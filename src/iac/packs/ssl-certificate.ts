@@ -1,4 +1,4 @@
-import { createResourcePack } from '@aws-cf-builder/utils';
+import { createResourcePack } from "../utils";
 
 export type AddSSLCertificateConfig = {
   id: string;

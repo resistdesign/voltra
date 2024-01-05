@@ -1,4 +1,4 @@
-import { CloudFormationParameter, CloudFormationTemplate } from '@aws-cf-builder/types';
+import { CloudFormationParameter, CloudFormationTemplate } from "../types/StandardIncludes";
 import { getValuePathString, mergeValues } from './patch-utils';
 
 export type ParameterInfo = {
