@@ -1,0 +1,238 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Build addBuildPipeline should add a build pipeline 1`] = `
+Object {
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": Object {
+    "APIBuildCodeBuildAndDeploy": Object {
+      "DependsOn": undefined,
+      "Properties": Object {
+        "Artifacts": Object {
+          "Type": "CODEPIPELINE",
+        },
+        "Description": "Deploy site to S3",
+        "Environment": Object {
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "EnvironmentVariables": undefined,
+          "Image": "aws/codebuild/nodejs:10.14.1",
+          "Type": "LINUX_CONTAINER",
+        },
+        "Name": Object {
+          "Fn::Sub": "\${AWS::StackName}-APIBuildCodeBuildAndDeploy",
+        },
+        "ServiceRole": Object {
+          "Fn::GetAtt": Array [
+            "APIBuildCodeBuildRole",
+            "Arn",
+          ],
+        },
+        "Source": Object {
+          "BuildSpec": "echo \\"build spec\\"",
+          "Type": "CODEPIPELINE",
+        },
+        "TimeoutInMinutes": 10,
+      },
+      "Type": "AWS::CodeBuild::Project",
+    },
+    "APIBuildCodeBuildRole": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Array [
+                  "codebuild.amazonaws.com",
+                ],
+              },
+            },
+          ],
+        },
+        "Path": "/",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": "*",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "codebuild-service",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "APIBuildCodePipelineRole": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Array [
+                  "codepipeline.amazonaws.com",
+                ],
+              },
+            },
+          ],
+        },
+        "Path": "/",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "codebuild:*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                Object {
+                  "Action": Array [
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetBucketVersioning",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                Object {
+                  "Action": Array [
+                    "s3:PutObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "arn:aws:s3:::codepipeline*",
+                  ],
+                },
+                Object {
+                  "Action": Array [
+                    "s3:*",
+                    "cloudformation:*",
+                    "iam:PassRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "codepipeline-service",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "APIBuildPipeline": Object {
+      "DependsOn": "APIBuildCodeBuildAndDeploy",
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "Location": Object {
+            "Ref": "APIBuildPipelineBucket",
+          },
+          "Type": "S3",
+        },
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "APIBuildCodePipelineRole",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "Branch": "main",
+                  "OAuthToken": "oauth-token",
+                  "Owner": "owner",
+                  "Repo": "repo",
+                },
+                "InputArtifacts": Array [],
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "SourceOutput",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Acquire-Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "APIBuildCodeBuildAndDeploy",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "SourceOutput",
+                  },
+                ],
+                "Name": "Artifact",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "DeployOutput",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Build-And-Deploy",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "APIBuildPipelineBucket": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+    },
+  },
+}
+`;

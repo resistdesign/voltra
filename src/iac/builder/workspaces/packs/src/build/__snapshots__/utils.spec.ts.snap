@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Build Utils createBuildSpec should create a YAML build spec 1`] = `
+"version: 0.2
+phases:
+  install:
+    run-as: main-user
+    commands:
+      - echo '//registry.npmjs.org/:_authToken=lkj5thlk5jh345lkj5h54jkth54k2l' >
+        .npmrc
+  build:
+    run-as: main-user
+    on-failure: ABORT
+    commands:
+      - aws s3 cp --recursive --acl public-read ./dist s3://example.com/
+      - aws lambda update-function-code --function-name \\"th5ljk2hl5kj4h325\\"
+        --zip-file \\"fileb://./dist/code.zip\\"
+  post_build:
+    run-as: main-user
+    commands:
+      - aws cloudfront create-invalidation --distribution-id \\"CFDID\\" --paths \\"/*\\"
+"
+`;

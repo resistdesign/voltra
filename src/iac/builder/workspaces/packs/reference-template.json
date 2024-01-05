@@ -1,0 +1,2623 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Automatically build and deploy a single page application from a GitHub repository. Assets are hosted in S3 with a CloudFront CDN that provides SSL, a fallback (index.html) and automatic redirection from HTTP to HTTPS. A DNS alias that points at the CloudFront Distribution will be created in Route53. Example App URL: `example.com -> https://example.com` Sub-domain Example App URL: `app.example.com -> https://app.example.com` ***** An Edge Optimized API Cloud Function will also be deployed with an API Gateway, DNS and SSL. Example API URL: `api.example.com -> https://api.example.com` Sub-domain Example API URL: `app-api.example.com -> https://app-api.example.com` ***** Environment Variables available to the API Function at runtime:\n  1. NODE_ENV: The current node environment. Example: `production`\n  2. API_CONFIG_PARAMETER_PATH: The SSM Parameter Store path for the API Configuration String. Example: `/production/myAppAPIConfig`\n    (Includes the `API Config Parameter Name`, `myAppAPIConfig` in this case.)",
+  "Parameters": {
+    "EnvironmentType": {
+      "Type": "String",
+      "Description": "The name of the environment to build under (NODE_ENV)",
+      "Default": "production"
+    },
+    "HostedZoneId": {
+      "Type": "AWS::Route53::HostedZone::Id",
+      "Description": "Select the Hosted Zone"
+    },
+    "HostedZoneDomainName": {
+      "Type": "String",
+      "Description": "The domain name of the Hosted Zone (Example: example.com)\n"
+    },
+    "FullDomainName": {
+      "Type": "String",
+      "Description": "The domain name of the selected Hosted Zone (Example: example.com) or\na sub-domain to be created within the Hosted Zone (Example: app.example.com)\n"
+    },
+    "FullAPIDomainName": {
+      "Type": "String",
+      "Description": "A sub-domain to be created within the Hosted Zone (Example: app.example.com)"
+    },
+    "SSLCertificateARN": {
+      "Type": "String",
+      "Description": "The ARN of the SSL Certificate (us-east-1 only).\nThe certificate should be for the Hosted Zone domain and a wildcard, for instance:\n  example.com\n  *.example.com\n",
+      "AllowedPattern": "^.*?us-east-1.*",
+      "ConstraintDescription": "The certificate must be in the us-east-1 region."
+    },
+    "APIConfigParameterName": {
+      "Type": "String",
+      "Description": "The name of the SSM Parameter used to store the API config."
+    },
+    "GitHubUser": {
+      "Type": "String",
+      "Description": "The GitHub User that owns the repository"
+    },
+    "GitHubRepo": {
+      "Type": "String",
+      "Description": "The name of the GitHub repository"
+    },
+    "GitHubBranch": {
+      "Type": "String",
+      "Description": "The name of the branch to be built",
+      "Default": "master"
+    },
+    "GitHubToken": {
+      "NoEcho": true,
+      "Type": "String",
+      "Description": "A GitHub Access Token with `repo` permissions (https://github.com/settings/tokens)"
+    },
+    "OutputDirectory": {
+      "Type": "String",
+      "Default": "./public",
+      "Description": "The build output directory containing the assets to be deployed"
+    },
+    "BuildType": {
+      "Type": "String",
+      "Default": "LINUX_CONTAINER",
+      "Description": "The type of container that will be used for running the build"
+    },
+    "BuildComputeType": {
+      "Type": "String",
+      "Default": "BUILD_GENERAL1_SMALL",
+      "Description": "The type/size of build compute configuration"
+    },
+    "BuildImage": {
+      "Type": "String",
+      "Default": "aws/codebuild/nodejs:10.14.1",
+      "Description": "The image needed to build the app"
+    },
+    "ConfigCommand": {
+      "Type": "String",
+      "Default": "echo \"{}\" > config.json",
+      "Description": "A command to execute before the UI build command"
+    },
+    "APIOutputDirectory": {
+      "Type": "String",
+      "Default": "./dist",
+      "Description": "The build output directory containing the assets to be deployed"
+    },
+    "APISchemaOutputDirectory": {
+      "Type": "String",
+      "Default": "./schema-dist",
+      "Description": "The build output directory containing the assets to be deployed to the schema sync cloud function"
+    },
+    "APINotifyOutputDirectory": {
+      "Type": "String",
+      "Default": "./notify-dist",
+      "Description": "The build output directory containing the assets to be deployed to the notification handler cloud function"
+    },
+    "APIGitHubUser": {
+      "Type": "String",
+      "Description": "The GitHub User that owns the repository"
+    },
+    "APIGitHubRepo": {
+      "Type": "String",
+      "Description": "The name of the GitHub repository"
+    },
+    "APIGitHubBranch": {
+      "Type": "String",
+      "Description": "The name of the branch to be built",
+      "Default": "master"
+    },
+    "APIGitHubToken": {
+      "NoEcho": true,
+      "Type": "String",
+      "Description": "A GitHub Access Token with `repo` permissions (https://github.com/settings/tokens)"
+    },
+    "APIBuildType": {
+      "Type": "String",
+      "Default": "LINUX_CONTAINER",
+      "Description": "The type of container that will be used for running the build"
+    },
+    "APIBuildComputeType": {
+      "Type": "String",
+      "Default": "BUILD_GENERAL1_SMALL",
+      "Description": "The type/size of build compute configuration"
+    },
+    "APIBuildImage": {
+      "Type": "String",
+      "Default": "aws/codebuild/nodejs:10.14.1",
+      "Description": "The image needed to build the app"
+    },
+    "APIConfigCommand": {
+      "Type": "String",
+      "Default": "echo \"{}\" > config.json",
+      "Description": "A command to execute before the API build command"
+    },
+    "APINPMToken": {
+      "NoEcho": true,
+      "Type": "String",
+      "Description": "A token used to install private npm modules"
+    },
+    "CognitoIdentityPoolId": {
+      "Type": "String",
+      "Description": "The ID of the Cognito Identity Pool used for API authentication and authorization"
+    },
+    "CognitoUserPoolArn": {
+      "Type": "String",
+      "Description": "The ARN of the Cognito User Pool used for API authentication and authorization"
+    },
+    "CognitoUserPoolId": {
+      "Type": "String",
+      "Description": "The ID of the Cognito User Pool used for API authentication and authorization"
+    },
+    "CognitoUserPoolClientId": {
+      "Type": "String",
+      "Description": "The ID of the Cognito User Pool Client used for API authentication and authorization"
+    },
+    "CognitoUserPoolClientCookieDomain": {
+      "Type": "String",
+      "Description": "The Cookie Domain of the Cognito User Pool Client used for API authentication and authorization"
+    },
+    "CognitoUserPoolClientDomain": {
+      "Type": "String",
+      "Description": "The Domain of the Cognito User Pool Client used for API authentication and authorization"
+    },
+    "DBConnectionURI": {
+      "NoEcho": true,
+      "Type": "String",
+      "Description": "The full MySQL/MariaDB connection URI, including username and password, in the format:\nmysql://<USERNAME>:<PASSWORD>@<HOST>:<PORT>/<DB-NAME>\n"
+    },
+    "DBVpcConfigSecurityGroupIds": {
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of the Security Group IDs for accessing the RDS database"
+    },
+    "DBVpcSubnetId": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "An ID of one of the Subnets where the RDS database can be accessed (Will be used by the API Function)"
+    },
+    "DBVpcConfigRouteTableIds": {
+      "Type": "CommaDelimitedList",
+      "Description": "A comma delimited list of the Route Table IDs for accessing external services from within the VPC"
+    },
+    "DBVpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "A VPC ID for accessing the RDS database"
+    },
+    "APIFunctionCIDRBlock1": {
+      "Type": "String",
+      "Description": "(Required) An IP (v4) CIDR Block to be applied to the API Function",
+      "Default": ""
+    },
+    "APIFunctionCIDRBlock2": {
+      "Type": "String",
+      "Description": "(Required) An IP (v4) CIDR Block to be applied to the API Function",
+      "Default": ""
+    },
+    "APIFunctionCIDRBlock3": {
+      "Type": "String",
+      "Description": "(Optional) An IP (v4) CIDR Block to be applied to the API Function",
+      "Default": ""
+    },
+    "APIFunctionCIDRBlock4": {
+      "Type": "String",
+      "Description": "(Optional) An IP (v4) CIDR Block to be applied to the API Function",
+      "Default": ""
+    },
+    "APIMailServiceSendAPIKey": {
+      "Type": "String",
+      "Description": "The API Key used to authenticate against the Notifications Mail Service when SENDING messages"
+    },
+    "APIMailServiceAPIKey": {
+      "Type": "String",
+      "Description": "The API Key used to authenticate against the Notifications Mail Service"
+    },
+    "APIMailServiceServerPrefix": {
+      "Type": "String",
+      "Description": "The Server Prefix used to communicate with the Notifications Mail Service"
+    },
+    "APIMailServiceContactListId": {
+      "Type": "String",
+      "Description": "The ID of the Contact List from the Notifications Mail Service where all users will be added (Newsletter Mailing List ID)"
+    },
+    "APIMailServiceFromAddress": {
+      "Type": "String",
+      "Description": "The 'From' Email Address used when sending messages with the Notifications Mail Service"
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Hosting Configuration"
+          },
+          "Parameters": [
+            "EnvironmentType",
+            "HostedZoneId",
+            "HostedZoneDomainName",
+            "FullDomainName",
+            "FullAPIDomainName",
+            "SSLCertificateARN",
+            "APIConfigParameterName"
+          ]
+        },
+        {
+          "Label": {
+            "default": "UI GitHub Settings"
+          },
+          "Parameters": [
+            "GitHubToken",
+            "GitHubUser",
+            "GitHubRepo",
+            "GitHubBranch"
+          ]
+        },
+        {
+          "Label": {
+            "default": "UI Build Settings"
+          },
+          "Parameters": [
+            "OutputDirectory",
+            "BuildType",
+            "BuildComputeType",
+            "BuildImage",
+            "ConfigCommand"
+          ]
+        },
+        {
+          "Label": {
+            "default": "API GitHub Settings"
+          },
+          "Parameters": [
+            "APIGitHubToken",
+            "APIGitHubUser",
+            "APIGitHubRepo",
+            "APIGitHubBranch"
+          ]
+        },
+        {
+          "Label": {
+            "default": "API Build Settings"
+          },
+          "Parameters": [
+            "APIOutputDirectory",
+            "APISchemaOutputDirectory",
+            "APINotifyOutputDirectory",
+            "APIBuildType",
+            "APIBuildComputeType",
+            "APIBuildImage",
+            "APIConfigCommand",
+            "APINPMToken"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Cognito User Authentication & Authorization"
+          },
+          "Parameters": [
+            "CognitoIdentityPoolId",
+            "CognitoUserPoolArn",
+            "CognitoUserPoolId",
+            "CognitoUserPoolClientId",
+            "CognitoUserPoolClientCookieDomain",
+            "CognitoUserPoolClientDomain"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Database Configuration"
+          },
+          "Parameters": [
+            "DBConnectionURI",
+            "DBVpcConfigSecurityGroupIds",
+            "DBVpcSubnetId",
+            "DBVpcConfigRouteTableIds",
+            "DBVpcId"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Networking"
+          },
+          "Parameters": [
+            "APIFunctionCIDRBlock1",
+            "APIFunctionCIDRBlock2",
+            "APIFunctionCIDRBlock3",
+            "APIFunctionCIDRBlock4"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Notifications"
+          },
+          "Parameters": [
+            "APIMailServiceSendAPIKey",
+            "APIMailServiceAPIKey",
+            "APIMailServiceServerPrefix",
+            "APIMailServiceContactListId",
+            "APIMailServiceFromAddress"
+          ]
+        }
+      ],
+      "ParameterLabels": {
+        "EnvironmentType": {
+          "default": "Environment Type"
+        },
+        "HostedZoneId": {
+          "default": "Hosted Zone"
+        },
+        "HostedZoneDomainName": {
+          "default": "Hosted Zone Domain Name"
+        },
+        "FullDomainName": {
+          "default": "Full Domain Name"
+        },
+        "FullAPIDomainName": {
+          "default": "Full API Domain Name"
+        },
+        "SSLCertificateARN": {
+          "default": "SSL Certificate ARN"
+        },
+        "APIConfigParameterName": {
+          "default": "API Config Parameter Name"
+        },
+        "GitHubToken": {
+          "default": "UI GitHub Access Token"
+        },
+        "GitHubUser": {
+          "default": "UI GitHub User (or Organization)"
+        },
+        "GitHubRepo": {
+          "default": "UI GitHub Repository Name"
+        },
+        "GitHubBranch": {
+          "default": "UI Build Branch"
+        },
+        "OutputDirectory": {
+          "default": "UI Output Directory"
+        },
+        "BuildType": {
+          "default": "UI CodeBuild Build Type"
+        },
+        "BuildComputeType": {
+          "default": "UI CodeBuild Compute Instance Type"
+        },
+        "BuildImage": {
+          "default": "UI CodeBuild Build Image"
+        },
+        "ConfigCommand": {
+          "default": "UI Config Command"
+        },
+        "APIGitHubToken": {
+          "default": "API GitHub Access Token"
+        },
+        "APIGitHubUser": {
+          "default": "API GitHub User (or Organization)"
+        },
+        "APIGitHubRepo": {
+          "default": "API GitHub Repository Name"
+        },
+        "APIGitHubBranch": {
+          "default": "API Build Branch"
+        },
+        "APIOutputDirectory": {
+          "default": "API Output Directory"
+        },
+        "APISchemaOutputDirectory": {
+          "default": "API Schema Output Directory"
+        },
+        "APINotifyOutputDirectory": {
+          "default": "API Notification Handler Output Directory"
+        },
+        "APIBuildType": {
+          "default": "API CodeBuild Build Type"
+        },
+        "APIBuildComputeType": {
+          "default": "API CodeBuild Compute Instance Type"
+        },
+        "APIBuildImage": {
+          "default": "API CodeBuild Build Image"
+        },
+        "APIConfigCommand": {
+          "default": "API Config Command"
+        },
+        "APINPMToken": {
+          "default": "API NPM Token"
+        },
+        "CognitoIdentityPoolId": {
+          "default": "Cognito Identity Pool ID"
+        },
+        "CognitoUserPoolArn": {
+          "default": "Cognito User Pool ARN"
+        },
+        "CognitoUserPoolId": {
+          "default": "Cognito User Pool ID"
+        },
+        "CognitoUserPoolClientId": {
+          "default": "Cognito User Pool Client ID"
+        },
+        "CognitoUserPoolClientCookieDomain": {
+          "default": "Cognito User Pool Client Cookie Domain"
+        },
+        "CognitoUserPoolClientDomain": {
+          "default": "Cognito User Pool Client Domain"
+        },
+        "DBConnectionURI": {
+          "default": "DB Connection URI"
+        },
+        "DBVpcConfigSecurityGroupIds": {
+          "default": "DB VPC Config Security Group IDs"
+        },
+        "DBVpcSubnetId": {
+          "default": "DB VPC Subnet ID"
+        },
+        "DBVpcConfigRouteTableIds": {
+          "default": "DB VPC Config Route Table IDs"
+        },
+        "DBVpcId": {
+          "default": "DB VPC ID"
+        },
+        "APIFunctionCIDRBlock1": {
+          "default": "API Function CIDR Block 1"
+        },
+        "APIFunctionCIDRBlock2": {
+          "default": "API Function CIDR Block 2"
+        },
+        "APIFunctionCIDRBlock3": {
+          "default": "API Function CIDR Block 3"
+        },
+        "APIFunctionCIDRBlock4": {
+          "default": "API Function CIDR Block 4"
+        },
+        "APIMailServiceSendAPIKey": {
+          "default": "Mail Service Send API Key"
+        },
+        "APIMailServiceAPIKey": {
+          "default": "Mail Service API Key"
+        },
+        "APIMailServiceServerPrefix": {
+          "default": "Mail Service Server Prefix"
+        },
+        "APIMailServiceContactListId": {
+          "default": "Mail Service Contact List Id"
+        },
+        "APIMailServiceFromAddress": {
+          "default": "Mail Service From Address"
+        }
+      }
+    }
+  },
+  "Conditions": {
+    "Has3rdAPICIDRBlock": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "APIFunctionCIDRBlock3"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "Has4thAPICIDRBlock": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "APIFunctionCIDRBlock4"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "APIWorkRoleSNSTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": {
+          "Fn::Sub": "${AWS::StackName}_WorkRoleSNSTopic"
+        }
+      }
+    },
+    "APIWorkRoleSNSTopicSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Protocol": "lambda",
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "APINotificationHandlerCloudFunction",
+            "Arn"
+          ]
+        },
+        "TopicArn": {
+          "Ref": "APIWorkRoleSNSTopic"
+        }
+      }
+    },
+    "APIWorkRoleSNSTopicAPIFunctionPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "Principal": "sns.amazonaws.com",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "APINotificationHandlerCloudFunction",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "APIS3": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*"
+              ],
+              "AllowedMethods": [
+                "GET",
+                "PUT",
+                "POST",
+                "DELETE",
+                "HEAD"
+              ],
+              "AllowedOrigins": [
+                "*"
+              ]
+            }
+          ]
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "APICloudFunctionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "lambda-parameter-store",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetParameter*"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${EnvironmentType}/${APIConfigParameterName}*"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "cognito-idp:ListUsers"
+                  ],
+                  "Resource": {
+                    "Ref": "CognitoUserPoolArn"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:*"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": [
+                        "arn:aws:s3:::${BucketName}",
+                        {
+                          "BucketName": {
+                            "Ref": "APIS3"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Sub": [
+                        "arn:aws:s3:::${BucketName}/*",
+                        {
+                          "BucketName": {
+                            "Ref": "APIS3"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:GetTopicAttributes",
+                    "sns:ListSubscriptionsByTopic",
+                    "sns:Publish",
+                    "sns:Subscribe",
+                    "sns:SetSubscriptionAttributes"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": [
+                        "${APIWorkRoleSNSTopicArn}",
+                        {
+                          "APIWorkRoleSNSTopicArn": {
+                            "Ref": "APIWorkRoleSNSTopic"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Sub": [
+                        "${APIWorkRoleSNSTopicArn}:*",
+                        {
+                          "APIWorkRoleSNSTopicArn": {
+                            "Ref": "APIWorkRoleSNSTopic"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "APISecurityGroupInboundRule": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Metadata": {
+        "SRID": {
+          "Fn::Sub": "${AWS::StackName}_APISecurityGroupInboundRule"
+        }
+      },
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${AWS::StackName}_APISecurityGroupInboundRule"
+        },
+        "GroupId": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "DBVpcConfigSecurityGroupIds"
+            }
+          ]
+        },
+        "SourceSecurityGroupId": {
+          "Fn::Select": [
+            0,
+            {
+              "Ref": "DBVpcConfigSecurityGroupIds"
+            }
+          ]
+        },
+        "IpProtocol": "TCP",
+        "FromPort": 3306,
+        "ToPort": 3306
+      }
+    },
+    "APICloudFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": 30,
+        "MemorySize": 3008,
+        "Code": {
+          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"nice jorb!\"'\n          })};\n"
+        },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": {
+              "Ref": "EnvironmentType"
+            },
+            "CLIENT_ORIGIN": {
+              "Fn::Sub": "https://${FullDomainName}"
+            },
+            "API_CONFIG_PARAMETER_PATH": {
+              "Fn::Sub": "/${EnvironmentType}/${APIConfigParameterName}"
+            },
+            "API_S3_BUCKET_NAME": {
+              "Ref": "APIS3"
+            }
+          }
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "APICloudFunctionRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "VpcConfig": {
+          "SecurityGroupIds": {
+            "Ref": "DBVpcConfigSecurityGroupIds"
+          },
+          "SubnetIds": {
+            "Fn::If": [
+              "Has4thAPICIDRBlock",
+              [
+                {
+                  "Ref": "APISubnet1"
+                },
+                {
+                  "Ref": "APISubnet2"
+                },
+                {
+                  "Ref": "APISubnet3"
+                },
+                {
+                  "Ref": "APISubnet4"
+                }
+              ],
+              {
+                "Fn::If": [
+                  "Has3rdAPICIDRBlock",
+                  [
+                    {
+                      "Ref": "APISubnet1"
+                    },
+                    {
+                      "Ref": "APISubnet2"
+                    },
+                    {
+                      "Ref": "APISubnet3"
+                    }
+                  ],
+                  [
+                    {
+                      "Ref": "APISubnet1"
+                    },
+                    {
+                      "Ref": "APISubnet2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "APIDBSchemaSyncCloudFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": 900,
+        "MemorySize": 3008,
+        "Code": {
+          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"you schema little wonky today!\"'\n          })};\n"
+        },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": {
+              "Ref": "EnvironmentType"
+            },
+            "CLIENT_ORIGIN": {
+              "Fn::Sub": "https://${FullDomainName}"
+            },
+            "API_CONFIG_PARAMETER_PATH": {
+              "Fn::Sub": "/${EnvironmentType}/${APIConfigParameterName}"
+            }
+          }
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "APICloudFunctionRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "VpcConfig": {
+          "SecurityGroupIds": {
+            "Ref": "DBVpcConfigSecurityGroupIds"
+          },
+          "SubnetIds": {
+            "Fn::If": [
+              "Has4thAPICIDRBlock",
+              [
+                {
+                  "Ref": "APISubnet1"
+                },
+                {
+                  "Ref": "APISubnet2"
+                },
+                {
+                  "Ref": "APISubnet3"
+                },
+                {
+                  "Ref": "APISubnet4"
+                }
+              ],
+              {
+                "Fn::If": [
+                  "Has3rdAPICIDRBlock",
+                  [
+                    {
+                      "Ref": "APISubnet1"
+                    },
+                    {
+                      "Ref": "APISubnet2"
+                    },
+                    {
+                      "Ref": "APISubnet3"
+                    }
+                  ],
+                  [
+                    {
+                      "Ref": "APISubnet1"
+                    },
+                    {
+                      "Ref": "APISubnet2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "APINotificationHandlerCloudFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Timeout": 900,
+        "MemorySize": 3008,
+        "Code": {
+          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"you learn something new everyday!\"'\n          })};\n"
+        },
+        "Environment": {
+          "Variables": {
+            "NODE_ENV": {
+              "Ref": "EnvironmentType"
+            },
+            "CLIENT_ORIGIN": {
+              "Fn::Sub": "https://${FullDomainName}"
+            },
+            "API_CONFIG_PARAMETER_PATH": {
+              "Fn::Sub": "/${EnvironmentType}/${APIConfigParameterName}"
+            }
+          }
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "APICloudFunctionRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "VpcConfig": {
+          "SecurityGroupIds": {
+            "Ref": "DBVpcConfigSecurityGroupIds"
+          },
+          "SubnetIds": {
+            "Fn::If": [
+              "Has4thAPICIDRBlock",
+              [
+                {
+                  "Ref": "APISubnet1"
+                },
+                {
+                  "Ref": "APISubnet2"
+                },
+                {
+                  "Ref": "APISubnet3"
+                },
+                {
+                  "Ref": "APISubnet4"
+                }
+              ],
+              {
+                "Fn::If": [
+                  "Has3rdAPICIDRBlock",
+                  [
+                    {
+                      "Ref": "APISubnet1"
+                    },
+                    {
+                      "Ref": "APISubnet2"
+                    },
+                    {
+                      "Ref": "APISubnet3"
+                    }
+                  ],
+                  [
+                    {
+                      "Ref": "APISubnet1"
+                    },
+                    {
+                      "Ref": "APISubnet2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "APIGatewayRESTAPI": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-APIGatewayRESTAPI"
+        },
+        "EndpointConfiguration": {
+          "Types": [
+            "EDGE"
+          ]
+        }
+      }
+    },
+    "APIGatewayRESTAPIResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "DependsOn": "APIGatewayRESTAPI",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "APIGatewayRESTAPI",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "{proxy+}",
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        }
+      }
+    },
+    "APIGatewayRESTAPIMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "DependsOn": "APIGatewayRESTAPIResource",
+      "Properties": {
+        "AuthorizationScopes": [
+          "phone",
+          "email",
+          "openid",
+          "profile"
+        ],
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "APICustomAuthorizer"
+        },
+        "HttpMethod": "ANY",
+        "ResourceId": {
+          "Ref": "APIGatewayRESTAPIResource"
+        },
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APICloudFunction.Arn}/invocations"
+          }
+        }
+      }
+    },
+    "APIGatewayRESTAPIRootMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "DependsOn": "APIGatewayRESTAPIResource",
+      "Properties": {
+        "AuthorizationScopes": [
+          "phone",
+          "email",
+          "openid",
+          "profile"
+        ],
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "APICustomAuthorizer"
+        },
+        "HttpMethod": "ANY",
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "APIGatewayRESTAPI",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APICloudFunction.Arn}/invocations"
+          }
+        }
+      }
+    },
+    "APIGatewayRESTAPIOPTIONSMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "DependsOn": "APIGatewayRESTAPIResource",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "ResourceId": {
+          "Ref": "APIGatewayRESTAPIResource"
+        },
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APICloudFunction.Arn}/invocations"
+          }
+        }
+      }
+    },
+    "APIGatewayRESTAPIRootOPTIONSMethod": {
+      "Type": "AWS::ApiGateway::Method",
+      "DependsOn": "APIGatewayRESTAPIResource",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "APIGatewayRESTAPI",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "Integration": {
+          "Type": "AWS_PROXY",
+          "IntegrationHttpMethod": "POST",
+          "Uri": {
+            "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${APICloudFunction.Arn}/invocations"
+          }
+        }
+      }
+    },
+    "APIGatewayRESTAPIDeployment": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "DependsOn": [
+        "APIGatewayRESTAPIResource",
+        "APIGatewayRESTAPIMethod",
+        "APIGatewayRESTAPIRootMethod",
+        "APIGatewayRESTAPI",
+        "APICloudFunction"
+      ],
+      "Properties": {
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        }
+      }
+    },
+    "APICloudWatch": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "${AWS::StackName}-APIGatewayLogs"
+        }
+      }
+    },
+    "APICloudWatchRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "apigateway.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Path": "/",
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+        ]
+      }
+    },
+    "APICloudWatchAccount": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "APICloudWatchRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "APIGatewayRESTAPIEnvironment": {
+      "Type": "AWS::ApiGateway::Stage",
+      "DependsOn": [
+        "APICloudWatchAccount",
+        "APIGatewayRESTAPIDeployment"
+      ],
+      "Properties": {
+        "AccessLogSetting": {
+          "DestinationArn": {
+            "Fn::GetAtt": [
+              "APICloudWatch",
+              "Arn"
+            ]
+          },
+          "Format": "{\"requestId\":\"$context.requestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"requestTime\":\"$context.requestTime\",\"httpMethod\":\"$context.httpMethod\",\"resourcePath\":\"$context.resourcePath\",\"status\":\"$context.status\",\"protocol\":\"$context.protocol\",\"responseLength\":\"$context.responseLength\",\"apiGatewayErrorMessage\":\"$context.error.message\"}"
+        },
+        "DeploymentId": {
+          "Ref": "APIGatewayRESTAPIDeployment"
+        },
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "StageName": {
+          "Ref": "EnvironmentType"
+        }
+      }
+    },
+    "APIDomainName": {
+      "Type": "AWS::ApiGateway::DomainName",
+      "Properties": {
+        "CertificateArn": {
+          "Ref": "SSLCertificateARN"
+        },
+        "DomainName": {
+          "Fn::Sub": [
+            "${DomainName}",
+            {
+              "DomainName": {
+                "Ref": "FullAPIDomainName"
+              }
+            }
+          ]
+        },
+        "EndpointConfiguration": {
+          "Types": [
+            "EDGE"
+          ]
+        }
+      }
+    },
+    "APIDomainNameBasePathMapping": {
+      "Type": "AWS::ApiGateway::BasePathMapping",
+      "DependsOn": [
+        "APIGatewayRESTAPI",
+        "APIGatewayRESTAPIEnvironment",
+        "APIDomainName"
+      ],
+      "Properties": {
+        "DomainName": {
+          "Fn::Sub": [
+            "${DomainName}",
+            {
+              "DomainName": {
+                "Ref": "FullAPIDomainName"
+              }
+            }
+          ]
+        },
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "Stage": {
+          "Ref": "EnvironmentType"
+        }
+      }
+    },
+    "APICloudFunctionANYResourcePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "FunctionName": {
+          "Ref": "APICloudFunction"
+        },
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/*",
+            {
+              "__Stage__": {
+                "Ref": "EnvironmentType"
+              },
+              "__ApiId__": {
+                "Ref": "APIGatewayRESTAPI"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "APICustomAuthorizer": {
+      "Type": "AWS::ApiGateway::Authorizer",
+      "Properties": {
+        "IdentitySource": "method.request.header.authorization",
+        "Name": "APICustomAuthorizer",
+        "ProviderARNs": [
+          {
+            "Ref": "CognitoUserPoolArn"
+          }
+        ],
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        },
+        "Type": "COGNITO_USER_POOLS"
+      }
+    },
+    "GatewayResponseDefault4XX": {
+      "Type": "AWS::ApiGateway::GatewayResponse",
+      "Properties": {
+        "ResponseParameters": {
+          "gatewayresponse.header.Access-Control-Allow-Origin": {
+            "Fn::Sub": [
+              "'https://${FullDomainName}'",
+              {
+                "FullDomainName": {
+                  "Ref": "FullDomainName"
+                }
+              }
+            ]
+          },
+          "gatewayresponse.header.Access-Control-Allow-Credentials": "'true'",
+          "gatewayresponse.header.Access-Control-Allow-Headers": "'*'"
+        },
+        "ResponseType": "DEFAULT_4XX",
+        "RestApiId": {
+          "Ref": "APIGatewayRESTAPI"
+        }
+      }
+    },
+    "APIRoute53Record": {
+      "Type": "AWS::Route53::RecordSet",
+      "DependsOn": "APIDomainName",
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId"
+        },
+        "Type": "A",
+        "Name": {
+          "Fn::Sub": [
+            "${DomainName}.",
+            {
+              "DomainName": {
+                "Ref": "FullAPIDomainName"
+              }
+            }
+          ]
+        },
+        "AliasTarget": {
+          "HostedZoneId": "Z2FDTNDATAQYW2",
+          "DNSName": {
+            "Fn::Sub": [
+              "${DomainName}.",
+              {
+                "DomainName": {
+                  "Fn::GetAtt": [
+                    "APIDomainName",
+                    "DistributionDomainName"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "APICodeBuildRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "codebuild.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "codebuild-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "*",
+                  "Resource": "*"
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "APICodePipelineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "codepipeline.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "codepipeline-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "codebuild:*"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetBucketVersioning"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::codepipeline*"
+                  ],
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "s3:*",
+                    "cloudformation:*",
+                    "iam:PassRole"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "APIPipelineBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        }
+      }
+    },
+    "APICodeBuildDeploySite": {
+      "Type": "AWS::CodeBuild::Project",
+      "DependsOn": [
+        "APICodeBuildRole"
+      ],
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-APICodeBuildDeploySite"
+        },
+        "Description": "Deploy API to Lambda",
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "APICodeBuildRole",
+            "Arn"
+          ]
+        },
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Environment": {
+          "Type": {
+            "Ref": "APIBuildType"
+          },
+          "ComputeType": {
+            "Ref": "APIBuildComputeType"
+          },
+          "Image": {
+            "Fn::Sub": "${APIBuildImage}"
+          },
+          "EnvironmentVariables": [
+            {
+              "Name": "APP_DOMAIN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "FullDomainName"
+              }
+            },
+            {
+              "Name": "DB_CONNECTION_URI",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "DBConnectionURI"
+              }
+            },
+            {
+              "Name": "API_S3_BUCKET_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIS3"
+              }
+            },
+            {
+              "Name": "WORK_ROLE_SNS_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIWorkRoleSNSTopic"
+              }
+            },
+            {
+              "Name": "MAIL_SERVICE_SEND_API_KEY",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIMailServiceSendAPIKey"
+              }
+            },
+            {
+              "Name": "MAIL_SERVICE_API_KEY",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIMailServiceAPIKey"
+              }
+            },
+            {
+              "Name": "MAIL_SERVICE_SERVER_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIMailServiceServerPrefix"
+              }
+            },
+            {
+              "Name": "MAIL_SERVICE_CONTACT_LIST_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIMailServiceContactListId"
+              }
+            },
+            {
+              "Name": "MAIL_SERVICE_FROM_ADDRESS",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "APIMailServiceFromAddress"
+              }
+            },
+            {
+              "Name": "USER_POOL_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "CognitoUserPoolId"
+              }
+            },
+            {
+              "Name": "NOTIFICATION_HANDLER_ARN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::GetAtt": [
+                  "APINotificationHandlerCloudFunction",
+                  "Arn"
+                ]
+              }
+            }
+          ]
+        },
+        "Source": {
+          "Type": "CODEPIPELINE",
+          "BuildSpec": {
+            "Fn::Sub": [
+              "version: 0.2\nphases:\n  build:\n    commands:\n      - ${APIConfigCommand}\n      - \"echo '//registry.npmjs.org/:_authToken=${APINPMToken}' > .npmrc\"\n      - \"npm i yarn && npx yarn && NODE_ENV=${EnvironmentType} npx yarn workspace @er-candidates/api build\"\n  post_build:\n    commands:\n      - PWD_RETURN_DIR=\"${!PWD}\"\n      - cd ${APISchemaOutputDirectory} && zip -qr ../../schema-dist.zip * && cd \"${!PWD_RETURN_DIR}\"\n      - aws lambda update-function-code --function-name \"${APIDBSchemaSyncCloudFunctionArn}\" --zip-file \"fileb://packages/api/schema-dist.zip\"\n      - aws lambda invoke --function-name \"${APIDBSchemaSyncCloudFunctionArn}\" --invocation-type RequestResponse --payload \"{}\" ./API_DB_MIGRATION_INVOKE.json && cat ./API_DB_MIGRATION_INVOKE.json\n      - cd ${APIOutputDirectory} && zip -qr ../../dist.zip * && cd \"${!PWD_RETURN_DIR}\"\n      - aws lambda update-function-code --function-name \"${APIFunctionArn}\" --zip-file \"fileb://packages/api/dist.zip\"\n      - cd ${APINotifyOutputDirectory} && zip -qr ../../notify-dist.zip * && cd \"${!PWD_RETURN_DIR}\"\n      - aws lambda update-function-code --function-name \"${APINotificationHandlerCloudFunctionArn}\" --zip-file \"fileb://packages/api/notify-dist.zip\"\n",
+              {
+                "EnvironmentType": {
+                  "Ref": "EnvironmentType"
+                },
+                "APIFunctionArn": {
+                  "Fn::GetAtt": [
+                    "APICloudFunction",
+                    "Arn"
+                  ]
+                },
+                "APIDBSchemaSyncCloudFunctionArn": {
+                  "Fn::GetAtt": [
+                    "APIDBSchemaSyncCloudFunction",
+                    "Arn"
+                  ]
+                },
+                "APINotificationHandlerCloudFunctionArn": {
+                  "Fn::GetAtt": [
+                    "APINotificationHandlerCloudFunction",
+                    "Arn"
+                  ]
+                },
+                "APINPMToken": {
+                  "Ref": "APINPMToken"
+                },
+                "APIOutputDirectory": {
+                  "Ref": "APIOutputDirectory"
+                },
+                "APISchemaOutputDirectory": {
+                  "Ref": "APISchemaOutputDirectory"
+                },
+                "APINotifyOutputDirectory": {
+                  "Ref": "APINotifyOutputDirectory"
+                }
+              }
+            ]
+          }
+        },
+        "TimeoutInMinutes": 10
+      }
+    },
+    "APIPipeline": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "DependsOn": "APICodeBuildDeploySite",
+      "Properties": {
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "APICodePipelineRole",
+            "Arn"
+          ]
+        },
+        "Stages": [
+          {
+            "Name": "Acquire-Source",
+            "Actions": [
+              {
+                "InputArtifacts": [],
+                "Name": "Source",
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Version": "1",
+                  "Provider": "GitHub"
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "Configuration": {
+                  "Owner": {
+                    "Ref": "APIGitHubUser"
+                  },
+                  "Repo": {
+                    "Ref": "APIGitHubRepo"
+                  },
+                  "Branch": {
+                    "Ref": "APIGitHubBranch"
+                  },
+                  "OAuthToken": {
+                    "Ref": "APIGitHubToken"
+                  }
+                },
+                "RunOrder": 1
+              }
+            ]
+          },
+          {
+            "Name": "Build-And-Deploy",
+            "Actions": [
+              {
+                "Name": "Artifact",
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Version": "1",
+                  "Provider": "CodeBuild"
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "OutputArtifacts": [
+                  {
+                    "Name": "DeployOutput"
+                  }
+                ],
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "APICodeBuildDeploySite"
+                  }
+                },
+                "RunOrder": 1
+              }
+            ]
+          }
+        ],
+        "ArtifactStore": {
+          "Type": "S3",
+          "Location": {
+            "Ref": "APIPipelineBucket"
+          }
+        }
+      }
+    },
+    "S3": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "AccessControl": "PublicRead",
+        "BucketName": {
+          "Ref": "FullDomainName"
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html"
+        }
+      }
+    },
+    "CloudFront": {
+      "Type": "AWS::CloudFront::Distribution",
+      "DependsOn": "S3",
+      "Properties": {
+        "DistributionConfig": {
+          "Aliases": [
+            {
+              "Fn::Sub": [
+                "www.${DomainName}",
+                {
+                  "DomainName": {
+                    "Ref": "HostedZoneDomainName"
+                  }
+                }
+              ]
+            },
+            {
+              "Ref": "FullDomainName"
+            }
+          ],
+          "ViewerCertificate": {
+            "AcmCertificateArn": {
+              "Ref": "SSLCertificateARN"
+            },
+            "SslSupportMethod": "sni-only",
+            "MinimumProtocolVersion": "TLSv1.1_2016"
+          },
+          "DefaultCacheBehavior": {
+            "ForwardedValues": {
+              "QueryString": false
+            },
+            "TargetOriginId": {
+              "Fn::Sub": [
+                "S3-${S3BucketName}",
+                {
+                  "S3BucketName": {
+                    "Ref": "FullDomainName"
+                  }
+                }
+              ]
+            },
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "IPV6Enabled": false,
+          "HttpVersion": "http2",
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::Sub": [
+                  "${S3BucketName}.s3.amazonaws.com",
+                  {
+                    "S3BucketName": {
+                      "Ref": "FullDomainName"
+                    }
+                  }
+                ]
+              },
+              "Id": {
+                "Fn::Sub": [
+                  "S3-${S3BucketName}",
+                  {
+                    "S3BucketName": {
+                      "Ref": "FullDomainName"
+                    }
+                  }
+                ]
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": ""
+              }
+            }
+          ],
+          "CustomErrorResponses": [
+            {
+              "ErrorCachingMinTTL": 300,
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html"
+            },
+            {
+              "ErrorCachingMinTTL": 300,
+              "ErrorCode": 403,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html"
+            }
+          ],
+          "PriceClass": "PriceClass_All"
+        }
+      }
+    },
+    "Route53Record": {
+      "Type": "AWS::Route53::RecordSet",
+      "DependsOn": "CloudFront",
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId"
+        },
+        "Type": "A",
+        "Name": {
+          "Fn::Sub": [
+            "${DomainName}.",
+            {
+              "DomainName": {
+                "Ref": "FullDomainName"
+              }
+            }
+          ]
+        },
+        "AliasTarget": {
+          "HostedZoneId": "Z2FDTNDATAQYW2",
+          "DNSName": {
+            "Fn::Sub": [
+              "${DomainName}.",
+              {
+                "DomainName": {
+                  "Fn::GetAtt": [
+                    "CloudFront",
+                    "DomainName"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "Route53WWWRecord": {
+      "Type": "AWS::Route53::RecordSet",
+      "DependsOn": "CloudFront",
+      "Properties": {
+        "HostedZoneId": {
+          "Ref": "HostedZoneId"
+        },
+        "Type": "A",
+        "Name": {
+          "Fn::Sub": [
+            "www.${DomainName}.",
+            {
+              "DomainName": {
+                "Ref": "HostedZoneDomainName"
+              }
+            }
+          ]
+        },
+        "AliasTarget": {
+          "HostedZoneId": "Z2FDTNDATAQYW2",
+          "DNSName": {
+            "Fn::Sub": [
+              "${DomainName}.",
+              {
+                "DomainName": {
+                  "Fn::GetAtt": [
+                    "CloudFront",
+                    "DomainName"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "CodeBuildRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "codebuild.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "codebuild-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": "*",
+                  "Resource": "*"
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "CodePipelineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "codepipeline.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "codepipeline-service",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "codebuild:*"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetBucketVersioning"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::codepipeline*"
+                  ],
+                  "Effect": "Allow"
+                },
+                {
+                  "Action": [
+                    "s3:*",
+                    "cloudformation:*",
+                    "iam:PassRole"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "PipelineBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        }
+      }
+    },
+    "CodeBuildDeploySite": {
+      "Type": "AWS::CodeBuild::Project",
+      "DependsOn": [
+        "CodeBuildRole",
+        "S3",
+        "CloudFront"
+      ],
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-BuildAndDeploySite"
+        },
+        "Description": "Deploy site to S3",
+        "ServiceRole": {
+          "Fn::GetAtt": [
+            "CodeBuildRole",
+            "Arn"
+          ]
+        },
+        "Artifacts": {
+          "Type": "CODEPIPELINE"
+        },
+        "Environment": {
+          "Type": {
+            "Ref": "BuildType"
+          },
+          "ComputeType": {
+            "Ref": "BuildComputeType"
+          },
+          "Image": {
+            "Fn::Sub": "${BuildImage}"
+          },
+          "EnvironmentVariables": [
+            {
+              "Name": "APP_DOMAIN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "FullDomainName"
+              }
+            },
+            {
+              "Name": "API_DOMAIN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "FullAPIDomainName"
+              }
+            },
+            {
+              "Name": "USER_POOL_CLIENT_ID",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "CognitoUserPoolClientId"
+              }
+            },
+            {
+              "Name": "USER_POOL_CLIENT_COOKIE_DOMAIN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "CognitoUserPoolClientCookieDomain"
+              }
+            },
+            {
+              "Name": "USER_POOL_CLIENT_DOMAIN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "CognitoUserPoolClientDomain"
+              }
+            },
+            {
+              "Name": "REGION",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "AWS::Region"
+              }
+            },
+            {
+              "Name": "OAUTH_CONFIG_DOMAIN",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::Sub": [
+                  "https://cognito-idp.${UserPoolRegion}.amazonaws.com/${UserPoolID}",
+                  {
+                    "UserPoolRegion": {
+                      "Ref": "AWS::Region"
+                    },
+                    "UserPoolID": {
+                      "Ref": "CognitoUserPoolId"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "Source": {
+          "Type": "CODEPIPELINE",
+          "BuildSpec": {
+            "Fn::Sub": [
+              "version: 0.2\nphases:\n  build:\n    commands:\n      - ${ConfigCommand}\n      - \"npm i yarn && npx yarn && API_BASE_URL='https://${FullAPIDomainName}' NODE_ENV=${EnvironmentType} npx yarn workspace @er-candidates/app build\"\n  post_build:\n    commands:\n      - aws s3 cp --recursive --acl public-read ${OutputDirectory} s3://${FullDomainName}/\n      - aws cloudfront create-invalidation --distribution-id \"${DistributionId}\" --paths \"/*\"\n",
+              {
+                "DistributionId": {
+                  "Ref": "CloudFront"
+                },
+                "FullDomainName": {
+                  "Ref": "FullDomainName"
+                },
+                "FullAPIDomainName": {
+                  "Ref": "FullAPIDomainName"
+                },
+                "OutputDirectory": {
+                  "Ref": "OutputDirectory"
+                }
+              }
+            ]
+          }
+        },
+        "TimeoutInMinutes": 10
+      }
+    },
+    "Pipeline": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "DependsOn": "CodeBuildDeploySite",
+      "Properties": {
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CodePipelineRole",
+            "Arn"
+          ]
+        },
+        "Stages": [
+          {
+            "Name": "Acquire-Source",
+            "Actions": [
+              {
+                "InputArtifacts": [],
+                "Name": "Source",
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Version": "1",
+                  "Provider": "GitHub"
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "Configuration": {
+                  "Owner": {
+                    "Ref": "GitHubUser"
+                  },
+                  "Repo": {
+                    "Ref": "GitHubRepo"
+                  },
+                  "Branch": {
+                    "Ref": "GitHubBranch"
+                  },
+                  "OAuthToken": {
+                    "Ref": "GitHubToken"
+                  }
+                },
+                "RunOrder": 1
+              }
+            ]
+          },
+          {
+            "Name": "Build-And-Deploy",
+            "Actions": [
+              {
+                "Name": "Artifact",
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Version": "1",
+                  "Provider": "CodeBuild"
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "OutputArtifacts": [
+                  {
+                    "Name": "DeployOutput"
+                  }
+                ],
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "CodeBuildDeploySite"
+                  }
+                },
+                "RunOrder": 1
+              }
+            ]
+          }
+        ],
+        "ArtifactStore": {
+          "Type": "S3",
+          "Location": {
+            "Ref": "PipelineBucket"
+          }
+        }
+      }
+    },
+    "CognitoAdminGroup": {
+      "Type": "AWS::Cognito::UserPoolGroup",
+      "Properties": {
+        "GroupName": "appAdminGroup",
+        "Precedence": 0,
+        "Description": "App Admin Group",
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CognitoAdminAuthRole",
+            "Arn"
+          ]
+        },
+        "UserPoolId": {
+          "Ref": "CognitoUserPoolId"
+        }
+      }
+    },
+    "CognitoAdminAuthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "appAdminAuthRole",
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": [
+                "sts:AssumeRoleWithWebIdentity"
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "CognitoIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CognitoAuthorizedPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "mobileanalytics:PutEvents",
+                    "cognito-sync:*",
+                    "cognito-identity:*"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "execute-api:Invoke"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": [
+                      "arn:aws:execute-api:${Region}:${AccountId}:${APIID}/${StageName}/${HTTPVerb}/api/*",
+                      {
+                        "Region": {
+                          "Ref": "AWS::Region"
+                        },
+                        "AccountId": {
+                          "Ref": "AWS::AccountId"
+                        },
+                        "APIID": {
+                          "Ref": "APIGatewayRESTAPI"
+                        },
+                        "StageName": {
+                          "Ref": "EnvironmentType"
+                        },
+                        "HTTPVerb": "*"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "execute-api:Invoke"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": [
+                      "arn:aws:execute-api:${Region}:${AccountId}:${APIID}/${StageName}/${HTTPVerb}/admin/*",
+                      {
+                        "Region": {
+                          "Ref": "AWS::Region"
+                        },
+                        "AccountId": {
+                          "Ref": "AWS::AccountId"
+                        },
+                        "APIID": {
+                          "Ref": "APIGatewayRESTAPI"
+                        },
+                        "StageName": {
+                          "Ref": "EnvironmentType"
+                        },
+                        "HTTPVerb": "*"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CognitoIdentityPoolRoles": {
+      "Type": "AWS::Cognito::IdentityPoolRoleAttachment",
+      "Properties": {
+        "IdentityPoolId": {
+          "Ref": "CognitoIdentityPoolId"
+        },
+        "Roles": {
+          "authenticated": {
+            "Fn::GetAtt": [
+              "CognitoAuthRole",
+              "Arn"
+            ]
+          },
+          "unauthenticated": {
+            "Fn::GetAtt": [
+              "CognitoUnauthRole",
+              "Arn"
+            ]
+          }
+        }
+      }
+    },
+    "CognitoAuthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "appAuthRole",
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": [
+                "sts:AssumeRoleWithWebIdentity"
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "CognitoIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CognitoAuthorizedPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "mobileanalytics:PutEvents",
+                    "cognito-sync:*",
+                    "cognito-identity:*"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "execute-api:Invoke"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": [
+                      "arn:aws:execute-api:${Region}:${AccountId}:${APIID}/${StageName}/${HTTPVerb}/api/*",
+                      {
+                        "Region": {
+                          "Ref": "AWS::Region"
+                        },
+                        "AccountId": {
+                          "Ref": "AWS::AccountId"
+                        },
+                        "APIID": {
+                          "Ref": "APIGatewayRESTAPI"
+                        },
+                        "StageName": {
+                          "Ref": "EnvironmentType"
+                        },
+                        "HTTPVerb": "*"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CognitoUnauthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "appUnauthRole",
+        "Path": "/",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": [
+                "sts:AssumeRoleWithWebIdentity"
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": {
+                    "Ref": "CognitoIdentityPoolId"
+                  }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "unauthenticated"
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CognitoUnauthorizedPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "mobileanalytics:PutEvents",
+                    "cognito-sync:*",
+                    "cognito-identity:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "APISubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": {
+          "Ref": "APIFunctionCIDRBlock1"
+        },
+        "VpcId": {
+          "Ref": "DBVpcId"
+        }
+      }
+    },
+    "APISubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": {
+          "Ref": "APIFunctionCIDRBlock2"
+        },
+        "VpcId": {
+          "Ref": "DBVpcId"
+        }
+      }
+    },
+    "APISubnet3": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "Has3rdAPICIDRBlock",
+      "Properties": {
+        "CidrBlock": {
+          "Ref": "APIFunctionCIDRBlock3"
+        },
+        "VpcId": {
+          "Ref": "DBVpcId"
+        }
+      }
+    },
+    "APISubnet4": {
+      "Type": "AWS::EC2::Subnet",
+      "Condition": "Has4thAPICIDRBlock",
+      "Properties": {
+        "CidrBlock": {
+          "Ref": "APIFunctionCIDRBlock4"
+        },
+        "VpcId": {
+          "Ref": "DBVpcId"
+        }
+      }
+    },
+    "APIRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "DBVpcId"
+        }
+      }
+    },
+    "APIRTSubnetAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "APIRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "APISubnet1"
+        }
+      }
+    },
+    "APIRTSubnetAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "APIRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "APISubnet2"
+        }
+      }
+    },
+    "APIRTSubnetAssociation3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "Has3rdAPICIDRBlock",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "APIRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "APISubnet3"
+        }
+      }
+    },
+    "APIRTSubnetAssociation4": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Condition": "Has4thAPICIDRBlock",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "APIRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "APISubnet4"
+        }
+      }
+    },
+    "APIElasticIPAllocation": {
+      "Type": "AWS::EC2::EIP"
+    },
+    "APINATGateway": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "APIElasticIPAllocation",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "DBVpcSubnetId"
+        }
+      }
+    },
+    "APINATRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "APIRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "APINATGateway"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AppURL": {
+      "Description": "App URL",
+      "Value": {
+        "Fn::Sub": "https://${FullDomainName}"
+      }
+    },
+    "APIURL": {
+      "Description": "API URL",
+      "Value": {
+        "Fn::Sub": "https://${FullAPIDomainName}"
+      }
+    }
+  }
+}

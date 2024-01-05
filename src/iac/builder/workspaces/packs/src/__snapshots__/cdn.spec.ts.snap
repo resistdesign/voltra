@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CDN addCDN should add a CDN 1`] = `
+Object {
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": Object {
+    "BasicCloudFront": Object {
+      "DependsOn": "BasicS3",
+      "Properties": Object {
+        "DistributionConfig": Object {
+          "Aliases": Array [
+            "app.example.com",
+          ],
+          "CustomErrorResponses": Array [
+            Object {
+              "ErrorCachingMinTTL": 300,
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html",
+            },
+            Object {
+              "ErrorCachingMinTTL": 300,
+              "ErrorCode": 403,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html",
+            },
+          ],
+          "DefaultCacheBehavior": Object {
+            "ForwardedValues": Object {
+              "QueryString": false,
+            },
+            "TargetOriginId": Object {
+              "Fn::Sub": Array [
+                "S3-\${S3BucketName}",
+                Object {
+                  "S3BucketName": "app.example.com",
+                },
+              ],
+            },
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": false,
+          "Origins": Array [
+            Object {
+              "DomainName": Object {
+                "Fn::Sub": Array [
+                  "\${S3BucketName}.s3.amazonaws.com",
+                  Object {
+                    "S3BucketName": "app.example.com",
+                  },
+                ],
+              },
+              "Id": Object {
+                "Fn::Sub": Array [
+                  "S3-\${S3BucketName}",
+                  Object {
+                    "S3BucketName": "app.example.com",
+                  },
+                ],
+              },
+              "S3OriginConfig": Object {
+                "OriginAccessIdentity": "",
+              },
+            },
+          ],
+          "PriceClass": "PriceClass_All",
+          "ViewerCertificate": Object {
+            "AcmCertificateArn": "i:am:a:cert:arn",
+            "MinimumProtocolVersion": "TLSv1.1_2016",
+            "SslSupportMethod": "sni-only",
+          },
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "BasicRoute53Record": Object {
+      "DependsOn": Array [
+        "BasicCloudFront",
+      ],
+      "Properties": Object {
+        "AliasTarget": Object {
+          "DNSName": Object {
+            "Fn::Sub": Array [
+              "\${DomainName}.",
+              Object {
+                "DomainName": Object {
+                  "Fn::GetAtt": Array [
+                    "BasicCloudFront",
+                    "DomainName",
+                  ],
+                },
+              },
+            ],
+          },
+          "HostedZoneId": "Z2FDTNDATAQYW2",
+        },
+        "HostedZoneId": "1234567890",
+        "Name": Object {
+          "Fn::Sub": Array [
+            "\${DomainName}.",
+            Object {
+              "DomainName": "app.example.com",
+            },
+          ],
+        },
+        "Type": "A",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+  },
+}
+`;
