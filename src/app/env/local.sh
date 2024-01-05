@@ -1,8 +1,0 @@
-export APP_DOMAIN='app-local.lahc.resist.design:1234'
-export API_DOMAIN='api.lahc.resist.design'
-export USER_POOL_CLIENT_COOKIE_DOMAIN='.lahc.resist.design'
-export USER_POOL_CLIENT_ID='6ur83cggqqvn67uk3n7tcq2qen'
-export OAUTH_CONFIG_DOMAIN='https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Nd1nQuT4Y'
-export USER_POOL_CLIENT_DOMAIN='auth.lahc.resist.design'
-export USER_POOL_CLIENT_CALLBACK_URL='https://app-local.lahc.resist.design:1234/login-complete'
-export USER_POOL_CLIENT_LOGOUT_URL='https://app-local.lahc.resist.design:1234/logout-complete'
