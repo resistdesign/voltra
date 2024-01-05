@@ -3,7 +3,7 @@ import {
   DynamoDBClientConfig,
   QueryCommandInput,
 } from "@aws-sdk/client-dynamodb";
-import { DBServiceItemDriver } from "../../utils/DBServiceTypes";
+import { DBServiceItemDriver } from "../../DBServiceTypes";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import {
   Criteria,
@@ -11,7 +11,7 @@ import {
   SearchCriterionLogicalGroupingTypes,
   SearchCriterionTypes,
   SearchOperatorTypes,
-} from "../../utils/SearchCriteriaTypes";
+} from "../../SearchCriteriaTypes";
 
 export type BaseQueryCommandInput = Pick<
   QueryCommandInput,
