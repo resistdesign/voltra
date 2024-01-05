@@ -1,11 +1,11 @@
-import { FC } from 'react';
-import styled from 'styled-components';
+import { FC } from "react";
+import styled from "styled-components";
 
 const TabsBase = styled.div`
   margin-bottom: 0;
 `;
 const TabButton = styled.button.attrs((p) => ({
-  className: 'tab-button',
+  className: "tab-button",
 }))`
   &.tab-button {
     flex: 1 0 auto;
@@ -26,7 +26,7 @@ export const Tabs: FC<TabsProps> = ({ tabItems = [] }) => {
   return (
     <TabsBase role="group">
       {tabItems.map((t, index) => {
-        const { label = '', onClick = () => {} } = t;
+        const { label = "", onClick = () => {} } = t;
 
         return (
           <TabButton key={`TabButton:${index}`} onClick={onClick}>

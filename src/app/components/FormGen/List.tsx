@@ -1,13 +1,13 @@
-import React, { FC, PropsWithChildren, useCallback, useState } from 'react';
+import React, { FC, PropsWithChildren, useCallback, useState } from "react";
 import {
   getDefaultItemForTypeStructure,
   getValueLabel,
   TypeStructure,
   TypeStructureMap,
-} from './TypeParsing/TypeUtils';
-import { NavigateBackHandler, NavigateToHandler } from './Navigation';
-import styled from 'styled-components';
-import { LayoutBox, LayoutControls } from './Layout';
+} from "./TypeParsing/TypeUtils";
+import { NavigateBackHandler, NavigateToHandler } from "./Navigation";
+import styled from "styled-components";
+import { LayoutBox, LayoutControls } from "./Layout";
 
 const ITEM_PLACEHOLDER = {};
 
@@ -27,19 +27,31 @@ type SelectItemButtonBaseProps = {
 
 type SelectItemButtonProps = PropsWithChildren<SelectItemButtonBaseProps>;
 
-const SelectItemButton: FC<SelectItemButtonProps> = ({ index, onSelectItem, children }) => {
+const SelectItemButton: FC<SelectItemButtonProps> = ({
+  index,
+  onSelectItem,
+  children,
+}) => {
   const onOpenItemInternal = useCallback(() => {
     onSelectItem(index);
   }, [index, onSelectItem]);
 
-  return <SelectItemButtonBase onClick={onOpenItemInternal}>{children}</SelectItemButtonBase>;
+  return (
+    <SelectItemButtonBase onClick={onOpenItemInternal}>
+      {children}
+    </SelectItemButtonBase>
+  );
 };
 
 type SelectItemCheckboxProps = SelectItemButtonBaseProps & {
   selected: boolean;
 };
 
-const SelectItemCheckbox: FC<SelectItemCheckboxProps> = ({ index, onSelectItem, selected = false }) => {
+const SelectItemCheckbox: FC<SelectItemCheckboxProps> = ({
+  index,
+  onSelectItem,
+  selected = false,
+}) => {
   const onOpenItemInternal = useCallback(() => {
     onSelectItem(index);
   }, [index, onSelectItem]);
@@ -89,15 +101,17 @@ export const List: FC<ListProps> = ({
   onNavigateBack,
 }: ListProps) => {
   const [selectedIndices, setSelectedIndices] = useState<any[]>([]);
-  const [tryingToDeleteSelectedItems, setTryingToDeleteSelectedItems] = useState(false);
+  const [tryingToDeleteSelectedItems, setTryingToDeleteSelectedItems] =
+    useState(false);
   const onBegineDelete = useCallback(() => {
     setTryingToDeleteSelectedItems(true);
   }, [setTryingToDeleteSelectedItems]);
   const [itemsAreMoving, setItemsAreMoving] = useState(false);
   const getItemLabel = useCallback(
     (item: any, index: number): string =>
-      (getValueLabel(item, typeStructure, typeStructureMap) || '').trim() || `${index + 1}`,
-    [typeStructure, typeStructureMap, items]
+      (getValueLabel(item, typeStructure, typeStructureMap) || "").trim() ||
+      `${index + 1}`,
+    [typeStructure, typeStructureMap, items],
   );
   const onChangeInternal = useCallback(
     (value: any) => {
@@ -105,19 +119,27 @@ export const List: FC<ListProps> = ({
         onChange(value);
       }
     },
-    [onChange]
+    [onChange],
   );
   const onCancelDelete = useCallback(() => {
     setTryingToDeleteSelectedItems(false);
   }, [setTryingToDeleteSelectedItems]);
   const onConfirmDelete = useCallback(() => {
-    const newItems = items.filter((_, index) => !selectedIndices.includes(index));
+    const newItems = items.filter(
+      (_, index) => !selectedIndices.includes(index),
+    );
 
     onChangeInternal(newItems);
 
     setTryingToDeleteSelectedItems(false);
     setSelectedIndices([]);
-  }, [items, onChangeInternal, selectedIndices, setTryingToDeleteSelectedItems, setSelectedIndices]);
+  }, [
+    items,
+    onChangeInternal,
+    selectedIndices,
+    setTryingToDeleteSelectedItems,
+    setSelectedIndices,
+  ]);
   const onAddItem = useCallback(() => {
     onChangeInternal([...items, getDefaultItemForTypeStructure(typeStructure)]);
   }, [items, onChangeInternal, typeStructure]);
@@ -133,7 +155,7 @@ export const List: FC<ListProps> = ({
         });
       }
     },
-    [onNavigateToPath, items, getItemLabel]
+    [onNavigateToPath, items, getItemLabel],
   );
   const onToggleItemSelected = useCallback(
     (index: number) => {
@@ -143,7 +165,7 @@ export const List: FC<ListProps> = ({
         setSelectedIndices([...selectedIndices, index]);
       }
     },
-    [selectedIndices, setSelectedIndices]
+    [selectedIndices, setSelectedIndices],
   );
   const onSetItemsAreMoving = useCallback(() => {
     setItemsAreMoving(true);
@@ -172,7 +194,7 @@ export const List: FC<ListProps> = ({
 
       onCleanupMovingItems();
     },
-    [items, onChangeInternal, onCleanupMovingItems, selectedIndices]
+    [items, onChangeInternal, onCleanupMovingItems, selectedIndices],
   );
   const onSelectAllItems = useCallback(() => {
     setSelectedIndices(items.map((_, index) => index));
@@ -185,7 +207,8 @@ export const List: FC<ListProps> = ({
     <LayoutBox $allowShrink>
       <LayoutBox $allowShrink>
         {items.map((item, index) => {
-          return itemsAreMoving && selectedIndices.includes(index) ? undefined : (
+          return itemsAreMoving &&
+            selectedIndices.includes(index) ? undefined : (
             <ItemBase key={index}>
               {itemsAreMoving ? (
                 <SelectItemButton index={index} onSelectItem={onMoveItems}>
@@ -211,7 +234,10 @@ export const List: FC<ListProps> = ({
           <>
             {itemsAreMoving ? (
               <>
-                <SelectItemButton index={items.length} onSelectItem={onMoveItems}>
+                <SelectItemButton
+                  index={items.length}
+                  onSelectItem={onMoveItems}
+                >
                   Move Here
                 </SelectItemButton>
                 <button onClick={onCleanupMovingItems}>Cancel</button>
@@ -219,7 +245,9 @@ export const List: FC<ListProps> = ({
             ) : tryingToDeleteSelectedItems ? (
               <>
                 <button onClick={onCancelDelete}>Cancel Delete</button>
-                <DeleteButton onClick={onConfirmDelete}>Confirm Delete</DeleteButton>
+                <DeleteButton onClick={onConfirmDelete}>
+                  Confirm Delete
+                </DeleteButton>
               </>
             ) : (
               <>
@@ -232,7 +260,9 @@ export const List: FC<ListProps> = ({
         ) : undefined}
         {itemsAreMoving ? undefined : (
           <>
-            {selectedIndices.length < items.length ? <button onClick={onSelectAllItems}>Select All</button> : undefined}
+            {selectedIndices.length < items.length ? (
+              <button onClick={onSelectAllItems}>Select All</button>
+            ) : undefined}
             <button onClick={onAddItem}>+ Add Item</button>
             <button onClick={onNavigateBack}>Done</button>
           </>

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from "react";
 import {
   getTagValue,
   getTagValues,
@@ -9,20 +9,20 @@ import {
   TAG_TYPES,
   TypeStructure,
   TypeStructureMap,
-} from './TypeParsing/TypeUtils';
-import { Input } from './Input';
-import { Form } from './Form';
-import { NavigateBackHandler, NavigateToHandler } from './Navigation';
-import HashMatrix from './ValueProcessing/HashMatrix';
+} from "./TypeParsing/TypeUtils";
+import { Input } from "./Input";
+import { Form } from "./Form";
+import { NavigateBackHandler, NavigateToHandler } from "./Navigation";
+import HashMatrix from "./ValueProcessing/HashMatrix";
 import {
   getLayoutContainerCSS,
   getTypeStructureLayoutGridTemplate,
   LayoutBox,
   LayoutContainerProps,
   LayoutControls,
-} from './Layout';
-import styled, { css } from 'styled-components';
-import { DataTypeMap } from './HelperTypes';
+} from "./Layout";
+import styled, { css } from "styled-components";
+import { DataTypeMap } from "./HelperTypes";
 
 const LayoutForm = styled(Form)<LayoutContainerProps>`
   ${(p) => getLayoutContainerCSS(p)}
@@ -38,7 +38,7 @@ const OpenFormButtonBase = styled.button<OpenFormButtonBaseProps>`
       ? css`
           grid-area: ${p.$gridArea};
         `
-      : ''}
+      : ""}
 `;
 
 type OpenFormButtonProps = {
@@ -48,13 +48,23 @@ type OpenFormButtonProps = {
   onOpenForm: (name: string) => void;
 };
 
-const OpenFormButton: FC<OpenFormButtonProps> = ({ disabled = false, name, label, onOpenForm }) => {
+const OpenFormButton: FC<OpenFormButtonProps> = ({
+  disabled = false,
+  name,
+  label,
+  onOpenForm,
+}) => {
   const onOpenFormInternal = useCallback(() => {
     onOpenForm(name);
   }, [name, onOpenForm]);
 
   return (
-    <OpenFormButtonBase disabled={disabled} type="button" $gridArea={name} onClick={onOpenFormInternal}>
+    <OpenFormButtonBase
+      disabled={disabled}
+      type="button"
+      $gridArea={name}
+      onClick={onOpenFormInternal}
+    >
       Edit {label}
     </OpenFormButtonBase>
   );
@@ -84,8 +94,11 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
   isEntryPoint = false,
 }) => {
   const baseTypeStructure = useMemo(() => {
-    const { type: typeStructureType = '' } = typeStructure;
-    const topLevelTypeStructure = getTypeStructureByName(typeStructureType, typeStructureMap);
+    const { type: typeStructureType = "" } = typeStructure;
+    const topLevelTypeStructure = getTypeStructureByName(
+      typeStructureType,
+      typeStructureMap,
+    );
 
     return { ...topLevelTypeStructure, ...typeStructure };
   }, [typeStructureMap, typeStructure]);
@@ -100,7 +113,7 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
     return getTypeStructureWithFilteredContent(contentNames, baseTypeStructure);
   }, [baseTypeStructure]);
   const {
-    name: typeStructureName = '',
+    name: typeStructureName = "",
     type: typeStructureType,
     content: typeStructureContent = [],
     readonly = false,
@@ -122,37 +135,52 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
           TAG_TYPES.optionsType,
           TAG_TYPES.allowCustomValue,
         ],
-        cleanTypeStructure
+        cleanTypeStructure,
       ),
-    [cleanTypeStructure]
+    [cleanTypeStructure],
   );
   const typeStructureOptions = useMemo(() => {
-    if (typeof typeStructureOptionsString === 'string') {
+    if (typeof typeStructureOptionsString === "string") {
       return (
         typeStructureOptionsString
-          .split('\n')
-          .map((l) => l.split(','))
+          .split("\n")
+          .map((l) => l.split(","))
           // @ts-ignore
           .flat()
           .map((l: string) => l.trim())
       );
     } else {
-      return typeStructureOptionsTypeName && typeof typeStructureOptionsTypeName === 'string'
+      return typeStructureOptionsTypeName &&
+        typeof typeStructureOptionsTypeName === "string"
         ? getTypeStructureByName(typeStructureOptionsTypeName, typeStructureMap)
         : undefined;
     }
-  }, [typeStructureOptionsString, typeStructureOptionsTypeName, typeStructureMap]);
-  const hasTypeStructureLayout = useMemo(() => typeof typeStructureLayout === 'string', [typeStructureLayout]);
+  }, [
+    typeStructureOptionsString,
+    typeStructureOptionsTypeName,
+    typeStructureMap,
+  ]);
+  const hasTypeStructureLayout = useMemo(
+    () => typeof typeStructureLayout === "string",
+    [typeStructureLayout],
+  );
   const [internalValueBase, setInternalValue] = useState(value);
   const valueLastChanged = useMemo(() => new Date().getTime(), [value]);
-  const internalValueLastChanged = useMemo(() => new Date().getTime(), [internalValueBase]);
-  const internalValue = useMemo(
-    () => (valueLastChanged > internalValueLastChanged ? value : internalValueBase),
-    [value, internalValueBase, valueLastChanged, internalValueLastChanged]
+  const internalValueLastChanged = useMemo(
+    () => new Date().getTime(),
+    [internalValueBase],
   );
-  const hasChanges = useMemo(() => internalValue !== value, [internalValue, value]);
+  const internalValue = useMemo(
+    () =>
+      valueLastChanged > internalValueLastChanged ? value : internalValueBase,
+    [value, internalValueBase, valueLastChanged, internalValueLastChanged],
+  );
+  const hasChanges = useMemo(
+    () => internalValue !== value,
+    [internalValue, value],
+  );
   const submissionTypeName = useMemo(() => {
-    return topLevel ? '' : typeStructureName;
+    return topLevel ? "" : typeStructureName;
   }, [topLevel, typeStructureName]);
   const onFormSubmit = useCallback(() => {
     onChange(submissionTypeName, internalValue);
@@ -173,7 +201,7 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
     (_n: string, v: any) => {
       setInternalValue(v);
     },
-    [setInternalValue]
+    [setInternalValue],
   );
   const onPropertyChange = useCallback(
     (n: string, v: any) => {
@@ -188,30 +216,52 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
         onChange(submissionTypeName, newValue);
       }
     },
-    [internalValue, setInternalValue, topLevel, isEntryPoint, onChange, submissionTypeName]
+    [
+      internalValue,
+      setInternalValue,
+      topLevel,
+      isEntryPoint,
+      onChange,
+      submissionTypeName,
+    ],
   );
   const onNavigateToPathInternal = useCallback(
     (path: string[] = []) => {
       if (onNavigateToPath) {
-        const targetValue = new HashMatrix({ hashMatrix: internalValue }).getPath(path);
-        const targetTypeStructure = getTypeStructureByPath(path, cleanTypeStructure, typeStructureMap);
+        const targetValue = new HashMatrix({
+          hashMatrix: internalValue,
+        }).getPath(path);
+        const targetTypeStructure = getTypeStructureByPath(
+          path,
+          cleanTypeStructure,
+          typeStructureMap,
+        );
         const { multiple: ttsMultiple } = targetTypeStructure;
         const targetLabel = getTagValue(TAG_TYPES.label, targetTypeStructure);
-        const cleanTargetLabel = typeof targetLabel === 'string' ? targetLabel : '';
+        const cleanTargetLabel =
+          typeof targetLabel === "string" ? targetLabel : "";
 
         onNavigateToPath({
-          label: ttsMultiple ? cleanTargetLabel : getValueLabel(targetValue, targetTypeStructure, typeStructureMap),
+          label: ttsMultiple
+            ? cleanTargetLabel
+            : getValueLabel(targetValue, targetTypeStructure, typeStructureMap),
           path: [...navigationPathPrefix, ...path],
         });
       }
     },
-    [onNavigateToPath, navigationPathPrefix, internalValue, cleanTypeStructure, typeStructureMap]
+    [
+      onNavigateToPath,
+      navigationPathPrefix,
+      internalValue,
+      cleanTypeStructure,
+      typeStructureMap,
+    ],
   );
   const onOpenForm = useCallback(
     (name: string) => {
       onNavigateToPathInternal([name]);
     },
-    [onNavigateToPathInternal]
+    [onNavigateToPathInternal],
   );
   const FormComp: FC = topLevel ? LayoutForm : LayoutBox;
   const formProps = useMemo(() => {
@@ -223,7 +273,10 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
   const layoutBoxProps = useMemo(() => {
     return {
       $isGrid: hasTypeStructureLayout,
-      $gridTemplate: getTypeStructureLayoutGridTemplate(typeStructureLayout, topLevel),
+      $gridTemplate: getTypeStructureLayoutGridTemplate(
+        typeStructureLayout,
+        topLevel,
+      ),
     };
   }, [hasTypeStructureLayout, typeStructureLayout, topLevel]);
   const controls = useMemo(() => {
@@ -233,8 +286,8 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
           <LayoutControls>
             <button
               style={{
-                flex: '1 0 auto',
-                width: 'auto',
+                flex: "1 0 auto",
+                width: "auto",
               }}
               type="button"
               onClick={onCancelForm}
@@ -243,8 +296,8 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
             </button>
             <button
               style={{
-                flex: '1 0 auto',
-                width: 'auto',
+                flex: "1 0 auto",
+                width: "auto",
               }}
               type="button"
               onClick={onResetForm}
@@ -253,8 +306,8 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
             </button>
             <button
               style={{
-                flex: '1 0 auto',
-                width: 'auto',
+                flex: "1 0 auto",
+                width: "auto",
               }}
               type="submit"
             >
@@ -266,8 +319,8 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
           <LayoutControls>
             <button
               style={{
-                flex: '1 0 auto',
-                width: 'auto',
+                flex: "1 0 auto",
+                width: "auto",
               }}
               type="button"
               onClick={onCancelForm}
@@ -278,7 +331,14 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
         ) : undefined}
       </>
     );
-  }, [topLevel, isEntryPoint, hasChanges, onCancelForm, onResetForm, onFormSubmit]);
+  }, [
+    topLevel,
+    isEntryPoint,
+    hasChanges,
+    onCancelForm,
+    onResetForm,
+    onFormSubmit,
+  ]);
 
   if (isForm) {
     return (
@@ -286,17 +346,26 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
         <LayoutBox $allowShrink={topLevel}>
           <LayoutBox {...(layoutBoxProps as any)} $allowShrink={false}>
             {typeStructureContent.map((tS) => {
-              const { name: tSName, literal: tSLiteral = false, type: tSType, multiple: tSMultiple } = tS;
-              const { [TAG_TYPES.inline]: tSInline, [TAG_TYPES.label]: tSLabel } = getTagValues(
-                [TAG_TYPES.inline, TAG_TYPES.label],
-                tS
-              );
-              const inputLabel = typeof tSLabel === 'string' ? tSLabel : tSName;
-              const tSTypeIsTypeStructure = typeof tSType === 'string' && !!typeStructureMap[tSType];
+              const {
+                name: tSName,
+                literal: tSLiteral = false,
+                type: tSType,
+                multiple: tSMultiple,
+              } = tS;
+              const {
+                [TAG_TYPES.inline]: tSInline,
+                [TAG_TYPES.label]: tSLabel,
+              } = getTagValues([TAG_TYPES.inline, TAG_TYPES.label], tS);
+              const inputLabel = typeof tSLabel === "string" ? tSLabel : tSName;
+              const tSTypeIsTypeStructure =
+                typeof tSType === "string" && !!typeStructureMap[tSType];
               const useInputType = !tSTypeIsTypeStructure;
               const isHelperType = tSType in DataTypeMap;
 
-              if (!tSMultiple && (isHelperType || tSLiteral || tSInline || useInputType)) {
+              if (
+                !tSMultiple &&
+                (isHelperType || tSLiteral || tSInline || useInputType)
+              ) {
                 return (
                   <TypeStructureComponent
                     key={tSName}
@@ -330,7 +399,7 @@ export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
       <Input
         key={typeStructureName}
         name={typeStructureName}
-        label={`${typeStructureLabel ?? ''}`}
+        label={`${typeStructureLabel ?? ""}`}
         value={topLevel ? internalValue : value}
         type={typeStructureType}
         onChange={topLevel ? onPrimitiveChangeInternal : onChange}

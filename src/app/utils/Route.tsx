@@ -1,12 +1,23 @@
-import React, { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
-import { getParamsAndTestPath, mergeStringPaths, resolvePath } from '../../common/utils/Routing';
+import React, {
+  createContext,
+  PropsWithChildren,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  getParamsAndTestPath,
+  mergeStringPaths,
+  resolvePath,
+} from "../../common/utils/Routing";
 
 (function (history) {
   const pushState = history.pushState;
 
   history.pushState = function (state, title, url) {
     // @ts-ignore
-    if (typeof history.onpushstate == 'function') {
+    if (typeof history.onpushstate == "function") {
       // @ts-ignore
       history.onpushstate({ state: state });
     }
@@ -15,7 +26,7 @@ import { getParamsAndTestPath, mergeStringPaths, resolvePath } from '../../commo
     const result = pushState.apply(history, arguments);
 
     // Dispatch a custom event 'statechanged'
-    window.dispatchEvent(new CustomEvent('statechanged', { detail: state }));
+    window.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
 
     return result;
   };
@@ -31,10 +42,13 @@ export type RouteContextType = {
 
 export const RouteContext = createContext<RouteContextType>({
   currentWindowPath: CURRENT_PATH,
-  parentPath: '',
+  parentPath: "",
   params: {},
 });
-export const { Provider: RouteContextProvider, Consumer: RouteContextConsumer } = RouteContext;
+export const {
+  Provider: RouteContextProvider,
+  Consumer: RouteContextConsumer,
+} = RouteContext;
 
 export const useRouteContext = () => useContext(RouteContext);
 
@@ -48,25 +62,37 @@ export const Route = <ParamsType extends Record<string, any>>({
   /**
    * Use `:` as the first character to denote a parameter in the path.
    * */
-  path = '',
+  path = "",
   onParamsChange,
   exact = false,
   children,
 }: PropsWithChildren<RouteProps<ParamsType>>) => {
-  const [currentPath = '', setCurrentPath] = useState<string>(CURRENT_PATH);
-  const { currentWindowPath = '', parentPath = '', params: parentParams = {} } = useRouteContext();
+  const [currentPath = "", setCurrentPath] = useState<string>(CURRENT_PATH);
+  const {
+    currentWindowPath = "",
+    parentPath = "",
+    params: parentParams = {},
+  } = useRouteContext();
   const isTopLevel = useMemo(() => !parentPath, [parentPath]);
-  const fullPath = useMemo(() => mergeStringPaths(parentPath, path), [parentPath, path]);
+  const fullPath = useMemo(
+    () => mergeStringPaths(parentPath, path),
+    [parentPath, path],
+  );
   const newParams = useMemo(
-    () => getParamsAndTestPath(isTopLevel ? currentPath : currentWindowPath, fullPath, exact),
-    [isTopLevel, currentPath, currentWindowPath, fullPath, exact]
+    () =>
+      getParamsAndTestPath(
+        isTopLevel ? currentPath : currentWindowPath,
+        fullPath,
+        exact,
+      ),
+    [isTopLevel, currentPath, currentWindowPath, fullPath, exact],
   );
   const params = useMemo(
     () => ({
       ...parentParams,
       ...(newParams ? newParams : {}),
     }),
-    [parentParams, newParams]
+    [parentParams, newParams],
   );
   const newRouteContext = useMemo(
     () => ({
@@ -74,7 +100,7 @@ export const Route = <ParamsType extends Record<string, any>>({
       parentPath: fullPath,
       params,
     }),
-    [currentPath, fullPath, params]
+    [currentPath, fullPath, params],
   );
 
   useEffect(() => {
@@ -88,16 +114,20 @@ export const Route = <ParamsType extends Record<string, any>>({
       const handleAnchorClick = (event: MouseEvent) => {
         let target: Node | ParentNode | null = event.target as Node;
 
-        while (target && target.nodeName !== 'A') {
+        while (target && target.nodeName !== "A") {
           target = target.parentNode;
         }
 
-        if (target && target.nodeName === 'A') {
+        if (target && target.nodeName === "A") {
           const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
-          const href = aTarget.getAttribute('href');
+          const href = aTarget.getAttribute("href");
 
           event.preventDefault();
-          history.pushState({}, '', resolvePath(window.location.pathname, href ? href : ''));
+          history.pushState(
+            {},
+            "",
+            resolvePath(window.location.pathname, href ? href : ""),
+          );
           setCurrentPath(window.location.pathname);
         }
       };
@@ -105,17 +135,21 @@ export const Route = <ParamsType extends Record<string, any>>({
         setCurrentPath(window.location.pathname);
       };
 
-      window.document.addEventListener('click', handleAnchorClick);
-      window.addEventListener('popstate', handlePopOrReplaceState);
-      window.addEventListener('statechanged', handlePopOrReplaceState);
+      window.document.addEventListener("click", handleAnchorClick);
+      window.addEventListener("popstate", handlePopOrReplaceState);
+      window.addEventListener("statechanged", handlePopOrReplaceState);
 
       return () => {
-        window.document.removeEventListener('click', handleAnchorClick);
-        window.removeEventListener('popstate', handlePopOrReplaceState);
-        window.removeEventListener('statechanged', handlePopOrReplaceState);
+        window.document.removeEventListener("click", handleAnchorClick);
+        window.removeEventListener("popstate", handlePopOrReplaceState);
+        window.removeEventListener("statechanged", handlePopOrReplaceState);
       };
     }
   }, [parentPath]);
 
-  return newParams ? <RouteContextProvider value={newRouteContext}>{children}</RouteContextProvider> : null;
+  return newParams ? (
+    <RouteContextProvider value={newRouteContext}>
+      {children}
+    </RouteContextProvider>
+  ) : null;
 };

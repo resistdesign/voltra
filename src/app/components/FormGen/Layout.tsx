@@ -1,42 +1,49 @@
-import styled, { css } from 'styled-components';
+import styled, { css } from "styled-components";
 
-export const FORM_CONTROLS_GRID_AREA = 'FORM_CONTROLS_GRID_AREA';
+export const FORM_CONTROLS_GRID_AREA = "FORM_CONTROLS_GRID_AREA";
 
 export const getTypeStructureLayoutGridTemplate = (
-  typeStructureLayout: string | boolean = '',
-  topLevel: boolean = false
+  typeStructureLayout: string | boolean = "",
+  topLevel: boolean = false,
 ): string => {
-  const hasTemplate = typeof typeStructureLayout === 'string' && !!typeStructureLayout.replace(/\s/g, () => '');
+  const hasTemplate =
+    typeof typeStructureLayout === "string" &&
+    !!typeStructureLayout.replace(/\s/g, () => "");
 
   if (hasTemplate) {
     const gridTemplateRows = typeStructureLayout
-      .split('\n')
+      .split("\n")
       .map((l) => l.trim())
       .filter((l) => !!l);
     const maxColCount = gridTemplateRows.reduce((acc, row) => {
-      const colCount = row.split(' ').length;
+      const colCount = row.split(" ").length;
 
       return Math.max(acc, colCount);
     }, 1);
-    const rowsWithControls = topLevel ? [...gridTemplateRows, FORM_CONTROLS_GRID_AREA] : gridTemplateRows;
+    const rowsWithControls = topLevel
+      ? [...gridTemplateRows, FORM_CONTROLS_GRID_AREA]
+      : gridTemplateRows;
     const filledGridTemplateRows = rowsWithControls.map((row) => {
-      const existingCols = row.split(' ');
+      const existingCols = row.split(" ");
       const colCount = existingCols.length;
       const ratio = maxColCount / colCount;
 
       return existingCols
         .reduce((acc: string[], c: string, ind: number) => {
-          const intRatio = ind === existingCols.length - 1 ? Math.ceil(ratio) : Math.floor(ratio);
+          const intRatio =
+            ind === existingCols.length - 1
+              ? Math.ceil(ratio)
+              : Math.floor(ratio);
           const newCols = new Array(intRatio).fill(c);
 
           return [...acc, ...newCols];
         }, [])
-        .join(' ');
+        .join(" ");
     });
 
-    return filledGridTemplateRows.map((l) => `"${l}"`).join('\n');
+    return filledGridTemplateRows.map((l) => `"${l}"`).join("\n");
   } else {
-    return '';
+    return "";
   }
 };
 
@@ -59,14 +66,18 @@ export const LayoutMediaCSS = css`
     ${LayoutDefaultColumnCSS}
   }
 `;
-export const getLayoutContainerCSS = ({ $isGrid = false, $gridTemplate, $gridArea }: LayoutContainerProps) => css`
-  grid-area: ${$gridArea ? $gridArea : 'auto'};
-  display: ${$isGrid ? 'grid' : 'flex'};
-  grid-template: ${$gridTemplate ? $gridTemplate : 'auto'};
+export const getLayoutContainerCSS = ({
+  $isGrid = false,
+  $gridTemplate,
+  $gridArea,
+}: LayoutContainerProps) => css`
+  grid-area: ${$gridArea ? $gridArea : "auto"};
+  display: ${$isGrid ? "grid" : "flex"};
+  grid-template: ${$gridTemplate ? $gridTemplate : "auto"};
   gap: 1em;
   overflow: auto;
 
-  ${!$gridTemplate ? LayoutDefaultColumnCSS : ''}
+  ${!$gridTemplate ? LayoutDefaultColumnCSS : ""}
 
   ${LayoutMediaCSS}
 `;

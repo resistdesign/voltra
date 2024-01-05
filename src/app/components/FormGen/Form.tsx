@@ -1,4 +1,10 @@
-import { ChangeEvent, FC, HTMLAttributes, PropsWithChildren, useCallback } from 'react';
+import {
+  ChangeEvent,
+  FC,
+  HTMLAttributes,
+  PropsWithChildren,
+  useCallback,
+} from "react";
 
 export type FormProps = PropsWithChildren<
   HTMLAttributes<HTMLFormElement> & {
@@ -13,7 +19,7 @@ export const Form: FC<FormProps> = ({ onSubmit, children, ...otherProps }) => {
 
       onSubmit();
     },
-    [onSubmit]
+    [onSubmit],
   );
 
   return (

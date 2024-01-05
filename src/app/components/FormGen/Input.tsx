@@ -1,21 +1,22 @@
-import React, { ChangeEvent, FC, FormEvent, useCallback, useMemo } from 'react';
-import { TypeStructure } from './TypeParsing/TypeUtils';
-import { getUUID } from './IdUtils';
-import styled from 'styled-components';
-import { DataTypeMap } from './HelperTypes';
+import React, { ChangeEvent, FC, FormEvent, useCallback, useMemo } from "react";
+import { TypeStructure } from "./TypeParsing/TypeUtils";
+import { getUUID } from "./IdUtils";
+import styled from "styled-components";
+import { DataTypeMap } from "./HelperTypes";
 
-const getInputTypeForTypeStructureType = (type: string) => DataTypeMap[type as keyof typeof DataTypeMap] || 'text';
+const getInputTypeForTypeStructureType = (type: string) =>
+  DataTypeMap[type as keyof typeof DataTypeMap] || "text";
 
 const InputBase = styled.input`
-  &[type='date']:before {
+  &[type="date"]:before {
     content: attr(placeholder) !important;
     color: var(--form-element-placeholder-color);
     margin-right: 0.5em;
   }
 
-  &[type='date']:focus:before,
-  &[type='date']:valid:before {
-    content: '';
+  &[type="date"]:focus:before,
+  &[type="date"]:valid:before {
+    content: "";
   }
 `;
 const RatingBase = styled.fieldset`
@@ -31,7 +32,7 @@ const RatingBase = styled.fieldset`
 `;
 const RatingStarContainer = styled.label`
   &:before {
-    content: '★';
+    content: "★";
     color: var(--pico-form-element-color);
     cursor: pointer;
   }
@@ -59,8 +60,8 @@ export type InputProps = {
 
 export const Input: FC<InputProps> = ({
   name,
-  label = '',
-  type = 'string',
+  label = "",
+  type = "string",
   value,
   onChange,
   options,
@@ -75,11 +76,17 @@ export const Input: FC<InputProps> = ({
     } else {
       const { content = [] } = options || {};
 
-      return content.map(({ type }) => type.replace(/['"]/gim, () => ''));
+      return content.map(({ type }) => type.replace(/['"]/gim, () => ""));
     }
   }, [options]);
   const onChangeInternal = useCallback(
-    (event: FormEvent<HTMLInputElement> | ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    (
+      event:
+        | FormEvent<HTMLInputElement>
+        | ChangeEvent<
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+          >,
+    ) => {
       if (onChange) {
         const { target } = event;
         const { checked, value: inputValue } = target as any;
@@ -87,37 +94,68 @@ export const Input: FC<InputProps> = ({
           convertedType === DataTypeMap.boolean
             ? checked ?? false
             : convertedType === DataTypeMap.Rating
-            ? parseInt(inputValue, 10)
-            : inputValue;
+              ? parseInt(inputValue, 10)
+              : inputValue;
 
         onChange(name, newValue);
       }
     },
-    [name, convertedType, value, onChange]
+    [name, convertedType, value, onChange],
   );
   const cleanValue = useMemo(
-    () => (convertedType === DataTypeMap.boolean ? value ?? false : value ?? ''),
-    [convertedType, value]
+    () =>
+      convertedType === DataTypeMap.boolean ? value ?? false : value ?? "",
+    [convertedType, value],
   );
   const styleObj = useMemo(() => ({ gridArea: name }), [name]);
 
-  return type === 'Rating' ? (
+  return type === "Rating" ? (
     <RatingBase disabled={readonly}>
       <legend>{label}</legend>
       <RatingStarContainer>
-        <RatingStar type="radio" readOnly value={1} checked={cleanValue >= 1} onClick={onChangeInternal} />
+        <RatingStar
+          type="radio"
+          readOnly
+          value={1}
+          checked={cleanValue >= 1}
+          onClick={onChangeInternal}
+        />
       </RatingStarContainer>
       <RatingStarContainer>
-        <RatingStar type="radio" readOnly value={2} checked={cleanValue >= 2} onClick={onChangeInternal} />
+        <RatingStar
+          type="radio"
+          readOnly
+          value={2}
+          checked={cleanValue >= 2}
+          onClick={onChangeInternal}
+        />
       </RatingStarContainer>
       <RatingStarContainer>
-        <RatingStar type="radio" readOnly value={3} checked={cleanValue >= 3} onClick={onChangeInternal} />
+        <RatingStar
+          type="radio"
+          readOnly
+          value={3}
+          checked={cleanValue >= 3}
+          onClick={onChangeInternal}
+        />
       </RatingStarContainer>
       <RatingStarContainer>
-        <RatingStar type="radio" readOnly value={4} checked={cleanValue >= 4} onClick={onChangeInternal} />
+        <RatingStar
+          type="radio"
+          readOnly
+          value={4}
+          checked={cleanValue >= 4}
+          onClick={onChangeInternal}
+        />
       </RatingStarContainer>
       <RatingStarContainer>
-        <RatingStar type="radio" readOnly value={5} checked={cleanValue >= 5} onClick={onChangeInternal} />
+        <RatingStar
+          type="radio"
+          readOnly
+          value={5}
+          checked={cleanValue >= 5}
+          onClick={onChangeInternal}
+        />
       </RatingStarContainer>
     </RatingBase>
   ) : convertedType === DataTypeMap.boolean ? (
@@ -139,7 +177,12 @@ export const Input: FC<InputProps> = ({
       rows={5}
     />
   ) : options && !allowCustomValue ? (
-    <select disabled={readonly} value={cleanValue} onChange={onChangeInternal} style={styleObj}>
+    <select
+      disabled={readonly}
+      value={cleanValue}
+      onChange={onChangeInternal}
+      style={styleObj}
+    >
       <option value="">{label}</option>
       {optionsList.map((o, index) => (
         <option key={index} value={o}>

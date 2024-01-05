@@ -1,7 +1,7 @@
-import 'material-symbols';
-import { FC, HTMLAttributes, PropsWithChildren } from 'react';
+import "material-symbols";
+import { FC, HTMLAttributes, PropsWithChildren } from "react";
 
-export type MaterialSymbolVariant = 'outlined' | 'rounded' | 'sharp';
+export type MaterialSymbolVariant = "outlined" | "rounded" | "sharp";
 
 export type MaterialSymbolProps = PropsWithChildren<
   HTMLAttributes<HTMLSpanElement> & {
@@ -10,7 +10,7 @@ export type MaterialSymbolProps = PropsWithChildren<
 >;
 
 export const MaterialSymbol: FC<MaterialSymbolProps> = ({
-  variant = 'outlined',
+  variant = "outlined",
   children,
   ...rest
 }: MaterialSymbolProps) => (

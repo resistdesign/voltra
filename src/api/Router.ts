@@ -1,4 +1,4 @@
-import { mergeStringPaths } from '../../common/utils/Routing';
+import { mergeStringPaths } from "../../common/utils/Routing";
 import {
   CloudFunctionEventRouter,
   CloudFunctionEventTransformer,
@@ -8,11 +8,15 @@ import {
   Route,
   RouteHandler,
   RouteMap,
-} from './Router/Types';
-import { getRouteIsAuthorized } from './Router/Auth';
-import { getHeadersWithCORS } from './Router/CORS';
+} from "./Router/Types";
+import { getRouteIsAuthorized } from "./Router/Auth";
+import { getHeadersWithCORS } from "./Router/CORS";
 
-export const addRouteToRouteMap = (routeMap: RouteMap, route: Route, basePath: string = ''): RouteMap => {
+export const addRouteToRouteMap = (
+  routeMap: RouteMap,
+  route: Route,
+  basePath: string = "",
+): RouteMap => {
   const { path: routePath } = route;
   const path = mergeStringPaths(basePath, routePath);
 
@@ -22,7 +26,11 @@ export const addRouteToRouteMap = (routeMap: RouteMap, route: Route, basePath: s
   };
 };
 
-export const addRoutesToRouteMap = (routeMap: RouteMap, routes: Route[], basePath: string = ''): RouteMap => {
+export const addRoutesToRouteMap = (
+  routeMap: RouteMap,
+  routes: Route[],
+  basePath: string = "",
+): RouteMap => {
   let newRouteMap = {
     ...routeMap,
   };
@@ -34,7 +42,11 @@ export const addRoutesToRouteMap = (routeMap: RouteMap, routes: Route[], basePat
   return newRouteMap;
 };
 
-export const addRouteMapToRouteMap = (routeMap: RouteMap, routeMapToAdd: RouteMap, basePath: string = ''): RouteMap => {
+export const addRouteMapToRouteMap = (
+  routeMap: RouteMap,
+  routeMapToAdd: RouteMap,
+  basePath: string = "",
+): RouteMap => {
   const newRouteMap = {
     ...routeMap,
   };
@@ -53,9 +65,10 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
   event: any,
   eventTransformer: CloudFunctionEventTransformer,
   routeMap: RouteMap,
-  allowedOrigins: CORSPatter[]
+  allowedOrigins: CORSPatter[],
 ): Promise<CloudFunctionResponse> => {
-  let transformedEvent: NormalizedCloudFunctionEventData | undefined = undefined;
+  let transformedEvent: NormalizedCloudFunctionEventData | undefined =
+    undefined;
 
   try {
     transformedEvent = eventTransformer(event);
@@ -67,23 +80,27 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
     const {
       authInfo,
       headers: { origin: originItems = [] } = {},
-      path = '',
+      path = "",
       // IMPORTANT: Respond automatically to all OPTIONS requests.
       method,
       // IMPORTANT: Should be an array of arguments.
       body = [],
     } = transformedEvent;
     const providedOrigin = originItems[0];
-    const normalizedOrigin = typeof providedOrigin === 'string' ? providedOrigin : '';
+    const normalizedOrigin =
+      typeof providedOrigin === "string" ? providedOrigin : "";
     const normalizedBody = Array.isArray(body) ? body : [body];
     const route = routeMap[path];
-    const responseHeaders = getHeadersWithCORS(normalizedOrigin, allowedOrigins);
+    const responseHeaders = getHeadersWithCORS(
+      normalizedOrigin,
+      allowedOrigins,
+    );
 
-    if (method === 'OPTIONS') {
+    if (method === "OPTIONS") {
       return {
         statusCode: 200,
         headers: responseHeaders,
-        body: 'OK',
+        body: "OK",
       };
     } else {
       if (route) {
@@ -91,7 +108,9 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
         const requestIsAuthorized = getRouteIsAuthorized(authInfo, authConfig);
 
         if (requestIsAuthorized) {
-          const handlerInstance: RouteHandler = handler ? handler : handlerFactory(transformedEvent);
+          const handlerInstance: RouteHandler = handler
+            ? handler
+            : handlerFactory(transformedEvent);
 
           try {
             const result = await handlerInstance(...normalizedBody);
@@ -102,19 +121,19 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
               body: JSON.stringify(result),
             };
           } catch (error) {
-            console.log('Handler Failed:', `${error}`);
+            console.log("Handler Failed:", `${error}`);
 
             return {
               statusCode: 500,
               headers: responseHeaders,
-              body: 'Internal Server Error',
+              body: "Internal Server Error",
             };
           }
         } else {
           return {
             statusCode: 401,
             headers: responseHeaders,
-            body: 'Unauthorized',
+            body: "Unauthorized",
           };
         }
       }
@@ -122,7 +141,7 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
       return {
         statusCode: 404,
         headers: responseHeaders,
-        body: 'Not Found',
+        body: "Not Found",
       };
     }
   }
@@ -130,6 +149,6 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
   return {
     statusCode: 500,
     headers: {},
-    body: 'Internal Server Error',
+    body: "Internal Server Error",
   };
 };

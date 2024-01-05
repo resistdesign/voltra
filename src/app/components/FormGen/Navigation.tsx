@@ -1,11 +1,20 @@
-import React, { FC, MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styled from 'styled-components';
-import { getLocalJSON, LocalJSON } from './Storage/LocalJSON';
+import React, {
+  FC,
+  MouseEvent as ReactMouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import styled from "styled-components";
+import { getLocalJSON, LocalJSON } from "./Storage/LocalJSON";
 
-const TRAIL_PREFIX = 'Trail';
-const MAIN_TRAIL = 'Default';
+const TRAIL_PREFIX = "Trail";
+const MAIN_TRAIL = "Default";
 const TRAIL_SERVICE: LocalJSON = getLocalJSON(TRAIL_PREFIX);
-const DEFAULT_TRAIL: NavigationTrail = (TRAIL_SERVICE.read(MAIN_TRAIL) || []) as any;
+const DEFAULT_TRAIL: NavigationTrail = (TRAIL_SERVICE.read(MAIN_TRAIL) ||
+  []) as any;
 
 export type NavigationPath = (string | number)[];
 
@@ -17,10 +26,10 @@ export type NavigationBreadcrumb = {
 
 export type NavigationTrail = NavigationBreadcrumb[];
 
-export const navigateTo = (breadcrumb: NavigationBreadcrumb, trail: NavigationTrail = []): NavigationTrail => [
-  ...trail,
-  breadcrumb,
-];
+export const navigateTo = (
+  breadcrumb: NavigationBreadcrumb,
+  trail: NavigationTrail = [],
+): NavigationTrail => [...trail, breadcrumb];
 
 export const navigateBack = (trail: NavigationTrail = []): NavigationTrail => {
   const [_lastBreadCrumb, ...newTrail] = [...trail].reverse();
@@ -28,7 +37,9 @@ export const navigateBack = (trail: NavigationTrail = []): NavigationTrail => {
   return newTrail.reverse();
 };
 
-export const getNavigationPath = (trail: NavigationTrail = []): NavigationPath => {
+export const getNavigationPath = (
+  trail: NavigationTrail = [],
+): NavigationPath => {
   return (
     trail
       .map(({ path }) => path)
@@ -52,13 +63,19 @@ export type Navigation = {
 };
 
 export const useNavigation = (storeTrail: boolean = false): Navigation => {
-  const [trail, setTrail] = useState<NavigationTrail>(storeTrail ? DEFAULT_TRAIL : []);
+  const [trail, setTrail] = useState<NavigationTrail>(
+    storeTrail ? DEFAULT_TRAIL : [],
+  );
   const path = useMemo(() => getNavigationPath(trail), [trail]);
   const onNavigateTo = useCallback(
-    (breadcrumb: NavigationBreadcrumb) => setTrail(navigateTo(breadcrumb, trail)),
-    [trail, setTrail]
+    (breadcrumb: NavigationBreadcrumb) =>
+      setTrail(navigateTo(breadcrumb, trail)),
+    [trail, setTrail],
   );
-  const onNavigateBack = useCallback(() => setTrail(navigateBack(trail)), [trail, setTrail]);
+  const onNavigateBack = useCallback(
+    () => setTrail(navigateBack(trail)),
+    [trail, setTrail],
+  );
   const navigation = useMemo(
     () => ({
       trail,
@@ -67,7 +84,7 @@ export const useNavigation = (storeTrail: boolean = false): Navigation => {
       onNavigateBack,
       onSetTrail: setTrail,
     }),
-    [trail, path, onNavigateTo, onNavigateBack]
+    [trail, path, onNavigateTo, onNavigateBack],
   );
 
   useEffect(() => {
@@ -100,7 +117,10 @@ export type NavigationBreadcrumbsProps = {
   onChange: (newTrail: NavigationTrail) => void;
 };
 
-export const NavigationBreadcrumbs: FC<NavigationBreadcrumbsProps> = ({ trail, onChange }) => {
+export const NavigationBreadcrumbs: FC<NavigationBreadcrumbsProps> = ({
+  trail,
+  onChange,
+}) => {
   const listRef = useRef<HTMLDivElement>(null);
   const onGoToBreadcrumb = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>) => {
@@ -112,7 +132,7 @@ export const NavigationBreadcrumbs: FC<NavigationBreadcrumbsProps> = ({ trail, o
 
       onChange(newTrail);
     },
-    [trail, onChange]
+    [trail, onChange],
   );
 
   useEffect(() => {

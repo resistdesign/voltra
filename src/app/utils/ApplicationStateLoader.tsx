@@ -1,6 +1,9 @@
-import { ApplicationStateIdentifier, useApplicationStateValue } from './ApplicationState';
-import { sendServiceRequest, ServiceConfig } from './Service';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ApplicationStateIdentifier,
+  useApplicationStateValue,
+} from "./ApplicationState";
+import { sendServiceRequest, ServiceConfig } from "./Service";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type ApplicationStateLoader = {
   loading: boolean;
@@ -23,8 +26,16 @@ export type ApplicationStateLoaderConfig = {
   manual?: boolean;
 };
 
-export const useApplicationStateLoader = (config: ApplicationStateLoaderConfig): ApplicationStateLoader => {
-  const { identifier, remoteProcedureCall, resetOnError = false, onLoadComplete, manual = false } = config;
+export const useApplicationStateLoader = (
+  config: ApplicationStateLoaderConfig,
+): ApplicationStateLoader => {
+  const {
+    identifier,
+    remoteProcedureCall,
+    resetOnError = false,
+    onLoadComplete,
+    manual = false,
+  } = config;
   const { args = [] } = remoteProcedureCall;
   const argsRef = useRef<any[]>(args);
   argsRef.current = args;
@@ -44,7 +55,11 @@ export const useApplicationStateLoader = (config: ApplicationStateLoaderConfig):
 
       try {
         const { serviceConfig, path } = remoteProcedureCall;
-        const result = await sendServiceRequest(serviceConfig, path, directArgs);
+        const result = await sendServiceRequest(
+          serviceConfig,
+          path,
+          directArgs,
+        );
 
         success = true;
 
@@ -63,7 +78,7 @@ export const useApplicationStateLoader = (config: ApplicationStateLoaderConfig):
 
       onLoadComplete?.(success);
     },
-    [remoteProcedureCall, onChange, resetOnError, onLoadComplete]
+    [remoteProcedureCall, onChange, resetOnError, onLoadComplete],
   );
   const appStateLoader = useMemo(
     () => ({
@@ -72,7 +87,7 @@ export const useApplicationStateLoader = (config: ApplicationStateLoaderConfig):
       invalidate,
       makeRemoteProcedureCall,
     }),
-    [loading, latestError, invalidate, makeRemoteProcedureCall]
+    [loading, latestError, invalidate, makeRemoteProcedureCall],
   );
 
   useEffect(() => {

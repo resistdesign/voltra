@@ -1,5 +1,5 @@
-import { FC, PropsWithChildren } from 'react';
-import styled from 'styled-components';
+import { FC, PropsWithChildren } from "react";
+import styled from "styled-components";
 
 export type FCWithChildren = FC<PropsWithChildren>;
 
@@ -12,31 +12,31 @@ export type LayoutComponents = {
 
 const getPascalCaseAreaName = (area: string): string => {
   return area
-    .split('-')
+    .split("-")
     .map((a) => a[0].toUpperCase() + a.slice(1))
-    .join('');
+    .join("");
 };
 
 const convertLayoutToCSS = (
-  layout: string = ''
+  layout: string = "",
 ): {
   areasList: string[];
   css: string;
 } => {
-  const lines = layout.split('\n');
+  const lines = layout.split("\n");
 
   let areaRows: string[] = [];
   let rows: string[] = [];
-  let css = '';
+  let css = "";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
-    if (line.indexOf('\\') === 0) {
+    if (line.indexOf("\\") === 0) {
       // Column Widths
-      css += `\ngrid-template-columns: ${line.split('\\').join('').trim()};`;
+      css += `\ngrid-template-columns: ${line.split("\\").join("").trim()};`;
     } else {
-      const parts = line.split(',').map((p) => p && p.trim());
+      const parts = line.split(",").map((p) => p && p.trim());
 
       if (parts[0]) {
         areaRows = [...areaRows, parts[0]];
@@ -51,10 +51,12 @@ const convertLayoutToCSS = (
   css += `\ngrid-template-areas:\n${areaRows
     .filter((a) => !!(a && a.trim()))
     .map((a) => `  "${a}"`)
-    .join('\n')};`;
+    .join("\n")};`;
 
   if (rows.length) {
-    css += `\ngrid-template-rows: ${rows.filter((r) => !!(r && r.trim())).join(' ')};`;
+    css += `\ngrid-template-rows: ${rows
+      .filter((r) => !!(r && r.trim()))
+      .join(" ")};`;
   }
 
   const areasList: string[] = Object.keys(
@@ -63,13 +65,13 @@ const convertLayoutToCSS = (
         (acc, a) => [
           ...acc,
           ...a
-            .split(' ')
+            .split(" ")
             .map((a) => a && a.trim())
             .filter((a) => !!a),
         ],
-        [] as string[]
+        [] as string[],
       )
-      .reduce((acc, a) => ({ ...acc, [a]: true }), {})
+      .reduce((acc, a) => ({ ...acc, [a]: true }), {}),
   );
 
   return {
@@ -80,15 +82,18 @@ const convertLayoutToCSS = (
 
 export const getEasyLayout = (
   extendFrom?: FCWithChildren,
-  areasExtendFrom?: FCWithChildren
-): ((layoutTemplate: TemplateStringsArray, ...expressions: any[]) => LayoutComponents) => {
+  areasExtendFrom?: FCWithChildren,
+): ((
+  layoutTemplate: TemplateStringsArray,
+  ...expressions: any[]
+) => LayoutComponents) => {
   return (layoutTemplate, ...expressions) => {
     const mergedTemplate = layoutTemplate.reduce((acc, l, ind) => {
       const expr = expressions[ind - 1];
-      const exprStr = typeof expr === 'undefined' ? '' : expr;
+      const exprStr = typeof expr === "undefined" ? "" : expr;
 
       return `${acc}${l}${exprStr}`;
-    }, '');
+    }, "");
     const { areasList, css } = convertLayoutToCSS(mergedTemplate);
     const baseLayoutComp = extendFrom ? styled(extendFrom) : styled.div;
     const layout = baseLayoutComp`
@@ -97,7 +102,9 @@ export const getEasyLayout = (
   `;
     const areas: ComponentMap = areasList.reduce((acc, area) => {
       const pascalCaseAreaName = getPascalCaseAreaName(area);
-      const baseCompFunc = areasExtendFrom ? styled(areasExtendFrom) : styled.div;
+      const baseCompFunc = areasExtendFrom
+        ? styled(areasExtendFrom)
+        : styled.div;
       const component = baseCompFunc`
       grid-area: ${area};
     `;

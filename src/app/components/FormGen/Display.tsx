@@ -1,5 +1,5 @@
-import React, { FC, HTMLAttributes, useMemo } from 'react';
-import styled from 'styled-components';
+import React, { FC, HTMLAttributes, useMemo } from "react";
+import styled from "styled-components";
 import {
   getMergedTypeStructure,
   getTagValue,
@@ -8,9 +8,9 @@ import {
   TAG_TYPES,
   TypeStructure,
   TypeStructureMap,
-} from './TypeParsing/TypeUtils';
-import { getTypeStructureLayoutGridTemplate, LayoutBox } from './Layout';
-import { DataTypeMap } from './HelperTypes';
+} from "./TypeParsing/TypeUtils";
+import { getTypeStructureLayoutGridTemplate, LayoutBox } from "./Layout";
+import { DataTypeMap } from "./HelperTypes";
 
 const DisplayBase = styled(LayoutBox)`
   flex: 1 1 auto;
@@ -27,12 +27,19 @@ type DisplayProps = HTMLAttributes<HTMLDivElement> & {
   isItem?: boolean;
 };
 
-export const DisplayObject: FC<DisplayProps> = ({ typeStructure, typeStructureMap, value = {}, ...elementProps }) => {
-  const { name = '', content = [] } = typeStructure;
+export const DisplayObject: FC<DisplayProps> = ({
+  typeStructure,
+  typeStructureMap,
+  value = {},
+  ...elementProps
+}) => {
+  const { name = "", content = [] } = typeStructure;
   const displayLayout = useMemo(() => {
     const dL = getTagValue(TAG_TYPES.displayLayout, typeStructure);
 
-    return typeof dL === 'string' ? getTypeStructureLayoutGridTemplate(dL) : undefined;
+    return typeof dL === "string"
+      ? getTypeStructureLayoutGridTemplate(dL)
+      : undefined;
   }, [typeStructure]);
 
   return (
@@ -46,29 +53,60 @@ export const DisplayObject: FC<DisplayProps> = ({ typeStructure, typeStructureMa
       {content.map((item: any, index: number) => {
         const { name } = item;
 
-        return <Display key={index} typeStructure={item} typeStructureMap={typeStructureMap} value={value[name]} />;
+        return (
+          <Display
+            key={index}
+            typeStructure={item}
+            typeStructureMap={typeStructureMap}
+            value={value[name]}
+          />
+        );
       })}
     </DisplayObjectBase>
   );
 };
 
-export const DisplayArray: FC<DisplayProps> = ({ typeStructure, typeStructureMap, value = [], ...elementProps }) => {
-  const { name = '' } = typeStructure;
+export const DisplayArray: FC<DisplayProps> = ({
+  typeStructure,
+  typeStructureMap,
+  value = [],
+  ...elementProps
+}) => {
+  const { name = "" } = typeStructure;
 
   return (
-    <DisplayArrayBase className={`display-array-${name}`} $gridArea={name} {...elementProps}>
+    <DisplayArrayBase
+      className={`display-array-${name}`}
+      $gridArea={name}
+      {...elementProps}
+    >
       {value.map((item: any, index: number) => (
-        <Display key={index} typeStructure={typeStructure} typeStructureMap={typeStructureMap} value={item} isItem />
+        <Display
+          key={index}
+          typeStructure={typeStructure}
+          typeStructureMap={typeStructureMap}
+          value={item}
+          isItem
+        />
       ))}
     </DisplayArrayBase>
   );
 };
 
-export const DisplayPrimitive: FC<DisplayProps> = ({ typeStructure, typeStructureMap, value, ...elementProps }) => {
-  const { name = '' } = typeStructure;
+export const DisplayPrimitive: FC<DisplayProps> = ({
+  typeStructure,
+  typeStructureMap,
+  value,
+  ...elementProps
+}) => {
+  const { name = "" } = typeStructure;
 
   return (
-    <DisplayPrimitiveBase className={`display-primitive-${name}`} $gridArea={name} {...elementProps}>
+    <DisplayPrimitiveBase
+      className={`display-primitive-${name}`}
+      $gridArea={name}
+      {...elementProps}
+    >
       {value}
     </DisplayPrimitiveBase>
   );
@@ -89,8 +127,9 @@ export const Display: FC<DisplayProps> = ({
   }, [typeStructure]);
   const { type, multiple = false } = cleanTypeStructure;
   const typeStructureIsPrimitive = useMemo(
-    () => type in DataTypeMap || getTypeStructureIsPrimitive(cleanTypeStructure),
-    [type, cleanTypeStructure]
+    () =>
+      type in DataTypeMap || getTypeStructureIsPrimitive(cleanTypeStructure),
+    [type, cleanTypeStructure],
   );
 
   return multiple && !isItem ? (

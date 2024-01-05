@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3"
+  },
+  "name": "voltra",
+  "version": "0.0.0",
+  "description": "With our powers combined!",
+  "main": "index.js",
+  "repository": "git@github.com:resistdesign/voltra.git",
+  "author": "Resist Design",
+  "license": "UNLICENSED",
+  "private": true
+}
