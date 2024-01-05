@@ -1,0 +1,19 @@
+export type APIConfig = {
+  CLIENT_ORIGIN: string;
+  DEV_CLIENT_ORIGIN: string;
+  DATABASE_MESSAGE_HISTORY_TABLE_NAME: string;
+  DATABASE_USER_INFO_TABLE_NAME: string;
+  S3_API_BUCKET_NAME: string;
+  OPEN_AI_API_KEY: string;
+  OPEN_AI_MODEL_ID: string;
+};
+
+export const API_CONFIG: APIConfig = {
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || '',
+  DEV_CLIENT_ORIGIN: process.env.DEV_CLIENT_ORIGIN || '',
+  DATABASE_MESSAGE_HISTORY_TABLE_NAME: process.env.DATABASE_MESSAGE_HISTORY_TABLE_NAME || '',
+  DATABASE_USER_INFO_TABLE_NAME: process.env.DATABASE_USER_INFO_TABLE_NAME || '',
+  S3_API_BUCKET_NAME: process.env.S3_API_BUCKET_NAME || '',
+  OPEN_AI_API_KEY: process.env.OPEN_AI_API_KEY || '',
+  OPEN_AI_MODEL_ID: process.env.OPEN_AI_MODEL_ID || '',
+};
