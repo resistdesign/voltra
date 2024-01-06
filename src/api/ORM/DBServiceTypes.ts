@@ -16,15 +16,13 @@ export type ListItemsConfig = {
   itemsPerPage?: number;
   cursor?: string;
   criteria?: Criteria;
-};
-
-export type SearchItemsConfig = ListItemsConfig & {
+  // TODO: Use these maybe!?
   sortFields?: SortField[];
 };
 
 export type PartialItemTypeWithUniquelyIdentifyingFieldName<
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = Partial<ItemType> & Pick<ItemType, UniquelyIdentifyingFieldName>;
 
 export type BooleanOrUndefined = boolean | undefined;
@@ -32,7 +30,7 @@ export type BooleanOrUndefined = boolean | undefined;
 export type PartialOrFullItemType<
   PatchType extends BooleanOrUndefined,
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = PatchType extends true
   ? PartialItemTypeWithUniquelyIdentifyingFieldName<
       ItemType,
@@ -42,32 +40,32 @@ export type PartialOrFullItemType<
 
 export type UpdateItemOperation<
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = (
   updatedItem: PartialOrFullItemType<
     typeof patch,
     ItemType,
     UniquelyIdentifyingFieldName
   >,
-  patch?: BooleanOrUndefined
+  patch?: BooleanOrUndefined,
 ) => AsyncReturnValue<ItemType>;
 
 export type DBServiceItemDriver<
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   createItem: (
-    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ) => AsyncReturnValue<ItemType>;
   readItem: (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName]
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => AsyncReturnValue<ItemType>;
   updateItem: UpdateItemOperation<ItemType, UniquelyIdentifyingFieldName>;
   deleteItem: (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName]
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => AsyncReturnValue<ItemType>;
   // TODO: Needs to support Item Results OR Boolean Existence for a particular query.
   listItems: (
-    config: ListItemsConfig
+    config: ListItemsConfig,
   ) => AsyncReturnValue<ListItemResults<ItemType>>;
 };
