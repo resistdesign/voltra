@@ -19,7 +19,6 @@ export type ListItemsConfig = {
 };
 
 export type SearchItemsConfig = ListItemsConfig & {
-  criteria?: Criteria;
   sortFields?: SortField[];
 };
 
