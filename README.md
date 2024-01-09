@@ -1,3 +1,9 @@
+<style>
+body {
+  background: url("images%2FVoltra%20Robot.png") no-repeat center center fixed;
+}
+</style>
+
 # Voltra
 
 ![Voltra Gem Logo 2024 Square.png](images%2FVoltra%20Gem%20Logo%202024%20Square.png)
