@@ -4,10 +4,10 @@
 
 ## With our powers combined!
 
-<table style="border: none;">
+<table style="border: 0 solid black;">
 <tbody>
 <tr>
-<td><img src="images/Voltra Robot.png" /></td>
+<td><img src="images/Voltra Robot.png" style="width: 100em;" /></td>
 <td>Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
 applications. It features a robust API with RPC, CORS, and versatile authentication options, alongside dynamic app
 development tools like TypeScript-driven form generation. The platform excels in Infrastructure as Code (IaC), offering
