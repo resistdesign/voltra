@@ -1,12 +1,10 @@
-<img src="images%2FVoltra%20Robot.png" width="100%" style="position: absolute; z-index: -100;">
-
 # Voltra
 
 ![Voltra Gem Logo 2024 Square.png](images%2FVoltra%20Gem%20Logo%202024%20Square.png)
 
 ## With our powers combined!
 
-Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
+<img src="images/Voltra Robot.png" style="width: 15em; float: right; margin: 0 0.5em 0 0;" /> Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
 applications. It features a robust API with RPC, CORS, and versatile authentication options, alongside dynamic app
 development tools like TypeScript-driven form generation. The platform excels in Infrastructure as Code (IaC), offering
 features like chainable stacks and comprehensive parameter support. Its intuitive interface simplifies the addition of
