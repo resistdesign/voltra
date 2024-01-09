@@ -7,7 +7,6 @@
 <table style="border: 0 solid black;">
 <tbody>
 <tr>
-<td><img src="images/Robo Power.png" style="width: 200em;" /></td>
 <td>Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
 applications. It features a robust API with RPC, CORS, and versatile authentication options, alongside dynamic app
 development tools like TypeScript-driven form generation. The platform excels in Infrastructure as Code (IaC), offering
@@ -15,6 +14,7 @@ features like chainable stacks and comprehensive parameter support. Its intuitiv
 databases, storage, authentication, and functions through easy-to-use packs. Furthermore, Voltra enhances development
 workflows with shared routing utilities, advanced state management, and a smart, lightweight routing system for React
 front-end apps.</td>
+<td><img src="images/Robo Power.png" style="width: 200em;" /></td>
 </tr>
 </tbody>
 </table>
