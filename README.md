@@ -1,8 +1,4 @@
-<style>
-body {
-  background: url("images%2FVoltra%20Robot.png") no-repeat center center fixed;
-}
-</style>
+<img src="images%2FVoltra%20Robot.png" width="100%" style="position: absolute; z-index: -100;">
 
 # Voltra
 
