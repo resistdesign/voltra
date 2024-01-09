@@ -1,7 +1,14 @@
 # Volta
 
 ## With our powers combined!
-{collapsible="true" default-state="expanded"}
+
+Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
+applications. It features a robust API with RPC, CORS, and versatile authentication options, alongside dynamic app
+development tools like TypeScript-driven form generation. The platform excels in Infrastructure as Code (IaC), offering
+features like chainable stacks and comprehensive parameter support. Its intuitive interface simplifies the addition of
+databases, storage, authentication, and functions through easy-to-use packs. Furthermore, Voltra enhances development
+workflows with shared routing utilities, advanced state management, and a smart, lightweight routing system for React
+front-end apps.
 
 ## Features
 
@@ -13,4 +20,3 @@
 | Routing: Nesting/Handlers/Injected Handlers | Routing: Param Handlers/Parallel Routes/Hooks |                          | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 |                                             |                                               |                          | Typed Build Spec Creation                                     |
 |                                             |                                               |                          | Typed Resource Parameters                                     |
-
