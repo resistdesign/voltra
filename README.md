@@ -1,6 +1,6 @@
-![Voltra Gem Logo 2024 Square.png|128x128](images%2FVoltra%20Gem%20Logo%202024%20Square.png)
-
 # Volta
+
+![Voltra Gem Logo 2024 Square.png|128x128](images%2FVoltra%20Gem%20Logo%202024%20Square.png)
 
 ## With our powers combined!
 
