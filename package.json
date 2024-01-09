@@ -11,5 +11,8 @@
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
   "license": "UNLICENSED",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "yaml": "^2.3.4"
+  }
 }
