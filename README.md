@@ -4,13 +4,20 @@
 
 ## With our powers combined!
 
-<img src="images/Voltra Robot.png" style="width: 15em; float: right; margin: 0 0.5em 0 0;" /> Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
+<table style="border: none;">
+<tbody>
+<tr>
+<td><img src="images/Voltra Robot.png" /></td>
+<td>Voltra is a state-of-the-art platform designed to streamline the creation of cloud infrastructure and complex web
 applications. It features a robust API with RPC, CORS, and versatile authentication options, alongside dynamic app
 development tools like TypeScript-driven form generation. The platform excels in Infrastructure as Code (IaC), offering
 features like chainable stacks and comprehensive parameter support. Its intuitive interface simplifies the addition of
 databases, storage, authentication, and functions through easy-to-use packs. Furthermore, Voltra enhances development
 workflows with shared routing utilities, advanced state management, and a smart, lightweight routing system for React
-front-end apps.
+front-end apps.</td>
+</tr>
+</tbody>
+</table>
 
 ## Features
 
