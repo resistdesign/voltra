@@ -12,10 +12,10 @@ import {
   getFullFileKey,
   getS3FileDriver,
 } from "../file/S3";
-import { PersistableItem } from "../../../types/PersistableItem";
-import { ServiceResponse } from "@incarnate/cloud";
 
-export type BaseFileItem = PersistableItem & BaseFile;
+export type BaseFileItem = {
+  id: string;
+} & BaseFile;
 
 export type S3DBServiceItemDriverConfig = {
   config?: S3ClientConfig;
@@ -41,23 +41,23 @@ export const getS3DBServiceItemDriver = ({
   const driver: DBServiceItemDriver<BaseFileItem, "id"> = {
     createItem: async (item) => {
       const uploadUrl = await s3FileDriver.getFileUploadUrl(
-        item,
-        baseDirectory
+        item as BaseFileLocationInfo,
+        baseDirectory,
       );
       const downloadUrl = await s3FileDriver.getFileDownloadUrl(
-        item,
-        baseDirectory
+        item as BaseFileLocationInfo,
+        baseDirectory,
       );
 
       await s3.send(
         new PutObjectCommand({
           Bucket: bucketName,
           Key: getFullFileKey({
-            file: item,
+            file: item as BaseFileLocationInfo,
             baseDirectory,
           }),
           Body: "",
-        })
+        }),
       );
 
       const {
@@ -69,15 +69,15 @@ export const getS3DBServiceItemDriver = ({
         new HeadObjectCommand({
           Bucket: bucketName,
           Key: getFullFileKey({
-            file: item,
+            file: item as BaseFileLocationInfo,
             baseDirectory,
           }),
-        })
+        }),
       );
 
       return {
         id: getFullFileKey({
-          file: item,
+          file: item as BaseFileLocationInfo,
         }),
         ...item,
         updatedOn: LastModified?.getTime() || 0,
@@ -86,7 +86,7 @@ export const getS3DBServiceItemDriver = ({
         isDirectory: ContentType === "application/x-directory",
         uploadUrl,
         downloadUrl,
-      };
+      } as BaseFileItem;
     },
     readItem: async (id) => {
       const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
@@ -102,7 +102,7 @@ export const getS3DBServiceItemDriver = ({
             file: itemLoc,
             baseDirectory,
           }),
-        })
+        }),
       );
       const item: BaseFile = {
         ...itemLoc,
@@ -139,7 +139,7 @@ export const getS3DBServiceItemDriver = ({
               file: oldItemLoc,
               baseDirectory,
             }),
-          })
+          }),
         );
         await s3FileDriver.deleteFile(oldItemLoc, baseDirectory);
       }
@@ -160,7 +160,7 @@ export const getS3DBServiceItemDriver = ({
           undefined,
           baseDirectory,
           itemsPerPage,
-          cursor
+          cursor,
         );
 
       return {
@@ -178,14 +178,14 @@ export const getS3DBServiceItemDriver = ({
   return readOnly
     ? {
         createItem: async () => {
-          throw new ServiceResponse(405, "Method Not Allowed");
+          throw new Error("Method Not Allowed");
         },
         readItem: driver.readItem,
         updateItem: async () => {
-          throw new ServiceResponse(405, "Method Not Allowed");
+          throw new Error("Method Not Allowed");
         },
         deleteItem: async () => {
-          throw new ServiceResponse(405, "Method Not Allowed");
+          throw new Error("Method Not Allowed");
         },
         listItems: driver.listItems,
       }

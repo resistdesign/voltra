@@ -1,4 +1,3 @@
-import { mergeStringPaths } from "../../common/utils/Routing";
 import {
   CloudFunctionEventRouter,
   CloudFunctionEventTransformer,
@@ -11,6 +10,7 @@ import {
 } from "./Router/Types";
 import { getRouteIsAuthorized } from "./Router/Auth";
 import { getHeadersWithCORS } from "./Router/CORS";
+import {mergeStringPaths} from "../common/Routing";
 
 export const addRouteToRouteMap = (
   routeMap: RouteMap,
