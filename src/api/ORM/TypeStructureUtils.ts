@@ -3,7 +3,7 @@ import {
   getCleanTypeStructureMap,
   getTagValue,
   TypeStructureMap,
-} from "../../app/FormGenEngine/TypeParsing/TypeUtils";
+} from "../../app/components/FormGen/TypeParsing/TypeUtils";
 import {
   DataContextField,
   DataContextMap,
@@ -17,7 +17,7 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
 };
 
 export const typeStructureMapToDataContextMap = (
-  typeStructureMap: TypeStructureMap
+  typeStructureMap: TypeStructureMap,
 ): DataContextMap => {
   const dataContextMap: DataContextMap = {};
   const cleanTypeStructureMap = getCleanTypeStructureMap(typeStructureMap);
@@ -26,10 +26,10 @@ export const typeStructureMapToDataContextMap = (
     const { namespace, type, content = [] } = typeStructure;
     const cleanFullTypeName = getCleanType(type, namespace);
     const uniquelyIdentifyingFieldName = getCleanedTagStringValue(
-      getTagValue("uniquelyIdentifyingFieldName", typeStructure)
+      getTagValue("uniquelyIdentifyingFieldName", typeStructure),
     );
     const allowedOperations = getCleanedTagStringValue(
-      getTagValue("allowedOperations", typeStructure)
+      getTagValue("allowedOperations", typeStructure),
     );
     const uuidFieldName =
       typeof uniquelyIdentifyingFieldName === "string"
@@ -48,7 +48,7 @@ export const typeStructureMapToDataContextMap = (
       fields: content.reduce((acc, subType) => {
         const { name, type, literal = false, multiple = false } = subType;
         const subAO = getCleanedTagStringValue(
-          getTagValue("allowedOperations", subType)
+          getTagValue("allowedOperations", subType),
         );
         const subOpsList =
           typeof subAO === "string"
