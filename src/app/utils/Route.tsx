@@ -10,7 +10,7 @@ import {
   getParamsAndTestPath,
   mergeStringPaths,
   resolvePath,
-} from "../../common/utils/Routing";
+} from "../../common/Routing";
 
 (function (history) {
   const pushState = history.pushState;
