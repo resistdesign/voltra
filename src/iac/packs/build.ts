@@ -1,7 +1,7 @@
-import { createResourcePack } from '@aws-cf-builder/utils';
-import { AWS } from '@aws-cf-builder/types';
+import { createResourcePack } from "../utils";
+import { AWS } from "../types/IaCTypes";
 
-export const DEFAULT_BUILD_PIPELINE_REPO_PROVIDER = 'GitHub';
+export const DEFAULT_BUILD_PIPELINE_REPO_PROVIDER = "GitHub";
 
 export type BuildPipelineRepoConfig = {
   provider?: any;
@@ -17,8 +17,18 @@ export type AddBuildPipelineConfig = {
   dependsOn?: string | string[];
   environmentVariables?: AWS.CodeBuild.Project.EnvironmentVariable[];
   timeoutInMinutes?: number;
-  environmentType?: 'ARM_CONTAINER' | 'LINUX_CONTAINER' | 'LINUX_GPU_CONTAINER' | 'WINDOWS_SERVER_2019_CONTAINER' | string;
-  environmentComputeType?: 'BUILD_GENERAL1_LARGE' | 'BUILD_GENERAL1_SMALL' | 'BUILD_GENERAL1_MEDIUM' | 'BUILD_GENERAL1_2XLARGE' | string;
+  environmentType?:
+    | "ARM_CONTAINER"
+    | "LINUX_CONTAINER"
+    | "LINUX_GPU_CONTAINER"
+    | "WINDOWS_SERVER_2019_CONTAINER"
+    | string;
+  environmentComputeType?:
+    | "BUILD_GENERAL1_LARGE"
+    | "BUILD_GENERAL1_SMALL"
+    | "BUILD_GENERAL1_MEDIUM"
+    | "BUILD_GENERAL1_2XLARGE"
+    | string;
   environmentImage?: string;
   repoConfig: BuildPipelineRepoConfig;
 };
@@ -28,111 +38,115 @@ export type AddBuildPipelineConfig = {
  */
 export const addBuildPipeline = createResourcePack(
   ({
-     id,
-     buildSpec,
-     dependsOn,
-     environmentVariables,
-     timeoutInMinutes = 10,
-     environmentType = 'LINUX_CONTAINER',
-     environmentComputeType = 'BUILD_GENERAL1_SMALL',
-     environmentImage = 'aws/codebuild/nodejs:10.14.1',
-     repoConfig: {
-       provider = DEFAULT_BUILD_PIPELINE_REPO_PROVIDER,
-       owner,
-       repo,
-       branch,
-       oauthToken,
-     },
-   }: AddBuildPipelineConfig) => ({
+    id,
+    buildSpec,
+    dependsOn,
+    environmentVariables,
+    timeoutInMinutes = 10,
+    environmentType = "LINUX_CONTAINER",
+    environmentComputeType = "BUILD_GENERAL1_SMALL",
+    environmentImage = "aws/codebuild/nodejs:10.14.1",
+    repoConfig: {
+      provider = DEFAULT_BUILD_PIPELINE_REPO_PROVIDER,
+      owner,
+      repo,
+      branch,
+      oauthToken,
+    },
+  }: AddBuildPipelineConfig) => ({
     Resources: {
       [`${id}CodeBuildRole`]: {
-        Type: 'AWS::IAM::Role',
+        Type: "AWS::IAM::Role",
         Properties: {
           AssumeRolePolicyDocument: {
             Statement: [
               {
-                Effect: 'Allow',
+                Effect: "Allow",
                 Principal: {
-                  Service: ['codebuild.amazonaws.com'],
+                  Service: ["codebuild.amazonaws.com"],
                 },
-                Action: ['sts:AssumeRole'],
+                Action: ["sts:AssumeRole"],
               },
             ],
           },
-          Path: '/',
+          Path: "/",
           Policies: [
             {
-              PolicyName: 'codebuild-service',
+              PolicyName: "codebuild-service",
               PolicyDocument: {
                 Statement: [
                   {
-                    Effect: 'Allow',
-                    Action: '*',
-                    Resource: '*',
+                    Effect: "Allow",
+                    Action: "*",
+                    Resource: "*",
                   },
                 ],
-                Version: '2012-10-17',
+                Version: "2012-10-17",
               },
             },
           ],
         },
       },
       [`${id}CodePipelineRole`]: {
-        Type: 'AWS::IAM::Role',
+        Type: "AWS::IAM::Role",
         Properties: {
           AssumeRolePolicyDocument: {
             Statement: [
               {
-                Effect: 'Allow',
+                Effect: "Allow",
                 Principal: {
-                  Service: ['codepipeline.amazonaws.com'],
+                  Service: ["codepipeline.amazonaws.com"],
                 },
-                Action: ['sts:AssumeRole'],
+                Action: ["sts:AssumeRole"],
               },
             ],
           },
-          Path: '/',
+          Path: "/",
           Policies: [
             {
-              PolicyName: 'codepipeline-service',
+              PolicyName: "codepipeline-service",
               PolicyDocument: {
                 Statement: [
                   {
-                    Action: ['codebuild:*'],
-                    Resource: '*',
-                    Effect: 'Allow',
+                    Action: ["codebuild:*"],
+                    Resource: "*",
+                    Effect: "Allow",
                   },
                   {
-                    Action: ['s3:GetObject', 's3:GetObjectVersion', 's3:GetBucketVersioning'],
-                    Resource: '*',
-                    Effect: 'Allow',
+                    Action: [
+                      "s3:GetObject",
+                      "s3:GetObjectVersion",
+                      "s3:GetBucketVersioning",
+                    ],
+                    Resource: "*",
+                    Effect: "Allow",
                   },
                   {
-                    Action: ['s3:PutObject'],
-                    Resource: ['arn:aws:s3:::codepipeline*'],
-                    Effect: 'Allow',
+                    Action: ["s3:PutObject"],
+                    Resource: ["arn:aws:s3:::codepipeline*"],
+                    Effect: "Allow",
                   },
                   {
-                    Action: ['s3:*', 'cloudformation:*', 'iam:PassRole'],
-                    Resource: '*',
-                    Effect: 'Allow',
+                    Action: ["s3:*", "cloudformation:*", "iam:PassRole"],
+                    Resource: "*",
+                    Effect: "Allow",
                   },
                 ],
-                Version: '2012-10-17',
+                Version: "2012-10-17",
               },
             },
           ],
         },
       },
       [`${id}PipelineBucket`]: {
-        Type: 'AWS::S3::Bucket',
-        DeletionPolicy: 'Delete',
+        Type: "AWS::S3::Bucket",
+        DeletionPolicy: "Delete",
         Properties: {
           BucketEncryption: {
             ServerSideEncryptionConfiguration: [
               {
                 ServerSideEncryptionByDefault: {
-                  SSEAlgorithm: 'AES256',
+                  SSEAlgorithm: "AES256",
                 },
               },
             ],
@@ -146,18 +160,18 @@ export const addBuildPipeline = createResourcePack(
         },
       },
       [`${id}CodeBuildAndDeploy`]: {
-        Type: 'AWS::CodeBuild::Project',
+        Type: "AWS::CodeBuild::Project",
         DependsOn: dependsOn,
         Properties: {
           Name: {
-            'Fn::Sub': `\${AWS::StackName}-${id}CodeBuildAndDeploy`,
+            "Fn::Sub": `\${AWS::StackName}-${id}CodeBuildAndDeploy`,
           },
-          Description: 'Deploy site to S3',
+          Description: "Deploy site to S3",
           ServiceRole: {
-            'Fn::GetAtt': [`${id}CodeBuildRole`, 'Arn'],
+            "Fn::GetAtt": [`${id}CodeBuildRole`, "Arn"],
           },
           Artifacts: {
-            Type: 'CODEPIPELINE',
+            Type: "CODEPIPELINE",
           },
           Environment: {
             Type: environmentType,
@@ -166,35 +180,35 @@ export const addBuildPipeline = createResourcePack(
             EnvironmentVariables: environmentVariables,
           },
           Source: {
-            Type: 'CODEPIPELINE',
+            Type: "CODEPIPELINE",
             BuildSpec: buildSpec,
           },
           TimeoutInMinutes: timeoutInMinutes,
         },
       },
       [`${id}Pipeline`]: {
-        Type: 'AWS::CodePipeline::Pipeline',
+        Type: "AWS::CodePipeline::Pipeline",
         DependsOn: `${id}CodeBuildAndDeploy`,
         Properties: {
           RoleArn: {
-            'Fn::GetAtt': [`${id}CodePipelineRole`, 'Arn'],
+            "Fn::GetAtt": [`${id}CodePipelineRole`, "Arn"],
           },
           Stages: [
             {
-              Name: 'Acquire-Source',
+              Name: "Acquire-Source",
               Actions: [
                 {
                   InputArtifacts: [],
-                  Name: 'Source',
+                  Name: "Source",
                   ActionTypeId: {
-                    Category: 'Source',
-                    Owner: 'ThirdParty',
-                    Version: '1',
+                    Category: "Source",
+                    Owner: "ThirdParty",
+                    Version: "1",
                     Provider: provider,
                   },
                   OutputArtifacts: [
                     {
-                      Name: 'SourceOutput',
+                      Name: "SourceOutput",
                     },
                   ],
                   Configuration: {
@@ -208,24 +222,24 @@ export const addBuildPipeline = createResourcePack(
               ],
             },
             {
-              Name: 'Build-And-Deploy',
+              Name: "Build-And-Deploy",
               Actions: [
                 {
-                  Name: 'Artifact',
+                  Name: "Artifact",
                   ActionTypeId: {
-                    Category: 'Build',
-                    Owner: 'AWS',
-                    Version: '1',
-                    Provider: 'CodeBuild',
+                    Category: "Build",
+                    Owner: "AWS",
+                    Version: "1",
+                    Provider: "CodeBuild",
                   },
                   InputArtifacts: [
                     {
-                      Name: 'SourceOutput',
+                      Name: "SourceOutput",
                     },
                   ],
                   OutputArtifacts: [
                     {
-                      Name: 'DeployOutput',
+                      Name: "DeployOutput",
                     },
                   ],
                   Configuration: {
@@ -239,7 +253,7 @@ export const addBuildPipeline = createResourcePack(
             },
           ],
           ArtifactStore: {
-            Type: 'S3',
+            Type: "S3",
             Location: {
               Ref: `${id}PipelineBucket`,
             },
