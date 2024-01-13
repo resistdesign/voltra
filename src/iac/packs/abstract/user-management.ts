@@ -1,6 +1,6 @@
-import { createResourcePack } from '@aws-cf-builder/utils';
-import FS from 'fs';
-import Path from 'path';
+import FS from "fs";
+import Path from "path";
+import { createResourcePack } from "../../utils";
 
 export type AddUserManagementConfig = {
   id: string;
@@ -34,43 +34,43 @@ export const addUserManagement = createResourcePack(
       apiGatewayRESTAPIId && apiStageName
         ? {
             [`${id}IdentityPoolRoles`]: {
-              Type: 'AWS::Cognito::IdentityPoolRoleAttachment',
+              Type: "AWS::Cognito::IdentityPoolRoleAttachment",
               Properties: {
                 IdentityPoolId: {
                   Ref: `${id}IdentityPool`,
                 },
                 Roles: {
                   authenticated: {
-                    'Fn::GetAtt': [`${id}AuthRole`, 'Arn'],
+                    "Fn::GetAtt": [`${id}AuthRole`, "Arn"],
                   },
                   unauthenticated: {
-                    'Fn::GetAtt': [`${id}UnauthRole`, 'Arn'],
+                    "Fn::GetAtt": [`${id}UnauthRole`, "Arn"],
                   },
                 },
               },
             },
             [`${id}AuthRole`]: {
-              Type: 'AWS::IAM::Role',
+              Type: "AWS::IAM::Role",
               Properties: {
                 RoleName: authRoleName,
-                Path: '/',
+                Path: "/",
                 AssumeRolePolicyDocument: {
-                  Version: '2012-10-17',
+                  Version: "2012-10-17",
                   Statement: [
                     {
-                      Effect: 'Allow',
+                      Effect: "Allow",
                       Principal: {
-                        Federated: 'cognito-identity.amazonaws.com',
+                        Federated: "cognito-identity.amazonaws.com",
                       },
-                      Action: ['sts:AssumeRoleWithWebIdentity'],
+                      Action: ["sts:AssumeRoleWithWebIdentity"],
                       Condition: {
                         StringEquals: {
-                          'cognito-identity.amazonaws.com:aud': {
+                          "cognito-identity.amazonaws.com:aud": {
                             Ref: `${id}IdentityPool`,
                           },
                         },
-                        'ForAnyValue:StringLike': {
-                          'cognito-identity.amazonaws.com:amr': 'authenticated',
+                        "ForAnyValue:StringLike": {
+                          "cognito-identity.amazonaws.com:amr": "authenticated",
                         },
                       },
                     },
@@ -78,31 +78,35 @@ export const addUserManagement = createResourcePack(
                 },
                 Policies: [
                   {
-                    PolicyName: 'CognitoAuthorizedPolicy',
+                    PolicyName: "CognitoAuthorizedPolicy",
                     PolicyDocument: {
-                      Version: '2012-10-17',
+                      Version: "2012-10-17",
                       Statement: [
                         {
-                          Effect: 'Allow',
-                          Action: ['mobileanalytics:PutEvents', 'cognito-sync:*', 'cognito-identity:*'],
-                          Resource: '*',
+                          Effect: "Allow",
+                          Action: [
+                            "mobileanalytics:PutEvents",
+                            "cognito-sync:*",
+                            "cognito-identity:*",
+                          ],
+                          Resource: "*",
                         },
                         {
-                          Effect: 'Allow',
-                          Action: ['execute-api:Invoke'],
+                          Effect: "Allow",
+                          Action: ["execute-api:Invoke"],
                           Resource: {
-                            'Fn::Sub': [
-                              'arn:aws:execute-api:${Region}:${AccountId}:${APIID}/${StageName}/${HTTPVerb}/api/*',
+                            "Fn::Sub": [
+                              "arn:aws:execute-api:${Region}:${AccountId}:${APIID}/${StageName}/${HTTPVerb}/api/*",
                               {
                                 Region: {
-                                  Ref: 'AWS::Region',
+                                  Ref: "AWS::Region",
                                 },
                                 AccountId: {
-                                  Ref: 'AWS::AccountId',
+                                  Ref: "AWS::AccountId",
                                 },
                                 APIID: apiGatewayRESTAPIId,
                                 StageName: apiStageName,
-                                HTTPVerb: '*',
+                                HTTPVerb: "*",
                               },
                             ],
                           },
@@ -114,27 +118,28 @@ export const addUserManagement = createResourcePack(
               },
             },
             [`${id}UnauthRole`]: {
-              Type: 'AWS::IAM::Role',
+              Type: "AWS::IAM::Role",
               Properties: {
                 RoleName: unauthRoleName,
-                Path: '/',
+                Path: "/",
                 AssumeRolePolicyDocument: {
-                  Version: '2012-10-17',
+                  Version: "2012-10-17",
                   Statement: [
                     {
-                      Effect: 'Allow',
+                      Effect: "Allow",
                       Principal: {
-                        Federated: 'cognito-identity.amazonaws.com',
+                        Federated: "cognito-identity.amazonaws.com",
                       },
-                      Action: ['sts:AssumeRoleWithWebIdentity'],
+                      Action: ["sts:AssumeRoleWithWebIdentity"],
                       Condition: {
                         StringEquals: {
-                          'cognito-identity.amazonaws.com:aud': {
+                          "cognito-identity.amazonaws.com:aud": {
                             Ref: `${id}IdentityPool`,
                           },
                         },
-                        'ForAnyValue:StringLike': {
-                          'cognito-identity.amazonaws.com:amr': 'unauthenticated',
+                        "ForAnyValue:StringLike": {
+                          "cognito-identity.amazonaws.com:amr":
+                            "unauthenticated",
                         },
                       },
                     },
@@ -142,14 +147,18 @@ export const addUserManagement = createResourcePack(
                 },
                 Policies: [
                   {
-                    PolicyName: 'CognitoUnauthorizedPolicy',
+                    PolicyName: "CognitoUnauthorizedPolicy",
                     PolicyDocument: {
-                      Version: '2012-10-17',
+                      Version: "2012-10-17",
                       Statement: [
                         {
-                          Effect: 'Allow',
-                          Action: ['mobileanalytics:PutEvents', 'cognito-sync:*', 'cognito-identity:*'],
-                          Resource: '*',
+                          Effect: "Allow",
+                          Action: [
+                            "mobileanalytics:PutEvents",
+                            "cognito-sync:*",
+                            "cognito-identity:*",
+                          ],
+                          Resource: "*",
                         },
                       ],
                     },
@@ -163,15 +172,15 @@ export const addUserManagement = createResourcePack(
     return {
       Resources: {
         [`${id}UserPool`]: {
-          Type: 'AWS::Cognito::UserPool',
+          Type: "AWS::Cognito::UserPool",
           Properties: {
             UserPoolName: {
-              'Fn::Sub': [`$\{AWS::StackName\}${id}UserPool`, {}],
+              "Fn::Sub": [`$\{AWS::StackName\}${id}UserPool`, {}],
             },
             AccountRecoverySetting: {
               RecoveryMechanisms: [
                 {
-                  Name: 'verified_email',
+                  Name: "verified_email",
                   Priority: 1,
                 },
               ],
@@ -180,26 +189,26 @@ export const addUserManagement = createResourcePack(
               AllowAdminCreateUserOnly: false,
               UnusedAccountValidityDays: 365,
             },
-            AutoVerifiedAttributes: ['email'],
-            AliasAttributes: ['phone_number', 'email', 'preferred_username'],
+            AutoVerifiedAttributes: ["email"],
+            AliasAttributes: ["phone_number", "email", "preferred_username"],
             Schema: [
               {
-                Name: 'email',
+                Name: "email",
                 Required: true,
                 Mutable: true,
               },
               {
-                Name: 'given_name',
+                Name: "given_name",
                 Required: true,
                 Mutable: true,
               },
               {
-                Name: 'family_name',
+                Name: "family_name",
                 Required: true,
                 Mutable: true,
               },
               {
-                Name: 'phone_number',
+                Name: "phone_number",
                 Required: true,
                 Mutable: true,
               },
@@ -214,36 +223,40 @@ export const addUserManagement = createResourcePack(
           },
         },
         [`${id}UserPoolAliasTargetLambdaExecutionRole`]: {
-          Type: 'AWS::IAM::Role',
+          Type: "AWS::IAM::Role",
           Properties: {
             AssumeRolePolicyDocument: {
-              Version: '2012-10-17',
+              Version: "2012-10-17",
               Statement: [
                 {
-                  Effect: 'Allow',
+                  Effect: "Allow",
                   Principal: {
-                    Service: ['lambda.amazonaws.com'],
+                    Service: ["lambda.amazonaws.com"],
                   },
-                  Action: ['sts:AssumeRole'],
+                  Action: ["sts:AssumeRole"],
                 },
               ],
             },
-            Path: '/',
+            Path: "/",
             Policies: [
               {
-                PolicyName: 'root',
+                PolicyName: "root",
                 PolicyDocument: {
-                  Version: '2012-10-17',
+                  Version: "2012-10-17",
                   Statement: [
                     {
-                      Effect: 'Allow',
-                      Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-                      Resource: 'arn:aws:logs:*:*:*',
+                      Effect: "Allow",
+                      Action: [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents",
+                      ],
+                      Resource: "arn:aws:logs:*:*:*",
                     },
                     {
-                      Effect: 'Allow',
-                      Action: ['cognito-idp:DescribeUserPoolDomain'],
-                      Resource: '*',
+                      Effect: "Allow",
+                      Action: ["cognito-idp:DescribeUserPoolDomain"],
+                      Resource: "*",
                     },
                   ],
                 },
@@ -252,20 +265,27 @@ export const addUserManagement = createResourcePack(
           },
         },
         [`${id}GetUserPoolClientCFDistribution`]: {
-          Type: 'AWS::Lambda::Function',
+          Type: "AWS::Lambda::Function",
           Properties: {
             Description: `Look up CloudFrontDistribution of ${id}UserPoolDomain`,
-            Handler: 'index.handler',
+            Handler: "index.handler",
             MemorySize: 128,
             Role: {
-              'Fn::GetAtt': [`${id}UserPoolAliasTargetLambdaExecutionRole`, 'Arn'],
+              "Fn::GetAtt": [
+                `${id}UserPoolAliasTargetLambdaExecutionRole`,
+                "Arn",
+              ],
             },
-            Runtime: 'nodejs16.x',
+            Runtime: "nodejs16.x",
             Timeout: 30,
             Code: {
               ZipFile: FS.readFileSync(
-                Path.join(__dirname, 'user-management', 'UserPoolAliasTargetCustomResourceCode.js'),
-                { encoding: 'utf8' }
+                Path.join(
+                  __dirname,
+                  "user-management",
+                  "UserPoolAliasTargetCustomResourceCode.js",
+                ),
+                { encoding: "utf8" },
               ),
             },
           },
@@ -275,11 +295,11 @@ export const addUserManagement = createResourcePack(
           DependsOn: `${id}UserPoolDomain`,
           Properties: {
             ServiceToken: {
-              'Fn::GetAtt': [`${id}GetUserPoolClientCFDistribution`, 'Arn'],
+              "Fn::GetAtt": [`${id}GetUserPoolClientCFDistribution`, "Arn"],
             },
             UserPoolDomain: {
-              'Fn::Sub': [
-                'auth.${BaseDomainName}',
+              "Fn::Sub": [
+                "auth.${BaseDomainName}",
                 {
                   BaseDomainName: domainName,
                 },
@@ -289,48 +309,50 @@ export const addUserManagement = createResourcePack(
         },
         [`${id}BaseDomainRecord`]: !!baseDomainRecordAliasTargetDNSName
           ? {
-              Type: 'AWS::Route53::RecordSet',
-              DeletionPolicy: 'Delete',
+              Type: "AWS::Route53::RecordSet",
+              DeletionPolicy: "Delete",
               Properties: {
                 HostedZoneId: hostedZoneId,
-                Type: 'A',
+                Type: "A",
                 Name: domainName,
                 AliasTarget: {
-                  HostedZoneId: 'Z2FDTNDATAQYW2',
+                  HostedZoneId: "Z2FDTNDATAQYW2",
                   DNSName: baseDomainRecordAliasTargetDNSName,
                 },
               },
             }
           : (undefined as any),
         [`${id}UserPoolDomainRecord`]: {
-          Type: 'AWS::Route53::RecordSet',
-          DeletionPolicy: 'Delete',
+          Type: "AWS::Route53::RecordSet",
+          DeletionPolicy: "Delete",
           Properties: {
             HostedZoneId: hostedZoneId,
-            Type: 'A',
+            Type: "A",
             Name: {
-              'Fn::Sub': [
-                'auth.${BaseDomainName}',
+              "Fn::Sub": [
+                "auth.${BaseDomainName}",
                 {
                   BaseDomainName: domainName,
                 },
               ],
             },
             AliasTarget: {
-              HostedZoneId: 'Z2FDTNDATAQYW2',
+              HostedZoneId: "Z2FDTNDATAQYW2",
               DNSName: {
-                'Fn::GetAtt': [`${id}UPDomain`, 'AliasTarget'],
+                "Fn::GetAtt": [`${id}UPDomain`, "AliasTarget"],
               },
             },
           },
         },
         [`${id}UserPoolDomain`]: {
-          Type: 'AWS::Cognito::UserPoolDomain',
-          DependsOn: !!baseDomainRecordAliasTargetDNSName ? `${id}BaseDomainRecord` : undefined,
+          Type: "AWS::Cognito::UserPoolDomain",
+          DependsOn: !!baseDomainRecordAliasTargetDNSName
+            ? `${id}BaseDomainRecord`
+            : undefined,
           Properties: {
             Domain: {
-              'Fn::Sub': [
-                'auth.${BaseDomainName}',
+              "Fn::Sub": [
+                "auth.${BaseDomainName}",
                 {
                   BaseDomainName: domainName,
                 },
@@ -345,29 +367,35 @@ export const addUserManagement = createResourcePack(
           },
         },
         [`${id}UserPoolClient`]: {
-          Type: 'AWS::Cognito::UserPoolClient',
+          Type: "AWS::Cognito::UserPoolClient",
           Properties: {
             ClientName: {
-              'Fn::Sub': [`$\{AWS::StackName\}${id}UserPoolClient`, {}],
+              "Fn::Sub": [`$\{AWS::StackName\}${id}UserPoolClient`, {}],
             },
             UserPoolId: {
               Ref: `${id}UserPool`,
             },
             AllowedOAuthFlowsUserPoolClient: true,
-            AllowedOAuthFlows: ['code', 'implicit'],
-            AllowedOAuthScopes: ['openid', 'email', 'phone', 'profile', 'aws.cognito.signin.user.admin'],
+            AllowedOAuthFlows: ["code", "implicit"],
+            AllowedOAuthScopes: [
+              "openid",
+              "email",
+              "phone",
+              "profile",
+              "aws.cognito.signin.user.admin",
+            ],
             CallbackURLs: callbackUrls,
             LogoutURLs: logoutUrls,
             EnableTokenRevocation: true,
-            PreventUserExistenceErrors: 'ENABLED',
-            SupportedIdentityProviders: ['COGNITO'],
+            PreventUserExistenceErrors: "ENABLED",
+            SupportedIdentityProviders: ["COGNITO"],
           },
         },
         [`${id}IdentityPool`]: {
-          Type: 'AWS::Cognito::IdentityPool',
+          Type: "AWS::Cognito::IdentityPool",
           Properties: {
             IdentityPoolName: {
-              'Fn::Sub': [`$\{AWS::StackName\}${id}IdentityPool`, {}],
+              "Fn::Sub": [`$\{AWS::StackName\}${id}IdentityPool`, {}],
             },
             AllowUnauthenticatedIdentities: false,
             CognitoIdentityProviders: [
@@ -376,7 +404,7 @@ export const addUserManagement = createResourcePack(
                   Ref: `${id}UserPoolClient`,
                 },
                 ProviderName: {
-                  'Fn::GetAtt': [`${id}UserPool`, 'ProviderName'],
+                  "Fn::GetAtt": [`${id}UserPool`, "ProviderName"],
                 },
                 ServerSideTokenCheck: true,
               },
@@ -386,5 +414,5 @@ export const addUserManagement = createResourcePack(
         ...apiRoleConfig,
       },
     };
-  }
+  },
 );
