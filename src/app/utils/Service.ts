@@ -1,4 +1,4 @@
-import { mergeStringPaths } from '../../common/utils/Routing';
+import { mergeStringPaths } from "../../common/Routing";
 
 export type ServiceConfig = {
   protocol: string;
@@ -11,18 +11,22 @@ export type ServiceConfig = {
 export const getFullUrl = (
   protocol: string,
   domain: string,
-  basePath: string = '',
-  path: string = '',
-  port?: number
+  basePath: string = "",
+  path: string = "",
+  port?: number,
 ): string => {
-  const portString = !!port ? `:${port}` : '';
+  const portString = !!port ? `:${port}` : "";
   const fullPath = mergeStringPaths(basePath, path);
 
   return `${protocol}://${domain}${portString}${fullPath}`;
 };
 
-export const sendServiceRequest = async (config: ServiceConfig, path: string = '', args: any[] = []): Promise<any> => {
-  const { protocol, domain, port, basePath = '', authorization = '' } = config;
+export const sendServiceRequest = async (
+  config: ServiceConfig,
+  path: string = "",
+  args: any[] = [],
+): Promise<any> => {
+  const { protocol, domain, port, basePath = "", authorization = "" } = config;
   const fullUrl = getFullUrl(protocol, domain, basePath, path, port);
   const requestHeaders = !!authorization
     ? {
@@ -31,8 +35,8 @@ export const sendServiceRequest = async (config: ServiceConfig, path: string = '
     : undefined;
   const response = await fetch(fullUrl, {
     headers: requestHeaders,
-    credentials: 'same-origin',
-    method: 'POST',
+    credentials: "same-origin",
+    method: "POST",
     body: JSON.stringify(args),
   });
   const data = await response.json();
