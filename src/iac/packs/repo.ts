@@ -1,4 +1,4 @@
-import { createResourcePack, SimpleCFT } from '@aws-cf-builder/utils';
+import { createResourcePack, SimpleCFT } from "../utils";
 
 export type AddRepoConfig = {
   repoOwnerParameterName: string;
@@ -8,31 +8,36 @@ export type AddRepoConfig = {
 };
 
 export const addRepo = createResourcePack(
-  ({ repoOwnerParameterName, repoNameParameterName, repoBranchParameterName, repoTokenParameterName }: AddRepoConfig) =>
+  ({
+    repoOwnerParameterName,
+    repoNameParameterName,
+    repoBranchParameterName,
+    repoTokenParameterName,
+  }: AddRepoConfig) =>
     new SimpleCFT().addParameterGroup({
-      Label: 'Repository',
+      Label: "Repository",
       Parameters: {
         [repoOwnerParameterName]: {
-          Label: 'RepoOwner',
-          Type: 'String',
-          Description: 'The owner of the repository',
+          Label: "RepoOwner",
+          Type: "String",
+          Description: "The owner of the repository",
         },
         [repoNameParameterName]: {
-          Label: 'RepoName',
-          Type: 'String',
-          Description: 'The name of the repository',
+          Label: "RepoName",
+          Type: "String",
+          Description: "The name of the repository",
         },
         [repoBranchParameterName]: {
-          Label: 'RepoBranch',
-          Type: 'String',
-          Description: 'The branch of the repository',
+          Label: "RepoBranch",
+          Type: "String",
+          Description: "The branch of the repository",
         },
         [repoTokenParameterName]: {
-          Label: 'RepoToken',
-          Type: 'String',
-          Description: 'The token of the repository',
+          Label: "RepoToken",
+          Type: "String",
+          Description: "The token of the repository",
           NoEcho: true,
         },
       },
-    }).template
+    }).template,
 );

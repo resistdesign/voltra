@@ -1,4 +1,4 @@
-import { createResourcePack, SimpleCFT } from '@aws-cf-builder/utils';
+import { createResourcePack, SimpleCFT } from "../utils";
 
 export type AddDNSConfig = {
   hostedZoneIdParameterName: string;
@@ -7,37 +7,41 @@ export type AddDNSConfig = {
 };
 
 export const addDNS = createResourcePack(
-  ({ hostedZoneIdParameterName, domainNameParameterName, localUIDevelopmentDomainName }: AddDNSConfig) =>
+  ({
+    hostedZoneIdParameterName,
+    domainNameParameterName,
+    localUIDevelopmentDomainName,
+  }: AddDNSConfig) =>
     new SimpleCFT()
       .addParameterGroup({
-        Label: 'DNS',
+        Label: "DNS",
         Parameters: {
           [hostedZoneIdParameterName]: {
-            Label: 'Hosted Zone ID',
-            Type: 'AWS::Route53::HostedZone::Id',
-            Description: 'Hosted Zone ID',
+            Label: "Hosted Zone ID",
+            Type: "AWS::Route53::HostedZone::Id",
+            Description: "Hosted Zone ID",
           },
           [domainNameParameterName]: {
-            Label: 'Domain Name',
-            Type: 'String',
-            Description: 'Domain name for the hosted zone',
-            Default: 'example.com',
+            Label: "Domain Name",
+            Type: "String",
+            Description: "Domain name for the hosted zone",
+            Default: "example.com",
           },
         },
       })
       .patch({
         Resources: {
           [localUIDevelopmentDomainName]: {
-            Type: 'AWS::Route53::RecordSet',
-            DeletionPolicy: 'Delete',
+            Type: "AWS::Route53::RecordSet",
+            DeletionPolicy: "Delete",
             Properties: {
               HostedZoneId: {
                 Ref: hostedZoneIdParameterName,
               },
-              Type: 'A',
+              Type: "A",
               Name: {
-                'Fn::Sub': [
-                  'app-local.${BaseDomainName}',
+                "Fn::Sub": [
+                  "app-local.${BaseDomainName}",
                   {
                     BaseDomainName: {
                       Ref: domainNameParameterName,
@@ -45,10 +49,10 @@ export const addDNS = createResourcePack(
                   },
                 ],
               },
-              ResourceRecords: ['127.0.0.1'],
-              TTL: '300',
+              ResourceRecords: ["127.0.0.1"],
+              TTL: "300",
             },
           },
         },
-      }).template
+      }).template,
 );

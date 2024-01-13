@@ -1,11 +1,11 @@
-import { createResourcePack, SimpleCFT } from '@aws-cf-builder/utils';
+import { createResourcePack, SimpleCFT } from "../utils";
 
-export const DEFAULT_AUTH_TYPE = 'COGNITO_USER_POOLS';
+export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 
 export type AddGatewayAuthorizerConfig = {
   providerARNs?: string[];
   scopes?: string[];
-  type?: 'TOKEN' | 'COGNITO_USER_POOLS' | 'REQUEST';
+  type?: "TOKEN" | "COGNITO_USER_POOLS" | "REQUEST";
   identitySource?: string;
 };
 
@@ -22,36 +22,43 @@ export type AddGatewayConfig = {
 
 export const addGateway = createResourcePack(
   ({
-     id,
-     hostedZoneId,
-     domainName,
-     certificateArn,
-     cloudFunction: { id: cloudFunctionId, region: cloudFunctionRegion = '${AWS::Region}' },
-     stageName = 'production',
-     authorizer,
-     deploymentSuffix = '',
-   }: AddGatewayConfig) => {
+    id,
+    hostedZoneId,
+    domainName,
+    certificateArn,
+    cloudFunction: {
+      id: cloudFunctionId,
+      region: cloudFunctionRegion = "${AWS::Region}",
+    },
+    stageName = "production",
+    authorizer,
+    deploymentSuffix = "",
+  }: AddGatewayConfig) => {
     const cloudFunctionUri = {
-      'Fn::Sub': `arn:aws:apigateway:${cloudFunctionRegion}:lambda:path/2015-03-31/functions/\${${cloudFunctionId}.Arn}/invocations`,
+      "Fn::Sub": `arn:aws:apigateway:${cloudFunctionRegion}:lambda:path/2015-03-31/functions/\${${cloudFunctionId}.Arn}/invocations`,
     };
     const {
-      scopes: authScopes = ['phone', 'email', 'openid', 'profile'],
-      type: authType = 'COGNITO_USER_POOLS',
+      scopes: authScopes = ["phone", "email", "openid", "profile"],
+      type: authType = "COGNITO_USER_POOLS",
       providerARNs,
-      identitySource = 'method.request.header.authorization',
-    }: Partial<AddGatewayAuthorizerConfig> = !!authorizer && typeof authorizer === 'object' ? authorizer : {};
+      identitySource = "method.request.header.authorization",
+    }: Partial<AddGatewayAuthorizerConfig> = !!authorizer &&
+    typeof authorizer === "object"
+      ? authorizer
+      : {};
     const authorizerId = `${id}CustomAuthorizer`;
     const authProps = !!authorizer
       ? {
-        AuthorizationScopes: authScopes,
-        AuthorizationType: authType === DEFAULT_AUTH_TYPE ? DEFAULT_AUTH_TYPE : 'CUSTOM',
-        AuthorizerId: {
-          Ref: authorizerId,
-        },
-      }
+          AuthorizationScopes: authScopes,
+          AuthorizationType:
+            authType === DEFAULT_AUTH_TYPE ? DEFAULT_AUTH_TYPE : "CUSTOM",
+          AuthorizerId: {
+            Ref: authorizerId,
+          },
+        }
       : {
-        AuthorizationType: 'NONE',
-      };
+          AuthorizationType: "NONE",
+        };
     const fullDeploymentId = `${id}GatewayRESTAPIDeployment${deploymentSuffix}`;
 
     return new SimpleCFT()
@@ -59,36 +66,36 @@ export const addGateway = createResourcePack(
         Resources: {
           // REST API
           [id]: {
-            Type: 'AWS::ApiGateway::RestApi',
+            Type: "AWS::ApiGateway::RestApi",
 
             Properties: {
               Name: {
-                'Fn::Sub': `\${AWS::StackName}-${id}GatewayRESTAPI`,
+                "Fn::Sub": `\${AWS::StackName}-${id}GatewayRESTAPI`,
               },
               EndpointConfiguration: {
-                Types: ['EDGE'],
+                Types: ["EDGE"],
               },
             },
           },
           [`${id}GatewayRESTAPIResource`]: {
-            Type: 'AWS::ApiGateway::Resource',
+            Type: "AWS::ApiGateway::Resource",
             DependsOn: id,
             Properties: {
               ParentId: {
-                'Fn::GetAtt': [id, 'RootResourceId'],
+                "Fn::GetAtt": [id, "RootResourceId"],
               },
-              PathPart: '{proxy+}',
+              PathPart: "{proxy+}",
               RestApiId: {
                 Ref: id,
               },
             },
           },
           [`${id}GatewayRESTAPIMethod`]: {
-            Type: 'AWS::ApiGateway::Method',
+            Type: "AWS::ApiGateway::Method",
             DependsOn: `${id}GatewayRESTAPIResource`,
             Properties: {
               ...authProps,
-              HttpMethod: 'ANY',
+              HttpMethod: "ANY",
               ResourceId: {
                 Ref: `${id}GatewayRESTAPIResource`,
               },
@@ -96,27 +103,27 @@ export const addGateway = createResourcePack(
                 Ref: id,
               },
               Integration: {
-                Type: 'AWS_PROXY',
-                IntegrationHttpMethod: 'POST',
+                Type: "AWS_PROXY",
+                IntegrationHttpMethod: "POST",
                 Uri: cloudFunctionUri,
               },
             },
           },
           [`${id}GatewayRESTAPIRootMethod`]: {
-            Type: 'AWS::ApiGateway::Method',
+            Type: "AWS::ApiGateway::Method",
             DependsOn: `${id}GatewayRESTAPIResource`,
             Properties: {
               ...authProps,
-              HttpMethod: 'ANY',
+              HttpMethod: "ANY",
               ResourceId: {
-                'Fn::GetAtt': [id, 'RootResourceId'],
+                "Fn::GetAtt": [id, "RootResourceId"],
               },
               RestApiId: {
                 Ref: id,
               },
               Integration: {
-                Type: 'AWS_PROXY',
-                IntegrationHttpMethod: 'POST',
+                Type: "AWS_PROXY",
+                IntegrationHttpMethod: "POST",
                 Uri: cloudFunctionUri,
               },
             },
@@ -127,11 +134,11 @@ export const addGateway = createResourcePack(
         Resources: {
           // CORS
           [`${id}GatewayRESTAPIOPTIONSMethod`]: {
-            Type: 'AWS::ApiGateway::Method',
+            Type: "AWS::ApiGateway::Method",
             DependsOn: `${id}GatewayRESTAPIResource`,
             Properties: {
-              AuthorizationType: 'NONE',
-              HttpMethod: 'OPTIONS',
+              AuthorizationType: "NONE",
+              HttpMethod: "OPTIONS",
               ResourceId: {
                 Ref: `${id}GatewayRESTAPIResource`,
               },
@@ -139,41 +146,43 @@ export const addGateway = createResourcePack(
                 Ref: id,
               },
               Integration: {
-                Type: 'AWS_PROXY',
-                IntegrationHttpMethod: 'POST',
+                Type: "AWS_PROXY",
+                IntegrationHttpMethod: "POST",
                 Uri: cloudFunctionUri,
               },
             },
           },
           [`${id}GatewayRESTAPIRootOPTIONSMethod`]: {
-            Type: 'AWS::ApiGateway::Method',
+            Type: "AWS::ApiGateway::Method",
             DependsOn: `${id}GatewayRESTAPIResource`,
             Properties: {
-              AuthorizationType: 'NONE',
-              HttpMethod: 'OPTIONS',
+              AuthorizationType: "NONE",
+              HttpMethod: "OPTIONS",
               ResourceId: {
-                'Fn::GetAtt': [id, 'RootResourceId'],
+                "Fn::GetAtt": [id, "RootResourceId"],
               },
               RestApiId: {
                 Ref: id,
               },
               Integration: {
-                Type: 'AWS_PROXY',
-                IntegrationHttpMethod: 'POST',
+                Type: "AWS_PROXY",
+                IntegrationHttpMethod: "POST",
                 Uri: cloudFunctionUri,
               },
             },
           },
           [`${id}GatewayResponseDefault4XX`]: {
-            Type: 'AWS::ApiGateway::GatewayResponse',
+            Type: "AWS::ApiGateway::GatewayResponse",
             Properties: {
               ResponseParameters: {
                 // Not authorized, so just allow the current origin by mapping it into the header.
-                'gatewayresponse.header.Access-Control-Allow-Origin': 'method.request.header.origin',
-                'gatewayresponse.header.Access-Control-Allow-Credentials': '\'true\'',
-                'gatewayresponse.header.Access-Control-Allow-Headers': '\'*\'',
+                "gatewayresponse.header.Access-Control-Allow-Origin":
+                  "method.request.header.origin",
+                "gatewayresponse.header.Access-Control-Allow-Credentials":
+                  "'true'",
+                "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
               },
-              ResponseType: 'DEFAULT_4XX',
+              ResponseType: "DEFAULT_4XX",
               RestApiId: {
                 Ref: id,
               },
@@ -185,8 +194,14 @@ export const addGateway = createResourcePack(
         Resources: {
           // SUPPORTING RESOURCES
           [fullDeploymentId]: {
-            Type: 'AWS::ApiGateway::Deployment',
-            DependsOn: [`${id}GatewayRESTAPIResource`, `${id}GatewayRESTAPIMethod`, `${id}GatewayRESTAPIRootMethod`, id, cloudFunctionId],
+            Type: "AWS::ApiGateway::Deployment",
+            DependsOn: [
+              `${id}GatewayRESTAPIResource`,
+              `${id}GatewayRESTAPIMethod`,
+              `${id}GatewayRESTAPIRootMethod`,
+              id,
+              cloudFunctionId,
+            ],
             Properties: {
               RestApiId: {
                 Ref: id,
@@ -194,47 +209,49 @@ export const addGateway = createResourcePack(
             },
           },
           [`${id}CloudWatch`]: {
-            Type: 'AWS::Logs::LogGroup',
+            Type: "AWS::Logs::LogGroup",
             Properties: {
               LogGroupName: {
-                'Fn::Sub': `\${AWS::StackName}-${id}GatewayLogs`,
+                "Fn::Sub": `\${AWS::StackName}-${id}GatewayLogs`,
               },
             },
           },
           [`${id}CloudWatchRole`]: {
-            Type: 'AWS::IAM::Role',
+            Type: "AWS::IAM::Role",
             Properties: {
               AssumeRolePolicyDocument: {
-                Version: '2012-10-17',
+                Version: "2012-10-17",
                 Statement: [
                   {
-                    Effect: 'Allow',
+                    Effect: "Allow",
                     Principal: {
-                      Service: ['apigateway.amazonaws.com'],
+                      Service: ["apigateway.amazonaws.com"],
                     },
-                    Action: 'sts:AssumeRole',
+                    Action: "sts:AssumeRole",
                   },
                 ],
               },
-              Path: '/',
-              ManagedPolicyArns: ['arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs'],
+              Path: "/",
+              ManagedPolicyArns: [
+                "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+              ],
             },
           },
           [`${id}CloudWatchAccount`]: {
-            Type: 'AWS::ApiGateway::Account',
+            Type: "AWS::ApiGateway::Account",
             Properties: {
               CloudWatchRoleArn: {
-                'Fn::GetAtt': [`${id}CloudWatchRole`, 'Arn'],
+                "Fn::GetAtt": [`${id}CloudWatchRole`, "Arn"],
               },
             },
           },
           [`${id}GatewayRESTAPIEnvironment`]: {
-            Type: 'AWS::ApiGateway::Stage',
+            Type: "AWS::ApiGateway::Stage",
             DependsOn: [`${id}CloudWatchAccount`, fullDeploymentId],
             Properties: {
               AccessLogSetting: {
                 DestinationArn: {
-                  'Fn::GetAtt': [`${id}CloudWatch`, 'Arn'],
+                  "Fn::GetAtt": [`${id}CloudWatch`, "Arn"],
                 },
                 Format:
                   '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","caller":"$context.identity.caller","user":"$context.identity.user","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength","apiGatewayErrorMessage":"$context.error.message"}',
@@ -254,18 +271,22 @@ export const addGateway = createResourcePack(
         Resources: {
           // DNS
           [`${id}DomainName`]: {
-            Type: 'AWS::ApiGateway::DomainName',
+            Type: "AWS::ApiGateway::DomainName",
             Properties: {
               CertificateArn: certificateArn,
               DomainName: domainName,
               EndpointConfiguration: {
-                Types: ['EDGE'],
+                Types: ["EDGE"],
               },
             },
           },
           [`${id}DomainNameBasePathMapping`]: {
-            Type: 'AWS::ApiGateway::BasePathMapping',
-            DependsOn: [id, `${id}GatewayRESTAPIEnvironment`, `${id}DomainName`],
+            Type: "AWS::ApiGateway::BasePathMapping",
+            DependsOn: [
+              id,
+              `${id}GatewayRESTAPIEnvironment`,
+              `${id}DomainName`,
+            ],
             Properties: {
               DomainName: domainName,
               RestApiId: {
@@ -275,27 +296,30 @@ export const addGateway = createResourcePack(
             },
           },
           [`${id}Route53Record`]: {
-            Type: 'AWS::Route53::RecordSet',
+            Type: "AWS::Route53::RecordSet",
             DependsOn: `${id}DomainName`,
             Properties: {
               HostedZoneId: hostedZoneId,
-              Type: 'A',
+              Type: "A",
               Name: {
-                'Fn::Sub': [
-                  '${DomainName}.',
+                "Fn::Sub": [
+                  "${DomainName}.",
                   {
                     DomainName: domainName,
                   },
                 ],
               },
               AliasTarget: {
-                HostedZoneId: 'Z2FDTNDATAQYW2',
+                HostedZoneId: "Z2FDTNDATAQYW2",
                 DNSName: {
-                  'Fn::Sub': [
-                    '${DomainName}.',
+                  "Fn::Sub": [
+                    "${DomainName}.",
                     {
                       DomainName: {
-                        'Fn::GetAtt': [`${id}DomainName`, 'DistributionDomainName'],
+                        "Fn::GetAtt": [
+                          `${id}DomainName`,
+                          "DistributionDomainName",
+                        ],
                       },
                     },
                   ],
@@ -309,16 +333,16 @@ export const addGateway = createResourcePack(
         Resources: {
           // PERMISSIONS
           [`${id}CloudFunctionANYResourcePermission`]: {
-            Type: 'AWS::Lambda::Permission',
+            Type: "AWS::Lambda::Permission",
             Properties: {
-              Action: 'lambda:InvokeFunction',
-              Principal: 'apigateway.amazonaws.com',
+              Action: "lambda:InvokeFunction",
+              Principal: "apigateway.amazonaws.com",
               FunctionName: {
-                'Fn::GetAtt': [cloudFunctionId, 'Arn'],
+                "Fn::GetAtt": [cloudFunctionId, "Arn"],
               },
               SourceArn: {
-                'Fn::Sub': [
-                  'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/*',
+                "Fn::Sub": [
+                  "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/*",
                   {
                     __Stage__: stageName,
                     __ApiId__: {
@@ -334,22 +358,22 @@ export const addGateway = createResourcePack(
       .patch(
         !!authorizer
           ? {
-            Resources: {
-              // AUTHORIZER
-              [`${id}CustomAuthorizer`]: {
-                Type: 'AWS::ApiGateway::Authorizer',
-                Properties: {
-                  IdentitySource: identitySource,
-                  Name: `${id}CustomAuthorizer`,
-                  ProviderARNs: providerARNs,
-                  RestApiId: {
-                    Ref: id,
+              Resources: {
+                // AUTHORIZER
+                [`${id}CustomAuthorizer`]: {
+                  Type: "AWS::ApiGateway::Authorizer",
+                  Properties: {
+                    IdentitySource: identitySource,
+                    Name: `${id}CustomAuthorizer`,
+                    ProviderARNs: providerARNs,
+                    RestApiId: {
+                      Ref: id,
+                    },
+                    Type: "COGNITO_USER_POOLS",
                   },
-                  Type: 'COGNITO_USER_POOLS',
                 },
               },
-            },
-          }
+            }
           : {},
       ).template;
   },
