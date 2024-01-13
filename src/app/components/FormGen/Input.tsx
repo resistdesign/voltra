@@ -7,10 +7,12 @@ import { DataTypeMap } from "./HelperTypes";
 const getInputTypeForTypeStructureType = (type: string) =>
   DataTypeMap[type as keyof typeof DataTypeMap] || "text";
 
+// TODO: Need a way to raise this styling up to a higher level. Specifically, the `:before` `color`.
+// TODO: Fix styles and colors in these components.
 const InputBase = styled.input`
   &[type="date"]:before {
     content: attr(placeholder) !important;
-    color: var(--form-element-placeholder-color);
+    color: #a9a9a9;
     margin-right: 0.5em;
   }
 
@@ -27,19 +29,19 @@ const RatingBase = styled.fieldset`
   align-items: center;
   gap: 1em;
   padding: 1em;
-  border: 0.05em solid var(--form-element-border-color);
+  border: 0.05em solid black;
   box-sizing: border-box;
 `;
 const RatingStarContainer = styled.label`
   &:before {
     content: "★";
-    color: var(--pico-form-element-color);
+    color: #a9a9a9;
     cursor: pointer;
   }
 
   &:has(input:checked) {
     &:before {
-      color: var(--pico-primary);
+      color: #ffcc00;
     }
   }
 `;
