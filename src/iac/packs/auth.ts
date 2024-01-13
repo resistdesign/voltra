@@ -1,5 +1,5 @@
-import { createResourcePack, SimpleCFT } from '@aws-cf-builder/utils';
-import { addUserManagement } from './abstract/user-management';
+import { addUserManagement } from "./abstract/user-management";
+import { createResourcePack, SimpleCFT } from "../utils";
 
 export type AddAuthConfig = {
   userManagementId: string;
@@ -51,27 +51,27 @@ export const addAuth = createResourcePack(
           callbackUrls: callbackUrls,
           logoutUrls: logoutUrls,
           baseDomainRecordAliasTargetDNSName: {
-            'Fn::GetAtt': [mainCDNCloudFrontId, 'DomainName'],
+            "Fn::GetAtt": [mainCDNCloudFrontId, "DomainName"],
           },
           apiGatewayRESTAPIId: {
             Ref: apiCloudFunctionGatewayId,
           },
           apiStageName,
         },
-        addUserManagement
+        addUserManagement,
       )
       .patch({
         Resources: {
           [adminGroupId]: {
-            Type: 'AWS::Cognito::UserPoolGroup',
+            Type: "AWS::Cognito::UserPoolGroup",
             Properties: {
               GroupName: userManagementAdminGroupName,
               UserPoolId: {
                 Ref: `${userManagementId}UserPool`,
               },
-              Description: 'Application admin group.',
+              Description: "Application admin group.",
             },
           },
         },
-      }).template
+      }).template,
 );
