@@ -45,14 +45,14 @@ export const DataContextOperations: Record<
 
 export const dataContextOperationIsAllowed = (
   operation: DataContextOperationOptions,
-  allowedOperations: DataContextOperationOptions[] = []
+  allowedOperations: DataContextOperationOptions[] = [],
 ) => allowedOperations.includes(operation);
 
 export const getDataContextOperationNotAllowed = (
-  operation: DataContextOperationOptions
+  operation: DataContextOperationOptions,
 ) =>
   new Error(
-    `${DataContextServiceErrorTypes.OPERATION_NOT_ALLOWED}: ${operation}`
+    `${DataContextServiceErrorTypes.OPERATION_NOT_ALLOWED}: ${operation}`,
   );
 
 export type DataContextField = {
@@ -65,7 +65,7 @@ export type DataContextField = {
 
 export type DataContext<
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   itemTypeName: string;
   resolvedType?: string;
@@ -85,7 +85,7 @@ export type DataContextUniquelyIdentifyingFieldType<DC> =
 
 export type NewItemType<
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = ItemType | Omit<ItemType, UniquelyIdentifyingFieldName>;
 
 export type DataContextMap = Record<string, DataContext<any, any>>;
@@ -94,12 +94,12 @@ export type DataContextOperationProvider<
   T extends Record<
     Lowercase<DataContextOperationOptions>,
     (...args: any[]) => AsyncReturnValue<any>
-  >
+  >,
 > = T;
 
 export type DataContextCreateOrUpdateOperation<DCM extends DataContextMap> = <
   ContextName extends keyof DCM,
-  UpdateFlag extends boolean
+  UpdateFlag extends boolean,
 >(
   contextName: ContextName,
   item: UpdateFlag extends true
@@ -108,7 +108,7 @@ export type DataContextCreateOrUpdateOperation<DCM extends DataContextMap> = <
         DataContextItemType<DCM[ContextName]>,
         DataContextUniquelyIdentifyingFieldName<DCM[ContextName]>
       >,
-  update?: UpdateFlag
+  update?: UpdateFlag,
 ) => AsyncReturnValue<DataContextItemType<DCM[ContextName]>>;
 
 export type DataContextService<DCM extends DataContextMap> =
@@ -118,23 +118,23 @@ export type DataContextService<DCM extends DataContextMap> =
       item: NewItemType<
         DataContextItemType<DCM[ContextName]>,
         DataContextUniquelyIdentifyingFieldName<DCM[ContextName]>
-      >
+      >,
     ) => AsyncReturnValue<DataContextItemType<DCM[ContextName]>>;
     read: <ContextName extends keyof DCM>(
       contextName: ContextName,
-      itemId: DataContextUniquelyIdentifyingFieldType<DCM>
+      itemId: DataContextUniquelyIdentifyingFieldType<DCM>,
     ) => AsyncReturnValue<DataContextItemType<DCM[ContextName]>>;
     update: <ContextName extends keyof DCM>(
       contextName: ContextName,
-      item: DataContextItemType<DCM[ContextName]>
+      item: DataContextItemType<DCM[ContextName]>,
     ) => AsyncReturnValue<DataContextItemType<DCM[ContextName]>>;
     delete: <ContextName extends keyof DCM>(
       contextName: ContextName,
-      itemId: DataContextUniquelyIdentifyingFieldType<DCM>
+      itemId: DataContextUniquelyIdentifyingFieldType<DCM>,
     ) => AsyncReturnValue<DataContextItemType<DCM[ContextName]>>;
     list: <ContextName extends keyof DCM>(
       contextName: ContextName,
-      config: ListItemsConfig
+      config: ListItemsConfig,
     ) => AsyncReturnValue<
       ListItemResults<DataContextItemType<DCM[ContextName]>>
     >;
@@ -142,7 +142,7 @@ export type DataContextService<DCM extends DataContextMap> =
 
 export type DataContextRelationship<
   FromDataContext extends DataContext<any, any>,
-  ToDataContext extends DataContext<any, any>
+  ToDataContext extends DataContext<any, any>,
 > = {
   id: string;
   fromContext: FromDataContext["itemTypeName"];
@@ -171,13 +171,13 @@ export type GetDataContextServiceConfig<DCM extends DataContextMap> = {
 };
 
 export const getDataContextService = <DCM extends DataContextMap>(
-  config: GetDataContextServiceConfig<DCM>
+  config: GetDataContextServiceConfig<DCM>,
 ): DataContextService<DCM> => {
   const { dataContextMap, itemDriverMap, relationshipItemDriver } = config;
   const createOrUpdate: DataContextCreateOrUpdateOperation<DCM> = async (
     contextName,
     item,
-    update?
+    update?,
   ) => {
     const serviceOperation =
       update === true
@@ -214,7 +214,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
           f !== uniquelyIdentifyingFieldName &&
           dataContextOperationIsAllowed(
             serviceOperation,
-            allowedFieldOperations
+            allowedFieldOperations,
           )
         ) {
           if (!isContext || embedded) {
@@ -234,12 +234,16 @@ export const getDataContextService = <DCM extends DataContextMap>(
             for (const relatedItem of arrayValue) {
               if (!!relatedItem) {
                 const isExistingItem =
-                  !!relatedItem[uniquelyIdentifyingFieldNameForItem];
+                  !!relatedItem[
+                    uniquelyIdentifyingFieldNameForItem as keyof typeof relatedItem
+                  ];
                 const relatedIdListForField =
                   relatedIdMap[f as keyof ItemType] || [];
 
                 let targetIdentifier =
-                  relatedItem[uniquelyIdentifyingFieldNameForItem];
+                  relatedItem[
+                    uniquelyIdentifyingFieldNameForItem as keyof typeof relatedItem
+                  ];
 
                 if (!isExistingItem) {
                   // Create item.
@@ -317,7 +321,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
                 },
               });
             const allExistingRelationshipIds = allExistingRelationships.map(
-              ({ toUniqueIdentifier }) => toUniqueIdentifier
+              ({ toUniqueIdentifier }) => toUniqueIdentifier,
             );
             const allExistingRelationshipsIdsMap: Record<
               DataContextUniquelyIdentifyingFieldType<any>,
@@ -327,7 +331,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
                 ...acc,
                 [toUniqueIdentifier]: id,
               }),
-              {}
+              {},
             );
 
             // Create relationships that are in the updating item but not in the existing item.
@@ -347,7 +351,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
             for (const existingRelatedId of allExistingRelationshipIds) {
               if (!relatedIdListForField.includes(existingRelatedId)) {
                 await relationshipItemDriver.deleteItem(
-                  allExistingRelationshipsIdsMap[existingRelatedId]
+                  allExistingRelationshipsIdsMap[existingRelatedId],
                 );
               }
             }
@@ -369,7 +373,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
       if (
         dataContextOperationIsAllowed(
           DataContextOperations.READ,
-          allowedOperations
+          allowedOperations,
         )
       ) {
         // Read and return the new item.
@@ -387,7 +391,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
   const readItem = async <ContextName extends keyof DCM>(
     contextName: ContextName,
     itemId: DataContextUniquelyIdentifyingFieldType<DCM>,
-    serviceOperation: DataContextOperationOptions
+    serviceOperation: DataContextOperationOptions,
   ) => {
     const {
       allowedOperations = [],
@@ -416,7 +420,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
           f !== uniquelyIdentifyingFieldName &&
           dataContextOperationIsAllowed(
             serviceOperation,
-            allowedFieldOperations
+            allowedFieldOperations,
           )
         ) {
           if (!isContext || embedded) {
@@ -457,7 +461,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
                 },
               });
             const relatedItemIdList = relatedItemInfoList.map(
-              ({ toUniqueIdentifier }) => toUniqueIdentifier
+              ({ toUniqueIdentifier }) => toUniqueIdentifier,
             );
 
             let newRelationalValue;
@@ -468,7 +472,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
               for (const relatedItemId of relatedItemIdList) {
                 const relatedItem = await service.read(
                   typeName as keyof DCM,
-                  relatedItemId as any
+                  relatedItemId as any,
                 );
 
                 newRelationalValue.push(relatedItem);
@@ -479,7 +483,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
 
               newRelationalValue = await service.read(
                 typeName as keyof DCM,
-                lastRelatedItemId as any
+                lastRelatedItemId as any,
               );
             }
 
@@ -495,7 +499,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
           ...acc,
           [field]: itemFromDriver[field],
         }),
-        {}
+        {},
       );
 
       return {
@@ -522,7 +526,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
       if (
         dataContextOperationIsAllowed(
           DataContextOperations.READ,
-          allowedOperations
+          allowedOperations,
         )
       ) {
         returnItem = await service.read(contextName, itemId);
@@ -536,7 +540,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
       if (
         dataContextOperationIsAllowed(
           DataContextOperations.DELETE,
-          allowedOperations
+          allowedOperations,
         )
       ) {
         // Delete item.
@@ -587,7 +591,7 @@ export const getDataContextService = <DCM extends DataContextMap>(
       if (
         dataContextOperationIsAllowed(
           DataContextOperations.LIST,
-          allowedOperations
+          allowedOperations,
         )
       ) {
         const { itemsPerPage = 10, cursor, criteria } = config;
@@ -598,23 +602,23 @@ export const getDataContextService = <DCM extends DataContextMap>(
 
         if (criteriaListHasRelatedField(criteriaList, dataContext)) {
           throw new Error(
-            DataContextServiceErrorTypes.RELATED_ITEM_SEARCH_NOT_ALLOWED
+            DataContextServiceErrorTypes.RELATED_ITEM_SEARCH_NOT_ALLOWED,
           );
         } else if (
           criteriaListHasDisallowedFieldForOperation(
             criteriaList,
             DataContextOperations.LIST,
-            dataContext
+            dataContext,
           )
         ) {
           throw new Error(
-            DataContextServiceErrorTypes.OPERATION_NOT_ALLOWED_FOR_FIELD
+            DataContextServiceErrorTypes.OPERATION_NOT_ALLOWED_FOR_FIELD,
           );
         } else if (
           criteriaListHasInvalidFieldOrValueType(
             criteriaList,
             contextName,
-            dataContextMap
+            dataContextMap,
           )
         ) {
           throw new Error(DataContextServiceErrorTypes.INVALID_CRITERION);
@@ -627,8 +631,8 @@ export const getDataContextService = <DCM extends DataContextMap>(
             });
           const readItemList = await Promise.all(
             items.map(({ [uniquelyIdentifyingFieldName]: id }) =>
-              service.read(contextName, id)
-            )
+              service.read(contextName, id),
+            ),
           );
 
           return {
