@@ -1,6 +1,7 @@
 import {
   Criteria,
   Criterion,
+  CriterionGroup,
   CriterionPath,
   SearchCriterionLogicalGroupingTypes,
   SearchCriterionTypes,
@@ -9,14 +10,14 @@ import {
 export type CriterionTranslator<ReturnType> = (
   criterion: Criterion,
   fieldOrderPath: number[],
-  fieldNamePath: string[]
+  fieldNamePath: string[],
 ) => ReturnType;
 
 export type CriterionGroupTranslator<ReturnType> = (
   translatedCriterionList: any[],
   relationshipType: SearchCriterionLogicalGroupingTypes,
   fieldOrderPath: number[],
-  fieldNamePath: string[]
+  fieldNamePath: string[],
 ) => ReturnType;
 
 export const processCriteria = <TranslatedCriterion, TranslatedCriterionGroup>(
@@ -26,7 +27,7 @@ export const processCriteria = <TranslatedCriterion, TranslatedCriterionGroup>(
   pathDelimiter: string = ".",
   parentOrderPath: number[] = [],
   parentPath: string[] = [],
-  fieldIndex: number = 0
+  fieldIndex: number = 0,
 ): TranslatedCriterion | TranslatedCriterionGroup => {
   const { type } = criteria;
   const orderPath = [...parentOrderPath, fieldIndex];
@@ -40,7 +41,7 @@ export const processCriteria = <TranslatedCriterion, TranslatedCriterionGroup>(
         ...criteria,
       },
       orderPath,
-      path
+      path,
     );
   } else if (type === SearchCriterionTypes.NESTED_CRITERION) {
     const { field, value } = criteria as CriterionPath;
@@ -53,10 +54,11 @@ export const processCriteria = <TranslatedCriterion, TranslatedCriterionGroup>(
       pathDelimiter,
       orderPath,
       path,
-      0
+      0,
     );
   } else {
-    const { relationshipType, criteria: criteriaList = [] } = criteria;
+    const { logicalGroupingType, criteria: criteriaList = [] } =
+      criteria as CriterionGroup;
 
     return criterionGroupTranslator(
       criteriaList.map((criterion, subFieldIndex) =>
@@ -67,12 +69,12 @@ export const processCriteria = <TranslatedCriterion, TranslatedCriterionGroup>(
           pathDelimiter,
           orderPath,
           parentPath,
-          subFieldIndex
-        )
+          subFieldIndex,
+        ),
       ),
-      relationshipType,
+      logicalGroupingType,
       orderPath,
-      parentPath
+      parentPath,
     );
   }
 };
