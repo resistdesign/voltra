@@ -29,3 +29,7 @@ front-end apps.</td>
 | Routing: Nesting/Handlers/Injected Handlers | Routing: Param Handlers/Parallel Routes/Hooks | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 |                                             |                                               | Typed Build Spec Creation                                     |
 |                                             |                                               | Typed Resource Parameters                                     |
+
+## TODO:
+
+1. Publish (automatically???)
