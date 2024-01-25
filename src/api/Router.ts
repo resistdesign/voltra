@@ -10,7 +10,9 @@ import {
 } from "./Router/Types";
 import { getRouteIsAuthorized } from "./Router/Auth";
 import { getHeadersWithCORS } from "./Router/CORS";
-import {mergeStringPaths} from "../common/Routing";
+import { mergeStringPaths } from "../common/Routing";
+
+export * from "./Router/AWS";
 
 export const addRouteToRouteMap = (
   routeMap: RouteMap,

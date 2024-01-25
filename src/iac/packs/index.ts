@@ -1,7 +1,11 @@
-// TODO: Update to include new packs.
+export * from "./auth";
 export * from "./build";
 export * from "./build/utils";
 export * from "./cdn";
 export * from "./cloud-function";
+export * from "./database";
+export * from "./dns";
 export * from "./file-storage";
 export * from "./gateway";
+export * from "./repo";
+export * from "./ssl-certificate";

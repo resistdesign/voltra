@@ -1,5 +1,6 @@
 import { CloudFormationParameter, CloudFormationTemplate } from "../types/StandardIncludes";
 import { getValuePathString, mergeValues } from './patch-utils';
+export * from './patch-utils';
 
 export type ParameterInfo = {
   ParameterId: string;
