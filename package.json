@@ -43,7 +43,7 @@
     "browser": {
       "context": "browser",
       "includeNodeModules": false,
-      "outputFormat": "global",
+      "outputFormat": "esmodule",
       "distDir": "dist/browser"
     }
   },
