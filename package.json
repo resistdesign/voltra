@@ -10,7 +10,7 @@
   "author": "Resist Design",
   "license": "UNLICENSED",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@resistdesign"
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "test": "tsc --noEmit"
