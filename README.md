@@ -2,6 +2,14 @@
 
 ![Voltra Gem Logo 2024 Square.png](https://github.com/resistdesign/voltra/blob/main/images/Voltra%20Gem%20Logo%202024%20Square.png?raw=true)
 
+## Usage
+
+### Install
+
+```bash
+yarn add @resistdesign/voltra
+```
+
 ## With our powers combined!
 
 <table style="border: 0 solid black;">
@@ -29,7 +37,3 @@ front-end apps.</td>
 | Routing: Nesting/Handlers/Injected Handlers | Routing: Param Handlers/Parallel Routes/Hooks | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 |                                             |                                               | Typed Build Spec Creation                                     |
 |                                             |                                               | Typed Resource Parameters                                     |
-
-## TODO:
-
-1. Publish (automatically???)
