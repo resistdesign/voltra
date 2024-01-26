@@ -7,6 +7,9 @@
   "author": "Resist Design",
   "license": "UNLICENSED",
   "private": true,
+  "scripts": {
+    "build": "tsc ./src/**/*.{ts,tsx} --outDir ./dist"
+  },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
     "@aws-sdk/client-s3": "^3.490.0",
