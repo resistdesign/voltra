@@ -1,5 +1,5 @@
 {
-  "name": "voltra",
+  "name": "@resistdesign/voltra",
   "version": "0.0.0",
   "description": "With our powers combined!",
   "main": "dist/index.ts",
