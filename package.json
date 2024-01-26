@@ -1,6 +1,6 @@
 {
   "name": "@resistdesign/voltra",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "With our powers combined!",
   "main": "src/index.ts",
   "files": [
