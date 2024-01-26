@@ -7,6 +7,9 @@
   "author": "Resist Design",
   "license": "UNLICENSED",
   "private": true,
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@resistdesign"
+  },
   "scripts": {
     "build": "tsc"
   },
