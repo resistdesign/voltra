@@ -2,13 +2,13 @@
   "name": "voltra",
   "version": "0.0.0",
   "description": "With our powers combined!",
-  "main": "index.js",
+  "main": "dist/index.ts",
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "build": "tsc ./src/**/*.{ts,tsx} --outDir ./dist"
+    "build": "tsc"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
