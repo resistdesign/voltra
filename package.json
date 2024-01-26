@@ -38,20 +38,13 @@
       "context": "node",
       "includeNodeModules": false,
       "outputFormat": "commonjs",
-      "engines": {
-        "node": ">=12"
-      }
-    },
-    "module": {
-      "context": "neutral",
-      "includeNodeModules": false,
-      "outputFormat": "esmodule"
+      "distDir": "dist/node"
     },
     "browser": {
       "context": "browser",
       "includeNodeModules": false,
       "outputFormat": "global",
-      "distDir": "./dist/browser"
+      "distDir": "dist/browser"
     }
   },
   "parcel": {
