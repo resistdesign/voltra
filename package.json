@@ -9,7 +9,6 @@
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
   "license": "UNLICENSED",
-  "private": true,
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/@resistdesign"
   },
