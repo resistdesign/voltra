@@ -1,31 +1,44 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "module": "commonjs",
-    "target": "es5",
+    "target": "es2018",
+    // Modern enough for Node.js and newer browsers, adjust as needed
+    "module": "esnext",
+    // For better compatibility with modern module systems
     "lib": [
-      "dom",
-      "esnext"
+      "esnext",
+      "dom"
     ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    // Include 'dom' only if needed for browser-specific types
+    "declaration": true,
+    // Generate .d.ts files
+    "outDir": "./dist",
+    // Output directory for compiled files
+    "rootDir": "./src",
+    // Root directory of source files
     "strict": true,
+    // Enable all strict type-checking options
+    "esModuleInterop": true,
+    // Enables ES6 module emulation
+    "skipLibCheck": true,
+    // Skip type checking of all declaration files (*.d.ts)
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
+    // Use Node.js module resolution mechanism
     "resolveJsonModule": true,
+    // Allow importing '.json' files
     "isolatedModules": true,
-    "noEmit": false,
+    // Ensure each file can be safely transpiled without relying on other imports
     "jsx": "react-jsx"
+    // Preserve JSX, adjust as necessary
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*"
+    // Include all files in the src directory
   ],
   "exclude": [
     "node_modules",
+    // Exclude node_modules from the compilation
     "**/*.spec.ts"
+    // Exclude test files from the compilation if present
   ]
 }
