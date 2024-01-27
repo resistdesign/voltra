@@ -4,7 +4,6 @@
   "description": "With our powers combined!",
   "main": "src/index.ts",
   "files": [
-    "images",
     "src"
   ],
   "repository": "git@github.com:resistdesign/voltra.git",
