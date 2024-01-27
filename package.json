@@ -6,6 +6,11 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    "./API": "./dist/api/index.js",
+    "./App": "./dist/app/index.js",
+    "./IaC": "./dist/iac/index.js"
+  },
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
   "license": "UNLICENSED",
