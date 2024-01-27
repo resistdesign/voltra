@@ -2,20 +2,34 @@
   "name": "@resistdesign/voltra",
   "version": "1.0.0",
   "description": "With our powers combined!",
+  "homepage": "https://voltra.app",
+  "repository": "git@github.com:resistdesign/voltra.git",
+  "author": "Resist Design",
+  "license": "UNLICENSED",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "main": "dist/index.js",
   "files": [
     "dist"
   ],
   "exports": {
     "./api": "./dist/api/index.js",
-    "./app": "./dist/app/index.js",
-    "./iac": "./dist/iac/index.js"
+    "./app": "./dist/api/index.js",
+    "./iac": "./dist/api/index.js"
   },
-  "repository": "git@github.com:resistdesign/voltra.git",
-  "author": "Resist Design",
-  "license": "UNLICENSED",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+  "typesVersions": {
+    "*": {
+      "api": [
+        "dist/api/index.d.ts"
+      ],
+      "app": [
+        "dist/app/index.d.ts"
+      ],
+      "iac": [
+        "dist/iac/index.d.ts"
+      ]
+    }
   },
   "scripts": {
     "build": "tsc",

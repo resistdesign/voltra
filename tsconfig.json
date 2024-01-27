@@ -9,12 +9,7 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "declaration": true,
-    "baseUrl": ".",
-    "paths": {
-      "@resistdesign/voltra/*": [
-        "./src/*"
-      ]
-    }
+    "moduleResolution": "NodeNext"
   },
   "include": [
     "src/**/*.js",
