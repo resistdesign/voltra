@@ -1,11 +1,15 @@
-const AWS = require("aws-sdk");
-const Response = require("cfn-response");
+import AWS from "aws-sdk";
+import { CloudFormationCustomResourceHandler } from "aws-lambda";
+import Response, { ResponseStatus } from "cfn-response";
 
-exports.handler = async (event, context) => {
+export const handler: CloudFormationCustomResourceHandler = async (
+  event,
+  context,
+): Promise<void> => {
   const { RequestType } = event;
 
-  let status = Response.FAILED,
-    data = {};
+  let status: ResponseStatus = Response.FAILED,
+    data: any = {};
 
   if (RequestType === "Delete") {
     status = Response.SUCCESS;
@@ -17,9 +21,9 @@ exports.handler = async (event, context) => {
       const cognito = new AWS.CognitoIdentityServiceProvider();
       const {
         DomainDescription: { CloudFrontDistribution },
-      } = await cognito
+      } = (await cognito
         .describeUserPoolDomain({ Domain: UserPoolDomain })
-        .promise();
+        .promise()) as any;
 
       status = Response.SUCCESS;
       data = {
@@ -30,10 +34,15 @@ exports.handler = async (event, context) => {
     }
   }
 
-  return await sendResponse(event, context, status, data);
+  return (await sendResponse(event, context, status, data)) as any;
 };
 
-async function sendResponse(event, context, responseStatus, responseData) {
+async function sendResponse(
+  event: any,
+  context: any,
+  responseStatus: any,
+  responseData: any,
+) {
   let responsePromise = new Promise((resolve, reject) => {
     const responseBody = JSON.stringify({
       Status: responseStatus,
@@ -59,13 +68,13 @@ async function sendResponse(event, context, responseStatus, responseData) {
       },
     };
     console.log("SENDING RESPONSE...\n");
-    const request = https.request(options, function (response) {
+    const request = https.request(options, function (response: any) {
       console.log("STATUS: " + response.statusCode);
       console.log("HEADERS: " + JSON.stringify(response.headers));
       resolve(JSON.parse(responseBody));
       context.done();
     });
-    request.on("error", function (error) {
+    request.on("error", function (error: any) {
       console.log("sendResponse Error:" + error);
       reject(error);
       context.done();
