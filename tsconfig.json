@@ -8,7 +8,13 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@resistdesign/voltra/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": [
     "src/**/*.js",

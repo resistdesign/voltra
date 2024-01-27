@@ -7,9 +7,9 @@
     "dist"
   ],
   "exports": {
-    "./API": "./dist/api/index.js",
-    "./App": "./dist/app/index.js",
-    "./IaC": "./dist/iac/index.js"
+    "./api": "./dist/api/index.js",
+    "./app": "./dist/app/index.js",
+    "./iac": "./dist/iac/index.js"
   },
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
