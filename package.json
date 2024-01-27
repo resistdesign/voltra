@@ -2,9 +2,9 @@
   "name": "@resistdesign/voltra",
   "version": "1.0.0",
   "description": "With our powers combined!",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "files": [
-    "src"
+    "dist"
   ],
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
@@ -13,6 +13,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
+    "build": "tsc",
     "test": "tsc --noEmit"
   },
   "dependencies": {
