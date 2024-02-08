@@ -3,7 +3,8 @@ import { createResourcePack, SimpleCFT } from "../utils";
 export type AddDNSConfig = {
   hostedZoneIdParameterName: string;
   domainNameParameterName: string;
-  localUIDevelopmentDomainName: string;
+  localUIDevelopmentDomainName?: string;
+  localUIDevelopmentIPAddress?: string;
 };
 
 export const addDNS = createResourcePack(
@@ -11,25 +12,27 @@ export const addDNS = createResourcePack(
     hostedZoneIdParameterName,
     domainNameParameterName,
     localUIDevelopmentDomainName,
-  }: AddDNSConfig) =>
-    new SimpleCFT()
-      .addParameterGroup({
-        Label: "DNS",
-        Parameters: {
-          [hostedZoneIdParameterName]: {
-            Label: "Hosted Zone ID",
-            Type: "AWS::Route53::HostedZone::Id",
-            Description: "Hosted Zone ID",
-          },
-          [domainNameParameterName]: {
-            Label: "Domain Name",
-            Type: "String",
-            Description: "Domain name for the hosted zone",
-            Default: "example.com",
-          },
+    localUIDevelopmentIPAddress,
+  }: AddDNSConfig) => {
+    let cft = new SimpleCFT().addParameterGroup({
+      Label: "DNS",
+      Parameters: {
+        [hostedZoneIdParameterName]: {
+          Label: "Hosted Zone ID",
+          Type: "AWS::Route53::HostedZone::Id",
+          Description: "Hosted Zone ID",
         },
-      })
-      .patch({
+        [domainNameParameterName]: {
+          Label: "Domain Name",
+          Type: "String",
+          Description: "Domain name for the hosted zone",
+          Default: "example.com",
+        },
+      },
+    });
+
+    if (localUIDevelopmentDomainName) {
+      cft = cft.patch({
         Resources: {
           [localUIDevelopmentDomainName]: {
             Type: "AWS::Route53::RecordSet",
@@ -49,10 +52,18 @@ export const addDNS = createResourcePack(
                   },
                 ],
               },
-              ResourceRecords: ["127.0.0.1"],
+              ResourceRecords: [
+                localUIDevelopmentIPAddress
+                  ? localUIDevelopmentIPAddress
+                  : "127.0.0.1",
+              ],
               TTL: "300",
             },
           },
         },
-      }).template,
+      });
+    }
+
+    return cft.template;
+  },
 );
