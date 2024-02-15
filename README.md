@@ -1,6 +1,6 @@
 # Voltra
 
-![Voltra Gem Logo 2024 Square.png](https://github.com/resistdesign/voltra/blob/main/images/Voltra%20Gem%20Logo%202024%20Square.png?raw=true)
+![Voltra Gem Logo 2024 Square.png](https://docs.voltra.app/images/Voltra%20Gem%20Logo%202024%20Square.png)
 
 ## Usage
 
@@ -22,7 +22,7 @@ features like chainable stacks and comprehensive parameter support. Its intuitiv
 databases, storage, authentication, and functions through easy-to-use packs. Furthermore, Voltra enhances development
 workflows with shared routing utilities, advanced state management, and a smart, lightweight routing system for React
 front-end apps.</td>
-<td><img src="https://github.com/resistdesign/voltra/blob/main/images/Robo%20Power.png?raw=true" style="width: 200em;" /></td>
+<td><img src="https://docs.voltra.app/images/Robo%20Power.png" style="width: 200em;" /></td>
 </tr>
 </tbody>
 </table>
