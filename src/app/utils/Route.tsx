@@ -45,8 +45,15 @@ export const RouteContext = createContext<RouteContextType>({
   parentPath: "",
   params: {},
 });
+
 export const {
+  /**
+   * @ignore
+   * */
   Provider: RouteContextProvider,
+  /**
+   * @ignore
+   * */
   Consumer: RouteContextConsumer,
 } = RouteContext;
 
