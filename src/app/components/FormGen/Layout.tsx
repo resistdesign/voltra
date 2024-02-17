@@ -81,9 +81,17 @@ export const getLayoutContainerCSS = ({
 
   ${LayoutMediaCSS}
 `;
+
+/**
+ * @ignore
+ * */
 export const LayoutBox = styled.div<LayoutContainerProps>`
   ${(p) => getLayoutContainerCSS(p)}
 `;
+
+/**
+ * @ignore
+ * */
 export const LayoutControls = styled.div`
   flex: 0 0 auto;
   display: flex;

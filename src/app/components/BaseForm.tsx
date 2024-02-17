@@ -1,6 +1,9 @@
 import React, { FC, FormEvent, FormHTMLAttributes } from "react";
 import styled from "styled-components";
 
+/**
+ * @ignore
+ * */
 export type BaseFormProps = FormHTMLAttributes<HTMLFormElement>;
 
 const FormBase: FC<BaseFormProps> = ({ onSubmit, ...rest }) => {
@@ -12,6 +15,9 @@ const FormBase: FC<BaseFormProps> = ({ onSubmit, ...rest }) => {
   return <form onSubmit={handleSubmit} {...rest} />;
 };
 
+/**
+ * @ignore
+ * */
 export const BaseForm = styled(FormBase).attrs((p) => ({
   className: "form-normalized-outer-spacing",
 }))`

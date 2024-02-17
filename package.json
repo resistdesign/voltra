@@ -34,7 +34,7 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc --noEmit",
-    "doc": "typedoc ./src/index.ts && cp CNAME docs/ && cp ./images docs/ -r"
+    "doc": "typedoc && cp CNAME docs/ && cp -r ./images docs/"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
