@@ -5,6 +5,8 @@ export * as API from "./api";
 
 /**
  * Build front-end applications with React/TypeScript, layout systems, form generation, RPC requests, easy state management and more.
+ *
+ * @see {@link getEasyLayout} and {@link TypeStructureComponent} for a great place to start.
  * */
 export * as App from "./app";
 

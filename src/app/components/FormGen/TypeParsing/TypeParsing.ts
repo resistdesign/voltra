@@ -266,6 +266,9 @@ const getTypeMap = (typeNode: Node, namespace?: string): TypeStructureMap => {
   return map;
 };
 
+/**
+ * Use your TypeScript to drive form generation for automated, runtime UI presentation.
+ * */
 export const convertTypeScriptToTypeStructureMap = (typeScriptText: string): TypeStructureMap => {
   const typeScriptNode: Node = createSourceFile('x.ts', typeScriptText, ScriptTarget.Latest, true);
 
