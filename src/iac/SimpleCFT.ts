@@ -22,6 +22,7 @@ export class SimpleCFT {
 
   /**
    * Apply a pack with configuration to the stack template.
+   * @see {@link IaC} for an example.
    * */
   public applyPack = <ParamsType>(
     pack: ResourcePackApplier<ParamsType>,
