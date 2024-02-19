@@ -16,7 +16,7 @@ const FormBase: FC<BaseFormProps> = ({ onSubmit, ...rest }) => {
 };
 
 /**
- * @ignore
+ * A basic form element wrapper that handles form submission in an expected and normalized way.
  * */
 export const BaseForm = styled(FormBase).attrs((p) => ({
   className: "form-normalized-outer-spacing",

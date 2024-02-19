@@ -9,6 +9,9 @@ import {
   useState,
 } from "react";
 
+/**
+ * An object, nested or not, used as the identifier or identifier path for a state value.
+ * */
 export interface ApplicationStateIdentifier
   extends Record<string, ApplicationStateIdentifier | {}> {}
 
@@ -71,11 +74,17 @@ export const ApplicationStateContext =
 
 const { Provider } = ApplicationStateContext;
 
+/**
+ * Used to access and update application state values.
+ * */
 export type ApplicationStateValueController = {
   value: ApplicationStateValue;
   onChange: (value: ApplicationStateValue) => void;
 };
 
+/**
+ * Get and set an application state value by identifier.
+ * */
 export const useApplicationStateValue = (
   identifier: ApplicationStateIdentifier,
 ): ApplicationStateValueController => {
@@ -107,13 +116,18 @@ export const useApplicationStateValue = (
   return controller;
 };
 
+/**
+ * A mapped structure of application state value controllers.
+ * */
 export type ApplicationStateValueStructureController<
   StructureType extends Record<string, any>,
 > = {
   valueStructure: StructureType;
   onChangeStructure: Record<keyof StructureType, (newValue: any) => void>;
 };
-
+/**
+ * Use an object that is a collection of application state value controllers.
+ * */
 export const useApplicationStateValueStructure = <
   StructureType extends Record<string, any>,
 >(
@@ -158,9 +172,12 @@ export const useApplicationStateValueStructure = <
   return controller;
 };
 
-export type ApplicationStateProvider = PropsWithChildren<{}>;
+export type ApplicationStateProviderProps = PropsWithChildren<{}>;
 
-export const ApplicationStateProvider: FC<ApplicationStateProvider> = ({
+/**
+ * Provide a context container for application state.
+ * */
+export const ApplicationStateProvider: FC<ApplicationStateProviderProps> = ({
   children,
 }) => {
   const [value, setValue] = useState<ApplicationState>(new Map());
