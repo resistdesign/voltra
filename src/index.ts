@@ -15,7 +15,7 @@ export * as App from "./app";
  *
  * @example
  * ```typescript
- * import {SimpleCTF} from '@simple-ctf/iac';
+ * import { SimpleCTF } from '@resistdesign/voltra/iac';
  *
  * const ctf = new SimpleCTF()
  *   .addPack(
