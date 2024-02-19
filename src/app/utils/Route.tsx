@@ -34,6 +34,9 @@ import {
 
 const CURRENT_PATH: string = window.location.pathname;
 
+/**
+ * Access values for the current Route.
+ * */
 export type RouteContextType = {
   currentWindowPath: string;
   parentPath: string;
@@ -57,14 +60,23 @@ export const {
   Consumer: RouteContextConsumer,
 } = RouteContext;
 
+/**
+ * Access Route path and parameter information.
+ * */
 export const useRouteContext = () => useContext(RouteContext);
 
+/**
+ * Configure the Route.
+ * */
 export type RouteProps<ParamsType extends Record<string, any>> = {
   path?: string;
   onParamsChange?: (params: ParamsType) => void;
   exact?: boolean;
 };
 
+/**
+ * Organize nested routes with parameters and integrate with the browser history.
+ * */
 export const Route = <ParamsType extends Record<string, any>>({
   /**
    * Use `:` as the first character to denote a parameter in the path.
