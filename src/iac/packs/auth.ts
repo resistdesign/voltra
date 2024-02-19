@@ -1,6 +1,6 @@
 import { addUserManagement } from "./abstract/user-management";
 import { createResourcePack } from "../utils";
-import {SimpleCFT} from "../SimpleCFT";
+import { SimpleCFT } from "../SimpleCFT";
 
 export type AddAuthConfig = {
   userManagementId: string;
@@ -38,32 +38,29 @@ export const addAuth = createResourcePack(
     userManagementAdminGroupName,
   }: AddAuthConfig) =>
     new SimpleCFT()
-      .applyPack(
-        {
-          id: userManagementId,
-          authRoleName,
-          unauthRoleName,
-          domainName: {
-            Ref: domainNameParameterName,
-          },
-          hostedZoneId: {
-            Ref: hostedZoneIdParameterName,
-          },
-          sslCertificateArn: {
-            Ref: sslCertificateId,
-          },
-          callbackUrls: callbackUrls,
-          logoutUrls: logoutUrls,
-          baseDomainRecordAliasTargetDNSName: {
-            "Fn::GetAtt": [mainCDNCloudFrontId, "DomainName"],
-          },
-          apiGatewayRESTAPIId: {
-            Ref: apiCloudFunctionGatewayId,
-          },
-          apiStageName,
+      .applyPack(addUserManagement, {
+        id: userManagementId,
+        authRoleName,
+        unauthRoleName,
+        domainName: {
+          Ref: domainNameParameterName,
         },
-        addUserManagement,
-      )
+        hostedZoneId: {
+          Ref: hostedZoneIdParameterName,
+        },
+        sslCertificateArn: {
+          Ref: sslCertificateId,
+        },
+        callbackUrls: callbackUrls,
+        logoutUrls: logoutUrls,
+        baseDomainRecordAliasTargetDNSName: {
+          "Fn::GetAtt": [mainCDNCloudFrontId, "DomainName"],
+        },
+        apiGatewayRESTAPIId: {
+          Ref: apiCloudFunctionGatewayId,
+        },
+        apiStageName,
+      })
       .patch({
         Resources: {
           [adminGroupId]: {
