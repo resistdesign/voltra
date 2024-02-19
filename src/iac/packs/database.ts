@@ -1,4 +1,5 @@
-import { createResourcePack, SimpleCFT } from "../utils";
+import { createResourcePack } from "../utils";
+import { SimpleCFT } from "../SimpleCFT";
 
 export type AddDatabaseConfig = {
   tableId: string;
