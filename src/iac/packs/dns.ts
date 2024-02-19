@@ -7,6 +7,10 @@ export type AddDNSConfig = {
   localUIDevelopmentIPAddress?: string;
 };
 
+/**
+ * Add DNS parameters for reference in other resources.
+ * Optionally includes a front-end live development subdomain.
+ * */
 export const addDNS = createResourcePack(
   ({
     hostedZoneIdParameterName,
