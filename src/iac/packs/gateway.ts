@@ -1,4 +1,5 @@
-import { createResourcePack, SimpleCFT } from "../utils";
+import { createResourcePack } from "../utils";
+import { SimpleCFT } from "../SimpleCFT";
 
 export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 
