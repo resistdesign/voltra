@@ -18,7 +18,7 @@ export * as App from "./app";
  * import { SimpleCTF } from '@resistdesign/voltra/iac';
  *
  * const ctf = new SimpleCTF()
- *   .addPack(
+ *   .applyPack(
  *     addDNS,
  *     {
  *       hostedZoneIdParameterName: "<YOUR_INFO_HERE>"
