@@ -20,6 +20,11 @@ export type AddGatewayConfig = {
   deploymentSuffix?: string;
 };
 
+/**
+ * Add a load-balanced API gateway for your serverless cloud function.
+ * Includes authorization config that connects your user management system to your cloud function.
+ * Also includes a DNS record for your API/back-end.
+ * */
 export const addGateway = createResourcePack(
   ({
     id,

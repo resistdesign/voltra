@@ -17,6 +17,9 @@ export type AddAuthConfig = {
   logoutUrls: any[];
 };
 
+/**
+ * Add a user management system.
+ * */
 export const addAuth = createResourcePack(
   ({
     userManagementId,

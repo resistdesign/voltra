@@ -7,14 +7,22 @@ export type AddSSLCertificateConfig = {
   includeWildCard?: boolean;
 };
 
+/**
+ * Add an automatic SSL Certificate for a domain and all of it's subdomains.
+ * */
 export const addSSLCertificate = createResourcePack(
-  ({ id, domainName, hostedZoneId, includeWildCard = true }: AddSSLCertificateConfig) => ({
+  ({
+    id,
+    domainName,
+    hostedZoneId,
+    includeWildCard = true,
+  }: AddSSLCertificateConfig) => ({
     Resources: {
       [id]: {
-        Type: 'AWS::CertificateManager::Certificate',
+        Type: "AWS::CertificateManager::Certificate",
         Properties: {
           DomainName: domainName,
-          ValidationMethod: 'DNS',
+          ValidationMethod: "DNS",
           DomainValidationOptions: [
             {
               DomainName: domainName,
@@ -24,8 +32,8 @@ export const addSSLCertificate = createResourcePack(
           SubjectAlternativeNames: includeWildCard
             ? [
                 {
-                  'Fn::Sub': [
-                    '*.${BaseDomainName}',
+                  "Fn::Sub": [
+                    "*.${BaseDomainName}",
                     {
                       BaseDomainName: domainName,
                     },
@@ -36,5 +44,5 @@ export const addSSLCertificate = createResourcePack(
         },
       },
     },
-  })
+  }),
 );

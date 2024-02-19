@@ -7,6 +7,9 @@ export type AddDatabaseConfig = {
   billingMode?: "PAY_PER_REQUEST" | "PROVISIONED";
 };
 
+/**
+ * Add a highly available key-value database with global scale performance.
+ * */
 export const addDatabase = createResourcePack(
   ({
     tableId,
