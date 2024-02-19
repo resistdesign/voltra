@@ -93,7 +93,7 @@ const convertLayoutToCSS = (
  * Quickly express advanced, extensible grid layouts with styled-components.
  *
  * @example
- * ```typescript
+ * ```tsx
  * const {
  *   layout: Container,
  *   areas: {
