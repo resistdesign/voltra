@@ -1,5 +1,8 @@
 import { mergeStringPaths } from "../../common/Routing";
 
+/**
+ * The HTTP service configuration, including authorization, to be used for a service call.
+ * */
 export type ServiceConfig = {
   protocol: string;
   domain: string;
