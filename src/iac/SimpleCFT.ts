@@ -24,8 +24,8 @@ export class SimpleCFT {
    * Apply a pack with configuration to the stack template.
    * */
   public applyPack = <ParamsType>(
-    params: ParamsType,
     pack: ResourcePackApplier<ParamsType>,
+    params: ParamsType,
   ) => {
     this.template = pack(params, this.template);
 
