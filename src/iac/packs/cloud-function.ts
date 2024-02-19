@@ -41,6 +41,10 @@ export type AddCloudFunctionConfig = {
   policies?: AWS.IAM.Role.Policy[];
 };
 
+/**
+ * Add a serverless cloud function to run part or all of your API (back-end) without always running servers.
+ *
+ * */
 export const addCloudFunction = createResourcePack(
   ({
     id,

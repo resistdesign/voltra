@@ -8,6 +8,10 @@ export type AddCDNConfig = {
   fileStorageId: string;
 };
 
+/**
+ * Add a global cache of static files (a CDN) for things like your front-end, website, etc.
+ * Includes a DNS record for the domain.
+ * */
 export const addCDN = createResourcePack(
   ({
     id,

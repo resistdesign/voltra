@@ -7,6 +7,9 @@ export type AddRepoConfig = {
   repoTokenParameterName: string;
 };
 
+/**
+ * Add repository related parameters for reference in other resources like a build pipeline (CI/CD).
+ * */
 export const addRepo = createResourcePack(
   ({
     repoOwnerParameterName,
