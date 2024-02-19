@@ -1,6 +1,10 @@
-import { CloudFormationParameter, CloudFormationTemplate } from "../types/StandardIncludes";
-import { getValuePathString, mergeValues } from './patch-utils';
-export * from './patch-utils';
+import {
+  CloudFormationParameter,
+  CloudFormationTemplate,
+} from "../types/StandardIncludes";
+import { getValuePathString, mergeValues } from "./patch-utils";
+
+export * from "./patch-utils";
 
 export type ParameterInfo = {
   ParameterId: string;
@@ -9,14 +13,30 @@ export type ParameterInfo = {
   Group?: string;
 };
 
-export const addParameter = (parameterInfo: ParameterInfo, template: CloudFormationTemplate): CloudFormationTemplate => {
+/**
+ * Add a stack parameter including its descriptive info and an optional parameter group.
+ * */
+export const addParameter = (
+  parameterInfo: ParameterInfo,
+  template: CloudFormationTemplate,
+): CloudFormationTemplate => {
   const { ParameterId, Parameter, Label, Group } = parameterInfo;
-  const { Parameters, Metadata: { 'AWS::CloudFormation::Interface': { ParameterGroups = [], ParameterLabels = {} } = {} } = {} } = template;
+  const {
+    Parameters,
+    Metadata: {
+      "AWS::CloudFormation::Interface": {
+        ParameterGroups = [],
+        ParameterLabels = {},
+      } = {},
+    } = {},
+  } = template;
 
   let NewParameterGroups = ParameterGroups;
 
   if (Group) {
-    const GroupObject = ParameterGroups.filter((g) => g.Label?.default === Group)[0];
+    const GroupObject = ParameterGroups.filter(
+      (g) => g.Label?.default === Group,
+    )[0];
 
     NewParameterGroups = GroupObject
       ? ParameterGroups.map((g) =>
@@ -25,7 +45,7 @@ export const addParameter = (parameterInfo: ParameterInfo, template: CloudFormat
                 ...g,
                 Parameters: [...(g.Parameters || []), ParameterId],
               }
-            : g
+            : g,
         )
       : [
           ...ParameterGroups,
@@ -46,8 +66,8 @@ export const addParameter = (parameterInfo: ParameterInfo, template: CloudFormat
     },
     Metadata: {
       ...template.Metadata,
-      'AWS::CloudFormation::Interface': {
-        ...template?.Metadata?.['AWS::CloudFormation::Interface'],
+      "AWS::CloudFormation::Interface": {
+        ...template?.Metadata?.["AWS::CloudFormation::Interface"],
         ParameterGroups: NewParameterGroups,
         ParameterLabels: {
           ...ParameterLabels,
@@ -60,36 +80,55 @@ export const addParameter = (parameterInfo: ParameterInfo, template: CloudFormat
   };
 };
 
-export const addParameters = (parameters: ParameterInfo[], template: CloudFormationTemplate) =>
-  parameters.reduce((acc, p) => addParameter(p, acc), template);
+/**
+ * Add multiple stack parameters with info and groups.
+ * */
+export const addParameters = (
+  parameters: ParameterInfo[],
+  template: CloudFormationTemplate,
+) => parameters.reduce((acc, p) => addParameter(p, acc), template);
 
-export type ResourcePackApplier<ParamsType> = (params: ParamsType, template: CloudFormationTemplate) => CloudFormationTemplate;
+export type ResourcePackApplier<ParamsType> = (
+  params: ParamsType,
+  template: CloudFormationTemplate,
+) => CloudFormationTemplate;
 
-export const patchTemplate = (patch: Partial<CloudFormationTemplate>, template: CloudFormationTemplate): CloudFormationTemplate =>
+/**
+ * Apply a patch to a stack template.
+ * */
+export const patchTemplate = (
+  patch: Partial<CloudFormationTemplate>,
+  template: CloudFormationTemplate,
+): CloudFormationTemplate =>
   mergeValues([], template, patch, {
     [getValuePathString([
       // Parameter Groups
-      'Metadata',
-      'AWS::CloudFormation::Interface',
-      'ParameterGroups',
+      "Metadata",
+      "AWS::CloudFormation::Interface",
+      "ParameterGroups",
     ])]: {
-      strategy: 'accumulate-unique-by',
+      strategy: "accumulate-unique-by",
       data: (pG) => pG?.Label?.default,
     },
     [getValuePathString([
       // Parameter Group Parameter Ids
-      'Metadata',
-      'AWS::CloudFormation::Interface',
-      'ParameterGroups',
-      '#',
-      'Parameters',
+      "Metadata",
+      "AWS::CloudFormation::Interface",
+      "ParameterGroups",
+      "#",
+      "Parameters",
     ])]: {
-      strategy: 'accumulate-unique',
+      strategy: "accumulate-unique",
     },
   });
 
+/**
+ * Create a custom resource pack that can use configuration input to patch a stack with convenient resources, parameters, etc.
+ * */
 export const createResourcePack =
-  <ParamsType>(creator: (params: ParamsType) => Partial<CloudFormationTemplate>): ResourcePackApplier<ParamsType> =>
+  <ParamsType>(
+    creator: (params: ParamsType) => Partial<CloudFormationTemplate>,
+  ): ResourcePackApplier<ParamsType> =>
   (params: ParamsType, template: CloudFormationTemplate) => {
     const patch = creator(params);
 
@@ -103,27 +142,51 @@ export type ParameterGroup = {
   };
 };
 
+/**
+ * The basis for your stack template.
+ * Apply packs, patches, parameters and parameter groups.
+ * Access the `template` property for the resulting CloudFormation template.
+ * */
 export class SimpleCFT {
-  constructor(public template: CloudFormationTemplate = { AWSTemplateFormatVersion: '2010-09-09' }) {}
+  constructor(
+    public template: CloudFormationTemplate = {
+      AWSTemplateFormatVersion: "2010-09-09",
+    },
+  ) {}
 
-  public applyPack = <ParamsType>(params: ParamsType, pack: ResourcePackApplier<ParamsType>) => {
+  /**
+   * Apply a pack with configuration to the stack template.
+   * */
+  public applyPack = <ParamsType>(
+    params: ParamsType,
+    pack: ResourcePackApplier<ParamsType>,
+  ) => {
     this.template = pack(params, this.template);
 
     return this;
   };
 
+  /**
+   * Apply a patch to the stack template.
+   * */
   public patch = (patch: Partial<CloudFormationTemplate>) => {
     this.template = patchTemplate(patch, this.template);
 
     return this;
   };
 
+  /**
+   * Add a stack parameter including its descriptive info and an optional parameter group.
+   * */
   public addParameter = (parameter: ParameterInfo) => {
     this.template = addParameter(parameter, this.template);
 
     return this;
   };
 
+  /**
+   * Add a group of stack parameters including their descriptive info and an optional parameter group.
+   * */
   public addParameterGroup = ({ Label: Group, Parameters }: ParameterGroup) => {
     const parameterIds = Object.keys(Parameters);
     const parameterList: ParameterInfo[] = parameterIds.map((ParameterId) => {
