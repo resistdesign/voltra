@@ -34,7 +34,7 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc --noEmit",
-    "doc": "typedoc && cp CNAME docs/ && cp -r ./images docs/",
+    "doc": "typedoc && cp CNAME docs/ && cp -r ./images docs/ && cp ./favicon/assets/* docs/",
     "doc:dev": "typedoc --watch"
   },
   "dependencies": {
