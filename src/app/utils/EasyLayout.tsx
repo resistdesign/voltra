@@ -1,10 +1,19 @@
 import { FC, PropsWithChildren } from "react";
 import styled from "styled-components";
 
+/**
+ * FC With Children
+ * */
 export type FCWithChildren = FC<PropsWithChildren>;
 
+/**
+ * Component Map
+ * */
 export type ComponentMap = Record<string, FCWithChildren>;
 
+/**
+ * Layout Components
+ * */
 export type LayoutComponents = {
   layout: FCWithChildren;
   areas: ComponentMap;
@@ -80,6 +89,38 @@ const convertLayoutToCSS = (
   };
 };
 
+/**
+ * Quickly express advanced, extensible grid layouts with styled-components.
+ *
+ * @example
+ * ```typescript
+ * const {
+ *   layout: Container,
+ *   areas: {
+ *     Header,
+ *     Side,
+ *     Main,
+ *     Footer,
+ *   },
+ * } = getEasyLayout(styled.div)`
+ *   header header header, 1fr
+ *   side main main, 5fr
+ *   footer footer footer, 1fr
+ *   \\ 1fr 1fr 1fr
+ * `;
+ *
+ * const App = () => {
+ *   return (
+ *     <Container>
+ *       <Header>Header Content</Header>
+ *       <Side>Side Content</Side>
+ *       <Main>Main Content</Main>
+ *       <Footer>Footer Content</Footer>
+ *     </Container>
+ *   );
+ * };
+ * ```
+ * */
 export const getEasyLayout = (
   extendFrom?: FCWithChildren,
   areasExtendFrom?: FCWithChildren,

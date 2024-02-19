@@ -82,6 +82,11 @@ export type TypeStructureComponentProps = {
   isEntryPoint?: boolean;
 };
 
+/**
+ * Automatically generate a complex, nested set of form views from a type structure map.
+ *
+ * @see {@link convertTypeScriptToTypeStructureMap}
+ * */
 export const TypeStructureComponent: FC<TypeStructureComponentProps> = ({
   typeStructureMap,
   typeStructure,

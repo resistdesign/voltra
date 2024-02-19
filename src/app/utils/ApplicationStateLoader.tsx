@@ -5,6 +5,9 @@ import {
 import { sendServiceRequest, ServiceConfig } from "./Service";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+/**
+ * Access and track the loading of an application state value.
+ * */
 export type ApplicationStateLoader = {
   loading: boolean;
   latestError: any;
@@ -12,20 +15,42 @@ export type ApplicationStateLoader = {
   makeRemoteProcedureCall: (...args: any[]) => Promise<void>;
 };
 
+/**
+ * The service, path and arguments to use for a remote procedure call.
+ * */
 export type RemoteProcedureCall = {
   serviceConfig: ServiceConfig;
   path: string;
   args?: any[];
 };
 
+/**
+ * The configuration for an application state loader.
+ * */
 export type ApplicationStateLoaderConfig = {
   identifier: ApplicationStateIdentifier;
   remoteProcedureCall: RemoteProcedureCall;
+  /**
+   * Clear the application state value on error.
+   *
+   * @default false
+   * */
   resetOnError?: boolean;
+  /**
+   * Called each time the application state value has been loaded.
+   * */
   onLoadComplete?: (success: boolean) => void;
+  /**
+   * Prevent automatic loading of the application state value and call the `RemoteProcedureCall` manually with `makeRemoteProcedureCall` on the `ApplicationStateLoader`.
+   *
+   * @default false
+   * */
   manual?: boolean;
 };
 
+/**
+ * Load, track and access an application state value.
+ * */
 export const useApplicationStateLoader = (
   config: ApplicationStateLoaderConfig,
 ): ApplicationStateLoader => {

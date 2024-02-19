@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
 const getKeyValueWithoutError = (obj: any, key: string | number) => {
   try {
@@ -8,11 +8,14 @@ const getKeyValueWithoutError = (obj: any, key: string | number) => {
   }
 };
 
+/**
+ * Safely access and update a value in a parent object by its key.
+ * */
 export const useController = (
   parentValue: any,
   key: string | number,
   onParentValueChange: (value: any) => void,
-  isArrayIndex: boolean = false
+  isArrayIndex: boolean = false,
 ) => {
   const [value, setValue] = useState(getKeyValueWithoutError(parentValue, key));
   const onChange = useCallback(
@@ -36,7 +39,7 @@ export const useController = (
         // Ignore.
       }
     },
-    [parentValue, key, onParentValueChange, isArrayIndex]
+    [parentValue, key, onParentValueChange, isArrayIndex],
   );
 
   useEffect(() => {
