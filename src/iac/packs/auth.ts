@@ -1,5 +1,6 @@
 import { addUserManagement } from "./abstract/user-management";
-import { createResourcePack, SimpleCFT } from "../utils";
+import { createResourcePack } from "../utils";
+import {SimpleCFT} from "../SimpleCFT";
 
 export type AddAuthConfig = {
   userManagementId: string;
