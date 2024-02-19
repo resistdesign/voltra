@@ -1,5 +1,5 @@
 /**
- * Route RPC back-end API requests to the functions with context about authentication, the request context and more.
+ * Route RPC back-end API requests to the appropriate functions with context about authentication, the request context and more.
  * */
 export * as API from "./api";
 /**
