@@ -50,6 +50,9 @@ export type UpdateItemOperation<
   patch?: BooleanOrUndefined,
 ) => AsyncReturnValue<ItemType>;
 
+/**
+ * A driver for a database service.
+ * */
 export type DBServiceItemDriver<
   ItemType extends Record<any, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,

@@ -75,9 +75,8 @@ export type DataContext<
   fields: Partial<Record<keyof ItemType, DataContextField>>;
 };
 
-export type DataContextItemType<DC> = DC extends DataContext<infer T, any>
-  ? T
-  : never;
+export type DataContextItemType<DC> =
+  DC extends DataContext<infer T, any> ? T : never;
 export type DataContextUniquelyIdentifyingFieldName<DC> =
   DC extends DataContext<any, infer T> ? T : never;
 export type DataContextUniquelyIdentifyingFieldType<DC> =
@@ -111,6 +110,9 @@ export type DataContextCreateOrUpdateOperation<DCM extends DataContextMap> = <
   update?: UpdateFlag,
 ) => AsyncReturnValue<DataContextItemType<DCM[ContextName]>>;
 
+/**
+ * An advanced OMR service that can handle relationships between data contexts.
+ * */
 export type DataContextService<DCM extends DataContextMap> =
   DataContextOperationProvider<{
     create: <ContextName extends keyof DCM>(
@@ -170,6 +172,9 @@ export type GetDataContextServiceConfig<DCM extends DataContextMap> = {
   >;
 };
 
+/**
+ * Configure and instantiate a {@link DataContextService}.
+ * */
 export const getDataContextService = <DCM extends DataContextMap>(
   config: GetDataContextServiceConfig<DCM>,
 ): DataContextService<DCM> => {

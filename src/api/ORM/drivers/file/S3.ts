@@ -40,6 +40,9 @@ export const getBaseFileLocationInfo = (path: string): BaseFileLocationInfo => {
   };
 };
 
+/**
+ * Use S3 as a {@link FileServiceDriver}.
+ * */
 export const getS3FileDriver = ({
   config = {},
   bucketName,
@@ -77,14 +80,14 @@ export const getS3FileDriver = ({
         new DeleteObjectCommand({
           Bucket: bucketName,
           Key: getFullFileKey({ file, baseDirectory }),
-        })
+        }),
       );
     },
     listFiles: async (
       path,
       baseDirectory,
       maxNumberOfFiles = Infinity,
-      cursor
+      cursor,
     ) => {
       const files: BaseFile[] = [];
 
@@ -103,7 +106,7 @@ export const getS3FileDriver = ({
             Bucket: bucketName,
             Prefix: `${baseDirectory || ""}${path || ""}`,
             ContinuationToken: continuationToken,
-          })
+          }),
         );
 
         allContents = [...allContents, ...Contents];
@@ -122,7 +125,7 @@ export const getS3FileDriver = ({
               new HeadObjectCommand({
                 Bucket: bucketName,
                 Key: file.Key,
-              })
+              }),
             );
 
             files.push({

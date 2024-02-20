@@ -3,7 +3,7 @@ import {
   getCleanTypeStructureMap,
   getTagValue,
   TypeStructureMap,
-} from "../../app/components/FormGen/TypeParsing/TypeUtils";
+} from "../../app";
 import {
   DataContextField,
   DataContextMap,
@@ -16,6 +16,9 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
   return !!trimmed ? trimmed : undefined;
 };
 
+/**
+ * Create a {@link DataContextMap} from a {@link TypeStructureMap} generated from TypeScript types.
+ * */
 export const typeStructureMapToDataContextMap = (
   typeStructureMap: TypeStructureMap,
 ): DataContextMap => {

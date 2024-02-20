@@ -25,6 +25,9 @@ export type S3DBServiceItemDriverConfig = {
   readOnly?: boolean;
 };
 
+/**
+ * Use S3 as a {@link DBServiceItemDriver} for {@link BaseFileItem}s.
+ * */
 export const getS3DBServiceItemDriver = ({
   config = {},
   bucketName,
