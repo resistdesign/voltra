@@ -17,6 +17,9 @@ export type ListFilesResult = {
   cursor?: string;
 };
 
+/**
+ * A driver for the file service.
+ * */
 export type FileServiceDriver = {
   getFileUploadUrl: (
     file: BaseFileLocationInfo,

@@ -14,6 +14,9 @@ import { mergeStringPaths } from "../common/Routing";
 
 export * from "./Router/AWS";
 
+/**
+ * A utility function to add a route to a route map by path.
+ * */
 export const addRouteToRouteMap = (
   routeMap: RouteMap,
   route: Route,
@@ -28,6 +31,9 @@ export const addRouteToRouteMap = (
   };
 };
 
+/**
+ * Add multiple routes to a {@link RouteMap} by path.
+ * */
 export const addRoutesToRouteMap = (
   routeMap: RouteMap,
   routes: Route[],
@@ -44,6 +50,9 @@ export const addRoutesToRouteMap = (
   return newRouteMap;
 };
 
+/**
+ * Apply one {@link RouteMap} to another.
+ * */
 export const addRouteMapToRouteMap = (
   routeMap: RouteMap,
   routeMapToAdd: RouteMap,
@@ -62,7 +71,9 @@ export const addRouteMapToRouteMap = (
   return newRouteMap;
 };
 
-// IMPORTANT: Cloud function event router.
+/**
+ * A Cloud Function event router.
+ * */
 export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
   event: any,
   eventTransformer: CloudFunctionEventTransformer,

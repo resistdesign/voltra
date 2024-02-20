@@ -49,7 +49,7 @@ export const getFieldName = (field: string, fieldNamePrefix = ""): string =>
 export const convertCriterionToDynamoDBQuery = (
   criterion: Criterion,
   fieldIndexKey: FieldIndexKey = [0],
-  fieldNamePrefix = ""
+  fieldNamePrefix = "",
 ): BaseQueryCommandInput => {
   const { field, operator, value } = criterion;
   const fieldIndexKeyString = fieldIndexKey.join(".");
@@ -71,7 +71,7 @@ export const convertCriterionToDynamoDBQuery = (
 export const convertCriteriaToDynamoDBQuery = (
   criteria: Criteria | undefined = undefined,
   fieldIndexKey: FieldIndexKey = [0],
-  fieldNamePrefix = ""
+  fieldNamePrefix = "",
 ): Partial<BaseQueryCommandInput> => {
   if (criteria) {
     const { type } = criteria;
@@ -85,8 +85,8 @@ export const convertCriteriaToDynamoDBQuery = (
         convertCriteriaToDynamoDBQuery(
           subCriterion,
           [...fieldIndexKey, index],
-          fieldNamePrefix
-        )
+          fieldNamePrefix,
+        ),
       );
       const { FilterExpression, ...otherProps } = subQueryCommandInputs.reduce(
         (acc, subQueryCommandInput) => {
@@ -102,7 +102,7 @@ export const convertCriteriaToDynamoDBQuery = (
             FilterExpression: `${acc.FilterExpression} ${logicalGroupingType} ${subQueryCommandInput.FilterExpression}`,
           };
         },
-        {}
+        {},
       );
 
       return {
@@ -115,7 +115,7 @@ export const convertCriteriaToDynamoDBQuery = (
       return convertCriteriaToDynamoDBQuery(
         value,
         [...fieldIndexKey, 0],
-        getFieldName(field, fieldNamePrefix)
+        getFieldName(field, fieldNamePrefix),
       );
     } else if (type === SearchCriterionTypes.BOOLEAN_CRITERION) {
       const { value } = criteria;
@@ -129,7 +129,7 @@ export const convertCriteriaToDynamoDBQuery = (
       return convertCriterionToDynamoDBQuery(
         criteria,
         fieldIndexKey,
-        fieldNamePrefix
+        fieldNamePrefix,
       );
     }
   } else {
@@ -145,7 +145,7 @@ const getRandomString = (lengthRemaining: number = 0): string =>
     : "";
 const getUUID = (prefix = "") =>
   `${prefix}${getRandomString(8)}-${getRandomString(4)}-${getRandomString(
-    4
+    4,
   )}-${getRandomString(4)}-${getRandomString(12)}`;
 const getMultiUUID = (prefix = "", multiple: number = 1): string =>
   `${prefix}${[...new Array(multiple)].map(() => getUUID()).join("_")}`;
@@ -155,16 +155,19 @@ export const getStandardUUID = () =>
 
 export type DynamoDBServiceItemDriverConfig<
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   config: DynamoDBClientConfig;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   tableName: string;
 };
 
+/**
+ * Use DynamoDB as a {@link DBServiceItemDriver}.
+ * */
 export const getDynamoDBServiceItemDriver = <
   ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType
+  UniquelyIdentifyingFieldName extends keyof ItemType,
 >({
   config,
   uniquelyIdentifyingFieldName,
@@ -209,7 +212,7 @@ export const getDynamoDBServiceItemDriver = <
           .map((f) => `#${f}`);
         const fields = patchFields.reduce(
           (acc, f) => ({ ...acc, [`#${f}`]: f }),
-          {}
+          {},
         );
         const setExpression = setExpressionList.length
           ? `SET ${setExpressionList.join(", ")}`
@@ -234,7 +237,7 @@ export const getDynamoDBServiceItemDriver = <
               ...acc,
               [`:${f}`]: marshall(updatedItem[f]),
             }),
-            {}
+            {},
           ),
           ReturnValues: "ALL_NEW",
         });
@@ -242,7 +245,7 @@ export const getDynamoDBServiceItemDriver = <
         return driver.readItem(
           updatedItem[
             uniquelyIdentifyingFieldName as UniquelyIdentifyingFieldName
-          ] as any
+          ] as any,
         );
       } else {
         const { Attributes } = await dynamoDB.putItem({
@@ -281,9 +284,8 @@ export const getDynamoDBServiceItemDriver = <
             : {},
           ...convertCriteriaToDynamoDBQuery(criteria),
         };
-        const { Items, LastEvaluatedKey } = await dynamoDB.query(
-          queryCommandInput
-        );
+        const { Items, LastEvaluatedKey } =
+          await dynamoDB.query(queryCommandInput);
 
         results = [...results, ...(Items || [])];
         lastResults = Items || [];
