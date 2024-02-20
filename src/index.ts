@@ -1,5 +1,27 @@
 /**
  * Route RPC back-end API requests to the appropriate functions with context about authentication, the request itself and more.
+ *
+ * @example
+ * ```typescript
+ * export const handler = async (event: any): Promise<CloudFunctionResponse> =>
+ *   handleCloudFunctionEvent(
+ *     event,
+ *     AWS.normalizeCloudFunctionEvent,
+ *     addRoutesToRouteMap({}, [
+ *       {
+ *         path: "",
+ *         authConfig: {
+ *           anyAuthorized: true,
+ *         },
+ *         handler: async () => 'WELCOME!!!!',
+ *       }
+ *     ]),
+ *     [
+ *       process.env.CLIENT_ORIGIN as string,
+ *       /https:\\/\\/example\\.com(:.*?$|\\/.*$|$)/gim,
+ *     ]
+ *   );
+ * ```
  * */
 export * as API from "./api";
 
