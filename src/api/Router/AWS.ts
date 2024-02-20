@@ -4,7 +4,13 @@ import {
   NormalizedCloudFunctionEventData,
 } from "./Types";
 
+/**
+ * AWS specific utilities for processing routing and normalizing Cloud Function events.
+ * */
 export namespace AWS {
+  /**
+   * An AWS specific Cloud Function event.
+   * */
   export interface IAWSCloudFunctionEvent {
     requestContext?: Record<any, any>;
     httpMethod?: string;
@@ -88,7 +94,9 @@ export namespace AWS {
     };
   };
 
-  // Auth, CORS, Headers, Method and Body.
+  /**
+   * Parse out the Auth, CORS, Headers, Method and Body from an AWS Cloud Function event.
+   * */
   export const normalizeCloudFunctionEvent: CloudFunctionEventTransformer = (
     event: IAWSCloudFunctionEvent,
   ): NormalizedCloudFunctionEventData => {
