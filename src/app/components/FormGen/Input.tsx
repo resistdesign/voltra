@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FC, FormEvent, useCallback, useMemo } from "react";
-import { TypeStructure } from "./TypeParsing/TypeUtils";
+import { TypeStructure } from "../../../common/TypeParsing/TypeUtils";
 import { getUUID } from "./IdUtils";
 import styled from "styled-components";
 import { DataTypeMap } from "./HelperTypes";

@@ -3,7 +3,7 @@ import {
   DynamoDBClientConfig,
   QueryCommandInput,
 } from "@aws-sdk/client-dynamodb";
-import { DBServiceItemDriver } from "../../DBServiceTypes";
+import { DBServiceItemDriver } from "../../ServiceTypes/DBServiceTypes";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import {
   Criteria,

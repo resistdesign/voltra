@@ -9,7 +9,7 @@ import {
   TAG_TYPES,
   TypeStructure,
   TypeStructureMap,
-} from "./TypeParsing/TypeUtils";
+} from "../../../common/TypeParsing/TypeUtils";
 import { Input } from "./Input";
 import { Form } from "./Form";
 import { NavigateBackHandler, NavigateToHandler } from "./Navigation";

@@ -1,4 +1,4 @@
-import { TypeStructure, TypeStructureMap } from './TypeUtils';
+import { TypeStructure, TypeStructureMap } from "./TypeUtils";
 import {
   ArrayTypeNode,
   createSourceFile,
@@ -12,11 +12,11 @@ import {
   SyntaxKind,
   TypeNode,
   UnionTypeNode,
-} from 'typescript';
+} from "typescript";
 
 const SUPPORTED_TYPE_REFERENCE_FEATURES = {
-  PICK: 'Pick',
-  OMIT: 'Omit',
+  PICK: "Pick",
+  OMIT: "Omit",
 };
 
 type TypeStructureGenerator = (
@@ -25,16 +25,20 @@ type TypeStructureGenerator = (
   options?: {
     parentName?: string;
     namespace?: string;
-  }
+  },
 ) => TypeStructure;
 
 const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
-  [SyntaxKind.TypeLiteral]: (name: string, typeNode: Node, { parentName, namespace } = {}): TypeStructure => {
+  [SyntaxKind.TypeLiteral]: (
+    name: string,
+    typeNode: Node,
+    { parentName, namespace } = {},
+  ): TypeStructure => {
     const content: TypeStructure[] = [];
 
     typeNode.forEachChild((tLChild) => {
       if (tLChild.kind === SyntaxKind.PropertySignature) {
-        let identifier: string = '',
+        let identifier: string = "",
           subTypeNode: Node | undefined,
           optional: boolean = false,
           readonly = false;
@@ -55,7 +59,10 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
           const fullParentName = parentName ? `${parentName}.${name}` : name;
 
           content.push({
-            ...parseType(identifier, subTypeNode, { parentName: fullParentName, namespace }),
+            ...parseType(identifier, subTypeNode, {
+              parentName: fullParentName,
+              namespace,
+            }),
             optional,
             readonly,
           });
@@ -71,7 +78,11 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
       content,
     };
   },
-  [SyntaxKind.UnionType]: (name: string, typeNode: Node, { parentName, namespace } = {}): TypeStructure => {
+  [SyntaxKind.UnionType]: (
+    name: string,
+    typeNode: Node,
+    { parentName, namespace } = {},
+  ): TypeStructure => {
     const { types = [] } = typeNode as UnionTypeNode;
 
     return {
@@ -79,10 +90,16 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
       name,
       type: parentName ? `${parentName}.${name}` : name,
       varietyType: true,
-      content: types.map((t: TypeNode) => parseType(name, t, { parentName, namespace })),
+      content: types.map((t: TypeNode) =>
+        parseType(name, t, { parentName, namespace }),
+      ),
     };
   },
-  [SyntaxKind.IntersectionType]: (name: string, typeNode: Node, { parentName, namespace } = {}): TypeStructure => {
+  [SyntaxKind.IntersectionType]: (
+    name: string,
+    typeNode: Node,
+    { parentName, namespace } = {},
+  ): TypeStructure => {
     const { types = [] } = typeNode as IntersectionTypeNode;
 
     return {
@@ -90,27 +107,36 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
       name,
       type: parentName ? `${parentName}.${name}` : name,
       comboType: true,
-      content: types.map((t: TypeNode) => parseType(name, t, { parentName, namespace })),
+      content: types.map((t: TypeNode) =>
+        parseType(name, t, { parentName, namespace }),
+      ),
     };
   },
-  [SyntaxKind.ArrayType]: (name: string, typeNode: Node, { parentName, namespace } = {}): TypeStructure => {
+  [SyntaxKind.ArrayType]: (
+    name: string,
+    typeNode: Node,
+    { parentName, namespace } = {},
+  ): TypeStructure => {
     const { elementType } = typeNode as ArrayTypeNode;
-    const extendedTS: TypeStructure = parseType(name, elementType, { parentName, namespace });
+    const extendedTS: TypeStructure = parseType(name, elementType, {
+      parentName,
+      namespace,
+    });
     const { multiple: extendedMultiple = false } = extendedTS;
 
     return {
       ...extendedTS,
-      multiple: typeof extendedMultiple === 'number' ? extendedMultiple + 1 : 1,
+      multiple: typeof extendedMultiple === "number" ? extendedMultiple + 1 : 1,
     };
   },
   [SyntaxKind.TypeReference]: (
     name: string,
     typeNode: Node,
-    { parentName: _parentName, namespace } = {}
+    { parentName: _parentName, namespace } = {},
   ): TypeStructure => {
-    let identifier = '';
-    let referencedTypeName = '';
-    let contentNamesString = '';
+    let identifier = "";
+    let referencedTypeName = "";
+    let contentNamesString = "";
 
     typeNode.forEachChild((n) => {
       if (n.kind === SyntaxKind.Identifier) {
@@ -121,18 +147,23 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
         referencedTypeName = n.getText();
       }
 
-      if (n.kind === SyntaxKind.LiteralType || n.kind === SyntaxKind.UnionType) {
+      if (
+        n.kind === SyntaxKind.LiteralType ||
+        n.kind === SyntaxKind.UnionType
+      ) {
         contentNamesString = n.getText();
       }
     });
 
     if (identifier && referencedTypeName && contentNamesString) {
-      const baseTS: Pick<TypeStructure, 'namespace' | 'name' | 'type'> = {
+      const baseTS: Pick<TypeStructure, "namespace" | "name" | "type"> = {
         namespace,
         name,
         type: referencedTypeName,
       };
-      const contentNames = contentNamesString.replace(/[\s'"]/gim, () => '').split('|');
+      const contentNames = contentNamesString
+        .replace(/[\s'"]/gim, () => "")
+        .split("|");
 
       if (identifier === SUPPORTED_TYPE_REFERENCE_FEATURES.PICK) {
         return {
@@ -162,15 +193,15 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
 const parseType: TypeStructureGenerator = (
   name: string,
   typeNode: Node,
-  { parentName, namespace } = {}
+  { parentName, namespace } = {},
 ): TypeStructure => {
   const typeHandling = TYPE_HANDLING_MAP[typeNode.kind];
-  const comments: TypeStructure['comments'] = [];
-  const tags: TypeStructure['tags'] = {};
+  const comments: TypeStructure["comments"] = [];
+  const tags: TypeStructure["tags"] = {};
 
   if ((typeNode?.parent as any)?.jsDoc) {
     (typeNode.parent as any).jsDoc.forEach((doc: JSDoc) => {
-      if (typeof doc.comment === 'string') {
+      if (typeof doc.comment === "string") {
         comments.push(doc.comment);
       } else {
         doc.comment?.forEach((c: JSDocComment) => {
@@ -186,9 +217,9 @@ const parseType: TypeStructureGenerator = (
             !tag.comment && !tagType
               ? // If there is no value and no type, the tag is just `true`.
                 true
-              : typeof tag.comment === 'string'
-              ? tag.comment
-              : undefined;
+              : typeof tag.comment === "string"
+                ? tag.comment
+                : undefined;
 
           tags[tagName] = {
             type: tagType,
@@ -232,7 +263,9 @@ const getTypeMap = (typeNode: Node, namespace?: string): TypeStructureMap => {
   typeNode.forEachChild((n) => {
     if (n.kind === SyntaxKind.ModuleDeclaration) {
       const { name } = n as ModuleDeclaration;
-      const newNamespace = namespace ? `${namespace}.${name.getText()}` : name.getText();
+      const newNamespace = namespace
+        ? `${namespace}.${name.getText()}`
+        : name.getText();
 
       n.forEachChild((cN) => {
         map = {
@@ -241,7 +274,7 @@ const getTypeMap = (typeNode: Node, namespace?: string): TypeStructureMap => {
         };
       });
     } else if (n.kind === SyntaxKind.TypeAliasDeclaration) {
-      let identifier: string = '',
+      let identifier: string = "",
         isExport = false,
         nNode: Node | undefined;
 
@@ -267,10 +300,17 @@ const getTypeMap = (typeNode: Node, namespace?: string): TypeStructureMap => {
 };
 
 /**
- * Use your TypeScript to drive form generation for automated, runtime UI presentation.
+ * Use TypeScript types to drive form generation for automated, runtime UI presentation.
  * */
-export const convertTypeScriptToTypeStructureMap = (typeScriptText: string): TypeStructureMap => {
-  const typeScriptNode: Node = createSourceFile('x.ts', typeScriptText, ScriptTarget.Latest, true);
+export const convertTypeScriptToTypeStructureMap = (
+  typeScriptText: string,
+): TypeStructureMap => {
+  const typeScriptNode: Node = createSourceFile(
+    "x.ts",
+    typeScriptText,
+    ScriptTarget.Latest,
+    true,
+  );
 
   return getTypeMap(typeScriptNode);
 };
