@@ -1,5 +1,4 @@
 export * as Storage from "./Storage";
-export * as TypeParsing from "../../../common/TypeParsing";
 export * as ValueProcessing from "./ValueProcessing";
 export * from "./Application";
 export * from "./Display";
