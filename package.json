@@ -16,7 +16,7 @@
     "test": "tsc --noEmit",
     "doc": "typedoc && cp CNAME docs/ && cp -r ./images docs/ && cp ./favicon/assets/* docs/",
     "doc:dev": "typedoc --watch",
-    "prep-dist": "cp package.json dist/ && cp README.md dist/"
+    "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .releaserc dist/"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
