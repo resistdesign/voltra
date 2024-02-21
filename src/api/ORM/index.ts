@@ -1,9 +1,6 @@
-export * from "./drivers";
-export * from "./CriteriaUtils";
-export * from "./CriterionDriverResolutionTools";
-export * from "./DataContextService";
-export * from "./DBServiceTypes";
-export * from "./FileServiceTypes";
-export * from "./index";
-export * from "./SearchCriteriaTypes";
-export * from "./TypeStructureUtils";
+export * as Drivers from "./drivers";
+export * as CriteriaUtils from "./CriteriaUtils";
+export * as DataContext from "./DataContextService";
+export * as ServiceType from "./ServiceTypes";
+export * as Search from "./SearchCriteriaTypes";
+export * as TypeUtils from "./TypeStructureUtils";

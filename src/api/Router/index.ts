@@ -7,12 +7,12 @@ import {
   Route,
   RouteHandler,
   RouteMap,
-} from "./Router/Types";
-import { getRouteIsAuthorized } from "./Router/Auth";
-import { getHeadersWithCORS } from "./Router/CORS";
-import { mergeStringPaths } from "../common/Routing";
+} from "./Types";
+import { getRouteIsAuthorized } from "./Auth";
+import { getHeadersWithCORS } from "./CORS";
+import { mergeStringPaths } from "../../common/Routing";
 
-export * from "./Router/AWS";
+export * from "./AWS";
 
 /**
  * A utility function to add a route to a route map by path.

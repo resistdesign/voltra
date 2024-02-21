@@ -3,7 +3,7 @@ import {
   DBServiceItemDriver,
   ListItemResults,
   ListItemsConfig,
-} from "./DBServiceTypes";
+} from "./ServiceTypes/DBServiceTypes";
 import {
   Criteria,
   SearchCriterionLogicalGroupingTypes,
@@ -16,7 +16,7 @@ import {
   criteriaListHasRelatedField,
   flattenCriterionGroups,
   reduceCriteria,
-} from "./CriteriaUtils";
+} from "./CriteriaUtils/CriteriaUtils";
 
 export const DataContextServiceErrorTypes = {
   OPERATION_NOT_ALLOWED: "OPERATION_NOT_ALLOWED",

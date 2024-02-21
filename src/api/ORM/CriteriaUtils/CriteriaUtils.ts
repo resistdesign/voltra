@@ -5,7 +5,7 @@ import {
   CriterionPath,
   SearchCriterionLogicalGroupingTypes,
   SearchCriterionTypes,
-} from "./SearchCriteriaTypes";
+} from "../SearchCriteriaTypes";
 import {
   DataContext,
   DataContextField,
@@ -13,7 +13,7 @@ import {
   DataContextMap,
   dataContextOperationIsAllowed,
   DataContextOperationOptions,
-} from "./DataContextService";
+} from "../DataContextService";
 
 type CriteriaReducer = (criteria: Criteria) => Criteria;
 
