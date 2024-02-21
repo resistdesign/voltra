@@ -15,7 +15,7 @@ import {
   BaseFile,
   BaseFileLocationInfo,
   FileServiceDriver,
-} from "../../FileServiceTypes";
+} from "../../ServiceTypes/FileServiceTypes";
 
 export const getFullFileKey = ({
   file,

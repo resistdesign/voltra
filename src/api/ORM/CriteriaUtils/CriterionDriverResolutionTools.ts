@@ -5,7 +5,7 @@ import {
   CriterionPath,
   SearchCriterionLogicalGroupingTypes,
   SearchCriterionTypes,
-} from "./SearchCriteriaTypes";
+} from "../SearchCriteriaTypes";
 
 export type CriterionTranslator<ReturnType> = (
   criterion: Criterion,

@@ -1,6 +1,8 @@
 /**
  * Route RPC back-end API requests to the appropriate functions with context about authentication, the request itself and more.
  *
+ * @usage `import * from "@resistdesign/voltra/api";`
+ *
  * @example
  * ```typescript
  * export const handler = async (event: any): Promise<CloudFunctionResponse> =>
@@ -27,6 +29,8 @@ export * as API from "./api";
 
 /**
  * Build front-end applications with React/TypeScript, layout systems, form generation, RPC requests, easy state management and more.
+ *
+ * @usage `import * from "@resistdesign/voltra/app";`
  *
  * @see {@link getEasyLayout}, {@link TypeStructureComponent} and {@link useApplicationStateLoader} for some great starting points.
  *
@@ -149,6 +153,8 @@ export * as App from "./app";
  *
  * @usage Start with `SimpleCTF`, add packs and use utilities as needed.
  *
+ * `import * from "@resistdesign/voltra/iac";`
+ *
  * @example
  * ```typescript
  * const ctf = new SimpleCTF()
@@ -166,3 +172,10 @@ export * as App from "./app";
  *  ```
  * */
 export * as IaC from "./iac";
+
+/**
+ * A set of common utilities for use in all layers of the application stack.
+ *
+ * @usage `import * from "@resistdesign/voltra/common";`
+ * */
+export * as Common from "./common";

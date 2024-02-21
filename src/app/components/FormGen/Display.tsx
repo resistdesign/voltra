@@ -8,7 +8,7 @@ import {
   TAG_TYPES,
   TypeStructure,
   TypeStructureMap,
-} from "./TypeParsing/TypeUtils";
+} from "../../../common/TypeParsing/TypeUtils";
 import { getTypeStructureLayoutGridTemplate, LayoutBox } from "./Layout";
 import { DataTypeMap } from "./HelperTypes";
 
