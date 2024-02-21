@@ -1,12 +1,26 @@
+/**
+ * Get the path segments from a path string.
+ * */
 export const getPathArray = (path: string): string[] =>
   path
     .split("/")
     .map((p) => decodeURIComponent(p))
     .filter((part) => part !== "");
+
+/**
+ * Get the path string from path segments.
+ * */
 export const getPathString = (path: string[]): string => "/" + path.join("/");
+
+/**
+ * Merge two path strings.
+ * */
 export const mergeStringPaths = (path1: string, path2: string): string =>
   getPathString([...getPathArray(path1), ...getPathArray(path2)]);
 
+/**
+ * Resolve a path string against another path string.
+ * */
 export const resolvePath = (currentPath: string, newPath: string): string => {
   let currentSegments = getPathArray(currentPath);
   const newSegments = getPathArray(newPath);
@@ -34,6 +48,9 @@ export const resolvePath = (currentPath: string, newPath: string): string => {
   return "/" + currentSegments.join("/");
 };
 
+/**
+ * Get the parameter values from a path string and test the path against a test path.
+ * */
 export const getParamsAndTestPath = (
   path: string,
   testPath: string,
