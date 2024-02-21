@@ -5,8 +5,8 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-import { DBServiceItemDriver } from "../../DBServiceTypes";
-import { BaseFile, BaseFileLocationInfo } from "../../FileServiceTypes";
+import { DBServiceItemDriver } from "../../ServiceTypes/DBServiceTypes";
+import { BaseFile, BaseFileLocationInfo } from "../../ServiceTypes/FileServiceTypes";
 import {
   getBaseFileLocationInfo,
   getFullFileKey,

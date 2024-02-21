@@ -1,4 +1,4 @@
-import { Criteria } from "./SearchCriteriaTypes";
+import { Criteria } from "../SearchCriteriaTypes";
 
 export type AsyncReturnValue<T> = Promise<T> | T;
 
