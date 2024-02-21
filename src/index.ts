@@ -151,13 +151,13 @@ export * as App from "./app";
 /**
  * Build infrastructure as code with reusable components and utilities.
  *
- * @usage Start with `SimpleCTF`, add packs and use utilities as needed.
+ * @usage Start with `SimpleCFT`, add packs and use utilities as needed.
  *
  * `import * from "@resistdesign/voltra/iac";`
  *
  * @example
  * ```typescript
- * const ctf = new SimpleCTF()
+ * const ctf = new SimpleCFT()
  *   .applyPack(
  *     addDNS,
  *     {
