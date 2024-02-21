@@ -1,14 +1,14 @@
 import {
-  getCleanType,
-  getCleanTypeStructureMap,
-  getTagValue,
-  TypeStructureMap,
-} from "../../app";
-import {
   DataContextField,
   DataContextMap,
   DataContextOperationOptions,
 } from "./DataContextService";
+import {
+  getCleanType,
+  getCleanTypeStructureMap,
+  getTagValue,
+  TypeStructureMap,
+} from "../../common/TypeParsing";
 
 export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
   const trimmed = typeof tagValue === "string" ? tagValue.trim() : undefined;

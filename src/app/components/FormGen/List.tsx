@@ -4,7 +4,7 @@ import {
   getValueLabel,
   TypeStructure,
   TypeStructureMap,
-} from "./TypeParsing/TypeUtils";
+} from "../../../common/TypeParsing/TypeUtils";
 import { NavigateBackHandler, NavigateToHandler } from "./Navigation";
 import styled from "styled-components";
 import { LayoutBox, LayoutControls } from "./Layout";

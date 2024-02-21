@@ -166,3 +166,8 @@ export * as App from "./app";
  *  ```
  * */
 export * as IaC from "./iac";
+
+/**
+ * A set of common utilities for use in all layers of the application stack.
+ * */
+export * as Common from "./common";

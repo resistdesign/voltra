@@ -16,7 +16,8 @@
   "exports": {
     "./api": "./dist/api/index.js",
     "./app": "./dist/app/index.js",
-    "./iac": "./dist/iac/index.js"
+    "./iac": "./dist/iac/index.js",
+    "./common": "./dist/common/index.js"
   },
   "typesVersions": {
     "*": {
@@ -28,6 +29,9 @@
       ],
       "iac": [
         "dist/iac/index.d.ts"
+      ],
+      "common": [
+        "dist/common/index.d.ts"
       ]
     }
   },
