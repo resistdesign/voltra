@@ -1,6 +1,6 @@
 # Voltra
 
-![Voltra Gem Logo 2024 Square.png](https://docs.voltra.app/images/Voltra%20Gem%20Logo%202024%20Square.png)
+![Voltra Gem Logo 2024 Square.png](https://docs.voltra.app/images/Voltra%20Gem%20Logo%202024%20Square.png "Voltra")
 
 ## Usage
 
