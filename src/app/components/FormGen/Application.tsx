@@ -3,7 +3,7 @@ import {
   getTypeStructureByPath,
   getTypeStructureIsPrimitive,
   TypeStructureMap,
-} from "./TypeParsing/TypeUtils";
+} from "../../../common/TypeParsing/TypeUtils";
 import { TypeStructureComponent } from "./TypeStructureComponent";
 import HashMatrix from "./ValueProcessing/HashMatrix";
 import { List } from "./List";

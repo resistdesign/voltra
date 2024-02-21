@@ -1,11 +1,11 @@
-export * from "./Storage";
-export * from "./TypeParsing";
-export * from "./ValueProcessing";
+export * as Storage from "./Storage";
+export * as TypeParsing from "../../../common/TypeParsing";
+export * as ValueProcessing from "./ValueProcessing";
 export * from "./Application";
 export * from "./Display";
 export * from "./Editor";
 export * from "./Form";
-export * from "./HelperTypes";
+export * as HelperTypes from "./HelperTypes";
 export * from "./IdUtils";
 export * from "./Input";
 export * from "./Layout";
