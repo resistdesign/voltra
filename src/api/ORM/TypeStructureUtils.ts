@@ -26,7 +26,7 @@ export const typeStructureMapToDataContextMap = (
   const cleanTypeStructureMap = getCleanTypeStructureMap(typeStructureMap);
 
   Object.entries(cleanTypeStructureMap).forEach(([key, typeStructure]) => {
-    const { namespace, type, content = [] } = typeStructure;
+    const { namespace, type, content = [], comboType = false } = typeStructure;
     const cleanFullTypeName = getCleanType(type, namespace);
     const uniquelyIdentifyingFieldName = getCleanedTagStringValue(
       getTagValue("uniquelyIdentifyingFieldName", typeStructure),
@@ -48,6 +48,7 @@ export const typeStructureMapToDataContextMap = (
       isTypeAlias: !(cleanFullTypeName === key),
       uniquelyIdentifyingFieldName: uuidFieldName,
       allowedOperations: opsList as DataContextOperationOptions[],
+      // TODO: What about combo types? (need to merge in combo type fields)
       fields: content.reduce((acc, subType) => {
         const { name, type, literal = false, multiple = false } = subType;
         const subAO = getCleanedTagStringValue(
@@ -57,6 +58,15 @@ export const typeStructureMapToDataContextMap = (
           typeof subAO === "string"
             ? subAO.split(",").map((o) => o.trim())
             : undefined;
+
+        if (comboType && !literal) {
+          // TODO: Get combo type fields.
+        } else if (comboType && literal) {
+          // TODO: Should this even happen???
+          // TODO: Get combo type fields.
+        } else {
+          // TODO: Just apply the current field as is being done now.
+        }
 
         return {
           ...acc,
