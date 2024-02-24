@@ -22,6 +22,7 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
 export const typeStructureMapToDataContextMap = (
   typeStructureMap: TypeStructureMap,
 ): DataContextMap => {
+  // TODO: Detect caching by map key???
   const dataContextMap: DataContextMap = {};
   const cleanTypeStructureMap = getCleanTypeStructureMap(typeStructureMap);
 
@@ -61,6 +62,7 @@ export const typeStructureMapToDataContextMap = (
 
         if (comboType && !literal) {
           // TODO: Get combo type fields.
+          // TODO: Is extending other tables possible?
         } else if (comboType && literal) {
           // TODO: Should this even happen???
           // TODO: Get combo type fields.
