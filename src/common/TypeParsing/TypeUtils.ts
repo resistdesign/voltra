@@ -1,5 +1,3 @@
-const NOOP = () => undefined;
-
 export type TypeStructure = {
   namespace?: string;
   name: string;
