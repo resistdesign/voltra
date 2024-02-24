@@ -62,7 +62,6 @@ export const typeStructureMapToDataContextMap = (
 
         if (comboType && !literal) {
           // TODO: Get combo type fields.
-          // TODO: Is extending other tables possible?
         } else if (comboType && literal) {
           // TODO: Should this even happen???
           // TODO: Get combo type fields.
