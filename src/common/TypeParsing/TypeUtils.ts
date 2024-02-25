@@ -213,6 +213,7 @@ export const getCondensedTypeStructure = (
   const cachedTypeStructure = cache[cleanFullTypeName];
 
   // TODO: Handle `varietyType`.
+  // TODO: Handle direct union types. Example: `items: (One | Two)[];`
   let condensedTypeStructure = cachedTypeStructure;
 
   if (!condensedTypeStructure) {
