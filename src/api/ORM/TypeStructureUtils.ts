@@ -84,6 +84,7 @@ export const mergeDataContextTagMaps = (
 export const typeStructureToDataContext = (
   typeStructure: TypeStructure,
   typeStructureMap: TypeStructureMap,
+  defaultUniquelyIdentifyingFieldName?: string,
   cache: DataContextMap = {},
 ): DataContext<any, any> => {
   const {
@@ -113,7 +114,7 @@ export const typeStructureToDataContext = (
     const uuidFieldName =
       typeof uniquelyIdentifyingFieldName === "string"
         ? uniquelyIdentifyingFieldName.trim()
-        : undefined;
+        : defaultUniquelyIdentifyingFieldName;
     const opsList = allowedOperations
       ? allowedOperations.split(",").map((o) => o.trim())
       : undefined;
@@ -137,11 +138,14 @@ export const typeStructureToDataContext = (
   }
 };
 
+export const DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME = "id";
+
 /**
  * Create a {@link DataContextMap} from a {@link TypeStructureMap} generated from TypeScript types.
  * */
 export const typeStructureMapToDataContextMap = (
   typeStructureMap: TypeStructureMap,
+  useDefaultUniquelyIdentifyingFieldName = true,
 ): DataContextMap => {
   const dataContextMap: DataContextMap = {};
 
@@ -155,6 +159,9 @@ export const typeStructureMapToDataContextMap = (
       : typeStructureToDataContext(
           typeStructure,
           typeStructureMap,
+          useDefaultUniquelyIdentifyingFieldName
+            ? DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME
+            : undefined,
           dataContextMap,
         );
   });
