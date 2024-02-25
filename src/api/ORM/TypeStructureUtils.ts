@@ -6,6 +6,7 @@ import {
 } from "./DataContextService";
 import {
   getCleanType,
+  getCondensedTypeStructure,
   getTagValue,
   TypeStructure,
   TypeStructureMap,
@@ -47,11 +48,7 @@ export const typeStructureToDataContext = (
     namespace,
     type,
     content = [],
-    comboType = false,
-    // TODO: Handle `varietyType`.
-    varietyType = false,
-    // TODO: Need something better.
-  } = getCleanTypeStructure(typeStructure, typeStructureMap);
+  } = getCondensedTypeStructure(typeStructure, typeStructureMap);
   const cleanFullTypeName = getCleanType(type, namespace);
   const cachedDataContext = cache[cleanFullTypeName];
 
@@ -71,51 +68,19 @@ export const typeStructureToDataContext = (
     const opsList = allowedOperations
       ? allowedOperations.split(",").map((o) => o.trim())
       : undefined;
+    const newDataContext: DataContext<any, any> = {
+      itemTypeName: cleanFullTypeName,
+      resolvedType: type,
+      isTypeAlias: cleanFullTypeName in typeStructureMap,
+      uniquelyIdentifyingFieldName: uuidFieldName,
+      allowedOperations: opsList as DataContextOperationOptions[],
+      fields: {},
+    };
 
-    let newDataContext = !!cache[cleanFullTypeName]
-      ? cache[cleanFullTypeName]
-      : {
-          itemTypeName: cleanFullTypeName,
-          resolvedType: type,
-          isTypeAlias: cleanFullTypeName in typeStructureMap,
-          uniquelyIdentifyingFieldName: uuidFieldName,
-          allowedOperations: opsList as DataContextOperationOptions[],
-          fields: {},
-        };
+    for (const field of content) {
+      const { name: fieldName } = field;
 
-    if (comboType) {
-      // `content` is a list of types.
-      for (const subType of content) {
-        const {
-          allowedOperations: subTypeAllowedOperations = [],
-          fields: subTypeFields = {},
-        } = typeStructureToDataContext(subType, typeStructureMap, cache);
-        const {
-          allowedOperations: newDataContextAllowedOperations = [],
-          fields: newDataContextFields = {},
-        } = newDataContext;
-
-        // Merge data contexts.
-        newDataContext = {
-          ...newDataContext,
-          allowedOperations: [
-            ...newDataContextAllowedOperations,
-            ...subTypeAllowedOperations,
-          ],
-          fields: {
-            ...newDataContextFields,
-            ...subTypeFields,
-          },
-        };
-      }
-    } else {
-      // `content` is a list of fields.
-      for (const field of content) {
-        const { name: fieldName } = field;
-        const fieldDataContext = typeStructureToDataContextField(field);
-
-        newDataContext.fields[fieldName] = fieldDataContext;
-      }
+      newDataContext.fields[fieldName] = typeStructureToDataContextField(field);
     }
 
     cache[cleanFullTypeName] = newDataContext;

@@ -200,6 +200,111 @@ export const getMergedTypeStructure = (
   return mergedTypeStructure;
 };
 
+export const getUniqueStringArray = (arr: string[]): string[] =>
+  arr.filter((item, index) => arr.indexOf(item) === index);
+
+export const getCondensedTypeStructure = (
+  typeStructure: TypeStructure,
+  typeStructureMap: TypeStructureMap,
+  cache: TypeStructureMap = {},
+): TypeStructure => {
+  const { namespace, type, typeAlias } = typeStructure;
+  const cleanFullTypeName = getCleanType(type, namespace);
+  const cachedTypeStructure = cache[cleanFullTypeName];
+
+  let condensedTypeStructure = cachedTypeStructure;
+
+  if (!condensedTypeStructure) {
+    const mappedType = !!typeAlias
+      ? typeStructureMap[typeAlias]
+      : typeStructureMap[cleanFullTypeName];
+    const { comboType = false, literal = false, content = [] } = mappedType;
+
+    if (mappedType) {
+      // TODO: Handle `varietyType`.
+      if (comboType) {
+        let mergedType = mappedType;
+
+        for (const subType of content) {
+          const condensedSubType = getCondensedTypeStructure(
+            subType,
+            typeStructureMap,
+            cache,
+          );
+          const {
+            contentNames: {
+              allowed: subTypeAllowedContentNames,
+              disallowed: subTypeDisallowedContentNames,
+            } = {},
+            content: subTypeContent = [],
+            comments: subTypeComments = [],
+            tags: subTypeTags = {},
+          } = condensedSubType;
+          const {
+            contentNames: {
+              allowed: mergedTypeAllowedContentNames,
+              disallowed: mergedTypeDisallowedContentNames,
+            } = {},
+            content: mergedTypeContent = [],
+            comments: mergedTypeComments = [],
+            tags: mergedTypeTags = {},
+          } = mergedType;
+          const newMergedTypeAllowedContentNames =
+            !!subTypeAllowedContentNames || !!mergedTypeAllowedContentNames
+              ? getUniqueStringArray([
+                  ...(mergedTypeAllowedContentNames || []),
+                  ...(subTypeAllowedContentNames || []),
+                ])
+              : undefined;
+          const newMergedTypeDisallowedContentNames =
+            !!subTypeDisallowedContentNames ||
+            !!mergedTypeDisallowedContentNames
+              ? getUniqueStringArray([
+                  ...(mergedTypeDisallowedContentNames || []),
+                  ...(subTypeDisallowedContentNames || []),
+                ])
+              : undefined;
+          const newMergedTypeContentNames =
+            newMergedTypeAllowedContentNames ||
+            newMergedTypeDisallowedContentNames
+              ? {
+                  allowed: newMergedTypeAllowedContentNames,
+                  disallowed: newMergedTypeDisallowedContentNames,
+                }
+              : undefined;
+
+          mergedType = {
+            ...mergedType,
+            ...subType,
+            contentNames: newMergedTypeContentNames,
+            content: [...mergedTypeContent, ...subTypeContent],
+            comments: [...mergedTypeComments, ...subTypeComments],
+            // TODO: This should somehow be cumulative.
+            tags: { ...mergedTypeTags, ...subTypeTags },
+          };
+        }
+
+        condensedTypeStructure = mergedType;
+      } else {
+        if (literal) {
+          condensedTypeStructure = mappedType;
+        } else {
+          condensedTypeStructure = getCondensedTypeStructure(
+            mappedType,
+            typeStructureMap,
+          );
+        }
+      }
+    } else {
+      condensedTypeStructure = typeStructure;
+    }
+  }
+
+  cache[cleanFullTypeName] = condensedTypeStructure;
+
+  return condensedTypeStructure;
+};
+
 export const getCleanTypeStructure = (
   typeStructure: TypeStructure,
   typeStructureMap?: TypeStructureMap,
