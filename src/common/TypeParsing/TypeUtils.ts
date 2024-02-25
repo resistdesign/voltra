@@ -208,23 +208,23 @@ export const getCondensedTypeStructure = (
   typeStructureMap: TypeStructureMap,
   cache: TypeStructureMap = {},
 ): TypeStructure => {
-  const { namespace, type, typeAlias } = typeStructure;
+  const { namespace, type, typeAlias, literal = false } = typeStructure;
   const cleanFullTypeName = getCleanType(type, namespace);
   const cachedTypeStructure = cache[cleanFullTypeName];
 
+  // TODO: Handle `varietyType`.
   let condensedTypeStructure = cachedTypeStructure;
 
   if (!condensedTypeStructure) {
-    const mappedType = !!typeAlias
-      ? typeStructureMap[typeAlias]
-      : typeStructureMap[cleanFullTypeName];
-    const { comboType = false, literal = false, content = [] } = mappedType;
+    if (literal) {
+      condensedTypeStructure = typeStructure;
+    } else {
+      const mappedType = !!typeAlias
+        ? typeStructureMap[typeAlias]
+        : typeStructureMap[cleanFullTypeName];
+      const { comboType = false, content = [] } = mappedType;
 
-    if (mappedType) {
-      // TODO: Handle `varietyType`.
-      if (literal) {
-        condensedTypeStructure = mappedType;
-      } else {
+      if (mappedType) {
         if (comboType) {
           let mergedType = mappedType;
 
@@ -295,9 +295,9 @@ export const getCondensedTypeStructure = (
             cache,
           );
         }
+      } else {
+        condensedTypeStructure = typeStructure;
       }
-    } else {
-      condensedTypeStructure = typeStructure;
     }
   }
 
