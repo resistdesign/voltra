@@ -69,7 +69,6 @@ export type DataContext<
 > = {
   itemTypeName: string;
   resolvedType?: string;
-  isTypeAlias?: boolean;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   allowedOperations?: DataContextOperationOptions[];
   fields: Partial<Record<keyof ItemType, DataContextField>>;

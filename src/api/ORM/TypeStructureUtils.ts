@@ -71,7 +71,6 @@ export const typeStructureToDataContext = (
     const newDataContext: DataContext<any, any> = {
       itemTypeName: cleanFullTypeName,
       resolvedType: type,
-      isTypeAlias: cleanFullTypeName in typeStructureMap,
       uniquelyIdentifyingFieldName: uuidFieldName,
       allowedOperations: opsList as DataContextOperationOptions[],
       fields: {},
