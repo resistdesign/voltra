@@ -21,7 +21,7 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
 export const typeStructureToDataContextField = (
   typeStructure: TypeStructure,
 ): DataContextField => {
-  const { name, type, literal = false, multiple = false } = typeStructure;
+  const { type, literal = false, multiple = false } = typeStructure;
   const allowedOperations = getCleanedTagStringValue(
     getTagValue("allowedOperations", typeStructure),
   );
