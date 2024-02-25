@@ -21,9 +21,10 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
  * */
 export const typeStructureMapToDataContextMap = (
   typeStructureMap: TypeStructureMap,
+  cache: DataContextMap = {},
 ): DataContextMap => {
   // TODO: Detect caching by map key???
-  const dataContextMap: DataContextMap = {};
+  const dataContextMap: DataContextMap = cache;
   const cleanTypeStructureMap = getCleanTypeStructureMap(typeStructureMap);
 
   Object.entries(cleanTypeStructureMap).forEach(([key, typeStructure]) => {
@@ -42,45 +43,49 @@ export const typeStructureMapToDataContextMap = (
     const opsList = allowedOperations
       ? allowedOperations.split(",").map((o) => o.trim())
       : undefined;
+    const newDataContext = !!cache[cleanFullTypeName]
+      ? cache[cleanFullTypeName]
+      : {
+          itemTypeName: key,
+          resolvedType: type,
+          isTypeAlias: !(cleanFullTypeName === key),
+          uniquelyIdentifyingFieldName: uuidFieldName,
+          allowedOperations: opsList as DataContextOperationOptions[],
+          // TODO: What about combo types? (need to merge in combo type fields)
+          fields: content.reduce((acc, subType) => {
+            const { name, type, literal = false, multiple = false } = subType;
+            const subAO = getCleanedTagStringValue(
+              getTagValue("allowedOperations", subType),
+            );
+            const subOpsList =
+              typeof subAO === "string"
+                ? subAO.split(",").map((o) => o.trim())
+                : undefined;
 
-    dataContextMap[key] = {
-      itemTypeName: key,
-      resolvedType: type,
-      isTypeAlias: !(cleanFullTypeName === key),
-      uniquelyIdentifyingFieldName: uuidFieldName,
-      allowedOperations: opsList as DataContextOperationOptions[],
-      // TODO: What about combo types? (need to merge in combo type fields)
-      fields: content.reduce((acc, subType) => {
-        const { name, type, literal = false, multiple = false } = subType;
-        const subAO = getCleanedTagStringValue(
-          getTagValue("allowedOperations", subType),
-        );
-        const subOpsList =
-          typeof subAO === "string"
-            ? subAO.split(",").map((o) => o.trim())
-            : undefined;
+            if (comboType && !literal) {
+              // TODO: Get combo type fields.
+            } else if (comboType && literal) {
+              // TODO: Should this even happen???
+              // TODO: Get combo type fields.
+            } else {
+              // TODO: Just apply the current field as is being done now.
+            }
 
-        if (comboType && !literal) {
-          // TODO: Get combo type fields.
-        } else if (comboType && literal) {
-          // TODO: Should this even happen???
-          // TODO: Get combo type fields.
-        } else {
-          // TODO: Just apply the current field as is being done now.
-        }
-
-        return {
-          ...acc,
-          [name]: {
-            typeName: type,
-            isContext: !literal,
-            allowedOperations: subOpsList,
-            embedded: literal,
-            isMultiple: multiple,
-          } as DataContextField,
+            return {
+              ...acc,
+              [name]: {
+                typeName: type,
+                isContext: !literal,
+                allowedOperations: subOpsList,
+                embedded: literal,
+                isMultiple: multiple,
+              } as DataContextField,
+            };
+          }, {}),
         };
-      }, {}),
-    };
+
+    dataContextMap[key] = newDataContext;
+    cache[cleanFullTypeName] = newDataContext;
   });
 
   return dataContextMap;
