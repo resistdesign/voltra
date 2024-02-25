@@ -45,12 +45,14 @@ export const typeStructureToDataContext = (
   cache: DataContextMap = {},
 ): DataContext<any, any> => {
   const {
-    name,
+    namespace,
     type,
     content = [],
     comboType = false,
+    // TODO: Handle `varietyType`.
+    varietyType = false,
   } = getCleanTypeStructure(typeStructure, typeStructureMap);
-  const cleanFullTypeName = getCleanType(type, name);
+  const cleanFullTypeName = getCleanType(type, namespace);
   const cachedDataContext = cache[cleanFullTypeName];
 
   if (cachedDataContext) {
