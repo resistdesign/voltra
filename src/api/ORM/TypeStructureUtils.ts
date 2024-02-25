@@ -93,7 +93,6 @@ export const typeStructureToDataContext = (
   } = getCondensedTypeStructure(
     typeStructure,
     typeStructureMap,
-    {},
     mergeDataContextTagMaps,
   );
   const cleanFullTypeName = getCleanType(type, namespace);
