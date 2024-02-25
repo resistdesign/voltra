@@ -1,4 +1,4 @@
-export type TypeStructureTag = Record<
+export type TypeStructureTagMap = Record<
   string,
   {
     type?: string | undefined;
@@ -23,7 +23,7 @@ export type TypeStructure = {
   };
   content?: TypeStructure[];
   comments?: string[];
-  tags?: TypeStructureTag;
+  tags?: TypeStructureTagMap;
 };
 
 export type TypeStructureMap = Record<string, TypeStructure>;
@@ -209,14 +209,17 @@ export const getCondensedTypeStructure = (
   typeStructure: TypeStructure,
   typeStructureMap: TypeStructureMap,
   cache: TypeStructureMap = {},
+  mergeTagMaps?: (
+    tagMapA: TypeStructureTagMap,
+    tagMapB: TypeStructureTagMap,
+  ) => TypeStructureTagMap,
 ): TypeStructure => {
   const { namespace, type, typeAlias, literal = false } = typeStructure;
   const cleanFullTypeName = getCleanType(type, namespace);
-  const cachedTypeStructure = cache[cleanFullTypeName];
 
   // TODO: Handle `varietyType`.
   // TODO: Handle direct union types. Example: `items: (One | Two)[];`
-  let condensedTypeStructure = cachedTypeStructure;
+  let condensedTypeStructure = cache[cleanFullTypeName];
 
   if (!condensedTypeStructure) {
     if (literal) {
@@ -236,6 +239,7 @@ export const getCondensedTypeStructure = (
               subType,
               typeStructureMap,
               cache,
+              mergeTagMaps,
             );
             const {
               contentNames: {
@@ -285,8 +289,9 @@ export const getCondensedTypeStructure = (
               contentNames: newMergedTypeContentNames,
               content: [...mergedTypeContent, ...subTypeContent],
               comments: [...mergedTypeComments, ...subTypeComments],
-              // TODO: This should somehow be cumulative.
-              tags: { ...mergedTypeTags, ...subTypeTags },
+              tags: !!mergeTagMaps
+                ? mergeTagMaps(mergedTypeTags, subTypeTags)
+                : { ...mergedTypeTags, ...subTypeTags },
             };
           }
 
@@ -296,6 +301,7 @@ export const getCondensedTypeStructure = (
             mappedType,
             typeStructureMap,
             cache,
+            mergeTagMaps,
           );
         }
       } else {
