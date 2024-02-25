@@ -1,3 +1,11 @@
+export type TypeStructureTag = Record<
+  string,
+  {
+    type?: string | undefined;
+    value?: string | boolean | undefined;
+  }
+>;
+
 export type TypeStructure = {
   namespace?: string;
   name: string;
@@ -15,13 +23,7 @@ export type TypeStructure = {
   };
   content?: TypeStructure[];
   comments?: string[];
-  tags?: Record<
-    string,
-    {
-      type?: string | undefined;
-      value?: string | boolean | undefined;
-    }
-  >;
+  tags?: TypeStructureTag;
 };
 
 export type TypeStructureMap = Record<string, TypeStructure>;
