@@ -10,6 +10,7 @@ import {
   getTagValue,
   TypeStructure,
   TypeStructureMap,
+  TypeStructureTagMap,
 } from "../../common/TypeParsing";
 
 export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
@@ -39,6 +40,47 @@ export const typeStructureToDataContextField = (
   };
 };
 
+export const DataContextFieldTagNames = {
+  uniquelyIdentifyingFieldName: "uniquelyIdentifyingFieldName",
+  allowedOperations: "allowedOperations",
+};
+
+export const mergeDataContextTagMaps = (
+  tagMapA: TypeStructureTagMap,
+  tagMapB: TypeStructureTagMap,
+): TypeStructureTagMap => {
+  const { [DataContextFieldTagNames.allowedOperations]: tagMapAAllowedOps } =
+    tagMapA;
+  const { [DataContextFieldTagNames.allowedOperations]: tagMapBAllowedOps } =
+    tagMapB;
+
+  let mergedTag = {
+    ...tagMapA,
+    ...tagMapB,
+  };
+
+  if (tagMapAAllowedOps && tagMapBAllowedOps) {
+    const { value: tagMapAAllowedOpsValue } = tagMapAAllowedOps;
+    const { value: tagMapBAllowedOpsValue } = tagMapBAllowedOps;
+
+    if (
+      typeof tagMapAAllowedOpsValue === "string" &&
+      typeof tagMapBAllowedOpsValue === "string"
+    ) {
+      const mergedAllowedOps = `${tagMapAAllowedOpsValue},${tagMapBAllowedOpsValue}`;
+      mergedTag = {
+        ...mergedTag,
+        [DataContextFieldTagNames.allowedOperations]: {
+          type: "string",
+          value: mergedAllowedOps,
+        },
+      };
+    }
+  }
+
+  return mergedTag;
+};
+
 export const typeStructureToDataContext = (
   typeStructure: TypeStructure,
   typeStructureMap: TypeStructureMap,
@@ -48,7 +90,12 @@ export const typeStructureToDataContext = (
     namespace,
     type,
     content = [],
-  } = getCondensedTypeStructure(typeStructure, typeStructureMap);
+  } = getCondensedTypeStructure(
+    typeStructure,
+    typeStructureMap,
+    {},
+    mergeDataContextTagMaps,
+  );
   const cleanFullTypeName = getCleanType(type, namespace);
   const cachedDataContext = cache[cleanFullTypeName];
 
@@ -56,10 +103,13 @@ export const typeStructureToDataContext = (
     return cachedDataContext;
   } else {
     const uniquelyIdentifyingFieldName = getCleanedTagStringValue(
-      getTagValue("uniquelyIdentifyingFieldName", typeStructure),
+      getTagValue(
+        DataContextFieldTagNames.uniquelyIdentifyingFieldName,
+        typeStructure,
+      ),
     );
     const allowedOperations = getCleanedTagStringValue(
-      getTagValue("allowedOperations", typeStructure),
+      getTagValue(DataContextFieldTagNames.allowedOperations, typeStructure),
     );
     const uuidFieldName =
       typeof uniquelyIdentifyingFieldName === "string"
