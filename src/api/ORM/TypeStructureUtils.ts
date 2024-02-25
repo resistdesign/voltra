@@ -1,12 +1,14 @@
 import {
+  DataContext,
   DataContextField,
   DataContextMap,
   DataContextOperationOptions,
 } from "./DataContextService";
 import {
   getCleanType,
-  getCleanTypeStructureMap,
+  getCleanTypeStructure,
   getTagValue,
+  TypeStructure,
   TypeStructureMap,
 } from "../../common/TypeParsing";
 
@@ -14,6 +16,96 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
   const trimmed = typeof tagValue === "string" ? tagValue.trim() : undefined;
 
   return !!trimmed ? trimmed : undefined;
+};
+
+export const typeStructureToDataContextField = (
+  typeStructure: TypeStructure,
+): DataContextField => {
+  const { name, type, literal = false, multiple = false } = typeStructure;
+  const allowedOperations = getCleanedTagStringValue(
+    getTagValue("allowedOperations", typeStructure),
+  );
+  const opsList =
+    typeof allowedOperations === "string"
+      ? allowedOperations.split(",").map((o) => o.trim())
+      : undefined;
+
+  return {
+    typeName: type,
+    isContext: !literal,
+    allowedOperations: opsList as DataContextOperationOptions[],
+    embedded: literal,
+    isMultiple: !!multiple,
+  };
+};
+
+export const typeStructureToDataContext = (
+  typeStructure: TypeStructure,
+  typeStructureMap: TypeStructureMap,
+  cache: DataContextMap = {},
+): DataContext<any, any> => {
+  const {
+    name,
+    type,
+    content = [],
+    comboType = false,
+  } = getCleanTypeStructure(typeStructure, typeStructureMap);
+  const cleanFullTypeName = getCleanType(type, name);
+  const uniquelyIdentifyingFieldName = getCleanedTagStringValue(
+    getTagValue("uniquelyIdentifyingFieldName", typeStructure),
+  );
+  const allowedOperations = getCleanedTagStringValue(
+    getTagValue("allowedOperations", typeStructure),
+  );
+  const uuidFieldName =
+    typeof uniquelyIdentifyingFieldName === "string"
+      ? uniquelyIdentifyingFieldName.trim()
+      : undefined;
+  const opsList = allowedOperations
+    ? allowedOperations.split(",").map((o) => o.trim())
+    : undefined;
+
+  let newDataContext = !!cache[cleanFullTypeName]
+    ? cache[cleanFullTypeName]
+    : {
+        itemTypeName: cleanFullTypeName,
+        resolvedType: type,
+        isTypeAlias: cleanFullTypeName in typeStructureMap,
+        uniquelyIdentifyingFieldName: uuidFieldName,
+        allowedOperations: opsList as DataContextOperationOptions[],
+        fields: {},
+      };
+
+  if (comboType) {
+    // `content` is a list of types.
+    for (const subType of content) {
+      const {
+        allowedOperations: subTypeAllowedOperations = [],
+        fields: subTypeFields = {},
+      } = typeStructureToDataContext(subType, typeStructureMap, cache);
+      const {
+        allowedOperations: newDataContextAllowedOperations = [],
+        fields: newDataContextFields = {},
+      } = newDataContext;
+
+      // Merge data contexts.
+      newDataContext = {
+        ...newDataContext,
+        allowedOperations: [
+          ...newDataContextAllowedOperations,
+          ...subTypeAllowedOperations,
+        ],
+        fields: {
+          ...newDataContextFields,
+          ...subTypeFields,
+        },
+      };
+    }
+  } else {
+    // TODO: `content` is a list of fields.
+  }
+
+  return newDataContext;
 };
 
 /**
@@ -25,9 +117,8 @@ export const typeStructureMapToDataContextMap = (
 ): DataContextMap => {
   // TODO: Detect caching by map key???
   const dataContextMap: DataContextMap = cache;
-  const cleanTypeStructureMap = getCleanTypeStructureMap(typeStructureMap);
 
-  Object.entries(cleanTypeStructureMap).forEach(([key, typeStructure]) => {
+  Object.entries(typeStructureMap).forEach(([key, typeStructure]) => {
     const { namespace, type, content = [], comboType = false } = typeStructure;
     const cleanFullTypeName = getCleanType(type, namespace);
     const uniquelyIdentifyingFieldName = getCleanedTagStringValue(
@@ -53,34 +144,17 @@ export const typeStructureMapToDataContextMap = (
           allowedOperations: opsList as DataContextOperationOptions[],
           // TODO: What about combo types? (need to merge in combo type fields)
           fields: content.reduce((acc, subType) => {
-            const { name, type, literal = false, multiple = false } = subType;
-            const subAO = getCleanedTagStringValue(
-              getTagValue("allowedOperations", subType),
-            );
-            const subOpsList =
-              typeof subAO === "string"
-                ? subAO.split(",").map((o) => o.trim())
-                : undefined;
+            const { name, comboType = false } = subType;
 
-            if (comboType && !literal) {
-              // TODO: Get combo type fields.
-            } else if (comboType && literal) {
-              // TODO: Should this even happen???
-              // TODO: Get combo type fields.
+            if (comboType) {
+              // TODO: Merge in fields.
             } else {
-              // TODO: Just apply the current field as is being done now.
+              // Just apply the current field.
+              return {
+                ...acc,
+                [name]: typeStructureToDataContextField(subType),
+              };
             }
-
-            return {
-              ...acc,
-              [name]: {
-                typeName: type,
-                isContext: !literal,
-                allowedOperations: subOpsList,
-                embedded: literal,
-                isMultiple: multiple,
-              } as DataContextField,
-            };
           }, {}),
         };
 
