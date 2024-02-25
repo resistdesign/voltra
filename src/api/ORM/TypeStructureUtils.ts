@@ -6,7 +6,6 @@ import {
 } from "./DataContextService";
 import {
   getCleanType,
-  getCleanTypeStructure,
   getTagValue,
   TypeStructure,
   TypeStructureMap,
@@ -51,6 +50,7 @@ export const typeStructureToDataContext = (
     comboType = false,
     // TODO: Handle `varietyType`.
     varietyType = false,
+    // TODO: Need something better.
   } = getCleanTypeStructure(typeStructure, typeStructureMap);
   const cleanFullTypeName = getCleanType(type, namespace);
   const cachedDataContext = cache[cleanFullTypeName];
