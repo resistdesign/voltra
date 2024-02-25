@@ -208,11 +208,11 @@ export const getUniqueStringArray = (arr: string[]): string[] =>
 export const getCondensedTypeStructure = (
   typeStructure: TypeStructure,
   typeStructureMap: TypeStructureMap,
-  cache: TypeStructureMap = {},
   mergeTagMaps?: (
     tagMapA: TypeStructureTagMap,
     tagMapB: TypeStructureTagMap,
   ) => TypeStructureTagMap,
+  cache: TypeStructureMap = {},
 ): TypeStructure => {
   const { namespace, type, typeAlias, literal = false } = typeStructure;
   const cleanFullTypeName = getCleanType(type, namespace);
@@ -238,8 +238,8 @@ export const getCondensedTypeStructure = (
             const condensedSubType = getCondensedTypeStructure(
               subType,
               typeStructureMap,
-              cache,
               mergeTagMaps,
+              cache,
             );
             const {
               contentNames: {
@@ -300,8 +300,8 @@ export const getCondensedTypeStructure = (
           condensedTypeStructure = getCondensedTypeStructure(
             mappedType,
             typeStructureMap,
-            cache,
             mergeTagMaps,
+            cache,
           );
         }
       } else {
