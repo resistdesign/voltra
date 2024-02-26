@@ -6,11 +6,19 @@ export type TypeStructureTagMap = Record<
   }
 >;
 
+export type TypeStructureUnionType = {
+  type: string;
+  literal: boolean;
+  value: any;
+};
+
 export type TypeStructure = {
   namespace?: string;
   name: string;
   typeAlias?: string;
   type: string;
+  isUnionType?: boolean;
+  unionTypes?: TypeStructureUnionType[];
   literal?: boolean;
   readonly?: boolean;
   optional?: boolean;
@@ -217,21 +225,26 @@ export const getCondensedTypeStructure = (
   const { namespace, type, typeAlias, literal = false } = typeStructure;
   const cleanFullTypeName = getCleanType(type, namespace);
 
-  // TODO: Handle `varietyType`.
-  // TODO: Handle direct union types. Example: `items: (One | Two)[];`
   let condensedTypeStructure = cache[cleanFullTypeName];
 
   if (!condensedTypeStructure) {
     if (literal) {
+      // TODO: Handle direct union types. Example: `items: (One | Two)[];`
       condensedTypeStructure = typeStructure;
     } else {
       const mappedType = !!typeAlias
         ? typeStructureMap[typeAlias]
         : typeStructureMap[cleanFullTypeName];
-      const { comboType = false, content = [] } = mappedType;
+      const {
+        comboType = false,
+        varietyType = false,
+        content = [],
+      } = mappedType;
 
       if (mappedType) {
-        if (comboType) {
+        if (varietyType) {
+          condensedTypeStructure = mappedType;
+        } else if (comboType) {
           let mergedType = mappedType;
 
           for (const subType of content) {
