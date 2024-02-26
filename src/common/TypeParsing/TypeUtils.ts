@@ -229,7 +229,6 @@ export const getCondensedTypeStructure = (
 
   if (!condensedTypeStructure) {
     if (literal) {
-      // TODO: Handle direct union types. Example: `items: (One | Two)[];`
       condensedTypeStructure = typeStructure;
     } else {
       const mappedType = !!typeAlias
@@ -243,9 +242,14 @@ export const getCondensedTypeStructure = (
 
       if (mappedType) {
         if (varietyType) {
+          // TODO: Why are options going missing?
           condensedTypeStructure = mappedType;
         } else if (comboType) {
-          let mergedType = mappedType;
+          let mergedType = {
+            ...mappedType,
+            // TRICKY: Reset this because we don't want to keep type references, just get their fields.
+            content: [],
+          };
 
           for (const subType of content) {
             const condensedSubType = getCondensedTypeStructure(
