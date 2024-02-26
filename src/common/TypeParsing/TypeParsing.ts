@@ -143,15 +143,24 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
     { parentName, namespace } = {},
   ): TypeStructure => {
     const { types = [] } = typeNode as UnionTypeNode;
+    const typeList = types.map((t: TypeNode) => {
+      const { type: parsedTypeName } = parseType(name, t, {
+        parentName,
+        namespace,
+      });
+
+      return parsedTypeName;
+    });
+    const unionTypes = getUnionTypes(typeList.join(UNION_TYPE_SEPARATOR));
 
     return {
       namespace,
       name,
       type: parentName ? `${parentName}.${name}` : name,
-      varietyType: true,
-      content: types.map((t: TypeNode) =>
-        parseType(name, t, { parentName, namespace }),
-      ),
+      isUnionType: true,
+      unionTypes,
+      literal: unionTypes.reduce((acc, { literal }) => acc && literal, true),
+      content: [],
     };
   },
   [SyntaxKind.IntersectionType]: (

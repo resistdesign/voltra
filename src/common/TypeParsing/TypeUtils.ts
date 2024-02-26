@@ -22,7 +22,6 @@ export type TypeStructure = {
   literal?: boolean;
   readonly?: boolean;
   optional?: boolean;
-  varietyType?: boolean;
   comboType?: boolean;
   multiple?: boolean | number;
   contentNames?: {
