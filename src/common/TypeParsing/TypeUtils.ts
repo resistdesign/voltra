@@ -235,13 +235,12 @@ export const getCondensedTypeStructure = (
         : typeStructureMap[cleanFullTypeName];
       const {
         comboType = false,
-        varietyType = false,
+        isUnionType = false,
         content = [],
       } = mappedType;
 
       if (mappedType) {
-        if (varietyType) {
-          // TODO: Why are options going missing?
+        if (isUnionType) {
           condensedTypeStructure = mappedType;
         } else if (comboType) {
           let mergedType: TypeStructure = {
