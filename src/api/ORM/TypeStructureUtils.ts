@@ -94,6 +94,7 @@ export const typeStructureToDataContext = (
   defaultUniquelyIdentifyingFieldName?: string,
   cache: DataContextMap = {},
 ): DataContext<any, any> => {
+  const tsMapCache = {};
   const {
     namespace,
     type,
@@ -105,6 +106,7 @@ export const typeStructureToDataContext = (
     typeStructure,
     typeStructureMap,
     mergeDataContextTagMaps,
+    tsMapCache,
   );
   const cleanFullTypeName = getCleanType(type, namespace);
   const cachedDataContext = cache[cleanFullTypeName];
@@ -138,9 +140,24 @@ export const typeStructureToDataContext = (
     };
 
     for (const field of content) {
+      const {
+        literal: mappedFieldTypeLiteral = false,
+        unionTypes: mappedFieldTypeUnionTypes = [],
+      } = getCondensedTypeStructure(
+        field,
+        typeStructureMap,
+        mergeDataContextTagMaps,
+        tsMapCache,
+      );
+      const isUnionType =
+        mappedFieldTypeLiteral && mappedFieldTypeUnionTypes.length > 0;
       const { name: fieldName } = field;
 
-      newDataContext.fields[fieldName] = typeStructureToDataContextField(field);
+      newDataContext.fields[fieldName] = typeStructureToDataContextField({
+        ...field,
+        isUnionType,
+        unionTypes: isUnionType ? mappedFieldTypeUnionTypes : undefined,
+      });
     }
 
     cache[cleanFullTypeName] = newDataContext;
