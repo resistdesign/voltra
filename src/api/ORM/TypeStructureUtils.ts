@@ -22,7 +22,13 @@ export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
 export const typeStructureToDataContextField = (
   typeStructure: TypeStructure,
 ): DataContextField => {
-  const { type, literal = false, multiple = false } = typeStructure;
+  const {
+    type,
+    literal = false,
+    multiple = false,
+    isUnionType = false,
+    unionTypes = [],
+  } = typeStructure;
   const allowedOperations = getCleanedTagStringValue(
     getTagValue("allowedOperations", typeStructure),
   );
@@ -35,8 +41,9 @@ export const typeStructureToDataContextField = (
     typeName: type,
     isContext: !literal,
     allowedOperations: opsList as DataContextOperationOptions[],
-    embedded: literal,
     isMultiple: !!multiple,
+    valueOptions: isUnionType ? unionTypes : undefined,
+    embedded: literal,
   };
 };
 
