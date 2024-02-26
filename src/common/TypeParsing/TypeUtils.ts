@@ -245,7 +245,7 @@ export const getCondensedTypeStructure = (
           // TODO: Why are options going missing?
           condensedTypeStructure = mappedType;
         } else if (comboType) {
-          let mergedType = {
+          let mergedType: TypeStructure = {
             ...mappedType,
             // TRICKY: Reset this because we don't want to keep type references, just get their fields.
             content: [],
