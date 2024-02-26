@@ -73,7 +73,7 @@ export type DataContext<
   resolvedType?: string;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   allowedOperations?: DataContextOperationOptions[];
-
+  valueOptions?: TypeStructureUnionType[];
   fields: Partial<Record<keyof ItemType, DataContextField>>;
 };
 

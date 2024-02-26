@@ -97,6 +97,8 @@ export const typeStructureToDataContext = (
   const {
     namespace,
     type,
+    isUnionType,
+    unionTypes = [],
     content = [],
   } = getCondensedTypeStructure(
     typeStructure,
@@ -130,6 +132,7 @@ export const typeStructureToDataContext = (
       resolvedType: type,
       uniquelyIdentifyingFieldName: uuidFieldName,
       allowedOperations: opsList as DataContextOperationOptions[],
+      valueOptions: isUnionType ? unionTypes : undefined,
       fields: {},
     };
 
