@@ -32,12 +32,11 @@ type TypeStructureGenerator = (
   },
 ) => TypeStructure;
 
-const UNION_TYPE_DETECTION_REGEX = /^\([\s\S]*\)$/gim;
 const UNION_TYPE_SEPARATOR = "|";
 const STRING_LITERAL_TYPE_DETECTION_REGEX = /(^'[\s\S]*'$)|(^"[\s\S]*"$)/gim;
 
 const typeIsUnionType = (type: string = ""): boolean =>
-  type.trim().match(UNION_TYPE_DETECTION_REGEX) !== null;
+  type.includes(UNION_TYPE_SEPARATOR);
 
 const typeIsBooleanLiteral = (type: string = ""): boolean =>
   type === "true" || type === "false";
