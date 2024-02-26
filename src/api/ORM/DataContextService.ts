@@ -60,6 +60,7 @@ export type DataContextField = {
   isContext?: boolean;
   isMultiple?: boolean;
   allowedOperations?: DataContextOperationOptions[];
+  valueOptions?: any[];
   embedded?: boolean;
 };
 
@@ -71,6 +72,7 @@ export type DataContext<
   resolvedType?: string;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   allowedOperations?: DataContextOperationOptions[];
+
   fields: Partial<Record<keyof ItemType, DataContextField>>;
 };
 
