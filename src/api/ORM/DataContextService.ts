@@ -17,6 +17,7 @@ import {
   flattenCriterionGroups,
   reduceCriteria,
 } from "./CriteriaUtils/CriteriaUtils";
+import { TypeStructureUnionType } from "../../common/TypeParsing";
 
 export const DataContextServiceErrorTypes = {
   OPERATION_NOT_ALLOWED: "OPERATION_NOT_ALLOWED",
@@ -60,7 +61,7 @@ export type DataContextField = {
   isContext?: boolean;
   isMultiple?: boolean;
   allowedOperations?: DataContextOperationOptions[];
-  valueOptions?: any[];
+  valueOptions?: TypeStructureUnionType[];
   embedded?: boolean;
 };
 
