@@ -179,22 +179,19 @@ export const typeStructureMapToDataContextMap = (
 
   Object.entries(typeStructureMap).forEach(([_key, typeStructure]) => {
     const { namespace, type, literal = false } = typeStructure;
+    const cleanFullTypeName = getCleanType(type, namespace);
+    const existingDataContext = dataContextMap[cleanFullTypeName];
 
-    if (!literal) {
-      const cleanFullTypeName = getCleanType(type, namespace);
-      const existingDataContext = dataContextMap[cleanFullTypeName];
-
-      dataContextMap[cleanFullTypeName] = !!existingDataContext
-        ? existingDataContext
-        : typeStructureToDataContext(
-            typeStructure,
-            typeStructureMap,
-            useDefaultUniquelyIdentifyingFieldName
-              ? DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME
-              : undefined,
-            dataContextMap,
-          );
-    }
+    dataContextMap[cleanFullTypeName] = !!existingDataContext
+      ? existingDataContext
+      : typeStructureToDataContext(
+          typeStructure,
+          typeStructureMap,
+          useDefaultUniquelyIdentifyingFieldName
+            ? DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME
+            : undefined,
+          dataContextMap,
+        );
   });
 
   return dataContextMap;
