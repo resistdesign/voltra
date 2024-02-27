@@ -153,6 +153,7 @@ export const typeStructureToDataContext = (
         mappedFieldTypeLiteral && mappedFieldTypeUnionTypes.length > 0;
       const { name: fieldName } = field;
 
+      // TODO: Need to use `contentNames` (Pick/Omit) to limit fields.
       newDataContext.fields[fieldName] = typeStructureToDataContextField({
         ...field,
         isUnionType,
