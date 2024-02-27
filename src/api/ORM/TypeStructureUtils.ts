@@ -98,7 +98,6 @@ export const typeStructureToDataContext = (
   const {
     namespace,
     type,
-    // TODO: In this case, the options probably need to get pu ton the fields.
     isUnionType,
     unionTypes = [],
     content = [],
@@ -178,7 +177,7 @@ export const typeStructureMapToDataContextMap = (
   const dataContextMap: DataContextMap = {};
 
   Object.entries(typeStructureMap).forEach(([_key, typeStructure]) => {
-    const { namespace, type, literal = false } = typeStructure;
+    const { namespace, type } = typeStructure;
     const cleanFullTypeName = getCleanType(type, namespace);
     const existingDataContext = dataContextMap[cleanFullTypeName];
 
