@@ -13,6 +13,12 @@ import {
   TypeStructureTagMap,
 } from "../../common/TypeParsing";
 
+export const DataContextFieldTagNames = {
+  uniquelyIdentifyingFieldName: "uniquelyIdentifyingFieldName",
+  allowedOperations: "allowedOperations",
+  virtual: "virtual",
+};
+
 export const getCleanedTagStringValue = (tagValue: any): string | undefined => {
   const trimmed = typeof tagValue === "string" ? tagValue.trim() : undefined;
 
@@ -45,11 +51,6 @@ export const typeStructureToDataContextField = (
     valueOptions: isUnionType ? unionTypes : undefined,
     embedded: literal,
   };
-};
-
-export const DataContextFieldTagNames = {
-  uniquelyIdentifyingFieldName: "uniquelyIdentifyingFieldName",
-  allowedOperations: "allowedOperations",
 };
 
 export const mergeDataContextTagMaps = (
@@ -178,19 +179,25 @@ export const typeStructureMapToDataContextMap = (
 
   Object.entries(typeStructureMap).forEach(([_key, typeStructure]) => {
     const { namespace, type } = typeStructure;
+    const isVirtual = getTagValue(
+      DataContextFieldTagNames.virtual,
+      typeStructure,
+    );
     const cleanFullTypeName = getCleanType(type, namespace);
     const existingDataContext = dataContextMap[cleanFullTypeName];
 
-    dataContextMap[cleanFullTypeName] = !!existingDataContext
-      ? existingDataContext
-      : typeStructureToDataContext(
-          typeStructure,
-          typeStructureMap,
-          useDefaultUniquelyIdentifyingFieldName
-            ? DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME
-            : undefined,
-          dataContextMap,
-        );
+    if (!isVirtual) {
+      dataContextMap[cleanFullTypeName] = !!existingDataContext
+        ? existingDataContext
+        : typeStructureToDataContext(
+            typeStructure,
+            typeStructureMap,
+            useDefaultUniquelyIdentifyingFieldName
+              ? DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME
+              : undefined,
+            dataContextMap,
+          );
+    }
   });
 
   return dataContextMap;
