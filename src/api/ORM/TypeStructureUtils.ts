@@ -102,6 +102,10 @@ export const typeStructureToDataContext = (
     isUnionType,
     unionTypes = [],
     content = [],
+    contentNames: {
+      allowed: allowedContentNames = [],
+      disallowed: disallowedContentNames = [],
+    } = {},
   } = getCondensedTypeStructure(
     typeStructure,
     typeStructureMap,
@@ -110,6 +114,8 @@ export const typeStructureToDataContext = (
   );
   const cleanFullTypeName = getCleanType(type, namespace);
   const cachedDataContext = cache[cleanFullTypeName];
+  const hasAllowedContentNames = allowedContentNames.length > 0;
+  const hasDisallowedContentNames = disallowedContentNames.length > 0;
 
   if (cachedDataContext) {
     return cachedDataContext;
@@ -140,25 +146,33 @@ export const typeStructureToDataContext = (
     };
 
     for (const field of content) {
-      const {
-        literal: mappedFieldTypeLiteral = false,
-        unionTypes: mappedFieldTypeUnionTypes = [],
-      } = getCondensedTypeStructure(
-        field,
-        typeStructureMap,
-        mergeDataContextTagMaps,
-        tsMapCache,
-      );
-      const isUnionType =
-        mappedFieldTypeLiteral && mappedFieldTypeUnionTypes.length > 0;
       const { name: fieldName } = field;
+      // IMPORTANT: Use `contentNames` (Pick/Omit) to limit fields.
+      const fieldIsAllowed = hasAllowedContentNames
+        ? allowedContentNames.includes(fieldName)
+        : hasDisallowedContentNames
+          ? !disallowedContentNames.includes(fieldName)
+          : true;
 
-      // TODO: Need to use `contentNames` (Pick/Omit) to limit fields.
-      newDataContext.fields[fieldName] = typeStructureToDataContextField({
-        ...field,
-        isUnionType,
-        unionTypes: isUnionType ? mappedFieldTypeUnionTypes : undefined,
-      });
+      if (fieldIsAllowed) {
+        const {
+          literal: mappedFieldTypeLiteral = false,
+          unionTypes: mappedFieldTypeUnionTypes = [],
+        } = getCondensedTypeStructure(
+          field,
+          typeStructureMap,
+          mergeDataContextTagMaps,
+          tsMapCache,
+        );
+        const isUnionType =
+          mappedFieldTypeLiteral && mappedFieldTypeUnionTypes.length > 0;
+
+        newDataContext.fields[fieldName] = typeStructureToDataContextField({
+          ...field,
+          isUnionType,
+          unionTypes: isUnionType ? mappedFieldTypeUnionTypes : undefined,
+        });
+      }
     }
 
     cache[cleanFullTypeName] = newDataContext;
