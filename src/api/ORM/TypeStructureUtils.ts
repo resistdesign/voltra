@@ -170,6 +170,7 @@ export const DEFAULT_UNIQUELY_IDENTIFYING_FIELD_NAME = "id";
 
 /**
  * Create a {@link DataContextMap} from a {@link TypeStructureMap} generated from TypeScript types.
+ * Types tagged as `@virtual` will not be included in the resulting {@link DataContextMap}.
  * */
 export const typeStructureMapToDataContextMap = (
   typeStructureMap: TypeStructureMap,
