@@ -140,9 +140,12 @@ export const Route = <ParamsType extends Record<string, any>>({
         if (target && target.nodeName === "A") {
           const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
           const href = aTarget.getAttribute("href");
-          const hrefUrl = new URL(href ? href : "");
 
-          if (!hrefUrl.protocol) {
+          try {
+            new URL(href ? href : "");
+            // Full URL
+          } catch (error) {
+            // Partial URL
             event.preventDefault();
             history.pushState(
               {},
