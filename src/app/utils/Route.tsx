@@ -140,14 +140,17 @@ export const Route = <ParamsType extends Record<string, any>>({
         if (target && target.nodeName === "A") {
           const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
           const href = aTarget.getAttribute("href");
+          const hrefUrl = new URL(href ? href : "");
 
-          event.preventDefault();
-          history.pushState(
-            {},
-            "",
-            resolvePath(window.location.pathname, href ? href : ""),
-          );
-          setCurrentPath(window.location.pathname);
+          if (!hrefUrl.protocol) {
+            event.preventDefault();
+            history.pushState(
+              {},
+              "",
+              resolvePath(window.location.pathname, href ? href : ""),
+            );
+            setCurrentPath(window.location.pathname);
+          }
         }
       };
       const handlePopOrReplaceState = () => {
