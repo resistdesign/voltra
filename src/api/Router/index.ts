@@ -133,13 +133,20 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
               headers: responseHeaders,
               body: JSON.stringify(result),
             };
-          } catch (error) {
+          } catch (error: any) {
             console.log("Handler Failed:", `${error}`);
 
             return {
               statusCode: 500,
               headers: responseHeaders,
-              body: "Internal Server Error",
+              body: JSON.stringify(
+                {
+                  status: "Internal Server Error",
+                  message: error?.message,
+                },
+                null,
+                2,
+              ),
             };
           }
         } else {
