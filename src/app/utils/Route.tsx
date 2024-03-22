@@ -41,12 +41,14 @@ export type RouteContextType = {
   currentWindowPath: string;
   parentPath: string;
   params: Record<string, any>;
+  isTopLevel: boolean;
 };
 
 export const RouteContext = createContext<RouteContextType>({
   currentWindowPath: CURRENT_PATH,
   parentPath: "",
   params: {},
+  isTopLevel: true,
 });
 
 export const {
@@ -91,20 +93,19 @@ export const Route = <ParamsType extends Record<string, any>>({
     currentWindowPath = "",
     parentPath = "",
     params: parentParams = {},
+    isTopLevel,
   } = useRouteContext();
-  const isTopLevel = useMemo(() => !parentPath, [parentPath]);
+  const targetCurrentPath = useMemo(
+    () => (isTopLevel ? currentPath : currentWindowPath),
+    [isTopLevel, currentPath, currentWindowPath],
+  );
   const fullPath = useMemo(
     () => mergeStringPaths(parentPath, path),
     [parentPath, path],
   );
   const newParams = useMemo(
-    () =>
-      getParamsAndTestPath(
-        isTopLevel ? currentPath : currentWindowPath,
-        fullPath,
-        exact,
-      ),
-    [isTopLevel, currentPath, currentWindowPath, fullPath, exact],
+    () => getParamsAndTestPath(targetCurrentPath, fullPath, exact),
+    [targetCurrentPath, fullPath, exact],
   );
   const params = useMemo(
     () => ({
@@ -115,11 +116,12 @@ export const Route = <ParamsType extends Record<string, any>>({
   );
   const newRouteContext = useMemo(
     () => ({
-      currentWindowPath: currentPath,
+      currentWindowPath: targetCurrentPath,
       parentPath: fullPath,
       params,
+      isTopLevel: false,
     }),
-    [currentPath, fullPath, params],
+    [targetCurrentPath, fullPath, params],
   );
 
   useEffect(() => {
@@ -129,7 +131,7 @@ export const Route = <ParamsType extends Record<string, any>>({
   }, [params, onParamsChange]);
 
   useEffect(() => {
-    if (parentPath.length === 0) {
+    if (isTopLevel) {
       const handleAnchorClick = (event: MouseEvent) => {
         let target: Node | ParentNode | null = event.target as Node;
 
@@ -140,16 +142,20 @@ export const Route = <ParamsType extends Record<string, any>>({
         if (target && target.nodeName === "A") {
           const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
           const href = aTarget.getAttribute("href");
-          const hrefUrl = new URL(href ? href : "");
 
-          if (!hrefUrl.protocol) {
-            event.preventDefault();
-            history.pushState(
-              {},
-              "",
-              resolvePath(window.location.pathname, href ? href : ""),
+          try {
+            new URL(href ? href : "");
+            // Full URL
+          } catch (error) {
+            // Partial URL
+            const newPath = resolvePath(
+              window.location.pathname,
+              href ? href : "",
             );
-            setCurrentPath(window.location.pathname);
+
+            event.preventDefault();
+            history.pushState({}, "", newPath);
+            setCurrentPath(newPath);
           }
         }
       };
@@ -167,7 +173,7 @@ export const Route = <ParamsType extends Record<string, any>>({
         window.removeEventListener("statechanged", handlePopOrReplaceState);
       };
     }
-  }, [parentPath]);
+  }, [isTopLevel]);
 
   return newParams ? (
     <RouteContextProvider value={newRouteContext}>
