@@ -67,7 +67,7 @@ export const useApplicationStateLoader = (
   const [cacheValidity, setCacheValidity] = useState<{}>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [latestError, setLatestError] = useState<any>();
-  const { onChange } = useApplicationStateValue(identifier);
+  const { onChange, setModified } = useApplicationStateValue(identifier);
   const invalidate = useCallback(() => {
     setCacheValidity({});
   }, []);
@@ -89,6 +89,7 @@ export const useApplicationStateLoader = (
         success = true;
 
         onChange(result);
+        setModified(false);
       } catch (error) {
         success = false;
 
@@ -96,6 +97,7 @@ export const useApplicationStateLoader = (
 
         if (resetOnError) {
           onChange(undefined);
+          setModified(false);
         }
       }
 
@@ -103,7 +105,7 @@ export const useApplicationStateLoader = (
 
       onLoadComplete?.(success);
     },
-    [remoteProcedureCall, onChange, resetOnError, onLoadComplete],
+    [remoteProcedureCall, onChange, setModified, resetOnError, onLoadComplete],
   );
   const appStateLoader = useMemo(
     () => ({
