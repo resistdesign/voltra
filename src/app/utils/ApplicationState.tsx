@@ -17,6 +17,11 @@ export interface ApplicationStateIdentifier
 
 export type ApplicationStateValue = any;
 
+export type ApplicationStateModificationState = Map<
+  ApplicationStateIdentifier,
+  boolean
+>;
+
 export type ApplicationState = Map<
   ApplicationStateIdentifier,
   ApplicationStateValue
@@ -36,10 +41,22 @@ export const getApplicationStateIdentifier = <
 ): ApplicationStateIdentifierSubStateType<SubStateIdStructure> =>
   (subStateIdMap ? subStateIdMap : {}) as any;
 
+export const getApplicationStateModified = (
+  identifier: ApplicationStateIdentifier,
+  modificationState: ApplicationStateModificationState,
+): boolean => !!modificationState.get(identifier);
+
 export const getApplicationStateValue = (
   identifier: ApplicationStateIdentifier,
   applicationState: ApplicationState,
 ): ApplicationStateValue => applicationState.get(identifier);
+
+export const setApplicationStateModified = (
+  identifier: ApplicationStateIdentifier,
+  value: boolean,
+  modificationState: ApplicationState,
+): ApplicationStateModificationState =>
+  new Map(modificationState).set(identifier, value);
 
 export const setApplicationStateValue = (
   identifier: ApplicationStateIdentifier,
@@ -62,14 +79,18 @@ export const getApplicationStateValueStructure = <
   );
 
 export type ApplicationStateContextType = {
+  modified: ApplicationStateModificationState;
   value: ApplicationState;
   onChange: (newValue: ApplicationState) => void;
+  setModified: (newValue: ApplicationStateModificationState) => void;
 };
 
 export const ApplicationStateContext =
   createContext<ApplicationStateContextType>({
+    modified: new Map(),
     value: new Map(),
     onChange: () => {},
+    setModified: () => {},
   });
 
 const { Provider } = ApplicationStateContext;
@@ -78,8 +99,10 @@ const { Provider } = ApplicationStateContext;
  * Used to access and update application state values.
  * */
 export type ApplicationStateValueController = {
+  modified: boolean;
   value: ApplicationStateValue;
   onChange: (value: ApplicationStateValue) => void;
+  setModified: (value: boolean) => void;
 };
 
 /**
@@ -88,29 +111,47 @@ export type ApplicationStateValueController = {
 export const useApplicationStateValue = (
   identifier: ApplicationStateIdentifier,
 ): ApplicationStateValueController => {
-  const { value: applicationState, onChange: setApplicationState } = useContext(
-    ApplicationStateContext,
-  );
+  const {
+    modified: modificationState,
+    value: applicationState,
+    onChange: setApplicationState,
+    setModified: setModificationState,
+  } = useContext(ApplicationStateContext);
   const appStateRef = useRef(applicationState);
   appStateRef.current = applicationState;
+  const modified = useMemo(
+    () => getApplicationStateModified(identifier, modificationState),
+    [identifier, modificationState],
+  );
   const value = useMemo(
     () => getApplicationStateValue(identifier, applicationState),
     [identifier, applicationState],
+  );
+  const setModified = useCallback(
+    (isModified: boolean) => {
+      setModificationState(
+        setApplicationStateModified(identifier, isModified, modificationState),
+      );
+    },
+    [identifier, setModificationState],
   );
   const onChange = useCallback(
     (newValue: ApplicationStateValue) => {
       setApplicationState(
         setApplicationStateValue(identifier, newValue, appStateRef.current),
       );
+      setModified(true);
     },
     [identifier, setApplicationState],
   );
   const controller = useMemo<ApplicationStateValueController>(
     () => ({
+      modified,
       value,
       onChange,
+      setModified,
     }),
-    [onChange, value],
+    [modified, onChange, setModified, value],
   );
 
   return controller;
@@ -180,13 +221,18 @@ export type ApplicationStateProviderProps = PropsWithChildren<{}>;
 export const ApplicationStateProvider: FC<ApplicationStateProviderProps> = ({
   children,
 }) => {
+  const [modified, setModified] = useState<ApplicationStateModificationState>(
+    new Map(),
+  );
   const [value, setValue] = useState<ApplicationState>(new Map());
   const controller = useMemo<ApplicationStateContextType>(
     () => ({
+      modified,
       value,
       onChange: setValue,
+      setModified,
     }),
-    [value],
+    [modified, value],
   );
 
   return <Provider value={controller}>{children}</Provider>;
