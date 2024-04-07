@@ -200,6 +200,7 @@ export const typeStructureMapToDataContextMap = (
       typeStructure,
     );
     const cleanFullTypeName = getCleanType(type, namespace);
+
     // TODO: Losing pick/omit info here, because `type` is being used as the key.
     // TODO: May need to keep the pick/omit types but mark them as not real database tables.
     const existingDataContext = dataContextMap[cleanFullTypeName];
