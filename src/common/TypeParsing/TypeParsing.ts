@@ -1,4 +1,8 @@
-import { TypeStructure, TypeStructureMap } from "./TypeUtils";
+import {
+  TypeStructure,
+  TypeStructureMap,
+  TypeStructureUnionType,
+} from "./TypeUtils";
 import {
   ArrayTypeNode,
   createSourceFile,
@@ -27,6 +31,61 @@ type TypeStructureGenerator = (
     namespace?: string;
   },
 ) => TypeStructure;
+
+const UNION_TYPE_SEPARATOR = "|";
+const STRING_LITERAL_TYPE_DETECTION_REGEX = /(^'[\s\S]*'$)|(^"[\s\S]*"$)/gim;
+
+const typeIsUnionType = (type: string = ""): boolean =>
+  type.includes(UNION_TYPE_SEPARATOR);
+
+const typeIsBooleanLiteral = (type: string = ""): boolean =>
+  type === "true" || type === "false";
+const getCleanBooleanLiteral = (type: string = ""): boolean => type === "true";
+const typeIsStringLiteral = (type: string = ""): boolean =>
+  type.match(STRING_LITERAL_TYPE_DETECTION_REGEX) !== null;
+const getCleanStringLiteral = (type: string = ""): string =>
+  type.replace(/['"]/gim, "");
+const typeIsNumberLiteral = (type: string = ""): boolean =>
+  type !== "" && !isNaN(Number(type));
+const getCleanNumberLiteral = (type: string = ""): number => Number(type);
+
+const getUnionTypes = (type: string = ""): TypeStructureUnionType[] => {
+  const cleanOverallType = type
+    .trim()
+    .replace(/^\(/gim, "")
+    .replace(/\)$/gim, "");
+  const typeParts = cleanOverallType.split(UNION_TYPE_SEPARATOR);
+  const cleanTypeParts = typeParts.map((t) => t.trim());
+  const parsedUnionTypes = cleanTypeParts.map((t) => {
+    if (typeIsBooleanLiteral(t)) {
+      return {
+        type: "boolean",
+        literal: true,
+        value: getCleanBooleanLiteral(t),
+      };
+    } else if (typeIsStringLiteral(t)) {
+      return {
+        type: "string",
+        literal: true,
+        value: getCleanStringLiteral(t),
+      };
+    } else if (typeIsNumberLiteral(t)) {
+      return {
+        type: "number",
+        literal: true,
+        value: getCleanNumberLiteral(t),
+      };
+    } else {
+      return {
+        type: t,
+        literal: false,
+        value: t,
+      };
+    }
+  });
+
+  return parsedUnionTypes;
+};
 
 const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
   [SyntaxKind.TypeLiteral]: (
@@ -84,15 +143,24 @@ const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
     { parentName, namespace } = {},
   ): TypeStructure => {
     const { types = [] } = typeNode as UnionTypeNode;
+    const typeList = types.map((t: TypeNode) => {
+      const { type: parsedTypeName } = parseType(name, t, {
+        parentName,
+        namespace,
+      });
+
+      return parsedTypeName;
+    });
+    const unionTypes = getUnionTypes(typeList.join(UNION_TYPE_SEPARATOR));
 
     return {
       namespace,
       name,
       type: parentName ? `${parentName}.${name}` : name,
-      varietyType: true,
-      content: types.map((t: TypeNode) =>
-        parseType(name, t, { parentName, namespace }),
-      ),
+      isUnionType: true,
+      unionTypes,
+      literal: unionTypes.reduce((acc, { literal }) => acc && literal, true),
+      content: [],
     };
   },
   [SyntaxKind.IntersectionType]: (
@@ -246,10 +314,16 @@ const parseType: TypeStructureGenerator = (
       ...otherHandledTypeProps,
     };
   } else {
+    const type = typeNode.getText();
+    const typeIsUnion = typeIsUnionType(type);
+    const unionTypes = typeIsUnion ? getUnionTypes(type) : undefined;
+
     return {
       namespace,
       name,
-      type: typeNode.getText(),
+      type,
+      isUnionType: typeIsUnion,
+      unionTypes,
       literal: true,
       comments,
       tags,

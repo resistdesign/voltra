@@ -17,6 +17,7 @@ import {
   flattenCriterionGroups,
   reduceCriteria,
 } from "./CriteriaUtils/CriteriaUtils";
+import { TypeStructureUnionType } from "../../common/TypeParsing";
 
 export const DataContextServiceErrorTypes = {
   OPERATION_NOT_ALLOWED: "OPERATION_NOT_ALLOWED",
@@ -60,6 +61,7 @@ export type DataContextField = {
   isContext?: boolean;
   isMultiple?: boolean;
   allowedOperations?: DataContextOperationOptions[];
+  valueOptions?: TypeStructureUnionType[];
   embedded?: boolean;
 };
 
@@ -69,9 +71,9 @@ export type DataContext<
 > = {
   itemTypeName: string;
   resolvedType?: string;
-  isTypeAlias?: boolean;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   allowedOperations?: DataContextOperationOptions[];
+  valueOptions?: TypeStructureUnionType[];
   fields: Partial<Record<keyof ItemType, DataContextField>>;
 };
 
