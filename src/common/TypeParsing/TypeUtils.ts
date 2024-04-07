@@ -1,14 +1,27 @@
-const NOOP = () => undefined;
+export type TypeStructureTagMap = Record<
+  string,
+  {
+    type?: string | undefined;
+    value?: string | boolean | undefined;
+  }
+>;
+
+export type TypeStructureUnionType = {
+  type: string;
+  literal: boolean;
+  value: any;
+};
 
 export type TypeStructure = {
   namespace?: string;
   name: string;
   typeAlias?: string;
   type: string;
+  isUnionType?: boolean;
+  unionTypes?: TypeStructureUnionType[];
   literal?: boolean;
   readonly?: boolean;
   optional?: boolean;
-  varietyType?: boolean;
   comboType?: boolean;
   multiple?: boolean | number;
   contentNames?: {
@@ -17,13 +30,7 @@ export type TypeStructure = {
   };
   content?: TypeStructure[];
   comments?: string[];
-  tags?: Record<
-    string,
-    {
-      type?: string | undefined;
-      value?: string | boolean | undefined;
-    }
-  >;
+  tags?: TypeStructureTagMap;
 };
 
 export type TypeStructureMap = Record<string, TypeStructure>;
@@ -200,6 +207,127 @@ export const getMergedTypeStructure = (
   }
 
   return mergedTypeStructure;
+};
+
+export const getUniqueStringArray = (arr: string[]): string[] =>
+  arr.filter((item, index) => arr.indexOf(item) === index);
+
+export const getCondensedTypeStructure = (
+  typeStructure: TypeStructure,
+  typeStructureMap: TypeStructureMap,
+  mergeTagMaps?: (
+    tagMapA: TypeStructureTagMap,
+    tagMapB: TypeStructureTagMap,
+  ) => TypeStructureTagMap,
+  cache: TypeStructureMap = {},
+): TypeStructure => {
+  const { namespace, type, typeAlias, literal = false } = typeStructure;
+  const cleanFullTypeName = getCleanType(type, namespace);
+
+  let condensedTypeStructure = cache[cleanFullTypeName];
+
+  if (!condensedTypeStructure) {
+    if (literal) {
+      condensedTypeStructure = typeStructure;
+    } else {
+      const mappedType = !!typeAlias
+        ? typeStructureMap[typeAlias]
+        : typeStructureMap[cleanFullTypeName];
+      const {
+        comboType = false,
+        isUnionType = false,
+        content = [],
+      } = mappedType;
+
+      if (mappedType) {
+        if (isUnionType) {
+          condensedTypeStructure = mappedType;
+        } else if (comboType) {
+          let mergedType: TypeStructure = {
+            ...mappedType,
+            // TRICKY: Reset this because we don't want to keep type references, just get their fields.
+            content: [],
+          };
+
+          for (const subType of content) {
+            const condensedSubType = getCondensedTypeStructure(
+              subType,
+              typeStructureMap,
+              mergeTagMaps,
+              cache,
+            );
+            const {
+              contentNames: {
+                allowed: subTypeAllowedContentNames,
+                disallowed: subTypeDisallowedContentNames,
+              } = {},
+              content: subTypeContent = [],
+              comments: subTypeComments = [],
+              tags: subTypeTags = {},
+            } = condensedSubType;
+            const {
+              contentNames: {
+                allowed: mergedTypeAllowedContentNames,
+                disallowed: mergedTypeDisallowedContentNames,
+              } = {},
+              content: mergedTypeContent = [],
+              comments: mergedTypeComments = [],
+              tags: mergedTypeTags = {},
+            } = mergedType;
+            const newMergedTypeAllowedContentNames =
+              !!subTypeAllowedContentNames || !!mergedTypeAllowedContentNames
+                ? getUniqueStringArray([
+                    ...(mergedTypeAllowedContentNames || []),
+                    ...(subTypeAllowedContentNames || []),
+                  ])
+                : undefined;
+            const newMergedTypeDisallowedContentNames =
+              !!subTypeDisallowedContentNames ||
+              !!mergedTypeDisallowedContentNames
+                ? getUniqueStringArray([
+                    ...(mergedTypeDisallowedContentNames || []),
+                    ...(subTypeDisallowedContentNames || []),
+                  ])
+                : undefined;
+            const newMergedTypeContentNames =
+              newMergedTypeAllowedContentNames ||
+              newMergedTypeDisallowedContentNames
+                ? {
+                    allowed: newMergedTypeAllowedContentNames,
+                    disallowed: newMergedTypeDisallowedContentNames,
+                  }
+                : undefined;
+
+            mergedType = {
+              ...mergedType,
+              ...subType,
+              contentNames: newMergedTypeContentNames,
+              content: [...mergedTypeContent, ...subTypeContent],
+              comments: [...mergedTypeComments, ...subTypeComments],
+              tags: !!mergeTagMaps
+                ? mergeTagMaps(mergedTypeTags, subTypeTags)
+                : { ...mergedTypeTags, ...subTypeTags },
+            };
+          }
+
+          condensedTypeStructure = mergedType;
+        } else {
+          condensedTypeStructure = getCondensedTypeStructure(
+            mappedType,
+            typeStructureMap,
+            mergeTagMaps,
+            cache,
+          );
+        }
+      } else {
+        condensedTypeStructure = typeStructure;
+      }
+    }
+  }
+
+  cache[cleanFullTypeName] = condensedTypeStructure;
+
+  return condensedTypeStructure;
 };
 
 export const getCleanTypeStructure = (
