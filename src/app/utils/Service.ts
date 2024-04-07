@@ -42,7 +42,12 @@ export const sendServiceRequest = async (
     method: "POST",
     body: JSON.stringify(args),
   });
+  const { ok: responseIsOk } = response;
   const data = await response.json();
 
-  return data;
+  if (responseIsOk) {
+    return data;
+  } else {
+    throw data;
+  }
 };
