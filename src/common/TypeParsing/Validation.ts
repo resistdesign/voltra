@@ -1,11 +1,17 @@
 import { TypeInfoField, TypeInfoMap, TypeKeyword } from "./TypeInfo";
 
+/**
+ * The error message constants for primitive types.
+ * */
 export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS: Record<TypeKeyword, string> = {
   string: "NOT_A_STRING",
   number: "NOT_A_NUMBER",
   boolean: "NOT_A_BOOLEAN",
 };
 
+/**
+ * The error message constants for validation.
+ */
 export const ERROR_MESSAGE_CONSTANTS = {
   MISSING: "MISSING",
   INVALID_OPTION: "INVALID_OPTION",
@@ -14,31 +20,49 @@ export const ERROR_MESSAGE_CONSTANTS = {
   TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
 };
 
+/**
+ * The delimiter used to separate error paths.
+ */
 export const ERROR_PATH_DELIMITER = "/";
 
+/**
+ * The validation results for type info fields.
+ */
 export type TypeInfoValidationResults = {
   valid: boolean;
   error: string;
   errorMap: Record<string, string>;
 };
 
+/**
+ * Creates an error path from parts.
+ */
 export const makeErrorPath = (parts: (string | number)[] = []): string =>
   parts
     .map((p) => JSON.stringify(p))
     .map(encodeURIComponent)
     .join(ERROR_PATH_DELIMITER);
 
+/**
+ * Gets the parts of an error path.
+ */
 export const getErrorPathParts = (errorPath: string = ""): string[] =>
   errorPath
     .split(ERROR_PATH_DELIMITER)
     .map(decodeURIComponent)
     .map((p) => JSON.parse(p));
 
+/**
+ * Gets the validity value.
+ */
 export const getValidityValue = (
   existing: boolean,
   pending: boolean,
 ): boolean => (!existing ? false : pending);
 
+/**
+ * The validators for primitive values.
+ */
 export const TYPE_KEYWORD_VALIDATORS: Record<
   TypeKeyword,
   (value: any) => boolean
@@ -48,8 +72,14 @@ export const TYPE_KEYWORD_VALIDATORS: Record<
   boolean: (value) => typeof value === "boolean",
 };
 
+/**
+ * Checks if a value has a value.
+ */
 export const hasValue = (value: any): boolean => value ?? false;
 
+/**
+ * Validates a primitive value.
+ */
 export const validateKeywordType = (value: any, type: string): boolean => {
   const validator = TYPE_KEYWORD_VALIDATORS[type as TypeKeyword];
 
@@ -62,6 +92,9 @@ export const validateKeywordType = (value: any, type: string): boolean => {
   return valid;
 };
 
+/**
+ * Validates a type info field value.
+ */
 export const validateTypeInfoFieldValue = (
   value: any,
   typeInfoField: TypeInfoField,
@@ -116,6 +149,9 @@ export const validateTypeInfoFieldValue = (
   return results;
 };
 
+/**
+ * Validates an array of type info field values.
+ */
 export const validateArrayOfTypeInfoFieldValues = (
   values: any[] = [],
   typeInfoField: TypeInfoField,
@@ -146,6 +182,9 @@ export const validateArrayOfTypeInfoFieldValues = (
   return results;
 };
 
+/**
+ * Validates a type info value.
+ */
 export const validateTypeInfoValue = (
   value: any,
   typeInfoFullName: string,
