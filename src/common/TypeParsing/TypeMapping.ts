@@ -1,11 +1,17 @@
-import { ModuleDeclaration, Node, SyntaxKind, TypeAliasDeclaration } from 'typescript';
+import {ModuleDeclaration, Node, SyntaxKind, TypeAliasDeclaration,} from "typescript";
 
+/**
+ * A map of type aliases in the TypeScript AST.
+ */
 export type TypeMap = Record<string, TypeAliasDeclaration>;
 
+/**
+ * Converts a TypeScript AST to a map of type aliases.
+ */
 export const convertASTToMap = (
   node: Node,
   map: Record<string, TypeAliasDeclaration> = {},
-  parentName?: string
+  parentName?: string,
 ): TypeMap => {
   node.forEachChild((child) => {
     const { kind: childKind } = child;
@@ -14,7 +20,9 @@ export const convertASTToMap = (
       const moduleNode: ModuleDeclaration = child as ModuleDeclaration;
       const { name: moduleName } = moduleNode;
       const textModuleName: string = moduleName.getText();
-      const fullModuleName: string = parentName ? `${parentName}.${textModuleName}` : textModuleName;
+      const fullModuleName: string = parentName
+        ? `${parentName}.${textModuleName}`
+        : textModuleName;
 
       convertASTToMap(moduleNode, map, fullModuleName);
     }
