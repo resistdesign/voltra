@@ -203,6 +203,8 @@ export const typeStructureMapToDataContextMap = (
 
     // TODO: Losing pick/omit info here, because `type` is being used as the key.
     // TODO: May need to keep the pick/omit types but mark them as not real database tables.
+    // TODO: Losing pipe '|' object literal option fields.
+    // TODO: Losing pipe '|' Types that resolve to literal values.
     const existingDataContext = dataContextMap[cleanFullTypeName];
 
     if (!isVirtual) {

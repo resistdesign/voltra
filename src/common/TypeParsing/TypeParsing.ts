@@ -1,390 +1,42 @@
-import {
-  TypeStructure,
-  TypeStructureMap,
-  TypeStructureUnionType,
-} from "./TypeUtils";
-import {
-  ArrayTypeNode,
-  createSourceFile,
-  IntersectionTypeNode,
-  JSDoc,
-  JSDocComment,
-  JSDocTag,
-  ModuleDeclaration,
-  Node,
-  ScriptTarget,
-  SyntaxKind,
-  TypeNode,
-  UnionTypeNode,
-} from "typescript";
+import { createSourceFile, Node, ScriptTarget, SyntaxKind } from "typescript";
+import { convertASTToMap, TypeMap } from "./TypeMapping";
+import { TypeInfoMap } from "./TypeInfo";
+import { getTypeInfoFromTypeAlias } from "./ParsingUtils/getTypeInfoFromTypeAlias";
 
-const SUPPORTED_TYPE_REFERENCE_FEATURES = {
-  PICK: "Pick",
-  OMIT: "Omit",
-};
-
-type TypeStructureGenerator = (
-  name: string,
-  typeNode: Node,
-  options?: {
-    parentName?: string;
-    namespace?: string;
-  },
-) => TypeStructure;
-
-const UNION_TYPE_SEPARATOR = "|";
-const STRING_LITERAL_TYPE_DETECTION_REGEX = /(^'[\s\S]*'$)|(^"[\s\S]*"$)/gim;
-
-const typeIsUnionType = (type: string = ""): boolean =>
-  type.includes(UNION_TYPE_SEPARATOR);
-
-const typeIsBooleanLiteral = (type: string = ""): boolean =>
-  type === "true" || type === "false";
-const getCleanBooleanLiteral = (type: string = ""): boolean => type === "true";
-const typeIsStringLiteral = (type: string = ""): boolean =>
-  type.match(STRING_LITERAL_TYPE_DETECTION_REGEX) !== null;
-const getCleanStringLiteral = (type: string = ""): string =>
-  type.replace(/['"]/gim, "");
-const typeIsNumberLiteral = (type: string = ""): boolean =>
-  type !== "" && !isNaN(Number(type));
-const getCleanNumberLiteral = (type: string = ""): number => Number(type);
-
-const getUnionTypes = (type: string = ""): TypeStructureUnionType[] => {
-  const cleanOverallType = type
-    .trim()
-    .replace(/^\(/gim, "")
-    .replace(/\)$/gim, "");
-  const typeParts = cleanOverallType.split(UNION_TYPE_SEPARATOR);
-  const cleanTypeParts = typeParts.map((t) => t.trim());
-  const parsedUnionTypes = cleanTypeParts.map((t) => {
-    if (typeIsBooleanLiteral(t)) {
-      return {
-        type: "boolean",
-        literal: true,
-        value: getCleanBooleanLiteral(t),
-      };
-    } else if (typeIsStringLiteral(t)) {
-      return {
-        type: "string",
-        literal: true,
-        value: getCleanStringLiteral(t),
-      };
-    } else if (typeIsNumberLiteral(t)) {
-      return {
-        type: "number",
-        literal: true,
-        value: getCleanNumberLiteral(t),
-      };
-    } else {
-      return {
-        type: t,
-        literal: false,
-        value: t,
-      };
-    }
-  });
-
-  return parsedUnionTypes;
-};
-
-const TYPE_HANDLING_MAP: Partial<Record<SyntaxKind, TypeStructureGenerator>> = {
-  [SyntaxKind.TypeLiteral]: (
-    name: string,
-    typeNode: Node,
-    { parentName, namespace } = {},
-  ): TypeStructure => {
-    const content: TypeStructure[] = [];
-
-    typeNode.forEachChild((tLChild) => {
-      if (tLChild.kind === SyntaxKind.PropertySignature) {
-        let identifier: string = "",
-          subTypeNode: Node | undefined,
-          optional: boolean = false,
-          readonly = false;
-
-        tLChild.forEachChild((pSChild) => {
-          if (pSChild.kind === SyntaxKind.ReadonlyKeyword) {
-            readonly = true;
-          } else if (pSChild.kind === SyntaxKind.Identifier) {
-            identifier = pSChild.getText();
-          } else if (pSChild.kind === SyntaxKind.QuestionToken) {
-            optional = true;
-          } else {
-            subTypeNode = pSChild;
-          }
-        });
-
-        if (subTypeNode) {
-          const fullParentName = parentName ? `${parentName}.${name}` : name;
-
-          content.push({
-            ...parseType(identifier, subTypeNode, {
-              parentName: fullParentName,
-              namespace,
-            }),
-            optional,
-            readonly,
-          });
-        }
-      }
-    });
-
-    return {
-      namespace,
-      name,
-      type: parentName ? `${parentName}.${name}` : name,
-      literal: true,
-      content,
-    };
-  },
-  [SyntaxKind.UnionType]: (
-    name: string,
-    typeNode: Node,
-    { parentName, namespace } = {},
-  ): TypeStructure => {
-    const { types = [] } = typeNode as UnionTypeNode;
-    const typeList = types.map((t: TypeNode) => {
-      const { type: parsedTypeName } = parseType(name, t, {
-        parentName,
-        namespace,
-      });
-
-      return parsedTypeName;
-    });
-    const unionTypes = getUnionTypes(typeList.join(UNION_TYPE_SEPARATOR));
-
-    return {
-      namespace,
-      name,
-      type: parentName ? `${parentName}.${name}` : name,
-      isUnionType: true,
-      unionTypes,
-      literal: unionTypes.reduce((acc, { literal }) => acc && literal, true),
-      content: [],
-    };
-  },
-  [SyntaxKind.IntersectionType]: (
-    name: string,
-    typeNode: Node,
-    { parentName, namespace } = {},
-  ): TypeStructure => {
-    const { types = [] } = typeNode as IntersectionTypeNode;
-
-    return {
-      namespace,
-      name,
-      type: parentName ? `${parentName}.${name}` : name,
-      comboType: true,
-      content: types.map((t: TypeNode) =>
-        parseType(name, t, { parentName, namespace }),
-      ),
-    };
-  },
-  [SyntaxKind.ArrayType]: (
-    name: string,
-    typeNode: Node,
-    { parentName, namespace } = {},
-  ): TypeStructure => {
-    const { elementType } = typeNode as ArrayTypeNode;
-    const extendedTS: TypeStructure = parseType(name, elementType, {
-      parentName,
-      namespace,
-    });
-    const { multiple: extendedMultiple = false } = extendedTS;
-
-    return {
-      ...extendedTS,
-      multiple: typeof extendedMultiple === "number" ? extendedMultiple + 1 : 1,
-    };
-  },
-  [SyntaxKind.TypeReference]: (
-    name: string,
-    typeNode: Node,
-    { parentName: _parentName, namespace } = {},
-  ): TypeStructure => {
-    let identifier = "";
-    let referencedTypeName = "";
-    let contentNamesString = "";
-
-    typeNode.forEachChild((n) => {
-      if (n.kind === SyntaxKind.Identifier) {
-        identifier = n.getText();
-      }
-
-      if (n.kind === SyntaxKind.TypeReference) {
-        referencedTypeName = n.getText();
-      }
-
-      if (
-        n.kind === SyntaxKind.LiteralType ||
-        n.kind === SyntaxKind.UnionType
-      ) {
-        contentNamesString = n.getText();
-      }
-    });
-
-    if (identifier && referencedTypeName && contentNamesString) {
-      const baseTS: Pick<TypeStructure, "namespace" | "name" | "type"> = {
-        namespace,
-        name,
-        type: referencedTypeName,
-      };
-      const contentNames = contentNamesString
-        .replace(/[\s'"]/gim, () => "")
-        .split("|");
-
-      if (identifier === SUPPORTED_TYPE_REFERENCE_FEATURES.PICK) {
-        return {
-          ...baseTS,
-          contentNames: {
-            allowed: contentNames,
-          },
-        };
-      } else if (identifier === SUPPORTED_TYPE_REFERENCE_FEATURES.OMIT) {
-        return {
-          ...baseTS,
-          contentNames: {
-            disallowed: contentNames,
-          },
-        };
-      }
-    }
-
-    return {
-      namespace,
-      name,
-      type: typeNode.getText(),
-    };
-  },
-};
-
-const parseType: TypeStructureGenerator = (
-  name: string,
-  typeNode: Node,
-  { parentName, namespace } = {},
-): TypeStructure => {
-  const typeHandling = TYPE_HANDLING_MAP[typeNode.kind];
-  const comments: TypeStructure["comments"] = [];
-  const tags: TypeStructure["tags"] = {};
-
-  if ((typeNode?.parent as any)?.jsDoc) {
-    (typeNode.parent as any).jsDoc.forEach((doc: JSDoc) => {
-      if (typeof doc.comment === "string") {
-        comments.push(doc.comment);
-      } else {
-        doc.comment?.forEach((c: JSDocComment) => {
-          comments.push(c.getText());
-        });
-      }
-
-      if (doc?.tags) {
-        doc.tags.forEach((tag: JSDocTag) => {
-          const tagName = tag.tagName.getText();
-          const tagType = (tag as any).typeExpression?.type?.getText();
-          const tagValue =
-            !tag.comment && !tagType
-              ? // If there is no value and no type, the tag is just `true`.
-                true
-              : typeof tag.comment === "string"
-                ? tag.comment
-                : undefined;
-
-          tags[tagName] = {
-            type: tagType,
-            value: tagValue,
-          };
-        });
-      }
-    });
-  }
-
-  if (typeHandling) {
-    const {
-      comments: handledComments = [],
-      tags: handledTags = {},
-      ...otherHandledTypeProps
-    } = typeHandling(name, typeNode, { parentName, namespace }) || {};
-
-    return {
-      comments: [...comments, ...handledComments],
-      tags: {
-        ...tags,
-        ...handledTags,
-      },
-      ...otherHandledTypeProps,
-    };
-  } else {
-    const type = typeNode.getText();
-    const typeIsUnion = typeIsUnionType(type);
-    const unionTypes = typeIsUnion ? getUnionTypes(type) : undefined;
-
-    return {
-      namespace,
-      name,
-      type,
-      isUnionType: typeIsUnion,
-      unionTypes,
-      literal: true,
-      comments,
-      tags,
-    };
-  }
-};
-
-const getTypeMap = (typeNode: Node, namespace?: string): TypeStructureMap => {
-  let map: TypeStructureMap = {};
-
-  typeNode.forEachChild((n) => {
-    if (n.kind === SyntaxKind.ModuleDeclaration) {
-      const { name } = n as ModuleDeclaration;
-      const newNamespace = namespace
-        ? `${namespace}.${name.getText()}`
-        : name.getText();
-
-      n.forEachChild((cN) => {
-        map = {
-          ...map,
-          ...getTypeMap(cN, newNamespace),
-        };
-      });
-    } else if (n.kind === SyntaxKind.TypeAliasDeclaration) {
-      let identifier: string = "",
-        isExport = false,
-        nNode: Node | undefined;
-
-      n.forEachChild((n2) => {
-        if (n2.kind === SyntaxKind.ExportKeyword) {
-          isExport = true;
-        } else if (n2.kind === SyntaxKind.Identifier) {
-          identifier = n2.getText();
-        } else {
-          nNode = n2;
-        }
-      });
-
-      if (isExport && nNode) {
-        const mapKey = namespace ? `${namespace}.${identifier}` : identifier;
-
-        map[mapKey] = parseType(identifier, nNode, { namespace });
-      }
-    }
-  });
-
-  return map;
-};
-
-/**
- * Use TypeScript types to drive form generation for automated, runtime UI presentation.
- * */
-export const convertTypeScriptToTypeStructureMap = (
-  typeScriptText: string,
-): TypeStructureMap => {
+export const getTypeInfoMapFromTypeScript = (source: string): TypeInfoMap => {
   const typeScriptNode: Node = createSourceFile(
     "x.ts",
-    typeScriptText,
+    source,
     ScriptTarget.Latest,
     true,
   );
+  const typeMap: TypeMap = convertASTToMap(typeScriptNode, {});
+  const typeInfoMap: TypeInfoMap = {};
 
-  return getTypeMap(typeScriptNode);
+  for (const key in typeMap) {
+    const typeAliasDec = typeMap[key];
+    const { modifiers } = typeAliasDec;
+
+    let outputTypeInfo = false;
+
+    if (modifiers) {
+      modifiers.forEach((modifier) => {
+        const { kind } = modifier;
+
+        if (kind === SyntaxKind.ExportKeyword) {
+          outputTypeInfo = true;
+        }
+      });
+    }
+
+    if (outputTypeInfo) {
+      const typeInfo = getTypeInfoFromTypeAlias(typeAliasDec, typeMap);
+
+      if (typeInfo) {
+        typeInfoMap[key] = typeInfo;
+      }
+    }
+  }
+
+  return typeInfoMap;
 };
