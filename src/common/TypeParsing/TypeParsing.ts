@@ -3,6 +3,9 @@ import { convertASTToMap, TypeMap } from "./TypeMapping";
 import { TypeInfoMap } from "./TypeInfo";
 import { getTypeInfoFromTypeAlias } from "./ParsingUtils/getTypeInfoFromTypeAlias";
 
+/**
+ * Extracts type information from TypeScript content.
+ */
 export const getTypeInfoMapFromTypeScript = (source: string): TypeInfoMap => {
   const typeScriptNode: Node = createSourceFile(
     "x.ts",
