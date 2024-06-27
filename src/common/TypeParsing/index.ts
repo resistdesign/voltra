@@ -1,2 +1,6 @@
 export * from "./TypeParsing";
-export * from "./TypeUtils";
+export * as Validation from "./Validation";
+export * as TypeInfo from "./TypeInfo";
+export * as TypeMapping from "./TypeMapping";
+export * as Constants from "./Constants";
+export * as Utils from "./Utils";
