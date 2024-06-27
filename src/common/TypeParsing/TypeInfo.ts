@@ -1,7 +1,16 @@
+/**
+ * The set of acceptable literal value types.
+ */
 export type LiteralValue = string | number | boolean | null | undefined;
 
-export type TypeKeyword = 'string' | 'number' | 'boolean';
+/**
+ * The set of acceptable type keywords.
+ */
+export type TypeKeyword = "string" | "number" | "boolean";
 
+/**
+ * Information about a field in a type definition.
+ */
 export type TypeInfoField = {
   type: TypeKeyword;
   typeReference?: string;
@@ -12,10 +21,16 @@ export type TypeInfoField = {
   tags?: Record<any, any>;
 };
 
+/**
+ * Information about a type definition.
+ */
 export type TypeInfo = {
   fields?: Record<string, TypeInfoField>;
   tags?: Record<any, any>;
   unionFieldSets?: string[][];
 };
 
+/**
+ * A map of type information maps.
+ */
 export type TypeInfoMap = Record<string, TypeInfo>;
