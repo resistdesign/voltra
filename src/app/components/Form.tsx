@@ -4,9 +4,9 @@ import styled from "styled-components";
 /**
  * @ignore
  * */
-export type BaseFormProps = FormHTMLAttributes<HTMLFormElement>;
+export type FormBaseProps = FormHTMLAttributes<HTMLFormElement>;
 
-const FormBase: FC<BaseFormProps> = ({ onSubmit, ...rest }) => {
+const FormBase: FC<FormBaseProps> = ({ onSubmit, ...rest }) => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit?.(event);
@@ -18,7 +18,7 @@ const FormBase: FC<BaseFormProps> = ({ onSubmit, ...rest }) => {
 /**
  * A basic form element wrapper that handles form submission in an expected and normalized way.
  * */
-export const BaseForm = styled(FormBase).attrs((p) => ({
+export const Form = styled(FormBase).attrs((p) => ({
   className: "form-normalized-outer-spacing",
 }))`
   &.form-normalized-outer-spacing {

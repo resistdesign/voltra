@@ -17,7 +17,6 @@ import {
   flattenCriterionGroups,
   reduceCriteria,
 } from "./CriteriaUtils/CriteriaUtils";
-import { TypeStructureUnionType } from "../../common/TypeParsing";
 
 export const DataContextServiceErrorTypes = {
   OPERATION_NOT_ALLOWED: "OPERATION_NOT_ALLOWED",
@@ -55,6 +54,12 @@ export const getDataContextOperationNotAllowed = (
   new Error(
     `${DataContextServiceErrorTypes.OPERATION_NOT_ALLOWED}: ${operation}`,
   );
+
+export type TypeStructureUnionType = {
+  type: string;
+  literal: boolean;
+  value: any;
+};
 
 export type DataContextField = {
   typeName: string;
