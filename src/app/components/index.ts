@@ -1,4 +1,4 @@
-export * from "./BaseForm";
-export * as FormGen from "./FormGen";
+export * from "./Form";
 export * from "./MaterialSymbol";
 export * from "./Tabs";
+// TODO: New FormGen.
