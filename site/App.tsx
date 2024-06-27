@@ -23,6 +23,7 @@ export const App: FC = () => {
       <GlobalStyle />
       <Route>
         <h1>Demos</h1>
+        <a href="./docs">Docs</a>
       </Route>
     </ApplicationStateProvider>
   );
