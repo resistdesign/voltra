@@ -23,7 +23,7 @@ export const App: FC = () => {
       <GlobalStyle />
       <Route>
         <h1>Demos</h1>
-        <a href="./docs">Docs</a>
+        <a href="https://docs.voltra.app/docs">Docs</a>
       </Route>
     </ApplicationStateProvider>
   );
