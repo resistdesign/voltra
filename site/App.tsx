@@ -50,7 +50,7 @@ export const App: FC = () => {
           }}
         />
         <br />
-        <input type="number" onChange={onBasicInputChange} value={val} />
+        <input type="number" value={val} onChange={onBasicInputChange} />
       </Route>
     </ApplicationStateProvider>
   );
