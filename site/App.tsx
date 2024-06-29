@@ -19,7 +19,7 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 export const App: FC = () => {
-  const [val, setVal] = useState<number>(0);
+  const [val, setVal] = useState<number>(14);
 
   return (
     <ApplicationStateProvider>
