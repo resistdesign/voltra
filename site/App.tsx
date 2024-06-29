@@ -6,8 +6,8 @@ import {
 } from "react";
 import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../src/app/utils";
-import { NumberInput } from "../src/app/components/FormGen/NumberInput";
-import { BooleanInput } from "../src/app/components/FormGen/BooleanInput";
+import { NumberInput } from "../src/app/components/FormGen/Inputs/Primitives/NumberInput";
+import { BooleanInput } from "../src/app/components/FormGen/Inputs/Primitives/BooleanInput";
 
 const GlobalStyle = createGlobalStyle`
     html,

@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { InputComponent } from "./Types";
+import { InputComponent } from "../../Types";
 
 const getAdvancedNumericValue = (value: string | number): number => {
   if (value === "Infinity" || value === "+Infinity" || value === "∞") {
