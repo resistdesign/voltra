@@ -5,7 +5,7 @@ export type InputProps<ElementType> = ElementType & {
   typeInfoMap: TypeInfoMap;
   typeInfo: TypeInfo;
   fieldInfo: FieldInfo;
-  index?: number;
+  index: string | number;
   options?: any[];
   value: any;
   onChange: (value: any) => void;
