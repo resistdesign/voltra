@@ -21,6 +21,8 @@ const GlobalStyle = createGlobalStyle`
 export const App: FC = () => {
   const [val, setVal] = useState<number>(14);
 
+  console.log(val, typeof val);
+
   return (
     <ApplicationStateProvider>
       <GlobalStyle />
