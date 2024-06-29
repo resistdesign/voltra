@@ -1,4 +1,9 @@
-import { FC, useState } from "react";
+import {
+  ChangeEvent as ReactChangeEvent,
+  FC,
+  useCallback,
+  useState,
+} from "react";
 import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../src/app/utils";
 import { NumberInput } from "../src/app/components/FormGen/NumberInput";
@@ -20,6 +25,14 @@ const GlobalStyle = createGlobalStyle`
 
 export const App: FC = () => {
   const [val, setVal] = useState<number>(1e86);
+  const onBasicInputChange = useCallback(
+    ({
+      target: { value: newValue = "0" },
+    }: ReactChangeEvent<HTMLInputElement>) => {
+      setVal(Number(newValue));
+    },
+    [],
+  );
 
   console.log(val, typeof val);
 
@@ -36,6 +49,8 @@ export const App: FC = () => {
             setVal(v);
           }}
         />
+        <br />
+        <input type="number" onChange={onBasicInputChange} value={val} />
       </Route>
     </ApplicationStateProvider>
   );
