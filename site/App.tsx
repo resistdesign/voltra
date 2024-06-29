@@ -23,7 +23,7 @@ const GlobalStyle = createGlobalStyle`
 //  boolean
 //  option selector
 //  option selector w/ custom value
-//  custom
+//  custom (i.e. date picker)
 //  existing object
 //  sub form/object
 //  array of all of the above
