@@ -28,5 +28,12 @@ export const NumberInput: InputComponentProps<
     setInternalValue(value ?? "");
   }, [value]);
 
-  return <input type="text" value={`${value ?? ""}`} {...rest} />;
+  return (
+    <input
+      type="text"
+      value={`${internalValue ?? ""}`}
+      onChange={onChangeHandler}
+      {...rest}
+    />
+  );
 };

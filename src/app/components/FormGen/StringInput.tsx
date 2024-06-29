@@ -15,5 +15,12 @@ export const StringInput: InputComponentProps<
     [onChange],
   );
 
-  return <input type="text" value={`${value ?? ""}`} {...rest} />;
+  return (
+    <input
+      type="text"
+      value={`${value ?? ""}`}
+      onChange={onChangeHandler}
+      {...rest}
+    />
+  );
 };
