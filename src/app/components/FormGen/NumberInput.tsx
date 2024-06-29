@@ -33,7 +33,6 @@ export const NumberInput: InputComponentProps<
   );
 
   useEffect(() => {
-    setInternalValue(`${value ?? 0}`);
     setInternalNumericValue(value ?? 0);
   }, [value]);
 
