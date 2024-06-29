@@ -1,0 +1,20 @@
+import { InputComponentProps } from "./Types";
+import { StringInput } from "./StringInput";
+import { NumberInput } from "./NumberInput";
+
+// TODO: Input types:
+//  string
+//  number
+//  boolean
+//  option selector
+//  option selector w/ custom value
+//  custom (i.e. date picker)
+//  existing object selector
+//  existing object selector w/ search
+//  sub form/object
+//  array of all of the above
+
+export const INPUT_TYPE_MAP: Record<string, InputComponentProps<any>> = {
+  string: StringInput,
+  number: NumberInput,
+};
