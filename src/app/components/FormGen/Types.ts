@@ -5,6 +5,4 @@ export type InputProps<ElementPropsType> = ElementPropsType & {
   onChange: (value: any) => void;
 };
 
-export type InputComponentProps<ElementPropsType> = FC<
-  InputProps<ElementPropsType>
->;
+export type InputComponent<ElementPropsType> = FC<InputProps<ElementPropsType>>;

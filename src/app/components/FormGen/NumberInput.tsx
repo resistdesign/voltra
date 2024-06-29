@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { InputComponentProps } from "./Types";
+import { InputComponent } from "./Types";
 
 const getAdvancedNumericValue = (value: string | number): number => {
   if (value === "Infinity" || value === "+Infinity" || value === "∞") {
@@ -25,7 +25,7 @@ const getAdvancedNumericValue = (value: string | number): number => {
 const getStringNumericValue = (value: string | number): string =>
   `${value ?? ""}`;
 
-export const NumberInput: InputComponentProps<
+export const NumberInput: InputComponent<
   InputHTMLAttributes<HTMLInputElement>
 > = ({ value, onChange, ...rest }) => {
   const [internalNumericValue, setInternalNumericValue] =

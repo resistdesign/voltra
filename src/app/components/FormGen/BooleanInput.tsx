@@ -5,20 +5,20 @@ import {
 } from "react";
 import { InputComponent } from "./Types";
 
-export const StringInput: InputComponent<
+export const BooleanInput: InputComponent<
   InputHTMLAttributes<HTMLInputElement>
 > = ({ value, onChange, ...rest }) => {
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
-      onChange(newValue ?? "");
+      onChange(newValue ?? false);
     },
     [onChange],
   );
 
   return (
     <input
-      type="text"
-      value={`${value ?? ""}`}
+      type="checkbox"
+      checked={value as boolean}
       onChange={onChangeHandler}
       {...rest}
     />
