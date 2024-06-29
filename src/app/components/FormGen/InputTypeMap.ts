@@ -1,6 +1,7 @@
 import { InputComponent } from "./Types";
-import { StringInput } from "./StringInput";
-import { NumberInput } from "./NumberInput";
+import { StringInput } from "./Inputs/Primitives/StringInput";
+import { NumberInput } from "./Inputs/Primitives/NumberInput";
+import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
 
 // TODO: Input types:
 //  string
@@ -17,4 +18,5 @@ import { NumberInput } from "./NumberInput";
 export const INPUT_TYPE_MAP: Record<string, InputComponent<any>> = {
   string: StringInput,
   number: NumberInput,
+  boolean: BooleanInput,
 };

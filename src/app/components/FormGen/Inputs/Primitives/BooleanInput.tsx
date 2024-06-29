@@ -1,5 +1,5 @@
 import { InputHTMLAttributes, useCallback } from "react";
-import { InputComponent } from "./Types";
+import { InputComponent } from "../../Types";
 
 export const BooleanInput: InputComponent<
   InputHTMLAttributes<HTMLInputElement>
