@@ -7,33 +7,57 @@ import {
 } from "react";
 import { InputComponentProps } from "./Types";
 
-const isExponent = (value: string) =>
-  value.includes("e") || value.includes("E");
+const getAdvancedNumericValue = (value: string | number): number => {
+  if (value === "Infinity" || value === "+Infinity" || value === "∞") {
+    return Infinity;
+  } else if (value === "-Infinity" || value === "-∞") {
+    return -Infinity;
+  } else {
+    const num = JSON.parse(`${value}`);
+
+    if (isNaN(num)) {
+      throw new Error("Invalid number");
+    }
+
+    return num;
+  }
+};
+const getStringNumericValue = (value: string | number): string =>
+  `${value ?? ""}`;
 
 export const NumberInput: InputComponentProps<
   InputHTMLAttributes<HTMLInputElement>
 > = ({ value, onChange, ...rest }) => {
-  const [internalNumericValue, setInternalNumericValue] = useState<number>(
-    value ?? 0,
+  const [internalNumericValue, setInternalNumericValue] =
+    useState<number>(value);
+  const [internalValue, setInternalValue] = useState<string>(
+    getStringNumericValue(value),
   );
-  const [internalValue, setInternalValue] = useState<string>(value ?? "0");
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
       try {
-        const newNumberValue = JSON.parse(`${newValue ?? "0"}`);
+        const newNumberValue = getAdvancedNumericValue(newValue);
 
         setInternalNumericValue(newNumberValue);
       } catch (error) {
         // Ignore.
       }
 
-      setInternalValue(newValue ?? "0");
+      setInternalValue(newValue ?? "");
     },
     [onChange],
   );
 
   useEffect(() => {
-    setInternalNumericValue(value ?? 0);
+    setInternalNumericValue((exNumVal) => {
+      if (value !== exNumVal) {
+        setInternalValue(getStringNumericValue(value));
+
+        return value;
+      } else {
+        return exNumVal;
+      }
+    });
   }, [value]);
 
   useEffect(() => {
@@ -43,7 +67,7 @@ export const NumberInput: InputComponentProps<
   return (
     <input
       type="text"
-      value={`${internalValue ?? ""}`}
+      value={internalValue}
       onChange={onChangeHandler}
       {...rest}
     />
