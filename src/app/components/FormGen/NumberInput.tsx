@@ -13,8 +13,10 @@ const isExponent = (value: string) =>
 export const NumberInput: InputComponentProps<
   InputHTMLAttributes<HTMLInputElement>
 > = ({ value, onChange, ...rest }) => {
-  const [internalNumericValue, setInternalNumericValue] = useState(value ?? 0);
-  const [internalValue, setInternalValue] = useState(value ?? "0");
+  const [internalNumericValue, setInternalNumericValue] = useState<number>(
+    value ?? 0,
+  );
+  const [internalValue, setInternalValue] = useState<string>(value ?? "0");
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
       try {
@@ -31,12 +33,12 @@ export const NumberInput: InputComponentProps<
   );
 
   useEffect(() => {
-    setInternalValue(value ?? "");
+    setInternalValue(`${value ?? 0}`);
     setInternalNumericValue(value ?? 0);
   }, [value]);
 
   useEffect(() => {
-    onChange(internalValue);
+    onChange(internalNumericValue);
   }, [internalNumericValue, onChange]);
 
   return (
