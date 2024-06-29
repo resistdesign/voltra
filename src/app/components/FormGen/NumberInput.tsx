@@ -49,13 +49,13 @@ export const NumberInput: InputComponentProps<
   );
 
   useEffect(() => {
-    setInternalNumericValue((exNumVal) => {
-      if (value !== exNumVal) {
+    setInternalNumericValue((existingInternalNumVal) => {
+      if (value !== existingInternalNumVal) {
         setInternalValue(getStringNumericValue(value));
 
         return value;
       } else {
-        return exNumVal;
+        return existingInternalNumVal;
       }
     });
   }, [value]);
