@@ -17,6 +17,17 @@ const GlobalStyle = createGlobalStyle`
     }
 `;
 
+// TODO: Input types:
+//  string
+//  number
+//  boolean
+//  option selector
+//  option selector w/ custom value
+//  custom
+//  existing object
+//  sub form/object
+//  array of all of the above
+
 export const App: FC = () => {
   return (
     <ApplicationStateProvider>
@@ -24,6 +35,8 @@ export const App: FC = () => {
       <Route>
         <h1>Demos</h1>
         <a href="https://docs.voltra.app/docs">Docs</a>
+        <br/>
+        <input />
       </Route>
     </ApplicationStateProvider>
   );
