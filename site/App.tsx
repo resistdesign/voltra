@@ -25,6 +25,9 @@ const GlobalStyle = createGlobalStyle`
 
 export const App: FC = () => {
   const [val, setVal] = useState<number>(1e86);
+  const onNumberInputChange = useCallback((value: any) => {
+    setVal(value as number);
+  }, []);
   const onBasicInputChange = useCallback(
     ({
       target: { value: newValue = "0" },
@@ -43,12 +46,7 @@ export const App: FC = () => {
         <h1>Demos</h1>
         <a href="https://docs.voltra.app/docs">Docs</a>
         <br />
-        <NumberInput
-          value={val}
-          onChange={(v) => {
-            setVal(v);
-          }}
-        />
+        <NumberInput value={val} onChange={onNumberInputChange} />
         <br />
         <input type="number" value={val} onChange={onBasicInputChange} />
       </Route>
