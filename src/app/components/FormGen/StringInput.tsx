@@ -1,20 +1,13 @@
 import {
   ChangeEvent as ReactChangeEvent,
-  FC,
   InputHTMLAttributes,
   useCallback,
 } from "react";
-import { InputProps } from "./Types";
+import { InputComponentProps } from "./Types";
 
-export type StringInputProps = InputProps<
+export const StringInput: InputComponentProps<
   InputHTMLAttributes<HTMLInputElement>
->;
-
-export const StringInput: FC<StringInputProps> = ({
-  value,
-  onChange,
-  ...rest
-}) => {
+> = ({ value, onChange, ...rest }) => {
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
       onChange(newValue);
