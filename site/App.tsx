@@ -24,7 +24,8 @@ const GlobalStyle = createGlobalStyle`
 //  option selector
 //  option selector w/ custom value
 //  custom (i.e. date picker)
-//  existing object
+//  existing object selector
+//  existing object selector w/ search
 //  sub form/object
 //  array of all of the above
 
