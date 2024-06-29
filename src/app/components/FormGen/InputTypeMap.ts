@@ -1,4 +1,4 @@
-import { InputComponentProps } from "./Types";
+import { InputComponent } from "./Types";
 import { StringInput } from "./StringInput";
 import { NumberInput } from "./NumberInput";
 
@@ -14,7 +14,7 @@ import { NumberInput } from "./NumberInput";
 //  sub form/object
 //  array of all of the above
 
-export const INPUT_TYPE_MAP: Record<string, InputComponentProps<any>> = {
+export const INPUT_TYPE_MAP: Record<string, InputComponent<any>> = {
   string: StringInput,
   number: NumberInput,
 };

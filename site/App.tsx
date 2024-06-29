@@ -7,6 +7,7 @@ import {
 import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../src/app/utils";
 import { NumberInput } from "../src/app/components/FormGen/NumberInput";
+import { BooleanInput } from "../src/app/components/FormGen/BooleanInput";
 
 const GlobalStyle = createGlobalStyle`
     html,
@@ -25,6 +26,7 @@ const GlobalStyle = createGlobalStyle`
 
 export const App: FC = () => {
   const [val, setVal] = useState<number>(1e86);
+  const [boolVal, setBoolVal] = useState<boolean>(false);
   const onNumberInputChange = useCallback((value: any) => {
     setVal(value as number);
   }, []);
@@ -36,8 +38,11 @@ export const App: FC = () => {
     },
     [],
   );
+  const onBooleanInputChange = useCallback((newValue: any) => {
+    setBoolVal(newValue as boolean);
+  }, []);
 
-  console.log(val, typeof val);
+  console.log(val, typeof val, boolVal);
 
   return (
     <ApplicationStateProvider>
@@ -46,9 +51,11 @@ export const App: FC = () => {
         <h1>Demos</h1>
         <a href="https://docs.voltra.app/docs">Docs</a>
         <br />
-        <NumberInput value={val} onChange={onNumberInputChange} />
+        <NumberInput value={val} onChange={onNumberInputChange} type="number" />
         <br />
         <input type="number" value={val} onChange={onBasicInputChange} />
+        <br />
+        <BooleanInput value={boolVal as any} onChange={onBooleanInputChange} />
       </Route>
     </ApplicationStateProvider>
   );
