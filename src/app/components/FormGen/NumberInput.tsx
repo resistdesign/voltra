@@ -16,9 +16,10 @@ export const NumberInput: InputComponentProps<
       try {
         const newNumberValue = JSON.parse(`${newValue ?? ""}`);
 
+        setInternalValue(newNumberValue ?? "");
         onChange(newNumberValue);
       } catch (error) {
-        setInternalValue(value ?? "");
+        setInternalValue(newValue ?? "");
       }
     },
     [onChange],
