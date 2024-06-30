@@ -9,7 +9,7 @@ export const StringSelector: InputComponent<HTMLSelectElement> = ({
 }) => {
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLSelectElement>) => {
-      onChange(newValue);
+      onChange(newValue === "" ? undefined : `${newValue ?? ""}`);
     },
     [onChange],
   );
