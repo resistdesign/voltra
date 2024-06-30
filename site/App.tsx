@@ -9,6 +9,7 @@ import { ApplicationStateProvider, Route } from "../src/app/utils";
 import { NumberInput } from "../src/app/components/FormGen/Inputs/Primitives/NumberInput";
 import { BooleanInput } from "../src/app/components/FormGen/Inputs/Primitives/BooleanInput";
 import { StringSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/StringSelector";
+import { NumberSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/NumberSelector";
 
 const GlobalStyle = createGlobalStyle`
     html,
@@ -46,8 +47,12 @@ export const App: FC = () => {
   const onStringSelectorChange = useCallback((newValue: any) => {
     setSelectedString(newValue as string);
   }, []);
+  const [selectedNumber, setSelectedNumber] = useState<number | undefined>();
+  const onNumberSelectorChange = useCallback((newValue: any) => {
+    setSelectedNumber(newValue as number);
+  }, []);
 
-  console.log(val, typeof val, boolVal);
+  console.log(val, typeof val, boolVal, selectedString, selectedNumber);
 
   return (
     <ApplicationStateProvider>
@@ -67,6 +72,13 @@ export const App: FC = () => {
           value={selectedString}
           onChange={onStringSelectorChange}
           options={["one", "two", "three"]}
+        />
+        <br />
+        <input value={selectedNumber ?? ""} readOnly />
+        <NumberSelector
+          value={selectedNumber}
+          onChange={onNumberSelectorChange}
+          options={[1, 2, 3]}
         />
       </Route>
     </ApplicationStateProvider>
