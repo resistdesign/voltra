@@ -11,7 +11,7 @@ import { NumberSelector } from "./Inputs/PrimitiveOptionSelectors/NumberSelector
 //  [x] number
 //  [x] boolean
 //  Primitive options selection:
-//  [] option selector
+//  [x] option selector
 //  [] option selector w/ custom value
 //  [] option selector w/search
 //  [] option selector w/search w/ custom value

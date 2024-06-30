@@ -2,6 +2,7 @@ import {
   ChangeEvent as ReactChangeEvent,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { InputComponent } from "../../Types";
@@ -29,17 +30,17 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   onChange,
   ...rest
 }) => {
-  const [internalNumericValue, setInternalNumericValue] =
-    useState<number>(value);
   const [internalValue, setInternalValue] = useState<string>(
     getStringNumericValue(value),
   );
+  const internalValueRef = useRef(internalValue);
+  internalValueRef.current = internalValue;
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
       try {
         const newNumberValue = getAdvancedNumericValue(newValue);
 
-        setInternalNumericValue(newNumberValue);
+        onChange(newNumberValue);
       } catch (error) {
         // Ignore.
       }
@@ -50,20 +51,14 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   );
 
   useEffect(() => {
-    setInternalNumericValue((existingInternalNumVal) => {
-      if (value !== existingInternalNumVal) {
-        setInternalValue(getStringNumericValue(value));
+    const internalValueAsNumber = getAdvancedNumericValue(
+      internalValueRef.current,
+    );
 
-        return value;
-      } else {
-        return existingInternalNumVal;
-      }
-    });
+    if (value !== internalValueAsNumber) {
+      setInternalValue(getStringNumericValue(value));
+    }
   }, [value]);
-
-  useEffect(() => {
-    onChange(internalNumericValue);
-  }, [internalNumericValue, onChange]);
 
   return (
     <input
