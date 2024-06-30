@@ -1,6 +1,5 @@
 import {
   ChangeEvent as ReactChangeEvent,
-  InputHTMLAttributes,
   useCallback,
   useEffect,
   useState,
@@ -25,9 +24,11 @@ const getAdvancedNumericValue = (value: string | number): number => {
 const getStringNumericValue = (value: string | number): string =>
   `${value ?? ""}`;
 
-export const NumberInput: InputComponent<
-  InputHTMLAttributes<HTMLInputElement>
-> = ({ value, onChange, ...rest }) => {
+export const NumberInput: InputComponent<HTMLInputElement> = ({
+  value,
+  onChange,
+  ...rest
+}) => {
   const [internalNumericValue, setInternalNumericValue] =
     useState<number>(value);
   const [internalValue, setInternalValue] = useState<string>(

@@ -1,9 +1,11 @@
-import { InputHTMLAttributes, useCallback } from "react";
+import { useCallback } from "react";
 import { InputComponent } from "../../Types";
 
-export const BooleanInput: InputComponent<
-  InputHTMLAttributes<HTMLInputElement>
-> = ({ value, onChange, ...rest }) => {
+export const BooleanInput: InputComponent<HTMLInputElement> = ({
+  value,
+  onChange,
+  ...rest
+}) => {
   const onClickHandler = useCallback(() => {
     onChange(!value);
   }, [value, onChange]);
