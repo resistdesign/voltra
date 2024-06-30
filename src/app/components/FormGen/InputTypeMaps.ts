@@ -2,6 +2,8 @@ import { InputComponent } from "./Types";
 import { StringInput } from "./Inputs/Primitives/StringInput";
 import { NumberInput } from "./Inputs/Primitives/NumberInput";
 import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
+import { TypeKeyword } from "../../../common/TypeParsing/TypeInfo";
+import { StringSelector } from "./Inputs/PrimitiveOptionSelectors/StringSelector";
 
 // TODO: Input types:
 //  [x] string
@@ -23,8 +25,21 @@ import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
 //  ---
 //  [] array of all of the above
 
-export const INPUT_TYPE_MAP: Record<string, InputComponent<any>> = {
+export const PRIMITIVE_INPUT_TYPE_MAP: Record<
+  TypeKeyword,
+  InputComponent<HTMLInputElement>
+> = {
   string: StringInput,
   number: NumberInput,
   boolean: BooleanInput,
+};
+
+export const SELECT_INPUT_TYPE_MAP: Record<
+  TypeKeyword,
+  InputComponent<HTMLSelectElement>
+> = {
+  string: StringSelector,
+  // TODO: Replace.
+  number: StringSelector,
+  boolean: StringSelector,
 };
