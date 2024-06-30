@@ -35,11 +35,10 @@ export const PRIMITIVE_INPUT_TYPE_MAP: Record<
 };
 
 export const SELECT_INPUT_TYPE_MAP: Record<
-  TypeKeyword,
+  Exclude<TypeKeyword, "boolean">,
   InputComponent<HTMLSelectElement>
 > = {
   string: StringSelector,
   // TODO: Replace.
   number: StringSelector,
-  boolean: StringSelector,
 };
