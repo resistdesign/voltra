@@ -8,6 +8,7 @@ import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../src/app/utils";
 import { NumberInput } from "../src/app/components/FormGen/Inputs/Primitives/NumberInput";
 import { BooleanInput } from "../src/app/components/FormGen/Inputs/Primitives/BooleanInput";
+import { StringSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/StringSelector";
 
 const GlobalStyle = createGlobalStyle`
     html,
@@ -26,7 +27,6 @@ const GlobalStyle = createGlobalStyle`
 
 export const App: FC = () => {
   const [val, setVal] = useState<number>(1e86);
-  const [boolVal, setBoolVal] = useState<boolean>(false);
   const onNumberInputChange = useCallback((value: any) => {
     setVal(value as number);
   }, []);
@@ -38,8 +38,13 @@ export const App: FC = () => {
     },
     [],
   );
+  const [boolVal, setBoolVal] = useState<boolean>(false);
   const onBooleanInputChange = useCallback((newValue: any) => {
     setBoolVal(newValue as boolean);
+  }, []);
+  const [selectedString, setSelectedString] = useState<string | undefined>();
+  const onStringSelectorChange = useCallback((newValue: any) => {
+    setSelectedString(newValue as string);
   }, []);
 
   console.log(val, typeof val, boolVal);
@@ -56,6 +61,13 @@ export const App: FC = () => {
         <input type="number" value={val} onChange={onBasicInputChange} />
         <br />
         <BooleanInput value={boolVal as any} onChange={onBooleanInputChange} />
+        <br />
+        <input value={selectedString ?? ""} readOnly />
+        <StringSelector
+          value={selectedString}
+          onChange={onStringSelectorChange}
+          options={["one", "two", "three"]}
+        />
       </Route>
     </ApplicationStateProvider>
   );
