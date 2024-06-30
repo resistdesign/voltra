@@ -4,6 +4,7 @@ import { NumberInput } from "./Inputs/Primitives/NumberInput";
 import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
 import { TypeKeyword } from "../../../common/TypeParsing/TypeInfo";
 import { StringSelector } from "./Inputs/PrimitiveOptionSelectors/StringSelector";
+import { NumberSelector } from "./Inputs/PrimitiveOptionSelectors/NumberSelector";
 
 // TODO: Input types:
 //  [x] string
@@ -34,11 +35,10 @@ export const PRIMITIVE_INPUT_TYPE_MAP: Record<
   boolean: BooleanInput,
 };
 
-export const SELECT_INPUT_TYPE_MAP: Record<
+export const PRIMITIVE_SELECT_INPUT_TYPE_MAP: Record<
   Exclude<TypeKeyword, "boolean">,
   InputComponent<HTMLSelectElement>
 > = {
   string: StringSelector,
-  // TODO: Replace.
-  number: StringSelector,
+  number: NumberSelector,
 };
