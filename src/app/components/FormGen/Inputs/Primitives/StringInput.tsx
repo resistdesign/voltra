@@ -8,7 +8,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
 }) => {
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
-      onChange(newValue ?? "");
+      onChange(newValue === "" ? undefined : newValue);
     },
     [onChange],
   );
