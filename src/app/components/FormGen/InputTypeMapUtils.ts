@@ -20,7 +20,7 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 //  ---
 //  Advanced input types:
 //  ---
-//  [] custom (i.e. date picker)
+//  [x] custom (i.e. date picker)
 //  Designate primary field for object selection:
 //  [] existing object selector
 //  [] existing object selector w/ search
