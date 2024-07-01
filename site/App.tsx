@@ -86,13 +86,13 @@ export const App: FC = () => {
         <StringComboBox
           value={selectedString}
           onChange={onStringSelectorChange}
-          options={["", "one", "two", "three"]}
+          options={[undefined, "one", "two", "three"]}
         />
         <br />
         <NumberComboBox
           value={selectedNumber}
           onChange={onNumberSelectorChange}
-          options={["", 1, 2, 3]}
+          options={[undefined, 1, 2, 3]}
         />
       </Route>
     </ApplicationStateProvider>
