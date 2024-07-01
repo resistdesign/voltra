@@ -51,12 +51,16 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   );
 
   useEffect(() => {
-    const internalValueAsNumber = getAdvancedNumericValue(
-      internalValueRef.current,
-    );
+    try {
+      const internalValueAsNumber = getAdvancedNumericValue(
+        internalValueRef.current,
+      );
 
-    if (value !== internalValueAsNumber) {
-      setInternalValue(getStringNumericValue(value));
+      if (value !== internalValueAsNumber) {
+        setInternalValue(getStringNumericValue(value));
+      }
+    } catch (error) {
+      // Ignore.
     }
   }, [value]);
 

@@ -5,6 +5,8 @@ import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
 import { TypeKeyword } from "../../../common/TypeParsing/TypeInfo";
 import { StringSelector } from "./Inputs/PrimitiveOptionSelectors/StringSelector";
 import { NumberSelector } from "./Inputs/PrimitiveOptionSelectors/NumberSelector";
+import { StringComboBox } from "./Inputs/PrimitiveOptionSelectors/StringComboBox";
+import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox";
 
 // TODO: Input types:
 //  [x] string
@@ -12,9 +14,9 @@ import { NumberSelector } from "./Inputs/PrimitiveOptionSelectors/NumberSelector
 //  [x] boolean
 //  Primitive options selection:
 //  [x] option selector
-//  [] option selector w/ custom value
-//  [] option selector w/search
-//  [] option selector w/search w/ custom value
+//  [x] option selector w/ custom value
+//  [x] option selector w/search
+//  [x] option selector w/search w/ custom value
 //  ---
 //  [] custom (i.e. date picker)
 //  Designate primary field for object selection:
@@ -41,4 +43,12 @@ export const PRIMITIVE_SELECT_INPUT_TYPE_MAP: Record<
 > = {
   string: StringSelector,
   number: NumberSelector,
+};
+
+export const PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP: Record<
+  Exclude<TypeKeyword, "boolean">,
+  InputComponent<HTMLInputElement>
+> = {
+  string: StringComboBox,
+  number: NumberComboBox,
 };
