@@ -13,9 +13,15 @@ const getAdvancedNumericValue = (value: string | number): number => {
   } else if (value === "-Infinity" || value === "-∞") {
     return -Infinity;
   } else {
-    const num = JSON.parse(`${value}`);
+    let num: number | undefined;
 
-    if (isNaN(num) || typeof num !== "number") {
+    try {
+      num = JSON.parse(`${value}`);
+    } catch (error) {
+      // Ignore.
+    }
+
+    if (isNaN(num ?? NaN) || typeof num !== "number") {
       throw new Error("Invalid number");
     }
 
