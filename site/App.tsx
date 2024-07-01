@@ -10,6 +10,8 @@ import { NumberInput } from "../src/app/components/FormGen/Inputs/Primitives/Num
 import { BooleanInput } from "../src/app/components/FormGen/Inputs/Primitives/BooleanInput";
 import { StringSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/StringSelector";
 import { NumberSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/NumberSelector";
+import { StringComboBox } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/StringComboBox";
+import { NumberComboBox } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/NumberComboBox";
 
 const GlobalStyle = createGlobalStyle`
     html,
@@ -76,6 +78,18 @@ export const App: FC = () => {
         <br />
         <input value={selectedNumber ?? ""} readOnly />
         <NumberSelector
+          value={selectedNumber}
+          onChange={onNumberSelectorChange}
+          options={[1, 2, 3]}
+        />
+        <br />
+        <StringComboBox
+          value={selectedString}
+          onChange={onStringSelectorChange}
+          options={["one", "two", "three"]}
+        />
+        <br />
+        <NumberComboBox
           value={selectedNumber}
           onChange={onNumberSelectorChange}
           options={[1, 2, 3]}
