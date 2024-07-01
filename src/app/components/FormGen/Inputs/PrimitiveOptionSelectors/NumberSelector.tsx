@@ -15,7 +15,7 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   );
 
   return (
-    <select value={value ?? undefined} onChange={onChangeHandler} {...rest}>
+    <select value={value ?? ""} onChange={onChangeHandler} {...rest}>
       <option value="">Select...</option>
       {options.map((option, index) => (
         <option key={`Option:${option}:${index}`} value={option}>
