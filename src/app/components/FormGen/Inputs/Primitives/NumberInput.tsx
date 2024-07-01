@@ -7,7 +7,9 @@ import {
 } from "react";
 import { InputComponent } from "../../Types";
 
-const getAdvancedNumericValue = (value: string | number): number => {
+const getAdvancedNumericValue = (
+  value: string | number,
+): number | undefined => {
   if (value === "Infinity" || value === "+Infinity" || value === "∞") {
     return Infinity;
   } else if (value === "-Infinity" || value === "-∞") {
@@ -22,7 +24,7 @@ const getAdvancedNumericValue = (value: string | number): number => {
     }
 
     if (isNaN(num ?? NaN) || typeof num !== "number") {
-      throw new Error("Invalid number");
+      num = undefined;
     }
 
     return num;
@@ -43,14 +45,9 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   internalValueRef.current = internalValue;
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
-      try {
-        const newNumberValue = getAdvancedNumericValue(newValue);
+      const newNumberValue = getAdvancedNumericValue(newValue);
 
-        onChange(newNumberValue);
-      } catch (error) {
-        // Ignore.
-      }
-
+      onChange(newNumberValue);
       setInternalValue(newValue ?? "");
     },
     [onChange],
