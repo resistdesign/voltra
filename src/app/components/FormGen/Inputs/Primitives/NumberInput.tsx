@@ -15,7 +15,7 @@ const getAdvancedNumericValue = (value: string | number): number => {
   } else {
     const num = JSON.parse(`${value}`);
 
-    if (isNaN(num)) {
+    if (isNaN(num) || typeof num !== "number") {
       throw new Error("Invalid number");
     }
 
