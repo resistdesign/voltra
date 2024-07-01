@@ -54,3 +54,10 @@ export const PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP: Record<
   string: StringComboBox,
   number: NumberComboBox,
 };
+
+export const getCustomInputType = (
+  customInputTypeName: string,
+  customInputTypeMap: Record<string, InputComponent<any>>,
+): InputComponent<any> | undefined =>
+  // TODO: Return a default JSON editor component.
+  customInputTypeMap[customInputTypeName];
