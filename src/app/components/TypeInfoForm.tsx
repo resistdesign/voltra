@@ -40,6 +40,12 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
     setInternalValue(value);
   }, [value]);
 
+  // TODO:
+  //  [] labels
+  //  [] arrays
+  //  [] navigation to sub-types
+  //  [] advanced input types, including custom
+
   return (
     <Form onSubmit={onSubmit}>
       {Object.keys(fields).map((fieldName) => {
