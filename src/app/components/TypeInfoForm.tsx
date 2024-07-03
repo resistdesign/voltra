@@ -69,6 +69,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
           />
         ) : undefined;
       })}
+      <button type="submit">Submit</button>
     </Form>
   );
 };
