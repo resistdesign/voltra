@@ -9,3 +9,5 @@ export type InputProps<ElementPropsType> = ElementPropsType & {
 export type InputComponent<ElementPropsType> = FC<
   InputProps<InputHTMLAttributes<ElementPropsType>>
 >;
+
+export type CustomInputComponentMap = Record<string, InputComponent<any>>;
