@@ -35,6 +35,8 @@ const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
 export const App: FC = () => {
   const [value, setValue] = useState<Record<any, any>>({});
 
+  console.log("Person:", value);
+
   return (
     <ApplicationStateProvider>
       <GlobalStyle />
