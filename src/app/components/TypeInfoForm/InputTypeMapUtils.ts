@@ -10,7 +10,7 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 
 // TODO: Input types:
 //  [x] string
-//  [] multi-line string
+//  [] specific string types (e.g. email, phone number, long text, etc.)
 //  [x] number
 //  [x] boolean
 //  Primitive options selection:
