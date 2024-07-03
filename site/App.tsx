@@ -6,12 +6,12 @@ import {
 } from "react";
 import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../src/app/utils";
-import { NumberInput } from "../src/app/components/FormGen/Inputs/Primitives/NumberInput";
-import { BooleanInput } from "../src/app/components/FormGen/Inputs/Primitives/BooleanInput";
-import { StringSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/StringSelector";
-import { NumberSelector } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/NumberSelector";
-import { StringComboBox } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/StringComboBox";
-import { NumberComboBox } from "../src/app/components/FormGen/Inputs/PrimitiveOptionSelectors/NumberComboBox";
+import { NumberInput } from "../src/app/components/TypeInfoForm/Inputs/Primitives/NumberInput";
+import { BooleanInput } from "../src/app/components/TypeInfoForm/Inputs/Primitives/BooleanInput";
+import { StringSelector } from "../src/app/components/TypeInfoForm/Inputs/PrimitiveOptionSelectors/StringSelector";
+import { NumberSelector } from "../src/app/components/TypeInfoForm/Inputs/PrimitiveOptionSelectors/NumberSelector";
+import { StringComboBox } from "../src/app/components/TypeInfoForm/Inputs/PrimitiveOptionSelectors/StringComboBox";
+import { NumberComboBox } from "../src/app/components/TypeInfoForm/Inputs/PrimitiveOptionSelectors/NumberComboBox";
 
 const GlobalStyle = createGlobalStyle`
     html,
