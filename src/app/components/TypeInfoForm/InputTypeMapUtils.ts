@@ -22,6 +22,7 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 //  Advanced input types:
 //  ---
 //  [x] custom (i.e. date picker)
+//  [] default/JSON editor
 //  Designate primary field for object selection:
 //  Object search form???
 //  [] existing object selector
