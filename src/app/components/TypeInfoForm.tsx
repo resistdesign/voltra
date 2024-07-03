@@ -45,6 +45,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
   //  [] arrays
   //  [] navigation to sub-types
   //  [] advanced input types, including custom
+  //  [] universal field change handler
 
   return (
     <Form onSubmit={onSubmit}>
