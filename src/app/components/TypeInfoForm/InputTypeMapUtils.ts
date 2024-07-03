@@ -1,4 +1,4 @@
-import { InputComponent } from "./Types";
+import { CustomInputComponentMap, InputComponent } from "./Types";
 import { StringInput } from "./Inputs/Primitives/StringInput";
 import { NumberInput } from "./Inputs/Primitives/NumberInput";
 import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
@@ -10,6 +10,7 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 
 // TODO: Input types:
 //  [x] string
+//  [] multi-line string
 //  [x] number
 //  [x] boolean
 //  Primitive options selection:
@@ -59,7 +60,24 @@ export const PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP: Record<
 
 export const getCustomInputType = (
   customInputTypeName: string,
-  customInputTypeMap: Record<string, InputComponent<any>>,
+  customInputTypeMap: CustomInputComponentMap,
 ): InputComponent<any> | undefined =>
   // TODO: Return a default JSON editor component.
   customInputTypeMap[customInputTypeName];
+
+export const getInputType = (
+  typeName: string,
+  customInputTypeMap: CustomInputComponentMap,
+): InputComponent<any> | undefined => {
+  const custom: boolean = false;
+
+  let inputType: InputComponent<any> | undefined = undefined;
+
+  if (custom) {
+    inputType = getCustomInputType(typeName, customInputTypeMap);
+  } else {
+    inputType = PRIMITIVE_INPUT_TYPE_MAP[typeName as TypeKeyword];
+  }
+
+  return inputType;
+};
