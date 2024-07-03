@@ -24,8 +24,9 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 //  Designate primary field for object selection:
 //  Object search form???
 //  [] existing object selector
+//  [] existing object selector multiple
 //  [] existing object selector w/ search
-//  [] existing object selector w/ advanced search
+//  [] existing object selector w/ advanced search (Advanced object field query)
 //  ---
 //  [] new object forms and sub-forms
 //  ---
