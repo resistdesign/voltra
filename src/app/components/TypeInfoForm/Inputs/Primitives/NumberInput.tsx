@@ -1,12 +1,6 @@
-import {
-  ChangeEvent as ReactChangeEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { InputComponent } from "../../Types";
-import {StringInput} from "./StringInput";
+import { StringInput } from "./StringInput";
 
 const getAdvancedNumericValue = (
   value: string | number,
@@ -45,7 +39,7 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   const internalValueRef = useRef(internalValue);
   internalValueRef.current = internalValue;
   const onChangeHandler = useCallback(
-    ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
+    (newValue: string) => {
       const newNumberValue = getAdvancedNumericValue(newValue);
 
       onChange(newNumberValue);
