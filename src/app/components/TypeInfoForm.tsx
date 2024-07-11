@@ -1,4 +1,4 @@
-import { InputComponent } from "./TypeInfoForm/Types";
+import { InputComponent, InputOptions } from "./TypeInfoForm/Types";
 import { Form } from "./Form";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -45,7 +45,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
   //  [] arrays
   //  [] navigation to sub-types
   //  [] advanced input types, including custom
-  //  [] universal field change handler
+  //  [] universal field change handler*
 
   return (
     <Form onSubmit={onSubmit}>
@@ -53,26 +53,33 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
         const field = fields[fieldName];
         const {
           type: fieldType,
+          tags,
           // TODO: Get from tags, BUT expose in API somehow.
           // customInputType,
         } = field;
         const InputComponent = getInputType(fieldType, customInputTypeMap);
         const fieldValue = internalValue[fieldName];
-        const onFieldChange = useCallback(
-          (newValue: any) => {
-            setInternalValue({
-              ...internalValue,
-              [fieldName]: newValue,
-            });
-          },
-          [internalValue, fieldName],
-        );
+        // TODO: *universal field change handler (move this out of this loop)
+        const onFieldChange = (newValue: any) => {
+          setInternalValue({
+            ...internalValue,
+            [fieldName]: newValue,
+          });
+        };
+        const onNavigateToType = (typeName: string) => {
+          // TODO: Implement navigation to sub-types.
+        };
 
         return InputComponent ? (
           <InputComponent
             key={fieldName}
+            typeInfoMap={typeInfoMap}
+            typeInfoField={field}
+            nameOrIndex={fieldName}
             value={fieldValue}
             onChange={onFieldChange}
+            options={tags as InputOptions}
+            onNavigateToType={onNavigateToType}
           />
         ) : undefined;
       })}
