@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { InputComponent } from "../../Types";
+import {StringInput} from "./StringInput";
 
 const getAdvancedNumericValue = (
   value: string | number,
@@ -68,7 +69,7 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   }, [value]);
 
   return (
-    <input
+    <StringInput
       type="text"
       value={internalValue}
       onChange={onChangeHandler}

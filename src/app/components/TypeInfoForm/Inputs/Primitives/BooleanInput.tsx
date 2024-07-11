@@ -6,6 +6,7 @@ const ChangeNOOP = () => {};
 export const BooleanInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
+  options: { label = "" } = {},
   ...rest
 }) => {
   const onClickHandler = useCallback(() => {
@@ -13,12 +14,16 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
   }, [value, onChange]);
 
   return (
-    <input
-      type="checkbox"
-      checked={value as boolean}
-      onClick={onClickHandler}
-      onChange={ChangeNOOP}
-      {...rest}
-    />
+    <label>
+      <input
+        type="checkbox"
+        checked={value as boolean}
+        onClick={onClickHandler}
+        onChange={ChangeNOOP}
+        {...rest}
+      />
+      &nbsp;
+      {label}
+    </label>
   );
 };

@@ -4,6 +4,7 @@ import { InputComponent } from "../../Types";
 export const StringInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
+  options: { label = "" } = {},
   ...rest
 }) => {
   const onChangeHandler = useCallback(
@@ -16,6 +17,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   return (
     <input
       type="text"
+      placeholder={label}
       value={`${value ?? ""}`}
       onChange={onChangeHandler}
       {...rest}

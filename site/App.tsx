@@ -22,12 +22,34 @@ const GlobalStyle = createGlobalStyle`
 
 const DEMO_TS = `
 export type Person = {
+  /**
+  * @label First Name
+  */
   firstName: string;
+  /**
+  * @label Last Name
+  */
   lastName: string;
+  /**
+  * @label Age
+  */
   age: number;
+  /**
+  * @label Phone Number
+  */
   phoneNumber: string;
+  /**
+  * @label Email
+  */
   email: string;
+  /**
+  * @label Friends
+  */
   friends: Person[];
+  /**
+  * @label Likes Cheese
+  */
+  likesCheese: boolean;
 };
 `;
 const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
