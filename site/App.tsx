@@ -7,7 +7,8 @@ import { getTypeInfoMapFromTypeScript } from "../src/common/TypeParsing";
 
 const GlobalStyle = createGlobalStyle`
     html,
-    body {
+    body,
+    #app-root {
         display: flex;
         flex-direction: column;
         align-items: stretch;
