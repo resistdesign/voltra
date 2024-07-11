@@ -1,22 +1,10 @@
 import { InputComponent, InputOptions } from "./TypeInfoForm/Types";
 import { Form } from "./Form";
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  TypeInfo,
-  TypeInfoField,
-  TypeInfoMap,
-} from "../../common/TypeParsing/TypeInfo";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { TypeInfo, TypeInfoField } from "../../common/TypeParsing/TypeInfo";
 import { getInputType } from "./TypeInfoForm/InputTypeMapUtils";
 
-export type TypeInfoFormProps<TypeInfoMapType extends TypeInfoMap> = {
-  typeInfoMap: TypeInfoMapType;
-  typeInfoName: keyof TypeInfoMapType;
-  customInputTypeMap?: Record<string, InputComponent<any>>;
-  value: Record<any, any>;
-  onChange: (value: Record<any, any>) => void;
-};
-
-export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
+export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
   typeInfoMap,
   typeInfoName,
   customInputTypeMap = {},
@@ -24,7 +12,9 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
   onChange,
 }) => {
   const typeInfo = useMemo<TypeInfo | undefined>(() => {
-    return typeInfoMap[typeInfoName];
+    return typeof typeInfoName === "string"
+      ? typeInfoMap[typeInfoName]
+      : undefined;
   }, [typeInfoMap, typeInfoName]);
   const fields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: typeInfoFields = {} }: Partial<TypeInfo> = typeInfo || {};
@@ -75,6 +65,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps<any>> = ({
             key={fieldName}
             typeInfoMap={typeInfoMap}
             typeInfoField={field}
+            typeInfoName={typeInfoName}
             nameOrIndex={fieldName}
             value={fieldValue}
             onChange={onFieldChange}

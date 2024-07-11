@@ -1,15 +1,23 @@
 import { FC, InputHTMLAttributes } from "react";
-import {TypeInfoField, TypeInfoMap} from "../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfoField,
+  TypeInfoMap,
+} from "../../../common/TypeParsing/TypeInfo";
 
 export type InputOptions = Partial<{
   label: string;
 }>;
 
-export type InputProps<ElementPropsType> = ElementPropsType & {
+export type InputProps<ElementPropsType, ValueType = any> = Omit<
+  ElementPropsType,
+  "value"
+> & {
   typeInfoMap: TypeInfoMap;
-  typeInfoField: TypeInfoField;
-  nameOrIndex: string | number;
-  value: any;
+  typeInfoField?: TypeInfoField;
+  customInputTypeMap?: Record<string, InputComponent<any>>;
+  typeInfoName?: string;
+  nameOrIndex?: string | number;
+  value: ValueType;
   onChange: (value: any) => void;
   options?: InputOptions;
   onNavigateToType?: (typeName: string) => void;

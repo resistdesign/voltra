@@ -71,6 +71,7 @@ export const App: FC = () => {
           typeInfoName={"Person"}
           value={value}
           onChange={setValue}
+          onNavigateToType={undefined /* TODO: Implement. */}
         />
       </Route>
     </ApplicationStateProvider>
