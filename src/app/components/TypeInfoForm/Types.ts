@@ -3,7 +3,7 @@ import { FC, InputHTMLAttributes } from "react";
 export type InputProps<ElementPropsType> = ElementPropsType & {
   value: any;
   onChange: (value: any) => void;
-  options?: any[];
+  options?: any;
 };
 
 export type InputComponent<ElementPropsType> = FC<
