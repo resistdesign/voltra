@@ -10,7 +10,7 @@ export type InputOptions = Partial<{
 
 export type InputProps<ElementPropsType, ValueType = any> = Omit<
   ElementPropsType,
-  "value"
+  "value" | "onChange"
 > & {
   typeInfoMap: TypeInfoMap;
   typeInfoField?: TypeInfoField;
