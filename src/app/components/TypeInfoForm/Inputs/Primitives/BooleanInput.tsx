@@ -7,6 +7,12 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
   options: { label = "" } = {},
+  typeInfoMap: _typeInfoMap,
+  typeInfoField: _typeInfoField,
+  customInputTypeMap: _customInputTypeMap,
+  typeInfoName: _typeInfoName,
+  nameOrIndex: _nameOrIndex,
+  onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
   const onClickHandler = useCallback(() => {
