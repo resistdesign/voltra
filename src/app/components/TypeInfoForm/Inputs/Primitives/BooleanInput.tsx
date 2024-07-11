@@ -23,7 +23,7 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
     <label>
       <input
         type="checkbox"
-        checked={value as boolean}
+        checked={value ?? false}
         onClick={onClickHandler}
         onChange={ChangeNOOP}
         {...rest}

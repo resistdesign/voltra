@@ -45,11 +45,6 @@
             --pico-primary-inverse: #fff; /* Same as auto dark theme */
         }
 
-        body#app-root {
-            padding-left: 0;
-            padding-right: 0;
-        }
-
         .loading-text {
             width: 100vw;
             height: 100vh;
@@ -60,13 +55,17 @@
         }
     </style>
 </head>
-<body id="app-root" class='container-fluid'>
+<body>
 <div
-        class='loading-text'
+        id='app-root'
 >
-    <h3>
-        Loading...
-    </h3>
+    <div
+            class='loading-text'
+    >
+        <h3>
+            Loading...
+        </h3>
+    </div>
 </div>
 </body>
 </html>
