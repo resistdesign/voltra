@@ -19,7 +19,7 @@
     "doc-to-site": "cp -r ./docs site-dist/",
     "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .releaserc dist/",
     "site:build": "parcel build site/index.html --dist-dir site-dist --target site && yarn finalize-site",
-    "site:dev": "parcel site/index.html --dist-dir site-dist --https",
+    "start": "parcel site/index.html --dist-dir site-dist --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/ && cp -r ./images site-dist/ && cp ./favicon/assets/* site-dist/"
   },
   "dependencies": {
