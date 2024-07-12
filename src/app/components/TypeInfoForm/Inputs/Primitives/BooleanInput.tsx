@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { InputComponent } from "../../Types";
+import { getNonInputProps } from "../../InputTypeMapUtils";
 
 const onChangeNOOP = () => {};
 
@@ -7,12 +8,6 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
   options: { label = "", constraints: { defaultValue } = {} as any } = {},
-  typeInfoMap: _typeInfoMap,
-  typeInfoField: _typeInfoField,
-  customInputTypeMap: _customInputTypeMap,
-  typeInfoName: _typeInfoName,
-  nameOrIndex: _nameOrIndex,
-  onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
   const checked = useMemo(
@@ -30,7 +25,7 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
         checked={checked}
         onClick={onClickHandler}
         onChange={onChangeNOOP}
-        {...rest}
+        {...getNonInputProps(rest)}
       />
       &nbsp;
       {label}

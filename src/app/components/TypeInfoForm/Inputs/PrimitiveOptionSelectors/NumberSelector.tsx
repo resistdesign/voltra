@@ -1,16 +1,11 @@
 import { ChangeEvent as ReactChangeEvent, useCallback } from "react";
 import { InputComponent } from "../../Types";
+import { getNonInputProps } from "../../InputTypeMapUtils";
 
 export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   typeInfoField: { possibleValues = [] } = {},
   value,
   onChange,
-  typeInfoMap: _typeInfoMap,
-  typeInfoField: _typeInfoField,
-  customInputTypeMap: _customInputTypeMap,
-  typeInfoName: _typeInfoName,
-  nameOrIndex: _nameOrIndex,
-  onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
   const onChangeHandler = useCallback(
@@ -21,7 +16,11 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   );
 
   return (
-    <select value={value ?? ""} onChange={onChangeHandler} {...rest}>
+    <select
+      value={value ?? ""}
+      onChange={onChangeHandler}
+      {...getNonInputProps(rest)}
+    >
       <option value="">Select...</option>
       {possibleValues.map((pV, index) => (
         <option key={`Option:${pV}:${index}`} value={`${pV}`}>

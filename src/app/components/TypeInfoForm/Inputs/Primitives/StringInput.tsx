@@ -1,5 +1,6 @@
 import { ChangeEvent as ReactChangeEvent, useCallback } from "react";
 import { InputComponent } from "../../Types";
+import { getNonInputProps } from "../../InputTypeMapUtils";
 
 export const StringInput: InputComponent<HTMLInputElement> = ({
   value,
@@ -9,12 +10,6 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
     format = "text",
     constraints: { defaultValue, step, min, max, pattern } = {} as any,
   } = {},
-  typeInfoMap: _typeInfoMap,
-  typeInfoField: _typeInfoField,
-  customInputTypeMap: _customInputTypeMap,
-  typeInfoName: _typeInfoName,
-  nameOrIndex: _nameOrIndex,
-  onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
   const onChangeHandler = useCallback(
@@ -34,7 +29,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
       min={min}
       max={max}
       pattern={pattern}
-      {...rest}
+      {...getNonInputProps(rest)}
     />
   );
 };
