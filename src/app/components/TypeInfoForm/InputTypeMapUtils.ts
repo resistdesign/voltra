@@ -70,6 +70,7 @@ export const getCustomInputType = (
 
 export const getInputType = (
   typeName: string,
+  // TODO: Add support for arrays.
   array?: boolean,
   isSelect?: boolean,
   allowCustomSelection?: boolean,
