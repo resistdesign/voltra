@@ -5,7 +5,7 @@ import {
   NodeArray,
   TypeAliasDeclaration,
 } from "typescript";
-import { getPotentialJSONValue } from "../../Routing";
+import { getPathArray, getPotentialJSONValue } from "../../Routing";
 
 const getTagValueFromJSON = (
   value: string | NodeArray<JSDocComment> | undefined,
@@ -28,19 +28,96 @@ const getTagValueFromJSON = (
   }
 };
 
-export const extractCommentTags = (node: Node): Record<any, any> => {
-  const commentTags: Record<string, any> = {};
+const getObjectWithValueAppliedToPath = (
+  path: any[] = [],
+  value: any,
+  baseObject?: object | any[],
+): any => {
+  let baseParentObject: any = undefined,
+    currentParent: any = undefined;
 
+  if (path.length === 0) {
+    baseParentObject = value;
+  } else {
+    for (let i = 0; i < path.length; i++) {
+      const pathPart = path[i];
+      const cleanPathPart =
+        typeof pathPart === "number"
+          ? pathPart
+          : `${typeof pathPart !== "undefined" ? pathPart : ""}`;
+      const isNum = typeof cleanPathPart === "number";
+
+      let newCurrentParent: any = undefined;
+
+      if (i === 0) {
+        if (!baseObject) {
+          baseParentObject = isNum ? [] : {};
+        } else {
+          baseParentObject = isNum
+            ? [...(Array.isArray(baseObject) ? baseObject : [])]
+            : {
+                ...(typeof baseObject === "object" ? baseObject : {}),
+              };
+        }
+
+        currentParent = baseParentObject;
+      }
+
+      if (i < path.length - 1) {
+        const existingNewCurrentParent = currentParent[cleanPathPart];
+
+        newCurrentParent = isNum
+          ? [
+              ...(Array.isArray(existingNewCurrentParent)
+                ? existingNewCurrentParent
+                : []),
+            ]
+          : {
+              ...(typeof existingNewCurrentParent === "object"
+                ? existingNewCurrentParent
+                : {}),
+            };
+
+        currentParent[cleanPathPart] = newCurrentParent;
+        currentParent = newCurrentParent;
+      } else {
+        if (isNum) {
+          newCurrentParent = [
+            ...(Array.isArray(currentParent) ? currentParent : []),
+            value,
+          ];
+        } else {
+          newCurrentParent = {
+            ...(typeof currentParent === "object" ? currentParent : {}),
+            [cleanPathPart]: value,
+          };
+        }
+
+        currentParent[cleanPathPart] = newCurrentParent;
+      }
+    }
+  }
+
+  return baseParentObject;
+};
+
+export const extractCommentTags = (node: Node): Record<any, any> => {
   const jsDocComments = (node as TypeAliasDeclaration)[
     "jsDoc" as keyof TypeAliasDeclaration
   ];
+
+  let commentTags: Record<string, any> = {};
 
   if (jsDocComments) {
     jsDocComments.forEach((jsDoc: JSDoc) => {
       const tags = jsDoc.tags;
       if (tags) {
         tags.forEach((tag) => {
-          commentTags[tag.tagName.text] = getTagValueFromJSON(tag.comment);
+          commentTags = getObjectWithValueAppliedToPath(
+            getPathArray(tag.tagName.text),
+            getTagValueFromJSON(tag.comment),
+            commentTags,
+          );
         });
       }
     });
