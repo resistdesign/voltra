@@ -12,6 +12,7 @@ export type InputOptions = {
     step?: number;
     min?: number;
     max?: number;
+    pattern?: string;
   };
 };
 
