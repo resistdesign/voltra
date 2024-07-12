@@ -5,6 +5,12 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   typeInfoField: { possibleValues = [] } = {},
   value,
   onChange,
+  typeInfoMap: _typeInfoMap,
+  typeInfoField: _typeInfoField,
+  customInputTypeMap: _customInputTypeMap,
+  typeInfoName: _typeInfoName,
+  nameOrIndex: _nameOrIndex,
+  onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
   const onChangeHandler = useCallback(
