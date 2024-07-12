@@ -7,7 +7,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   options: {
     label = "",
     format = "text",
-    constraints: { step, min, max } = {} as any,
+    constraintsJSON: { step, min, max } = {} as any,
   } = {},
   typeInfoMap: _typeInfoMap,
   typeInfoField: _typeInfoField,
