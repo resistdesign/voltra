@@ -14,18 +14,13 @@ export const NumberComboBox: InputComponent<HTMLInputElement> = ({
   typeInfoField: { possibleValues = [] } = {},
   value,
   onChange,
-  typeInfoMap: _typeInfoMap,
-  typeInfoField: _typeInfoField,
-  customInputTypeMap: _customInputTypeMap,
-  typeInfoName: _typeInfoName,
-  nameOrIndex: _nameOrIndex,
-  onNavigateToType: _onNavigateToType,
+  ...rest
 }) => {
   const listId = useMemo(generateUniqueId, []);
 
   return (
     <>
-      <NumberInput value={value} onChange={onChange} list={listId} />
+      <NumberInput value={value} onChange={onChange} list={listId} {...rest} />
       <datalist id={listId}>
         {possibleValues.map((pV, index) => (
           <option key={`Option:${pV}:${index}`} value={`${pV}`} />

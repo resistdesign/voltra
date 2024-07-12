@@ -1,4 +1,4 @@
-import { CustomInputComponentMap, InputComponent } from "./Types";
+import { CustomInputComponentMap, InputComponent, InputProps } from "./Types";
 import { StringInput } from "./Inputs/Primitives/StringInput";
 import { NumberInput } from "./Inputs/Primitives/NumberInput";
 import { BooleanInput } from "./Inputs/Primitives/BooleanInput";
@@ -7,6 +7,7 @@ import { StringSelector } from "./Inputs/PrimitiveOptionSelectors/StringSelector
 import { NumberSelector } from "./Inputs/PrimitiveOptionSelectors/NumberSelector";
 import { StringComboBox } from "./Inputs/PrimitiveOptionSelectors/StringComboBox";
 import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox";
+import { InputHTMLAttributes } from "react";
 
 // TODO: Input types:
 //  [x] string
@@ -61,6 +62,25 @@ export const PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP: Record<
   number: NumberComboBox,
 };
 
+export const getNonInputProps = (
+  inputProps: Partial<InputProps<any, any>>,
+): InputHTMLAttributes<any> => {
+  const {
+    typeInfoMap: _typeInfoMap,
+    typeInfoField: _typeInfoField,
+    customInputTypeMap: _customInputTypeMap,
+    typeInfoName: _typeInfoName,
+    nameOrIndex: _nameOrIndex,
+    value: _value,
+    onChange: _onChange,
+    options: _options,
+    onNavigateToType: _onNavigateToType,
+    ...rest
+  } = inputProps;
+
+  return rest;
+};
+
 export const getCustomInputType = (
   customInputTypeName: string,
   customInputTypeMap: CustomInputComponentMap,
@@ -72,7 +92,7 @@ export const getInputType = (
   typeName: string,
   // TODO: Add support for arrays.
   array?: boolean,
-  isSelect?: boolean,
+  isSelect?: boolean, // TODO: Selects for required fields.
   allowCustomSelection?: boolean,
   customInputType?: string,
   customInputTypeMap?: CustomInputComponentMap,
