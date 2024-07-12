@@ -132,8 +132,6 @@ export const extractCommentTags = (node: Node): Record<any, any> => {
           const { name: tagName, value: tagValue } = getTagNameAndValue(tag);
           const potentialJSONValue = getPotentialJSONValue(tagValue);
 
-          console.log(tagName, potentialJSONValue);
-
           commentTags = getObjectWithValueAppliedToPath(
             getPathArray(tagName, TAG_NAME_PATH_DELIMITER),
             potentialJSONValue,
