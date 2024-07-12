@@ -4,9 +4,10 @@ import {
   TypeInfoMap,
 } from "../../../common/TypeParsing/TypeInfo";
 
-export type InputOptions = Partial<{
-  label: string;
-}>;
+export type InputOptions = {
+  label?: string;
+  format?: string;
+};
 
 export type InputProps<ElementPropsType, ValueType = any> = Omit<
   ElementPropsType,

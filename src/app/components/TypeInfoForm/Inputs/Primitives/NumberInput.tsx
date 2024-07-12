@@ -63,11 +63,6 @@ export const NumberInput: InputComponent<HTMLInputElement> = ({
   }, [value]);
 
   return (
-    <StringInput
-      type="text"
-      value={internalValue}
-      onChange={onChangeHandler}
-      {...rest}
-    />
+    <StringInput value={internalValue} onChange={onChangeHandler} {...rest} />
   );
 };
