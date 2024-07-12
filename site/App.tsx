@@ -43,7 +43,7 @@ export type Person = {
   /**
   * @label Phone Number (+### (###) ###-####)
   * @format tel
-  * @constraints_pattern ^\+\d+(-\d+)? \(\d{3}\) \d{3}-\d{4}$
+  * @constraints_pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
   */
   phoneNumber: string;
   /**
