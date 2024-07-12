@@ -12,7 +12,7 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
   onChange,
 }) => {
   const typeInfo = useMemo<TypeInfo | undefined>(() => {
-    return typeof typeInfoName === "string"
+    return typeInfoMap && typeof typeInfoName === "string"
       ? typeInfoMap[typeInfoName]
       : undefined;
   }, [typeInfoMap, typeInfoName]);

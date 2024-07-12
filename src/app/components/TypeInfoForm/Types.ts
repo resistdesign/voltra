@@ -20,7 +20,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   ElementPropsType,
   "value" | "onChange"
 > & {
-  typeInfoMap: TypeInfoMap;
+  typeInfoMap?: TypeInfoMap;
   typeInfoField?: TypeInfoField;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   typeInfoName?: string;
@@ -28,6 +28,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   value: ValueType;
   onChange: (value: any) => void;
   options?: InputOptions;
+  possibleValues?: any[];
   onNavigateToType?: (typeName: string) => void;
 };
 
