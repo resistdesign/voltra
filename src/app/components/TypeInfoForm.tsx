@@ -42,12 +42,14 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
     <Form onSubmit={onSubmit}>
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
-        const { type: fieldType, array, tags } = field;
+        const { type: fieldType, possibleValues = [], array, tags } = field;
+        const isSelect = possibleValues.length > 0;
         const inputOptions: InputOptions = tags as InputOptions;
         const { allowCustomSelection, customInputType } = inputOptions;
         const InputComponent = getInputType(
           fieldType,
           array,
+          isSelect,
           allowCustomSelection,
           customInputType,
           customInputTypeMap,

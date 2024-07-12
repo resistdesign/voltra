@@ -71,6 +71,7 @@ export const getCustomInputType = (
 export const getInputType = (
   typeName: string,
   array?: boolean,
+  isSelect?: boolean,
   allowCustomSelection?: boolean,
   customInputType?: string,
   customInputTypeMap?: CustomInputComponentMap,
@@ -80,7 +81,7 @@ export const getInputType = (
   if (customInputType && customInputTypeMap) {
     inputType = getCustomInputType(customInputType, customInputTypeMap);
   } else {
-    inputType = array
+    inputType = isSelect
       ? allowCustomSelection
         ? PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP[typeName as NonBooleanTypeKeyword]
         : PRIMITIVE_SELECT_INPUT_TYPE_MAP[typeName as NonBooleanTypeKeyword]
