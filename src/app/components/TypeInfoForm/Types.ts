@@ -7,6 +7,8 @@ import {
 export type InputOptions = {
   label?: string;
   format?: string;
+  allowCustomSelection?: boolean;
+  customInputType?: string;
   constraints?: {
     defaultValue?: any;
     step?: number;

@@ -42,13 +42,16 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
     <Form onSubmit={onSubmit}>
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
-        const {
-          type: fieldType,
-          tags,
-          // TODO: Get from tags, BUT expose in API somehow.
-          // customInputType,
-        } = field;
-        const InputComponent = getInputType(fieldType, customInputTypeMap);
+        const { type: fieldType, array, tags } = field;
+        const inputOptions: InputOptions = tags as InputOptions;
+        const { allowCustomSelection, customInputType } = inputOptions;
+        const InputComponent = getInputType(
+          fieldType,
+          array,
+          allowCustomSelection,
+          customInputType,
+          customInputTypeMap,
+        );
         const fieldValue = internalValue[fieldName];
         // TODO: *universal field change handler (move this out of this loop)
         const onFieldChange = (newValue: any) => {
@@ -70,7 +73,7 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
             nameOrIndex={fieldName}
             value={fieldValue}
             onChange={onFieldChange}
-            options={tags as InputOptions}
+            options={inputOptions}
             onNavigateToType={onNavigateToType}
           />
         ) : undefined;
