@@ -4,7 +4,7 @@ import { InputComponent } from "../../Types";
 export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   value,
   onChange,
-  options = [],
+  possibleValues = [],
   ...rest
 }) => {
   const onChangeHandler = useCallback(
@@ -17,9 +17,9 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   return (
     <select value={value ?? ""} onChange={onChangeHandler} {...rest}>
       <option value="">Select...</option>
-      {options.map((option, index) => (
-        <option key={`Option:${option}:${index}`} value={option}>
-          {option}
+      {possibleValues.map((pV, index) => (
+        <option key={`Option:${pV}:${index}`} value={pV}>
+          {pV}
         </option>
       ))}
     </select>
