@@ -4,7 +4,7 @@ import { InputComponent } from "../../Types";
 export const StringInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
-  options: { label = "" } = {},
+  options: { label = "", format = "text" } = {},
   typeInfoMap: _typeInfoMap,
   typeInfoField: _typeInfoField,
   customInputTypeMap: _customInputTypeMap,
@@ -22,7 +22,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
 
   return (
     <input
-      type="text"
+      type={format}
       placeholder={label}
       value={`${value ?? ""}`}
       onChange={onChangeHandler}
