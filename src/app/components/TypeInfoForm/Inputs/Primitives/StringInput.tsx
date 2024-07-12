@@ -30,7 +30,6 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
       placeholder={label}
       value={`${value ?? defaultValue ?? ""}`}
       onChange={onChangeHandler}
-      defaultValue={defaultValue}
       step={step}
       min={min}
       max={max}
