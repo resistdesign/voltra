@@ -35,7 +35,10 @@ export type Person = {
   * @label Age
   * @format number
   * @constraintsJSON {
-  *   "min": 18
+  *   "default": 18,
+  *   "step": 1,
+  *   "min": 18,
+  *   "max": 100
   * }
   */
   age: number;
