@@ -11,9 +11,9 @@ const generateUniqueId = () => {
 };
 
 export const StringComboBox: InputComponent<HTMLInputElement> = ({
+  typeInfoField: { possibleValues = [] } = {},
   value,
   onChange,
-  possibleValues = [],
 }) => {
   const listId = useMemo(generateUniqueId, []);
 
@@ -22,7 +22,7 @@ export const StringComboBox: InputComponent<HTMLInputElement> = ({
       <StringInput value={value} onChange={onChange} list={listId} />
       <datalist id={listId}>
         {possibleValues.map((pV, index) => (
-          <option key={`Option:${pV}:${index}`} value={pV} />
+          <option key={`Option:${pV}:${index}`} value={`${pV}`} />
         ))}
       </datalist>
     </>

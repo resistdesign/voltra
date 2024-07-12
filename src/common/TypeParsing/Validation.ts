@@ -79,7 +79,7 @@ export const validateTypeInfoFieldValue = (
   typeInfoMap: TypeInfoMap,
   ignoreArray: boolean = false,
 ): TypeInfoValidationResults => {
-  const { type, typeReference, array, optional, options } = typeInfoField;
+  const { type, typeReference, array, optional, possibleValues } = typeInfoField;
   const results: TypeInfoValidationResults = {
     valid: true,
     error: "",
@@ -110,7 +110,7 @@ export const validateTypeInfoFieldValue = (
       results.valid = getValidityValue(results.valid, validTypeInfo);
       results.error = typeInfoError;
       results.errorMap = typeInfoErrorMap;
-    } else if (options && !options.includes(value)) {
+    } else if (possibleValues && !possibleValues.includes(value)) {
       results.valid = false;
       results.error = ERROR_MESSAGE_CONSTANTS.INVALID_OPTION;
     } else {
