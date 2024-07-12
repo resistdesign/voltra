@@ -43,7 +43,7 @@ const getTagNameAndValue = (tag: JSDocTag): TagInfo => {
     const extendedTagNameEndIndex = value.indexOf(" ");
 
     name += value.slice(0, extendedTagNameEndIndex);
-    value = value.slice(extendedTagNameEndIndex);
+    value = value.slice(extendedTagNameEndIndex + 1);
   }
 
   return {
