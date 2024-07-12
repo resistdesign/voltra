@@ -28,7 +28,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
     <input
       type={format}
       placeholder={label}
-      value={`${value ?? ""}`}
+      value={`${value ?? defaultValue ?? ""}`}
       onChange={onChangeHandler}
       defaultValue={defaultValue}
       step={step}
