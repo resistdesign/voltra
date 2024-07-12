@@ -22,11 +22,6 @@ export const ERROR_MESSAGE_CONSTANTS = {
 };
 
 /**
- * The delimiter used to separate error paths.
- */
-export const ERROR_PATH_DELIMITER = "/";
-
-/**
  * The validation results for type info fields.
  */
 export type TypeInfoValidationResults = {

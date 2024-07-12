@@ -1,11 +1,14 @@
-import { ERROR_PATH_DELIMITER } from "./TypeParsing/Validation";
+/**
+ * The delimiter used to separate paths.
+ */
+export const PATH_DELIMITER = "/";
 
 /**
  * Get the path segments from a path string.
  * */
 export const getPathArray = (path: string): string[] =>
   path
-    .split(ERROR_PATH_DELIMITER)
+    .split(PATH_DELIMITER)
     .map(decodeURIComponent)
     .map((p) => JSON.parse(p));
 
@@ -16,7 +19,7 @@ export const getPathString = (parts: (string | number)[] = []): string =>
   parts
     .map((p) => JSON.stringify(p))
     .map(encodeURIComponent)
-    .join(ERROR_PATH_DELIMITER);
+    .join(PATH_DELIMITER);
 
 /**
  * Merge two path strings.
