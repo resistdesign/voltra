@@ -1,33 +1,55 @@
 import {
   JSDoc,
   JSDocComment,
+  JSDocTag,
   Node,
   NodeArray,
   TypeAliasDeclaration,
 } from "typescript";
 import { getPathArray, getPotentialJSONValue } from "../../Routing";
 
-const TAG_NAME_PATH_DELIMITER = "_";
+type TagInfo = {
+  name: string;
+  value: any;
+};
 
-const getTagValueFromJSON = (
-  value: string | NodeArray<JSDocComment> | undefined,
-): any => {
-  if (typeof value === "undefined") {
-    return true;
-  } else if (Array.isArray(value)) {
-    const valueNodeArray = value as NodeArray<JSDocComment>;
+const TAG_NAME_PATH_DELIMITER = ".";
+
+const getFlatTagValue = (tagValue: JSDocTag["comment"]): string => {
+  if (typeof tagValue === "undefined") {
+    return "true";
+  }
+  if (Array.isArray(tagValue)) {
+    const valueNodeArray = tagValue as NodeArray<JSDocComment>;
     const valueList = [];
 
     for (let i = 0; i < valueNodeArray.length; i++) {
       const { text }: JSDocComment = valueNodeArray[i];
 
-      valueList.push(getTagValueFromJSON(text));
+      valueList.push(getFlatTagValue(text));
     }
 
-    return valueList;
+    return valueList.join(" ");
   } else {
-    return getPotentialJSONValue(value as string);
+    return `${tagValue}`;
   }
+};
+
+const getTagNameAndValue = (tag: JSDocTag): TagInfo => {
+  let name = tag.tagName.text,
+    value = getFlatTagValue(tag.comment);
+
+  if (value.startsWith(TAG_NAME_PATH_DELIMITER)) {
+    const extendedTagNameEndIndex = value.indexOf(" ");
+
+    name += value.slice(0, extendedTagNameEndIndex);
+    value = value.slice(extendedTagNameEndIndex);
+  }
+
+  return {
+    name,
+    value,
+  };
 };
 
 const getObjectWithValueAppliedToPath = (
@@ -103,9 +125,11 @@ export const extractCommentTags = (node: Node): Record<any, any> => {
       const tags = jsDoc.tags;
       if (tags) {
         tags.forEach((tag) => {
+          const { name: tagName, value: tagValue } = getTagNameAndValue(tag);
+
           commentTags = getObjectWithValueAppliedToPath(
-            getPathArray(tag.tagName.text, TAG_NAME_PATH_DELIMITER),
-            getTagValueFromJSON(tag.comment),
+            getPathArray(tagName, TAG_NAME_PATH_DELIMITER),
+            getPotentialJSONValue(tagValue),
             commentTags,
           );
         });
