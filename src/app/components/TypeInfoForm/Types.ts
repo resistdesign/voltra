@@ -7,6 +7,11 @@ import {
 export type InputOptions = {
   label?: string;
   format?: string;
+  constraints?: {
+    step?: number;
+    min?: number;
+    max?: number;
+  };
 };
 
 export type InputProps<ElementPropsType, ValueType = any> = Omit<
