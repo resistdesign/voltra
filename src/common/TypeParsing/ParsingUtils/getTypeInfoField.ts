@@ -32,7 +32,7 @@ export const getTypeInfoField = (
     readonly,
     optional,
     typeReference,
-    options,
+    possibleValues: options,
     tags,
   };
 };

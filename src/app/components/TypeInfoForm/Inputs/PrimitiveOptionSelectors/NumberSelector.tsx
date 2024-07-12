@@ -2,9 +2,9 @@ import { ChangeEvent as ReactChangeEvent, useCallback } from "react";
 import { InputComponent } from "../../Types";
 
 export const NumberSelector: InputComponent<HTMLSelectElement> = ({
+  typeInfoField: { possibleValues = [] } = {},
   value,
   onChange,
-  possibleValues = [],
   ...rest
 }) => {
   const onChangeHandler = useCallback(
@@ -18,7 +18,7 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
     <select value={value ?? ""} onChange={onChangeHandler} {...rest}>
       <option value="">Select...</option>
       {possibleValues.map((pV, index) => (
-        <option key={`Option:${pV}:${index}`} value={pV}>
+        <option key={`Option:${pV}:${index}`} value={`${pV}`}>
           {pV}
         </option>
       ))}

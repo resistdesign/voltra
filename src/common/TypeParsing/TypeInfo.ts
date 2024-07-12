@@ -17,7 +17,7 @@ export type TypeInfoField = {
   array: boolean;
   readonly: boolean;
   optional: boolean;
-  options?: LiteralValue[];
+  possibleValues?: LiteralValue[];
   tags?: Record<any, any>;
 };
 

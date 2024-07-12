@@ -28,7 +28,6 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   value: ValueType;
   onChange: (value: any) => void;
   options?: InputOptions;
-  possibleValues?: any[];
   onNavigateToType?: (typeName: string) => void;
 };
 
