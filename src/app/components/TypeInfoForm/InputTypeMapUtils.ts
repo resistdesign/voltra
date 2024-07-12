@@ -10,7 +10,7 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 
 // TODO: Input types:
 //  [x] string
-//  [ ] specific string types (e.g. email, phone number, long text, etc.)
+//  [x] specific string types (e.g. email, phone number, long text, etc.)
 //  [x] number
 //  [x] boolean
 //  Primitive options selection:
@@ -34,6 +34,8 @@ import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox
 //  ---
 //  [ ] array of all of the above
 
+export type NonBooleanTypeKeyword = Exclude<TypeKeyword, "boolean">;
+
 export const PRIMITIVE_INPUT_TYPE_MAP: Record<
   TypeKeyword,
   InputComponent<HTMLInputElement>
@@ -44,7 +46,7 @@ export const PRIMITIVE_INPUT_TYPE_MAP: Record<
 };
 
 export const PRIMITIVE_SELECT_INPUT_TYPE_MAP: Record<
-  Exclude<TypeKeyword, "boolean">,
+  NonBooleanTypeKeyword,
   InputComponent<HTMLSelectElement>
 > = {
   string: StringSelector,
@@ -52,7 +54,7 @@ export const PRIMITIVE_SELECT_INPUT_TYPE_MAP: Record<
 };
 
 export const PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP: Record<
-  Exclude<TypeKeyword, "boolean">,
+  NonBooleanTypeKeyword,
   InputComponent<HTMLInputElement>
 > = {
   string: StringComboBox,
@@ -68,16 +70,21 @@ export const getCustomInputType = (
 
 export const getInputType = (
   typeName: string,
-  customInputTypeMap: CustomInputComponentMap,
+  array?: boolean,
+  allowCustomSelection?: boolean,
+  customInputType?: string,
+  customInputTypeMap?: CustomInputComponentMap,
 ): InputComponent<any> | undefined => {
-  const custom: boolean = false;
-
   let inputType: InputComponent<any> | undefined = undefined;
 
-  if (custom) {
-    inputType = getCustomInputType(typeName, customInputTypeMap);
+  if (customInputType && customInputTypeMap) {
+    inputType = getCustomInputType(customInputType, customInputTypeMap);
   } else {
-    inputType = PRIMITIVE_INPUT_TYPE_MAP[typeName as TypeKeyword];
+    inputType = array
+      ? allowCustomSelection
+        ? PRIMITIVE_COMBO_BOX_INPUT_TYPE_MAP[typeName as NonBooleanTypeKeyword]
+        : PRIMITIVE_SELECT_INPUT_TYPE_MAP[typeName as NonBooleanTypeKeyword]
+      : PRIMITIVE_INPUT_TYPE_MAP[typeName as TypeKeyword];
   }
 
   return inputType;
