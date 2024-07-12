@@ -33,6 +33,8 @@ export type Person = {
   lastName: string;
   /**
   * @label Age
+  * @format number
+  * @constraints/min 18
   */
   age: number;
   /**
