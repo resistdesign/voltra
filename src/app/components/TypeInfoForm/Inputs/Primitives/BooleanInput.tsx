@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import { InputComponent } from "../../Types";
 
-const ChangeNOOP = () => {};
+const onChangeNOOP = () => {};
 
 export const BooleanInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
-  options: { label = "" } = {},
+  options: { label = "", constraintsJSON: { defaultValue } = {} as any } = {},
   typeInfoMap: _typeInfoMap,
   typeInfoField: _typeInfoField,
   customInputTypeMap: _customInputTypeMap,
@@ -23,9 +23,9 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
     <label>
       <input
         type="checkbox"
-        checked={value ?? false}
+        checked={value ?? defaultValue ?? false}
         onClick={onClickHandler}
-        onChange={ChangeNOOP}
+        onChange={onChangeNOOP}
         {...rest}
       />
       &nbsp;
