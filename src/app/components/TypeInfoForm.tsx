@@ -31,12 +31,12 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
   }, [value]);
 
   // TODO:
-  //  [] labels
-  //  [] arrays
-  //  [] navigation to sub-types
-  //  [] advanced input types, including custom
-  //  [] universal field change handler*
-  //  [] validation
+  //  [x] labels
+  //  [ ] arrays
+  //  [ ] navigation to sub-types
+  //  [ ] advanced input types, including custom
+  //  [ ] universal field change handler*
+  //  [ ] validation
 
   return (
     <Form onSubmit={onSubmit}>
