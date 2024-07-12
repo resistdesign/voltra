@@ -57,7 +57,7 @@ export type Person = {
   friends: Person[];
   /**
   * @label Likes Cheese
-  * @constraints.defaultValue true
+  * @constraints.defaultValue
   */
   likesCheese: boolean;
 };
