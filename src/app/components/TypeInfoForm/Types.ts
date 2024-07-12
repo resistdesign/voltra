@@ -8,7 +8,7 @@ export type InputOptions = {
   label?: string;
   format?: string;
   constraintsJSON?: {
-    default?: any;
+    defaultValue?: any;
     step?: number;
     min?: number;
     max?: number;
