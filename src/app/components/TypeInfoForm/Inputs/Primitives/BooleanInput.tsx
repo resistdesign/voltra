@@ -6,7 +6,7 @@ const onChangeNOOP = () => {};
 export const BooleanInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
-  options: { label = "", constraintsJSON: { defaultValue } = {} as any } = {},
+  options: { label = "", constraints: { defaultValue } = {} as any } = {},
   typeInfoMap: _typeInfoMap,
   typeInfoField: _typeInfoField,
   customInputTypeMap: _customInputTypeMap,

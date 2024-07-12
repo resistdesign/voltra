@@ -14,20 +14,26 @@ export const getPotentialJSONValue = (value: string): any => {
 /**
  * Get the path segments from a path string.
  * */
-export const getPathArray = (path: string): any[] =>
+export const getPathArray = (
+  path: string,
+  delimiter: string = PATH_DELIMITER,
+): any[] =>
   path
-    .split(PATH_DELIMITER)
+    .split(delimiter)
     .map(decodeURIComponent)
     .map((p) => getPotentialJSONValue(p));
 
 /**
  * Get the path string from path segments.
  * */
-export const getPathString = (parts: any[] = []): string =>
+export const getPathString = (
+  parts: any[] = [],
+  delimiter: string = PATH_DELIMITER,
+): string =>
   parts
     .map((p) => JSON.stringify(p))
     .map(encodeURIComponent)
-    .join(PATH_DELIMITER);
+    .join(delimiter);
 
 /**
  * Merge two path strings.

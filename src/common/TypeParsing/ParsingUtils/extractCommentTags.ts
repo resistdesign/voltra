@@ -7,6 +7,8 @@ import {
 } from "typescript";
 import { getPathArray, getPotentialJSONValue } from "../../Routing";
 
+const TAG_NAME_PATH_DELIMITER = "_";
+
 const getTagValueFromJSON = (
   value: string | NodeArray<JSDocComment> | undefined,
 ): any => {
@@ -113,8 +115,9 @@ export const extractCommentTags = (node: Node): Record<any, any> => {
       const tags = jsDoc.tags;
       if (tags) {
         tags.forEach((tag) => {
+          console.log("TAG NAME:", tag.tagName.text, tag.comment);
           commentTags = getObjectWithValueAppliedToPath(
-            getPathArray(tag.tagName.text),
+            getPathArray(tag.tagName.text, TAG_NAME_PATH_DELIMITER),
             getTagValueFromJSON(tag.comment),
             commentTags,
           );
