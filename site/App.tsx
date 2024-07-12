@@ -44,6 +44,7 @@ export type Person = {
   age: number;
   /**
   * @label Phone Number
+  * @format tel
   */
   phoneNumber: string;
   /**

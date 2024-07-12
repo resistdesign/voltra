@@ -24,8 +24,6 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
     [onChange],
   );
 
-  console.log(value, defaultValue);
-
   return (
     <input
       type={format}
