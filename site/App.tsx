@@ -37,13 +37,13 @@ export type Person = {
   * @constraints.step 0.5
   * @constraints.min 18.0
   * @constraints.max 150.0
-  * @constraints.pattern \d*\.\d+
+  * @constraints.pattern \\d*\\.\\d+
   */
   age: number;
   /**
   * @label Phone Number (+### (###) ###-####)
   * @format tel
-  * @constraints.pattern ^\+\d+(-\d+)? \(\d{3}\) \d{3}-\d{4}$
+  * @constraints.pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
   */
   phoneNumber: string;
   /**

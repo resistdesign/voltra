@@ -1,4 +1,4 @@
-import { ChangeEvent as ReactChangeEvent, useCallback, useMemo } from "react";
+import { ChangeEvent as ReactChangeEvent, useCallback } from "react";
 import { InputComponent } from "../../Types";
 
 export const StringInput: InputComponent<HTMLInputElement> = ({
@@ -17,11 +17,6 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
-  const cleanPattern = useMemo(
-    () => (pattern ? `${pattern}`.replace(/\\/gim, "\\\\") : pattern),
-    [pattern],
-  );
-
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
       onChange(newValue === "" ? undefined : newValue);
@@ -38,7 +33,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
       step={step}
       min={min}
       max={max}
-      pattern={cleanPattern}
+      pattern={pattern}
       {...rest}
     />
   );
