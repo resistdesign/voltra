@@ -55,3 +55,30 @@ front-end apps.</td>
 | Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships |                                               | Typed Build Spec Creation                                     |
 |                                                                             |                                               | Typed Resource Parameters                                     |
+
+## App TODO:
+###Input types:
+- [x] string
+- [] specific string types (e.g. email, phone number, long text, etc.)
+- [x] number
+- [x] boolean
+- Primitive options selection:
+- [x] option selector
+- [x] option selector w/ custom value
+- [x] option selector w/search
+- [x] option selector w/search w/ custom value
+- ---
+- Advanced input types:
+- ---
+- [x] custom (i.e. date picker)
+- [] default/JSON editor
+- Designate primary field for object selection:
+- Object search form???
+- [] existing object selector
+- [] existing object selector multiple
+- [] existing object selector w/ search
+- [] existing object selector w/ advanced search (Advanced object field query)
+- ---
+- [] new object forms and sub-forms
+- ---
+- [] array of all of the above
