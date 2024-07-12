@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { InputComponent } from "../../Types";
 
 const onChangeNOOP = () => {};
@@ -15,15 +15,19 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
   onNavigateToType: _onNavigateToType,
   ...rest
 }) => {
+  const checked = useMemo(
+    () => value ?? defaultValue ?? false,
+    [value, defaultValue],
+  );
   const onClickHandler = useCallback(() => {
-    onChange(!value);
-  }, [value, onChange]);
+    onChange(!checked);
+  }, [checked, onChange]);
 
   return (
     <label>
       <input
         type="checkbox"
-        checked={value ?? defaultValue ?? false}
+        checked={checked}
         onClick={onClickHandler}
         onChange={onChangeNOOP}
         {...rest}
