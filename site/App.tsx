@@ -34,18 +34,16 @@ export type Person = {
   /**
   * @label Age
   * @format number
-  * @constraintsJSON {
-  *   "defaultValue": "18.0",
-  *   "step": 0.5,
-  *   "min": 18.0,
-  *   "max": 100.0
-  * }
+  * @constraints_defaultValue "18.0"
+  * @constraints_step 0.5
+  * @constraints_min 18.0
+  * @constraints_max 150.0
   */
   age: number;
   /**
   * @label Phone Number (+### (###) ###-####)
   * @format tel
-  * @constraintsJSON { "pattern": "^\\\\+\\\\d+(-\\\\d+)? \\\\(\\\\d{3}\\\\) \\\\d{3}-\\\\d{4}$" }
+  * @constraints_pattern ^\+\d+(-\d+)? \(\d{3}\) \d{3}-\d{4}$
   */
   phoneNumber: string;
   /**
@@ -59,7 +57,7 @@ export type Person = {
   friends: Person[];
   /**
   * @label Likes Cheese
-  * @constraintsJSON { "defaultValue": true }
+  * @constraints_defaultValue true
   */
   likesCheese: boolean;
 };
