@@ -57,6 +57,7 @@ export type Person = {
   friends: Person[];
   /**
   * @label Likes Cheese
+  * @constraintsJSON { "defaultValue": true }
   */
   likesCheese: boolean;
 };
