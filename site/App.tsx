@@ -43,9 +43,9 @@ export type Person = {
   */
   age: number;
   /**
-  * @label Phone Number
+  * @label Phone Number (+### (###) ###-####)
   * @format tel
-  * @constraintsJSON { "pattern": "^[0-9]{3}-[0-9]{3}-[0-9]{4}$" }
+  * @constraintsJSON { "pattern": "^\\\\+\\\\d+(-\\\\d+)? \\\\(\\\\d{3}\\\\) \\\\d{3}-\\\\d{4}$" }
   */
   phoneNumber: string;
   /**
