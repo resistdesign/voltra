@@ -40,16 +40,10 @@ const getTagNameAndValue = (tag: JSDocTag): TagInfo => {
 
   if (value.startsWith(TAG_NAME_PATH_DELIMITER)) {
     const extendedTagNameEndIndex = value.indexOf(" ");
-    const cleanExtendedTagNameEndIndex =
-      extendedTagNameEndIndex === -1
-        ? value.length - 1
-        : extendedTagNameEndIndex;
+    const hasActualValue = extendedTagNameEndIndex !== -1;
 
-    name += value.slice(0, cleanExtendedTagNameEndIndex);
-    value =
-      extendedTagNameEndIndex === -1
-        ? ""
-        : value.slice(cleanExtendedTagNameEndIndex + 1);
+    name += hasActualValue ? value.slice(0, extendedTagNameEndIndex) : value;
+    value = hasActualValue ? value.slice(extendedTagNameEndIndex + 1) : "";
   }
 
   if (value === "") {
@@ -136,12 +130,13 @@ export const extractCommentTags = (node: Node): Record<any, any> => {
       if (tags) {
         tags.forEach((tag) => {
           const { name: tagName, value: tagValue } = getTagNameAndValue(tag);
+          const potentialJSONValue = getPotentialJSONValue(tagValue);
 
-          console.log(tagName, tagValue);
+          console.log(tagName, potentialJSONValue);
 
           commentTags = getObjectWithValueAppliedToPath(
             getPathArray(tagName, TAG_NAME_PATH_DELIMITER),
-            getPotentialJSONValue(tagValue),
+            potentialJSONValue,
             commentTags,
           );
         });
