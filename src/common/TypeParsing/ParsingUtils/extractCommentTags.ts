@@ -83,19 +83,7 @@ const getObjectWithValueAppliedToPath = (
         currentParent[cleanPathPart] = newCurrentParent;
         currentParent = newCurrentParent;
       } else {
-        if (isNum) {
-          newCurrentParent = [
-            ...(Array.isArray(currentParent) ? currentParent : []),
-            value,
-          ];
-        } else {
-          newCurrentParent = {
-            ...(typeof currentParent === "object" ? currentParent : {}),
-            [cleanPathPart]: value,
-          };
-        }
-
-        currentParent[cleanPathPart] = newCurrentParent;
+        currentParent[cleanPathPart] = value;
       }
     }
   }
@@ -115,7 +103,6 @@ export const extractCommentTags = (node: Node): Record<any, any> => {
       const tags = jsDoc.tags;
       if (tags) {
         tags.forEach((tag) => {
-          console.log("TAG NAME:", tag.tagName.text, tag.comment);
           commentTags = getObjectWithValueAppliedToPath(
             getPathArray(tag.tagName.text, TAG_NAME_PATH_DELIMITER),
             getTagValueFromJSON(tag.comment),
