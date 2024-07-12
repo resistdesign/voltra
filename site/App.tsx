@@ -33,17 +33,17 @@ export type Person = {
   lastName: string;
   /**
   * @label Age
-  * @constraints_defaultValue "18.0"
-  * @constraints_step 0.5
-  * @constraints_min 18.0
-  * @constraints_max 150.0
-  * @constraints_pattern \\d*\\.\\d+
+  * @constraints.defaultValue "18.0"
+  * @constraints.step 0.5
+  * @constraints.min 18.0
+  * @constraints.max 150.0
+  * @constraints.pattern \\d*\\.\\d+
   */
   age: number;
   /**
   * @label Phone Number (+### (###) ###-####)
   * @format tel
-  * @constraints_pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
+  * @constraints.pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
   */
   phoneNumber: string;
   /**
@@ -57,7 +57,7 @@ export type Person = {
   friends: Person[];
   /**
   * @label Likes Cheese
-  * @constraints_defaultValue true
+  * @constraints.defaultValue true
   */
   likesCheese: boolean;
 };

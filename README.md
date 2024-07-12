@@ -57,9 +57,11 @@ front-end apps.</td>
 |                                                                             |                                               | Typed Resource Parameters                                     |
 
 ## App TODO:
-###Input types:
+
+### Input types:
+
 - [x] string
-- [] specific string types (e.g. email, phone number, long text, etc.)
+- [ ] specific string types (e.g. email, phone number, long text, etc.)
 - [x] number
 - [x] boolean
 - Primitive options selection:
@@ -67,18 +69,35 @@ front-end apps.</td>
 - [x] option selector w/ custom value
 - [x] option selector w/search
 - [x] option selector w/search w/ custom value
+
 - ---
+
 - Advanced input types:
+
 - ---
+
 - [x] custom (i.e. date picker)
-- [] default/JSON editor
+- [ ] default/JSON editor
 - Designate primary field for object selection:
 - Object search form???
-- [] existing object selector
-- [] existing object selector multiple
-- [] existing object selector w/ search
-- [] existing object selector w/ advanced search (Advanced object field query)
+- [ ] existing object selector
+- [ ] existing object selector multiple
+- [ ] existing object selector w/ search
+- [ ] existing object selector w/ advanced search (Advanced object field query)
+
 - ---
-- [] new object forms and sub-forms
+
+- [ ] new object forms and sub-forms
+
 - ---
-- [] array of all of the above
+
+- [ ] array of all of the above
+
+### TypeInfoForm:
+
+- [x] labels
+- [ ] arrays
+- [ ] navigation to sub-types
+- [ ] advanced input types, including custom
+- [ ] universal field change handler*
+- [ ] validation
