@@ -17,9 +17,8 @@ const TAG_NAME_PATH_DELIMITER = ".";
 
 const getFlatTagValue = (tagValue: JSDocTag["comment"]): string => {
   if (typeof tagValue === "undefined") {
-    return "true";
-  }
-  if (Array.isArray(tagValue)) {
+    return "";
+  } else if (Array.isArray(tagValue)) {
     const valueNodeArray = tagValue as NodeArray<JSDocComment>;
     const valueList = [];
 
@@ -44,6 +43,10 @@ const getTagNameAndValue = (tag: JSDocTag): TagInfo => {
 
     name += value.slice(0, extendedTagNameEndIndex);
     value = value.slice(extendedTagNameEndIndex + 1);
+  }
+
+  if (value === "") {
+    value = "true";
   }
 
   return {
