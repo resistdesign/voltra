@@ -7,7 +7,7 @@ import {
 export type InputOptions = {
   label?: string;
   format?: string;
-  constraints?: {
+  constraintsJSON?: {
     step?: number;
     min?: number;
     max?: number;
