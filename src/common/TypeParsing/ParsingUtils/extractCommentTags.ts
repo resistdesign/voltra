@@ -1,4 +1,32 @@
-import { JSDoc, Node, TypeAliasDeclaration } from "typescript";
+import {
+  JSDoc,
+  JSDocComment,
+  Node,
+  NodeArray,
+  TypeAliasDeclaration,
+} from "typescript";
+import { getPotentialJSONValue } from "../../Routing";
+
+const getTagValueFromJSON = (
+  value: string | NodeArray<JSDocComment> | undefined,
+): any => {
+  if (typeof value === "undefined") {
+    return true;
+  } else if (Array.isArray(value)) {
+    const valueNodeArray = value as NodeArray<JSDocComment>;
+    const valueList = [];
+
+    for (let i = 0; i < valueNodeArray.length; i++) {
+      const { text }: JSDocComment = valueNodeArray[i];
+
+      valueList.push(getTagValueFromJSON(text));
+    }
+
+    return valueList;
+  } else {
+    return getPotentialJSONValue(value as string);
+  }
+};
 
 export const extractCommentTags = (node: Node): Record<any, any> => {
   const commentTags: Record<string, any> = {};
@@ -12,7 +40,7 @@ export const extractCommentTags = (node: Node): Record<any, any> => {
       const tags = jsDoc.tags;
       if (tags) {
         tags.forEach((tag) => {
-          commentTags[tag.tagName.text] = tag.comment || true;
+          commentTags[tag.tagName.text] = getTagValueFromJSON(tag.comment);
         });
       }
     });

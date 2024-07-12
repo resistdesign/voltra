@@ -1,21 +1,29 @@
 /**
  * The delimiter used to separate paths.
- */
+ * */
 export const PATH_DELIMITER = "/";
+
+export const getPotentialJSONValue = (value: string): any => {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value;
+  }
+};
 
 /**
  * Get the path segments from a path string.
  * */
-export const getPathArray = (path: string): string[] =>
+export const getPathArray = (path: string): any[] =>
   path
     .split(PATH_DELIMITER)
     .map(decodeURIComponent)
-    .map((p) => JSON.parse(p));
+    .map((p) => getPotentialJSONValue(p));
 
 /**
  * Get the path string from path segments.
  * */
-export const getPathString = (parts: (string | number)[] = []): string =>
+export const getPathString = (parts: any[] = []): string =>
   parts
     .map((p) => JSON.stringify(p))
     .map(encodeURIComponent)
