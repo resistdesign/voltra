@@ -1,16 +1,22 @@
+import { ERROR_PATH_DELIMITER } from "./TypeParsing/Validation";
+
 /**
  * Get the path segments from a path string.
  * */
 export const getPathArray = (path: string): string[] =>
   path
-    .split("/")
-    .map((p) => decodeURIComponent(p))
-    .filter((part) => part !== "");
+    .split(ERROR_PATH_DELIMITER)
+    .map(decodeURIComponent)
+    .map((p) => JSON.parse(p));
 
 /**
  * Get the path string from path segments.
  * */
-export const getPathString = (path: string[]): string => "/" + path.join("/");
+export const getPathString = (parts: (string | number)[] = []): string =>
+  parts
+    .map((p) => JSON.stringify(p))
+    .map(encodeURIComponent)
+    .join(ERROR_PATH_DELIMITER);
 
 /**
  * Merge two path strings.

@@ -1,4 +1,5 @@
 import { TypeInfoField, TypeInfoMap, TypeKeyword } from "./TypeInfo";
+import { getPathString } from "../Routing";
 
 /**
  * The error message constants for primitive types.
@@ -33,24 +34,6 @@ export type TypeInfoValidationResults = {
   error: string;
   errorMap: Record<string, string>;
 };
-
-/**
- * Creates an error path from parts.
- */
-export const makeErrorPath = (parts: (string | number)[] = []): string =>
-  parts
-    .map((p) => JSON.stringify(p))
-    .map(encodeURIComponent)
-    .join(ERROR_PATH_DELIMITER);
-
-/**
- * Gets the parts of an error path.
- */
-export const getErrorPathParts = (errorPath: string = ""): string[] =>
-  errorPath
-    .split(ERROR_PATH_DELIMITER)
-    .map(decodeURIComponent)
-    .map((p) => JSON.parse(p));
 
 /**
  * Gets the validity value.
@@ -172,10 +155,10 @@ export const validateArrayOfTypeInfoFieldValues = (
     } = validateTypeInfoFieldValue(v, typeInfoField, typeInfoMap, true);
 
     results.valid = getValidityValue(results.valid, indexValid);
-    results.errorMap[makeErrorPath([i])] = indexError;
+    results.errorMap[getPathString([i])] = indexError;
 
     for (const er in indexErrorMap) {
-      results.errorMap[makeErrorPath([i, er])] = indexErrorMap[er];
+      results.errorMap[getPathString([i, er])] = indexErrorMap[er];
     }
   }
 
@@ -227,7 +210,7 @@ export const validateTypeInfoValue = (
         results.errorMap[key] = fieldError;
 
         for (const fE in fieldErrorMap) {
-          results.errorMap[makeErrorPath([key, fE])] = fieldErrorMap[fE];
+          results.errorMap[getPathString([key, fE])] = fieldErrorMap[fE];
         }
       }
     }
