@@ -7,7 +7,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   options: {
     label = "",
     format = "text",
-    constraintsJSON: { step, min, max } = {} as any,
+    constraintsJSON: { default: defaultValue, step, min, max } = {} as any,
   } = {},
   typeInfoMap: _typeInfoMap,
   typeInfoField: _typeInfoField,
@@ -30,6 +30,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
       placeholder={label}
       value={`${value ?? ""}`}
       onChange={onChangeHandler}
+      defaultValue={defaultValue}
       step={step}
       min={min}
       max={max}
