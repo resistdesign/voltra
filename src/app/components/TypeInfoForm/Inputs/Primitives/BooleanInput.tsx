@@ -30,6 +30,7 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
         onChange={onChangeNOOP}
         required={!optional}
         readOnly={readonly}
+        disabled={readonly}
         {...nonInputProps}
       />
       &nbsp;
