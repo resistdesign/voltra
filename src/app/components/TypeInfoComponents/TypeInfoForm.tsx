@@ -6,79 +6,50 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Form } from "./Form";
-import { getInputType } from "./TypeInfoForm/InputTypeMapUtils";
+import { Form } from "../Form";
+import { getInputType } from "./InputTypeMapUtils";
 import {
   InputComponent,
   InputOptions,
   NameOrIndex,
+  TypeInfoDataItem,
   TypeNavigation,
-} from "./TypeInfoForm/Types";
-import {
-  LiteralValue,
-  TypeInfo,
-  TypeInfoField,
-  TypeInfoMap,
-} from "../../common/TypeParsing/TypeInfo";
-
-export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;
-
-export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
-
-export type TypeDataStateMap = {
-  create: TypeInfoDataMap;
-  update: TypeInfoDataMap;
-  delete: TypeInfoDataMap;
-};
-
-export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;
+} from "./Types";
+import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 
 export type TypeInfoFormProps = InputHTMLAttributes<HTMLFormElement> & {
-  typeInfoName: string;
-  typeInfoMap: TypeInfoMap;
+  typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
-  // TODO: Might need to move the structure logic up to a new component.
-  value: TypeInfoDataStructure;
-  onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
+  value: TypeInfoDataItem;
+  onChange: (newValue: TypeInfoDataItem) => void;
+  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
 export const TypeInfoForm: FC<TypeInfoFormProps> = ({
-  typeInfoName,
-  typeInfoMap,
+  typeInfo,
   customInputTypeMap = {},
   value,
   onChange,
+  onNavigateToType,
 }) => {
-  const typeInfo = useMemo<TypeInfo | undefined>(
-    () => typeInfoMap[typeInfoName],
-    [typeInfoMap, typeInfoName],
-  );
   const fields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: typeInfoFields = {} }: Partial<TypeInfo> = typeInfo || {};
 
     return typeInfoFields;
   }, [typeInfo]);
-  const [currentDataItem, setCurrentDataItem] = useState<Record<any, any>>({});
+  const [internalValue, setInternalValue] = useState<TypeInfoDataItem>({});
   const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
-    setCurrentDataItem((prev) => ({
+    setInternalValue((prev) => ({
       ...prev,
       [nameOrIndex]: value,
     }));
   }, []);
-  const onNavigateToType = useCallback(
-    ({ typeName, fieldName }: TypeNavigation) => {
-      // TODO: Implement navigation.
-      console.log("Navigate to type", typeName, fieldName);
-    },
-    [],
-  );
   const onSubmit = useCallback(() => {
-    // TODO: Make this type navigation dependent.
-    // onChange(nameOrIndex, currentDataItem);
-  }, [value, currentDataItem, onChange]);
+    onChange(internalValue);
+  }, [internalValue, onChange]);
 
   useEffect(() => {
-    setCurrentDataItem(value);
+    setInternalValue(value);
   }, [value]);
 
   // TODO:
@@ -105,7 +76,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           customInputType,
           customInputTypeMap,
         );
-        const fieldValue = currentDataItem[fieldName];
+        const fieldValue = internalValue[fieldName];
 
         return InputComponent ? (
           <InputComponent
