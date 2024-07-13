@@ -1,35 +1,66 @@
 import {
+  FC,
+  InputHTMLAttributes,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Form } from "./Form";
+import { getInputType } from "./TypeInfoForm/InputTypeMapUtils";
+import {
   InputComponent,
   InputOptions,
   NameOrIndex,
   TypeNavigation,
 } from "./TypeInfoForm/Types";
-import { Form } from "./Form";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { TypeInfo, TypeInfoField } from "../../common/TypeParsing/TypeInfo";
-import { getInputType } from "./TypeInfoForm/InputTypeMapUtils";
+import {
+  LiteralValue,
+  TypeInfo,
+  TypeInfoField,
+  TypeInfoMap,
+} from "../../common/TypeParsing/TypeInfo";
 
-export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
-  typeInfoMap,
+export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;
+
+export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
+
+export type TypeDataStateMap = {
+  create: TypeInfoDataMap;
+  update: TypeInfoDataMap;
+  delete: TypeInfoDataMap;
+};
+
+export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;
+
+export type TypeInfoFormProps = InputHTMLAttributes<HTMLFormElement> & {
+  typeInfoName: string;
+  typeInfoMap: TypeInfoMap;
+  customInputTypeMap?: Record<string, InputComponent<any>>;
+  // TODO: Might need to move the structure logic up to a new component.
+  value: TypeInfoDataStructure;
+  onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
+};
+
+export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   typeInfoName,
+  typeInfoMap,
   customInputTypeMap = {},
-  nameOrIndex,
   value,
   onChange,
 }) => {
-  const typeInfo = useMemo<TypeInfo | undefined>(() => {
-    return typeInfoMap && typeof typeInfoName === "string"
-      ? typeInfoMap[typeInfoName]
-      : undefined;
-  }, [typeInfoMap, typeInfoName]);
+  const typeInfo = useMemo<TypeInfo | undefined>(
+    () => typeInfoMap[typeInfoName],
+    [typeInfoMap, typeInfoName],
+  );
   const fields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: typeInfoFields = {} }: Partial<TypeInfo> = typeInfo || {};
 
     return typeInfoFields;
   }, [typeInfo]);
-  const [internalValue, setInternalValue] = useState<Record<any, any>>(value);
+  const [currentDataItem, setCurrentDataItem] = useState<Record<any, any>>({});
   const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
-    setInternalValue((prev) => ({
+    setCurrentDataItem((prev) => ({
       ...prev,
       [nameOrIndex]: value,
     }));
@@ -42,19 +73,20 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
     [],
   );
   const onSubmit = useCallback(() => {
-    onChange(nameOrIndex, internalValue);
-  }, [nameOrIndex, internalValue, onChange]);
+    // TODO: Make this type navigation dependent.
+    // onChange(nameOrIndex, currentDataItem);
+  }, [value, currentDataItem, onChange]);
 
   useEffect(() => {
-    setInternalValue(value);
+    setCurrentDataItem(value);
   }, [value]);
 
   // TODO:
   //  [x] labels
-  //  [x] universal field change handler*
-  //  [ ] arrays
-  //  [ ] navigation to sub-types
   //  [x] advanced input types, including custom
+  //  [x] universal field change handler
+  //  [ ] navigation to sub-types
+  //  [ ] arrays
   //  [ ] validation
 
   return (
@@ -73,15 +105,13 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
           customInputType,
           customInputTypeMap,
         );
-        const fieldValue = internalValue[fieldName];
+        const fieldValue = currentDataItem[fieldName];
 
         return InputComponent ? (
           <InputComponent
             key={fieldName}
-            typeInfoMap={typeInfoMap}
-            typeInfoField={field}
-            typeInfoName={typeInfoName}
             nameOrIndex={fieldName}
+            typeInfoField={field}
             value={fieldValue}
             onChange={onFieldChange}
             options={inputOptions}
