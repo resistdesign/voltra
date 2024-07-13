@@ -7,6 +7,7 @@ const onChangeNOOP = () => {};
 
 export const BooleanInput: InputComponent<HTMLInputElement> = ({
   typeInfoField: { optional, readonly } = {} as TypeInfoField,
+  nameOrIndex,
   value,
   onChange,
   options: { label = "", constraints: { defaultValue } = {} as any } = {},
@@ -18,8 +19,8 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
     [value, defaultValue],
   );
   const onClickHandler = useCallback(() => {
-    onChange(!checked);
-  }, [checked, onChange]);
+    onChange(nameOrIndex, !checked);
+  }, [nameOrIndex, checked, onChange]);
 
   return (
     <label>
