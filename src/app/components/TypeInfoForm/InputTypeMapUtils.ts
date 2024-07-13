@@ -7,7 +7,7 @@ import { StringSelector } from "./Inputs/PrimitiveOptionSelectors/StringSelector
 import { NumberSelector } from "./Inputs/PrimitiveOptionSelectors/NumberSelector";
 import { StringComboBox } from "./Inputs/PrimitiveOptionSelectors/StringComboBox";
 import { NumberComboBox } from "./Inputs/PrimitiveOptionSelectors/NumberComboBox";
-import { InputHTMLAttributes } from "react";
+import { InputHTMLAttributes, useMemo } from "react";
 
 // TODO: Input types:
 //  [x] string
@@ -79,6 +79,12 @@ export const getNonInputProps = (
   } = inputProps;
 
   return rest;
+};
+
+export const useNonInputProps = (
+  inputProps: Partial<InputProps<any, any>>,
+): InputHTMLAttributes<any> => {
+  return useMemo(() => getNonInputProps(inputProps), [inputProps]);
 };
 
 export const getCustomInputType = (

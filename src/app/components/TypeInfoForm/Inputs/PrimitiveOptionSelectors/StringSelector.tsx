@@ -1,13 +1,14 @@
 import { ChangeEvent as ReactChangeEvent, useCallback } from "react";
 import { InputComponent } from "../../Types";
-import { getNonInputProps } from "../../InputTypeMapUtils";
+import { useNonInputProps } from "../../InputTypeMapUtils";
 
 export const StringSelector: InputComponent<HTMLSelectElement> = ({
-  typeInfoField: { possibleValues = [] } = {},
+  typeInfoField: { optional = false, possibleValues = [] } = {},
   value,
   onChange,
   ...rest
 }) => {
+  const nonInputProps = useNonInputProps(rest);
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLSelectElement>) => {
       onChange(newValue === "" ? undefined : `${newValue ?? ""}`);
@@ -19,9 +20,9 @@ export const StringSelector: InputComponent<HTMLSelectElement> = ({
     <select
       value={`${value ?? ""}`}
       onChange={onChangeHandler}
-      {...getNonInputProps(rest)}
+      {...nonInputProps}
     >
-      <option value="">Select...</option>
+      {optional ? <option value="">Select...</option> : undefined}
       {possibleValues.map((pV, index) => (
         <option key={`Option:${pV}:${index}`} value={`${pV}`}>
           {pV}
