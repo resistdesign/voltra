@@ -1,10 +1,12 @@
 import { useCallback, useMemo } from "react";
 import { InputComponent } from "../../Types";
 import { useNonInputProps } from "../../InputTypeMapUtils";
+import { TypeInfoField } from "../../../../../common/TypeParsing/TypeInfo";
 
 const onChangeNOOP = () => {};
 
 export const BooleanInput: InputComponent<HTMLInputElement> = ({
+  typeInfoField: { optional, readonly } = {} as TypeInfoField,
   value,
   onChange,
   options: { label = "", constraints: { defaultValue } = {} as any } = {},
@@ -26,6 +28,8 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
         checked={checked}
         onClick={onClickHandler}
         onChange={onChangeNOOP}
+        required={!optional}
+        readOnly={readonly}
         {...nonInputProps}
       />
       &nbsp;

@@ -35,7 +35,7 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
   //  [ ] universal field change handler*
   //  [ ] arrays
   //  [ ] navigation to sub-types
-  //  [ ] advanced input types, including custom
+  //  [x] advanced input types, including custom
   //  [ ] validation
 
   return (
