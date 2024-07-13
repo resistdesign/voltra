@@ -1,4 +1,9 @@
-import { InputComponent, InputOptions } from "./TypeInfoForm/Types";
+import {
+  InputComponent,
+  InputOptions,
+  NameOrIndex,
+  TypeNavigation,
+} from "./TypeInfoForm/Types";
 import { Form } from "./Form";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TypeInfo, TypeInfoField } from "../../common/TypeParsing/TypeInfo";
@@ -8,6 +13,7 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
   typeInfoMap,
   typeInfoName,
   customInputTypeMap = {},
+  nameOrIndex,
   value,
   onChange,
 }) => {
@@ -22,9 +28,22 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
     return typeInfoFields;
   }, [typeInfo]);
   const [internalValue, setInternalValue] = useState<Record<any, any>>(value);
+  const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
+    setInternalValue((prev) => ({
+      ...prev,
+      [nameOrIndex]: value,
+    }));
+  }, []);
+  const onNavigateToType = useCallback(
+    ({ typeName, fieldName }: TypeNavigation) => {
+      // TODO: Implement navigation.
+      console.log("Navigate to type", typeName, fieldName);
+    },
+    [],
+  );
   const onSubmit = useCallback(() => {
-    onChange(internalValue);
-  }, [internalValue, onChange]);
+    onChange(nameOrIndex, internalValue);
+  }, [nameOrIndex, internalValue, onChange]);
 
   useEffect(() => {
     setInternalValue(value);
@@ -32,7 +51,7 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
 
   // TODO:
   //  [x] labels
-  //  [ ] universal field change handler*
+  //  [x] universal field change handler*
   //  [ ] arrays
   //  [ ] navigation to sub-types
   //  [x] advanced input types, including custom
@@ -55,16 +74,6 @@ export const TypeInfoForm: InputComponent<HTMLFormElement> = ({
           customInputTypeMap,
         );
         const fieldValue = internalValue[fieldName];
-        // TODO: *universal field change handler (move this out of this loop)
-        const onFieldChange = (newValue: any) => {
-          setInternalValue({
-            ...internalValue,
-            [fieldName]: newValue,
-          });
-        };
-        const onNavigateToType = (typeName: string) => {
-          // TODO: Implement navigation to sub-types.
-        };
 
         return InputComponent ? (
           <InputComponent
