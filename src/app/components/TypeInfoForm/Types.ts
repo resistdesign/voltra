@@ -18,6 +18,13 @@ export type InputOptions = {
   };
 };
 
+export type TypeNavigation = {
+  typeName: string;
+  fieldName: string;
+};
+
+export type NameOrIndex = string | number;
+
 export type InputProps<ElementPropsType, ValueType = any> = Omit<
   ElementPropsType,
   "value" | "onChange"
@@ -26,11 +33,11 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   typeInfoField?: TypeInfoField;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   typeInfoName?: string;
-  nameOrIndex?: string | number;
+  nameOrIndex: NameOrIndex;
   value: ValueType;
-  onChange: (value: any) => void;
+  onChange: (nameOrIndex: NameOrIndex, value: any) => void;
   options?: InputOptions;
-  onNavigateToType?: (typeName: string) => void;
+  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
 export type InputComponent<ElementPropsType> = FC<
