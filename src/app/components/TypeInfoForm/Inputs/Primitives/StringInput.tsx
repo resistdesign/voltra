@@ -1,6 +1,6 @@
 import { ChangeEvent as ReactChangeEvent, useCallback } from "react";
 import { InputComponent } from "../../Types";
-import { getNonInputProps } from "../../InputTypeMapUtils";
+import { useNonInputProps } from "../../InputTypeMapUtils";
 
 export const StringInput: InputComponent<HTMLInputElement> = ({
   value,
@@ -12,6 +12,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   } = {},
   ...rest
 }) => {
+  const nonInputProps = useNonInputProps(rest);
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
       onChange(newValue === "" ? undefined : newValue);
@@ -29,7 +30,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
       min={min}
       max={max}
       pattern={pattern}
-      {...getNonInputProps(rest)}
+      {...nonInputProps}
     />
   );
 };
