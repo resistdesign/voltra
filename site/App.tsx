@@ -59,7 +59,7 @@ export type Person = {
   * @label Likes Cheese
   * @constraints.defaultValue
   */
-  likesCheese: boolean;
+  readonly likesCheese: boolean;
   /**
   * @label Dietary Restrictions
   */
