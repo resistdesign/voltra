@@ -1,9 +1,12 @@
 import { FC, useState } from "react";
 import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../src/app/utils";
-import { TypeInfoForm } from "../src/app/components/TypeInfoForm";
 import { TypeInfoMap } from "../src/common/TypeParsing/TypeInfo";
 import { getTypeInfoMapFromTypeScript } from "../src/common/TypeParsing";
+import {
+  TypeInfoApplication,
+  TypeInfoDataStructure,
+} from "../src/app/components";
 
 const GlobalStyle = createGlobalStyle`
     html,
@@ -69,9 +72,9 @@ export type Person = {
 const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
 
 export const App: FC = () => {
-  const [value, setValue] = useState<Record<any, any>>({});
+  const [value, setValue] = useState<TypeInfoDataStructure>({});
 
-  console.log("Person:", value);
+  console.log("Structure:", value);
 
   return (
     <ApplicationStateProvider>
@@ -80,9 +83,9 @@ export const App: FC = () => {
         <h1>Demos</h1>
         <a href="https://docs.voltra.app/docs">Docs</a>
         <br />
-        <TypeInfoForm
+        <TypeInfoApplication
           typeInfoMap={DEMO_TYPE_INFO_MAP}
-          typeInfoName={"Person"}
+          typeInfoName="Person"
           value={value}
           onChange={setValue}
         />
