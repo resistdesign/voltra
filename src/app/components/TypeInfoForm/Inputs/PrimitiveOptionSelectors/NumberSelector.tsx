@@ -4,6 +4,7 @@ import { useNonInputProps } from "../../InputTypeMapUtils";
 
 export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   typeInfoField: { optional, readonly, possibleValues = [] } = {},
+  nameOrIndex,
   value,
   onChange,
   ...rest
@@ -11,9 +12,9 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   const nonInputProps = useNonInputProps(rest);
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLSelectElement>) => {
-      onChange(newValue === "" ? undefined : Number(newValue));
+      onChange(nameOrIndex, newValue === "" ? undefined : Number(newValue));
     },
-    [onChange],
+    [nameOrIndex, onChange],
   );
 
   return (

@@ -98,7 +98,7 @@ export const getInputType = (
   typeName: string,
   // TODO: Add support for arrays.
   array?: boolean,
-  isSelect?: boolean, // TODO: Selects for required fields.
+  isSelect?: boolean,
   allowCustomSelection?: boolean,
   customInputType?: string,
   customInputTypeMap?: CustomInputComponentMap,

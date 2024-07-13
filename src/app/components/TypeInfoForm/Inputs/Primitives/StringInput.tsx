@@ -5,6 +5,7 @@ import { TypeInfoField } from "../../../../../common/TypeParsing/TypeInfo";
 
 export const StringInput: InputComponent<HTMLInputElement> = ({
   typeInfoField: { optional, readonly } = {} as TypeInfoField,
+  nameOrIndex,
   value,
   onChange,
   options: {
@@ -17,9 +18,9 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   const nonInputProps = useNonInputProps(rest);
   const onChangeHandler = useCallback(
     ({ target: { value: newValue } }: ReactChangeEvent<HTMLInputElement>) => {
-      onChange(newValue === "" ? undefined : newValue);
+      onChange(nameOrIndex, newValue === "" ? undefined : newValue);
     },
-    [onChange],
+    [nameOrIndex, onChange],
   );
 
   return (
