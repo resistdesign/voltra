@@ -14,7 +14,7 @@ export type TypeInfoApplicationProps = {
 export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   typeInfoName,
-  customInputTypeMap = {},
+  customInputTypeMap,
   value,
   onChange,
 }) => {
