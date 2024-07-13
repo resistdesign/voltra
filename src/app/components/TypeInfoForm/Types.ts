@@ -1,8 +1,5 @@
 import { FC, InputHTMLAttributes } from "react";
-import {
-  TypeInfoField,
-  TypeInfoMap,
-} from "../../../common/TypeParsing/TypeInfo";
+import { TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 
 export type InputOptions = {
   label?: string;
@@ -29,11 +26,8 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   ElementPropsType,
   "value" | "onChange"
 > & {
-  typeInfoMap?: TypeInfoMap;
-  typeInfoField?: TypeInfoField;
-  customInputTypeMap?: Record<string, InputComponent<any>>;
-  typeInfoName?: string;
   nameOrIndex: NameOrIndex;
+  typeInfoField?: TypeInfoField;
   value: ValueType;
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
   options?: InputOptions;

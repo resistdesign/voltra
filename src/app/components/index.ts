@@ -1,4 +1,5 @@
 export * from "./Form";
 export * from "./MaterialSymbol";
 export * from "./Tabs";
-// TODO: New FormGen.
+export * from "./TypeInfoForm";
+export * from "./TypeInfoForm/Types";
