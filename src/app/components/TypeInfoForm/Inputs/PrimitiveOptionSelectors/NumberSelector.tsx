@@ -3,7 +3,7 @@ import { InputComponent } from "../../Types";
 import { useNonInputProps } from "../../InputTypeMapUtils";
 
 export const NumberSelector: InputComponent<HTMLSelectElement> = ({
-  typeInfoField: { optional = false, possibleValues = [] } = {},
+  typeInfoField: { optional, readonly, possibleValues = [] } = {},
   value,
   onChange,
   ...rest
@@ -17,7 +17,13 @@ export const NumberSelector: InputComponent<HTMLSelectElement> = ({
   );
 
   return (
-    <select value={value ?? ""} onChange={onChangeHandler} {...nonInputProps}>
+    <select
+      value={value ?? ""}
+      onChange={onChangeHandler}
+      required={!optional}
+      disabled={readonly}
+      {...nonInputProps}
+    >
       {optional ? <option value="">Select...</option> : undefined}
       {possibleValues.map((pV, index) => (
         <option key={`Option:${pV}:${index}`} value={`${pV}`}>
