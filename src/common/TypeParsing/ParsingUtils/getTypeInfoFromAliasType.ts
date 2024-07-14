@@ -43,6 +43,7 @@ export const getTypeInfoFromAliasType = (
 ): TypeInfo | undefined => {
   const { kind } = type;
   const processor = ALIAS_TYPE_PROCESSORS[kind];
+  const typeInfo = processor ? processor(type, typeMap) : undefined;
 
-  return processor ? processor(type, typeMap) : undefined;
+  return typeInfo;
 };

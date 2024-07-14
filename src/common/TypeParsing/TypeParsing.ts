@@ -2,6 +2,7 @@ import { createSourceFile, Node, ScriptTarget, SyntaxKind } from "typescript";
 import { convertASTToMap, TypeMap } from "./TypeMapping";
 import { TypeInfoMap } from "./TypeInfo";
 import { getTypeInfoFromTypeAlias } from "./ParsingUtils/getTypeInfoFromTypeAlias";
+import { getPrimaryFieldForTypeInfo } from "./ParsingUtils/getPrimaryFieldForTypeInfo";
 
 /**
  * Extracts type information from TypeScript content.
@@ -36,7 +37,10 @@ export const getTypeInfoMapFromTypeScript = (source: string): TypeInfoMap => {
       const typeInfo = getTypeInfoFromTypeAlias(typeAliasDec, typeMap);
 
       if (typeInfo) {
-        typeInfoMap[key] = typeInfo;
+        typeInfoMap[key] = {
+          ...typeInfo,
+          primaryField: getPrimaryFieldForTypeInfo(typeInfo),
+        };
       }
     }
   }

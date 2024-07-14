@@ -138,6 +138,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     ],
   );
 
+  console.log(currentTypeInfo);
+
   return currentTypeInfo ? (
     <TypeInfoForm
       typeInfo={currentTypeInfo}
