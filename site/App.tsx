@@ -25,7 +25,16 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const DEMO_TS = `
-export type Person = {
+export type PersistableItem = {
+  /**
+  * @label ID
+  * @primaryField
+  * @hidden
+  */
+  readonly id: string;
+};
+
+export type Person = PersistableItem && {
   /**
   * @label First Name
   */

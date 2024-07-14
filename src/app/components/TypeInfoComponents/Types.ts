@@ -5,6 +5,7 @@ import {
 } from "../../../common/TypeParsing/TypeInfo";
 
 export type InputOptions = {
+  primaryField?: boolean;
   label?: string;
   format?: string;
   allowCustomSelection?: boolean;
@@ -21,6 +22,7 @@ export type InputOptions = {
 export type TypeNavigation = {
   typeName: string;
   fieldName: string;
+  primaryKeyValue?: any;
 };
 
 export type NameOrIndex = string | number;
@@ -50,7 +52,6 @@ export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
 export type TypeDataStateMap = {
   create: TypeInfoDataMap;
   update: TypeInfoDataMap;
-  delete: TypeInfoDataMap;
 };
 
 export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;

@@ -25,6 +25,7 @@ export type TypeInfoField = {
  * Information about a type definition.
  */
 export type TypeInfo = {
+  primaryField?: string;
   fields?: Record<string, TypeInfoField>;
   tags?: Record<any, any>;
   unionFieldSets?: string[][];
