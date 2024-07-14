@@ -17,7 +17,10 @@ import {
 } from "./Types";
 import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 
-export type TypeInfoFormProps = InputHTMLAttributes<HTMLFormElement> & {
+export type TypeInfoFormProps = Omit<
+  InputHTMLAttributes<HTMLFormElement>,
+  "value" | "onChange"
+> & {
   typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataItem;
