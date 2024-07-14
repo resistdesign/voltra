@@ -34,7 +34,7 @@ export type PersistableItem = {
   readonly id: string;
 };
 
-export type Person = PersistableItem && {
+export type Person = PersistableItem & {
   /**
   * @label First Name
   */
