@@ -55,7 +55,7 @@ export type Person = PersistableItem & {
   /**
   * @label Phone Number (+### (###) ###-####)
   * @format tel
-  * @constraints.pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
+  * @ Note #constraints.pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
   */
   phoneNumber: string;
   /**

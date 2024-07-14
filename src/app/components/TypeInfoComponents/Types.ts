@@ -4,6 +4,8 @@ import {
   TypeInfoField,
 } from "../../../common/TypeParsing/TypeInfo";
 
+export type TypeInfoDataItemOperation = "create" | "update" | "delete";
+
 export type InputOptions = {
   primaryField?: boolean;
   label?: string;
@@ -22,7 +24,8 @@ export type InputOptions = {
 export type TypeNavigation = {
   typeName: string;
   fieldName: string;
-  primaryKeyValue?: any;
+  operation: TypeInfoDataItemOperation;
+  primaryKeyValue: any;
 };
 
 export type NameOrIndex = string | number;
@@ -49,9 +52,9 @@ export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;
 
 export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
 
-export type TypeDataStateMap = {
-  create: TypeInfoDataMap;
-  update: TypeInfoDataMap;
-};
+export type TypeDataStateMap = Record<
+  TypeInfoDataItemOperation,
+  TypeInfoDataMap
+>;
 
 export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;
