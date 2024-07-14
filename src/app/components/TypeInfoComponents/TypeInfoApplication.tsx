@@ -10,36 +10,44 @@ import {
 } from "./Types";
 import { getSimpleId } from "../../../common/IdGeneration";
 
-export type TypeInfoApplicationProps = {
+export type OperationMode = Exclude<TypeInfoDataItemOperation, "delete">;
+
+export type TypeInfoApplicationProps<OM extends OperationMode> = {
   typeInfoMap: TypeInfoMap;
   typeInfoName: string;
-  operation?: TypeInfoDataItemOperation;
+  operation?: OM;
+  primaryKeyValue: OM extends "update" ? string : never;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataStructure;
   onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
 };
 
-export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
+export const TypeInfoApplication: FC<
+  TypeInfoApplicationProps<OperationMode>
+> = ({
   typeInfoMap,
   typeInfoName,
   operation = "create",
+  primaryKeyValue,
   customInputTypeMap,
   value,
   onChange,
 }) => {
-  const [typeNavigationHistory, setTypeNavigationHistory] = useState<
-    TypeNavigation[]
-  >([
-    {
+  const initialTypeNavigation = useMemo<TypeNavigation>(
+    () => ({
       typeName: typeInfoName,
       fieldName: "",
       operation,
       // TODO: Relationships*:
       //   - How to get the real primary field value when creating.
       //   - Where to store it once the real primary field is acquired.
-      primaryKeyValue: "",
-    },
-  ]);
+      primaryKeyValue: operation === "create" ? getSimpleId() : primaryKeyValue,
+    }),
+    [operation, primaryKeyValue, typeInfoName],
+  );
+  const [typeNavigationHistory, setTypeNavigationHistory] = useState<
+    TypeNavigation[]
+  >([initialTypeNavigation]);
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
       const { operation, primaryKeyValue } = typeNavigation;
@@ -75,9 +83,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const currentTypeInfo = useMemo(() => {
     return typeInfoMap[currentTypeName];
   }, [currentTypeName, typeInfoMap]);
-  const currentTypeInfoPrimaryField = useMemo(() => {
-    return currentTypeInfo?.primaryField;
-  }, [currentTypeInfo]);
   const currentDataItem = useMemo<TypeInfoDataItem>(() => {
     return (
       value?.[currentTypeName]?.[currentOperation]?.[
