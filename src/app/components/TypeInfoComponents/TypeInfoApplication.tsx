@@ -11,20 +11,30 @@ import {
 import { getSimpleId } from "../../../common/IdGeneration";
 
 export type OperationMode = Exclude<TypeInfoDataItemOperation, "delete">;
+export type UpdateOperationMode = "update";
+export type NonUpdateOperationMode = Exclude<
+  OperationMode,
+  UpdateOperationMode
+>;
 
-export type TypeInfoApplicationProps<OM extends OperationMode> = {
+export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
   typeInfoName: string;
-  operation?: OM;
-  primaryKeyValue: OM extends "update" ? string : never;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataStructure;
   onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
-};
+} & (
+  | {
+      operation: UpdateOperationMode;
+      primaryKeyValue: string;
+    }
+  | {
+      operation?: NonUpdateOperationMode;
+      primaryKeyValue?: string;
+    }
+);
 
-export const TypeInfoApplication: FC<
-  TypeInfoApplicationProps<OperationMode>
-> = ({
+export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   typeInfoName,
   operation = "create",
