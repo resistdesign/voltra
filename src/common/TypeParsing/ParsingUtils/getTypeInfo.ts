@@ -7,8 +7,7 @@ export const getTypeInfo = (typeLiteral: TypeLiteralNode): TypeInfo => {
   const { members } = typeLiteral;
   const tags = extractCommentTags(typeLiteral);
 
-  let fields: Record<string, TypeInfoField> = {},
-    primaryField: string | undefined = undefined;
+  let fields: Record<string, TypeInfoField> = {};
 
   for (const m of members) {
     const { name, kind } = m;
@@ -16,11 +15,6 @@ export const getTypeInfo = (typeLiteral: TypeLiteralNode): TypeInfo => {
     if (name && kind === SyntaxKind.PropertySignature) {
       const fieldName = name.getText();
       const field = getTypeInfoField(m as PropertySignature);
-      const { tags: { primaryField: isPrimaryField = false } = {} } = field;
-
-      if (isPrimaryField || !primaryField) {
-        primaryField = fieldName;
-      }
 
       fields = {
         ...fields,
@@ -30,7 +24,6 @@ export const getTypeInfo = (typeLiteral: TypeLiteralNode): TypeInfo => {
   }
 
   return {
-    primaryField: primaryField,
     fields,
     tags,
   };
