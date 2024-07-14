@@ -96,6 +96,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const currentTypeInfo = useMemo(() => {
     return typeInfoMap[currentTypeName];
   }, [currentTypeName, typeInfoMap]);
+  const currentPrimaryFieldName = useMemo(() => {
+    return currentTypeInfo?.primaryField;
+  }, [currentTypeInfo]);
   const currentDataItem = useMemo<TypeInfoDataItem>(() => {
     return (
       value?.[currentTypeName]?.[currentOperation]?.[
@@ -113,7 +116,14 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           ...value[currentTypeName],
           [currentOperation]: {
             ...value[currentTypeName]?.[currentOperation],
-            [currentPrimaryFieldValue]: newDataItem,
+            [currentPrimaryFieldValue]:
+              currentOperation === "create" &&
+              typeof currentPrimaryFieldName === "string"
+                ? {
+                    ...newDataItem,
+                    [currentPrimaryFieldName]: currentPrimaryFieldValue,
+                  }
+                : newDataItem,
           },
         },
       });
@@ -121,6 +131,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     [
       currentTypeName,
       currentOperation,
+      currentPrimaryFieldName,
       currentPrimaryFieldValue,
       onChange,
       value,
