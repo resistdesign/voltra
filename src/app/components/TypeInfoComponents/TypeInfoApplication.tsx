@@ -8,6 +8,7 @@ import {
   TypeInfoDataStructure,
   TypeNavigation,
 } from "./Types";
+import { getSimpleId } from "../../../common/IdGeneration";
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -33,7 +34,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       typeName: typeInfoName,
       fieldName: "",
       operation,
-      // TODO: Need a way to create a *temporary* primary field value.
       // TODO: Relationships*:
       //   - How to get the real primary field value when creating.
       //   - Where to store it once the real primary field is acquired.
@@ -42,10 +42,24 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   ]);
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
-      setTypeNavigationHistory((prevTypeNavigationHistory) => [
-        ...prevTypeNavigationHistory,
-        typeNavigation,
-      ]);
+      const { operation, primaryKeyValue } = typeNavigation;
+
+      if (operation === "create") {
+        const newTypeNavigation: TypeNavigation = {
+          ...typeNavigation,
+          primaryKeyValue: getSimpleId(),
+        };
+
+        setTypeNavigationHistory((prevTypeNavigationHistory) => [
+          ...prevTypeNavigationHistory,
+          newTypeNavigation,
+        ]);
+      } else if (primaryKeyValue) {
+        setTypeNavigationHistory((prevTypeNavigationHistory) => [
+          ...prevTypeNavigationHistory,
+          typeNavigation,
+        ]);
+      }
     },
     [setTypeNavigationHistory],
   );
