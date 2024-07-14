@@ -74,7 +74,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const onCurrentDataItemChange = useCallback(
     // TODO: *How to return from type navigation and apply the new value to the related field on the correct object.
     // TODO: What is the UX around Done VS Submit????
-    (newDataItem: TypeInfoDataItem) => {
+    (newDataItem: TypeInfoDataItem = {}) => {
       onChange({
         ...value,
         [currentTypeName]: {
@@ -87,9 +87,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       });
     },
     [
+      currentTypeName,
       currentOperation,
       currentPrimaryFieldValue,
-      currentTypeName,
       onChange,
       value,
     ],
