@@ -25,7 +25,7 @@ export type TypeNavigation = {
   typeName: string;
   fieldName: string;
   operation: TypeInfoDataItemOperation;
-  primaryKeyValue: any;
+  primaryKeyValue?: any;
 };
 
 export type NameOrIndex = string | number;
