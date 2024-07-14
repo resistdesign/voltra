@@ -34,6 +34,9 @@ export type TypeInfoApplicationProps = {
     }
 );
 
+/**
+ * Create a multi-type driven type information form application.
+ * */
 export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   typeInfoName,
