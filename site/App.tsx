@@ -31,7 +31,7 @@ export type PersistableItem = {
   * @primaryField
   * @hidden
   */
-  readonly id: string;
+  readonly id?: string;
 };
 
 export type Person = PersistableItem & {
