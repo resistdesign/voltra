@@ -16,6 +16,17 @@ import {
   TypeNavigation,
 } from "./Types";
 import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
+import styled from "styled-components";
+
+const LabelText = styled.span`
+  &:has(+ input[type="checkbox"]) {
+    display: none;
+  }
+
+  :not(input[type="checkbox"]) + & {
+    display: none;
+  }
+`;
 
 export type TypeInfoFormProps = Omit<
   InputHTMLAttributes<HTMLFormElement>,
@@ -90,7 +101,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
 
           return InputComponent ? (
             <label key={fieldName}>
-              {label}
+              <LabelText>{label}&nbsp;</LabelText>
               <InputComponent
                 nameOrIndex={fieldName}
                 typeInfoField={field}
@@ -99,6 +110,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
                 options={inputOptions}
                 onNavigateToType={onNavigateToType}
               />
+              <LabelText>&nbsp;{label}</LabelText>
             </label>
           ) : undefined;
         }
