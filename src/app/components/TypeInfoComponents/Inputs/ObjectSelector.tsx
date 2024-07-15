@@ -22,5 +22,9 @@ export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
     }
   }, [nameOrIndex, typeInfoField, value, onNavigateToType]);
 
-  return <button onClick={onClick}>Edit...{/* TODO: i18n */}</button>;
+  return (
+    <button type="button" onClick={onClick}>
+      Edit...{/* TODO: i18n */}
+    </button>
+  );
 };
