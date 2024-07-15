@@ -10,7 +10,7 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
   nameOrIndex,
   value,
   onChange,
-  options: { label = "", constraints: { defaultValue } = {} as any } = {},
+  options: { constraints: { defaultValue } = {} as any } = {},
   ...rest
 }) => {
   const nonInputProps = useNonInputProps(rest);
@@ -23,19 +23,15 @@ export const BooleanInput: InputComponent<HTMLInputElement> = ({
   }, [nameOrIndex, checked, onChange]);
 
   return (
-    <label>
-      <input
-        type="checkbox"
-        checked={checked}
-        onClick={onClickHandler}
-        onChange={onChangeNOOP}
-        required={!optional}
-        readOnly={readonly}
-        disabled={readonly}
-        {...nonInputProps}
-      />
-      &nbsp;
-      {label}
-    </label>
+    <input
+      type="checkbox"
+      checked={checked}
+      onClick={onClickHandler}
+      onChange={onChangeNOOP}
+      required={!optional}
+      readOnly={readonly}
+      disabled={readonly}
+      {...nonInputProps}
+    />
   );
 };
