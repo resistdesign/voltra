@@ -24,7 +24,7 @@ export type InputOptions = {
 
 export type TypeNavigation = {
   typeName: string;
-  fieldName: string;
+  fieldNameOrIndex: NameOrIndex;
   operation: TypeInfoDataItemOperation;
   primaryKeyValue?: any;
 };

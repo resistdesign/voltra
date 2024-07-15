@@ -17,6 +17,7 @@ import {
 } from "./Types";
 import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
+import { ObjectSelector } from "./Inputs/ObjectSelector";
 
 const LabelText = styled.span`
   &:has(+ input[type="checkbox"]) {
@@ -97,7 +98,13 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
     <BaseForm onSubmit={onSubmitInternal}>
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
-        const { type: fieldType, possibleValues = [], array, tags } = field;
+        const {
+          type: fieldType,
+          typeReference,
+          possibleValues = [],
+          array,
+          tags,
+        } = field;
         const inputOptions: InputOptions = tags as InputOptions;
         const {
           label = "",
@@ -108,14 +115,16 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
 
         if (!hidden) {
           const isSelect = possibleValues.length > 0;
-          const InputComponent = getInputType(
-            fieldType,
-            array,
-            isSelect,
-            allowCustomSelection,
-            customInputType,
-            customInputTypeMap,
-          );
+          const InputComponent = typeReference
+            ? ObjectSelector
+            : getInputType(
+                fieldType,
+                array,
+                isSelect,
+                allowCustomSelection,
+                customInputType,
+                customInputTypeMap,
+              );
           const fieldValue = internalValue[fieldName];
 
           return InputComponent ? (

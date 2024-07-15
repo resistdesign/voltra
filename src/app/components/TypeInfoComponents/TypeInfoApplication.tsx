@@ -49,7 +49,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const initialTypeNavigation = useMemo<TypeNavigation>(
     () => ({
       typeName: typeInfoName,
-      fieldName: "",
+      fieldNameOrIndex: "",
       operation,
       // TODO: Relationships*:
       //   - How to get the real primary field value when creating.
