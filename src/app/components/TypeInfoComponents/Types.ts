@@ -12,6 +12,7 @@ export type InputOptions = {
   format?: string;
   allowCustomSelection?: boolean;
   customInputType?: string;
+  hidden?: boolean;
   constraints?: {
     defaultValue?: any;
     step?: number;
