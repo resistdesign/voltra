@@ -59,7 +59,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   //  [x] labels
   //  [x] advanced input types, including custom
   //  [x] universal field change handler
-  //  [ ] navigation to sub-types
+  //  [X] navigation to sub-types
   //  [ ] arrays
   //  [ ] validation
 
@@ -68,30 +68,33 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
         const { type: fieldType, possibleValues = [], array, tags } = field;
-        const isSelect = possibleValues.length > 0;
         const inputOptions: InputOptions = tags as InputOptions;
-        const { allowCustomSelection, customInputType } = inputOptions;
-        const InputComponent = getInputType(
-          fieldType,
-          array,
-          isSelect,
-          allowCustomSelection,
-          customInputType,
-          customInputTypeMap,
-        );
-        const fieldValue = internalValue[fieldName];
+        const { allowCustomSelection, customInputType, hidden } = inputOptions;
 
-        return InputComponent ? (
-          <InputComponent
-            key={fieldName}
-            nameOrIndex={fieldName}
-            typeInfoField={field}
-            value={fieldValue}
-            onChange={onFieldChange}
-            options={inputOptions}
-            onNavigateToType={onNavigateToType}
-          />
-        ) : undefined;
+        if (!hidden) {
+          const isSelect = possibleValues.length > 0;
+          const InputComponent = getInputType(
+            fieldType,
+            array,
+            isSelect,
+            allowCustomSelection,
+            customInputType,
+            customInputTypeMap,
+          );
+          const fieldValue = internalValue[fieldName];
+
+          return InputComponent ? (
+            <InputComponent
+              key={fieldName}
+              nameOrIndex={fieldName}
+              typeInfoField={field}
+              value={fieldValue}
+              onChange={onFieldChange}
+              options={inputOptions}
+              onNavigateToType={onNavigateToType}
+            />
+          ) : undefined;
+        }
       })}
       <button type="submit">Submit</button>
     </Form>
