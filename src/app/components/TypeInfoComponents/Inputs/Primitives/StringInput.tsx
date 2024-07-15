@@ -26,7 +26,7 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
     <input
       type={format}
       value={`${value || (defaultValue ?? "")}`}
-      onSubmit={onChangeHandler}
+      onChange={onChangeHandler}
       step={step}
       min={min}
       max={max}
