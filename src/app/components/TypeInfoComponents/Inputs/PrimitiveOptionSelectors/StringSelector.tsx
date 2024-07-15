@@ -25,7 +25,9 @@ export const StringSelector: InputComponent<HTMLSelectElement> = ({
       disabled={readonly}
       {...nonInputProps}
     >
-      {optional ? <option value="">Select...</option> : undefined}
+      {optional ? (
+        <option value="">Select...{/* TODO: i18n */}</option>
+      ) : undefined}
       {possibleValues.map((pV, index) => (
         <option key={`Option:${pV}:${index}`} value={`${pV}`}>
           {pV}
