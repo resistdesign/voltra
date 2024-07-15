@@ -69,7 +69,12 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
         const field = fields[fieldName];
         const { type: fieldType, possibleValues = [], array, tags } = field;
         const inputOptions: InputOptions = tags as InputOptions;
-        const { allowCustomSelection, customInputType, hidden } = inputOptions;
+        const {
+          label = "",
+          allowCustomSelection,
+          customInputType,
+          hidden,
+        } = inputOptions;
 
         if (!hidden) {
           const isSelect = possibleValues.length > 0;
@@ -84,15 +89,17 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           const fieldValue = internalValue[fieldName];
 
           return InputComponent ? (
-            <InputComponent
-              key={fieldName}
-              nameOrIndex={fieldName}
-              typeInfoField={field}
-              value={fieldValue}
-              onChange={onFieldChange}
-              options={inputOptions}
-              onNavigateToType={onNavigateToType}
-            />
+            <label key={fieldName}>
+              {label}
+              <InputComponent
+                nameOrIndex={fieldName}
+                typeInfoField={field}
+                value={fieldValue}
+                onChange={onFieldChange}
+                options={inputOptions}
+                onNavigateToType={onNavigateToType}
+              />
+            </label>
           ) : undefined;
         }
       })}

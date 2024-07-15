@@ -9,7 +9,6 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   value,
   onChange,
   options: {
-    label = "",
     format = "text",
     constraints: { defaultValue, step, min, max, pattern } = {} as any,
   } = {},
@@ -26,7 +25,6 @@ export const StringInput: InputComponent<HTMLInputElement> = ({
   return (
     <input
       type={format}
-      placeholder={label}
       value={`${value || (defaultValue ?? "")}`}
       onChange={onChangeHandler}
       step={step}
