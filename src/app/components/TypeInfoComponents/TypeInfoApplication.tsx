@@ -143,7 +143,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       typeInfo={currentTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
-      onChange={onCurrentDataItemChange}
+      onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
   ) : undefined;

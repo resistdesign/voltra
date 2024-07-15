@@ -30,12 +30,12 @@ const LabelText = styled.span`
 
 export type TypeInfoFormProps = Omit<
   InputHTMLAttributes<HTMLFormElement>,
-  "value" | "onChange"
+  "value" | "onSubmit"
 > & {
   typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataItem;
-  onChange: (newValue: TypeInfoDataItem) => void;
+  onSubmit: (newValue: TypeInfoDataItem) => void;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
@@ -43,7 +43,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   typeInfo,
   customInputTypeMap = {},
   value,
-  onChange,
+  onSubmit,
   onNavigateToType,
 }) => {
   const fields = useMemo<Record<string, TypeInfoField>>(() => {
@@ -58,9 +58,9 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
       [nameOrIndex]: value,
     }));
   }, []);
-  const onSubmit = useCallback(() => {
-    onChange(internalValue);
-  }, [internalValue, onChange]);
+  const onSubmitInternal = useCallback(() => {
+    onSubmit(internalValue);
+  }, [internalValue, onSubmit]);
 
   useEffect(() => {
     setInternalValue(value);
@@ -75,7 +75,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   //  [ ] validation
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmitInternal}>
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
         const { type: fieldType, possibleValues = [], array, tags } = field;
