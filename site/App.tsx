@@ -22,6 +22,10 @@ const GlobalStyle = createGlobalStyle`
         padding: 0;
         overflow: hidden;
     }
+
+    #app-root {
+        overflow: auto;
+    }
 `;
 
 const DEMO_TS = `
