@@ -27,6 +27,23 @@ const LabelText = styled.span`
     display: none;
   }
 `;
+// TODO: Do options based grid layout.
+const BaseForm = styled(Form)`
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 1em;
+`;
+const FormControls = styled.div`
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1em;
+`;
 
 export type TypeInfoFormProps = Omit<
   InputHTMLAttributes<HTMLFormElement>,
@@ -35,6 +52,7 @@ export type TypeInfoFormProps = Omit<
   typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataItem;
+  onCancel?: () => void;
   onSubmit: (newValue: TypeInfoDataItem) => void;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
@@ -43,6 +61,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   typeInfo,
   customInputTypeMap = {},
   value,
+  onCancel,
   onSubmit,
   onNavigateToType,
 }) => {
@@ -75,7 +94,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   //  [ ] validation
 
   return (
-    <Form onSubmit={onSubmitInternal}>
+    <BaseForm onSubmit={onSubmitInternal}>
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
         const { type: fieldType, possibleValues = [], array, tags } = field;
@@ -115,7 +134,14 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           ) : undefined;
         }
       })}
-      <button type="submit">Submit</button>
-    </Form>
+      <FormControls>
+        {onCancel ? (
+          <button type="button" onClick={onCancel}>
+            Cancel
+          </button>
+        ) : undefined}
+        <button type="submit">Submit</button>
+      </FormControls>
+    </BaseForm>
   );
 };
