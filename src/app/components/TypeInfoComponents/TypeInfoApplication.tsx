@@ -106,9 +106,24 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       ] ?? {}
     );
   }, [currentTypeName, currentOperation, currentPrimaryFieldValue, value]);
+  const isFirstHistoryNavItem = useMemo(() => {
+    return typeNavigationHistory.length === 1;
+  }, [typeNavigationHistory]);
+  const onCancelCurrentNavHistory = useCallback(() => {
+    setTypeNavigationHistory((prevTypeNavigationHistory) => {
+      if (!isFirstHistoryNavItem) {
+        const [_currentNav, ...historyNavList] = [
+          ...prevTypeNavigationHistory,
+        ].reverse();
+
+        return historyNavList.reverse();
+      } else {
+        return prevTypeNavigationHistory;
+      }
+    });
+  }, [isFirstHistoryNavItem]);
   const onCurrentDataItemChange = useCallback(
     // TODO: *How to return from type navigation and apply the new value to the related field on the correct object.
-    // TODO: What is the UX around Done VS Submit????
     (newDataItem: TypeInfoDataItem = {}) => {
       onChange({
         ...value,
@@ -127,6 +142,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           },
         },
       });
+      onCancelCurrentNavHistory();
     },
     [
       currentTypeName,
@@ -135,6 +151,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       currentPrimaryFieldValue,
       onChange,
       value,
+      onCancelCurrentNavHistory,
     ],
   );
 
@@ -143,6 +160,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       typeInfo={currentTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
+      onCancel={isFirstHistoryNavItem ? undefined : onCancelCurrentNavHistory}
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
