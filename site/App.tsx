@@ -90,9 +90,9 @@ export type Person = PersistableItem & {
   */
   email: string;
   /**
-  * @label Friends
+  * @label Car
   */
-  friends: Person[];
+  car: Car;
   /**
   * @label Likes Cheese
   * @constraints.defaultValue
