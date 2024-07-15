@@ -38,6 +38,28 @@ export type PersistableItem = {
   readonly id?: string;
 };
 
+export type Car = PersistableItem & {
+  /**
+  * @label Make
+  */
+  make: string;
+  /**
+  * @label Model
+  */
+  model: string;
+  /**
+  * @label Year
+  * @constraints.min 1900
+  * @constraints.max 2022
+  * @constraints.step 1
+  */
+  year: number;
+  /**
+  * @label Color
+  */
+  color: string;
+};
+
 export type Person = PersistableItem & {
   /**
   * @label First Name
