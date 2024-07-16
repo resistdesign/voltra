@@ -38,12 +38,20 @@ const BaseForm = styled(Form)`
   gap: 1em;
 `;
 const FormControls = styled.div`
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1em;
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1em;
+`;
+const FormControlButton = styled.button.attrs({
+  className: "form-control-button",
+})`
+  &.form-control-button {
+    flex: 1 0 auto;
+    width: unset;
+  }
 `;
 
 export type TypeInfoFormProps = Omit<
@@ -145,11 +153,11 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
       })}
       <FormControls>
         {onCancel ? (
-          <button type="button" onClick={onCancel}>
+          <FormControlButton type="button" onClick={onCancel}>
             Cancel
-          </button>
+          </FormControlButton>
         ) : undefined}
-        <button type="submit">Submit</button>
+        <FormControlButton type="submit">Submit</FormControlButton>
       </FormControls>
     </BaseForm>
   );
