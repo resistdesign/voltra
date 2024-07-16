@@ -38,18 +38,17 @@ const BaseForm = styled(Form)`
   gap: 1em;
 `;
 const FormControls = styled.div`
-    flex: 1 0 auto;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
     gap: 1em;
 `;
-const FormControlButton = styled.button.attrs({
-  className: "form-control-button",
-})`
-  &.form-control-button {
-    flex: 1 0 auto;
+const FormControlButton = styled.button`
+  flex: 0 0 auto;
+
+  &[type="submit"] {
     width: unset;
   }
 `;
