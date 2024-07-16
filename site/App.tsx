@@ -54,10 +54,6 @@ export type Car = PersistableItem & {
   * @constraints.step 1
   */
   year: number;
-  /**
-  * @label Color
-  */
-  color: string;
 };
 
 export type Person = PersistableItem & {
