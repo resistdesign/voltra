@@ -13,7 +13,10 @@ export type ObjectTableProps = {
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ typeInfo, objectList }) => {
+export const ObjectTable: FC<ObjectTableProps> = ({
+  typeInfo,
+  objectList = [],
+}) => {
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: tIF = {} } = typeInfo;
 
