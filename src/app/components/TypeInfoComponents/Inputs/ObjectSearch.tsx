@@ -1,10 +1,12 @@
 import { FC } from "react";
+import { SearchCriteria } from "../../../../common/SearchTypes";
 
-// TODO: Search Criteria structures.
 // TODO: Search criteria interface.
 
-export type ObjectSearchProps = {};
+export type ObjectSearchProps = {
+  searchCriteria: SearchCriteria;
+};
 
-export const ObjectSearch: FC<ObjectSearchProps> = () => {
+export const ObjectSearch: FC<ObjectSearchProps> = ({ searchCriteria }) => {
   return <div></div>;
 };
