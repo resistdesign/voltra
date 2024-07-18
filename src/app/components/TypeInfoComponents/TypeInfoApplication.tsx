@@ -155,6 +155,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     ],
   );
 
+  // TODO: Show object search controls.
+
   return currentTypeInfo ? (
     <TypeInfoForm
       typeInfo={currentTypeInfo}
