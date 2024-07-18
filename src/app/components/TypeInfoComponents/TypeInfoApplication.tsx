@@ -87,7 +87,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const {
     typeName: currentTypeName,
     // TODO: Store the relationship primary field value.
-    fieldName: currentFieldName,
+    fieldNameOrIndex: currentFieldNameOrIndex,
     operation: currentOperation,
     primaryKeyValue: currentPrimaryFieldValue,
   } = useMemo(() => {
