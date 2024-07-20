@@ -28,6 +28,8 @@ export enum ComparisonOperators {
   ENDS_WITH = "ENDS_WITH",
 }
 
+// TODO: BOOLEAN EXISTENCE Criterion for Nested Searches!!!
+
 export type FieldCriterion = {
   fieldName: string;
   operator: ComparisonOperators;
@@ -38,8 +40,6 @@ export type FieldCriterion = {
 
 export type SearchCriteria = {
   isSearchCriteria: true;
-  pageData?: any;
-  itemType: string;
   logicalOperator: LogicalOperators;
   fieldCriteria: (FieldCriterion | SearchCriteria)[];
 };
