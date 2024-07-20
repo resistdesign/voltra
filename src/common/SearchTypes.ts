@@ -14,12 +14,18 @@ export enum ComparisonOperators {
   NOT_IN = "NOT_IN",
   LIKE = "LIKE",
   NOT_LIKE = "NOT_LIKE",
-  IS_NULL = "IS_NULL",
+  EXISTS = "EXISTS",
+  NOT_EXISTS = "NOT_EXISTS",
   IS_NOT_NULL = "IS_NOT_NULL",
+  IS_NULL = "IS_NULL",
+  IS_NOT_EMPTY = "IS_NOT_EMPTY",
+  IS_EMPTY = "IS_EMPTY",
   BETWEEN = "BETWEEN",
   NOT_BETWEEN = "NOT_BETWEEN",
   CONTAINS = "CONTAINS",
   NOT_CONTAINS = "NOT_CONTAINS",
+  STARTS_WITH = "STARTS_WITH",
+  ENDS_WITH = "ENDS_WITH",
 }
 
 export type FieldCriterion = {
