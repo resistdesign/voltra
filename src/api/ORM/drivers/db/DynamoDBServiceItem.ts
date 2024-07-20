@@ -5,13 +5,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { DBServiceItemDriver } from "../../ServiceTypes/DBServiceTypes";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
-import {
-  Criteria,
-  Criterion,
-  SearchCriterionLogicalGroupingTypes,
-  SearchCriterionTypes,
-  SearchOperatorTypes,
-} from "../../SearchCriteriaTypes";
+import { ComparisonOperators } from "../../../../common/SearchTypes";
 
 export type BaseQueryCommandInput = Pick<
   QueryCommandInput,
@@ -20,27 +14,29 @@ export type BaseQueryCommandInput = Pick<
 
 export type FieldIndexKey = number[];
 
-export const OPERATOR_MAP: Record<SearchOperatorTypes, string> = {
-  [SearchOperatorTypes.EQUAL]: "=",
-  [SearchOperatorTypes.NOT_EQUAL]: "<>",
-  [SearchOperatorTypes.GREATER_THAN]: ">",
-  [SearchOperatorTypes.GREATER_THAN_OR_EQUAL]: ">=",
-  [SearchOperatorTypes.LESS_THAN]: "<",
-  [SearchOperatorTypes.LESS_THAN_OR_EQUAL]: "<=",
-  [SearchOperatorTypes.IN]: "IN",
-  [SearchOperatorTypes.NOT_IN]: "NOT IN",
-  [SearchOperatorTypes.CONTAINS]: "CONTAINS",
-  [SearchOperatorTypes.NOT_CONTAINS]: "NOT CONTAINS",
-  [SearchOperatorTypes.STARTS_WITH]: "BEGINS_WITH",
-  [SearchOperatorTypes.ENDS_WITH]: "ENDS_WITH",
-  [SearchOperatorTypes.IS_NULL]: "IS NULL",
-  [SearchOperatorTypes.IS_NOT_NULL]: "IS NOT NULL",
-  [SearchOperatorTypes.IS_EMPTY]: "IS EMPTY",
-  [SearchOperatorTypes.IS_NOT_EMPTY]: "IS NOT EMPTY",
-  [SearchOperatorTypes.BETWEEN]: "BETWEEN",
-  [SearchOperatorTypes.NOT_BETWEEN]: "NOT BETWEEN",
-  [SearchOperatorTypes.EXISTS]: "EXISTS",
-  [SearchOperatorTypes.NOT_EXISTS]: "NOT EXISTS",
+export const OPERATOR_MAP: Record<ComparisonOperators, string> = {
+  [ComparisonOperators.EQUALS]: "=",
+  [ComparisonOperators.NOT_EQUALS]: "<>",
+  [ComparisonOperators.GREATER_THAN]: ">",
+  [ComparisonOperators.GREATER_THAN_OR_EQUAL]: ">=",
+  [ComparisonOperators.LESS_THAN]: "<",
+  [ComparisonOperators.LESS_THAN_OR_EQUAL]: "<=",
+  [ComparisonOperators.IN]: "IN",
+  [ComparisonOperators.NOT_IN]: "NOT IN",
+  [ComparisonOperators.CONTAINS]: "CONTAINS",
+  [ComparisonOperators.NOT_CONTAINS]: "NOT CONTAINS",
+  [ComparisonOperators.STARTS_WITH]: "BEGINS_WITH",
+  [ComparisonOperators.ENDS_WITH]: "ENDS_WITH",
+  [ComparisonOperators.IS_NULL]: "IS NULL",
+  [ComparisonOperators.IS_NOT_NULL]: "IS NOT NULL",
+  [ComparisonOperators.IS_EMPTY]: "IS EMPTY",
+  [ComparisonOperators.IS_NOT_EMPTY]: "IS NOT EMPTY",
+  [ComparisonOperators.BETWEEN]: "BETWEEN",
+  [ComparisonOperators.NOT_BETWEEN]: "NOT BETWEEN",
+  [ComparisonOperators.EXISTS]: "EXISTS",
+  [ComparisonOperators.NOT_EXISTS]: "NOT EXISTS",
+  [ComparisonOperators.LIKE]: "LIKE",
+  [ComparisonOperators.NOT_LIKE]: "NOT LIKE",
 };
 
 export const getFieldName = (field: string, fieldNamePrefix = ""): string =>
