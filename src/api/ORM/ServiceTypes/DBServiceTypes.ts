@@ -1,4 +1,4 @@
-import { Criteria } from "../SearchCriteriaTypes";
+import { SearchCriteria } from "../../../common/SearchTypes";
 
 export type AsyncReturnValue<T> = Promise<T> | T;
 
@@ -15,7 +15,7 @@ export type SortField = {
 export type ListItemsConfig = {
   itemsPerPage?: number;
   cursor?: string;
-  criteria?: Criteria;
+  criteria?: SearchCriteria;
   // TODO: Use these maybe!?
   sortFields?: SortField[];
 };

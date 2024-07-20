@@ -5,13 +5,16 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-import { DBServiceItemDriver } from "../../ServiceTypes/DBServiceTypes";
-import { BaseFile, BaseFileLocationInfo } from "../../ServiceTypes/FileServiceTypes";
+import {
+  BaseFile,
+  BaseFileLocationInfo,
+  DBServiceItemDriver,
+} from "../../ServiceTypes";
 import {
   getBaseFileLocationInfo,
   getFullFileKey,
   getS3FileDriver,
-} from "../file/S3";
+} from "../file";
 
 export type BaseFileItem = {
   id: string;
