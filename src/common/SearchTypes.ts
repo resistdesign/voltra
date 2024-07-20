@@ -1,4 +1,9 @@
-export enum FieldOperators {
+export enum LogicalOperators {
+  AND = "AND",
+  OR = "OR",
+}
+
+export enum ComparisonOperators {
   EQUALS = "EQUALS",
   NOT_EQUALS = "NOT_EQUALS",
   GREATER_THAN = "GREATER_THAN",
@@ -19,14 +24,16 @@ export enum FieldOperators {
 
 export type FieldCriterion = {
   fieldName: string;
-  operator?: FieldOperators;
+  operator: ComparisonOperators;
   customOperator?: string;
   value?: any;
   subSearchCriteria?: SearchCriteria;
 };
 
 export type SearchCriteria = {
+  isSearchCriteria: true;
   pageData?: any;
   itemType: string;
-  fieldCriteria: FieldCriterion[];
+  logicalOperator: LogicalOperators;
+  fieldCriteria: (FieldCriterion | SearchCriteria)[];
 };
