@@ -37,7 +37,7 @@ export type TypeInfoField = {
   readonly: boolean;
   optional: boolean;
   possibleValues?: LiteralValue[];
-  tags?: SupportedTags & Record<any, any>;
+  tags?: SupportedTags;
 };
 
 /**
