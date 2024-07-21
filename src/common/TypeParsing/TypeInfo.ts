@@ -1,3 +1,19 @@
+export type SupportedTags = {
+  primaryField?: boolean;
+  label?: string;
+  format?: string;
+  allowCustomSelection?: boolean;
+  customInputType?: string;
+  hidden?: boolean;
+  constraints?: {
+    defaultValue?: any;
+    step?: number;
+    min?: number;
+    max?: number;
+    pattern?: string;
+  };
+};
+
 /**
  * The set of acceptable literal value types.
  */
@@ -18,7 +34,7 @@ export type TypeInfoField = {
   readonly: boolean;
   optional: boolean;
   possibleValues?: LiteralValue[];
-  tags?: Record<any, any>;
+  tags?: SupportedTags & Record<any, any>;
 };
 
 /**

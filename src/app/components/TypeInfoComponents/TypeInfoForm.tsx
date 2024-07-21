@@ -10,12 +10,11 @@ import { Form } from "../Form";
 import { getInputType } from "./InputTypeMapUtils";
 import {
   InputComponent,
-  InputOptions,
   NameOrIndex,
   TypeInfoDataItem,
   TypeNavigation,
 } from "./Types";
-import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
+import {SupportedTags, TypeInfo, TypeInfoField} from "../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
 import { ObjectSelector } from "./Inputs/ObjectSelector";
 
@@ -112,7 +111,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           array,
           tags,
         } = field;
-        const inputOptions: InputOptions = tags as InputOptions;
+        const inputOptions: SupportedTags = tags as SupportedTags;
         const {
           label = "",
           allowCustomSelection,

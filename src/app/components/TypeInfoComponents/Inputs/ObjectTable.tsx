@@ -1,9 +1,10 @@
 import { FC, useMemo } from "react";
 import {
+  SupportedTags,
   TypeInfo,
   TypeInfoField,
 } from "../../../../common/TypeParsing/TypeInfo";
-import { InputOptions, TypeNavigation } from "../Types";
+import { TypeNavigation } from "../Types";
 import { transformValueToString } from "../../../../common/StringTransformers";
 
 export type ObjectTableProps = {
@@ -31,7 +32,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       fieldNames
         .map((f) => {
           const { tags = {} } = typeInfoFields[f];
-          const { label = f, hidden } = tags as InputOptions;
+          const { label = f, hidden } = tags as SupportedTags;
 
           return hidden ? undefined : label;
         })
@@ -58,7 +59,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
                 typeReference,
                 tags = {},
               } = typeInfoFields[fieldName];
-              const { hidden, customInputType } = tags as InputOptions;
+              const { hidden, customInputType } = tags as SupportedTags;
               const stringValueForDisplay = transformValueToString(
                 item[fieldName as keyof typeof item],
                 type,
