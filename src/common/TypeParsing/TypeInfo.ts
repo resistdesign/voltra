@@ -1,3 +1,6 @@
+/**
+ * Voltra supported tags.
+ * */
 export type SupportedTags = {
   primaryField?: boolean;
   label?: string;
