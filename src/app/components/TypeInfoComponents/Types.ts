@@ -1,26 +1,11 @@
 import { FC, InputHTMLAttributes } from "react";
 import {
+  SupportedTags,
   LiteralValue,
   TypeInfoField,
 } from "../../../common/TypeParsing/TypeInfo";
 
 export type TypeInfoDataItemOperation = "create" | "update" | "delete";
-
-export type InputOptions = {
-  primaryField?: boolean;
-  label?: string;
-  format?: string;
-  allowCustomSelection?: boolean;
-  customInputType?: string;
-  hidden?: boolean;
-  constraints?: {
-    defaultValue?: any;
-    step?: number;
-    min?: number;
-    max?: number;
-    pattern?: string;
-  };
-};
 
 export type TypeNavigation = {
   typeName: string;
@@ -39,7 +24,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   typeInfoField?: TypeInfoField;
   value: ValueType;
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
-  options?: InputOptions;
+  options?: SupportedTags;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
