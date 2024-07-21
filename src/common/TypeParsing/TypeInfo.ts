@@ -1,5 +1,5 @@
 /**
- * Voltra supported tags.
+ * Voltra supported `TypeInfoField` tags.
  * */
 export type SupportedTags = {
   primaryField?: boolean;
