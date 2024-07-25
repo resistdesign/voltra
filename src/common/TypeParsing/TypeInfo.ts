@@ -1,7 +1,20 @@
 /**
- * Voltra supported `TypeInfoField` tags.
+ * Voltra supported `TypeInfo` tags.
  * */
 export type SupportedTags = {
+  label?: string;
+  deniedOperations?: {
+    create?: boolean;
+    read?: boolean;
+    update?: boolean;
+    delete?: boolean;
+  };
+};
+
+/**
+ * Voltra supported `TypeInfoField` tags.
+ * */
+export type SupportedFieldTags = {
   primaryField?: boolean;
   label?: string;
   format?: string;
@@ -14,6 +27,12 @@ export type SupportedTags = {
     min?: number;
     max?: number;
     pattern?: string;
+  };
+  deniedOperations?: {
+    create?: boolean;
+    read?: boolean;
+    update?: boolean;
+    delete?: boolean;
   };
 };
 
@@ -37,7 +56,7 @@ export type TypeInfoField = {
   readonly: boolean;
   optional: boolean;
   possibleValues?: LiteralValue[];
-  tags?: SupportedTags;
+  tags?: SupportedFieldTags;
 };
 
 /**
@@ -46,7 +65,7 @@ export type TypeInfoField = {
 export type TypeInfo = {
   primaryField?: string;
   fields?: Record<string, TypeInfoField>;
-  tags?: Record<any, any>;
+  tags?: SupportedTags;
   unionFieldSets?: string[][];
 };
 
