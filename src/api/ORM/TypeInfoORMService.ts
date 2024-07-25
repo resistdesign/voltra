@@ -1,5 +1,10 @@
 import { DBServiceItemDriver } from "./ServiceTypes";
-import { TypeInfo, TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoField,
+  TypeInfoMap,
+  TypeOperation,
+} from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   validateTypeInfoValue,
@@ -20,6 +25,29 @@ export const TypeInfoORMServiceErrors = {
     UPDATE: "DENIED_TYPE_OPERATION_UPDATE",
     DELETE: "DENIED_TYPE_OPERATION_DELETE",
   },
+};
+
+export const getTypeOperationAllowed = (
+  typeOperation: TypeOperation,
+  typeInfo: TypeInfo,
+) => {
+  const { tags = {} } = typeInfo;
+  const { deniedOperations: { [typeOperation]: denied = false } = {} } = tags;
+
+  return !denied;
+};
+
+export const getTypeFieldOperationAllowed = (
+  typeOperation: TypeOperation,
+  typeInfo: TypeInfo,
+  fieldName: string,
+) => {
+  const { fields = {} } = typeInfo;
+  const { [fieldName]: typeInfoField = {} } = fields;
+  const { tags = {} }: Partial<TypeInfoField> = typeInfoField;
+  const { deniedOperations: { [typeOperation]: denied = false } = {} } = tags;
+
+  return !denied;
 };
 
 export class TypeInfoORMService {
@@ -71,9 +99,11 @@ export class TypeInfoORMService {
       this.customValidators,
     );
 
-    // TODO: Allowed Type operations.
-    // TODO: Allowed Field operations.
-    // TODO: Pattern Validation???
+    if (!getTypeOperationAllowed("create", typeInfo)) {
+      throw new Error(TypeInfoORMServiceErrors.DENIED_TYPE_OPERATION.CREATE);
+    }
+
+    // TODO: Allowed Field operations. CLEAN ITEM!!!
 
     if (valid) {
       const newItem = await driver.createItem(item);
