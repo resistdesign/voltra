@@ -60,6 +60,9 @@ export class TypeInfoORMService {
       true,
     );
 
+    // TODO: Allowed Type operations.
+    // TODO: Allowed Field operations.
+
     if (valid) {
       const newItem = await driver.createItem(item);
 
