@@ -19,7 +19,7 @@ export type SupportedFieldTags = {
   label?: string;
   format?: string;
   allowCustomSelection?: boolean;
-  customInputType?: string;
+  customType?: string;
   hidden?: boolean;
   constraints?: {
     defaultValue?: any;
