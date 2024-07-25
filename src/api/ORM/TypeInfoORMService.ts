@@ -18,7 +18,6 @@ export type DBServiceItemDriverMap = Record<
 export const TypeInfoORMServiceErrors = {
   INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
   INVALID_DRIVER: "INVALID_DRIVER",
-  INVALID_PRIMARY_FIELD: "INVALID_PRIMARY_FIELD",
   DENIED_TYPE_OPERATION: {
     CREATE: "DENIED_TYPE_OPERATION_CREATE",
     READ: "DENIED_TYPE_OPERATION_READ",
@@ -67,16 +66,6 @@ export class TypeInfoORMService {
     return typeInfo;
   };
 
-  protected getPrimaryField = (typeInfo: TypeInfo): string => {
-    const primaryField = typeInfo.primaryField;
-
-    if (!primaryField) {
-      throw new Error(TypeInfoORMServiceErrors.INVALID_PRIMARY_FIELD);
-    }
-
-    return primaryField;
-  };
-
   protected getDriver = (typeName: string): DBServiceItemDriver<any, any> => {
     const driver = this.driverMap[typeName];
 
@@ -89,28 +78,30 @@ export class TypeInfoORMService {
 
   create = async (typeName: string, item: Record<any, any>): Promise<any> => {
     const typeInfo = this.getTypeInfo(typeName);
-    const primaryField = this.getPrimaryField(typeInfo);
-    const driver = this.getDriver(typeName);
-    const { valid, errorMap } = validateTypeInfoValue(
-      item,
-      typeName,
-      this.typeInfoMap,
-      true,
-      this.customValidators,
-    );
 
     if (!getTypeOperationAllowed("create", typeInfo)) {
       throw new Error(TypeInfoORMServiceErrors.DENIED_TYPE_OPERATION.CREATE);
-    }
-
-    // TODO: Allowed Field operations. CLEAN ITEM!!!
-
-    if (valid) {
-      const newItem = await driver.createItem(item);
-
-      return newItem;
     } else {
-      throw errorMap;
+      const driver = this.getDriver(typeName);
+      const { valid, errorMap } = validateTypeInfoValue(
+        item,
+        typeName,
+        this.typeInfoMap,
+        true,
+        this.customValidators,
+      );
+
+      // TODO: NESTING: No nesting, just id references
+      //  OR maybe nothing at all and use a separate API for relationships.
+      // TODO: Allowed Field operations. CLEAN ITEM!!!
+
+      if (valid) {
+        const newItem = await driver.createItem(item);
+
+        return newItem;
+      } else {
+        throw errorMap;
+      }
     }
   };
 }
