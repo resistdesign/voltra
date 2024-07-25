@@ -1,14 +1,11 @@
+export type TypeOperation = "create" | "read" | "update" | "delete";
+
 /**
  * Voltra supported `TypeInfo` tags.
  * */
 export type SupportedTags = {
   label?: string;
-  deniedOperations?: {
-    create?: boolean;
-    read?: boolean;
-    update?: boolean;
-    delete?: boolean;
-  };
+  deniedOperations?: Record<TypeOperation, boolean>;
 };
 
 /**
@@ -21,19 +18,14 @@ export type SupportedFieldTags = {
   allowCustomSelection?: boolean;
   customType?: string;
   hidden?: boolean;
-  constraints?: {
+  inputConstraints?: {
     defaultValue?: any;
     step?: number;
     min?: number;
     max?: number;
     pattern?: string;
   };
-  deniedOperations?: {
-    create?: boolean;
-    read?: boolean;
-    update?: boolean;
-    delete?: boolean;
-  };
+  deniedOperations?: Record<TypeOperation, boolean>;
 };
 
 /**
