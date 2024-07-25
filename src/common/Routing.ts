@@ -21,6 +21,7 @@ export const getPathArray = (
 ): any[] =>
   path
     .split(delimiter)
+    .filter((p) => p !== "")
     .map(decodeURIComponent)
     .map((p) => getPotentialJSONValue(p))
     .filter((p) => !filterEmpty || p !== "");
