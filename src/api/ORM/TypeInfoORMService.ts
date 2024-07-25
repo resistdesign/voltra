@@ -62,6 +62,8 @@ export class TypeInfoORMService {
 
     // TODO: Allowed Type operations.
     // TODO: Allowed Field operations.
+    // TODO: Custom Validation.
+    // TODO: Pattern Validation.
 
     if (valid) {
       const newItem = await driver.createItem(item);
