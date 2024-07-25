@@ -18,6 +18,7 @@ export type ListItemsConfig = {
   criteria?: SearchCriteria;
   // TODO: Use these maybe!?
   sortFields?: SortField[];
+  checkExistence?: boolean;
 };
 
 export type PartialItemTypeWithUniquelyIdentifyingFieldName<
@@ -70,5 +71,5 @@ export type DBServiceItemDriver<
   // TODO: Needs to support Item Results OR Boolean Existence for a particular query.
   listItems: (
     config: ListItemsConfig,
-  ) => AsyncReturnValue<ListItemResults<ItemType>>;
+  ) => AsyncReturnValue<ListItemResults<ItemType> | boolean>;
 };
