@@ -1,6 +1,9 @@
 import { DBServiceItemDriver } from "./ServiceTypes";
 import { TypeInfo, TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
-import { validateTypeInfoValue } from "../../common/TypeParsing/Validation";
+import {
+  CustomTypeInfoFieldValidatorMap,
+  validateTypeInfoValue,
+} from "../../common/TypeParsing/Validation";
 
 export type DBServiceItemDriverMap = Record<
   string,
@@ -17,6 +20,7 @@ export class TypeInfoORMService {
   constructor(
     protected typeInfoMap: TypeInfoMap,
     protected driverMap: DBServiceItemDriverMap,
+    protected customValidators?: CustomTypeInfoFieldValidatorMap,
   ) {}
 
   protected getTypeInfo = (typeName: string): TypeInfo => {
@@ -58,12 +62,12 @@ export class TypeInfoORMService {
       typeName,
       this.typeInfoMap,
       true,
+      this.customValidators,
     );
 
     // TODO: Allowed Type operations.
     // TODO: Allowed Field operations.
-    // TODO: Custom Validation.
-    // TODO: Pattern Validation.
+    // TODO: Pattern Validation???
 
     if (valid) {
       const newItem = await driver.createItem(item);

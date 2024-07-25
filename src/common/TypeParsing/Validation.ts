@@ -1,5 +1,28 @@
-import { TypeInfoField, TypeInfoMap, TypeKeyword } from "./TypeInfo";
+import {
+  SupportedFieldTags,
+  TypeInfoField,
+  TypeInfoMap,
+  TypeKeyword,
+} from "./TypeInfo";
 import { getPathString } from "../Routing";
+
+/**
+ * A custom type info field validator.
+ * */
+export type CustomTypeInfoFieldValidator = (value: any) => boolean;
+
+/**
+ * A map of custom type info field validators.
+ * */
+export type CustomTypeInfoFieldValidatorMap = Record<
+  string,
+  CustomTypeInfoFieldValidator
+>;
+
+/**
+ * The error message constants for custom types.
+ * */
+export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
 
 /**
  * The error message constants for primitive types.
@@ -71,6 +94,31 @@ export const validateKeywordType = (value: any, type: string): boolean => {
 };
 
 /**
+ * Validates a custom type.
+ */
+export const validateCustomType = (
+  value: any,
+  customType?: string,
+  customValidators?: CustomTypeInfoFieldValidatorMap,
+): boolean => {
+  let valid = true;
+
+  if (customValidators && customType) {
+    const validator = customValidators[customType];
+
+    if (validator) {
+      try {
+        valid = validator(value);
+      } catch (e) {
+        valid = false;
+      }
+    }
+  }
+
+  return valid;
+};
+
+/**
  * Validates a type info field value.
  */
 export const validateTypeInfoFieldValue = (
@@ -78,8 +126,11 @@ export const validateTypeInfoFieldValue = (
   typeInfoField: TypeInfoField,
   typeInfoMap: TypeInfoMap,
   ignoreArray: boolean = false,
+  strict: boolean = false,
+  customValidators?: CustomTypeInfoFieldValidatorMap,
 ): TypeInfoValidationResults => {
-  const { type, typeReference, array, optional, possibleValues } = typeInfoField;
+  const { type, typeReference, array, optional, possibleValues, tags } =
+    typeInfoField;
   const results: TypeInfoValidationResults = {
     valid: true,
     error: "",
@@ -94,7 +145,13 @@ export const validateTypeInfoFieldValue = (
       valid: validArray,
       error: arrayError,
       errorMap: arrayErrorMap,
-    } = validateArrayOfTypeInfoFieldValues(value, typeInfoField, typeInfoMap);
+    } = validateArrayOfTypeInfoFieldValues(
+      value,
+      typeInfoField,
+      typeInfoMap,
+      strict,
+      customValidators,
+    );
 
     results.valid = getValidityValue(results.valid, validArray);
     results.error = arrayError;
@@ -105,7 +162,13 @@ export const validateTypeInfoFieldValue = (
         valid: validTypeInfo,
         error: typeInfoError,
         errorMap: typeInfoErrorMap,
-      } = validateTypeInfoValue(value, typeReference, typeInfoMap);
+      } = validateTypeInfoValue(
+        value,
+        typeReference,
+        typeInfoMap,
+        strict,
+        customValidators,
+      );
 
       results.valid = getValidityValue(results.valid, validTypeInfo);
       results.error = typeInfoError;
@@ -115,10 +178,19 @@ export const validateTypeInfoFieldValue = (
       results.error = ERROR_MESSAGE_CONSTANTS.INVALID_OPTION;
     } else {
       const pendingValid = validateKeywordType(value, type);
+      const { customType }: Partial<SupportedFieldTags> = tags || {};
+      const customValid = validateCustomType(
+        value,
+        customType,
+        customValidators,
+      );
 
       results.valid = getValidityValue(results.valid, pendingValid);
+      results.valid = getValidityValue(results.valid, customValid);
 
-      if (!results.valid) {
+      if (!customValid) {
+        results.error = INVALID_CUSTOM_TYPE;
+      } else if (!results.valid) {
         results.error = PRIMITIVE_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword];
       }
     }
@@ -134,6 +206,8 @@ export const validateArrayOfTypeInfoFieldValues = (
   values: any[] = [],
   typeInfoField: TypeInfoField,
   typeInfoMap: TypeInfoMap,
+  strict: boolean = false,
+  customValidators?: CustomTypeInfoFieldValidatorMap,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,
@@ -147,7 +221,14 @@ export const validateArrayOfTypeInfoFieldValues = (
       valid: indexValid,
       error: indexError = "",
       errorMap: indexErrorMap,
-    } = validateTypeInfoFieldValue(v, typeInfoField, typeInfoMap, true);
+    } = validateTypeInfoFieldValue(
+      v,
+      typeInfoField,
+      typeInfoMap,
+      true,
+      strict,
+      customValidators,
+    );
 
     results.valid = getValidityValue(results.valid, indexValid);
     results.errorMap[getPathString([i])] = indexError;
@@ -168,6 +249,7 @@ export const validateTypeInfoValue = (
   typeInfoFullName: string,
   typeInfoMap: TypeInfoMap,
   strict: boolean = false,
+  customValidators?: CustomTypeInfoFieldValidatorMap,
 ): TypeInfoValidationResults => {
   const typeInfo = typeInfoMap[typeInfoFullName];
   const results: TypeInfoValidationResults = {
@@ -199,7 +281,14 @@ export const validateTypeInfoValue = (
           valid: fieldValid,
           error: fieldError,
           errorMap: fieldErrorMap,
-        } = validateTypeInfoFieldValue(fieldValue, typeInfoField, typeInfoMap);
+        } = validateTypeInfoFieldValue(
+          fieldValue,
+          typeInfoField,
+          typeInfoMap,
+          false,
+          strict,
+          customValidators,
+        );
 
         results.valid = getValidityValue(results.valid, fieldValid);
         results.errorMap[key] = fieldError;
