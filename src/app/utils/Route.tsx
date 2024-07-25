@@ -15,7 +15,7 @@ import {
 (function (history) {
   const pushState = history.pushState;
 
-  history.pushState = function (state, title, url) {
+  history.pushState = function (state, ...remainingArguments) {
     // @ts-ignore
     if (typeof history.onpushstate == "function") {
       // @ts-ignore
@@ -23,7 +23,7 @@ import {
     }
 
     // @ts-ignore
-    const result = pushState.apply(history, arguments);
+    const result = pushState.apply(history, [state, ...remainingArguments]);
 
     // Dispatch a custom event 'statechanged'
     window.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
@@ -142,6 +142,7 @@ export const Route = <ParamsType extends Record<string, any>>({
         if (target && target.nodeName === "A") {
           const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
           const href = aTarget.getAttribute("href");
+          const title = aTarget.getAttribute("title") ?? "";
 
           try {
             new URL(href ? href : "");
@@ -154,7 +155,7 @@ export const Route = <ParamsType extends Record<string, any>>({
             );
 
             event.preventDefault();
-            history.pushState({}, "", newPath);
+            history.pushState({}, title, newPath);
             setCurrentPath(newPath);
           }
         }

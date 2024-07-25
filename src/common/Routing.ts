@@ -17,11 +17,13 @@ export const getPotentialJSONValue = (value: string): any => {
 export const getPathArray = (
   path: string,
   delimiter: string = PATH_DELIMITER,
+  filterEmpty: boolean = false,
 ): any[] =>
   path
     .split(delimiter)
     .map(decodeURIComponent)
-    .map((p) => getPotentialJSONValue(p));
+    .map((p) => getPotentialJSONValue(p))
+    .filter((p) => !filterEmpty || p !== "");
 
 /**
  * Get the path string from path segments.
@@ -29,8 +31,10 @@ export const getPathArray = (
 export const getPathString = (
   parts: any[] = [],
   delimiter: string = PATH_DELIMITER,
+  filterEmpty: boolean = false,
 ): string =>
   parts
+    .filter((p) => !filterEmpty || p !== "")
     .map((p) => JSON.stringify(p))
     .map(encodeURIComponent)
     .join(delimiter);
@@ -45,8 +49,9 @@ export const mergeStringPaths = (path1: string, path2: string): string =>
  * Resolve a path string against another path string.
  * */
 export const resolvePath = (currentPath: string, newPath: string): string => {
-  let currentSegments = getPathArray(currentPath);
-  const newSegments = getPathArray(newPath);
+  const newSegments = getPathArray(newPath, PATH_DELIMITER, true);
+
+  let currentSegments = getPathArray(currentPath, PATH_DELIMITER, true);
 
   // If the new path is absolute, start from the root
   if (newPath.startsWith("/")) {

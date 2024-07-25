@@ -28,12 +28,15 @@ export const App: FC = () => {
     <ApplicationStateProvider>
       <GlobalStyle />
       <Route>
-        <h1>Voltra</h1>
-        <h3>Info</h3>
-        <a href="https://docs.voltra.app/docs">Docs</a>
-        <h3>Demos</h3>
-        <a href="type-info">Type Info</a>
-        <br />
+        <Route path="" exact>
+          <h1>Voltra</h1>
+          <h3>Info</h3>
+          <a href="https://docs.voltra.app/docs">Docs</a>
+          <br />
+          <h3>Demos</h3>
+          <a href="type-info">Type Info</a>
+          <br />
+        </Route>
         <Route path="type-info">
           <TypeInfo />
         </Route>
