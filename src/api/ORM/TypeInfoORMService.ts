@@ -43,31 +43,26 @@ export class TypeInfoORMService {
   };
 
   create = async (typeName: string, item: Record<any, any>): Promise<any> => {
-    const typeInfo = this.getTypeInfo(typeName);
+    const validationResults = validateTypeInfoValue(
+      item,
+      typeName,
+      this.typeInfoMap,
+      true,
+      this.customValidators,
+      "create",
+    );
 
-    if (!getTypeOperationAllowed("create", typeInfo)) {
-      throw new Error(TypeInfoORMServiceErrors.DENIED_TYPE_OPERATION.CREATE);
-    } else {
+    if (validationResults.valid) {
+      const typeInfo = this.getTypeInfo(typeName);
       const driver = this.getDriver(typeName);
-      const validationResults = validateTypeInfoValue(
-        item,
-        typeName,
-        this.typeInfoMap,
-        true,
-        this.customValidators,
-        "create",
-      );
+      const newItem = await driver.createItem(item);
 
       // TODO: NESTING: No nesting, just id references
       //  OR maybe nothing at all and use a separate API for relationships.
 
-      if (validationResults.valid) {
-        const newItem = await driver.createItem(item);
-
-        return newItem;
-      } else {
-        throw validationResults;
-      }
+      return newItem;
+    } else {
+      throw validationResults;
     }
   };
 }
