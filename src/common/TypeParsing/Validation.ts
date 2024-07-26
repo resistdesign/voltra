@@ -1,8 +1,10 @@
 import {
   SupportedFieldTags,
+  TypeInfo,
   TypeInfoField,
   TypeInfoMap,
   TypeKeyword,
+  TypeOperation,
 } from "./TypeInfo";
 import { getPathString } from "../Routing";
 
@@ -44,13 +46,20 @@ export const ERROR_MESSAGE_CONSTANTS = {
   TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
 };
 
+export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
+  create: "DENIED_TYPE_OPERATION_CREATE",
+  read: "DENIED_TYPE_OPERATION_READ",
+  update: "DENIED_TYPE_OPERATION_UPDATE",
+  delete: "DENIED_TYPE_OPERATION_DELETE",
+};
+
 /**
  * The validation results for type info fields.
  */
 export type TypeInfoValidationResults = {
   valid: boolean;
   error: string;
-  errorMap: Record<string, string>;
+  errorMap: Record<string, string[]>;
 };
 
 /**
@@ -231,10 +240,78 @@ export const validateArrayOfTypeInfoFieldValues = (
     );
 
     results.valid = getValidityValue(results.valid, indexValid);
-    results.errorMap[getPathString([i])] = indexError;
+    results.errorMap[getPathString([i])] = [indexError];
 
     for (const er in indexErrorMap) {
       results.errorMap[getPathString([i, er])] = indexErrorMap[er];
+    }
+  }
+
+  return results;
+};
+
+/**
+ * Validates a type info field operation.
+ * */
+export const validateTypeInfoFieldOperationAllowed = (
+  fieldName: string,
+  fieldOperation?: TypeOperation,
+  typeInfoField?: TypeInfoField,
+): TypeInfoValidationResults => {
+  const results: TypeInfoValidationResults = {
+    valid: true,
+    error: "",
+    errorMap: {},
+  };
+
+  if (fieldOperation && typeInfoField) {
+    const { tags = {} }: Partial<TypeInfoField> = typeInfoField || {};
+    const { deniedOperations: { [fieldOperation]: denied = false } = {} } =
+      tags;
+
+    results.valid = !denied;
+
+    if (!results.valid) {
+      results.error = DENIED_TYPE_OPERATIONS[fieldOperation];
+
+      results.errorMap[fieldName] = [results.error];
+    }
+  }
+
+  return results;
+};
+
+/**
+ * Validates a type info operation.
+ * */
+export const validateTypeOperationAllowed = (
+  value: any,
+  typeOperation: TypeOperation,
+  typeInfo: TypeInfo,
+): TypeInfoValidationResults => {
+  const results: TypeInfoValidationResults = {
+    valid: true,
+    error: "",
+    errorMap: {},
+  };
+  const { fields = {}, tags = {} } = typeInfo;
+  const { deniedOperations: { [typeOperation]: denied = false } = {} } = tags;
+  const valueFields = typeof value === "object" ? Object.keys(value ?? {}) : [];
+
+  if (denied) {
+    results.valid = false;
+    results.error = DENIED_TYPE_OPERATIONS[typeOperation];
+  } else {
+    for (const vF of valueFields) {
+      const vFieldInfo = fields[vF];
+      const { valid: vFValid, error: vFError } =
+        validateTypeInfoFieldOperationAllowed(vF, typeOperation, vFieldInfo);
+
+      results.valid = getValidityValue(results.valid, vFValid);
+
+      if (!vFValid) {
+        results.errorMap[vF] = [vFError];
+      }
     }
   }
 
@@ -250,6 +327,7 @@ export const validateTypeInfoValue = (
   typeInfoMap: TypeInfoMap,
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
+  typeOperation?: TypeOperation,
 ): TypeInfoValidationResults => {
   const typeInfo = typeInfoMap[typeInfoFullName];
   const results: TypeInfoValidationResults = {
@@ -261,6 +339,29 @@ export const validateTypeInfoValue = (
   if (typeInfo) {
     const { fields } = typeInfo;
 
+    if (typeOperation) {
+      const {
+        valid: operationValid,
+        error: operationError,
+        errorMap: operationErrorMap,
+      } = validateTypeOperationAllowed(value, typeOperation, typeInfo);
+
+      results.valid = getValidityValue(results.valid, operationValid);
+      results.error = operationError;
+
+      for (const oE in operationErrorMap) {
+        const existingError = results.errorMap[oE] ?? [];
+
+        results.errorMap[oE] = existingError
+          ? [...existingError, ...operationErrorMap[oE]]
+          : operationErrorMap[oE];
+      }
+
+      if (!operationValid && operationError) {
+        results.error = operationError;
+      }
+    }
+
     if (strict) {
       const knownFields = Object.keys(fields || {});
       const valueFields = Object.keys(value || {});
@@ -268,7 +369,7 @@ export const validateTypeInfoValue = (
       for (const vF of valueFields) {
         if (!knownFields.includes(vF)) {
           results.valid = false;
-          results.errorMap[vF] = ERROR_MESSAGE_CONSTANTS.INVALID_FIELD;
+          results.errorMap[vF] = [ERROR_MESSAGE_CONSTANTS.INVALID_FIELD];
         }
       }
     }
@@ -291,7 +392,7 @@ export const validateTypeInfoValue = (
         );
 
         results.valid = getValidityValue(results.valid, fieldValid);
-        results.errorMap[key] = fieldError;
+        results.errorMap[key] = [fieldError];
 
         for (const fE in fieldErrorMap) {
           results.errorMap[getPathString([key, fE])] = fieldErrorMap[fE];
