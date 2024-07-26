@@ -59,6 +59,7 @@ export class TypeInfoORMService {
       // TODO: NESTING: No nesting, just id references
       //  OR maybe nothing at all and use a separate API for relationships.
       // TODO: Should `readonly` add denials for all other operations on a field???
+      // TODO: Is there a solid, simple way to do pattern validation on field values???
 
       return newItem;
     } else {
