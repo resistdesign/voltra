@@ -53,7 +53,6 @@ export class TypeInfoORMService {
     );
 
     if (validationResults.valid) {
-      const typeInfo = this.getTypeInfo(typeName);
       const driver = this.getDriver(typeName);
       const newItem = await driver.createItem(item);
 
