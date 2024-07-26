@@ -58,6 +58,7 @@ export class TypeInfoORMService {
 
       // TODO: NESTING: No nesting, just id references
       //  OR maybe nothing at all and use a separate API for relationships.
+      // TODO: Should `readonly` add denials for all other operations on a field???
 
       return newItem;
     } else {
