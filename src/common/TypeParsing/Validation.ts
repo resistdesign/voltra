@@ -167,6 +167,7 @@ export const validateTypeInfoFieldValue = (
     results.errorMap = arrayErrorMap;
   } else {
     if (typeReference) {
+      // TODO: Should nesting actually be handled???
       const {
         valid: validTypeInfo,
         error: typeInfoError,
