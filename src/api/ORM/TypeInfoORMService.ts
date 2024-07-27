@@ -1,41 +1,110 @@
-import { DBServiceItemDriver } from "./ServiceTypes";
+import {
+  DBRelatedItemDriver,
+  DBRelationshipItem,
+  DBServiceItemDriver,
+} from "./ServiceTypes";
 import { TypeInfoMap, TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
+  TypeInfoValidationResults,
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
 
-export const TypeInfoORMServiceErrors = {
+export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
+  NO_RELATIONSHIP_DRIVERS_SUPPLIED: "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
   INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
   INVALID_DRIVER: "INVALID_DRIVER",
+  INVALID_RELATIONSHIP_DRIVER: "INVALID_RELATIONSHIP_DRIVER",
+};
+
+export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
+  INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",
+  INVALID_RELATIONSHIP_ITEM_FIELD: "INVALID_RELATIONSHIP_ITEM_FIELD",
+};
+
+export const validateRelationshipItem = (
+  relationshipItem: DBRelationshipItem,
+): TypeInfoValidationResults => {
+  const results: TypeInfoValidationResults = {
+    valid: true,
+    error: "",
+    errorMap: {},
+  };
+
+  if (typeof relationshipItem === "object" && relationshipItem !== null) {
+    for (const f in relationshipItem) {
+      if (typeof relationshipItem[f] !== "string" || !relationshipItem[f]) {
+        results.valid = false;
+        results.error =
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+        results.errorMap[f] =
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM_FIELD;
+      }
+    }
+  } else {
+    results.valid = false;
+    results.error = TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+  }
+
+  return results;
+};
+
+export type TypeInfoORMServiceConfig = {
+  typeInfoMap: TypeInfoMap;
+  driver?: DBServiceItemDriver<any, any>;
+  getDriver?: (typeName: string) => DBServiceItemDriver<any, any>;
+  relationshipDriver?: DBRelatedItemDriver;
+  getRelationshipDriver?: (
+    typeName: string,
+    fieldName: string,
+  ) => DBRelatedItemDriver;
+  customValidators?: CustomTypeInfoFieldValidatorMap;
 };
 
 export class TypeInfoORMService {
-  constructor(
-    protected typeInfoMap: TypeInfoMap,
-    protected driver?: DBServiceItemDriver<any, any>,
-    protected getDriver?: (typeName: string) => DBServiceItemDriver<any, any>,
-    protected customValidators?: CustomTypeInfoFieldValidatorMap,
-  ) {
-    if (!driver && !getDriver) {
-      throw new Error(TypeInfoORMServiceErrors.NO_DRIVERS_SUPPLIED);
+  constructor(protected config: TypeInfoORMServiceConfig) {
+    if (!config.driver && !config.getDriver) {
+      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.NO_DRIVERS_SUPPLIED);
+    }
+
+    if (!config.relationshipDriver && !config.getRelationshipDriver) {
+      throw new Error(
+        TYPE_INFO_ORM_SERVICE_ERRORS.NO_RELATIONSHIP_DRIVERS_SUPPLIED,
+      );
     }
   }
 
   protected getDriverInternal = (
     typeName: string,
   ): DBServiceItemDriver<any, any> => {
-    const driver = this.driver
-      ? this.driver
-      : this.getDriver
-        ? this.getDriver(typeName)
+    const driver = this.config.driver
+      ? this.config.driver
+      : this.config.getDriver
+        ? this.config.getDriver(typeName)
         : undefined;
 
     if (!driver) {
-      throw new Error(TypeInfoORMServiceErrors.INVALID_DRIVER);
+      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_DRIVER);
+    }
+
+    return driver;
+  };
+
+  protected getRelationshipDriverInternal = (
+    typeName: string,
+    fieldName: string,
+  ): DBRelatedItemDriver => {
+    const driver = this.config.relationshipDriver
+      ? this.config.relationshipDriver
+      : this.config.getRelationshipDriver
+        ? this.config.getRelationshipDriver(typeName, fieldName)
+        : undefined;
+
+    if (!driver) {
+      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP_DRIVER);
     }
 
     return driver;
@@ -49,9 +118,9 @@ export class TypeInfoORMService {
     const validationResults = validateTypeInfoValue(
       item,
       typeName,
-      this.typeInfoMap,
+      this.config.typeInfoMap,
       true,
-      this.customValidators,
+      this.config.customValidators,
       typeOperation,
       RelationshipValidationType.STRICT_EXCLUDE,
     );
@@ -60,6 +129,10 @@ export class TypeInfoORMService {
       throw validationResults;
     }
   };
+
+  createRelationship = async (
+    relationshipItem: DBRelationshipItem,
+  ): Promise<boolean> => {};
 
   /**
    * Create a new item of the given type.
