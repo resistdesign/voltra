@@ -1,3 +1,6 @@
+/**
+ * A set of possible operations for a type or field value.
+ * */
 export enum TypeOperation {
   create = "create",
   read = "read",
@@ -6,11 +9,16 @@ export enum TypeOperation {
 }
 
 /**
+ * A map of denied operations for a type or field value.
+ * */
+export type DeniedOperations = Partial<Record<TypeOperation, boolean>>;
+
+/**
  * Voltra supported `TypeInfo` tags.
  * */
 export type SupportedTags = {
   label?: string;
-  deniedOperations?: Record<TypeOperation, boolean>;
+  deniedOperations?: DeniedOperations;
 };
 
 /**
@@ -30,7 +38,7 @@ export type SupportedFieldTags = {
     max?: number;
     pattern?: string;
   };
-  deniedOperations?: Record<TypeOperation, boolean>;
+  deniedOperations?: DeniedOperations;
 };
 
 /**
