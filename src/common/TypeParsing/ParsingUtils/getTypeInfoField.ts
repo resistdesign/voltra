@@ -1,5 +1,5 @@
 import { PropertySignature, SyntaxKind } from "typescript";
-import { TypeInfoField, TypeKeyword } from "../TypeInfo";
+import { SupportedFieldTags, TypeInfoField, TypeKeyword } from "../TypeInfo";
 import { extractTypeDetails } from "./extractTypeDetails";
 import { extractCommentTags } from "./extractCommentTags";
 
@@ -24,7 +24,25 @@ export const getTypeInfoField = (
     ? modifiers.some((modifier) => modifier.kind === SyntaxKind.ReadonlyKeyword)
     : false;
   const optional = !!propertySignature.questionToken;
-  const tags = extractCommentTags(propertySignature);
+
+  let tags = extractCommentTags(propertySignature);
+
+  if (readonly) {
+    const {
+      deniedOperations,
+      deniedOperations: { create, update, delete: del } = {},
+    }: SupportedFieldTags = tags || {};
+
+    tags = {
+      ...tags,
+      deniedOperations: {
+        ...deniedOperations,
+        create: create ?? true,
+        update: update ?? true,
+        delete: del ?? true,
+      },
+    };
+  }
 
   return {
     type: typeKeyword,

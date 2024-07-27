@@ -76,6 +76,7 @@ export class TypeInfoORMService {
     //  OR maybe nothing at all and use a separate API for relationships.
     // TODO: Should there even be a driver MAP???
     // TODO: Should `readonly` add denials for all other operations on a field???
+    // TODO: Validate union field sets???
 
     return newItem;
   };
