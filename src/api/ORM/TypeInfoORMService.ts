@@ -75,7 +75,6 @@ export class TypeInfoORMService {
     // TODO: NESTING: No nesting, just id references
     //  OR maybe nothing at all and use a separate API for relationships.
     // TODO: Should there even be a driver MAP???
-    // TODO: Validate union field sets???
 
     return newItem;
   };
