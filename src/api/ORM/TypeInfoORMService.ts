@@ -66,6 +66,7 @@ export class TypeInfoORMService {
       true,
       this.customValidators,
       typeOperation,
+      true,
     );
 
     if (!validationResults.valid) {
