@@ -1,5 +1,4 @@
 import {
-  SupportedFieldTags,
   TypeInfo,
   TypeInfoField,
   TypeInfoMap,
@@ -20,6 +19,15 @@ export type CustomTypeInfoFieldValidatorMap = Record<
   string,
   CustomTypeInfoFieldValidator
 >;
+
+/**
+ * The validation results for type info fields.
+ */
+export type TypeInfoValidationResults = {
+  valid: boolean;
+  error: string;
+  errorMap: Record<string, string[]>;
+};
 
 /**
  * The error message constants for custom types.
@@ -44,6 +52,8 @@ export const ERROR_MESSAGE_CONSTANTS = {
   INVALID_FIELD: "INVALID_FIELD",
   INVALID_TYPE: "INVALID_TYPE",
   TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
+  INVALID_PATTERN: "INVALID_PATTERN",
+  VALUE_DOES_NOT_MATCH_PATTERN: "VALUE_DOES_NOT_MATCH_PATTERN",
 };
 
 export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
@@ -54,12 +64,41 @@ export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
 };
 
 /**
- * The validation results for type info fields.
- */
-export type TypeInfoValidationResults = {
-  valid: boolean;
-  error: string;
-  errorMap: Record<string, string[]>;
+ * Validates a value against a pattern.
+ *
+ * `value` must be a string or not supplied.
+ * `pattern` must be a string or not supplied.
+ *
+ * If either are not supplied, the result is valid.
+ * */
+export const validateValueMatchesPattern = (
+  value?: any,
+  pattern?: string,
+): TypeInfoValidationResults => {
+  const results: TypeInfoValidationResults = {
+    valid: true,
+    error: "",
+    errorMap: {},
+  };
+  const valueSupplied = typeof value !== "undefined";
+  const patternSupplied = typeof pattern === "string" && pattern.trim() !== "";
+
+  if (!valueSupplied || !patternSupplied) {
+    try {
+      const regex = new RegExp(pattern as string);
+      const testResult = typeof value === "string" && regex.test(value);
+
+      if (!testResult) {
+        results.valid = false;
+        results.error = ERROR_MESSAGE_CONSTANTS.VALUE_DOES_NOT_MATCH_PATTERN;
+      }
+    } catch (e) {
+      results.valid = false;
+      results.error = ERROR_MESSAGE_CONSTANTS.INVALID_PATTERN;
+    }
+  }
+
+  return results;
 };
 
 /**
@@ -138,8 +177,14 @@ export const validateTypeInfoFieldValue = (
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
 ): TypeInfoValidationResults => {
-  const { type, typeReference, array, optional, possibleValues, tags } =
-    typeInfoField;
+  const {
+    type,
+    typeReference,
+    array,
+    optional,
+    possibleValues,
+    tags: { customType, inputConstraints: { pattern = undefined } = {} } = {},
+  } = typeInfoField;
   const results: TypeInfoValidationResults = {
     valid: true,
     error: "",
@@ -188,7 +233,6 @@ export const validateTypeInfoFieldValue = (
       results.error = ERROR_MESSAGE_CONSTANTS.INVALID_OPTION;
     } else {
       const pendingValid = validateKeywordType(value, type);
-      const { customType }: Partial<SupportedFieldTags> = tags || {};
       const customValid = validateCustomType(
         value,
         customType,
@@ -198,10 +242,20 @@ export const validateTypeInfoFieldValue = (
       results.valid = getValidityValue(results.valid, pendingValid);
       results.valid = getValidityValue(results.valid, customValid);
 
+      if (type === "string") {
+        const { valid: patternValid, error: patternError } =
+          validateValueMatchesPattern(value, pattern);
+
+        results.valid = getValidityValue(results.valid, patternValid);
+        results.error = patternError;
+      }
+
       if (!customValid) {
         results.error = INVALID_CUSTOM_TYPE;
       } else if (!results.valid) {
-        results.error = PRIMITIVE_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword];
+        results.error = results.error
+          ? results.error
+          : PRIMITIVE_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword];
       }
     }
   }
