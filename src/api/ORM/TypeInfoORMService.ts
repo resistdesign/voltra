@@ -1,9 +1,14 @@
 import { DBServiceItemDriver } from "./ServiceTypes";
-import { TypeInfo, TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoMap,
+  TypeOperation,
+} from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
+import { TypeInfoDataItem } from "../../app/components";
 
 export type DBServiceItemDriverMap = Record<
   string,
@@ -42,27 +47,36 @@ export class TypeInfoORMService {
     return driver;
   };
 
-  create = async (typeName: string, item: Record<any, any>): Promise<any> => {
+  protected validate = (
+    typeName: string,
+    item: TypeInfoDataItem,
+    typeOperation: TypeOperation,
+  ) => {
     const validationResults = validateTypeInfoValue(
       item,
       typeName,
       this.typeInfoMap,
       true,
       this.customValidators,
-      "create",
+      typeOperation,
     );
 
-    if (validationResults.valid) {
-      const driver = this.getDriver(typeName);
-      const newItem = await driver.createItem(item);
-
-      // TODO: NESTING: No nesting, just id references
-      //  OR maybe nothing at all and use a separate API for relationships.
-      // TODO: Should `readonly` add denials for all other operations on a field???
-
-      return newItem;
-    } else {
+    if (!validationResults.valid) {
       throw validationResults;
     }
+  };
+
+  create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
+    this.validate(typeName, item, TypeOperation.CREATE);
+
+    const driver = this.getDriver(typeName);
+    const newItem = await driver.createItem(item);
+
+    // TODO: NESTING: No nesting, just id references
+    //  OR maybe nothing at all and use a separate API for relationships.
+    // TODO: Should there even be a driver MAP???
+    // TODO: Should `readonly` add denials for all other operations on a field???
+
+    return newItem;
   };
 }
