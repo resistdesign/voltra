@@ -373,7 +373,7 @@ export const validateTypeInfoFieldOperationAllowed = (
  * Validates a type info operation.
  * */
 export const validateTypeOperationAllowed = (
-  value: any,
+  valueFields: string[],
   typeOperation: TypeOperation,
   typeInfo: TypeInfo,
 ): TypeInfoValidationResults => {
@@ -384,7 +384,6 @@ export const validateTypeOperationAllowed = (
   };
   const { fields = {}, tags = {} } = typeInfo;
   const { deniedOperations: { [typeOperation]: denied = false } = {} } = tags;
-  const valueFields = typeof value === "object" ? Object.keys(value ?? {}) : [];
 
   if (denied) {
     results.valid = false;
@@ -429,11 +428,13 @@ export const validateTypeInfoValue = (
     const { fields, unionFieldSets } = typeInfo;
 
     if (typeOperation) {
+      const valueFields =
+        typeof value === "object" ? Object.keys(value ?? {}) : [];
       const {
         valid: operationValid,
         error: operationError,
         errorMap: operationErrorMap,
-      } = validateTypeOperationAllowed(value, typeOperation, typeInfo);
+      } = validateTypeOperationAllowed(valueFields, typeOperation, typeInfo);
 
       results.valid = getValidityValue(results.valid, operationValid);
       results.error = operationError;
