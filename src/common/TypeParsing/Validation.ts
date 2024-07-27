@@ -51,6 +51,7 @@ export const ERROR_MESSAGE_CONSTANTS = {
   INVALID_OPTION: "INVALID_OPTION",
   INVALID_FIELD: "INVALID_FIELD",
   INVALID_TYPE: "INVALID_TYPE",
+  NO_UNION_TYPE_MATCHED: "NO_UNION_TYPE_MATCHED",
   TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
   INVALID_PATTERN: "INVALID_PATTERN",
   VALUE_DOES_NOT_MATCH_PATTERN: "VALUE_DOES_NOT_MATCH_PATTERN",
@@ -392,7 +393,7 @@ export const validateTypeInfoValue = (
   };
 
   if (typeInfo) {
-    const { fields } = typeInfo;
+    const { fields, unionFieldSets } = typeInfo;
 
     if (typeOperation) {
       const {
@@ -417,7 +418,25 @@ export const validateTypeInfoValue = (
       }
     }
 
-    if (strict) {
+    if (unionFieldSets) {
+      const valueFields = Object.keys(value || {});
+
+      let valid = false;
+
+      for (const uFS of unionFieldSets) {
+        // IMPORTANT: One of the union field sets MUST contain all of the value fields.
+        valid = valueFields.every((vF) => uFS.includes(vF));
+
+        if (valid) {
+          break;
+        }
+      }
+
+      if (!valid) {
+        results.valid = false;
+        results.error = ERROR_MESSAGE_CONSTANTS.NO_UNION_TYPE_MATCHED;
+      }
+    } else if (strict) {
       const knownFields = Object.keys(fields || {});
       const valueFields = Object.keys(value || {});
 
