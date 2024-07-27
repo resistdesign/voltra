@@ -14,7 +14,7 @@ import {
   TypeInfoDataItem,
   TypeNavigation,
 } from "./Types";
-import {SupportedTags, TypeInfo, TypeInfoField} from "../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
 import { ObjectSelector } from "./Inputs/ObjectSelector";
 
@@ -37,12 +37,12 @@ const BaseForm = styled(Form)`
   gap: 1em;
 `;
 const FormControls = styled.div`
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 1em;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1em;
 `;
 const FormControlButton = styled.button`
   flex: 0 0 auto;
@@ -109,15 +109,9 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           typeReference,
           possibleValues = [],
           array,
-          tags,
+          tags = {},
         } = field;
-        const inputOptions: SupportedTags = tags as SupportedTags;
-        const {
-          label = "",
-          allowCustomSelection,
-          customInputType,
-          hidden,
-        } = inputOptions;
+        const { label = "", allowCustomSelection, customType, hidden } = tags;
 
         if (!hidden) {
           const isSelect = possibleValues.length > 0;
@@ -128,7 +122,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
                 array,
                 isSelect,
                 allowCustomSelection,
-                customInputType,
+                customType,
                 customInputTypeMap,
               );
           const fieldValue = internalValue[fieldName];
@@ -141,7 +135,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
                 typeInfoField={field}
                 value={fieldValue}
                 onChange={onFieldChange}
-                options={inputOptions}
+                options={tags}
                 onNavigateToType={onNavigateToType}
               />
               <LabelText>&nbsp;{label}</LabelText>

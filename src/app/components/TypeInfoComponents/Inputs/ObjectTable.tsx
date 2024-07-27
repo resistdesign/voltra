@@ -1,6 +1,6 @@
 import { FC, useMemo } from "react";
 import {
-  SupportedTags,
+  SupportedFieldTags,
   TypeInfo,
   TypeInfoField,
 } from "../../../../common/TypeParsing/TypeInfo";
@@ -32,7 +32,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       fieldNames
         .map((f) => {
           const { tags = {} } = typeInfoFields[f];
-          const { label = f, hidden } = tags as SupportedTags;
+          const { label = f, hidden } = tags as SupportedFieldTags;
 
           return hidden ? undefined : label;
         })
@@ -59,11 +59,11 @@ export const ObjectTable: FC<ObjectTableProps> = ({
                 typeReference,
                 tags = {},
               } = typeInfoFields[fieldName];
-              const { hidden, customInputType } = tags as SupportedTags;
+              const { hidden, customType } = tags as SupportedFieldTags;
               const stringValueForDisplay = transformValueToString(
                 item[fieldName as keyof typeof item],
                 type,
-                customInputType,
+                customType,
               );
 
               if (!hidden) {
