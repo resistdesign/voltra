@@ -73,3 +73,20 @@ export type DBServiceItemDriver<
     config: ListItemsConfig,
   ) => AsyncReturnValue<ListItemResults<ItemType> | boolean>;
 };
+
+/**
+ * An item containing the information about a relationship between two items.
+ * */
+export type DBRelationshipItem = {
+  id: string;
+  fromTypeName: string;
+  fromTypePrimaryFieldValue: string;
+  fromTypeFieldName: string;
+  toTypeName: string;
+  toTypePrimaryFieldValue: string;
+};
+
+/**
+ * A driver for a database service that handles relationship items.
+ * */
+export type DBRelatedItemDriver = DBServiceItemDriver<DBRelationshipItem, "id">;
