@@ -67,7 +67,7 @@ export class TypeInfoORMService {
   };
 
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
-    this.validate(typeName, item, TypeOperation.CREATE);
+    this.validate(typeName, item, "create");
 
     const driver = this.getDriver(typeName);
     const newItem = await driver.createItem(item);
