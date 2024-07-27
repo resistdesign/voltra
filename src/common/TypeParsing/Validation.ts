@@ -183,7 +183,7 @@ export const validateTypeInfoFieldValue = (
     array,
     optional,
     possibleValues,
-    tags: { customType, inputConstraints: { pattern = undefined } = {} } = {},
+    tags: { customType, constraints: { pattern = undefined } = {} } = {},
   } = typeInfoField;
   const results: TypeInfoValidationResults = {
     valid: true,
