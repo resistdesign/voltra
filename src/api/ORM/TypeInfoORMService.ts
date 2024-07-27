@@ -1,9 +1,5 @@
 import { DBServiceItemDriver } from "./ServiceTypes";
-import {
-  TypeInfo,
-  TypeInfoMap,
-  TypeOperation,
-} from "../../common/TypeParsing/TypeInfo";
+import { TypeInfoMap, TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
@@ -28,16 +24,6 @@ export class TypeInfoORMService {
       throw new Error(TypeInfoORMServiceErrors.NO_DRIVERS_SUPPLIED);
     }
   }
-
-  protected getTypeInfo = (typeName: string): TypeInfo => {
-    const typeInfo = this.typeInfoMap[typeName];
-
-    if (!typeInfo) {
-      throw new Error(TypeInfoORMServiceErrors.INVALID_TYPE_INFO);
-    }
-
-    return typeInfo;
-  };
 
   protected getDriverInternal = (
     typeName: string,
@@ -75,6 +61,9 @@ export class TypeInfoORMService {
     }
   };
 
+  /**
+   * Create a new item of the given type.
+   * */
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
     this.validate(typeName, item, TypeOperation.create);
 
