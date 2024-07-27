@@ -18,7 +18,7 @@ export type SupportedFieldTags = {
   allowCustomSelection?: boolean;
   customType?: string;
   hidden?: boolean;
-  inputConstraints?: {
+  constraints?: {
     defaultValue?: any;
     step?: number;
     min?: number;

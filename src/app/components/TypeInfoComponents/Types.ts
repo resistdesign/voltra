@@ -1,7 +1,7 @@
 import { FC, InputHTMLAttributes } from "react";
 import {
-  SupportedTags,
   LiteralValue,
+  SupportedFieldTags,
   TypeInfoField,
 } from "../../../common/TypeParsing/TypeInfo";
 
@@ -24,7 +24,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   typeInfoField?: TypeInfoField;
   value: ValueType;
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
-  options?: SupportedTags;
+  options?: SupportedFieldTags;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
