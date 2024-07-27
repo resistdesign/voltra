@@ -1,4 +1,9 @@
-export type TypeOperation = "create" | "read" | "update" | "delete";
+export enum TypeOperation {
+  create = "create",
+  read = "read",
+  update = "update",
+  delete = "delete",
+}
 
 /**
  * Voltra supported `TypeInfo` tags.
