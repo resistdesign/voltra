@@ -6,6 +6,10 @@ import {
   TypeOperation,
 } from "./TypeInfo";
 import { getPathString } from "../Routing";
+import {
+  DBRelationshipItem,
+  DBRelationshipItemKeys,
+} from "../../api/ORM/ServiceTypes";
 
 export enum RelationshipValidationType {
   INCLUDE = "INCLUDE",
@@ -35,23 +39,14 @@ export type TypeInfoValidationResults = {
   errorMap: Record<string, string[]>;
 };
 
-/**
- * The error message constants for custom types.
- * */
 export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
 
-/**
- * The error message constants for primitive types.
- * */
 export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS: Record<TypeKeyword, string> = {
   string: "NOT_A_STRING",
   number: "NOT_A_NUMBER",
   boolean: "NOT_A_BOOLEAN",
 };
 
-/**
- * The error message constants for validation.
- */
 export const ERROR_MESSAGE_CONSTANTS = {
   MISSING: "MISSING",
   INVALID_OPTION: "INVALID_OPTION",
@@ -513,6 +508,44 @@ export const validateTypeInfoValue = (
     if (!results.valid && !results.error) {
       results.error = ERROR_MESSAGE_CONSTANTS.INVALID_TYPE;
     }
+  }
+
+  return results;
+};
+
+export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
+  INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",
+  INVALID_RELATIONSHIP_ITEM_FIELD: "INVALID_RELATIONSHIP_ITEM_FIELD",
+};
+
+/**
+ * Validates a relationship item.
+ * */
+export const validateRelationshipItem = (
+  relationshipItem: DBRelationshipItem,
+): TypeInfoValidationResults => {
+  const results: TypeInfoValidationResults = {
+    valid: true,
+    error: "",
+    errorMap: {},
+  };
+
+  if (typeof relationshipItem === "object" && relationshipItem !== null) {
+    const relKeyValues = Object.values(DBRelationshipItemKeys);
+
+    for (const rKV of relKeyValues) {
+      if (typeof relationshipItem[rKV] !== "string" || !relationshipItem[rKV]) {
+        results.valid = false;
+        results.error =
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+        results.errorMap[rKV] = [
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM_FIELD,
+        ];
+      }
+    }
+  } else {
+    results.valid = false;
+    results.error = TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
   }
 
   return results;

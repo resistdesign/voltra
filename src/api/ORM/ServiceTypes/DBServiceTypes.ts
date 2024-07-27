@@ -75,16 +75,21 @@ export type DBServiceItemDriver<
 };
 
 /**
+ * The keys for a relationship item.
+ * */
+export enum DBRelationshipItemKeys {
+  id = "id",
+  fromTypeName = "fromTypeName",
+  fromTypePrimaryFieldValue = "fromTypePrimaryFieldValue",
+  fromTypeFieldName = "fromTypeFieldName",
+  toTypeName = "toTypeName",
+  toTypePrimaryFieldValue = "toTypePrimaryFieldValue",
+}
+
+/**
  * An item containing the information about a relationship between two items.
  * */
-export type DBRelationshipItem = {
-  id: string;
-  fromTypeName: string;
-  fromTypePrimaryFieldValue: string;
-  fromTypeFieldName: string;
-  toTypeName: string;
-  toTypePrimaryFieldValue: string;
-};
+export type DBRelationshipItem = Record<DBRelationshipItemKeys, string>;
 
 /**
  * A driver for a database service that handles relationship items.
