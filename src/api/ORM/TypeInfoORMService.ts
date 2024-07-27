@@ -81,8 +81,7 @@ export class TypeInfoORMService {
     const driver = this.getDriverInternal(typeName);
     const newItem = await driver.createItem(item);
 
-    // TODO: NESTING: No nesting, just id references
-    //  OR maybe nothing at all and use a separate API for relationships.
+    // TODO: NESTING: No nesting, use a separate API for relationships.
 
     return newItem;
   };
