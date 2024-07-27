@@ -7,6 +7,12 @@ import {
 } from "./TypeInfo";
 import { getPathString } from "../Routing";
 
+export enum RelationshipValidationType {
+  INCLUDE = "INCLUDE",
+  EXCLUDE = "EXCLUDE",
+  STRICT_EXCLUDE = "STRICT_EXCLUDE",
+}
+
 /**
  * A custom type info field validator.
  * */
@@ -50,6 +56,8 @@ export const ERROR_MESSAGE_CONSTANTS = {
   MISSING: "MISSING",
   INVALID_OPTION: "INVALID_OPTION",
   INVALID_FIELD: "INVALID_FIELD",
+  RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED:
+    "RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED",
   INVALID_TYPE: "INVALID_TYPE",
   NO_UNION_TYPE_MATCHED: "NO_UNION_TYPE_MATCHED",
   TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
@@ -178,7 +186,7 @@ export const validateTypeInfoFieldValue = (
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
-  externalizeRelationships?: boolean,
+  relationshipValidationType?: RelationshipValidationType,
 ): TypeInfoValidationResults => {
   const {
     type,
@@ -209,7 +217,7 @@ export const validateTypeInfoFieldValue = (
       strict,
       customValidators,
       typeOperation,
-      externalizeRelationships,
+      relationshipValidationType,
     );
 
     results.valid = getValidityValue(results.valid, validArray);
@@ -217,7 +225,10 @@ export const validateTypeInfoFieldValue = (
     results.errorMap = arrayErrorMap;
   } else {
     if (typeReference) {
-      if (!externalizeRelationships) {
+      if (
+        typeof relationshipValidationType === "undefined" ||
+        relationshipValidationType === RelationshipValidationType.INCLUDE
+      ) {
         const {
           valid: validTypeInfo,
           error: typeInfoError,
@@ -229,12 +240,22 @@ export const validateTypeInfoFieldValue = (
           strict,
           customValidators,
           typeOperation,
-          externalizeRelationships,
+          relationshipValidationType,
         );
 
         results.valid = getValidityValue(results.valid, validTypeInfo);
         results.error = typeInfoError;
         results.errorMap = typeInfoErrorMap;
+      } else if (
+        relationshipValidationType === RelationshipValidationType.STRICT_EXCLUDE
+      ) {
+        const valueSupplied = typeof value !== "undefined";
+
+        if (valueSupplied) {
+          results.valid = false;
+          results.error =
+            ERROR_MESSAGE_CONSTANTS.RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED;
+        }
       }
     } else if (possibleValues && !possibleValues.includes(value)) {
       results.valid = false;
@@ -281,7 +302,7 @@ export const validateArrayOfTypeInfoFieldValues = (
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
-  externalizeRelationships?: boolean,
+  relationshipValidationType?: RelationshipValidationType,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,
@@ -303,7 +324,7 @@ export const validateArrayOfTypeInfoFieldValues = (
       strict,
       customValidators,
       typeOperation,
-      externalizeRelationships,
+      relationshipValidationType,
     );
 
     results.valid = getValidityValue(results.valid, indexValid);
@@ -395,7 +416,7 @@ export const validateTypeInfoValue = (
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
-  externalizeRelationships?: boolean,
+  relationshipValidationType?: RelationshipValidationType,
 ): TypeInfoValidationResults => {
   const typeInfo = typeInfoMap[typeInfoFullName];
   const results: TypeInfoValidationResults = {
@@ -476,7 +497,7 @@ export const validateTypeInfoValue = (
           strict,
           customValidators,
           typeOperation,
-          externalizeRelationships,
+          relationshipValidationType,
         );
 
         results.valid = getValidityValue(results.valid, fieldValid);
