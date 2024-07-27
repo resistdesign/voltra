@@ -6,6 +6,7 @@ import {
 } from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
+  RelationshipValidationType,
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
@@ -66,7 +67,7 @@ export class TypeInfoORMService {
       true,
       this.customValidators,
       typeOperation,
-      true,
+      RelationshipValidationType.STRICT_EXCLUDE,
     );
 
     if (!validationResults.valid) {
