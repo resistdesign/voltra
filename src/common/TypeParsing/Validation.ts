@@ -177,6 +177,8 @@ export const validateTypeInfoFieldValue = (
   ignoreArray: boolean = false,
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
+  typeOperation?: TypeOperation,
+  externalizeRelationships?: boolean,
 ): TypeInfoValidationResults => {
   const {
     type,
@@ -206,6 +208,8 @@ export const validateTypeInfoFieldValue = (
       typeInfoMap,
       strict,
       customValidators,
+      typeOperation,
+      externalizeRelationships,
     );
 
     results.valid = getValidityValue(results.valid, validArray);
@@ -213,22 +217,25 @@ export const validateTypeInfoFieldValue = (
     results.errorMap = arrayErrorMap;
   } else {
     if (typeReference) {
-      // TODO: Should nesting actually be handled???
-      const {
-        valid: validTypeInfo,
-        error: typeInfoError,
-        errorMap: typeInfoErrorMap,
-      } = validateTypeInfoValue(
-        value,
-        typeReference,
-        typeInfoMap,
-        strict,
-        customValidators,
-      );
+      if (!externalizeRelationships) {
+        const {
+          valid: validTypeInfo,
+          error: typeInfoError,
+          errorMap: typeInfoErrorMap,
+        } = validateTypeInfoValue(
+          value,
+          typeReference,
+          typeInfoMap,
+          strict,
+          customValidators,
+          typeOperation,
+          externalizeRelationships,
+        );
 
-      results.valid = getValidityValue(results.valid, validTypeInfo);
-      results.error = typeInfoError;
-      results.errorMap = typeInfoErrorMap;
+        results.valid = getValidityValue(results.valid, validTypeInfo);
+        results.error = typeInfoError;
+        results.errorMap = typeInfoErrorMap;
+      }
     } else if (possibleValues && !possibleValues.includes(value)) {
       results.valid = false;
       results.error = ERROR_MESSAGE_CONSTANTS.INVALID_OPTION;
@@ -273,6 +280,8 @@ export const validateArrayOfTypeInfoFieldValues = (
   typeInfoMap: TypeInfoMap,
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
+  typeOperation?: TypeOperation,
+  externalizeRelationships?: boolean,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,
@@ -293,6 +302,8 @@ export const validateArrayOfTypeInfoFieldValues = (
       true,
       strict,
       customValidators,
+      typeOperation,
+      externalizeRelationships,
     );
 
     results.valid = getValidityValue(results.valid, indexValid);
@@ -384,6 +395,7 @@ export const validateTypeInfoValue = (
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
+  externalizeRelationships?: boolean,
 ): TypeInfoValidationResults => {
   const typeInfo = typeInfoMap[typeInfoFullName];
   const results: TypeInfoValidationResults = {
@@ -463,6 +475,8 @@ export const validateTypeInfoValue = (
           false,
           strict,
           customValidators,
+          typeOperation,
+          externalizeRelationships,
         );
 
         results.valid = getValidityValue(results.valid, fieldValid);
