@@ -110,6 +110,9 @@ export class TypeInfoORMService {
     }
   };
 
+  /**
+   * Create a new relationship between two items.
+   * */
   createRelationship = async (
     relationshipItem: DBRelationshipItem,
   ): Promise<boolean> => {
@@ -124,8 +127,6 @@ export class TypeInfoORMService {
 
     const driver = this.getDriverInternal(typeName);
     const newItem = await driver.createItem(item);
-
-    // TODO: NESTING: No nesting, use a separate API for relationships.
 
     return newItem;
   };
