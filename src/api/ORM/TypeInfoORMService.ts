@@ -7,7 +7,7 @@ import { TypeInfoMap, TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
-  TypeInfoValidationResults,
+  validateRelationshipItem,
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
@@ -18,38 +18,6 @@ export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
   INVALID_DRIVER: "INVALID_DRIVER",
   INVALID_RELATIONSHIP_DRIVER: "INVALID_RELATIONSHIP_DRIVER",
-};
-
-export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
-  INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",
-  INVALID_RELATIONSHIP_ITEM_FIELD: "INVALID_RELATIONSHIP_ITEM_FIELD",
-};
-
-export const validateRelationshipItem = (
-  relationshipItem: DBRelationshipItem,
-): TypeInfoValidationResults => {
-  const results: TypeInfoValidationResults = {
-    valid: true,
-    error: "",
-    errorMap: {},
-  };
-
-  if (typeof relationshipItem === "object" && relationshipItem !== null) {
-    for (const f in relationshipItem) {
-      if (typeof relationshipItem[f] !== "string" || !relationshipItem[f]) {
-        results.valid = false;
-        results.error =
-          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
-        results.errorMap[f] =
-          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM_FIELD;
-      }
-    }
-  } else {
-    results.valid = false;
-    results.error = TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
-  }
-
-  return results;
 };
 
 export type TypeInfoORMServiceConfig = {
@@ -130,9 +98,23 @@ export class TypeInfoORMService {
     }
   };
 
+  protected validateRelationshipItem = (
+    relationshipItem: DBRelationshipItem,
+  ) => {
+    const validationResults = validateRelationshipItem(relationshipItem);
+
+    // TODO: Validate against type info. Make sure that such a relationship exists.
+
+    if (!validationResults.valid) {
+      throw validationResults;
+    }
+  };
+
   createRelationship = async (
     relationshipItem: DBRelationshipItem,
-  ): Promise<boolean> => {};
+  ): Promise<boolean> => {
+    // TODO: Clean the relationship item.
+  };
 
   /**
    * Create a new item of the given type.
