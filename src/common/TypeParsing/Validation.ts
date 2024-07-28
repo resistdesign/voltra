@@ -7,8 +7,8 @@ import {
 } from "./TypeInfo";
 import { getPathString } from "../Routing";
 import {
-  DBRelationshipItem,
   DBRelationshipItemKeys,
+  NewDBRelationshipItem,
 } from "../../api/ORM/ServiceTypes";
 
 export enum RelationshipValidationType {
@@ -522,7 +522,7 @@ export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
  * Validates a relationship item.
  * */
 export const validateRelationshipItem = (
-  relationshipItem: DBRelationshipItem,
+  relationshipItem: NewDBRelationshipItem,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,

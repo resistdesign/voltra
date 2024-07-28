@@ -2,7 +2,9 @@ import {
   DBRelatedItemDriver,
   DBRelationshipItem,
   DBRelationshipItemKeys,
+  DBRelationshipOrigin,
   DBServiceItemDriver,
+  NewDBRelationshipItem,
 } from "./ServiceTypes";
 import {
   TypeInfo,
@@ -17,18 +19,22 @@ import {
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../common/SearchTypes";
 
 export const cleanRelationshipItem = (
-  relationshipItem: DBRelationshipItem,
-): DBRelationshipItem => {
+  relationshipItem: NewDBRelationshipItem,
+): NewDBRelationshipItem => {
   const relItemKeys = Object.values(DBRelationshipItemKeys);
-  const cleanedItem: Partial<DBRelationshipItem> = {};
+  const cleanedItem: Partial<NewDBRelationshipItem> = {};
 
   for (const rIK of relItemKeys) {
     cleanedItem[rIK] = relationshipItem[rIK];
   }
 
-  return cleanedItem as DBRelationshipItem;
+  return cleanedItem as NewDBRelationshipItem;
 };
 
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
@@ -129,7 +135,7 @@ export class TypeInfoORMService {
   };
 
   protected validateRelationshipItem = (
-    relationshipItem: DBRelationshipItem,
+    relationshipItem: NewDBRelationshipItem,
   ) => {
     const validationResults = validateRelationshipItem(relationshipItem);
 
@@ -162,7 +168,7 @@ export class TypeInfoORMService {
    * Create a new relationship between two items.
    * */
   createRelationship = async (
-    relationshipItem: DBRelationshipItem,
+    relationshipItem: NewDBRelationshipItem,
   ): Promise<string> => {
     this.validateRelationshipItem(relationshipItem);
 
@@ -176,6 +182,68 @@ export class TypeInfoORMService {
 
     return newIdentifier;
   };
+
+  /**
+   * Delete a relationship between two items.
+   * */
+  deletedRelationship = async (
+    relationshipItem: DBRelationshipItem,
+  ): Promise<boolean> => {
+    this.validateRelationshipItem(relationshipItem);
+
+    const cleanedItem = cleanRelationshipItem(relationshipItem);
+    const {
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue,
+      toTypePrimaryFieldValue,
+    } = cleanedItem;
+    const driver = this.getRelationshipDriverInternal(
+      fromTypeName,
+      fromTypeFieldName,
+    );
+    const { items: itemList = [] } = await driver.listItems({
+      criteria: {
+        isSearchCriteria: true,
+        logicalOperator: LogicalOperators.AND,
+        fieldCriteria: [
+          {
+            fieldName: DBRelationshipItemKeys.fromTypeName,
+            operator: ComparisonOperators.EQUALS,
+            value: fromTypeName,
+          },
+          {
+            fieldName: DBRelationshipItemKeys.fromTypePrimaryFieldValue,
+            operator: ComparisonOperators.EQUALS,
+            value: fromTypePrimaryFieldValue,
+          },
+          {
+            fieldName: DBRelationshipItemKeys.fromTypeFieldName,
+            operator: ComparisonOperators.EQUALS,
+            value: fromTypeFieldName,
+          },
+          {
+            fieldName: DBRelationshipItemKeys.toTypePrimaryFieldValue,
+            operator: ComparisonOperators.EQUALS,
+            value: toTypePrimaryFieldValue,
+          },
+        ],
+      },
+      checkExistence: false,
+    });
+
+    for (const item of itemList) {
+      const { id: itemId } = item;
+
+      await driver.deleteItem(itemId);
+    }
+
+    return false;
+  };
+
+  listRelatedItems = async (
+    relationshipDefinition: DBRelationshipOrigin,
+  ): Promise<TypeInfoDataItem[]> => {};
 
   /**
    * Create a new item of the given type.
