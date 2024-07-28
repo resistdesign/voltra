@@ -48,10 +48,8 @@ export const TYPE_INFO_ORM_SERVICE_ERRORS = {
 
 export type TypeInfoORMServiceConfig = {
   typeInfoMap: TypeInfoMap;
-  driver?: DBServiceItemDriver<any, any>;
-  getDriver?: (typeName: string) => DBServiceItemDriver<any, any>;
-  relationshipDriver?: DBRelatedItemDriver;
-  getRelationshipDriver?: (
+  getDriver: (typeName: string) => DBServiceItemDriver<any, any>;
+  getRelationshipDriver: (
     typeName: string,
     fieldName: string,
   ) => DBRelatedItemDriver;
@@ -60,11 +58,11 @@ export type TypeInfoORMServiceConfig = {
 
 export class TypeInfoORMService {
   constructor(protected config: TypeInfoORMServiceConfig) {
-    if (!config.driver && !config.getDriver) {
+    if (!config.getDriver) {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.NO_DRIVERS_SUPPLIED);
     }
 
-    if (!config.relationshipDriver && !config.getRelationshipDriver) {
+    if (!config.getRelationshipDriver) {
       throw new Error(
         TYPE_INFO_ORM_SERVICE_ERRORS.NO_RELATIONSHIP_DRIVERS_SUPPLIED,
       );
@@ -74,11 +72,7 @@ export class TypeInfoORMService {
   protected getDriverInternal = (
     typeName: string,
   ): DBServiceItemDriver<any, any> => {
-    const driver = this.config.driver
-      ? this.config.driver
-      : this.config.getDriver
-        ? this.config.getDriver(typeName)
-        : undefined;
+    const driver = this.config.getDriver(typeName);
 
     if (!driver) {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_DRIVER);
@@ -91,11 +85,7 @@ export class TypeInfoORMService {
     typeName: string,
     fieldName: string,
   ): DBRelatedItemDriver => {
-    const driver = this.config.relationshipDriver
-      ? this.config.relationshipDriver
-      : this.config.getRelationshipDriver
-        ? this.config.getRelationshipDriver(typeName, fieldName)
-        : undefined;
+    const driver = this.config.getRelationshipDriver(typeName, fieldName);
 
     if (!driver) {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP_DRIVER);
