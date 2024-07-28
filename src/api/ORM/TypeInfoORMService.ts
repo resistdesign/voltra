@@ -1,6 +1,7 @@
 import {
   DBRelatedItemDriver,
   DBRelationshipItem,
+  DBRelationshipItemKeys,
   DBServiceItemDriver,
 } from "./ServiceTypes";
 import { TypeInfoMap, TypeOperation } from "../../common/TypeParsing/TypeInfo";
@@ -11,6 +12,19 @@ import {
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
+
+export const cleanRelationshipItem = (
+  relationshipItem: DBRelationshipItem,
+): DBRelationshipItem => {
+  const relItemKeys = Object.values(DBRelationshipItemKeys);
+  const cleanedItem: Partial<DBRelationshipItem> = {};
+
+  for (const rIK of relItemKeys) {
+    cleanedItem[rIK] = relationshipItem[rIK];
+  }
+
+  return cleanedItem as DBRelationshipItem;
+};
 
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
@@ -115,8 +129,17 @@ export class TypeInfoORMService {
    * */
   createRelationship = async (
     relationshipItem: DBRelationshipItem,
-  ): Promise<boolean> => {
-    // TODO: Clean the relationship item.
+  ): Promise<string> => {
+    this.validateRelationshipItem(relationshipItem);
+
+    const cleanedItem = cleanRelationshipItem(relationshipItem);
+    const driver = this.getRelationshipDriverInternal(
+      cleanedItem.typeName,
+      cleanedItem.fieldName,
+    );
+    const newIdentifier = await driver.createItem(cleanedItem);
+
+    return newIdentifier;
   };
 
   /**
@@ -126,8 +149,8 @@ export class TypeInfoORMService {
     this.validate(typeName, item, TypeOperation.create);
 
     const driver = this.getDriverInternal(typeName);
-    const newItem = await driver.createItem(item);
+    const newIdentifier = await driver.createItem(item);
 
-    return newItem;
+    return newIdentifier;
   };
 }
