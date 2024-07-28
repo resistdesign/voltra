@@ -28,8 +28,6 @@ export enum ComparisonOperators {
   ENDS_WITH = "ENDS_WITH",
 }
 
-// TODO: BOOLEAN EXISTENCE Criterion for Nested Searches!!!
-
 export type FieldCriterion = {
   fieldName: string;
   operator: ComparisonOperators;
