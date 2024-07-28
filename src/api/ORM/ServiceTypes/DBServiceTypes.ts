@@ -10,13 +10,29 @@ export type SortField = {
   reverse?: boolean;
 };
 
-export type ListItemsConfig = {
+/**
+ * The type for checking sub-item existence.
+ * */
+export type ListItemsConfigCheckType = boolean | undefined;
+
+/**
+ * The configuration for listing and searching for items.
+ * */
+export type ListItemsConfig<CheckType extends ListItemsConfigCheckType> = {
   itemsPerPage?: number;
   cursor?: string;
   criteria?: SearchCriteria;
   sortFields?: SortField[];
-  checkExistence?: boolean;
+  checkExistence?: CheckType;
 };
+
+/**
+ * The return type for listing items.
+ * */
+export type ListItemReturnType<
+  CheckType extends ListItemsConfigCheckType,
+  ItemType extends Record<any, any>,
+> = CheckType extends true ? boolean : ListItemResults<ItemType>;
 
 /**
  * A driver for a database service.
@@ -35,9 +51,9 @@ export type DBServiceItemDriver<
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<boolean>;
-  listItems: (
-    config: ListItemsConfig,
-  ) => Promise<ListItemResults<ItemType> | boolean>;
+  listItems: <CheckType extends ListItemsConfigCheckType>(
+    config: ListItemsConfig<CheckType>,
+  ) => Promise<ListItemReturnType<CheckType, ItemType>>;
 };
 
 /**
