@@ -14,40 +14,9 @@ export type ListItemsConfig = {
   itemsPerPage?: number;
   cursor?: string;
   criteria?: SearchCriteria;
-  // TODO: Use these maybe!?
   sortFields?: SortField[];
   checkExistence?: boolean;
 };
-
-export type PartialItemTypeWithUniquelyIdentifyingFieldName<
-  ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType,
-> = Partial<ItemType> & Pick<ItemType, UniquelyIdentifyingFieldName>;
-
-export type BooleanOrUndefined = boolean | undefined;
-
-export type PartialOrFullItemType<
-  PatchType extends BooleanOrUndefined,
-  ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType,
-> = PatchType extends true
-  ? PartialItemTypeWithUniquelyIdentifyingFieldName<
-      ItemType,
-      UniquelyIdentifyingFieldName
-    >
-  : ItemType;
-
-export type UpdateItemOperation<
-  ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType,
-> = (
-  updatedItem: PartialOrFullItemType<
-    typeof patch,
-    ItemType,
-    UniquelyIdentifyingFieldName
-  >,
-  patch?: BooleanOrUndefined,
-) => Promise<ItemType>;
 
 /**
  * A driver for a database service.
@@ -58,15 +27,14 @@ export type DBServiceItemDriver<
 > = {
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => Promise<ItemType>;
+  ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
   readItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<ItemType>;
-  updateItem: UpdateItemOperation<ItemType, UniquelyIdentifyingFieldName>;
+  updateItem: (updatedItem: Partial<ItemType>) => Promise<boolean>;
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ) => Promise<ItemType>;
-  // TODO: Needs to support Item Results OR Boolean Existence for a particular query.
+  ) => Promise<boolean>;
   listItems: (
     config: ListItemsConfig,
   ) => Promise<ListItemResults<ItemType> | boolean>;
