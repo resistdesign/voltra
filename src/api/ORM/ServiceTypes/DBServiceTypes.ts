@@ -1,7 +1,5 @@
 import { SearchCriteria } from "../../../common/SearchTypes";
 
-export type AsyncReturnValue<T> = Promise<T> | T;
-
 export type ListItemResults<ItemType extends Record<any, any>> = {
   cursor?: string;
   items: ItemType[];
@@ -49,7 +47,7 @@ export type UpdateItemOperation<
     UniquelyIdentifyingFieldName
   >,
   patch?: BooleanOrUndefined,
-) => AsyncReturnValue<ItemType>;
+) => Promise<ItemType>;
 
 /**
  * A driver for a database service.
@@ -60,18 +58,18 @@ export type DBServiceItemDriver<
 > = {
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => AsyncReturnValue<ItemType>;
+  ) => Promise<ItemType>;
   readItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ) => AsyncReturnValue<ItemType>;
+  ) => Promise<ItemType>;
   updateItem: UpdateItemOperation<ItemType, UniquelyIdentifyingFieldName>;
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ) => AsyncReturnValue<ItemType>;
+  ) => Promise<ItemType>;
   // TODO: Needs to support Item Results OR Boolean Existence for a particular query.
   listItems: (
     config: ListItemsConfig,
-  ) => AsyncReturnValue<ListItemResults<ItemType> | boolean>;
+  ) => Promise<ListItemResults<ItemType> | boolean>;
 };
 
 /**
@@ -94,4 +92,7 @@ export type DBRelationshipItem = Record<DBRelationshipItemKeys, string>;
 /**
  * A driver for a database service that handles relationship items.
  * */
-export type DBRelatedItemDriver = DBServiceItemDriver<DBRelationshipItem, "id">;
+export type DBRelatedItemDriver = DBServiceItemDriver<
+  DBRelationshipItem,
+  DBRelationshipItemKeys.id
+>;
