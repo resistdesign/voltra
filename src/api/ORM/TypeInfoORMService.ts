@@ -4,10 +4,15 @@ import {
   DBRelationshipItemKeys,
   DBServiceItemDriver,
 } from "./ServiceTypes";
-import { TypeInfoMap, TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoMap,
+  TypeOperation,
+} from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
+  TypeInfoValidationResults,
   validateRelationshipItem,
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
@@ -29,9 +34,10 @@ export const cleanRelationshipItem = (
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
   NO_RELATIONSHIP_DRIVERS_SUPPLIED: "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
-  INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
   INVALID_DRIVER: "INVALID_DRIVER",
   INVALID_RELATIONSHIP_DRIVER: "INVALID_RELATIONSHIP_DRIVER",
+  INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
+  INVALID_RELATIONSHIP: "INVALID_RELATIONSHIP",
 };
 
 export type TypeInfoORMServiceConfig = {
@@ -92,6 +98,16 @@ export class TypeInfoORMService {
     return driver;
   };
 
+  protected getTypeInfo = (typeName: string): TypeInfo => {
+    const typeInfo = this.config.typeInfoMap[typeName];
+
+    if (!typeInfo) {
+      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_TYPE_INFO);
+    }
+
+    return typeInfo;
+  };
+
   protected validate = (
     typeName: string,
     item: TypeInfoDataItem,
@@ -117,10 +133,28 @@ export class TypeInfoORMService {
   ) => {
     const validationResults = validateRelationshipItem(relationshipItem);
 
-    // TODO: Validate against type info. Make sure that such a relationship exists.
-
     if (!validationResults.valid) {
       throw validationResults;
+    } else {
+      const { fromTypeName, fromTypeFieldName } = relationshipItem;
+      const {
+        fields: {
+          [fromTypeFieldName]: { typeReference = undefined } = {},
+        } = {},
+      } = this.getTypeInfo(fromTypeName);
+      const relatedTypeInfo = typeReference
+        ? this.getTypeInfo(typeReference)
+        : undefined;
+
+      if (!relatedTypeInfo) {
+        const relationshipValidationResults: TypeInfoValidationResults = {
+          valid: false,
+          error: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP,
+          errorMap: {},
+        };
+
+        throw relationshipValidationResults;
+      }
     }
   };
 
@@ -133,9 +167,10 @@ export class TypeInfoORMService {
     this.validateRelationshipItem(relationshipItem);
 
     const cleanedItem = cleanRelationshipItem(relationshipItem);
+    const { fromTypeName, fromTypeFieldName } = cleanedItem;
     const driver = this.getRelationshipDriverInternal(
-      cleanedItem.typeName,
-      cleanedItem.fieldName,
+      fromTypeName,
+      fromTypeFieldName,
     );
     const newIdentifier = await driver.createItem(cleanedItem);
 
