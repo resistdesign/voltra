@@ -349,6 +349,9 @@ export class TypeInfoORMService {
     }
   };
 
+  /**
+   * Delete an existing item of the given type.
+   * */
   delete = async (
     typeName: string,
     primaryFieldValue: any,
@@ -361,6 +364,9 @@ export class TypeInfoORMService {
     return result;
   };
 
+  /**
+   * List items of the given type, with the given criteria.
+   * */
   list = async <CheckType extends ListItemsConfigCheckType>(
     typeName: string,
     config: ListItemsConfig<CheckType>,
