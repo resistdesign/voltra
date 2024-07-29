@@ -8,7 +8,7 @@ import {
 import { getPathString } from "../Routing";
 import {
   DBRelationshipItemKeys,
-  NewDBRelationshipItem,
+  DBRelationshipItemType,
 } from "../../api/ORM/ServiceTypes";
 
 export enum RelationshipValidationType {
@@ -522,7 +522,8 @@ export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
  * Validates a relationship item.
  * */
 export const validateRelationshipItem = (
-  relationshipItem: NewDBRelationshipItem,
+  relationshipItem: DBRelationshipItemType,
+  omitFields: DBRelationshipItemKeys[] = [],
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,
@@ -534,7 +535,14 @@ export const validateRelationshipItem = (
     const relKeyValues = Object.values(DBRelationshipItemKeys);
 
     for (const rKV of relKeyValues) {
-      if (typeof relationshipItem[rKV] !== "string" || !relationshipItem[rKV]) {
+      const universalRKV = rKV as keyof DBRelationshipItemType;
+      const omitRKV = omitFields.includes(rKV);
+
+      if (
+        !omitRKV &&
+        (typeof relationshipItem[universalRKV] !== "string" ||
+          !relationshipItem[universalRKV])
+      ) {
         results.valid = false;
         results.error =
           TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;

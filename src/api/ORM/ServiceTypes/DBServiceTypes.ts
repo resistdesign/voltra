@@ -88,6 +88,30 @@ export type DBRelationshipOrigin = Record<
 >;
 
 /**
+ * The origination portion of a `DBRelationshipItem` for a specific item.
+ * */
+export type DBRelationshipItemOrigin = DBRelationshipOrigin &
+  Record<DBRelationshipItemKeys.fromTypePrimaryFieldValue, string>;
+
+/**
+ * One of the various types describing a relationship item.
+ * */
+export type DBRelationshipItemType =
+  | NewDBRelationshipItem
+  | DBRelationshipItem
+  | DBRelationshipOrigin
+  | DBRelationshipItemOrigin;
+
+/**
+ * A configuration for listing relationships.
+ * */
+export type ListRelationshipsConfig<
+  CheckType extends ListItemsConfigCheckType,
+> = Omit<ListItemsConfig<CheckType>, "criteria"> & {
+  relationshipItemOrigin: DBRelationshipItemOrigin;
+};
+
+/**
  * A driver for a database service that handles relationship items.
  * */
 export type DBRelatedItemDriver = DBServiceItemDriver<DBRelationshipItem, "id">;
