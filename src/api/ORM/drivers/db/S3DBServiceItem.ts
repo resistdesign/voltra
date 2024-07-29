@@ -28,6 +28,10 @@ export type S3DBServiceItemDriverConfig = {
   readOnly?: boolean;
 };
 
+export const S3_DB_SERVICE_ITEM_DRIVER_ERRORS = {
+  MISSING_ID: "MISSING_ID",
+};
+
 /**
  * Use S3 as a {@link DBServiceItemDriver} for {@link BaseFileItem}s.
  * */
@@ -81,18 +85,9 @@ export const getS3DBServiceItemDriver = ({
         }),
       );
 
-      return {
-        id: getFullFileKey({
-          file: item as BaseFileLocationInfo,
-        }),
-        ...item,
-        updatedOn: LastModified?.getTime() || 0,
-        mimeType: ContentType,
-        sizeInBytes: ContentLength,
-        isDirectory: ContentType === "application/x-directory",
-        uploadUrl,
-        downloadUrl,
-      } as BaseFileItem;
+      return getFullFileKey({
+        file: item as BaseFileLocationInfo,
+      });
     },
     readItem: async (id) => {
       const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
@@ -127,40 +122,59 @@ export const getS3DBServiceItemDriver = ({
     },
     updateItem: async (item) => {
       const { directory, name, id } = item;
-      const oldItemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
-      const { name: oldName, directory: oldDirectory } = oldItemLoc;
 
-      if (name && (name !== oldName || directory !== oldDirectory)) {
-        await s3.send(
-          new CopyObjectCommand({
-            Bucket: bucketName,
-            Key: getFullFileKey({
-              file: {
-                directory,
-                name,
-              },
-              baseDirectory,
+      if (typeof id === "undefined") {
+        throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+      } else {
+        const oldItemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
+        const { name: oldName, directory: oldDirectory } = oldItemLoc;
+
+        if (name && (name !== oldName || directory !== oldDirectory)) {
+          await s3.send(
+            new CopyObjectCommand({
+              Bucket: bucketName,
+              Key: getFullFileKey({
+                file: {
+                  directory,
+                  name,
+                },
+                baseDirectory,
+              }),
+              CopySource: getFullFileKey({
+                file: oldItemLoc,
+                baseDirectory,
+              }),
             }),
-            CopySource: getFullFileKey({
-              file: oldItemLoc,
-              baseDirectory,
-            }),
-          }),
-        );
-        await s3FileDriver.deleteFile(oldItemLoc, baseDirectory);
+          );
+          await s3FileDriver.deleteFile(oldItemLoc, baseDirectory);
+        }
+
+        await driver.readItem(id);
       }
 
-      return driver.readItem(id);
+      return true;
     },
     deleteItem: async (id) => {
-      const oldFile = await driver.readItem(id);
+      if (typeof id === "undefined") {
+        throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+      } else {
+        await driver.readItem(id);
+        await s3FileDriver.deleteFile(
+          getBaseFileLocationInfo(id),
+          baseDirectory,
+        );
+      }
 
-      await s3FileDriver.deleteFile(getBaseFileLocationInfo(id), baseDirectory);
-
-      return oldFile;
+      return true;
     },
     listItems: async (config) => {
-      const { itemsPerPage, cursor } = config;
+      const {
+        itemsPerPage,
+        cursor,
+        sortFields = [],
+        criteria,
+        checkExistence,
+      } = config;
       const { files: baseFileList, cursor: newCursor } =
         await s3FileDriver.listFiles(
           undefined,
@@ -169,15 +183,17 @@ export const getS3DBServiceItemDriver = ({
           cursor,
         );
 
-      return {
-        items: baseFileList.map((bF) => ({
-          id: getFullFileKey({
-            file: bF,
-          }),
-          ...bF,
-        })),
-        cursor: newCursor,
-      };
+      return checkExistence
+        ? true
+        : {
+            items: baseFileList.map((bF) => ({
+              id: getFullFileKey({
+                file: bF,
+              }),
+              ...bF,
+            })),
+            cursor: newCursor,
+          };
     },
   };
 
