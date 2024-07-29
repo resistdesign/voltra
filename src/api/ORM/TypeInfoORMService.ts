@@ -43,6 +43,7 @@ export const cleanRelationshipItem = (
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
   NO_RELATIONSHIP_DRIVERS_SUPPLIED: "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
+  NO_PRIMARY_FIELD_VALUE_SUPPLIED: "NO_PRIMARY_FIELD_VALUE_SUPPLIED",
   INVALID_DRIVER: "INVALID_DRIVER",
   INVALID_RELATIONSHIP_DRIVER: "INVALID_RELATIONSHIP_DRIVER",
   INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
@@ -111,6 +112,7 @@ export class TypeInfoORMService {
     typeName: string,
     item: TypeInfoDataItem,
     typeOperation: TypeOperation,
+    itemIsPartial?: boolean,
   ) => {
     const validationResults = validateTypeInfoValue(
       item,
@@ -120,6 +122,7 @@ export class TypeInfoORMService {
       this.config.customValidators,
       typeOperation,
       RelationshipValidationType.STRICT_EXCLUDE,
+      itemIsPartial,
     );
 
     if (!validationResults.valid) {
@@ -291,6 +294,56 @@ export class TypeInfoORMService {
     const newIdentifier = await driver.createItem(item);
 
     return newIdentifier;
+  };
+
+  /**
+   * Read an existing item of the given type.
+   * */
+  read = async (
+    typeName: string,
+    primaryFieldValue: any,
+  ): Promise<TypeInfoDataItem> => {
+    const driver = this.getDriverInternal(typeName);
+    const item = await driver.readItem(primaryFieldValue);
+
+    return item;
+  };
+
+  /**
+   * Update an existing item of the given type.
+   *
+   * This update will always act as a **patch**.
+   * Use `null` to signify the deletion of a field.
+   * Assign values to **all** fields to perform a **replacement**.
+   *
+   * The `item` **must always** contain its **primary field value**.
+   * */
+  update = async (
+    typeName: string,
+    item: TypeInfoDataItem,
+  ): Promise<boolean> => {
+    this.validate(typeName, item, TypeOperation.update, true);
+
+    const { primaryField } = this.getTypeInfo(typeName);
+    const primaryFieldValue =
+      typeof item === "object" && item !== null
+        ? item[primaryField as keyof TypeInfoDataItem]
+        : undefined;
+
+    if (typeof primaryFieldValue === "undefined") {
+      const validationResults: TypeInfoValidationResults = {
+        valid: false,
+        error: TYPE_INFO_ORM_SERVICE_ERRORS.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
+        errorMap: {},
+      };
+
+      throw validationResults;
+    } else {
+      const driver = this.getDriverInternal(typeName);
+      const result = await driver.updateItem(item);
+
+      return result;
+    }
   };
 
   // TODO: Should relationships be deleted when the item is deleted??????
