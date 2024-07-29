@@ -90,35 +90,39 @@ export const getS3DBServiceItemDriver = ({
       });
     },
     readItem: async (id) => {
-      const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
-      const {
-        ContentType = "",
-        ContentLength = 0,
-        LastModified,
-        Metadata: {} = {},
-      } = await s3.send(
-        new HeadObjectCommand({
-          Bucket: bucketName,
-          Key: getFullFileKey({
-            file: itemLoc,
-            baseDirectory,
+      if (typeof id === "undefined") {
+        throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+      } else {
+        const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
+        const {
+          ContentType = "",
+          ContentLength = 0,
+          LastModified,
+          Metadata: {} = {},
+        } = await s3.send(
+          new HeadObjectCommand({
+            Bucket: bucketName,
+            Key: getFullFileKey({
+              file: itemLoc,
+              baseDirectory,
+            }),
           }),
-        }),
-      );
-      const item: BaseFile = {
-        ...itemLoc,
-        updatedOn: LastModified?.getTime() || 0,
-        mimeType: ContentType,
-        sizeInBytes: ContentLength,
-        isDirectory: ContentType === "application/x-directory",
-      };
+        );
+        const item: BaseFile = {
+          ...itemLoc,
+          updatedOn: LastModified?.getTime() || 0,
+          mimeType: ContentType,
+          sizeInBytes: ContentLength,
+          isDirectory: ContentType === "application/x-directory",
+        };
 
-      return {
-        id: getFullFileKey({
-          file: itemLoc,
-        }),
-        ...item,
-      };
+        return {
+          id: getFullFileKey({
+            file: itemLoc,
+          }),
+          ...item,
+        };
+      }
     },
     updateItem: async (item) => {
       const { directory, name, id } = item;
