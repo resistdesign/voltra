@@ -1,8 +1,14 @@
+/**
+ * The logical operators for a search criteria.
+ * */
 export enum LogicalOperators {
   AND = "AND",
   OR = "OR",
 }
 
+/**
+ * The comparison operators for a field criterion.
+ * */
 export enum ComparisonOperators {
   EQUALS = "EQUALS",
   NOT_EQUALS = "NOT_EQUALS",
@@ -28,16 +34,36 @@ export enum ComparisonOperators {
   ENDS_WITH = "ENDS_WITH",
 }
 
+/**
+ * The field criterion for a search criteria.
+ * */
 export type FieldCriterion = {
   fieldName: string;
   operator: ComparisonOperators;
   customOperator?: string;
   value?: any;
-  subSearchCriteria?: SearchCriteria;
 };
 
+/**
+ * The criteria for a search.
+ * */
 export type SearchCriteria = {
-  isSearchCriteria: true;
   logicalOperator: LogicalOperators;
-  fieldCriteria: (FieldCriterion | SearchCriteria)[]; // TODO: Why is this both???
+  fieldCriteria: FieldCriterion[];
+};
+
+/**
+ * The field criterion for a report criteria.
+ * */
+export type ReportFieldCriterion = SearchCriteria & {
+  isReportFieldCriterion: true;
+  subSearchCriteria?: ReportCriteria;
+};
+
+/**
+ * The criteria for a report.
+ * */
+export type ReportCriteria = SearchCriteria & {
+  isReportCriteria: true;
+  fieldCriteria: (ReportFieldCriterion | ReportCriteria)[];
 };
