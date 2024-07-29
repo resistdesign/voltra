@@ -292,4 +292,6 @@ export class TypeInfoORMService {
 
     return newIdentifier;
   };
+
+  // TODO: Should relationships be deleted when the item is deleted??????
 }
