@@ -235,7 +235,7 @@ export class TypeInfoORMService {
       await driver.deleteItem(itemId);
     }
 
-    return false;
+    return true;
   };
 
   /**
