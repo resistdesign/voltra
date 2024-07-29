@@ -346,5 +346,18 @@ export class TypeInfoORMService {
     }
   };
 
-  // TODO: Should relationships be deleted when the item is deleted??????
+  delete = async (
+    typeName: string,
+    primaryFieldValue: any,
+  ): Promise<boolean> => {
+    const driver = this.getDriverInternal(typeName);
+    const result = await driver.deleteItem(primaryFieldValue);
+
+    return result;
+  };
+
+  // TODO: List.
 }
+
+// TODO: ACLs/Access Control. How to achieve fine grain control over who can access what exactly.
+// TODO: Introduce a Clean-Up driver that removes all relationships, and possibly related items, when items are deleted.
