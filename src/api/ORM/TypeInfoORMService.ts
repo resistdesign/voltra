@@ -2,8 +2,11 @@ import {
   DBRelatedItemDriver,
   DBRelationshipItem,
   DBRelationshipItemKeys,
-  DBRelationshipOrigin,
+  DBRelationshipItemType,
   DBServiceItemDriver,
+  ListItemReturnType,
+  ListItemsConfigCheckType,
+  ListRelationshipsConfig,
   NewDBRelationshipItem,
 } from "./ServiceTypes";
 import {
@@ -125,9 +128,13 @@ export class TypeInfoORMService {
   };
 
   protected validateRelationshipItem = (
-    relationshipItem: NewDBRelationshipItem,
+    relationshipItem: DBRelationshipItemType,
+    omitFields: DBRelationshipItemKeys[] = [],
   ) => {
-    const validationResults = validateRelationshipItem(relationshipItem);
+    const validationResults = validateRelationshipItem(
+      relationshipItem as NewDBRelationshipItem,
+      omitFields,
+    );
 
     if (!validationResults.valid) {
       throw validationResults;
@@ -231,9 +238,48 @@ export class TypeInfoORMService {
     return false;
   };
 
-  listRelatedItems = async (
-    relationshipDefinition: DBRelationshipOrigin,
-  ): Promise<TypeInfoDataItem[]> => {};
+  /**
+   * List the relationships for a given item.
+   * */
+  listRelationships = async <CheckType extends ListItemsConfigCheckType>(
+    config: ListRelationshipsConfig<CheckType>,
+  ): Promise<ListItemReturnType<CheckType, DBRelationshipItem>> => {
+    const { relationshipItemOrigin, ...remainingConfig } = config;
+    this.validateRelationshipItem(relationshipItemOrigin);
+
+    const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
+      relationshipItemOrigin;
+    const driver = this.getRelationshipDriverInternal(
+      fromTypeName,
+      fromTypeFieldName,
+    );
+    const results = await driver.listItems({
+      ...remainingConfig,
+      criteria: {
+        isSearchCriteria: true,
+        logicalOperator: LogicalOperators.AND,
+        fieldCriteria: [
+          {
+            fieldName: DBRelationshipItemKeys.fromTypeName,
+            operator: ComparisonOperators.EQUALS,
+            value: fromTypeName,
+          },
+          {
+            fieldName: DBRelationshipItemKeys.fromTypeFieldName,
+            operator: ComparisonOperators.EQUALS,
+            value: fromTypeFieldName,
+          },
+          {
+            fieldName: DBRelationshipItemKeys.fromTypePrimaryFieldValue,
+            operator: ComparisonOperators.EQUALS,
+            value: fromTypePrimaryFieldValue,
+          },
+        ],
+      },
+    });
+
+    return results;
+  };
 
   /**
    * Create a new item of the given type.
