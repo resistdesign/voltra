@@ -6,6 +6,7 @@ import {
   HeadObjectCommand,
   ListObjectsCommandOutput,
   ListObjectsV2Command,
+  ListObjectsV2CommandOutput,
   PutObjectCommand,
   PutObjectCommandInput,
   S3,
@@ -101,11 +102,18 @@ export const getS3FileDriver = ({
       ) {
         listAttempted = true;
 
-        const { Contents = [], NextContinuationToken } = await s3.send(
+        const {
+          Contents = [],
+          NextContinuationToken,
+        }: ListObjectsV2CommandOutput = await s3.send(
           new ListObjectsV2Command({
             Bucket: bucketName,
             Prefix: `${baseDirectory || ""}${path || ""}`,
             ContinuationToken: continuationToken,
+            MaxKeys:
+              maxNumberOfFiles === Infinity
+                ? undefined
+                : maxNumberOfFiles - allContents.length,
           }),
         );
 
@@ -113,30 +121,28 @@ export const getS3FileDriver = ({
         continuationToken = NextContinuationToken;
       }
 
-      if (allContents) {
-        for (const file of allContents) {
-          if (file.Key) {
-            const {
-              ContentType = "",
-              ContentLength = 0,
-              LastModified,
-              Metadata: {} = {},
-            } = await s3.send(
-              new HeadObjectCommand({
-                Bucket: bucketName,
-                Key: file.Key,
-              }),
-            );
+      for (const file of allContents) {
+        if (file.Key) {
+          const {
+            ContentType = "",
+            ContentLength = 0,
+            LastModified,
+            Metadata: {} = {},
+          } = await s3.send(
+            new HeadObjectCommand({
+              Bucket: bucketName,
+              Key: file.Key,
+            }),
+          );
 
-            files.push({
-              updatedOn: LastModified?.getTime() || 0,
-              mimeType: ContentType,
-              sizeInBytes: ContentLength,
-              directory: path,
-              name: file.Key.split("/").pop() || "",
-              isDirectory: ContentType === "application/x-directory",
-            });
-          }
+          files.push({
+            updatedOn: LastModified?.getTime() || 0,
+            mimeType: ContentType,
+            sizeInBytes: ContentLength,
+            directory: path,
+            name: file.Key.split("/").pop() || "",
+            isDirectory: ContentType === "application/x-directory",
+          });
         }
       }
 
