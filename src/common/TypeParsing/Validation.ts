@@ -182,6 +182,7 @@ export const validateTypeInfoFieldValue = (
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
   relationshipValidationType?: RelationshipValidationType,
+  itemIsPartial?: boolean,
 ): TypeInfoValidationResults => {
   const {
     type,
@@ -197,7 +198,7 @@ export const validateTypeInfoFieldValue = (
     errorMap: {},
   };
 
-  if (!optional && !hasValue(value)) {
+  if (!itemIsPartial && !optional && !hasValue(value)) {
     results.valid = false;
     results.error = ERROR_MESSAGE_CONSTANTS.MISSING;
   } else if (array && !ignoreArray) {
@@ -213,6 +214,7 @@ export const validateTypeInfoFieldValue = (
       customValidators,
       typeOperation,
       relationshipValidationType,
+      itemIsPartial,
     );
 
     results.valid = getValidityValue(results.valid, validArray);
@@ -236,6 +238,7 @@ export const validateTypeInfoFieldValue = (
           customValidators,
           typeOperation,
           relationshipValidationType,
+          itemIsPartial,
         );
 
         results.valid = getValidityValue(results.valid, validTypeInfo);
@@ -298,6 +301,7 @@ export const validateArrayOfTypeInfoFieldValues = (
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
   relationshipValidationType?: RelationshipValidationType,
+  itemIsPartial?: boolean,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,
@@ -320,6 +324,7 @@ export const validateArrayOfTypeInfoFieldValues = (
       customValidators,
       typeOperation,
       relationshipValidationType,
+      itemIsPartial,
     );
 
     results.valid = getValidityValue(results.valid, indexValid);
@@ -411,6 +416,7 @@ export const validateTypeInfoValue = (
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
   relationshipValidationType?: RelationshipValidationType,
+  itemIsPartial?: boolean,
 ): TypeInfoValidationResults => {
   const typeInfo = typeInfoMap[typeInfoFullName];
   const results: TypeInfoValidationResults = {
@@ -494,6 +500,7 @@ export const validateTypeInfoValue = (
           customValidators,
           typeOperation,
           relationshipValidationType,
+          itemIsPartial,
         );
 
         results.valid = getValidityValue(results.valid, fieldValid);
