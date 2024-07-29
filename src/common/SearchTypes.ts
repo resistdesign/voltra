@@ -39,5 +39,5 @@ export type FieldCriterion = {
 export type SearchCriteria = {
   isSearchCriteria: true;
   logicalOperator: LogicalOperators;
-  fieldCriteria: (FieldCriterion | SearchCriteria)[];
+  fieldCriteria: (FieldCriterion | SearchCriteria)[]; // TODO: Why is this both???
 };
