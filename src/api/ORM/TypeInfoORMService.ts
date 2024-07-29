@@ -5,6 +5,7 @@ import {
   DBRelationshipItemType,
   DBServiceItemDriver,
   ListItemReturnType,
+  ListItemsConfig,
   ListItemsConfigCheckType,
   ListRelationshipsConfig,
   NewDBRelationshipItem,
@@ -306,6 +307,8 @@ export class TypeInfoORMService {
     const driver = this.getDriverInternal(typeName);
     const item = await driver.readItem(primaryFieldValue);
 
+    // TODO: ACLs/Access Control. How to achieve fine grain control over who can access what exactly.
+
     return item;
   };
 
@@ -353,11 +356,22 @@ export class TypeInfoORMService {
     const driver = this.getDriverInternal(typeName);
     const result = await driver.deleteItem(primaryFieldValue);
 
+    // TODO: Introduce a Clean-Up driver that removes all relationships, and possibly related items, when items are deleted.
+
     return result;
   };
 
-  // TODO: List.
-}
+  list = async <CheckType extends ListItemsConfigCheckType>(
+    typeName: string,
+    config: ListItemsConfig<CheckType>,
+  ): Promise<ListItemReturnType<CheckType, TypeInfoDataItem>> => {
+    // TODO: Validation???
+    // TODO: Any relationship considerations?
+    //   Breaking down search criteria into multiple queries, per type???
 
-// TODO: ACLs/Access Control. How to achieve fine grain control over who can access what exactly.
-// TODO: Introduce a Clean-Up driver that removes all relationships, and possibly related items, when items are deleted.
+    const driver = this.getDriverInternal(typeName);
+    const results = await driver.listItems(config);
+
+    return results;
+  };
+}
