@@ -189,6 +189,7 @@ export const getS3DBServiceItemDriver = ({
         nextCursor: string | undefined = undefined;
 
       if (checkExistence) {
+        // TODO: Keep filtering files and checking for existence.
       } else {
         const { files: baseFileList = [], cursor: newCursor } =
           await s3FileDriver.listFiles(
