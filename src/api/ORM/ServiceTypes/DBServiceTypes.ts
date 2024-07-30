@@ -19,13 +19,20 @@ export type PagingInfo = {
 };
 
 /**
- * The configuration for listing and searching for items.
+ * The information for checking the existence of items.
  * */
-export type ListItemsConfig = PagingInfo & {
-  criteria?: SearchCriteria;
-  sortFields?: SortField[];
+export type ItemsExistenceInfo = {
   checkExistence?: boolean | undefined;
 };
+
+/**
+ * The configuration for listing and searching for items.
+ * */
+export type ListItemsConfig = PagingInfo &
+  ItemsExistenceInfo & {
+    criteria?: SearchCriteria;
+    sortFields?: SortField[];
+  };
 
 /**
  * A driver for a database service.
@@ -109,9 +116,10 @@ export type DBRelationshipItemType =
 /**
  * A configuration for listing relationships.
  * */
-export type ListRelationshipsConfig = PagingInfo & {
-  relationshipItemOrigin: DBRelationshipItemOrigin;
-};
+export type ListRelationshipsConfig = PagingInfo &
+  ItemsExistenceInfo & {
+    relationshipItemOrigin: DBRelationshipItemOrigin;
+  };
 
 /**
  * A driver for a database service that handles relationship items.

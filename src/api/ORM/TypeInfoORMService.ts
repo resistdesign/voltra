@@ -244,10 +244,10 @@ export class TypeInfoORMService {
    * List the relationships for a given item.
    * */
   listRelationships = async (
-    // TODO: Check existence???
     config: ListRelationshipsConfig,
-  ): Promise<ListItemResults<DBRelationshipItem>> => {
-    const { relationshipItemOrigin, ...remainingConfig } = config;
+  ): Promise<boolean | ListItemResults<DBRelationshipItem>> => {
+    const { relationshipItemOrigin, checkExistence, ...remainingConfig } =
+      config;
     this.validateRelationshipItem(relationshipItemOrigin);
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
@@ -256,8 +256,9 @@ export class TypeInfoORMService {
       fromTypeName,
       fromTypeFieldName,
     );
-    const results = (await driver.listItems({
+    const results = await driver.listItems({
       ...remainingConfig,
+      checkExistence,
       criteria: {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
@@ -278,7 +279,7 @@ export class TypeInfoORMService {
           },
         ],
       },
-    })) as ListItemResults<DBRelationshipItem>;
+    });
 
     return results;
   };
