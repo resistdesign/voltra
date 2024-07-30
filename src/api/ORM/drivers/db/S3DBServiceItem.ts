@@ -191,7 +191,7 @@ export const getS3DBServiceItemDriver = ({
         nextCursor: string | undefined = undefined;
 
       while (
-        filteredFiles.length < itemsPerPage &&
+        (checkExistence || filteredFiles.length < itemsPerPage) &&
         (!initiatedListing || nextCursor)
       ) {
         const { files: baseFileList = [], cursor: newCursor } =
