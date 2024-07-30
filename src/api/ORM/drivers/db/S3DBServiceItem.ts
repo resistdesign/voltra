@@ -15,6 +15,10 @@ import {
   getFullFileKey,
   getS3FileDriver,
 } from "../file";
+import {
+  getFilterTypeInfoDataItemsBySearchCriteria,
+  getSortedItems,
+} from "../../../../common/SearchUtils";
 
 export type BaseFileItem = {
   id: string;
@@ -180,24 +184,40 @@ export const getS3DBServiceItemDriver = ({
         criteria,
         checkExistence,
       } = config;
-      const { files: baseFileList, cursor: newCursor } =
-        await s3FileDriver.listFiles(
-          undefined,
-          baseDirectory,
-          itemsPerPage,
-          cursor,
-        );
+
+      let filteredFiles: BaseFileItem[] = [],
+        nextCursor: string | undefined = undefined;
+
+      if (checkExistence) {
+      } else {
+        const { files: baseFileList = [], cursor: newCursor } =
+          await s3FileDriver.listFiles(
+            undefined,
+            baseDirectory,
+            itemsPerPage,
+            cursor,
+          );
+        const currentFileItems = baseFileList.map((bF) => ({
+          id: getFullFileKey({
+            file: bF,
+          }),
+          ...bF,
+        }));
+
+        filteredFiles = criteria
+          ? (getFilterTypeInfoDataItemsBySearchCriteria(
+              criteria,
+              currentFileItems,
+            ) as BaseFileItem[])
+          : currentFileItems;
+        nextCursor = newCursor;
+      }
 
       return checkExistence
-        ? true
+        ? filteredFiles.length > 0
         : {
-            items: baseFileList.map((bF) => ({
-              id: getFullFileKey({
-                file: bF,
-              }),
-              ...bF,
-            })),
-            cursor: newCursor,
+            items: getSortedItems(sortFields, filteredFiles),
+            cursor: nextCursor,
           };
     },
   };

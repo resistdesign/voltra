@@ -1,4 +1,4 @@
-import { TypeInfoField, TypeInfoMap } from "./TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoField, TypeInfoMap } from "./TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
   FieldCriterion,
@@ -6,6 +6,7 @@ import {
   SearchCriteria,
 } from "./SearchTypes";
 import { TypeInfoDataItem } from "../app/components";
+import { SortField } from "../api/ORM/ServiceTypes";
 
 /**
  * Basic comparison operators for filtering data.
@@ -186,12 +187,13 @@ export const compareArray = (
  * Get the filtered data items based on the search criteria.
  * */
 export const getFilterTypeInfoDataItemsBySearchCriteria = (
-  typeInfoName: string,
-  typeInfoMap: TypeInfoMap,
   searchCriteria: SearchCriteria,
   items: TypeInfoDataItem[],
+  typeInfoName?: string,
+  typeInfoMap?: TypeInfoMap,
 ) => {
-  const { fields = {} } = typeInfoMap[typeInfoName];
+  const { fields = {} }: Partial<TypeInfo> =
+    typeInfoMap?.[typeInfoName as keyof TypeInfoMap] || {};
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
   const filteredItems: TypeInfoDataItem[] = [];
@@ -202,8 +204,8 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
 
       for (const fieldCriterion of fieldCriteria) {
         const { fieldName, operator, value } = fieldCriterion;
-        const { array: isArrayType, typeReference }: TypeInfoField =
-          fields[fieldName];
+        const { array: isArrayType, typeReference }: Partial<TypeInfoField> =
+          fields[fieldName] || {};
         const currentFieldValue = currentItem[fieldName];
 
         if (!typeReference) {
@@ -237,4 +239,35 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
   }
 
   return filteredItems;
+};
+
+/**
+ *
+ * */
+export const getSortedItems = (
+  sortFields: SortField[] = [],
+  items: TypeInfoDataItem[] = [],
+): TypeInfoDataItem[] => {
+  let newItems = [...items];
+
+  if (sortFields.length > 0) {
+    for (const sortF of sortFields) {
+      const { field, reverse } = sortF;
+
+      newItems = newItems.sort((a, b) => {
+        const aValue: any = a[field as keyof TypeInfoDataItem];
+        const bValue: any = b[field as keyof TypeInfoDataItem];
+
+        if (aValue < bValue) {
+          return reverse ? 1 : -1;
+        } else if (aValue > bValue) {
+          return reverse ? -1 : 1;
+        } else {
+          return 0;
+        }
+      });
+    }
+  }
+
+  return newItems;
 };
