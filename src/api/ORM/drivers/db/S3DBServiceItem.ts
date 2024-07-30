@@ -29,6 +29,7 @@ export type S3DBServiceItemDriverConfig = {
 };
 
 export const S3_DB_SERVICE_ITEM_DRIVER_ERRORS = {
+  INVALID_REQUEST: "INVALID_REQUEST",
   MISSING_ID: "MISSING_ID",
 };
 
@@ -204,14 +205,14 @@ export const getS3DBServiceItemDriver = ({
   return readOnly
     ? {
         createItem: async () => {
-          throw new Error("Method Not Allowed");
+          throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
         },
         readItem: driver.readItem,
         updateItem: async () => {
-          throw new Error("Method Not Allowed");
+          throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
         },
         deleteItem: async () => {
-          throw new Error("Method Not Allowed");
+          throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
         },
         listItems: driver.listItems,
       }
