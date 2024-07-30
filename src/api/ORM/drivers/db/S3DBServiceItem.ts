@@ -178,7 +178,7 @@ export const getS3DBServiceItemDriver = ({
     },
     listItems: async (config) => {
       const {
-        itemsPerPage,
+        itemsPerPage = Infinity,
         cursor,
         sortFields = [],
         criteria,
@@ -186,16 +186,18 @@ export const getS3DBServiceItemDriver = ({
       } = config;
 
       let filteredFiles: BaseFileItem[] = [],
+        initiatedListing: boolean = false,
         nextCursor: string | undefined = undefined;
 
-      if (checkExistence) {
-        // TODO: Keep filtering files and checking for existence.
-      } else {
+      while (
+        filteredFiles.length < itemsPerPage &&
+        (!initiatedListing || nextCursor)
+      ) {
         const { files: baseFileList = [], cursor: newCursor } =
           await s3FileDriver.listFiles(
             undefined,
             baseDirectory,
-            itemsPerPage,
+            checkExistence ? 100 : itemsPerPage - filteredFiles.length,
             cursor,
           );
         const currentFileItems = baseFileList.map((bF) => ({
@@ -205,6 +207,8 @@ export const getS3DBServiceItemDriver = ({
           ...bF,
         }));
 
+        initiatedListing = true;
+
         filteredFiles = criteria
           ? (getFilterTypeInfoDataItemsBySearchCriteria(
               criteria,
@@ -212,6 +216,10 @@ export const getS3DBServiceItemDriver = ({
             ) as BaseFileItem[])
           : currentFileItems;
         nextCursor = newCursor;
+
+        if (checkExistence && filteredFiles.length > 0) {
+          break;
+        }
       }
 
       return checkExistence
