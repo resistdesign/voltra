@@ -4,6 +4,7 @@ import {
   DBRelationshipItem,
   DBRelationshipItemKeys,
   DBRelationshipItemType,
+  DBRelationshipOriginatingItem,
   DBServiceItemDriver,
   ListItemResults,
   ListItemsConfig,
@@ -57,6 +58,9 @@ export type TypeInfoORMServiceConfig = {
     typeName: string,
     fieldName: string,
   ) => DBRelatedItemDriver;
+  createRelationshipCleanupItem?: (
+    relationshipOriginatingItem: DBRelationshipOriginatingItem,
+  ) => Promise<void>;
   customValidators?: CustomTypeInfoFieldValidatorMap;
 };
 
@@ -285,6 +289,19 @@ export class TypeInfoORMService {
   };
 
   /**
+   * Queue the cleanup of relationships for a given item.
+   * */
+  cleanupRelationships = async (
+    relationshipOriginatingItem: DBRelationshipOriginatingItem,
+  ): Promise<void> => {
+    if (this.config.createRelationshipCleanupItem) {
+      await this.config.createRelationshipCleanupItem(
+        relationshipOriginatingItem,
+      );
+    }
+  };
+
+  /**
    * Create a new item of the given type.
    * */
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
@@ -358,7 +375,10 @@ export class TypeInfoORMService {
     const driver = this.getDriverInternal(typeName);
     const result = await driver.deleteItem(primaryFieldValue);
 
-    // TODO: Introduce a Clean-Up driver that removes all relationships, and possibly related items, when items are deleted.
+    await this.cleanupRelationships({
+      fromTypeName: typeName,
+      fromTypePrimaryFieldValue: primaryFieldValue,
+    });
 
     return result;
   };
