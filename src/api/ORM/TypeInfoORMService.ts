@@ -374,6 +374,7 @@ export class TypeInfoORMService {
     //   Breaking down search criteria into multiple queries, per type???
 
     const driver = this.getDriverInternal(typeName);
+    // TODO: Need to access items through `read` to comply with ACLs/Access Control.
     const results = await driver.listItems(config);
 
     return results;
