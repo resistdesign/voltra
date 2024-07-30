@@ -391,11 +391,14 @@ export class TypeInfoORMService {
     config: ListItemsConfig,
   ): Promise<boolean | ListItemResults<TypeInfoDataItem>> => {
     // TODO: Validation???
-    // TODO: Any relationship considerations?
-    //   Breaking down search criteria into multiple queries, per type???
+    //   - no related fields allowed
+    //   - field must exist
+    //   - field must be readable
+    //   - operator must apply to field type
 
     const driver = this.getDriverInternal(typeName);
     // TODO: Need to access items through `read` to comply with ACLs/Access Control.
+    // TODO: IMPORTANT: Existence checks should not return true if any existing items are not accessible.
     const results = await driver.listItems(config);
 
     return results;
