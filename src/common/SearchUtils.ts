@@ -1,40 +1,137 @@
 import { TypeInfoField, TypeInfoMap } from "./TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
-  FieldCriterion,
   LogicalOperators,
   SearchCriteria,
 } from "./SearchTypes";
 import { TypeInfoDataItem } from "../app/components";
 
+/**
+ * Basic comparison operators for filtering data.
+ * */
 export const COMPARATORS: Record<
   ComparisonOperators,
-  (searchFieldCriterion: FieldCriterion, value: any) => boolean
+  (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => boolean
 > = {
-  [ComparisonOperators.EQUALS]: () => {},
-  [ComparisonOperators.NOT_EQUALS]: () => {},
-  [ComparisonOperators.GREATER_THAN]: () => {},
-  [ComparisonOperators.GREATER_THAN_OR_EQUAL]: () => {},
-  [ComparisonOperators.LESS_THAN]: () => {},
-  [ComparisonOperators.LESS_THAN_OR_EQUAL]: () => {},
-  [ComparisonOperators.IN]: () => {},
-  [ComparisonOperators.NOT_IN]: () => {},
-  [ComparisonOperators.LIKE]: () => {},
-  [ComparisonOperators.NOT_LIKE]: () => {},
-  [ComparisonOperators.EXISTS]: () => {},
-  [ComparisonOperators.NOT_EXISTS]: () => {},
-  [ComparisonOperators.IS_NOT_NULL]: () => {},
-  [ComparisonOperators.IS_NULL]: () => {},
-  [ComparisonOperators.IS_NOT_EMPTY]: () => {},
-  [ComparisonOperators.IS_EMPTY]: () => {},
-  [ComparisonOperators.BETWEEN]: () => {},
-  [ComparisonOperators.NOT_BETWEEN]: () => {},
-  [ComparisonOperators.CONTAINS]: () => {},
-  [ComparisonOperators.NOT_CONTAINS]: () => {},
-  [ComparisonOperators.STARTS_WITH]: () => {},
-  [ComparisonOperators.ENDS_WITH]: () => {},
+  [ComparisonOperators.EQUALS]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.NOT_EQUALS]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.GREATER_THAN]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.GREATER_THAN_OR_EQUAL]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.LESS_THAN]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.LESS_THAN_OR_EQUAL]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.IN]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.NOT_IN]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.LIKE]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.NOT_LIKE]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.EXISTS]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.NOT_EXISTS]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.IS_NOT_NULL]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.IS_NULL]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.IS_NOT_EMPTY]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.IS_EMPTY]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.BETWEEN]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.NOT_BETWEEN]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.CONTAINS]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.NOT_CONTAINS]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.STARTS_WITH]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
+  [ComparisonOperators.ENDS_WITH]: (
+    criterionValue: any,
+    criterionValueOptions: any[],
+    fieldValue: any,
+  ) => {},
 };
 
+/**
+ * Get the filtered data items based on the search criteria.
+ * */
 export const getFilterTypeInfoDataItemsBySearchCriteria = (
   typeInfoName: string,
   typeInfoMap: TypeInfoMap,
