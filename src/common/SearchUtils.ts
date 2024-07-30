@@ -21,42 +21,46 @@ export const COMPARATORS: Record<
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) => fieldValue === criterionValue,
   [ComparisonOperators.NOT_EQUALS]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) => fieldValue !== criterionValue,
   [ComparisonOperators.GREATER_THAN]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) => fieldValue > criterionValue,
   [ComparisonOperators.GREATER_THAN_OR_EQUAL]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) => fieldValue >= criterionValue,
   [ComparisonOperators.LESS_THAN]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) => fieldValue < criterionValue,
   [ComparisonOperators.LESS_THAN_OR_EQUAL]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) => fieldValue <= criterionValue,
   [ComparisonOperators.IN]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) =>
+    Array.isArray(criterionValueOptions) &&
+    criterionValueOptions.includes(fieldValue),
   [ComparisonOperators.NOT_IN]: (
     criterionValue: any,
     criterionValueOptions: any[],
     fieldValue: any,
-  ) => {},
+  ) =>
+    !Array.isArray(criterionValueOptions) ||
+    !criterionValueOptions.includes(fieldValue),
   [ComparisonOperators.LIKE]: (
     criterionValue: any,
     criterionValueOptions: any[],
