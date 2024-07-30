@@ -42,6 +42,7 @@ export type FieldCriterion = {
   operator: ComparisonOperators;
   customOperator?: string;
   value?: any;
+  valueOptions?: any[];
 };
 
 /**
