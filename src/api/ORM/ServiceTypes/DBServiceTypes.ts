@@ -11,28 +11,21 @@ export type SortField = {
 };
 
 /**
- * The type for checking sub-item existence.
+ * The information for paging through a list of items.
  * */
-export type ListItemsConfigCheckType = boolean | undefined;
+export type PagingInfo = {
+  itemsPerPage?: number;
+  cursor?: string;
+};
 
 /**
  * The configuration for listing and searching for items.
  * */
-export type ListItemsConfig<CheckType extends ListItemsConfigCheckType> = {
-  itemsPerPage?: number;
-  cursor?: string;
+export type ListItemsConfig = PagingInfo & {
   criteria?: SearchCriteria;
   sortFields?: SortField[];
-  checkExistence?: CheckType;
+  checkExistence?: boolean | undefined;
 };
-
-/**
- * The return type for listing items.
- * */
-export type ListItemReturnType<
-  CheckType extends ListItemsConfigCheckType,
-  ItemType extends Record<any, any>,
-> = CheckType extends true ? boolean : ListItemResults<ItemType>;
 
 /**
  * A driver for a database service.
@@ -51,9 +44,9 @@ export type DBServiceItemDriver<
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<boolean>;
-  listItems: <CheckType extends ListItemsConfigCheckType>(
-    config: ListItemsConfig<CheckType>,
-  ) => Promise<ListItemReturnType<CheckType, ItemType>>;
+  listItems: (
+    config: ListItemsConfig,
+  ) => Promise<boolean | ListItemResults<ItemType>>;
 };
 
 /**
@@ -67,16 +60,16 @@ export enum DBRelationshipItemKeys {
 }
 
 /**
- * An item containing the information about a relationship between two items.
- * */
-export type DBRelationshipItem = Record<DBRelationshipItemKeys, string> & {
-  id: string;
-};
-
-/**
  * A new `DBRelationshipItem`.
  * */
-export type NewDBRelationshipItem = Omit<DBRelationshipItem, "id">;
+export type BaseDBRelationshipItem = Record<DBRelationshipItemKeys, string>;
+
+/**
+ * An item containing the information about a relationship between two items.
+ * */
+export type DBRelationshipItem = BaseDBRelationshipItem & {
+  id: string;
+};
 
 /**
  * The origination portion of a `DBRelationshipItem`.
@@ -94,10 +87,21 @@ export type DBRelationshipItemOrigin = DBRelationshipOrigin &
   Record<DBRelationshipItemKeys.fromTypePrimaryFieldValue, string>;
 
 /**
+ * The originating item info portion of a `DBRelationshipItem`.
+ *
+ * Used for relationship originating from a specific item, regardless of field relationship.
+ * */
+export type DBRelationshipOriginatingItem = Record<
+  | DBRelationshipItemKeys.fromTypeName
+  | DBRelationshipItemKeys.fromTypePrimaryFieldValue,
+  string
+>;
+
+/**
  * One of the various types describing a relationship item.
  * */
 export type DBRelationshipItemType =
-  | NewDBRelationshipItem
+  | BaseDBRelationshipItem
   | DBRelationshipItem
   | DBRelationshipOrigin
   | DBRelationshipItemOrigin;
@@ -105,9 +109,7 @@ export type DBRelationshipItemType =
 /**
  * A configuration for listing relationships.
  * */
-export type ListRelationshipsConfig<
-  CheckType extends ListItemsConfigCheckType,
-> = Omit<ListItemsConfig<CheckType>, "criteria"> & {
+export type ListRelationshipsConfig = PagingInfo & {
   relationshipItemOrigin: DBRelationshipItemOrigin;
 };
 

@@ -55,15 +55,6 @@ export const getS3DBServiceItemDriver = ({
   });
   const driver: DBServiceItemDriver<BaseFileItem, "id"> = {
     createItem: async (item) => {
-      const uploadUrl = await s3FileDriver.getFileUploadUrl(
-        item as BaseFileLocationInfo,
-        baseDirectory,
-      );
-      const downloadUrl = await s3FileDriver.getFileDownloadUrl(
-        item as BaseFileLocationInfo,
-        baseDirectory,
-      );
-
       await s3.send(
         new PutObjectCommand({
           Bucket: bucketName,
@@ -72,21 +63,6 @@ export const getS3DBServiceItemDriver = ({
             baseDirectory,
           }),
           Body: "",
-        }),
-      );
-
-      const {
-        ContentType = "",
-        ContentLength = 0,
-        LastModified,
-        Metadata: {} = {},
-      } = await s3.send(
-        new HeadObjectCommand({
-          Bucket: bucketName,
-          Key: getFullFileKey({
-            file: item as BaseFileLocationInfo,
-            baseDirectory,
-          }),
         }),
       );
 
@@ -176,7 +152,6 @@ export const getS3DBServiceItemDriver = ({
 
       return true;
     },
-    // TODO: Fix return type issues.
     listItems: async (config) => {
       const {
         itemsPerPage = Infinity,
@@ -223,12 +198,14 @@ export const getS3DBServiceItemDriver = ({
         }
       }
 
-      return checkExistence
-        ? filteredFiles.length > 0
-        : {
-            items: getSortedItems(sortFields, filteredFiles),
-            cursor: nextCursor,
-          };
+      if (checkExistence) {
+        return filteredFiles.length > 0;
+      } else {
+        return {
+          items: getSortedItems(sortFields, filteredFiles) as BaseFileItem[],
+          cursor: nextCursor,
+        };
+      }
     },
   };
 

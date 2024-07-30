@@ -1,14 +1,13 @@
 import {
+  BaseDBRelationshipItem,
   DBRelatedItemDriver,
   DBRelationshipItem,
   DBRelationshipItemKeys,
   DBRelationshipItemType,
   DBServiceItemDriver,
-  ListItemReturnType,
+  ListItemResults,
   ListItemsConfig,
-  ListItemsConfigCheckType,
   ListRelationshipsConfig,
-  NewDBRelationshipItem,
 } from "./ServiceTypes";
 import {
   TypeInfo,
@@ -29,16 +28,16 @@ import {
 } from "../../common/SearchTypes";
 
 export const cleanRelationshipItem = (
-  relationshipItem: NewDBRelationshipItem,
-): NewDBRelationshipItem => {
+  relationshipItem: BaseDBRelationshipItem,
+): BaseDBRelationshipItem => {
   const relItemKeys = Object.values(DBRelationshipItemKeys);
-  const cleanedItem: Partial<NewDBRelationshipItem> = {};
+  const cleanedItem: Partial<BaseDBRelationshipItem> = {};
 
   for (const rIK of relItemKeys) {
     cleanedItem[rIK] = relationshipItem[rIK];
   }
 
-  return cleanedItem as NewDBRelationshipItem;
+  return cleanedItem as BaseDBRelationshipItem;
 };
 
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
@@ -136,7 +135,7 @@ export class TypeInfoORMService {
     omitFields: DBRelationshipItemKeys[] = [],
   ) => {
     const validationResults = validateRelationshipItem(
-      relationshipItem as NewDBRelationshipItem,
+      relationshipItem as BaseDBRelationshipItem,
       omitFields,
     );
 
@@ -169,7 +168,7 @@ export class TypeInfoORMService {
    * Create a new relationship between two items.
    * */
   createRelationship = async (
-    relationshipItem: NewDBRelationshipItem,
+    relationshipItem: BaseDBRelationshipItem,
   ): Promise<string> => {
     this.validateRelationshipItem(relationshipItem);
 
@@ -188,7 +187,7 @@ export class TypeInfoORMService {
    * Delete a relationship between two items.
    * */
   deletedRelationship = async (
-    relationshipItem: DBRelationshipItem,
+    relationshipItem: BaseDBRelationshipItem,
   ): Promise<boolean> => {
     this.validateRelationshipItem(relationshipItem);
 
@@ -203,9 +202,8 @@ export class TypeInfoORMService {
       fromTypeName,
       fromTypeFieldName,
     );
-    const { items: itemList = [] } = await driver.listItems({
+    const { items: itemList = [] } = (await driver.listItems({
       criteria: {
-        isSearchCriteria: true,
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
           {
@@ -231,7 +229,7 @@ export class TypeInfoORMService {
         ],
       },
       checkExistence: false,
-    });
+    })) as ListItemResults<DBRelationshipItem>;
 
     for (const item of itemList) {
       const { id: itemId } = item;
@@ -245,9 +243,10 @@ export class TypeInfoORMService {
   /**
    * List the relationships for a given item.
    * */
-  listRelationships = async <CheckType extends ListItemsConfigCheckType>(
-    config: ListRelationshipsConfig<CheckType>,
-  ): Promise<ListItemReturnType<CheckType, DBRelationshipItem>> => {
+  listRelationships = async (
+    // TODO: Check existence???
+    config: ListRelationshipsConfig,
+  ): Promise<ListItemResults<DBRelationshipItem>> => {
     const { relationshipItemOrigin, ...remainingConfig } = config;
     this.validateRelationshipItem(relationshipItemOrigin);
 
@@ -257,10 +256,9 @@ export class TypeInfoORMService {
       fromTypeName,
       fromTypeFieldName,
     );
-    const results = await driver.listItems({
+    const results = (await driver.listItems({
       ...remainingConfig,
       criteria: {
-        isSearchCriteria: true,
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
           {
@@ -280,7 +278,7 @@ export class TypeInfoORMService {
           },
         ],
       },
-    });
+    })) as ListItemResults<DBRelationshipItem>;
 
     return results;
   };
@@ -367,10 +365,10 @@ export class TypeInfoORMService {
   /**
    * List items of the given type, with the given criteria.
    * */
-  list = async <CheckType extends ListItemsConfigCheckType>(
+  list = async (
     typeName: string,
-    config: ListItemsConfig<CheckType>,
-  ): Promise<ListItemReturnType<CheckType, TypeInfoDataItem>> => {
+    config: ListItemsConfig,
+  ): Promise<boolean | ListItemResults<TypeInfoDataItem>> => {
     // TODO: Validation???
     // TODO: Any relationship considerations?
     //   Breaking down search criteria into multiple queries, per type???
