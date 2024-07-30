@@ -176,6 +176,7 @@ export const getS3DBServiceItemDriver = ({
 
       return true;
     },
+    // TODO: Fix return type issues.
     listItems: async (config) => {
       const {
         itemsPerPage = Infinity,
