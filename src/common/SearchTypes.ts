@@ -22,8 +22,6 @@ export enum ComparisonOperators {
   NOT_LIKE = "NOT_LIKE",
   EXISTS = "EXISTS",
   NOT_EXISTS = "NOT_EXISTS",
-  IS_NOT_NULL = "IS_NOT_NULL",
-  IS_NULL = "IS_NULL",
   IS_NOT_EMPTY = "IS_NOT_EMPTY",
   IS_EMPTY = "IS_EMPTY",
   BETWEEN = "BETWEEN",
@@ -32,6 +30,8 @@ export enum ComparisonOperators {
   NOT_CONTAINS = "NOT_CONTAINS",
   STARTS_WITH = "STARTS_WITH",
   ENDS_WITH = "ENDS_WITH",
+  DOES_NOT_START_WITH = "DOES_NOT_START_WITH",
+  DOES_NOT_END_WITH = "DOES_NOT_END_WITH",
 }
 
 /**
