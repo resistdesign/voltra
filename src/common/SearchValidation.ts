@@ -2,6 +2,9 @@ import { ComparisonOperators, FieldCriterion } from "./SearchTypes";
 import { TypeInfoValidationResults } from "./TypeParsing/Validation";
 import { TypeInfoMap } from "./TypeParsing/TypeInfo";
 
+/**
+ * Search validation errors.
+ * */
 export const SEARCH_VALIDATION_ERRORS = {
   INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
   RELATIONAL_FIELDS_NOT_ALLOWED: "RELATIONAL_FIELDS_NOT_ALLOWED",
@@ -9,6 +12,9 @@ export const SEARCH_VALIDATION_ERRORS = {
   INVALID_OPERATOR: "INVALID_OPERATOR",
 };
 
+/**
+ * Validate search fields against type info fields.
+ * */
 export const validateSearchFields = (
   typeInfoName: string,
   typeInfoMap: TypeInfoMap,
