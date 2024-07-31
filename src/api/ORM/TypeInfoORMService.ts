@@ -8,7 +8,7 @@ import {
   DBServiceItemDriver,
   ListItemResults,
   ListItemsConfig,
-  ListRelationshipsConfig,
+  ListRelationshipsConfig, validateRelationshipItem,
 } from "./ServiceTypes";
 import {
   TypeInfo,
@@ -19,13 +19,12 @@ import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
   TypeInfoValidationResults,
-  validateRelationshipItem,
   validateTypeInfoValue,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
 import {
   ComparisonOperators,
-  LogicalOperators,
+  LogicalOperators, SearchCriteria,
 } from "../../common/SearchTypes";
 
 export const cleanRelationshipItem = (
@@ -390,16 +389,22 @@ export class TypeInfoORMService {
     typeName: string,
     config: ListItemsConfig,
   ): Promise<boolean | ListItemResults<TypeInfoDataItem>> => {
-    // TODO: Validation???
-    //   - no related fields allowed
-    //   - field must exist
-    //   - field must be readable
-    //   - operator must apply to field type
-
+    const {
+      fields: {} = {},
+    } = this.getTypeInfo(typeName);
+    const {
+      criteria,
+    } = config;
+    const {
+      fieldCriteria = [],
+    }: Partial<SearchCriteria> = criteria || {};
     const driver = this.getDriverInternal(typeName);
+    const results = await driver.listItems(config);
     // TODO: Need to access items through `read` to comply with ACLs/Access Control.
     // TODO: IMPORTANT: Existence checks should not return true if any existing items are not accessible.
-    const results = await driver.listItems(config);
+
+
+    for(){}
 
     return results;
   };

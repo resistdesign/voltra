@@ -153,7 +153,7 @@ export const compare = (
     value: criterionValue,
     valueOptions: criterionValueOptions,
   } = fieldCriterion;
-  const comparator = COMPARATORS[operator];
+  const comparator = operator ? COMPARATORS[operator] : undefined;
 
   if (comparator) {
     return comparator(criterionValue, criterionValueOptions, fieldValue);
@@ -203,7 +203,7 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
       let meetsCriteria = true;
 
       for (const fieldCriterion of fieldCriteria) {
-        const { fieldName, operator, value } = fieldCriterion;
+        const { fieldName } = fieldCriterion;
         const { array: isArrayType, typeReference }: Partial<TypeInfoField> =
           fields[fieldName] || {};
         const currentFieldValue = currentItem[fieldName];
@@ -242,7 +242,7 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
 };
 
 /**
- *
+ * Get the sorted data items based on the given sort fields.
  * */
 export const getSortedItems = (
   sortFields: SortField[] = [],
