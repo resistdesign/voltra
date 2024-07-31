@@ -39,7 +39,7 @@ export enum ComparisonOperators {
  * */
 export type FieldCriterion = {
   fieldName: string;
-  operator: ComparisonOperators;
+  operator?: ComparisonOperators;
   customOperator?: string;
   value?: any;
   valueOptions?: any[];
