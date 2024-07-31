@@ -8,7 +8,8 @@ import {
   DBServiceItemDriver,
   ListItemResults,
   ListItemsConfig,
-  ListRelationshipsConfig, validateRelationshipItem,
+  ListRelationshipsConfig,
+  validateRelationshipItem,
 } from "./ServiceTypes";
 import {
   TypeInfo,
@@ -24,8 +25,10 @@ import {
 import { TypeInfoDataItem } from "../../app/components";
 import {
   ComparisonOperators,
-  LogicalOperators, SearchCriteria,
+  LogicalOperators,
+  SearchCriteria,
 } from "../../common/SearchTypes";
+import { validateSearchFields } from "../../common/SearchValidation";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseDBRelationshipItem,
@@ -389,23 +392,26 @@ export class TypeInfoORMService {
     typeName: string,
     config: ListItemsConfig,
   ): Promise<boolean | ListItemResults<TypeInfoDataItem>> => {
-    const {
-      fields: {} = {},
-    } = this.getTypeInfo(typeName);
-    const {
-      criteria,
-    } = config;
-    const {
-      fieldCriteria = [],
-    }: Partial<SearchCriteria> = criteria || {};
-    const driver = this.getDriverInternal(typeName);
-    const results = await driver.listItems(config);
-    // TODO: Need to access items through `read` to comply with ACLs/Access Control.
-    // TODO: IMPORTANT: Existence checks should not return true if any existing items are not accessible.
+    const { fields: {} = {} } = this.getTypeInfo(typeName);
+    const { criteria } = config;
+    const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
+    const searchFieldValidationResults = validateSearchFields(
+      typeName,
+      this.config.typeInfoMap,
+      fieldCriteria,
+      true,
+    );
+    const { valid: searchFieldsValid } = searchFieldValidationResults;
 
+    if (searchFieldsValid) {
+      const driver = this.getDriverInternal(typeName);
+      const results = await driver.listItems(config);
+      // TODO: Need to access items through `read` to comply with ACLs/Access Control.
+      // TODO: IMPORTANT: Existence checks should not return true if any existing items are not accessible.
 
-    for(){}
-
-    return results;
+      return results;
+    } else {
+      throw searchFieldValidationResults;
+    }
   };
 }
