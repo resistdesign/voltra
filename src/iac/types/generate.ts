@@ -35,7 +35,6 @@ const generate = async () => {
     },
   );
 
-  // TODO: Types should be broken up into separate files.
   FS.mkdirSync(Path.join(__dirname, "..", "dist"), { recursive: true });
   FS.writeFileSync(
     Path.join(__dirname, "..", "dist", "index.d.ts"),
