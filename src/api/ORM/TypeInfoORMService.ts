@@ -406,8 +406,6 @@ export class TypeInfoORMService {
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
       const results = await driver.listItems(config);
-      // TODO: Need to access items through `read` to comply with ACLs/Access Control.
-      // TODO: IMPORTANT: Existence checks should not return true if any existing items are not accessible.
 
       return results;
     } else {
