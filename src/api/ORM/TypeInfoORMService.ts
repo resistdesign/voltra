@@ -325,8 +325,6 @@ export class TypeInfoORMService {
     const driver = this.getDriverInternal(typeName);
     const item = await driver.readItem(primaryFieldValue);
 
-    // TODO: ACLs/Access Control. How to achieve fine grain control over who can access what exactly.
-
     return item;
   };
 
