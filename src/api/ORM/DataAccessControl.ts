@@ -1,3 +1,7 @@
+import { TypeInfoDataItem } from "../../app/components";
+import { TypeInfo } from "../../common/TypeParsing/TypeInfo";
+import { getPathString } from "../../common/Routing";
+
 /**
  * The possible types of a data access control (DAC) constraint.
  * */
@@ -25,6 +29,22 @@ export type DACRole = {
 };
 
 /**
+ * The result of a data access control (DAC) check.
+ * */
+export type DACAccessResult = {
+  allowed: boolean;
+  denied: boolean;
+};
+
+/**
+ * The result of a data access control (DAC) check for a data item.
+ * */
+export type DACDataItemResourceAccessResultMap = {
+  primaryAllowed: boolean;
+  fieldsResources?: Record<string, boolean>;
+};
+
+/**
  * Get the flattened constraints of a DAC role.
  * */
 export const getFlattenedDACConstraints = (
@@ -48,13 +68,14 @@ export const getFlattenedDACConstraints = (
 };
 
 /**
- * Get whether a resource access is allowed by a DAC role.
+ * Get the access to a given resource for a given DAC role.
  * */
-export const getResourceAccessIsAllowedByDACRole = (
+export const getResourceAccessByDACRole = (
+  // TODO: What about asterisk/wildcard path parts???
   fullResourcePath: string,
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
-): boolean => {
+): DACAccessResult => {
   const flattenedConstraints = getFlattenedDACConstraints(role, getDACRoleById);
 
   let allowed = false,
@@ -97,5 +118,65 @@ export const getResourceAccessIsAllowedByDACRole = (
     }
   }
 
-  return allowed && !denied;
+  return { allowed, denied };
+};
+
+/**
+ * Get the access to a given data item resource for a given DAC role.
+ * */
+export const getDACRoleHasAccessToDataItem = (
+  dataItem: TypeInfoDataItem,
+  typeName: string,
+  typeInfo: TypeInfo,
+  role: DACRole,
+  getDACRoleById: (id: string) => DACRole,
+): DACDataItemResourceAccessResultMap => {
+  const resultMap: DACDataItemResourceAccessResultMap = {
+    primaryAllowed: false,
+    fieldsResources: {},
+  };
+
+  if (
+    typeof dataItem === "object" &&
+    dataItem !== null &&
+    typeName &&
+    typeInfo
+  ) {
+    const { primaryField, fields = {} } = typeInfo;
+    const primaryFieldValue = dataItem[primaryField as keyof TypeInfoDataItem];
+    const dataItemFields = Object.keys(dataItem);
+    const primaryResourcePathParts = [typeName, primaryFieldValue];
+    const primaryResourcePath = getPathString(primaryResourcePathParts);
+    const { allowed: primaryResourceAllowed, denied: primaryResourceDenied } =
+      getResourceAccessByDACRole(primaryResourcePath, role, getDACRoleById);
+
+    resultMap.primaryAllowed = primaryResourceAllowed && !primaryResourceDenied;
+
+    for (const dIF of dataItemFields) {
+      const typeInfoField = fields[dIF];
+
+      if (typeInfoField) {
+        const { typeReference, array: fieldIsArray } = typeInfoField;
+
+        if (!typeReference && !fieldIsArray) {
+          const fieldResourcePathParts = [
+            typeName,
+            primaryFieldValue,
+            dIF,
+            dataItem[dIF],
+          ];
+          const fieldResourcePath = getPathString(fieldResourcePathParts);
+          const { allowed: fieldResourceAllowed, denied: fieldResourceDenied } =
+            getResourceAccessByDACRole(fieldResourcePath, role, getDACRoleById);
+
+          resultMap.fieldsResources = {
+            ...resultMap.fieldsResources,
+            [dIF]: fieldResourceAllowed && !fieldResourceDenied,
+          };
+        }
+      }
+    }
+  }
+
+  return resultMap;
 };
