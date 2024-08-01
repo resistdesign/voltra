@@ -85,6 +85,9 @@ export const getResourceAccessIsAllowedByDACRole = (
       }
     } else {
       if (fullResourcePath === resourcePath) {
+        lastAllowedPath = resourcePath;
+        lastDeniedPath = resourcePath;
+
         if (type === DACConstraintType.ALLOW) {
           allowed = true;
         } else {
