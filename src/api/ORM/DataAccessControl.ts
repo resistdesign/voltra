@@ -16,7 +16,8 @@ export enum DACConstraintType {
 export type DACConstraint = {
   type: DACConstraintType;
   resourcePath: string;
-  pathIsPrefix: boolean;
+  pathIsPrefix?: boolean;
+  wildcardIndices?: [fromIndex: number, toIndex: number][];
 };
 
 /**
