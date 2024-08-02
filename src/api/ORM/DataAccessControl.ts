@@ -1,6 +1,5 @@
 import { TypeInfoDataItem } from "../../app/components";
 import { LiteralValue, TypeInfo } from "../../common/TypeParsing/TypeInfo";
-import { getPathString } from "../../common/Routing";
 
 /**
  * The possible types of a data access control (DAC) constraint.
@@ -148,7 +147,6 @@ export const getFlattenedDACConstraints = (
  * Get the access to a given resource for a given DAC role.
  * */
 export const getResourceAccessByDACRole = (
-  // TODO: What about asterisk/wildcard path parts???
   fullResourcePath: LiteralValue[],
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
@@ -157,34 +155,40 @@ export const getResourceAccessByDACRole = (
 
   let allowed = false,
     denied = false,
-    lastAllowedPath = "",
-    lastDeniedPath = "";
+    lastAllowedPath = [],
+    lastDeniedPath = [];
 
   for (const constraint of flattenedConstraints) {
-    const { type, resourcePath, pathIsPrefix } = constraint;
+    const { type, resourcePath: dacPath, pathIsPrefix } = constraint;
+    const {
+      prefixMatch: dacPathIsPrefixOfResourcePath,
+      exactMatch: dacPathIsExactMatch,
+    } = getDACPathsMatch(dacPath, fullResourcePath);
 
     if (pathIsPrefix) {
-      if (fullResourcePath.startsWith(resourcePath)) {
+      if (dacPathIsPrefixOfResourcePath) {
         if (type === DACConstraintType.ALLOW) {
           allowed = true;
-          lastAllowedPath = resourcePath;
+          lastAllowedPath = dacPath;
 
+          // IMPORTANT: Calculate specificity.
           if (lastAllowedPath.length > lastDeniedPath.length) {
             denied = false;
           }
         } else {
           denied = true;
-          lastDeniedPath = resourcePath;
+          lastDeniedPath = dacPath;
 
+          // IMPORTANT: Calculate specificity.
           if (lastDeniedPath.length > lastAllowedPath.length) {
             allowed = false;
           }
         }
       }
     } else {
-      if (fullResourcePath === resourcePath) {
-        lastAllowedPath = resourcePath;
-        lastDeniedPath = resourcePath;
+      if (dacPathIsExactMatch) {
+        lastAllowedPath = dacPath;
+        lastDeniedPath = dacPath;
 
         if (type === DACConstraintType.ALLOW) {
           allowed = true;
@@ -220,10 +224,11 @@ export const getDACRoleHasAccessToDataItem = (
     typeInfo
   ) {
     const { primaryField, fields = {} } = typeInfo;
-    const primaryFieldValue = dataItem[primaryField as keyof TypeInfoDataItem];
+    const primaryFieldValue = dataItem[
+      primaryField as keyof TypeInfoDataItem
+    ] as LiteralValue;
     const dataItemFields = Object.keys(dataItem);
-    const primaryResourcePathParts = [typeName, primaryFieldValue];
-    const primaryResourcePath = getPathString(primaryResourcePathParts);
+    const primaryResourcePath = [typeName, primaryFieldValue];
     const { allowed: primaryResourceAllowed, denied: primaryResourceDenied } =
       getResourceAccessByDACRole(primaryResourcePath, role, getDACRoleById);
 
@@ -236,13 +241,12 @@ export const getDACRoleHasAccessToDataItem = (
         const { typeReference, array: fieldIsArray } = typeInfoField;
 
         if (!typeReference && !fieldIsArray) {
-          const fieldResourcePathParts = [
+          const fieldResourcePath = [
             typeName,
-            primaryFieldValue,
+            primaryFieldValue as LiteralValue,
             dIF,
-            dataItem[dIF],
+            dataItem[dIF] as LiteralValue,
           ];
-          const fieldResourcePath = getPathString(fieldResourcePathParts);
           const { allowed: fieldResourceAllowed, denied: fieldResourceDenied } =
             getResourceAccessByDACRole(fieldResourcePath, role, getDACRoleById);
 
