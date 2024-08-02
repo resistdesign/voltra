@@ -1,5 +1,5 @@
 import { TypeInfoDataItem } from "../../app/components";
-import { TypeInfo } from "../../common/TypeParsing/TypeInfo";
+import { LiteralValue, TypeInfo } from "../../common/TypeParsing/TypeInfo";
 import { getPathString } from "../../common/Routing";
 
 /**
@@ -15,9 +15,8 @@ export enum DACConstraintType {
  * */
 export type DACConstraint = {
   type: DACConstraintType;
-  resourcePath: string;
+  resourcePath: LiteralValue[];
   pathIsPrefix?: boolean;
-  wildcardIndices?: [fromIndex: number, toIndex: number][];
 };
 
 /**
@@ -43,6 +42,61 @@ export type DACAccessResult = {
 export type DACDataItemResourceAccessResultMap = {
   primaryAllowed: boolean;
   fieldsResources?: Record<string, boolean>;
+};
+
+export type DACPathMatchResults = {
+  prefixMatch: boolean;
+  exactMatch: boolean;
+};
+
+export const WILDCARD_SIGNIFIER_PROTOTYPE: Record<string, string> = {
+  WILD_CARD: "*",
+};
+
+export const getValueIsWildcardSignifier = (value: any): boolean => {
+  if (typeof value === "object" && value !== null) {
+    return Object.keys(WILDCARD_SIGNIFIER_PROTOTYPE).every(
+      (key) => value[key] === WILDCARD_SIGNIFIER_PROTOTYPE[key],
+    );
+  }
+
+  return false;
+};
+
+export const getDACPathsMatch = (
+  dacPath: LiteralValue[],
+  resourcePath: LiteralValue[],
+): DACPathMatchResults => {
+  const results: DACPathMatchResults = {
+    prefixMatch: false,
+    exactMatch: false,
+  };
+
+  let allDACPartsMatch = true;
+
+  for (let i = 0; i < dacPath.length; i++) {
+    const part = dacPath[i];
+    const resourcePart = resourcePath[i];
+
+    // TODO: IS this all correct!?
+    if (getValueIsWildcardSignifier(part)) {
+      allDACPartsMatch = allDACPartsMatch && true;
+    } else if (part === resourcePart) {
+      allDACPartsMatch = allDACPartsMatch && true;
+    } else {
+      allDACPartsMatch = false;
+      break;
+    }
+  }
+
+  if (dacPath.length !== resourcePath.length) {
+    const lastDACPart = dacPath[dacPath.length - 1];
+    const lastDACPartIsWildcard = getValueIsWildcardSignifier(lastDACPart);
+
+    results.exactMatch = results.prefixMatch && lastDACPartIsWildcard;
+  }
+
+  return results;
 };
 
 /**
@@ -73,7 +127,7 @@ export const getFlattenedDACConstraints = (
  * */
 export const getResourceAccessByDACRole = (
   // TODO: What about asterisk/wildcard path parts???
-  fullResourcePath: string,
+  fullResourcePath: LiteralValue[],
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
 ): DACAccessResult => {
