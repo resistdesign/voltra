@@ -44,15 +44,24 @@ export type DACDataItemResourceAccessResultMap = {
   fieldsResources?: Record<string, boolean>;
 };
 
+/**
+ * The result of matching a DAC path to a resource path.
+ * */
 export type DACPathMatchResults = {
   prefixMatch: boolean;
   exactMatch: boolean;
 };
 
+/**
+ * The prototype of a DAC wildcard signifier.
+ * */
 export const WILDCARD_SIGNIFIER_PROTOTYPE: Record<string, string> = {
   WILD_CARD: "*",
 };
 
+/**
+ * Check if a given DAC path part value is a DAC wildcard signifier.
+ * */
 export const getValueIsWildcardSignifier = (value: any): boolean => {
   if (typeof value === "object" && value !== null) {
     return Object.keys(WILDCARD_SIGNIFIER_PROTOTYPE).every(
@@ -63,6 +72,17 @@ export const getValueIsWildcardSignifier = (value: any): boolean => {
   return false;
 };
 
+/**
+ * Check if a given DAC path matches a given resource path.
+ *
+ * Includes checking if the DAC path is a prefix of the
+ * resource path and if the DAC path is an exact match of
+ * the resource path.
+ *
+ * The DAC path can include wildcard signifier objects at
+ * various indices in order to facilitate dynamic matches
+ * and grouping by common resource aspects.
+ * */
 export const getDACPathsMatch = (
   dacPath: LiteralValue[],
   resourcePath: LiteralValue[],
@@ -78,15 +98,15 @@ export const getDACPathsMatch = (
     const part = dacPath[i];
     const resourcePart = resourcePath[i];
 
-    // TODO: IS this all correct!?
-    if (getValueIsWildcardSignifier(part)) {
-      allDACPartsMatch = allDACPartsMatch && true;
-    } else if (part === resourcePart) {
-      allDACPartsMatch = allDACPartsMatch && true;
-    } else {
+    if (!getValueIsWildcardSignifier(part) && part !== resourcePart) {
       allDACPartsMatch = false;
+
       break;
     }
+  }
+
+  if (allDACPartsMatch) {
+    results.prefixMatch = true;
   }
 
   if (dacPath.length !== resourcePath.length) {
@@ -94,6 +114,8 @@ export const getDACPathsMatch = (
     const lastDACPartIsWildcard = getValueIsWildcardSignifier(lastDACPart);
 
     results.exactMatch = results.prefixMatch && lastDACPartIsWildcard;
+  } else if (results.prefixMatch) {
+    results.exactMatch = true;
   }
 
   return results;
