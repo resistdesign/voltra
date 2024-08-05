@@ -10,3 +10,21 @@
 //      - Not losing queued tasks.
 //      - Handling queueing errors.
 //      - Handling queueing timeouts and how much to process in a single batch.
+import { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import { ListItemsConfig } from "./ServiceTypes";
+import { ReportCriteria } from "../../common/SearchTypes";
+
+/**
+ * The configuration for an item report.
+ * */
+export type ReportConfig = ListItemsConfig & {
+  criteria?: ReportCriteria;
+};
+
+/**
+ * The data required to queue report work.
+ * */
+export type QueuedReportWork = ReportConfig & {
+  typeInfoName: string;
+  typeInfoMap: TypeInfoMap;
+};
