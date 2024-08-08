@@ -52,19 +52,3 @@ export type SearchCriteria = {
   logicalOperator: LogicalOperators;
   fieldCriteria: FieldCriterion[];
 };
-
-/**
- * The field criterion for a report criteria.
- * */
-export type ReportFieldCriterion = SearchCriteria & {
-  isReportFieldCriterion: true;
-  subSearchCriteria?: ReportCriteria;
-};
-
-/**
- * The criteria for a report.
- * */
-export type ReportCriteria = SearchCriteria & {
-  isReportCriteria: true;
-  fieldCriteria: (ReportFieldCriterion | ReportCriteria)[];
-};
