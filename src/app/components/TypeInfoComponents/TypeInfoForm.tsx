@@ -7,7 +7,6 @@ import {
   useState,
 } from "react";
 import { Form } from "../Form";
-import { getInputType } from "./InputTypeMapUtils";
 import {
   InputComponent,
   NameOrIndex,
@@ -16,7 +15,7 @@ import {
 } from "./Types";
 import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
-import { ObjectSelector } from "./Inputs/ObjectSelector";
+import { TypeInfoInput } from "./TypeInfoInput";
 
 const LabelText = styled.span`
   &:has(+ input[type="checkbox"]) {
@@ -104,44 +103,18 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
     <BaseForm onSubmit={onSubmitInternal}>
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
-        const {
-          type: fieldType,
-          typeReference,
-          possibleValues = [],
-          array,
-          tags = {},
-        } = field;
-        const { label = "", allowCustomSelection, customType, hidden } = tags;
 
-        if (!hidden) {
-          const isSelect = possibleValues.length > 0;
-          const InputComponent = typeReference
-            ? ObjectSelector
-            : getInputType(
-                fieldType,
-                array,
-                isSelect,
-                allowCustomSelection,
-                customType,
-                customInputTypeMap,
-              );
-          const fieldValue = internalValue[fieldName];
-
-          return InputComponent ? (
-            <label key={fieldName}>
-              <LabelText>{label}&nbsp;</LabelText>
-              <InputComponent
-                nameOrIndex={fieldName}
-                typeInfoField={field}
-                value={fieldValue}
-                onChange={onFieldChange}
-                options={tags}
-                onNavigateToType={onNavigateToType}
-              />
-              <LabelText>&nbsp;{label}</LabelText>
-            </label>
-          ) : undefined;
-        }
+        return (
+          <TypeInfoInput
+            key={fieldName}
+            field={field}
+            fieldValue={internalValue[fieldName]}
+            nameOrIndex={fieldName}
+            onChange={onFieldChange}
+            onNavigateToType={onNavigateToType}
+            customInputTypeMap={customInputTypeMap}
+          />
+        );
       })}
       <FormControls>
         {onCancel ? (
