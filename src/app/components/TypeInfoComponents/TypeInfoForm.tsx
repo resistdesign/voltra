@@ -107,7 +107,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
         return (
           <TypeInfoInput
             key={fieldName}
-            field={field}
+            typeInfoField={field}
             fieldValue={internalValue[fieldName]}
             nameOrIndex={fieldName}
             onChange={onFieldChange}
