@@ -1,18 +1,14 @@
 import { FC, useCallback } from "react";
 import {
+  FieldCriterion,
   LogicalOperators,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
-import {
-  InputComponent,
-  NameOrIndex,
-  TypeInfoDataItem,
-  TypeNavigation,
-} from "../Types";
+import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
 import { TypeInfo } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectTable";
 import styled from "styled-components";
-import { TypeInfoInput } from "../TypeInfoInput";
+import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -28,13 +24,6 @@ const Controls = styled.div`
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  gap: 1em;
-`;
-const FieldControl = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
   gap: 1em;
 `;
 
@@ -56,38 +45,29 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
   const { fields = {} } = typeInfo;
-  const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
-    // TODO: Implement field change.
-  }, []);
+  const onFieldCriterionChange = useCallback(
+    (index: number, fieldCriterion: FieldCriterion) => {
+      // TODO: Implement field change.
+    },
+    [],
+  );
 
-  // TODO: Search criteria interface.
-  // TODO: Add and remove search fields.
+  // TODO: Add/remove criterion.
 
   return (
     <BaseObjectSearch>
       <Controls>
-        {fieldCriteria.map((fieldCriterionItem, index) => {
-          const { fieldName, value } = fieldCriterionItem;
-          const typeInfoField = fields[fieldName];
-
-          // TODO: Field selection. DO NOT ALLOW TypeReference fields.
-          // TODO: Operator selection.
-          // TODO: Add/remove criterion.
-
-          return (
-            <FieldControl key={`TypeInfoInput:${fieldName}:${index}`}>
-              <TypeInfoInput
-                typeInfoField={typeInfoField}
-                fieldValue={value}
-                nameOrIndex={fieldName}
-                onChange={onFieldChange}
-                onNavigateToType={onNavigateToType}
-                customInputTypeMap={customInputTypeMap}
-                ignoreTypeReferences
-              />
-            </FieldControl>
-          );
-        })}
+        {fieldCriteria.map((fieldCriterionItem, index) => (
+          <FieldCriterionControl
+            key={`TypeInfoInput:${index}`}
+            index={index}
+            fieldCriterion={fieldCriterionItem}
+            typeInfo={typeInfo}
+            onChange={onFieldCriterionChange}
+            onNavigateToType={onNavigateToType}
+            customInputTypeMap={customInputTypeMap}
+          />
+        ))}
       </Controls>
       <ObjectTable typeInfo={typeInfo} objectList={searchResults} />
     </BaseObjectSearch>
