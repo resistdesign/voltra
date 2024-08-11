@@ -14,7 +14,6 @@ import { ObjectTable } from "./ObjectTable";
 import styled from "styled-components";
 import { TypeInfoInput } from "../TypeInfoInput";
 
-// TODO: Search criteria interface.
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
   display: flex;
@@ -61,6 +60,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     // TODO: Implement field change.
   }, []);
 
+  // TODO: Search criteria interface.
   // TODO: Add and remove search fields.
 
   return (
