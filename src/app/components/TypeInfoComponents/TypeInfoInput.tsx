@@ -19,7 +19,7 @@ const LabelText = styled.span`
 `;
 
 export type TypeInfoInputProps = {
-  field: TypeInfoField;
+  typeInfoField: TypeInfoField;
   fieldValue: LiteralValue | LiteralValue[];
   nameOrIndex: NameOrIndex;
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
@@ -29,7 +29,7 @@ export type TypeInfoInputProps = {
 };
 
 export const TypeInfoInput: FC<TypeInfoInputProps> = ({
-  field,
+  typeInfoField,
   fieldValue,
   nameOrIndex,
   onChange,
@@ -43,7 +43,7 @@ export const TypeInfoInput: FC<TypeInfoInputProps> = ({
     possibleValues = [],
     array,
     tags = {},
-  } = field;
+  } = typeInfoField;
   const { label = "", allowCustomSelection, customType, hidden } = tags;
 
   if (!hidden && !(ignoreTypeReferences && typeReference)) {
@@ -64,7 +64,7 @@ export const TypeInfoInput: FC<TypeInfoInputProps> = ({
         <LabelText>{label}&nbsp;</LabelText>
         <InputComponent
           nameOrIndex={nameOrIndex}
-          typeInfoField={field}
+          typeInfoField={typeInfoField}
           value={fieldValue}
           onChange={onChange}
           options={tags}
