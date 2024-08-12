@@ -1,9 +1,17 @@
-import { FC, useCallback, useMemo } from "react";
+import {
+  ChangeEvent as ReactChangeEvent,
+  FC,
+  useCallback,
+  useMemo,
+} from "react";
 import styled from "styled-components";
 import { TypeInfoInput } from "../../TypeInfoInput";
-import { FieldCriterion } from "../../../../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  FieldCriterion,
+} from "../../../../../common/SearchTypes";
 import { TypeInfo } from "../../../../../common/TypeParsing/TypeInfo";
-import { InputComponent, TypeNavigation } from "../../Types";
+import { InputComponent, NameOrIndex, TypeNavigation } from "../../Types";
 
 const FieldCriterionControlBase = styled.div`
   display: flex;
@@ -31,28 +39,72 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
   customInputTypeMap,
 }) => {
   const { fieldName, operator, value: fieldValue } = fieldCriterion;
+  const { fields: typeInfoFields = {} } = typeInfo;
   const typeInfoField = useMemo(
     () => typeInfo?.fields?.[fieldName],
     [typeInfo, fieldName],
   );
-  const onChangeInternal = useCallback(
-    (newFieldCriterion: FieldCriterion) => {},
-    [],
+  const onPatchFieldCriterion = useCallback(
+    (newFieldCriterion: Partial<FieldCriterion>) => {
+      onChange(index, { ...fieldCriterion, ...newFieldCriterion });
+    },
+    [fieldCriterion, onChange],
   );
-  const onFieldSelectionChange = useCallback(() => {}, []);
-  const onOperatorSelectionChange = useCallback(() => {}, []);
-  const onValueChange = useCallback(() => {}, []);
+  const onFieldSelectionChange = useCallback(
+    (event: ReactChangeEvent<HTMLSelectElement>) => {
+      const fieldName = event.target.value;
 
-  // TODO: Field selection. DO NOT ALLOW TypeReference fields.
-  // TODO: Operator selection.
+      if (fieldName) {
+        onPatchFieldCriterion({ fieldName });
+      }
+    },
+    [onPatchFieldCriterion],
+  );
+  const onOperatorSelectionChange = useCallback(
+    (event: ReactChangeEvent<HTMLSelectElement>) => {
+      const operator = event.target.value as FieldCriterion["operator"];
+
+      if (operator) {
+        onPatchFieldCriterion({ operator });
+      }
+    },
+    [onPatchFieldCriterion],
+  );
+  const onValueChange = useCallback(
+    (_nameOrIndex: NameOrIndex, value: any) => {
+      onPatchFieldCriterion({ value });
+    },
+    [onPatchFieldCriterion],
+  );
+  const fieldOptions = useMemo<string[]>(() => {
+    return Object.keys(typeInfoFields).filter((fieldNameOption) => {
+      // IMPORTANT: DO NOT ALLOW TypeReference fields.
+      const {
+        [fieldNameOption]: { typeReference },
+      } = typeInfoFields;
+
+      return !typeReference;
+    });
+  }, [typeInfoFields]);
+  const operatorOptions = useMemo(() => Object.keys(ComparisonOperators), []);
 
   return (
     <FieldCriterionControlBase>
       <select>
         <option value="">Field</option>
+        {fieldOptions.map((fieldOption) => (
+          <option key={fieldOption} value={fieldOption}>
+            {fieldOption}
+          </option>
+        ))}
       </select>
       <select>
         <option value="">Operator</option>
+        {operatorOptions.map((operatorOption) => (
+          <option key={operatorOption} value={operatorOption}>
+            {operatorOption}
+          </option>
+        ))}
       </select>
       {typeInfoField ? (
         <TypeInfoInput
