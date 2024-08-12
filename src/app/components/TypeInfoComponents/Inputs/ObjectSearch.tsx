@@ -5,6 +5,7 @@ import {
   useMemo,
 } from "react";
 import {
+  ComparisonOperators,
   FieldCriterion,
   LogicalOperators,
   SearchCriteria,
@@ -14,6 +15,7 @@ import { TypeInfo } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectTable";
 import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
+import { IndexButton } from "../../Basic/IndexButton";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -27,6 +29,14 @@ const Controls = styled.div`
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 1em;
+`;
+const FieldCriterionControlItem = styled.div`
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: row;
   justify-content: flex-start;
   align-items: stretch;
   gap: 1em;
@@ -89,8 +99,30 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     () => Object.values(LogicalOperators),
     [],
   );
+  const onAddCriterion = useCallback(() => {
+    onPatchSearchCriteria({
+      fieldCriteria: [
+        ...fieldCriteria,
+        {
+          fieldName: "",
+          operator: ComparisonOperators.EQUALS,
+          value: "",
+        },
+      ],
+    });
+  }, [fieldCriteria, onPatchSearchCriteria]);
+  const onRemoveCriterion = useCallback(
+    (index: number) => {
+      const newFieldCriteria = [...fieldCriteria].filter(
+        (_, fieldCriterionIndex) => fieldCriterionIndex !== index,
+      );
 
-  // TODO: Add/remove criterion.
+      onPatchSearchCriteria({
+        fieldCriteria: newFieldCriteria,
+      });
+    },
+    [fieldCriteria, onPatchSearchCriteria],
+  );
 
   return (
     <BaseObjectSearch>
@@ -104,16 +136,22 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
           ))}
         </select>
         {fieldCriteria.map((fieldCriterionItem, index) => (
-          <FieldCriterionControl
-            key={`TypeInfoInput:${index}`}
-            index={index}
-            fieldCriterion={fieldCriterionItem}
-            typeInfo={typeInfo}
-            onChange={onFieldCriterionChange}
-            onNavigateToType={onNavigateToType}
-            customInputTypeMap={customInputTypeMap}
-          />
+          <FieldCriterionControlItem key={`FieldCriterionControlItem:${index}`}>
+            <FieldCriterionControl
+              key={`TypeInfoInput:${index}`}
+              index={index}
+              fieldCriterion={fieldCriterionItem}
+              typeInfo={typeInfo}
+              onChange={onFieldCriterionChange}
+              onNavigateToType={onNavigateToType}
+              customInputTypeMap={customInputTypeMap}
+            />
+            <IndexButton index={index} onClick={onRemoveCriterion}>
+              Remove Criterion
+            </IndexButton>
+          </FieldCriterionControlItem>
         ))}
+        <button onClick={onAddCriterion}>Add Criterion</button>
       </Controls>
       <ObjectTable typeInfo={typeInfo} objectList={searchResults} />
     </BaseObjectSearch>
