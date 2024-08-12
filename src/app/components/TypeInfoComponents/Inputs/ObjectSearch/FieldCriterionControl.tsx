@@ -11,7 +11,7 @@ import {
   FieldCriterion,
 } from "../../../../../common/SearchTypes";
 import { TypeInfo } from "../../../../../common/TypeParsing/TypeInfo";
-import { InputComponent, NameOrIndex, TypeNavigation } from "../../Types";
+import { InputComponent, NameOrIndex } from "../../Types";
 
 const FieldCriterionControlBase = styled.div`
   display: flex;
@@ -26,7 +26,6 @@ export type FieldCriterionControlProps = {
   fieldCriterion: FieldCriterion;
   typeInfo: TypeInfo;
   onChange: (index: number, fieldCriterion: FieldCriterion) => void;
-  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
 };
 
@@ -35,7 +34,6 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
   fieldCriterion,
   typeInfo,
   onChange,
-  onNavigateToType,
   customInputTypeMap,
 }) => {
   const { fieldName, operator, value: fieldValue } = fieldCriterion;
@@ -112,7 +110,6 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
           fieldValue={fieldValue}
           nameOrIndex={fieldName}
           onChange={onValueChange}
-          onNavigateToType={onNavigateToType}
           customInputTypeMap={customInputTypeMap}
           ignoreTypeReferences
         />
