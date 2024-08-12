@@ -30,6 +30,7 @@ const Controls = styled.div`
 export type ObjectSearchProps = {
   typeInfo: TypeInfo;
   searchCriteria: SearchCriteria;
+  onSearchCriteriaChange: (searchCriteria: SearchCriteria) => void;
   searchResults: TypeInfoDataItem[];
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
@@ -38,6 +39,7 @@ export type ObjectSearchProps = {
 export const ObjectSearch: FC<ObjectSearchProps> = ({
   typeInfo,
   searchCriteria,
+  onSearchCriteriaChange,
   searchResults = [],
   onNavigateToType,
   customInputTypeMap,
@@ -45,11 +47,29 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
   const { fields = {} } = typeInfo;
-  const onFieldCriterionChange = useCallback(
-    (index: number, fieldCriterion: FieldCriterion) => {
-      // TODO: Implement field change.
+  const onPatchSearchCriteria = useCallback(
+    (newSearchCriteria: Partial<SearchCriteria>) => {
+      onSearchCriteriaChange({
+        ...searchCriteria,
+        ...newSearchCriteria,
+      });
     },
-    [],
+    [searchCriteria, onSearchCriteriaChange],
+  );
+  const onFieldCriterionChange = useCallback(
+    (index: number, newFieldCriterion: FieldCriterion) => {
+      const newFieldCriteria = [...fieldCriteria].map(
+        (fieldCriterionItem, fieldCriterionIndex) =>
+          fieldCriterionIndex === index
+            ? newFieldCriterion
+            : fieldCriterionItem,
+      );
+
+      onPatchSearchCriteria({
+        fieldCriteria: newFieldCriteria,
+      });
+    },
+    [fieldCriteria, onPatchSearchCriteria],
   );
 
   // TODO: Add/remove criterion.
