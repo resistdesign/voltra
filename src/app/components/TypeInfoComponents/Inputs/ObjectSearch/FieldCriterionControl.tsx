@@ -90,7 +90,7 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
 
   return (
     <FieldCriterionControlBase>
-      <select>
+      <select value={fieldName} onChange={onFieldSelectionChange}>
         <option value="">Field</option>
         {fieldOptions.map((fieldOption) => (
           <option key={fieldOption} value={fieldOption}>
@@ -98,7 +98,7 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
           </option>
         ))}
       </select>
-      <select>
+      <select value={operator} onChange={onOperatorSelectionChange}>
         <option value="">Operator</option>
         {operatorOptions.map((operatorOption) => (
           <option key={operatorOption} value={operatorOption}>
