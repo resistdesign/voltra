@@ -143,7 +143,6 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
               fieldCriterion={fieldCriterionItem}
               typeInfo={typeInfo}
               onChange={onFieldCriterionChange}
-              onNavigateToType={onNavigateToType}
               customInputTypeMap={customInputTypeMap}
             />
             <IndexButton index={index} onClick={onRemoveCriterion}>
