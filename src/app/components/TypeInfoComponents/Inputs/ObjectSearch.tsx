@@ -46,7 +46,6 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
 }) => {
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
-  const { fields = {} } = typeInfo;
   const onPatchSearchCriteria = useCallback(
     (newSearchCriteria: Partial<SearchCriteria>) => {
       onSearchCriteriaChange({
@@ -77,6 +76,9 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   return (
     <BaseObjectSearch>
       <Controls>
+        <select>
+
+        </select>
         {fieldCriteria.map((fieldCriterionItem, index) => (
           <FieldCriterionControl
             key={`TypeInfoInput:${index}`}
