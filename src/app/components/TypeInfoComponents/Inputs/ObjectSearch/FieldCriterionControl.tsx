@@ -86,7 +86,7 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
       return !typeReference;
     });
   }, [typeInfoFields]);
-  const operatorOptions = useMemo(() => Object.keys(ComparisonOperators), []);
+  const operatorOptions = useMemo(() => Object.values(ComparisonOperators), []);
 
   return (
     <FieldCriterionControlBase>

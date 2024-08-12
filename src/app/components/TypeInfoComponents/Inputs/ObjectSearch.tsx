@@ -1,4 +1,9 @@
-import { FC, useCallback } from "react";
+import {
+  ChangeEvent as ReactChangeEvent,
+  FC,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   FieldCriterion,
   LogicalOperators,
@@ -70,14 +75,33 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     },
     [fieldCriteria, onPatchSearchCriteria],
   );
+  const onLogicalOperatorChange = useCallback(
+    (event: ReactChangeEvent<HTMLSelectElement>) => {
+      const newLogicalOperator = event.target.value as LogicalOperators;
+
+      onPatchSearchCriteria({
+        logicalOperator: newLogicalOperator,
+      });
+    },
+    [onPatchSearchCriteria],
+  );
+  const logicalOperatorOptions = useMemo(
+    () => Object.values(LogicalOperators),
+    [],
+  );
 
   // TODO: Add/remove criterion.
 
   return (
     <BaseObjectSearch>
       <Controls>
-        <select>
-
+        <select value={logicalOperator} onChange={onLogicalOperatorChange}>
+          <option value="">Logical Operator</option>
+          {logicalOperatorOptions.map((operator) => (
+            <option key={operator} value={operator}>
+              {operator}
+            </option>
+          ))}
         </select>
         {fieldCriteria.map((fieldCriterionItem, index) => (
           <FieldCriterionControl
