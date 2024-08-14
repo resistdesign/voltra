@@ -67,7 +67,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
               );
 
               if (!hidden) {
-                // TODO: Handle navigation for type references.
+                // TODO: Handle navigation for viewing type references???
                 return (
                   <td key={`Field:${fieldName}:${fieldIndex}`}>
                     {stringValueForDisplay}
