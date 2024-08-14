@@ -17,6 +17,7 @@ export type ObjectTableProps = {
 export const ObjectTable: FC<ObjectTableProps> = ({
   typeInfo,
   objectList = [],
+  onNavigateToType,
 }) => {
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: tIF = {} } = typeInfo;
@@ -55,24 +56,38 @@ export const ObjectTable: FC<ObjectTableProps> = ({
             {fieldNames.map((fieldName, fieldIndex) => {
               const {
                 type,
-                // TODO: Need to navigate.
                 typeReference,
                 tags = {},
               } = typeInfoFields[fieldName];
               const { hidden, customType } = tags as SupportedFieldTags;
-              const stringValueForDisplay = transformValueToString(
-                item[fieldName as keyof typeof item],
-                type,
-                customType,
-              );
 
-              if (!hidden) {
-                // TODO: Handle navigation for viewing type references???
+              if (typeReference) {
+                // TODO: Handle navigation for ??viewing?? type references???
+                // TODO: Do we need a "TypeNavigation" component? What would that be?
+                return (
+                  <td key={`Field:${fieldName}:${fieldIndex}`}>
+                    <TypeNavigation
+                      type={typeReference}
+                      onNavigateToType={onNavigateToType}
+                    >
+                      {stringValueForDisplay}
+                    </TypeNavigation>
+                  </td>
+                );
+              } else if (!hidden) {
+                const stringValueForDisplay = transformValueToString(
+                  item[fieldName as keyof typeof item],
+                  type,
+                  customType,
+                );
+
                 return (
                   <td key={`Field:${fieldName}:${fieldIndex}`}>
                     {stringValueForDisplay}
                   </td>
                 );
+              } else {
+                return undefined;
               }
             })}
           </tr>
