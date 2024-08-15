@@ -1,8 +1,8 @@
+import { TypeInfoValidationResults } from "../../../common/TypeParsing/Validation";
 import {
   ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
-} from "./DBServiceTypes";
-import { TypeInfoValidationResults } from "../../../common/TypeParsing/Validation";
+} from "../../../common";
 
 export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
   INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",

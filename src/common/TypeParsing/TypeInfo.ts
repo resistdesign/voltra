@@ -2,10 +2,10 @@
  * A set of possible operations for a type or field value.
  * */
 export enum TypeOperation {
-  create = "create",
-  read = "read",
-  update = "update",
-  delete = "delete",
+  CREATE = "CREATE",
+  READ = "READ",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
 }
 
 /**
