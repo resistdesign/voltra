@@ -5,7 +5,12 @@ import {
   TypeInfoField,
 } from "../../../common/TypeParsing/TypeInfo";
 
-export type TypeInfoDataItemOperation = "create" | "update" | "delete";
+export enum TypeInfoDataItemOperation {
+  CREATE = "CREATE",
+  READ = "READ",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+}
 
 export type TypeNavigation = {
   typeName: string;
