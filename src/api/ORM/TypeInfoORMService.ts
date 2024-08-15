@@ -1,10 +1,5 @@
 import {
-  BaseItemRelationshipInfo,
   DBRelatedItemDriver,
-  ItemRelationshipInfo,
-  ItemRelationshipInfoKeys,
-  ItemRelationshipInfoType,
-  ItemRelationshipOriginatingItemInfo,
   DBServiceItemDriver,
   ListItemResults,
   ListItemsConfig,
@@ -29,6 +24,12 @@ import {
   SearchCriteria,
 } from "../../common/SearchTypes";
 import { validateSearchFields } from "../../common/SearchValidation";
+import {
+  BaseItemRelationshipInfo,
+  ItemRelationshipInfo, ItemRelationshipInfoKeys,
+  ItemRelationshipInfoType,
+  ItemRelationshipOriginatingItemInfo
+} from "../../common";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -307,7 +308,7 @@ export class TypeInfoORMService {
    * Create a new item of the given type.
    * */
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
-    this.validate(typeName, item, TypeOperation.create);
+    this.validate(typeName, item, TypeOperation.CREATE);
 
     const driver = this.getDriverInternal(typeName);
     const newIdentifier = await driver.createItem(item);
@@ -341,7 +342,7 @@ export class TypeInfoORMService {
     typeName: string,
     item: TypeInfoDataItem,
   ): Promise<boolean> => {
-    this.validate(typeName, item, TypeOperation.update, true);
+    this.validate(typeName, item, TypeOperation.UPDATE, true);
 
     const { primaryField } = this.getTypeInfo(typeName);
     const primaryFieldValue =
