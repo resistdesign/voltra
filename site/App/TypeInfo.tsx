@@ -1,5 +1,6 @@
 import { FC, useState } from "react";
 import {
+  ItemRelationshipInfoStructure,
   TypeInfoApplication,
   TypeInfoDataStructure,
 } from "../../src/app/components";
@@ -82,6 +83,8 @@ const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
 
 export const TypeInfo: FC = () => {
   const [value, setValue] = useState<TypeInfoDataStructure>({});
+  const [relationshipInfo, setRelationshipInfo] =
+    useState<ItemRelationshipInfoStructure>({});
 
   console.log("Structure:", value);
 
@@ -90,7 +93,9 @@ export const TypeInfo: FC = () => {
       typeInfoMap={DEMO_TYPE_INFO_MAP}
       typeInfoName="Person"
       value={value}
+      relationshipInfo={relationshipInfo}
       onChange={setValue}
+      onRelationshipInfoChange={setRelationshipInfo}
     />
   );
 };

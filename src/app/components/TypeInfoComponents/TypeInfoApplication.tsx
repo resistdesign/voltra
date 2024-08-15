@@ -6,6 +6,7 @@ import {
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
+  ItemRelationshipInfoStructure,
   TypeInfoDataItem,
   TypeInfoDataStructure,
   TypeNavigation,
@@ -24,7 +25,11 @@ export type TypeInfoApplicationProps = {
   typeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataStructure;
+  relationshipInfo: ItemRelationshipInfoStructure;
   onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
+  onRelationshipInfoChange: (
+    relationshipInfo: ItemRelationshipInfoStructure,
+  ) => void;
 } & (
   | {
       operation: UpdateOperationMode;
@@ -46,7 +51,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   primaryKeyValue,
   customInputTypeMap,
   value,
+  relationshipInfo,
   onChange,
+  onRelationshipInfoChange,
 }) => {
   const initialTypeNavigation = useMemo<TypeNavigation>(
     () => ({
