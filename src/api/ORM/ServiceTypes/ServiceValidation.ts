@@ -1,6 +1,6 @@
 import {
-  DBRelationshipItemKeys,
-  DBRelationshipItemType,
+  ItemRelationshipInfoKeys,
+  ItemRelationshipInfoType,
 } from "./DBServiceTypes";
 import { TypeInfoValidationResults } from "../../../common/TypeParsing/Validation";
 
@@ -13,8 +13,8 @@ export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
  * Validates a relationship item.
  * */
 export const validateRelationshipItem = (
-  relationshipItem: DBRelationshipItemType,
-  omitFields: DBRelationshipItemKeys[] = [],
+  relationshipItem: ItemRelationshipInfoType,
+  omitFields: ItemRelationshipInfoKeys[] = [],
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
     valid: true,
@@ -23,10 +23,10 @@ export const validateRelationshipItem = (
   };
 
   if (typeof relationshipItem === "object" && relationshipItem !== null) {
-    const relKeyValues = Object.values(DBRelationshipItemKeys);
+    const relKeyValues = Object.values(ItemRelationshipInfoKeys);
 
     for (const rKV of relKeyValues) {
-      const universalRKV = rKV as keyof DBRelationshipItemType;
+      const universalRKV = rKV as keyof ItemRelationshipInfoType;
       const omitRKV = omitFields.includes(rKV);
 
       if (

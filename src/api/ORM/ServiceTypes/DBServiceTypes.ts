@@ -57,9 +57,9 @@ export type DBServiceItemDriver<
 };
 
 /**
- * The keys for a relationship item.
+ * The keys for item relationship info.
  * */
-export enum DBRelationshipItemKeys {
+export enum ItemRelationshipInfoKeys {
   fromTypeName = "fromTypeName",
   fromTypePrimaryFieldValue = "fromTypePrimaryFieldValue",
   fromTypeFieldName = "fromTypeFieldName",
@@ -67,61 +67,64 @@ export enum DBRelationshipItemKeys {
 }
 
 /**
- * A new `DBRelationshipItem`.
+ * The basis for an `ItemRelationshipInfo` without an assigned identifier.
  * */
-export type BaseDBRelationshipItem = Record<DBRelationshipItemKeys, string>;
+export type BaseItemRelationshipInfo = Record<ItemRelationshipInfoKeys, string>;
 
 /**
  * An item containing the information about a relationship between two items.
  * */
-export type DBRelationshipItem = BaseDBRelationshipItem & {
+export type ItemRelationshipInfo = BaseItemRelationshipInfo & {
   id: string;
 };
 
 /**
- * The origination portion of a `DBRelationshipItem`.
+ * The origination portion of an `ItemRelationshipInfo`.
  * */
-export type DBRelationshipOrigin = Record<
-  | DBRelationshipItemKeys.fromTypeName
-  | DBRelationshipItemKeys.fromTypeFieldName,
+export type ItemRelationshipOriginInfo = Record<
+  | ItemRelationshipInfoKeys.fromTypeName
+  | ItemRelationshipInfoKeys.fromTypeFieldName,
   string
 >;
 
 /**
- * The origination portion of a `DBRelationshipItem` for a specific item.
+ * The origination portion of an `ItemRelationshipInfo` for a specific item.
  * */
-export type DBRelationshipItemOrigin = DBRelationshipOrigin &
-  Record<DBRelationshipItemKeys.fromTypePrimaryFieldValue, string>;
+export type ItemRelationshipOriginItemInfo = ItemRelationshipOriginInfo &
+  Record<ItemRelationshipInfoKeys.fromTypePrimaryFieldValue, string>;
 
 /**
- * The originating item info portion of a `DBRelationshipItem`.
+ * The originating item info portion of an `ItemRelationshipInfo`.
  *
  * Used for relationship originating from a specific item, regardless of field relationship.
  * */
-export type DBRelationshipOriginatingItem = Record<
-  | DBRelationshipItemKeys.fromTypeName
-  | DBRelationshipItemKeys.fromTypePrimaryFieldValue,
+export type ItemRelationshipOriginatingItemInfo = Record<
+  | ItemRelationshipInfoKeys.fromTypeName
+  | ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
   string
 >;
 
 /**
- * One of the various types describing a relationship item.
+ * One of the various types describing an item relationship.
  * */
-export type DBRelationshipItemType =
-  | BaseDBRelationshipItem
-  | DBRelationshipItem
-  | DBRelationshipOrigin
-  | DBRelationshipItemOrigin;
+export type ItemRelationshipInfoType =
+  | BaseItemRelationshipInfo
+  | ItemRelationshipInfo
+  | ItemRelationshipOriginInfo
+  | ItemRelationshipOriginItemInfo;
 
 /**
  * A configuration for listing relationships.
  * */
 export type ListRelationshipsConfig = PagingInfo &
   ItemsExistenceInfo & {
-    relationshipItemOrigin: DBRelationshipItemOrigin;
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo;
   };
 
 /**
  * A driver for a database service that handles relationship items.
  * */
-export type DBRelatedItemDriver = DBServiceItemDriver<DBRelationshipItem, "id">;
+export type DBRelatedItemDriver = DBServiceItemDriver<
+  ItemRelationshipInfo,
+  "id"
+>;
