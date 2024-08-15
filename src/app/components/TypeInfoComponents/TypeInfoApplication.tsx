@@ -166,7 +166,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     ],
   );
 
-  // TODO: Show object search controls.
+  // TODO: Show object search/list controls when there is a TypeNavigation in the history.
+  //   - Use the relationship info to get the related items.
+  //     - How to READ the related items?
 
   return currentTypeInfo ? (
     <TypeInfoForm
