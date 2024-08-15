@@ -3,19 +3,13 @@ import {
   LiteralValue,
   SupportedFieldTags,
   TypeInfoField,
+  TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-
-export enum TypeInfoDataItemOperation {
-  CREATE = "CREATE",
-  READ = "READ",
-  UPDATE = "UPDATE",
-  DELETE = "DELETE",
-}
 
 export type TypeNavigation = {
   typeName: string;
   fieldNameOrIndex: NameOrIndex;
-  operation: TypeInfoDataItemOperation;
+  operation: TypeOperation;
   primaryKeyValue?: any;
 };
 
@@ -43,9 +37,6 @@ export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;
 
 export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
 
-export type TypeDataStateMap = Record<
-  TypeInfoDataItemOperation,
-  TypeInfoDataMap
->;
+export type TypeDataStateMap = Record<TypeOperation, TypeInfoDataMap>;
 
 export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;

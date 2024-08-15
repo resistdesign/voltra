@@ -1,5 +1,6 @@
-import { InputComponent, TypeInfoDataItemOperation } from "../Types";
+import { InputComponent } from "../Types";
 import { useCallback } from "react";
+import { TypeOperation } from "../../../../common/TypeParsing/TypeInfo";
 
 export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
   nameOrIndex,
@@ -17,8 +18,8 @@ export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
           fieldNameOrIndex: nameOrIndex,
           operation:
             typeof value === "undefined"
-              ? TypeInfoDataItemOperation.CREATE
-              : TypeInfoDataItemOperation.UPDATE,
+              ? TypeOperation.CREATE
+              : TypeOperation.UPDATE,
           primaryKeyValue: value,
         });
       }
