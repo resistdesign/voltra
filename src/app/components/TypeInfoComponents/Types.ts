@@ -5,6 +5,7 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
+import { ItemRelationshipInfo } from "../../../common";
 
 export type TypeNavigation = {
   typeName: string;
@@ -40,3 +41,11 @@ export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
 export type TypeDataStateMap = Record<TypeOperation, TypeInfoDataMap>;
 
 export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;
+
+export type ItemRelationshipInfoStructure = {
+  [fromItemType: string]: {
+    [fromItemField: string]: {
+      [fromItemPrimaryKeyValue: string]: ItemRelationshipInfo[];
+    };
+  };
+};
