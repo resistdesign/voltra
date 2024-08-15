@@ -10,8 +10,11 @@ import {
 } from "./Types";
 import { getSimpleId } from "../../../common/IdGeneration";
 
-export type OperationMode = Exclude<TypeInfoDataItemOperation, "delete">;
-export type UpdateOperationMode = "update";
+export type OperationMode = Exclude<
+  TypeInfoDataItemOperation,
+  TypeInfoDataItemOperation.DELETE
+>;
+export type UpdateOperationMode = TypeInfoDataItemOperation.UPDATE;
 export type NonUpdateOperationMode = Exclude<
   OperationMode,
   UpdateOperationMode
@@ -40,7 +43,7 @@ export type TypeInfoApplicationProps = {
 export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   typeInfoName,
-  operation = "create",
+  operation = TypeInfoDataItemOperation.CREATE,
   primaryKeyValue,
   customInputTypeMap,
   value,
@@ -54,7 +57,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       // TODO: Relationships*:
       //   - How to get the real primary field value when creating.
       //   - Where to store it once the real primary field is acquired.
-      primaryKeyValue: operation === "create" ? getSimpleId() : primaryKeyValue,
+      primaryKeyValue:
+        operation === TypeInfoDataItemOperation.CREATE
+          ? getSimpleId()
+          : primaryKeyValue,
     }),
     [operation, primaryKeyValue, typeInfoName],
   );
@@ -132,7 +138,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           [currentOperation]: {
             ...value[currentTypeName]?.[currentOperation],
             [currentPrimaryFieldValue]:
-              currentOperation === "create" &&
+              currentOperation === TypeInfoDataItemOperation.CREATE &&
               typeof currentPrimaryFieldName === "string"
                 ? {
                     ...newDataItem,
