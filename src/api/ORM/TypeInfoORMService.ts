@@ -1,10 +1,10 @@
 import {
-  BaseDBRelationshipItem,
+  BaseItemRelationshipInfo,
   DBRelatedItemDriver,
-  DBRelationshipItem,
-  DBRelationshipItemKeys,
-  DBRelationshipItemType,
-  DBRelationshipOriginatingItem,
+  ItemRelationshipInfo,
+  ItemRelationshipInfoKeys,
+  ItemRelationshipInfoType,
+  ItemRelationshipOriginatingItemInfo,
   DBServiceItemDriver,
   ListItemResults,
   ListItemsConfig,
@@ -31,16 +31,16 @@ import {
 import { validateSearchFields } from "../../common/SearchValidation";
 
 export const cleanRelationshipItem = (
-  relationshipItem: BaseDBRelationshipItem,
-): BaseDBRelationshipItem => {
-  const relItemKeys = Object.values(DBRelationshipItemKeys);
-  const cleanedItem: Partial<BaseDBRelationshipItem> = {};
+  relationshipItem: BaseItemRelationshipInfo,
+): BaseItemRelationshipInfo => {
+  const relItemKeys = Object.values(ItemRelationshipInfoKeys);
+  const cleanedItem: Partial<BaseItemRelationshipInfo> = {};
 
   for (const rIK of relItemKeys) {
     cleanedItem[rIK] = relationshipItem[rIK];
   }
 
-  return cleanedItem as BaseDBRelationshipItem;
+  return cleanedItem as BaseItemRelationshipInfo;
 };
 
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
@@ -61,7 +61,7 @@ export type TypeInfoORMServiceConfig = {
     fieldName: string,
   ) => DBRelatedItemDriver;
   createRelationshipCleanupItem?: (
-    relationshipOriginatingItem: DBRelationshipOriginatingItem,
+    relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
   customValidators?: CustomTypeInfoFieldValidatorMap;
 };
@@ -137,11 +137,11 @@ export class TypeInfoORMService {
   };
 
   protected validateRelationshipItem = (
-    relationshipItem: DBRelationshipItemType,
-    omitFields: DBRelationshipItemKeys[] = [],
+    relationshipItem: ItemRelationshipInfoType,
+    omitFields: ItemRelationshipInfoKeys[] = [],
   ) => {
     const validationResults = validateRelationshipItem(
-      relationshipItem as BaseDBRelationshipItem,
+      relationshipItem as BaseItemRelationshipInfo,
       omitFields,
     );
 
@@ -174,7 +174,7 @@ export class TypeInfoORMService {
    * Create a new relationship between two items.
    * */
   createRelationship = async (
-    relationshipItem: BaseDBRelationshipItem,
+    relationshipItem: BaseItemRelationshipInfo,
   ): Promise<string> => {
     this.validateRelationshipItem(relationshipItem);
 
@@ -193,7 +193,7 @@ export class TypeInfoORMService {
    * Delete a relationship between two items.
    * */
   deletedRelationship = async (
-    relationshipItem: BaseDBRelationshipItem,
+    relationshipItem: BaseItemRelationshipInfo,
   ): Promise<boolean> => {
     this.validateRelationshipItem(relationshipItem);
 
@@ -213,29 +213,29 @@ export class TypeInfoORMService {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
           {
-            fieldName: DBRelationshipItemKeys.fromTypeName,
+            fieldName: ItemRelationshipInfoKeys.fromTypeName,
             operator: ComparisonOperators.EQUALS,
             value: fromTypeName,
           },
           {
-            fieldName: DBRelationshipItemKeys.fromTypePrimaryFieldValue,
+            fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
             operator: ComparisonOperators.EQUALS,
             value: fromTypePrimaryFieldValue,
           },
           {
-            fieldName: DBRelationshipItemKeys.fromTypeFieldName,
+            fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
             operator: ComparisonOperators.EQUALS,
             value: fromTypeFieldName,
           },
           {
-            fieldName: DBRelationshipItemKeys.toTypePrimaryFieldValue,
+            fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
             operator: ComparisonOperators.EQUALS,
             value: toTypePrimaryFieldValue,
           },
         ],
       },
       checkExistence: false,
-    })) as ListItemResults<DBRelationshipItem>;
+    })) as ListItemResults<ItemRelationshipInfo>;
 
     for (const item of itemList) {
       const { id: itemId } = item;
@@ -251,7 +251,7 @@ export class TypeInfoORMService {
    * */
   listRelationships = async (
     config: ListRelationshipsConfig,
-  ): Promise<boolean | ListItemResults<DBRelationshipItem>> => {
+  ): Promise<boolean | ListItemResults<ItemRelationshipInfo>> => {
     const { relationshipItemOrigin, checkExistence, ...remainingConfig } =
       config;
     this.validateRelationshipItem(relationshipItemOrigin);
@@ -269,17 +269,17 @@ export class TypeInfoORMService {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
           {
-            fieldName: DBRelationshipItemKeys.fromTypeName,
+            fieldName: ItemRelationshipInfoKeys.fromTypeName,
             operator: ComparisonOperators.EQUALS,
             value: fromTypeName,
           },
           {
-            fieldName: DBRelationshipItemKeys.fromTypeFieldName,
+            fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
             operator: ComparisonOperators.EQUALS,
             value: fromTypeFieldName,
           },
           {
-            fieldName: DBRelationshipItemKeys.fromTypePrimaryFieldValue,
+            fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
             operator: ComparisonOperators.EQUALS,
             value: fromTypePrimaryFieldValue,
           },
@@ -294,7 +294,7 @@ export class TypeInfoORMService {
    * Queue the cleanup of relationships for a given item.
    * */
   cleanupRelationships = async (
-    relationshipOriginatingItem: DBRelationshipOriginatingItem,
+    relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ): Promise<void> => {
     if (this.config.createRelationshipCleanupItem) {
       await this.config.createRelationshipCleanupItem(
