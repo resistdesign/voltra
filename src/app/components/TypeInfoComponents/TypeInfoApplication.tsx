@@ -65,7 +65,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     (typeNavigation: TypeNavigation) => {
       const { operation, primaryKeyValue } = typeNavigation;
 
-      if (operation === "create") {
+      if (operation === TypeInfoDataItemOperation.CREATE) {
         const newTypeNavigation: TypeNavigation = {
           ...typeNavigation,
           primaryKeyValue: getSimpleId(),
