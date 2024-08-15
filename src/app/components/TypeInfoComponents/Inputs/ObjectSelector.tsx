@@ -1,4 +1,4 @@
-import { InputComponent } from "../Types";
+import { InputComponent, TypeInfoDataItemOperation } from "../Types";
 import { useCallback } from "react";
 
 export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
@@ -15,7 +15,10 @@ export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
         onNavigateToType({
           typeName: typeReference,
           fieldNameOrIndex: nameOrIndex,
-          operation: typeof value === "undefined" ? "create" : "update",
+          operation:
+            typeof value === "undefined"
+              ? TypeInfoDataItemOperation.CREATE
+              : TypeInfoDataItemOperation.UPDATE,
           primaryKeyValue: value,
         });
       }

@@ -4,13 +4,13 @@ import {
   TypeInfo,
   TypeInfoField,
 } from "../../../../common/TypeParsing/TypeInfo";
-import { TypeNavigation } from "../Types";
+import { TypeInfoDataItemOperation, TypeNavigation } from "../Types";
 import { transformValueToString } from "../../../../common/StringTransformers";
+import { ItemButton } from "../../Basic/ItemButton";
 
 export type ObjectTableProps = {
   typeInfo: TypeInfo;
   objectList: object[];
-  // TODO: Does this work?
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
@@ -19,6 +19,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   objectList = [],
   onNavigateToType,
 }) => {
+  const { primaryField } = typeInfo;
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: tIF = {} } = typeInfo;
 
@@ -51,47 +52,56 @@ export const ObjectTable: FC<ObjectTableProps> = ({
         </tr>
       </thead>
       <tbody>
-        {objectList.map((item = {}, index) => (
-          <tr key={index}>
-            {fieldNames.map((fieldName, fieldIndex) => {
-              const {
-                type,
-                typeReference,
-                tags = {},
-              } = typeInfoFields[fieldName];
-              const { hidden, customType } = tags as SupportedFieldTags;
+        {objectList.map((item = {}, index) => {
+          const { [primaryField as keyof object]: primaryKeyValue } = item;
 
-              if (typeReference) {
-                // TODO: Handle navigation for ??viewing?? type references???
-                // TODO: Do we need a "TypeNavigation" component? What would that be?
-                return (
-                  <td key={`Field:${fieldName}:${fieldIndex}`}>
-                    <TypeNavigation
-                      type={typeReference}
-                      onNavigateToType={onNavigateToType}
-                    >
-                      {stringValueForDisplay}
-                    </TypeNavigation>
-                  </td>
-                );
-              } else if (!hidden) {
-                const stringValueForDisplay = transformValueToString(
-                  item[fieldName as keyof typeof item],
+          return (
+            <tr key={index}>
+              {fieldNames.map((fieldName, fieldIndex) => {
+                const {
                   type,
-                  customType,
-                );
+                  typeReference,
+                  tags = {},
+                } = typeInfoFields[fieldName];
+                const { hidden, customType } = tags as SupportedFieldTags;
 
-                return (
-                  <td key={`Field:${fieldName}:${fieldIndex}`}>
-                    {stringValueForDisplay}
-                  </td>
-                );
-              } else {
-                return undefined;
-              }
-            })}
-          </tr>
-        ))}
+                if (typeReference) {
+                  const typeNavigation: TypeNavigation = {
+                    typeName: typeReference,
+                    fieldNameOrIndex: fieldName,
+                    operation: TypeInfoDataItemOperation.READ,
+                    primaryKeyValue,
+                  };
+
+                  return (
+                    <td key={`Field:${fieldName}:${fieldIndex}`}>
+                      <ItemButton
+                        item={typeNavigation}
+                        onClick={onNavigateToType}
+                      >
+                        Explore{/* TODO: i18n. */}
+                      </ItemButton>
+                    </td>
+                  );
+                } else if (!hidden) {
+                  const stringValueForDisplay = transformValueToString(
+                    item[fieldName as keyof typeof item],
+                    type,
+                    customType,
+                  );
+
+                  return (
+                    <td key={`Field:${fieldName}:${fieldIndex}`}>
+                      {stringValueForDisplay}
+                    </td>
+                  );
+                } else {
+                  return undefined;
+                }
+              })}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
