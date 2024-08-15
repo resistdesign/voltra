@@ -3,8 +3,9 @@ import {
   SupportedFieldTags,
   TypeInfo,
   TypeInfoField,
+  TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
-import { TypeInfoDataItemOperation, TypeNavigation } from "../Types";
+import { TypeNavigation } from "../Types";
 import { transformValueToString } from "../../../../common/StringTransformers";
 import { ItemButton } from "../../Basic/ItemButton";
 
@@ -69,7 +70,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
                   const typeNavigation: TypeNavigation = {
                     typeName: typeReference,
                     fieldNameOrIndex: fieldName,
-                    operation: TypeInfoDataItemOperation.READ,
+                    operation: TypeOperation.READ,
                     primaryKeyValue,
                   };
 

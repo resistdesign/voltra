@@ -1,20 +1,19 @@
 import { FC, useCallback, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoForm";
-import { TypeInfoMap } from "../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfoMap,
+  TypeOperation,
+} from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
   TypeInfoDataItem,
-  TypeInfoDataItemOperation,
   TypeInfoDataStructure,
   TypeNavigation,
 } from "./Types";
 import { getSimpleId } from "../../../common/IdGeneration";
 
-export type OperationMode = Exclude<
-  TypeInfoDataItemOperation,
-  TypeInfoDataItemOperation.DELETE
->;
-export type UpdateOperationMode = TypeInfoDataItemOperation.UPDATE;
+export type OperationMode = Exclude<TypeOperation, TypeOperation.DELETE>;
+export type UpdateOperationMode = TypeOperation.UPDATE;
 export type NonUpdateOperationMode = Exclude<
   OperationMode,
   UpdateOperationMode
@@ -43,7 +42,7 @@ export type TypeInfoApplicationProps = {
 export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   typeInfoName,
-  operation = TypeInfoDataItemOperation.CREATE,
+  operation = TypeOperation.CREATE,
   primaryKeyValue,
   customInputTypeMap,
   value,
@@ -58,9 +57,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       //   - How to get the real primary field value when creating.
       //   - Where to store it once the real primary field is acquired.
       primaryKeyValue:
-        operation === TypeInfoDataItemOperation.CREATE
-          ? getSimpleId()
-          : primaryKeyValue,
+        operation === TypeOperation.CREATE ? getSimpleId() : primaryKeyValue,
     }),
     [operation, primaryKeyValue, typeInfoName],
   );
@@ -71,7 +68,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     (typeNavigation: TypeNavigation) => {
       const { operation, primaryKeyValue } = typeNavigation;
 
-      if (operation === TypeInfoDataItemOperation.CREATE) {
+      if (operation === TypeOperation.CREATE) {
         const newTypeNavigation: TypeNavigation = {
           ...typeNavigation,
           primaryKeyValue: getSimpleId(),
@@ -139,7 +136,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           [currentOperation]: {
             ...value[currentTypeName]?.[currentOperation],
             [currentPrimaryFieldValue]:
-              currentOperation === TypeInfoDataItemOperation.CREATE &&
+              currentOperation === TypeOperation.CREATE &&
               typeof currentPrimaryFieldName === "string"
                 ? {
                     ...newDataItem,
