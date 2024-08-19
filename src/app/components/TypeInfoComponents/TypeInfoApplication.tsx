@@ -135,6 +135,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const onCurrentDataItemChange = useCallback(
     // TODO: *How to return from type navigation and apply the new value to the related field on the correct object.
     //   - How to use `DBRelationshipItem`???
+    //   - IMPORTANT: ???`currentDataItem` per nav history item???
     (newDataItem: TypeInfoDataItem = {}) => {
       onChange({
         ...value,
