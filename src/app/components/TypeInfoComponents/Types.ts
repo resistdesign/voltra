@@ -5,13 +5,16 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-import { ItemRelationshipInfo } from "../../../common";
+import {
+  BaseItemRelationshipInfo,
+  ItemRelationshipInfo,
+} from "../../../common";
 
-export type TypeNavigation = {
-  typeName: string;
-  fieldNameOrIndex: NameOrIndex;
-  operation: TypeOperation;
-  primaryKeyValue?: any;
+export type TypeNavigation = Omit<
+  BaseItemRelationshipInfo,
+  "toTypePrimaryFieldValue"
+> & {
+  toTypePrimaryFieldValue?: string;
 };
 
 export type NameOrIndex = string | number;
