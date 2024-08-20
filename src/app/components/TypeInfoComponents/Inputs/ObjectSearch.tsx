@@ -11,7 +11,10 @@ import {
   SearchCriteria,
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
-import { TypeInfo } from "../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeOperation,
+} from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectTable";
 import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
@@ -43,19 +46,23 @@ const FieldCriterionControlItem = styled.div`
 `;
 
 export type ObjectSearchProps = {
+  typeInfoName: string;
   typeInfo: TypeInfo;
   searchCriteria: SearchCriteria;
   onSearchCriteriaChange: (searchCriteria: SearchCriteria) => void;
   searchResults: TypeInfoDataItem[];
+  operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
 };
 
 export const ObjectSearch: FC<ObjectSearchProps> = ({
+  typeInfoName,
   typeInfo,
   searchCriteria,
   onSearchCriteriaChange,
   searchResults = [],
+  operation,
   onNavigateToType,
   customInputTypeMap,
 }) => {
@@ -152,7 +159,13 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         ))}
         <button onClick={onAddCriterion}>Add Criterion</button>
       </Controls>
-      <ObjectTable typeInfo={typeInfo} objectList={searchResults} />
+      <ObjectTable
+        typeInfoName={typeInfoName}
+        typeInfo={typeInfo}
+        objectList={searchResults}
+        operation={operation}
+        onNavigateToType={onNavigateToType}
+      />
     </BaseObjectSearch>
   );
 };
