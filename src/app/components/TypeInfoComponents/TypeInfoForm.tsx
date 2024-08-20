@@ -13,7 +13,7 @@ import {
   TypeInfoDataItem,
   TypeNavigation,
 } from "./Types";
-import { TypeInfo, TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeOperation } from "../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
 import { TypeInfoInput } from "./TypeInfoInput";
 
@@ -55,27 +55,34 @@ export type TypeInfoFormProps = Omit<
   InputHTMLAttributes<HTMLFormElement>,
   "value" | "onSubmit"
 > & {
+  typeInfoName: string;
   typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataItem;
+  operation?: TypeOperation;
   onCancel?: () => void;
   onSubmit: (newValue: TypeInfoDataItem) => void;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
 export const TypeInfoForm: FC<TypeInfoFormProps> = ({
+  typeInfoName,
   typeInfo,
   customInputTypeMap = {},
   value,
+  operation = TypeOperation.CREATE,
   onCancel,
   onSubmit,
   onNavigateToType,
 }) => {
-  const fields = useMemo<Record<string, TypeInfoField>>(() => {
-    const { fields: typeInfoFields = {} }: Partial<TypeInfo> = typeInfo || {};
-
-    return typeInfoFields;
-  }, [typeInfo]);
+  const { primaryField, fields = {} } = typeInfo;
+  const primaryFieldValue = useMemo<any>(
+    () =>
+      typeof value === "object" && value !== null
+        ? value[primaryField as keyof TypeInfoDataItem]
+        : undefined,
+    [value],
+  );
   const [internalValue, setInternalValue] = useState<TypeInfoDataItem>({});
   const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
     setInternalValue((prev) => ({
@@ -86,6 +93,19 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   const onSubmitInternal = useCallback(() => {
     onSubmit(internalValue);
   }, [internalValue, onSubmit]);
+  const onNavigateToTypeForField = useCallback(
+    (nameOrIndex: NameOrIndex) => {
+      if (onNavigateToType && typeof primaryFieldValue !== "undefined") {
+        onNavigateToType({
+          fromTypeName: typeInfoName,
+          fromTypePrimaryFieldValue: `${primaryFieldValue}`,
+          fromTypeFieldName: `${nameOrIndex}`,
+          operation,
+        });
+      }
+    },
+    [onNavigateToType, primaryFieldValue, typeInfoName, operation],
+  );
 
   useEffect(() => {
     setInternalValue(value);
@@ -111,7 +131,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
             fieldValue={internalValue[fieldName]}
             nameOrIndex={fieldName}
             onChange={onFieldChange}
-            onNavigateToType={onNavigateToType}
+            onNavigateToType={onNavigateToTypeForField}
             customInputTypeMap={customInputTypeMap}
           />
         );
