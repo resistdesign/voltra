@@ -1,11 +1,9 @@
 import { InputComponent } from "../Types";
 import { useCallback } from "react";
-import { TypeOperation } from "../../../../common/TypeParsing/TypeInfo";
 
 export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
   nameOrIndex,
   typeInfoField,
-  value,
   onNavigateToType,
 }) => {
   const onClick = useCallback(() => {
@@ -13,18 +11,10 @@ export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
       const { typeReference } = typeInfoField;
 
       if (typeReference) {
-        onNavigateToType({
-          typeName: typeReference,
-          fieldNameOrIndex: nameOrIndex,
-          operation:
-            typeof value === "undefined"
-              ? TypeOperation.CREATE
-              : TypeOperation.UPDATE,
-          primaryKeyValue: value,
-        });
+        onNavigateToType(nameOrIndex);
       }
     }
-  }, [nameOrIndex, typeInfoField, value, onNavigateToType]);
+  }, [nameOrIndex, typeInfoField, onNavigateToType]);
 
   return (
     <button type="button" onClick={onClick}>

@@ -28,7 +28,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   value: ValueType;
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
   options?: SupportedFieldTags;
-  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
+  onNavigateToType?: (nameOrIndex: NameOrIndex) => void;
 };
 
 export type InputComponent<ElementPropsType> = FC<
