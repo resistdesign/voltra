@@ -64,6 +64,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   return currentTypeInfo ? (
     <TypeInfoForm
+      typeInfoName={typeInfoName /* TODO: Is this right? */}
       typeInfo={currentTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
