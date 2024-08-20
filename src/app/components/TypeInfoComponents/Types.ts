@@ -13,9 +13,7 @@ import {
 export type TypeNavigation = Omit<
   BaseItemRelationshipInfo,
   "toTypePrimaryFieldValue"
-> & {
-  toTypePrimaryFieldValue?: string;
-};
+>;
 
 export type NameOrIndex = string | number;
 
