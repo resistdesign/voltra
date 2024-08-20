@@ -16,7 +16,7 @@ import {
   BaseFile,
   BaseFileLocationInfo,
   FileServiceDriver,
-} from "../../ServiceTypes/FileServiceTypes";
+} from "../../ServiceTypes";
 
 export const getFullFileKey = ({
   file,
@@ -102,20 +102,22 @@ export const getS3FileDriver = ({
       ) {
         listAttempted = true;
 
+        const listObjectsV2CommandOutput: ListObjectsV2CommandOutput =
+          await s3.send(
+            new ListObjectsV2Command({
+              Bucket: bucketName,
+              Prefix: `${baseDirectory || ""}${path || ""}`,
+              ContinuationToken: continuationToken,
+              MaxKeys:
+                maxNumberOfFiles === Infinity
+                  ? undefined
+                  : maxNumberOfFiles - allContents.length,
+            }),
+          );
         const {
           Contents = [],
           NextContinuationToken,
-        }: ListObjectsV2CommandOutput = await s3.send(
-          new ListObjectsV2Command({
-            Bucket: bucketName,
-            Prefix: `${baseDirectory || ""}${path || ""}`,
-            ContinuationToken: continuationToken,
-            MaxKeys:
-              maxNumberOfFiles === Infinity
-                ? undefined
-                : maxNumberOfFiles - allContents.length,
-          }),
-        );
+        }: ListObjectsV2CommandOutput = listObjectsV2CommandOutput;
 
         allContents = [...allContents, ...Contents];
         continuationToken = NextContinuationToken;
