@@ -30,16 +30,16 @@ export const getTypeInfoField = (
   if (readonly) {
     const {
       deniedOperations,
-      deniedOperations: { create, update, delete: del } = {},
+      deniedOperations: { CREATE, UPDATE, DELETE } = {},
     }: SupportedFieldTags = tags || {};
 
     tags = {
       ...tags,
       deniedOperations: {
         ...deniedOperations,
-        create: create ?? true,
-        update: update ?? true,
-        delete: del ?? true,
+        create: CREATE ?? true,
+        update: UPDATE ?? true,
+        delete: DELETE ?? true,
       },
     };
   }
