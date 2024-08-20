@@ -54,7 +54,7 @@ export const validateSearchFields = (
               SEARCH_VALIDATION_ERRORS.RELATIONAL_FIELDS_NOT_ALLOWED,
             ];
           } else {
-            const { deniedOperations: { read: denyRead = false } = {} } = tags;
+            const { deniedOperations: { READ: denyRead = false } = {} } = tags;
 
             if (denyRead) {
               results.valid = false;
