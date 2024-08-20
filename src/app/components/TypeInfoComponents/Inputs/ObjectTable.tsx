@@ -68,10 +68,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
 
                 if (typeReference) {
                   const typeNavigation: TypeNavigation = {
-                    typeName: typeReference,
-                    fieldNameOrIndex: fieldName,
-                    operation: TypeOperation.READ,
-                    primaryKeyValue,
+
                   };
 
                   return (
