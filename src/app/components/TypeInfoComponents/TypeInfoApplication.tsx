@@ -68,6 +68,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
       onCancel={isFirstHistoryNavItem ? undefined : onCancelCurrentNavHistory}
+      operation={operation /* TODO: Is this right? */}
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
