@@ -5,7 +5,7 @@ import {
   LiteralValue,
   TypeInfoField,
 } from "../../../common/TypeParsing/TypeInfo";
-import { InputComponent, NameOrIndex, TypeNavigation } from "./Types";
+import { InputComponent, NameOrIndex } from "./Types";
 import styled from "styled-components";
 
 const LabelText = styled.span`
@@ -23,7 +23,7 @@ export type TypeInfoInputProps = {
   fieldValue: LiteralValue | LiteralValue[];
   nameOrIndex: NameOrIndex;
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
-  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
+  onNavigateToType?: (nameOrIndex: NameOrIndex) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   ignoreTypeReferences?: boolean;
 };
