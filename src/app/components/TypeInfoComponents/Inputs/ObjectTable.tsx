@@ -10,14 +10,18 @@ import { transformValueToString } from "../../../../common/StringTransformers";
 import { ItemButton } from "../../Basic/ItemButton";
 
 export type ObjectTableProps = {
+  typeInfoName: string;
   typeInfo: TypeInfo;
   objectList: object[];
+  operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
 export const ObjectTable: FC<ObjectTableProps> = ({
+  typeInfoName,
   typeInfo,
   objectList = [],
+  operation = TypeOperation.READ,
   onNavigateToType,
 }) => {
   const { primaryField } = typeInfo;
@@ -42,6 +46,45 @@ export const ObjectTable: FC<ObjectTableProps> = ({
         .filter((f) => f !== undefined) as string[],
     [fieldNames, typeInfoFields],
   );
+  const typeNavigationMap = useMemo<
+    Record<number, Record<string, TypeNavigation>>
+  >(() => {
+    const tNM: Record<string, Record<string, TypeNavigation>> = {};
+
+    for (let i = 0; i < objectList.length; i++) {
+      const item = objectList[i];
+      const fromTypePrimaryFieldValue =
+        typeof item === "object" && item !== null
+          ? item[primaryField as keyof object]
+          : undefined;
+
+      if (typeof fromTypePrimaryFieldValue !== "undefined") {
+        for (const fN of fieldNames) {
+          const { typeReference } = typeInfoFields[fN];
+
+          if (typeReference) {
+            const newTypeNavigation: TypeNavigation = {
+              fromTypeName: typeInfoName,
+              fromTypePrimaryFieldValue,
+              fromTypeFieldName: fN,
+              operation,
+            };
+
+            tNM[i][fN] = newTypeNavigation;
+          }
+        }
+      }
+    }
+
+    return tNM;
+  }, [
+    objectList,
+    primaryField,
+    typeInfoName,
+    fieldNames,
+    typeInfoFields,
+    operation,
+  ]);
 
   return (
     <table>
@@ -54,8 +97,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       </thead>
       <tbody>
         {objectList.map((item = {}, index) => {
-          const { [primaryField as keyof object]: primaryKeyValue } = item;
-
           return (
             <tr key={index}>
               {fieldNames.map((fieldName, fieldIndex) => {
@@ -67,11 +108,10 @@ export const ObjectTable: FC<ObjectTableProps> = ({
                 const { hidden, customType } = tags as SupportedFieldTags;
 
                 if (typeReference) {
-                  const typeNavigation: TypeNavigation = {
+                  const typeNavigation: TypeNavigation =
+                    typeNavigationMap[index][fieldName];
 
-                  };
-
-                  return (
+                  return typeNavigation ? (
                     <td key={`Field:${fieldName}:${fieldIndex}`}>
                       <ItemButton
                         item={typeNavigation}
@@ -80,7 +120,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
                         Explore{/* TODO: i18n. */}
                       </ItemButton>
                     </td>
-                  );
+                  ) : undefined;
                 } else if (!hidden) {
                   const stringValueForDisplay = transformValueToString(
                     item[fieldName as keyof typeof item],
