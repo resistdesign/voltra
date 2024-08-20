@@ -3,8 +3,8 @@
  * */
 export enum ItemRelationshipInfoKeys {
   fromTypeName = "fromTypeName",
-  fromTypeFieldName = "fromTypeFieldName",
   fromTypePrimaryFieldValue = "fromTypePrimaryFieldValue",
+  fromTypeFieldName = "fromTypeFieldName",
   toTypePrimaryFieldValue = "toTypePrimaryFieldValue",
 }
 
