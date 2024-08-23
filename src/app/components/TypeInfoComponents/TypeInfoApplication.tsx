@@ -17,6 +17,11 @@ export type NonUpdateOperationMode = Exclude<
   UpdateOperationMode
 >;
 
+export enum TypeInfoApplicationMode {
+  LIST = "LIST",
+  FORM = "FORM",
+}
+
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
   typeInfoName: string;
@@ -27,6 +32,7 @@ export type TypeInfoApplicationProps = {
   onRelationshipInfoChange: (
     relationshipInfo: ItemRelationshipInfoStructure,
   ) => void;
+  mode: TypeInfoApplicationMode;
 } & (
   | {
       operation: UpdateOperationMode;
@@ -44,13 +50,14 @@ export type TypeInfoApplicationProps = {
 export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   typeInfoName,
-  operation = TypeOperation.CREATE,
-  primaryKeyValue,
   customInputTypeMap,
   value,
   relationshipInfo,
   onChange,
   onRelationshipInfoChange,
+  mode = TypeInfoApplicationMode.FORM,
+  operation = TypeOperation.CREATE,
+  primaryKeyValue,
 }) => {
   // TODO: Show a list or a form???
   //   - Are we (based on denied operations???):
