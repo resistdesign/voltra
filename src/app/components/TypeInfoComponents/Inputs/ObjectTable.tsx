@@ -5,7 +5,7 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
-import { TypeNavigation } from "../Types";
+import { TypeNavigation, TypeNavigationMode } from "../Types";
 import { transformValueToString } from "../../../../common/StringTransformers";
 import { ItemButton } from "../../Basic/ItemButton";
 
@@ -67,6 +67,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
               fromTypeName: typeInfoName,
               fromTypePrimaryFieldValue,
               fromTypeFieldName: fN,
+              mode: TypeNavigationMode.FORM,
               operation,
             };
 

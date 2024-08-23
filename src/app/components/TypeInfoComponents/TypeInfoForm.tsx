@@ -12,6 +12,7 @@ import {
   NameOrIndex,
   TypeInfoDataItem,
   TypeNavigation,
+  TypeNavigationMode,
 } from "./Types";
 import { TypeInfo, TypeOperation } from "../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
@@ -100,6 +101,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           fromTypeName: typeInfoName,
           fromTypePrimaryFieldValue: `${primaryFieldValue}`,
           fromTypeFieldName: `${nameOrIndex}`,
+          mode: TypeNavigationMode.LIST,
           operation,
         });
       }
