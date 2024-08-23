@@ -10,10 +10,16 @@ import {
   ItemRelationshipInfo,
 } from "../../../common";
 
+export enum TypeNavigationMode {
+  LIST = "LIST",
+  FORM = "FORM",
+}
+
 export type TypeNavigation = Omit<
   BaseItemRelationshipInfo,
   "toTypePrimaryFieldValue"
 > & {
+  mode: TypeNavigationMode;
   operation: TypeOperation;
 };
 

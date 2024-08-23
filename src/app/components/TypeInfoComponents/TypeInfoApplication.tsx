@@ -8,6 +8,7 @@ import {
   InputComponent,
   ItemRelationshipInfoStructure,
   TypeInfoDataStructure,
+  TypeNavigationMode,
 } from "./Types";
 
 export type OperationMode = Exclude<TypeOperation, TypeOperation.DELETE>;
@@ -16,11 +17,6 @@ export type NonUpdateOperationMode = Exclude<
   OperationMode,
   UpdateOperationMode
 >;
-
-export enum TypeInfoApplicationMode {
-  LIST = "LIST",
-  FORM = "FORM",
-}
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -32,7 +28,7 @@ export type TypeInfoApplicationProps = {
   onRelationshipInfoChange: (
     relationshipInfo: ItemRelationshipInfoStructure,
   ) => void;
-  mode: TypeInfoApplicationMode;
+  mode: TypeNavigationMode;
 } & (
   | {
       operation: UpdateOperationMode;
@@ -55,7 +51,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   relationshipInfo,
   onChange,
   onRelationshipInfoChange,
-  mode = TypeInfoApplicationMode.FORM,
+  mode = TypeNavigationMode.FORM,
   operation = TypeOperation.CREATE,
   primaryKeyValue,
 }) => {
