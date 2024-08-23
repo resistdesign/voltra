@@ -10,6 +10,7 @@ import {
   TypeInfoDataStructure,
   TypeNavigationMode,
 } from "./Types";
+import { ObjectSearch } from "./Inputs/ObjectSearch";
 
 export type OperationMode = Exclude<TypeOperation, TypeOperation.DELETE>;
 export type UpdateOperationMode = TypeOperation.UPDATE;
@@ -65,7 +66,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   //   - Use the relationship info to get the related items.
   //     - How to READ the related items?
 
-  return currentTypeInfo ? (
+  return mode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={typeInfoName /* TODO: Is this right? */}
       typeInfo={currentTypeInfo}
@@ -76,5 +77,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
-  ) : undefined;
+  ) : (
+    <ObjectSearch
+      typeInfoName={}
+      typeInfo={}
+      searchCriteria={}
+      onSearchCriteriaChange={}
+      searchResults={}
+    />
+  );
 };
