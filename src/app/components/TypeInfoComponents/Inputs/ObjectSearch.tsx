@@ -48,6 +48,8 @@ const FieldCriterionControlItem = styled.div`
 export type ObjectSearchProps = {
   typeInfoName: string;
   typeInfo: TypeInfo;
+  // TODO: Selected items VS results.
+  // TODO: Paging.
   searchCriteria: SearchCriteria;
   onSearchCriteriaChange: (searchCriteria: SearchCriteria) => void;
   searchResults: TypeInfoDataItem[];
