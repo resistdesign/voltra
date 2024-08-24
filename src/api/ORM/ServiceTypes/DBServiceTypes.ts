@@ -1,42 +1,5 @@
-import { SearchCriteria } from "../../../common/SearchTypes";
-import {
-  ItemRelationshipInfo,
-  ItemRelationshipOriginItemInfo,
-} from "../../../common";
-
-export type ListItemResults<ItemType extends Record<any, any>> = {
-  cursor?: string;
-  items: ItemType[];
-};
-
-export type SortField = {
-  field?: string;
-  reverse?: boolean;
-};
-
-/**
- * The information for paging through a list of items.
- * */
-export type PagingInfo = {
-  itemsPerPage?: number;
-  cursor?: string;
-};
-
-/**
- * The information for checking the existence of items.
- * */
-export type ItemsExistenceInfo = {
-  checkExistence?: boolean | undefined;
-};
-
-/**
- * The configuration for listing and searching for items.
- * */
-export type ListItemsConfig = PagingInfo &
-  ItemsExistenceInfo & {
-    criteria?: SearchCriteria;
-    sortFields?: SortField[];
-  };
+import { ListItemResults, ListItemsConfig } from "../../../common/SearchTypes";
+import { ItemRelationshipInfo } from "../../../common";
 
 /**
  * A driver for a database service.
@@ -59,14 +22,6 @@ export type DBServiceItemDriver<
     config: ListItemsConfig,
   ) => Promise<boolean | ListItemResults<ItemType>>;
 };
-
-/**
- * A configuration for listing relationships.
- * */
-export type ListRelationshipsConfig = PagingInfo &
-  ItemsExistenceInfo & {
-    relationshipItemOrigin: ItemRelationshipOriginItemInfo;
-  };
 
 /**
  * A driver for a database service that handles relationship items.

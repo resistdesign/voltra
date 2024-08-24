@@ -3,10 +3,9 @@ import {
   ComparisonOperators,
   FieldCriterion,
   LogicalOperators,
-  SearchCriteria,
+  SearchCriteria, SortField,
 } from "./SearchTypes";
 import { TypeInfoDataItem } from "../app/components";
-import { SortField } from "../api/ORM/ServiceTypes";
 
 /**
  * Basic comparison operators for filtering data.

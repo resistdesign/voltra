@@ -1,9 +1,6 @@
 import {
   DBRelatedItemDriver,
   DBServiceItemDriver,
-  ListItemResults,
-  ListItemsConfig,
-  ListRelationshipsConfig,
   validateRelationshipItem,
 } from "./ServiceTypes";
 import {
@@ -19,7 +16,7 @@ import {
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
 import {
-  ComparisonOperators,
+  ComparisonOperators, ListItemResults, ListItemsConfig, ListRelationshipsConfig,
   LogicalOperators,
   SearchCriteria,
 } from "../../common/SearchTypes";
