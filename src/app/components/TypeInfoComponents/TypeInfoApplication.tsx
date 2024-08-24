@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useCallback, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoForm";
 import {
   TypeInfo,
@@ -99,6 +99,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
     [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
   );
+  const onCloseCurrentNavHistoryItem = useCallback(() => {
+    setNavHistory((prevNavHistory) => {
+      if (prevNavHistory.length > 0) {
+        const [_currentNavHistoryItem, ...restNavHistory] = [
+          ...prevNavHistory,
+        ].reverse();
+
+        return restNavHistory.reverse();
+      } else {
+        return prevNavHistory;
+      }
+    });
+  }, []);
 
   return mode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
@@ -106,8 +119,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       typeInfo={currentTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
-      onCancel={isFirstHistoryNavItem ? undefined : onCancelCurrentNavHistory}
-      operation={operation /* TODO: Is this right? */}
+      onCancel={onCloseCurrentNavHistoryItem}
+      operation={currentOperation}
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
