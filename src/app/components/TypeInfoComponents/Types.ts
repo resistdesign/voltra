@@ -45,11 +45,15 @@ export type CustomInputComponentMap = Record<string, InputComponent<any>>;
 
 export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;
 
-export type TypeInfoDataMap = Record<any, TypeInfoDataItem>;
+export type TypeInfoDataMap = {
+  [primaryKeyValue: string]: TypeInfoDataItem;
+};
 
 export type TypeDataStateMap = Record<TypeOperation, TypeInfoDataMap>;
 
-export type TypeInfoDataStructure = Record<string, TypeDataStateMap>;
+export type TypeInfoDataStructure = {
+  [typeInfoName: string]: TypeDataStateMap;
+};
 
 export type ItemRelationshipInfoStructure = {
   [fromItemType: string]: {

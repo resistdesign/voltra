@@ -3,9 +3,9 @@ import {
   ItemRelationshipInfoStructure,
   TypeInfoApplication,
   TypeInfoDataStructure,
-} from "../../src/app/components";
-import { TypeInfoMap } from "../../src/common/TypeParsing/TypeInfo";
-import { getTypeInfoMapFromTypeScript } from "../../src/common/TypeParsing";
+} from "../../../src/app/components";
+import { TypeInfoMap } from "../../../src/common/TypeParsing/TypeInfo";
+import { getTypeInfoMapFromTypeScript } from "../../../src/common/TypeParsing";
 
 const DEMO_TS = `
 export type PersistableItem = {
@@ -81,7 +81,7 @@ export type Person = PersistableItem & {
 `;
 const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
 
-export const TypeInfo: FC = () => {
+export const TypeInfoDemo: FC = () => {
   const [value, setValue] = useState<TypeInfoDataStructure>({});
   const [relationshipInfo, setRelationshipInfo] =
     useState<ItemRelationshipInfoStructure>({});
