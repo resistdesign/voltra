@@ -99,6 +99,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
     [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
   );
+  const onNavigateToType = useCallback(
+    (typeNavigation: TypeNavigation) => {
+      setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
+    },
+    [currentTypeNavigation],
+  );
   const onCloseCurrentNavHistoryItem = useCallback(() => {
     setNavHistory((prevNavHistory) => {
       if (prevNavHistory.length > 0) {
@@ -112,8 +118,33 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       }
     });
   }, []);
+  const onCurrentDataItemChange = useCallback(
+    (newDataItem: TypeInfoDataItem) => {
+      onChange({
+        ...value,
+        [currentFromTypeName]: {
+          ...currentTypeDataStateMap,
+          [currentOperation]: {
+            ...currentTypeInfoDataMap,
+            [currentFromTypePrimaryFieldValue]: newDataItem,
+          },
+        },
+      });
+    },
+    [
+      value,
+      currentFromTypeName,
+      currentTypeDataStateMap,
+      currentOperation,
+      currentTypeInfoDataMap,
+      currentFromTypePrimaryFieldValue,
+      onChange,
+    ],
+  );
 
-  return mode === TypeNavigationMode.FORM ? (
+  // TODO: Object selection and saving relationship info.
+
+  return currentMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={currentFromTypeName}
       typeInfo={currentTypeInfo}
