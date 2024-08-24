@@ -6,7 +6,9 @@ import {
 } from "react";
 import {
   ComparisonOperators,
-  FieldCriterion, ListItemsConfig,
+  FieldCriterion,
+  ListItemResults,
+  ListItemsConfig,
   LogicalOperators,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
@@ -48,11 +50,12 @@ const FieldCriterionControlItem = styled.div`
 export type ObjectSearchProps = {
   typeInfoName: string;
   typeInfo: TypeInfo;
+  // TODO: Load relationships. ("Selections")
   // TODO: Selected items VS results.
   // TODO: Paging.
   listItemsConfig: ListItemsConfig;
   onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
-  searchResults: TypeInfoDataItem[];
+  listItemResults: ListItemResults<TypeInfoDataItem>;
   operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
@@ -61,23 +64,40 @@ export type ObjectSearchProps = {
 export const ObjectSearch: FC<ObjectSearchProps> = ({
   typeInfoName,
   typeInfo,
-  searchCriteria,
-  onSearchCriteriaChange,
-  searchResults = [],
+  listItemsConfig,
+  onListItemsConfigChange,
+  listItemResults,
   operation,
   onNavigateToType,
   customInputTypeMap,
 }) => {
+  const {
+    criteria: searchCriteria = {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [],
+    },
+  }: Partial<ListItemsConfig> = listItemsConfig || {};
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
-  const onPatchSearchCriteria = useCallback(
-    (newSearchCriteria: Partial<SearchCriteria>) => {
-      onSearchCriteriaChange({
-        ...searchCriteria,
-        ...newSearchCriteria,
+  const onPatchListItemsConfig = useCallback(
+    (patch: Partial<ListItemsConfig>) => {
+      onListItemsConfigChange({
+        ...listItemsConfig,
+        ...patch,
       });
     },
-    [searchCriteria, onSearchCriteriaChange],
+    [listItemsConfig, onListItemsConfigChange],
+  );
+  const onPatchSearchCriteria = useCallback(
+    (newSearchCriteria: Partial<SearchCriteria>) => {
+      onPatchListItemsConfig({
+        criteria: {
+          ...searchCriteria,
+          ...newSearchCriteria,
+        },
+      });
+    },
+    [searchCriteria, onPatchListItemsConfig],
   );
   const onFieldCriterionChange = useCallback(
     (index: number, newFieldCriterion: FieldCriterion) => {
