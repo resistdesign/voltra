@@ -1,12 +1,13 @@
 import { FC, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoForm";
 import {
+  TypeInfo,
   TypeInfoMap,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
-  ItemRelationshipInfoStructure,
+  ItemRelationshipInfoStructure, TypeDataStateMap, TypeInfoDataItem,
   TypeInfoDataStructure,
   TypeNavigation,
   TypeNavigationMode,
@@ -72,10 +73,25 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => navHistory[navHistory.length - 1] || baseTypeNavigation,
     [navHistory, baseTypeNavigation],
   );
+  const {
+    fromTypeName: currentFromTypeName,
+    fromTypePrimaryFieldValue: currentFromTypePrimaryFieldValue,
+    fromTypeFieldName: currentFromTypeFieldName,
+    mode: currentMode,
+    operation: currentOperation,
+  } = currentTypeNavigation;
+  const currentTypeInfo = useMemo<TypeInfo>(
+    () => typeInfoMap[currentFromTypeName],
+    [typeInfoMap, currentFromTypeName],
+  );
+  const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
+    () => value[currentOperation],
+    [value, currentOperation],
+  );
 
   return mode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
-      typeInfoName={typeInfoName /* TODO: Is this right? */}
+      typeInfoName={currentFromTypeName}
       typeInfo={currentTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
