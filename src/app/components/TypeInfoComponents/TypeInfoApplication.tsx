@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoForm";
 import {
   TypeInfoMap,
@@ -8,6 +8,7 @@ import {
   InputComponent,
   ItemRelationshipInfoStructure,
   TypeInfoDataStructure,
+  TypeNavigation,
   TypeNavigationMode,
 } from "./Types";
 import { ObjectSearch } from "./Inputs/ObjectSearch";
@@ -56,15 +57,21 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   operation = TypeOperation.CREATE,
   primaryKeyValue,
 }) => {
-  // TODO: Show a list or a form???
-  //   - Are we (based on denied operations???):
-  //     - Creating a new object and adding a relationship for it.
-  //     - Updating an existing object.
-  //     - Selecting/Removing an existing object or objects.
-  // TODO: Is the top of the application a form or a list, or can it be both???
-  // TODO: Show object search/list controls when there is a TypeNavigation in the history.
-  //   - Use the relationship info to get the related items.
-  //     - How to READ the related items?
+  const baseTypeNavigation = useMemo<TypeNavigation>(
+    () => ({
+      fromTypeName: typeInfoName,
+      fromTypePrimaryFieldValue: "",
+      fromTypeFieldName: "",
+      mode,
+      operation,
+    }),
+    [typeInfoName, mode, operation],
+  );
+  const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
+  const currentTypeNavigation = useMemo<TypeNavigation>(
+    () => navHistory[navHistory.length - 1] || baseTypeNavigation,
+    [],
+  );
 
   return mode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
