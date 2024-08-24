@@ -60,17 +60,17 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
       fromTypeName: typeInfoName,
-      fromTypePrimaryFieldValue: "",
+      fromTypePrimaryFieldValue: `${primaryKeyValue}`,
       fromTypeFieldName: "",
       mode,
       operation,
     }),
-    [typeInfoName, mode, operation],
+    [typeInfoName, primaryKeyValue, mode, operation],
   );
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const currentTypeNavigation = useMemo<TypeNavigation>(
     () => navHistory[navHistory.length - 1] || baseTypeNavigation,
-    [],
+    [navHistory, baseTypeNavigation],
   );
 
   return mode === TypeNavigationMode.FORM ? (
