@@ -143,6 +143,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   );
 
   // TODO: Object selection and saving relationship info.
+  // TODO: Search criteria and search results.
 
   return currentMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
@@ -157,11 +158,14 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     />
   ) : (
     <ObjectSearch
-      typeInfoName={}
-      typeInfo={}
+      typeInfoName={currentFromTypeName}
+      typeInfo={currentTypeInfo}
       searchCriteria={}
       onSearchCriteriaChange={}
       searchResults={}
+      operation={currentOperation}
+      onNavigateToType={onNavigateToType}
+      customInputTypeMap={customInputTypeMap}
     />
   );
 };
