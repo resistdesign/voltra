@@ -54,14 +54,23 @@ export type SearchCriteria = {
   logicalOperator: LogicalOperators;
   fieldCriteria: FieldCriterion[];
 };
+
+/**
+ * The results from a request to list items.
+ * */
 export type ListItemResults<ItemType extends Record<any, any>> = {
   cursor?: string;
   items: ItemType[];
 };
+
+/**
+ * The information used to sort a list of items by a specified field.
+ * */
 export type SortField = {
   field?: string;
   reverse?: boolean;
 };
+
 /**
  * The information for paging through a list of items.
  * */
@@ -69,12 +78,14 @@ export type PagingInfo = {
   itemsPerPage?: number;
   cursor?: string;
 };
+
 /**
  * The information for checking the existence of items.
  * */
 export type ItemsExistenceInfo = {
   checkExistence?: boolean | undefined;
 };
+
 /**
  * The configuration for listing and searching for items.
  * */
@@ -83,6 +94,7 @@ export type ListItemsConfig = PagingInfo &
     criteria?: SearchCriteria;
     sortFields?: SortField[];
   };
+
 /**
  * A configuration for listing relationships.
  * */
