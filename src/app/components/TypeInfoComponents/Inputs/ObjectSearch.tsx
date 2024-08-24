@@ -6,7 +6,7 @@ import {
 } from "react";
 import {
   ComparisonOperators,
-  FieldCriterion,
+  FieldCriterion, ListItemsConfig,
   LogicalOperators,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
@@ -50,8 +50,8 @@ export type ObjectSearchProps = {
   typeInfo: TypeInfo;
   // TODO: Selected items VS results.
   // TODO: Paging.
-  searchCriteria: SearchCriteria;
-  onSearchCriteriaChange: (searchCriteria: SearchCriteria) => void;
+  listItemsConfig: ListItemsConfig;
+  onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
   searchResults: TypeInfoDataItem[];
   operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
