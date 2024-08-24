@@ -7,7 +7,10 @@ import {
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
-  ItemRelationshipInfoStructure, TypeDataStateMap, TypeInfoDataItem,
+  ItemRelationshipInfoStructure,
+  TypeDataStateMap,
+  TypeInfoDataItem,
+  TypeInfoDataMap,
   TypeInfoDataStructure,
   TypeNavigation,
   TypeNavigationMode,
@@ -85,8 +88,16 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     [typeInfoMap, currentFromTypeName],
   );
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
-    () => value[currentOperation],
-    [value, currentOperation],
+    () => value[currentFromTypeName],
+    [value, currentFromTypeName],
+  );
+  const currentTypeInfoDataMap = useMemo<TypeInfoDataMap>(
+    () => currentTypeDataStateMap[currentOperation],
+    [currentTypeDataStateMap, currentOperation],
+  );
+  const currentDataItem = useMemo<TypeInfoDataItem>(
+    () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
+    [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
   );
 
   return mode === TypeNavigationMode.FORM ? (
