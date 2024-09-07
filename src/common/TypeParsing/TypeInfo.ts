@@ -19,6 +19,7 @@ export type DeniedOperations = Partial<Record<TypeOperation, boolean>>;
 export type SupportedTags = {
   label?: string;
   deniedOperations?: DeniedOperations;
+  fullPaging?: boolean;
 };
 
 /**
