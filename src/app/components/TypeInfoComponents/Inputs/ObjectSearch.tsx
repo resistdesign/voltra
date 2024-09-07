@@ -52,8 +52,9 @@ export type ObjectSearchProps = {
   typeInfo: TypeInfo;
   // TODO: Load relationships. ("Selections")
   // TODO: Selected items VS results.
-  // TODO: Paging.
+  // TODO: IMPORTANT: Paging.
   listItemsConfig: ListItemsConfig;
+  selectedItemResults?: ListItemResults<TypeInfoDataItem>;
   onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
   listItemResults: ListItemResults<TypeInfoDataItem>;
   operation?: TypeOperation;
@@ -67,6 +68,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   listItemsConfig,
   onListItemsConfigChange,
   listItemResults,
+  selectedItemResults,
   operation,
   onNavigateToType,
   customInputTypeMap,
@@ -79,6 +81,14 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   }: Partial<ListItemsConfig> = listItemsConfig || {};
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
+  const {
+    // TODO: Paging.
+    items: itemResults = [],
+  }: ListItemResults<TypeInfoDataItem> = listItemResults;
+  const {
+    // TODO: Paging.
+    items: selectedResults = [],
+  }: Partial<ListItemResults<TypeInfoDataItem>> = selectedItemResults || {};
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
       onListItemsConfigChange({
@@ -184,7 +194,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       <ObjectTable
         typeInfoName={typeInfoName}
         typeInfo={typeInfo}
-        objectList={searchResults}
+        objectList={itemResults}
         operation={operation}
         onNavigateToType={onNavigateToType}
       />
