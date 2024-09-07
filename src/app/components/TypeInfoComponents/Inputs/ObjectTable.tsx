@@ -13,6 +13,7 @@ export type ObjectTableProps = {
   typeInfoName: string;
   typeInfo: TypeInfo;
   objectList: object[];
+  selectable?: boolean;
   selectedIndices?: number[];
   onSelectedIndicesChange?: (selectedIndices: number[]) => void;
   operation?: TypeOperation;
@@ -23,6 +24,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   typeInfoName,
   typeInfo,
   objectList = [],
+  selectable = false,
   selectedIndices = [],
   onSelectedIndicesChange,
   operation = TypeOperation.READ,
@@ -95,6 +97,12 @@ export const ObjectTable: FC<ObjectTableProps> = ({
     <table>
       <thead>
         <tr>
+          {selectable ? <th>
+            <input
+              type="checkbox"
+              checked
+            />
+          </th> : undefined}
           {fieldHeaderLabels.map((fieldLabel, index) => (
             <th key={`FieldLabel:${fieldLabel}:${index}`}>{fieldLabel}</th>
           ))}
