@@ -13,6 +13,8 @@ export type ObjectTableProps = {
   typeInfoName: string;
   typeInfo: TypeInfo;
   objectList: object[];
+  selectedIndices?: number[];
+  onSelectedIndicesChange?: (selectedIndices: number[]) => void;
   operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
@@ -21,6 +23,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   typeInfoName,
   typeInfo,
   objectList = [],
+  selectedIndices = [],
+  onSelectedIndicesChange,
   operation = TypeOperation.READ,
   onNavigateToType,
 }) => {
@@ -98,6 +102,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       </thead>
       <tbody>
         {objectList.map((item = {}, index) => {
+          // TODO: How to show that a row/item is selected?
           return (
             <tr key={index}>
               {fieldNames.map((fieldName, fieldIndex) => {
