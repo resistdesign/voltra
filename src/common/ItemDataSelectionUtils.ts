@@ -20,3 +20,36 @@ export const getSelectedIndices = (
 
   return selectedIndices;
 };
+
+export const getIndexIsSelected = (
+  index: number,
+  selectedIndices: number[],
+): boolean => selectedIndices.includes(index);
+
+export const getAllItemsAreSelected = (
+  items: TypeInfoDataItem[],
+  selectedItems: TypeInfoDataItem[],
+  primaryField: string,
+): boolean => {
+  const selectedPrimaryFieldValues = selectedItems.map(
+    (selectedItem) => selectedItem[primaryField],
+  );
+
+  return items.every((item) =>
+    selectedPrimaryFieldValues.includes(item[primaryField]),
+  );
+};
+
+export const getSomeItemsAreSelected = (
+  items: TypeInfoDataItem[],
+  selectedItems: TypeInfoDataItem[],
+  primaryField: string,
+): boolean => {
+  const selectedPrimaryFieldValues = selectedItems.map(
+    (selectedItem) => selectedItem[primaryField],
+  );
+
+  return items.some((item) =>
+    selectedPrimaryFieldValues.includes(item[primaryField]),
+  );
+};
