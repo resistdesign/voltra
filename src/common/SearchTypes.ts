@@ -76,8 +76,8 @@ export type SortField = {
  * @see SupportedTags.fullPaging
  * */
 export type StandardExpandedPagingCursor = {
-  currentPage: number;
-  totalPages: number;
+  currentPage?: number;
+  totalPages?: number;
 };
 
 /**
