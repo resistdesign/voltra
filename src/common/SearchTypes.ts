@@ -72,6 +72,15 @@ export type SortField = {
 };
 
 /**
+ * The data used to page a specific set of search results that uses full paging.
+ * @see SupportedTags.fullPaging
+ * */
+export type StandardExpandedPagingCursor = {
+  currentPage: number;
+  totalPages: number;
+};
+
+/**
  * The information for paging through a list of items.
  * */
 export type PagingInfo = {
