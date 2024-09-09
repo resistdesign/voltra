@@ -61,7 +61,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
 
     return pageNumberList;
   }, [currentPage, fullPaging, totalPages]);
-  // TODO: Icons?
 
   return (
     <BasePagingControls>
