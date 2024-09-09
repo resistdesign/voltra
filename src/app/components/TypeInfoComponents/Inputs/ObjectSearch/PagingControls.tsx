@@ -2,6 +2,7 @@ import { FC, useMemo } from "react";
 import { StandardExpandedPagingCursor } from "../../../../../common/SearchTypes";
 import styled from "styled-components";
 import { ValueButton } from "../../../Basic/ValueButton";
+import { MaterialSymbol } from "../../../MaterialSymbol";
 
 const BasePagingControls = styled.div`
   flex: 1 0 auto;
@@ -64,8 +65,12 @@ export const PagingControls: FC<PagingControlsProps> = ({
 
   return (
     <BasePagingControls>
-      <button onClick={onFirst}>{"|<"}</button>
-      <button onClick={onPrevious}>{"<"}</button>
+      <button onClick={onFirst}>
+        <MaterialSymbol>skip_previous</MaterialSymbol>
+      </button>
+      <button onClick={onPrevious}>
+        <MaterialSymbol>fast_rewind</MaterialSymbol>
+      </button>
       {fullPaging
         ? currentPageNumberList.map((pageNumber) => (
             <ValueButton value={pageNumber} onClick={onPageNumber}>
@@ -77,8 +82,12 @@ export const PagingControls: FC<PagingControlsProps> = ({
             </ValueButton>
           ))
         : undefined}
-      <button onClick={onNext}>{">"}</button>
-      <button onClick={onLast}>{">|"}</button>
+      <button onClick={onNext}>
+        <MaterialSymbol>fast_forward</MaterialSymbol>
+      </button>
+      <button onClick={onLast}>
+        <MaterialSymbol>skip_next</MaterialSymbol>
+      </button>
     </BasePagingControls>
   );
 };
