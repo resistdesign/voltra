@@ -3,6 +3,7 @@ import { StandardExpandedPagingCursor } from "../../../../../common/SearchTypes"
 import styled from "styled-components";
 import { ValueButton } from "../../../Basic/ValueButton";
 import { MaterialSymbol } from "../../../MaterialSymbol";
+import { PagingControlsConfig } from "./Types";
 
 const BasePagingControls = styled.div`
   flex: 1 0 auto;
@@ -13,17 +14,7 @@ const BasePagingControls = styled.div`
   gap: 1em;
 `;
 
-export type PagingControlsProps = {
-  fullPaging?: boolean;
-  pagingCursor?: string;
-  onFirst?: () => void;
-  onPrevious: () => void;
-  onPageNumber?: (pageNumber: number) => void;
-  onNext: () => void;
-  onLast?: () => void;
-};
-
-export const PagingControls: FC<PagingControlsProps> = ({
+export const PagingControls: FC<PagingControlsConfig> = ({
   fullPaging,
   pagingCursor,
   onFirst,
