@@ -92,6 +92,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
     typeInfoFields,
     operation,
   ]);
+  // const
 
   return (
     <table>
@@ -113,6 +114,12 @@ export const ObjectTable: FC<ObjectTableProps> = ({
           // TODO: How to show that a row/item is selected?
           return (
             <tr key={index}>
+              <td>
+                <input
+                  type="checkbox"
+                  checked
+                />
+              </td>
               {fieldNames.map((fieldName, fieldIndex) => {
                 const {
                   type,
