@@ -1,8 +1,10 @@
-import { ListItemResults, ListItemsConfig } from "../../../common/SearchTypes";
 import {
-  ItemRelationshipInfo,
-  ItemRelationshipOriginItemInfo,
-} from "../../../common";
+  ListItemResults,
+  ListItemsConfig,
+  MultiRelationshipCheckConfig,
+  MultiRelationshipCheckResultsMap,
+} from "../../../common/SearchTypes";
+import { ItemRelationshipInfo } from "../../../common";
 
 /**
  * A driver for a database service.
@@ -34,7 +36,6 @@ export type DBRelatedItemDriver = DBServiceItemDriver<
   "id"
 > & {
   itemsAreRelated: (
-    fromInfo: ItemRelationshipOriginItemInfo,
-    toPrimaryFieldValues: string[],
-  ) => Promise<Record<string, boolean>>;
+    config: MultiRelationshipCheckConfig,
+  ) => Promise<MultiRelationshipCheckResultsMap>;
 };
