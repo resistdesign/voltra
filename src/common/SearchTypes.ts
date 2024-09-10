@@ -111,3 +111,16 @@ export type ListRelationshipsConfig = PagingInfo &
   ItemsExistenceInfo & {
     relationshipItemOrigin: ItemRelationshipOriginItemInfo;
   };
+
+/**
+ * A configuration for checking multiple items for a relationship to a specific item.
+ * */
+export type MultiRelationshipCheckConfig = {
+  fromInfo: ItemRelationshipOriginItemInfo;
+  toPrimaryFieldValues: string[];
+};
+
+/**
+ * The results from checking multiple items for a relationship to a specific item.
+ * */
+export type MultiRelationshipCheckResultsMap = Record<string, boolean>;
