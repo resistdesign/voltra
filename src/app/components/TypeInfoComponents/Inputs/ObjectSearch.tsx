@@ -21,6 +21,7 @@ import { ObjectTable } from "./ObjectTable";
 import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
 import { IndexButton } from "../../Basic/IndexButton";
+import { PagingControls } from "./ObjectSearch/PagingControls";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -83,10 +84,13 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     searchCriteria;
   const {
     // TODO: Paging.
+    // TODO: Change Paging.
+    cursor: pagingCursor,
     items: itemResults = [],
   }: ListItemResults<TypeInfoDataItem> = listItemResults;
+  // TODO: Paging.
+  // TODO: Change Paging.
   const {
-    // TODO: Paging.
     items: selectedResults = [],
   }: Partial<ListItemResults<TypeInfoDataItem>> = selectedItemResults || {};
   const onPatchListItemsConfig = useCallback(
@@ -191,12 +195,30 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         ))}
         <button onClick={onAddCriterion}>Add Criterion</button>
       </Controls>
+      <PagingControls
+        fullPaging={fullPaging}
+        pagingCursor={pagingCursor}
+        onFirst={onFirst}
+        onPrevious={onPrevious}
+        onPageNumber={onPageNumber}
+        onNext={onNext}
+        onLast={onLast}
+      />
       <ObjectTable
         typeInfoName={typeInfoName}
         typeInfo={typeInfo}
         objectList={itemResults}
         operation={operation}
         onNavigateToType={onNavigateToType}
+      />
+      <PagingControls
+        fullPaging={fullPaging}
+        pagingCursor={pagingCursor}
+        onFirst={onFirst}
+        onPrevious={onPrevious}
+        onPageNumber={onPageNumber}
+        onNext={onNext}
+        onLast={onLast}
       />
     </BaseObjectSearch>
   );
