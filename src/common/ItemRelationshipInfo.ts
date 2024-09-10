@@ -30,7 +30,7 @@ export type ItemRelationshipOriginInfo = Record<
 >;
 
 /**
- * The origination portion of an `ItemRelationshipInfo` for a specific item.
+ * The origination portion of an `ItemRelationshipInfo` for a specific item and field relationship.
  * */
 export type ItemRelationshipOriginItemInfo = ItemRelationshipOriginInfo &
   Record<ItemRelationshipInfoKeys.fromTypePrimaryFieldValue, string>;

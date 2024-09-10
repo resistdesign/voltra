@@ -29,4 +29,6 @@ export type DBServiceItemDriver<
 export type DBRelatedItemDriver = DBServiceItemDriver<
   ItemRelationshipInfo,
   "id"
->;
+> & {
+  itemsAreRelated: () => Promise<Record<string, boolean>>;
+};
