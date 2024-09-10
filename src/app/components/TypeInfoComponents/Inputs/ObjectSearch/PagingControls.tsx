@@ -17,9 +17,9 @@ export type PagingControlsProps = {
   fullPaging?: boolean;
   pagingCursor?: string;
   onFirst?: () => void;
-  onPrevious?: () => void;
+  onPrevious: () => void;
   onPageNumber?: (pageNumber: number) => void;
-  onNext?: () => void;
+  onNext: () => void;
   onLast?: () => void;
 };
 
