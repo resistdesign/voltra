@@ -14,6 +14,7 @@ const BasePagingControls = styled.div`
   gap: 1em;
 `;
 
+// TODO: Items Per Page.
 export const PagingControls: FC<PagingControlsConfig> = ({
   fullPaging,
   pagingCursor,
