@@ -22,16 +22,11 @@ export const getStandardExpandedPagingCursor = (
 export const usePagingControls = (
   pagingInfo: PagingInfo,
   onPagingInfoChange?: (pagingInfo: PagingInfo) => void,
-  fullPaging?: boolean,
 ): PagingControlsConfig => {
   const { cursor, itemsPerPage = 1 } = pagingInfo;
   const fullCursor = useMemo<StandardExpandedPagingCursor | undefined>(() => {
-    if (fullPaging) {
-      return getStandardExpandedPagingCursor(cursor);
-    } else {
-      return undefined;
-    }
-  }, [cursor, fullPaging]);
+    return getStandardExpandedPagingCursor(cursor);
+  }, [cursor]);
   const {
     currentPage = 1,
     totalPages = 1,
@@ -50,19 +45,17 @@ export const usePagingControls = (
   const onPatchCursor = useCallback(
     (newCursor: Partial<StandardExpandedPagingCursor>) => {
       try {
-        if (fullPaging) {
-          onPatchPagingInfo({
-            cursor: JSON.stringify({
-              ...fullCursor,
-              ...newCursor,
-            }),
-          });
-        }
+        onPatchPagingInfo({
+          cursor: JSON.stringify({
+            ...fullCursor,
+            ...newCursor,
+          }),
+        });
       } catch (error) {
         // Ignore.
       }
     },
-    [fullPaging, fullCursor, onPatchPagingInfo],
+    [fullCursor, onPatchPagingInfo],
   );
   const onItemsPerPageChange = useCallback(
     (itemsPerPage: number) => {
@@ -103,7 +96,6 @@ export const usePagingControls = (
 
   return {
     onItemsPerPageChange,
-    fullPaging: !!fullPaging,
     pagingCursor: fullCursor,
     onFirst,
     onPrevious,
