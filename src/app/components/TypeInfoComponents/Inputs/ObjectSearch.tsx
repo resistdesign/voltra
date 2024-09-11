@@ -12,6 +12,7 @@ import {
   LogicalOperators,
   MultiRelationshipCheckConfig,
   MultiRelationshipCheckResultsMap,
+  PagingInfo,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
@@ -74,7 +75,7 @@ export type ObjectSearchProps = {
 export const ObjectSearch: FC<ObjectSearchProps> = ({
   typeInfoName,
   typeInfo,
-  // TODO: USe these:
+  // TODO: Use these:
   relationshipCheckConfig,
   onRelationshipCheckConfigChange,
   relationshipCheckResults,
@@ -98,16 +99,10 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
   const {
-    // TODO: Paging.
-    // TODO: Change Paging.
+    // TODO: Load more paging.
     cursor: nextPagingCursor,
     items: itemResults = [],
   }: ListItemResults<TypeInfoDataItem> = listItemResults;
-  // TODO: Paging.
-  // TODO: Change Paging.
-  const {
-    items: selectedResults = [],
-  }: Partial<ListItemResults<TypeInfoDataItem>> = selectedItemResults || {};
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
       onListItemConfigChange({
@@ -182,7 +177,18 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     [fieldCriteria, onPatchSearchCriteria],
   );
   const { tags: { fullPaging } = {} } = typeInfo;
-  const pagingControls = usePagingControls();
+  const onPagingInfoChange = useCallback(
+    (pagingInfo: PagingInfo) => {
+      onPatchListItemsConfig({
+        ...pagingInfo,
+      });
+    },
+    [onPatchListItemsConfig],
+  );
+  const pagingControls = usePagingControls(
+    listItemConfig as PagingInfo,
+    onPagingInfoChange,
+  );
 
   return (
     <BaseObjectSearch>
