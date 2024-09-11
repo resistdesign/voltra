@@ -24,6 +24,7 @@ import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
 import { IndexButton } from "../../Basic/IndexButton";
 import { PagingControls } from "./ObjectSearch/PagingControls";
+import { usePagingControls } from "./ObjectSearch/usePagingControls";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -180,6 +181,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     },
     [fieldCriteria, onPatchSearchCriteria],
   );
+  const { tags: { fullPaging } = {} } = typeInfo;
+  const pagingControls = usePagingControls();
 
   return (
     <BaseObjectSearch>
@@ -209,15 +212,10 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         ))}
         <button onClick={onAddCriterion}>Add Criterion</button>
       </Controls>
-      <PagingControls
-        fullPaging={fullPaging}
-        pagingCursor={currentPagingCursor}
-        onFirst={onFirst}
-        onPrevious={onPrevious}
-        onPageNumber={onPageNumber}
-        onNext={onNext}
-        onLast={onLast}
-      />
+      {fullPaging ? (
+        <PagingControls {...pagingControls} />
+      ) : // TODO: Load more button.
+      undefined}
       <ObjectTable
         typeInfoName={typeInfoName}
         typeInfo={typeInfo}
@@ -225,15 +223,10 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         operation={operation}
         onNavigateToType={onNavigateToType}
       />
-      <PagingControls
-        fullPaging={fullPaging}
-        pagingCursor={currentPagingCursor}
-        onFirst={onFirst}
-        onPrevious={onPrevious}
-        onPageNumber={onPageNumber}
-        onNext={onNext}
-        onLast={onLast}
-      />
+      {fullPaging ? (
+        <PagingControls {...pagingControls} />
+      ) : // TODO: Load more button.
+      undefined}
     </BaseObjectSearch>
   );
 };
