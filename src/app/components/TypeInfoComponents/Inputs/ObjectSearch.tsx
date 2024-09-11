@@ -10,6 +10,8 @@ import {
   ListItemResults,
   ListItemsConfig,
   LogicalOperators,
+  MultiRelationshipCheckConfig,
+  MultiRelationshipCheckResultsMap,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
@@ -51,9 +53,12 @@ const FieldCriterionControlItem = styled.div`
 export type ObjectSearchProps = {
   typeInfoName: string;
   typeInfo: TypeInfo;
-  selectedItemConfig?: ListItemsConfig;
-  onSelectedItemConfigChange?: (listItemsConfig: ListItemsConfig) => void;
-  selectedItemResults?: ListItemResults<TypeInfoDataItem>;
+  // TODO: Relationship Check. (Selected Items)
+  relationshipCheckConfig?: MultiRelationshipCheckConfig;
+  onRelationshipCheckConfigChange?: (
+    relationshipCheckConfig: MultiRelationshipCheckConfig,
+  ) => void;
+  relationshipCheckResults?: MultiRelationshipCheckResultsMap;
   // TODO: Load relationships. ("Selections")
   // TODO: Selected items VS results.
   // TODO: IMPORTANT: Paging.
@@ -68,9 +73,10 @@ export type ObjectSearchProps = {
 export const ObjectSearch: FC<ObjectSearchProps> = ({
   typeInfoName,
   typeInfo,
-  selectedItemConfig,
-  onSelectedItemConfigChange,
-  selectedItemResults,
+  // TODO: USe these:
+  relationshipCheckConfig,
+  onRelationshipCheckConfigChange,
+  relationshipCheckResults,
   listItemConfig,
   onListItemConfigChange,
   listItemResults,
@@ -79,6 +85,10 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   customInputTypeMap,
 }) => {
   const {
+    cursor: currentPagingCursor,
+    itemsPerPage,
+    // TODO: Sort fields.
+    sortFields,
     criteria: searchCriteria = {
       logicalOperator: LogicalOperators.AND,
       fieldCriteria: [],
@@ -89,7 +99,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   const {
     // TODO: Paging.
     // TODO: Change Paging.
-    cursor: pagingCursor,
+    cursor: nextPagingCursor,
     items: itemResults = [],
   }: ListItemResults<TypeInfoDataItem> = listItemResults;
   // TODO: Paging.
@@ -201,7 +211,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       </Controls>
       <PagingControls
         fullPaging={fullPaging}
-        pagingCursor={pagingCursor}
+        pagingCursor={currentPagingCursor}
         onFirst={onFirst}
         onPrevious={onPrevious}
         onPageNumber={onPageNumber}
@@ -217,7 +227,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       />
       <PagingControls
         fullPaging={fullPaging}
-        pagingCursor={pagingCursor}
+        pagingCursor={currentPagingCursor}
         onFirst={onFirst}
         onPrevious={onPrevious}
         onPageNumber={onPageNumber}
