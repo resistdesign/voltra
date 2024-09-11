@@ -16,7 +16,6 @@ const BasePagingControls = styled.div`
 
 // TODO: Items Per Page.
 export const PagingControls: FC<PagingControlsConfig> = ({
-  fullPaging,
   pagingCursor,
   onFirst,
   onPrevious,
@@ -37,22 +36,20 @@ export const PagingControls: FC<PagingControlsConfig> = ({
   const currentPageNumberList = useMemo(() => {
     const pageNumberList = [];
 
-    if (fullPaging) {
-      for (let i = currentPage - 3; i <= totalPages; i++) {
-        const thisPageNumber = i;
+    for (let i = currentPage - 3; i <= totalPages; i++) {
+      const thisPageNumber = i;
 
-        if (thisPageNumber > 0) {
-          pageNumberList.push(thisPageNumber);
-        }
+      if (thisPageNumber > 0) {
+        pageNumberList.push(thisPageNumber);
+      }
 
-        if (thisPageNumber === currentPage + 3) {
-          break;
-        }
+      if (thisPageNumber === currentPage + 3) {
+        break;
       }
     }
 
     return pageNumberList;
-  }, [currentPage, fullPaging, totalPages]);
+  }, [currentPage, totalPages]);
 
   return (
     <BasePagingControls>
@@ -62,17 +59,15 @@ export const PagingControls: FC<PagingControlsConfig> = ({
       <button onClick={onPrevious}>
         <MaterialSymbol>fast_rewind</MaterialSymbol>
       </button>
-      {fullPaging
-        ? currentPageNumberList.map((pageNumber) => (
-            <ValueButton value={pageNumber} onClick={onPageNumber}>
-              {pageNumber === currentPage ? (
-                <strong>{pageNumber}</strong>
-              ) : (
-                pageNumber
-              )}
-            </ValueButton>
-          ))
-        : undefined}
+      {currentPageNumberList.map((pageNumber) => (
+        <ValueButton value={pageNumber} onClick={onPageNumber}>
+          {pageNumber === currentPage ? (
+            <strong>{pageNumber}</strong>
+          ) : (
+            pageNumber
+          )}
+        </ValueButton>
+      ))}
       <button onClick={onNext}>
         <MaterialSymbol>fast_forward</MaterialSymbol>
       </button>
