@@ -95,6 +95,7 @@ export const usePagingControls = (
   }, [onPatchCursor, totalPages]);
 
   return {
+    itemsPerPage,
     onItemsPerPageChange,
     pagingCursor: fullCursor,
     onFirst,

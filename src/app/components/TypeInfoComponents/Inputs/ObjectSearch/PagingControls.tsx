@@ -1,4 +1,9 @@
-import { FC, useMemo } from "react";
+import {
+  ChangeEvent as ReactChangeEvent,
+  FC,
+  useCallback,
+  useMemo,
+} from "react";
 import { StandardExpandedPagingCursor } from "../../../../../common/SearchTypes";
 import styled from "styled-components";
 import { ValueButton } from "../../../Basic/ValueButton";
@@ -14,8 +19,9 @@ const BasePagingControls = styled.div`
   gap: 1em;
 `;
 
-// TODO: Items Per Page.
 export const PagingControls: FC<PagingControlsConfig> = ({
+  itemsPerPage = 10,
+  onItemsPerPageChange,
   pagingCursor,
   onFirst,
   onPrevious,
@@ -23,15 +29,16 @@ export const PagingControls: FC<PagingControlsConfig> = ({
   onNext,
   onLast,
 }) => {
-  const standardPagingCursor = useMemo<StandardExpandedPagingCursor>(() => {
-    try {
-      return typeof pagingCursor === "string"
-        ? (JSON.parse(pagingCursor) as StandardExpandedPagingCursor)
-        : {};
-    } catch (error) {
-      return {};
-    }
-  }, [pagingCursor]);
+  const standardPagingCursor = useMemo<StandardExpandedPagingCursor>(
+    () =>
+      typeof pagingCursor === "object"
+        ? pagingCursor
+        : {
+            currentPage: 1,
+            totalPages: 1,
+          },
+    [pagingCursor],
+  );
   const { currentPage = 1, totalPages = 1 } = standardPagingCursor;
   const currentPageNumberList = useMemo(() => {
     const pageNumberList = [];
@@ -50,6 +57,14 @@ export const PagingControls: FC<PagingControlsConfig> = ({
 
     return pageNumberList;
   }, [currentPage, totalPages]);
+  const onItemsPerPageChangeInternal = useCallback(
+    (event: ReactChangeEvent<HTMLSelectElement>) => {
+      const itemsPerPage = parseInt(event.target.value, 10);
+
+      onItemsPerPageChange(itemsPerPage);
+    },
+    [onItemsPerPageChange],
+  );
 
   return (
     <BasePagingControls>
@@ -74,6 +89,12 @@ export const PagingControls: FC<PagingControlsConfig> = ({
       <button onClick={onLast}>
         <MaterialSymbol>skip_next</MaterialSymbol>
       </button>
+      <select value={`${itemsPerPage}`} onChange={onItemsPerPageChangeInternal}>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
     </BasePagingControls>
   );
 };
