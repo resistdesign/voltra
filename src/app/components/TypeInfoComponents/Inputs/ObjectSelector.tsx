@@ -1,5 +1,6 @@
 import { InputComponent } from "../Types";
 import { useCallback } from "react";
+import { MaterialSymbol } from "../../MaterialSymbol";
 
 export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
   nameOrIndex,
@@ -18,7 +19,7 @@ export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
 
   return (
     <button type="button" onClick={onClick}>
-      Edit...{/* TODO: i18n */}
+      <MaterialSymbol>edit_square</MaterialSymbol>
     </button>
   );
 };
