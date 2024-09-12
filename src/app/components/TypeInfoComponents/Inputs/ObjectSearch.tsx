@@ -26,6 +26,7 @@ import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
 import { IndexButton } from "../../Basic/IndexButton";
 import { PagingControls } from "./ObjectSearch/PagingControls";
 import { usePagingControls } from "./ObjectSearch/usePagingControls";
+import { MaterialSymbol } from "../../MaterialSymbol";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -189,6 +190,11 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     listItemConfig as PagingInfo,
     onPagingInfoChange,
   );
+  const onLoadMore = useCallback(() => {
+    onPatchListItemsConfig({
+      cursor: nextPagingCursor,
+    });
+  }, [nextPagingCursor, onPatchListItemsConfig]);
 
   return (
     <BaseObjectSearch>
@@ -218,10 +224,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         ))}
         <button onClick={onAddCriterion}>Add Criterion</button>
       </Controls>
-      {fullPaging ? (
-        <PagingControls {...pagingControls} />
-      ) : // TODO: Load more button.
-      undefined}
+      {fullPaging ? <PagingControls {...pagingControls} /> : undefined}
       <ObjectTable
         typeInfoName={typeInfoName}
         typeInfo={typeInfo}
@@ -231,8 +234,11 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       />
       {fullPaging ? (
         <PagingControls {...pagingControls} />
-      ) : // TODO: Load more button.
-      undefined}
+      ) : (
+        <button onClick={onLoadMore}>
+          <MaterialSymbol>expand_circle_down</MaterialSymbol>
+        </button>
+      )}
     </BaseObjectSearch>
   );
 };
