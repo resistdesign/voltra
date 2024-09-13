@@ -2,6 +2,7 @@ import {
   ChangeEvent as ReactChangeEvent,
   FC,
   InputHTMLAttributes,
+  useCallback,
   useEffect,
   useRef,
 } from "react";
@@ -10,9 +11,10 @@ export type CheckedState = true | false | "indeterminate";
 
 export type CheckboxProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  "type" | "checked"
+  "type" | "checked" | "onChange"
 > & {
   checked?: CheckedState;
+  onChange?: (newChecked: CheckedState) => void;
 };
 
 export const PartiallySelectableCheckbox: FC<CheckboxProps> = ({
@@ -21,12 +23,18 @@ export const PartiallySelectableCheckbox: FC<CheckboxProps> = ({
   ...rest
 }) => {
   const checkboxRef = useRef<HTMLInputElement>(null);
-
-  const onChangeInternal = (event: ReactChangeEvent<HTMLInputElement>) => {
-    if (onChange) {
-      onChange(event);
-    }
-  };
+  const onChangeInternal = useCallback(
+    (event: ReactChangeEvent<HTMLInputElement>) => {
+      if (onChange) {
+        if (event.target.checked) {
+          onChange(true);
+        } else {
+          onChange(false);
+        }
+      }
+    },
+    [onChange],
+  );
 
   useEffect(() => {
     if (checkboxRef.current) {

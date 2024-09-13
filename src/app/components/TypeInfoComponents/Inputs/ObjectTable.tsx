@@ -1,4 +1,9 @@
-import { FC, useMemo } from "react";
+import {
+  ChangeEvent as ReactChangeEvent,
+  FC,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   SupportedFieldTags,
   TypeInfo,
@@ -9,6 +14,11 @@ import { TypeNavigation, TypeNavigationMode } from "../Types";
 import { transformValueToString } from "../../../../common/StringTransformers";
 import { ItemButton } from "../../Basic/ItemButton";
 import { MaterialSymbol } from "../../MaterialSymbol";
+import {
+  CheckedState,
+  PartiallySelectableCheckbox,
+} from "../../Basic/PartiallySelectableCheckbox";
+import { IndexInput } from "../../Basic/IndexInput";
 
 export type ObjectTableProps = {
   typeInfoName: string;
@@ -103,6 +113,46 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       !allIndicesAreSelected,
     [selectedIndices, objectList, allIndicesAreSelected],
   );
+  const allCheckedState = useMemo<CheckedState>(() => {
+    if (allIndicesAreSelected) {
+      return true;
+    } else if (indicesArePartiallySelected) {
+      return "indeterminate";
+    } else {
+      return false;
+    }
+  }, [allIndicesAreSelected, indicesArePartiallySelected]);
+  const onAllCheckedStateChange = useCallback(
+    (newChecked: CheckedState) => {
+      if (onSelectedIndicesChange) {
+        if (newChecked === true) {
+          onSelectedIndicesChange(objectList.map((_, index) => index));
+        } else if (newChecked === false) {
+          onSelectedIndicesChange([]);
+        }
+      }
+    },
+    [onSelectedIndicesChange, objectList],
+  );
+  const onItemSelectionChange = useCallback(
+    (
+      { target: { checked } }: ReactChangeEvent<HTMLInputElement>,
+      index: number,
+    ) => {
+      if (onSelectedIndicesChange) {
+        const wasChecked = selectedIndices.includes(index);
+
+        if (checked !== wasChecked) {
+          const newSelectedIndices = checked
+            ? [...selectedIndices, index]
+            : selectedIndices.filter((i) => i !== index);
+
+          onSelectedIndicesChange(newSelectedIndices);
+        }
+      }
+    },
+    [selectedIndices, onSelectedIndicesChange],
+  );
 
   return (
     <table>
@@ -110,13 +160,12 @@ export const ObjectTable: FC<ObjectTableProps> = ({
         <tr>
           {selectable ? (
             <th>
-              <input
-                type="checkbox"
-                checked={allIndicesAreSelected}
+              <PartiallySelectableCheckbox
+                checked={allCheckedState}
+                onChange={onAllCheckedStateChange}
               />
             </th>
-          ) : // TODO: Partially selected checkbox.
-          undefined}
+          ) : undefined}
           {fieldHeaderLabels.map((fieldLabel, index) => (
             <th key={`FieldLabel:${fieldLabel}:${index}`}>{fieldLabel}</th>
           ))}
@@ -124,13 +173,18 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       </thead>
       <tbody>
         {objectList.map((item = {}, index) => {
-          // TODO: How to show that a row/item is selected?
           return (
             <tr key={index}>
               <td>
-                <input type="checkbox" checked />
+                <IndexInput
+                  index={index}
+                  type="checkbox"
+                  checked={selectedIndices.includes(index)}
+                  onChange={onItemSelectionChange}
+                />
               </td>
               {fieldNames.map((fieldName, fieldIndex) => {
+                // TODO: This all needs to be a component.
                 const {
                   type,
                   typeReference,
@@ -159,6 +213,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
                         typeof fieldValue !== "undefined" &&
                         fieldValue !== null);
 
+                    // TODO: Do not allow navigation to types if they are tagged to deny the current operation.
                     return typeNavigation ? (
                       <td key={`Field:${fieldName}:${fieldIndex}`}>
                         <ItemButton
