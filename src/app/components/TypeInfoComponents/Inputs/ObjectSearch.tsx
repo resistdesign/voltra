@@ -103,6 +103,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   }: ListItemResults<TypeInfoDataItem> = listItemResults;
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
+      // TODO: When should the cursor be reset/removed?
       onListItemConfigChange({
         ...listItemConfig,
         ...patch,
