@@ -237,6 +237,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
             </th>
           ) : undefined}
           {unhiddenFieldNames.map((fieldName, index) => {
+            // TODO: This all needs to be a component.
             const fieldLabel = fieldHeaderLabelsMap[fieldName];
             const sortedState = sortFieldMap[fieldName];
 
