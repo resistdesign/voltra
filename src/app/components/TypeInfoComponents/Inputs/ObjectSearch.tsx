@@ -14,6 +14,7 @@ import {
   MultiRelationshipCheckResultsMap,
   PagingInfo,
   SearchCriteria,
+  SortField,
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
 import {
@@ -88,9 +89,6 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   customInputTypeMap,
 }) => {
   const {
-    cursor: currentPagingCursor,
-    itemsPerPage,
-    // TODO: Sort fields.
     sortFields,
     criteria: searchCriteria = {
       logicalOperator: LogicalOperators.AND,
@@ -100,7 +98,6 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
   const {
-    // TODO: Load more paging.
     cursor: nextPagingCursor,
     items: itemResults = [],
   }: ListItemResults<TypeInfoDataItem> = listItemResults;
@@ -112,6 +109,14 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       });
     },
     [listItemConfig, onListItemConfigChange],
+  );
+  const onSortFieldsChange = useCallback(
+    (newSortFields: SortField[]) => {
+      onPatchListItemsConfig({
+        sortFields: newSortFields,
+      });
+    },
+    [onPatchListItemsConfig],
   );
   const onPatchSearchCriteria = useCallback(
     (newSearchCriteria: Partial<SearchCriteria>) => {
@@ -228,7 +233,14 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       <ObjectTable
         typeInfoName={typeInfoName}
         typeInfo={typeInfo}
+        sortFields={sortFields}
+        onSortFieldsChange={onSortFieldsChange}
         objectList={itemResults}
+        selectable={true /* TODO: What should this be? */}
+        selectedIndices={[] /* TODO: What should this be? */}
+        onSelectedIndicesChange={
+          () => undefined /* TODO: What should this be? */
+        }
         operation={operation}
         onNavigateToType={onNavigateToType}
       />
