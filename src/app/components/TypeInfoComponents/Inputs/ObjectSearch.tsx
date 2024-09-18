@@ -241,7 +241,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         selectedIndices={[] /* TODO: What should this be? */}
         onSelectedIndicesChange={
           () => {
-            // TODO: Need to CRUD relationship objects based on selected indices.
+            // TODO: Need to CRUD relationship objects based on selected indices...
+            //   WHEN submitting back from this object search.
           } /* TODO: What should this be? */
         }
         operation={operation}
