@@ -19,6 +19,7 @@ import {
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
 import {
   TypeInfo,
+  TypeInfoMap,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectTable";
@@ -55,6 +56,7 @@ const FieldCriterionControlItem = styled.div`
 `;
 
 export type ObjectSearchProps = {
+  typeInfoMap: TypeInfoMap;
   typeInfoName: string;
   typeInfo: TypeInfo;
   // TODO: Relationship Check. (Selected Items)
@@ -74,7 +76,9 @@ export type ObjectSearchProps = {
   customInputTypeMap?: Record<string, InputComponent<any>>;
 };
 
+// TODO: Add item editing UI/buttons to item rows???
 export const ObjectSearch: FC<ObjectSearchProps> = ({
+  typeInfoMap,
   typeInfoName,
   typeInfo,
   // TODO: Use these:
@@ -232,21 +236,20 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       </Controls>
       {fullPaging ? <PagingControls {...pagingControls} /> : undefined}
       <ObjectTable
+        typeInfoMap={typeInfoMap}
         typeInfoName={typeInfoName}
         typeInfo={typeInfo}
         sortFields={sortFields}
         onSortFieldsChange={onSortFieldsChange}
         objectList={itemResults}
-        selectable={true /* TODO: What should this be? */}
-        selectedIndices={[] /* TODO: What should this be? */}
-        onSelectedIndicesChange={
-          () => {
-            // TODO: Need to CRUD relationship objects based on selected indices...
-            //   WHEN submitting back from this object search.
-          } /* TODO: What should this be? */
+        selectable={
+          // TODO: How to determine this?
+          true
         }
-        operation={operation}
-        onNavigateToType={onNavigateToType}
+        selectedIndices={}
+        onSelectedIndicesChange={}
+        operation={}
+        onNavigateToType={}
       />
       {fullPaging ? (
         <PagingControls {...pagingControls} />
