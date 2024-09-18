@@ -19,7 +19,7 @@ export type ItemFieldCellProps = {
   fieldName: string;
   typeInfoField: TypeInfoField;
   fieldValue: any;
-  onNavigateToType: (typeNavigation: TypeNavigation) => void;
+  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
 export const ItemFieldCell: FC<ItemFieldCellProps> = ({
@@ -58,7 +58,7 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
             fromTypeName: typeInfoName,
             fromTypePrimaryFieldValue: itemPrimaryFieldValue,
             fromTypeFieldName: fieldName,
-            mode: TypeNavigationMode.FORM,
+            mode: TypeNavigationMode.LIST,
             operation,
           }
         : undefined;
