@@ -14,7 +14,7 @@ export type ItemRowProps = {
   typeInfo: TypeInfo;
   operation: TypeOperation;
   item: TypeInfoDataItem;
-  onNavigateToType: (typeNavigation: TypeNavigation) => void;
+  onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   selectable?: boolean;
   selected?: boolean;
   onToggleSelection?: (index: number) => void;
