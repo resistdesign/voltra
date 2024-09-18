@@ -223,6 +223,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
               sortedState={sortFieldMap[fieldName]}
               fieldName={fieldName}
               typeInfoField={typeInfoFields[fieldName]}
+              onClick={onToggleSortField}
             />
           ))}
         </tr>
