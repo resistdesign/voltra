@@ -20,11 +20,7 @@ import {
 } from "../../Basic/PartiallySelectableCheckbox";
 import { IndexInput } from "../../Basic/IndexInput";
 import { SortField } from "../../../../common";
-import styled from "styled-components";
-
-const SortHeader = styled.th`
-  cursor: pointer;
-`;
+import { HeaderCell } from "./ObjectTable/HeaderCell";
 
 export type ObjectTableProps = {
   typeInfoName: string;
@@ -67,19 +63,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
         (fN) => !(typeInfoFields[fN].tags as SupportedFieldTags).hidden,
       ),
     [fieldNames, typeInfoFields],
-  );
-  const fieldHeaderLabelsMap = useMemo<Record<string, string>>(
-    () =>
-      unhiddenFieldNames.reduce((acc, f) => {
-        const { tags = {} } = typeInfoFields[f];
-        const { label = f } = tags as SupportedFieldTags;
-
-        return {
-          ...acc,
-          [f]: label,
-        };
-      }, {}),
-    [unhiddenFieldNames, typeInfoFields],
   );
   const typeNavigationMap = useMemo<
     Record<number, Record<string, TypeNavigation>>
@@ -172,17 +155,20 @@ export const ObjectTable: FC<ObjectTableProps> = ({
     [selectedIndices, onSelectedIndicesChange],
   );
   const onToggleSortField = useCallback(
-    (field: string) => {
+    (fieldName: string) => {
       if (onSortFieldsChange) {
-        const fieldIndex = sortFields.findIndex((sf) => sf.field === field);
+        const fieldIndex = sortFields.findIndex((sf) => sf.field === fieldName);
 
         if (fieldIndex === -1) {
           // If there is no sort field, then add one.
-          onSortFieldsChange([...sortFields, { field, reverse: false }]);
+          onSortFieldsChange([
+            ...sortFields,
+            { field: fieldName, reverse: false },
+          ]);
         } else if (sortFields[fieldIndex]) {
           const { reverse } = sortFields[fieldIndex];
           const newSortField = {
-            field,
+            field: fieldName,
             reverse,
           };
 
@@ -191,11 +177,15 @@ export const ObjectTable: FC<ObjectTableProps> = ({
 
             // If there is a sort field, and it is not reversed, then reverse it.
             onSortFieldsChange(
-              sortFields.map((sf) => (sf.field === field ? newSortField : sf)),
+              sortFields.map((sf) =>
+                sf.field === fieldName ? newSortField : sf,
+              ),
             );
           } else {
             // If there is a sort field, and it is reversed, then remove it.
-            onSortFieldsChange(sortFields.filter((sf) => sf.field !== field));
+            onSortFieldsChange(
+              sortFields.filter((sf) => sf.field !== fieldName),
+            );
           }
         }
       }
@@ -214,15 +204,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       ),
     [sortFields],
   );
-  const sortFieldToggleHandlerMap = useMemo<Record<string, () => void>>(
-    () =>
-      fieldNames.reduce<Record<string, () => void>>((acc, fieldName) => {
-        acc[fieldName] = () => onToggleSortField(fieldName);
-
-        return acc;
-      }, {}),
-    [fieldNames, onToggleSortField],
-  );
 
   return (
     <table>
@@ -236,27 +217,14 @@ export const ObjectTable: FC<ObjectTableProps> = ({
               />
             </th>
           ) : undefined}
-          {unhiddenFieldNames.map((fieldName, index) => {
-            // TODO: This all needs to be a component.
-            const fieldLabel = fieldHeaderLabelsMap[fieldName];
-            const sortedState = sortFieldMap[fieldName];
-
-            return (
-              <SortHeader
-                key={`FieldLabel:${fieldLabel}:${index}`}
-                onClick={sortFieldToggleHandlerMap[fieldName]}
-              >
-                {fieldLabel}&nbsp;
-                <MaterialSymbol>
-                  {sortedState === false
-                    ? "arrow_drop_down"
-                    : sortedState === true
-                      ? "arrow_drop_up"
-                      : undefined}
-                </MaterialSymbol>
-              </SortHeader>
-            );
-          })}
+          {unhiddenFieldNames.map((fieldName, index) => (
+            <HeaderCell
+              key={`FieldLabel:${fieldName}:${index}`}
+              sortedState={sortFieldMap[fieldName]}
+              fieldName={fieldName}
+              typeInfoField={typeInfoFields[fieldName]}
+            />
+          ))}
         </tr>
       </thead>
       <tbody>
