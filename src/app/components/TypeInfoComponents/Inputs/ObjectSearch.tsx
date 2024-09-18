@@ -240,7 +240,9 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         selectable={true /* TODO: What should this be? */}
         selectedIndices={[] /* TODO: What should this be? */}
         onSelectedIndicesChange={
-          () => undefined /* TODO: What should this be? */
+          () => {
+            // TODO: Need to CRUD relationship objects based on selected indices.
+          } /* TODO: What should this be? */
         }
         operation={operation}
         onNavigateToType={onNavigateToType}
