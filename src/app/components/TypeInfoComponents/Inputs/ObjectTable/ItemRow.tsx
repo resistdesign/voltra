@@ -1,4 +1,4 @@
-import { FC, useMemo } from "react";
+import { FC, useCallback, useMemo } from "react";
 import {
   TypeInfo,
   TypeInfoMap,
@@ -15,6 +15,9 @@ export type ItemRowProps = {
   operation: TypeOperation;
   item: TypeInfoDataItem;
   onNavigateToType: (typeNavigation: TypeNavigation) => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelection?: (index: number) => void;
 };
 
 export const ItemRow: FC<ItemRowProps> = ({
@@ -25,6 +28,9 @@ export const ItemRow: FC<ItemRowProps> = ({
   operation,
   item,
   onNavigateToType,
+  selectable,
+  selected,
+  onToggleSelection,
 }) => {
   const { primaryField, fields = {} } = typeInfo;
   const primaryFieldValue = useMemo<any>(
@@ -39,9 +45,23 @@ export const ItemRow: FC<ItemRowProps> = ({
     () => (typeof item === "object" && item !== null ? item : {}),
     [item],
   );
+  const onToggleSelectionInternal = useCallback(() => {
+    if (onToggleSelection) {
+      onToggleSelection(index);
+    }
+  }, [index, onToggleSelection]);
 
   return (
     <tr>
+      {selectable ? (
+        <td>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggleSelectionInternal}
+          />
+        </td>
+      ) : undefined}
       {fieldNameList.map((fieldName, index) => {
         const typeInfoField = fields[fieldName];
         const fieldValue = cleanItemObject[fieldName];
