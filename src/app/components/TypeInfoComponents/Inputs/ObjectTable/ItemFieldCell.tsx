@@ -58,6 +58,7 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
             fromTypeName: typeInfoName,
             fromTypePrimaryFieldValue: itemPrimaryFieldValue,
             fromTypeFieldName: fieldName,
+            // TODO: Calculate `mode` based on being an array and the operation???
             mode: TypeNavigationMode.LIST,
             operation,
           }
