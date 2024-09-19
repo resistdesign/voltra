@@ -71,8 +71,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   // TODO: FEATURES:
   //  - Type Navigation
   //  - Object Search
-  //  - Object Selection
-  //  - Object Relationships
+  //  - Object Creation
+  //  - Object Deletion
+  //  - Object Relationships (CRUD + LIst/Check)
+  //    - Object Selection
   //  - Item/Form Editing
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
