@@ -68,6 +68,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   onSearchCriteriaChange,
   searchResults,
 }) => {
+  // TODO: FEATURES:
+  //  - Type Navigation
+  //  - Object Search
+  //  - Object Selection
+  //  - Object Relationships
+  //  - Item/Form Editing
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
       fromTypeName: typeInfoName,
