@@ -73,6 +73,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   //  - Object Search
   //  - Object Creation
   //  - Object Deletion
+  //    - Delete Relationships???
   //  - Object Relationships (CRUD + LIst/Check)
   //    - Object Selection
   //  - Item/Form Editing
