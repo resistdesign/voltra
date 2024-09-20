@@ -17,11 +17,7 @@ import {
   SortField,
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
-import {
-  TypeInfo,
-  TypeInfoMap,
-  TypeOperation,
-} from "../../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectTable";
 import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
@@ -29,6 +25,7 @@ import { IndexButton } from "../../Basic/IndexButton";
 import { PagingControls } from "./ObjectSearch/PagingControls";
 import { usePagingControls } from "./ObjectSearch/usePagingControls";
 import { MaterialSymbol } from "../../MaterialSymbol";
+import { getSelectedIndices } from "../../../../common/ItemDataSelectionUtils";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -71,7 +68,6 @@ export type ObjectSearchProps = {
   listItemConfig: ListItemsConfig;
   onListItemConfigChange: (listItemsConfig: ListItemsConfig) => void;
   listItemResults: ListItemResults<TypeInfoDataItem>;
-  operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
 };
@@ -88,10 +84,10 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   listItemConfig,
   onListItemConfigChange,
   listItemResults,
-  operation,
   onNavigateToType,
   customInputTypeMap,
 }) => {
+  const { primaryField } = typeInfo;
   const {
     sortFields,
     criteria: searchCriteria = {
@@ -205,6 +201,17 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       cursor: nextPagingCursor,
     });
   }, [nextPagingCursor, onPatchListItemsConfig]);
+  const selectedIndices = useMemo(
+    () =>
+      primaryField && relationshipCheckResults
+        ? getSelectedIndices(
+            itemResults,
+            relationshipCheckResults,
+            primaryField,
+          )
+        : [],
+    [itemResults, relationshipCheckResults, primaryField],
+  );
 
   return (
     <BaseObjectSearch>
@@ -246,9 +253,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
           // TODO: How to determine this?
           true
         }
-        selectedIndices={}
+        selectedIndices={selectedIndices}
         onSelectedIndicesChange={}
-        operation={}
         onNavigateToType={}
       />
       {fullPaging ? (

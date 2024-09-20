@@ -2,7 +2,6 @@ import { FC, useCallback, useMemo } from "react";
 import {
   TypeInfo,
   TypeInfoMap,
-  TypeOperation,
 } from "../../../../../common/TypeParsing/TypeInfo";
 import { TypeInfoDataItem, TypeNavigation } from "../../Types";
 import { ItemFieldCell } from "./ItemFieldCell";
@@ -12,7 +11,6 @@ export type ItemRowProps = {
   index: number;
   typeInfoName: string;
   typeInfo: TypeInfo;
-  operation: TypeOperation;
   item: TypeInfoDataItem;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   selectable?: boolean;
@@ -25,7 +23,6 @@ export const ItemRow: FC<ItemRowProps> = ({
   index,
   typeInfoName,
   typeInfo,
-  operation,
   item,
   onNavigateToType,
   selectable,
@@ -71,7 +68,6 @@ export const ItemRow: FC<ItemRowProps> = ({
             key={`ItemField:${fieldName}:${index}`}
             typeInfoMap={typeInfoMap}
             typeInfoName={typeInfoName}
-            operation={operation}
             itemPrimaryFieldValue={primaryFieldValue}
             fieldName={fieldName}
             typeInfoField={typeInfoField}
