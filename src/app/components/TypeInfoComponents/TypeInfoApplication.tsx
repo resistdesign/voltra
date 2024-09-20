@@ -118,10 +118,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     return typeReference;
   }, [currentFromTypeInfo, currentFromTypeFieldName]);
-  const toTypeInfo = useMemo<TypeInfo | undefined>(
+  const toTypeInfo = useMemo<TypeInfo>(
     () =>
-      typeof toTypeName === "string" ? typeInfoMap[toTypeName] : undefined,
-    [typeInfoMap, toTypeName],
+      typeof toTypeName === "string" ? typeInfoMap[toTypeName] : baseTypeInfo,
+    [typeInfoMap, toTypeName, baseTypeInfo],
   );
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
     () => value[currentFromTypeName],
@@ -182,29 +182,27 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   // TODO: Object selection and saving relationship info.
 
-  return toTypeInfo ? (
-    currentMode === TypeNavigationMode.FORM ? (
-      <TypeInfoForm
-        typeInfoName={currentFromTypeName}
-        typeInfo={toTypeInfo}
-        customInputTypeMap={customInputTypeMap}
-        value={currentDataItem}
-        onCancel={onCloseCurrentNavHistoryItem}
-        operation={currentOperation}
-        onSubmit={onCurrentDataItemChange}
-        onNavigateToType={onNavigateToType}
-      />
-    ) : (
-      <ObjectSearch
-        typeInfoName={currentFromTypeName}
-        typeInfo={toTypeInfo}
-        searchCriteria={searchCriteria}
-        onSearchCriteriaChange={onSearchCriteriaChange}
-        searchResults={searchResults}
-        operation={currentOperation}
-        onNavigateToType={onNavigateToType}
-        customInputTypeMap={customInputTypeMap}
-      />
-    )
-  ) : undefined;
+  return currentMode === TypeNavigationMode.FORM ? (
+    <TypeInfoForm
+      typeInfoName={currentFromTypeName}
+      typeInfo={toTypeInfo}
+      customInputTypeMap={customInputTypeMap}
+      value={currentDataItem}
+      onCancel={onCloseCurrentNavHistoryItem}
+      operation={currentOperation}
+      onSubmit={onCurrentDataItemChange}
+      onNavigateToType={onNavigateToType}
+    />
+  ) : (
+    <ObjectSearch
+      typeInfoName={currentFromTypeName}
+      typeInfo={toTypeInfo}
+      searchCriteria={searchCriteria}
+      onSearchCriteriaChange={onSearchCriteriaChange}
+      searchResults={searchResults}
+      operation={currentOperation}
+      onNavigateToType={onNavigateToType}
+      customInputTypeMap={customInputTypeMap}
+    />
+  );
 };
