@@ -109,23 +109,38 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => typeInfoMap[currentFromTypeName],
     [typeInfoMap, currentFromTypeName],
   );
-  const toTypeName = useMemo<string | undefined>(() => {
-    const {
-      fields: {
-        [currentFromTypeFieldName]: { typeReference = undefined } = {},
-      } = {},
-    } = currentFromTypeInfo;
+  const toTypeInfoName = useMemo<string>(() => {
+    let typeName = typeInfoName;
 
-    return typeReference;
-  }, [currentFromTypeInfo, currentFromTypeFieldName]);
+    if (relationshipMode) {
+      const {
+        fields: {
+          [currentFromTypeFieldName]: { typeReference = undefined } = {},
+        } = {},
+      } = currentFromTypeInfo;
+
+      if (typeof typeReference === "string") {
+        typeName = typeReference;
+      }
+    }
+
+    return typeName;
+  }, [
+    typeInfoName,
+    relationshipMode,
+    currentFromTypeFieldName,
+    currentFromTypeInfo,
+  ]);
   const toTypeInfo = useMemo<TypeInfo>(
     () =>
-      typeof toTypeName === "string" ? typeInfoMap[toTypeName] : baseTypeInfo,
-    [typeInfoMap, toTypeName, baseTypeInfo],
+      typeof toTypeInfoName === "string"
+        ? typeInfoMap[toTypeInfoName]
+        : baseTypeInfo,
+    [typeInfoMap, toTypeInfoName, baseTypeInfo],
   );
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
-    () => value[currentFromTypeName],
-    [value, currentFromTypeName],
+    () => value[toTypeInfoName],
+    [value, toTypeInfoName],
   );
   const currentTypeInfoDataMap = useMemo<TypeInfoDataMap>(
     () => currentTypeDataStateMap[currentOperation],
@@ -184,25 +199,29 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   return currentMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
-      typeInfoName={currentFromTypeName}
+      typeInfoName={toTypeInfoName}
       typeInfo={toTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
+      operation={operation}
       onCancel={onCloseCurrentNavHistoryItem}
-      operation={currentOperation}
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
   ) : (
     <ObjectSearch
-      typeInfoName={currentFromTypeName}
+      typeInfoMap={typeInfoMap}
+      typeInfoName={toTypeInfoName}
       typeInfo={toTypeInfo}
-      searchCriteria={searchCriteria}
-      onSearchCriteriaChange={onSearchCriteriaChange}
-      searchResults={searchResults}
-      operation={currentOperation}
+      relationshipCheckConfig={}
+      onRelationshipCheckConfigChange={}
+      relationshipCheckResults={}
+      listItemConfig={}
+      onListItemConfigChange={}
+      listItemResults={}
       onNavigateToType={onNavigateToType}
-      customInputTypeMap={customInputTypeMap}
+      customInputTypeMap={}
+      selectable={}
     />
   );
 };
