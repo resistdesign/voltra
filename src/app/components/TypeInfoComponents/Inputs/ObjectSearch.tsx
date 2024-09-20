@@ -72,6 +72,7 @@ export type ObjectSearchProps = {
   listItemResults: ListItemResults<TypeInfoDataItem>;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
+  selectable?: boolean;
 };
 
 // TODO: Add item editing UI/buttons to item rows???
@@ -88,6 +89,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   listItemResults,
   onNavigateToType,
   customInputTypeMap,
+  selectable = false,
 }) => {
   const { primaryField } = typeInfo;
   const {
@@ -269,13 +271,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         sortFields={sortFields}
         onSortFieldsChange={onSortFieldsChange}
         objectList={itemResults}
-        selectable={
-          // TODO: This is only selectable if we are:
-          //   - Listing items from a `typeReference` navigation.
-          //   - AND the originating type AND field that refers to the `typeReference` is a allowed to be created or updated.
-          //     - We MAY need to know the current operation (create or update) to determine this.
-          true
-        }
+        selectable={selectable}
         selectedIndices={selectedIndices}
         onSelectedIndicesChange={onSelectedIndicesChange}
         onNavigateToType={onNavigateToType}
