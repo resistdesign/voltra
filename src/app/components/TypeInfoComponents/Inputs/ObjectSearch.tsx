@@ -2,7 +2,9 @@ import {
   ChangeEvent as ReactChangeEvent,
   FC,
   useCallback,
+  useEffect,
   useMemo,
+  useState,
 } from "react";
 import {
   ComparisonOperators,
@@ -201,7 +203,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       cursor: nextPagingCursor,
     });
   }, [nextPagingCursor, onPatchListItemsConfig]);
-  const selectedIndices = useMemo(
+  const selectedIndicesFromRelationShipCheckResults = useMemo(
     () =>
       primaryField && relationshipCheckResults
         ? getSelectedIndices(
@@ -211,6 +213,24 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
           )
         : [],
     [itemResults, relationshipCheckResults, primaryField],
+  );
+  const [selectedIndices, setSelectedIndices] = useState<number[]>(
+    selectedIndicesFromRelationShipCheckResults,
+  );
+  const onSelectedIndicesChange = useCallback(
+    (newSelectedIndices: number[]) => {
+      // TODO: Needs to be converted to update actions.
+      //  - Accumulate and submit changes? (Seems impossible to do this with paging at play.)
+      //    - Maybe maintain an internal version of the relationship check results?
+      //      - Then, when the user is done, they can submit the changes.
+      setSelectedIndices(newSelectedIndices);
+    },
+    [],
+  );
+
+  useEffect(
+    () => setSelectedIndices(selectedIndicesFromRelationShipCheckResults),
+    [selectedIndicesFromRelationShipCheckResults],
   );
 
   return (
@@ -250,12 +270,15 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         onSortFieldsChange={onSortFieldsChange}
         objectList={itemResults}
         selectable={
-          // TODO: How to determine this?
+          // TODO: This is only selectable if we are:
+          //   - Listing items from a `typeReference` navigation.
+          //   - AND the originating type AND field that refers to the `typeReference` is a allowed to be created or updated.
+          //     - We MAY need to know the current operation (create or update) to determine this.
           true
         }
         selectedIndices={selectedIndices}
-        onSelectedIndicesChange={}
-        onNavigateToType={}
+        onSelectedIndicesChange={onSelectedIndicesChange}
+        onNavigateToType={onNavigateToType}
       />
       {fullPaging ? (
         <PagingControls {...pagingControls} />
