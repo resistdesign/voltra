@@ -87,7 +87,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     }),
     [typeInfoName, primaryKeyValue, mode, operation],
   );
+  const baseTypeInfo = useMemo<TypeInfo>(
+    () => typeInfoMap[typeInfoName],
+    [typeInfoMap, typeInfoName],
+  );
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
+  const relationshipMode = navHistory.length > 0;
   const currentTypeNavigation = useMemo<TypeNavigation>(
     () => navHistory[navHistory.length - 1] || baseTypeNavigation,
     [navHistory, baseTypeNavigation],
