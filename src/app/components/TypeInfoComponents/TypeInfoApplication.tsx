@@ -17,6 +17,7 @@ import {
 } from "./Types";
 import { ObjectSearch } from "./Inputs/ObjectSearch";
 import { SearchCriteria } from "../../../common/SearchTypes";
+import { isValidTypeNavigation } from "./TypeNavigationUtils";
 
 export type OperationMode = Exclude<TypeOperation, TypeOperation.DELETE>;
 export type UpdateOperationMode = TypeOperation.UPDATE;
@@ -136,9 +137,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   );
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
-      setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
+      if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
+        setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
+      }
     },
-    [currentTypeNavigation],
+    [typeInfoMap, typeInfoMap],
   );
   const onCloseCurrentNavHistoryItem = useCallback(() => {
     setNavHistory((prevNavHistory) => {
@@ -179,27 +182,29 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   // TODO: Object selection and saving relationship info.
 
-  return currentMode === TypeNavigationMode.FORM ? (
-    <TypeInfoForm
-      typeInfoName={currentFromTypeName}
-      typeInfo={currentTypeInfo}
-      customInputTypeMap={customInputTypeMap}
-      value={currentDataItem}
-      onCancel={onCloseCurrentNavHistoryItem}
-      operation={currentOperation}
-      onSubmit={onCurrentDataItemChange}
-      onNavigateToType={onNavigateToType}
-    />
-  ) : (
-    <ObjectSearch
-      typeInfoName={currentFromTypeName}
-      typeInfo={currentTypeInfo}
-      searchCriteria={searchCriteria}
-      onSearchCriteriaChange={onSearchCriteriaChange}
-      searchResults={searchResults}
-      operation={currentOperation}
-      onNavigateToType={onNavigateToType}
-      customInputTypeMap={customInputTypeMap}
-    />
-  );
+  return toTypeInfo ? (
+    currentMode === TypeNavigationMode.FORM ? (
+      <TypeInfoForm
+        typeInfoName={currentFromTypeName}
+        typeInfo={toTypeInfo}
+        customInputTypeMap={customInputTypeMap}
+        value={currentDataItem}
+        onCancel={onCloseCurrentNavHistoryItem}
+        operation={currentOperation}
+        onSubmit={onCurrentDataItemChange}
+        onNavigateToType={onNavigateToType}
+      />
+    ) : (
+      <ObjectSearch
+        typeInfoName={currentFromTypeName}
+        typeInfo={toTypeInfo}
+        searchCriteria={searchCriteria}
+        onSearchCriteriaChange={onSearchCriteriaChange}
+        searchResults={searchResults}
+        operation={currentOperation}
+        onNavigateToType={onNavigateToType}
+        customInputTypeMap={customInputTypeMap}
+      />
+    )
+  ) : undefined;
 };
