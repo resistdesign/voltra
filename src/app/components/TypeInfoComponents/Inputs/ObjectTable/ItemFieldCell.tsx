@@ -14,7 +14,6 @@ import { transformValueToString } from "../../../../../common/StringTransformers
 export type ItemFieldCellProps = {
   typeInfoMap: TypeInfoMap;
   typeInfoName: string;
-  operation: TypeOperation;
   itemPrimaryFieldValue: any;
   fieldName: string;
   typeInfoField: TypeInfoField;
@@ -25,7 +24,6 @@ export type ItemFieldCellProps = {
 export const ItemFieldCell: FC<ItemFieldCellProps> = ({
   typeInfoMap,
   typeInfoName,
-  operation,
   itemPrimaryFieldValue,
   fieldName,
   typeInfoField,
@@ -44,7 +42,7 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
     const {
       tags: {
         deniedOperations: {
-          [operation]: targetTypeOperationDenied = false,
+          [TypeOperation.READ]: targetTypeReadDenied = false,
         } = {},
       } = {},
     }: Partial<TypeInfo> = typeReference
@@ -52,16 +50,16 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
       : {};
     const tN =
       typeReference &&
-      !targetTypeOperationDenied &&
+      !targetTypeReadDenied &&
       typeof itemPrimaryFieldValue !== "undefined"
-        ? {
+        ? ({
             fromTypeName: typeInfoName,
             fromTypePrimaryFieldValue: itemPrimaryFieldValue,
             fromTypeFieldName: fieldName,
             // TODO: Calculate `mode` based on being an array and the operation???
             mode: TypeNavigationMode.LIST,
-            operation,
-          }
+            operation: TypeOperation.READ,
+          } as TypeNavigation)
         : undefined;
 
     return tN;
@@ -71,7 +69,6 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
     itemPrimaryFieldValue,
     typeInfoName,
     fieldName,
-    operation,
   ]);
   const hasValue = useMemo<boolean>(
     () =>
@@ -89,13 +86,7 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
       {typeReference ? (
         typeNavigation ? (
           <ItemButton item={typeNavigation} onClick={onNavigateToType}>
-            <MaterialSymbol>
-              {operation === TypeOperation.READ
-                ? "manage_search"
-                : hasValue
-                  ? "edit_square"
-                  : "add"}
-            </MaterialSymbol>
+            <MaterialSymbol>{hasValue ? "edit_square" : "add"}</MaterialSymbol>
           </ItemButton>
         ) : undefined
       ) : (

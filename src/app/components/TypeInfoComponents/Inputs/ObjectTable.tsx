@@ -4,7 +4,6 @@ import {
   TypeInfo,
   TypeInfoField,
   TypeInfoMap,
-  TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
 import { TypeInfoDataItem, TypeNavigation } from "../Types";
 import {
@@ -25,7 +24,6 @@ export type ObjectTableProps = {
   selectable?: boolean;
   selectedIndices?: number[];
   onSelectedIndicesChange?: (selectedIndices: number[]) => void;
-  operation?: TypeOperation;
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
 };
 
@@ -39,7 +37,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   selectable = false,
   selectedIndices = [],
   onSelectedIndicesChange,
-  operation = TypeOperation.READ,
   onNavigateToType,
 }) => {
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
@@ -186,7 +183,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
               index={index}
               typeInfoName={typeInfoName}
               typeInfo={typeInfo}
-              operation={operation}
               item={item as TypeInfoDataItem}
               onNavigateToType={onNavigateToType}
               selectable={selectable}
