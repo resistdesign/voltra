@@ -104,9 +104,23 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     mode: currentMode,
     operation: currentOperation,
   } = currentTypeNavigation;
-  const currentTypeInfo = useMemo<TypeInfo>(
+  const currentFromTypeInfo = useMemo<TypeInfo>(
     () => typeInfoMap[currentFromTypeName],
     [typeInfoMap, currentFromTypeName],
+  );
+  const toTypeName = useMemo<string | undefined>(() => {
+    const {
+      fields: {
+        [currentFromTypeFieldName]: { typeReference = undefined } = {},
+      } = {},
+    } = currentFromTypeInfo;
+
+    return typeReference;
+  }, [currentFromTypeInfo, currentFromTypeFieldName]);
+  const toTypeInfo = useMemo<TypeInfo | undefined>(
+    () =>
+      typeof toTypeName === "string" ? typeInfoMap[toTypeName] : undefined,
+    [typeInfoMap, toTypeName],
   );
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
     () => value[currentFromTypeName],
