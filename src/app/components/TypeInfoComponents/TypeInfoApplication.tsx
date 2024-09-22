@@ -32,8 +32,8 @@ export type TypeInfoApplicationProps = {
   typeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataStructure;
-  relationshipInfo: ItemRelationshipInfoStructure;
   onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
+  relationshipInfo: ItemRelationshipInfoStructure;
   onRelationshipInfoChange: (
     relationshipInfo: ItemRelationshipInfoStructure,
   ) => void;
@@ -60,8 +60,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoName,
   customInputTypeMap,
   value,
-  relationshipInfo,
   onChange,
+  relationshipInfo,
   onRelationshipInfoChange,
   mode = TypeNavigationMode.FORM,
   operation = TypeOperation.CREATE,
