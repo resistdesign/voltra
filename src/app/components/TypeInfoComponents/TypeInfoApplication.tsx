@@ -38,6 +38,7 @@ export type TypeInfoApplicationProps = {
     relationshipInfo: ItemRelationshipInfoStructure,
   ) => void;
   mode: TypeNavigationMode;
+  // TODO: Rework search.
   searchCriteria: SearchCriteria;
   onSearchCriteriaChange: (searchCriteria: SearchCriteria) => void;
   searchResults: TypeInfoDataItem[];
