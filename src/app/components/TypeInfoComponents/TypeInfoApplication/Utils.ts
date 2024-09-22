@@ -1,1 +1,3 @@
-export const useTypeInfoApplicationStateManager = () => {};
+export const useTypeInfoApplicationStateManager = () => {
+
+};

@@ -2,6 +2,7 @@ import { FC, useCallback, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoForm";
 import {
   TypeInfo,
+  TypeInfoField,
   TypeInfoMap,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
@@ -150,6 +151,31 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
     [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
   );
+  const editing = useMemo<boolean>(
+    () =>
+      currentOperation === TypeOperation.CREATE ||
+      currentOperation === TypeOperation.UPDATE,
+    [currentOperation],
+  );
+  const selectable = useMemo<boolean>(() => {
+    const {
+      tags: {
+        deniedOperations: {
+          [currentOperation]: fromOperationDenied = false,
+        } = {},
+      } = {},
+      fields: { [currentFromTypeFieldName]: fromTypeInfoField = {} } = {},
+    } = currentFromTypeInfo;
+    const {
+      tags: {
+        deniedOperations: {
+          [currentOperation]: fromFieldOperationDenied = false,
+        } = {},
+      } = {},
+    }: Partial<TypeInfoField> = fromTypeInfoField;
+
+    return editing && !fromOperationDenied && !fromFieldOperationDenied;
+  }, []);
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
       if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
@@ -221,7 +247,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       listItemResults={}
       onNavigateToType={onNavigateToType}
       customInputTypeMap={}
-      selectable={}
+      selectable={selectable}
     />
   );
 };
