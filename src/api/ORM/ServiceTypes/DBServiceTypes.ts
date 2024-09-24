@@ -1,4 +1,4 @@
-import { ListItemResults, ListItemsConfig } from "../../../common/SearchTypes";
+import { ListItemsResults, ListItemsConfig } from "../../../common/SearchTypes";
 import { ItemRelationshipInfo } from "../../../common";
 
 /**
@@ -20,7 +20,7 @@ export type DBServiceItemDriver<
   ) => Promise<boolean>;
   listItems: (
     config: ListItemsConfig,
-  ) => Promise<boolean | ListItemResults<ItemType>>;
+  ) => Promise<boolean | ListItemsResults<ItemType>>;
 };
 
 /**

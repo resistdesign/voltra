@@ -16,4 +16,4 @@ export {ListItemsConfig} from "./SearchTypes";
 export {ItemsExistenceInfo} from "./SearchTypes";
 export {PagingInfo} from "./SearchTypes";
 export {SortField} from "./SearchTypes";
-export {ListItemResults} from "./SearchTypes";
+export {ListItemsResults} from "./SearchTypes";

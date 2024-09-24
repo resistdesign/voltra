@@ -2,18 +2,17 @@ import {
   ChangeEvent as ReactChangeEvent,
   FC,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from "react";
 import {
   ComparisonOperators,
   FieldCriterion,
-  ListItemResults,
   ListItemsConfig,
+  ListItemsResults,
+  ListRelationshipsConfig,
+  ListRelationshipsResults,
   LogicalOperators,
-  MultiRelationshipCheckConfig,
-  MultiRelationshipCheckResultsMap,
   PagingInfo,
   SearchCriteria,
   SortField,
@@ -27,7 +26,6 @@ import { IndexButton } from "../../Basic/IndexButton";
 import { PagingControls } from "./ObjectSearch/PagingControls";
 import { usePagingControls } from "./ObjectSearch/usePagingControls";
 import { MaterialSymbol } from "../../MaterialSymbol";
-import { getSelectedIndices } from "../../../../common/ItemDataSelectionUtils";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -58,18 +56,15 @@ export type ObjectSearchProps = {
   typeInfoMap: TypeInfoMap;
   typeInfoName: string;
   typeInfo: TypeInfo;
-  // TODO: Relationship Check. (Selected Items)
-  relationshipCheckConfig?: MultiRelationshipCheckConfig;
-  onRelationshipCheckConfigChange?: (
-    relationshipCheckConfig: MultiRelationshipCheckConfig,
+  listItemsConfig: ListItemsConfig;
+  onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
+  listItemsResults: ListItemsResults<TypeInfoDataItem>;
+  listRelationshipsConfig?: ListRelationshipsConfig;
+  onListRelationshipsConfigChange?: (
+    listRelationshipsConfig: ListRelationshipsConfig,
   ) => void;
-  relationshipCheckResults?: MultiRelationshipCheckResultsMap;
-  // TODO: Load relationships. ("Selections")
-  // TODO: Selected items VS results.
-  // TODO: IMPORTANT: Paging.
-  listItemConfig: ListItemsConfig;
-  onListItemConfigChange: (listItemsConfig: ListItemsConfig) => void;
-  listItemResults: ListItemResults<TypeInfoDataItem>;
+  listRelationshipsResults?: ListRelationshipsResults;
+  // TODO: CRUD ops for relationships.
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   selectable?: boolean;
@@ -80,40 +75,39 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   typeInfoMap,
   typeInfoName,
   typeInfo,
-  // TODO: Use these:
-  relationshipCheckConfig,
-  onRelationshipCheckConfigChange,
-  relationshipCheckResults,
-  listItemConfig,
-  onListItemConfigChange,
-  listItemResults,
+  listItemsConfig,
+  onListItemsConfigChange,
+  listItemsResults,
+  // TODO: Handle loading and displaying relationships.
+  listRelationshipsConfig,
+  onListRelationshipsConfigChange,
+  listRelationshipsResults,
   onNavigateToType,
   customInputTypeMap,
   selectable = false,
 }) => {
-  const { primaryField } = typeInfo;
   const {
     sortFields,
     criteria: searchCriteria = {
       logicalOperator: LogicalOperators.AND,
       fieldCriteria: [],
     },
-  }: Partial<ListItemsConfig> = listItemConfig || {};
+  }: Partial<ListItemsConfig> = listItemsConfig || {};
   const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
     searchCriteria;
   const {
     cursor: nextPagingCursor,
     items: itemResults = [],
-  }: ListItemResults<TypeInfoDataItem> = listItemResults;
+  }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
-      // TODO: When should the cursor be reset/removed?
-      onListItemConfigChange({
-        ...listItemConfig,
+      // TODO: >>>IMPORTANT<<<: When should the cursor be reset/removed?
+      onListItemsConfigChange({
+        ...listItemsConfig,
         ...patch,
       });
     },
-    [listItemConfig, onListItemConfigChange],
+    [listItemsConfig, onListItemsConfigChange],
   );
   const onSortFieldsChange = useCallback(
     (newSortFields: SortField[]) => {
@@ -197,7 +191,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     [onPatchListItemsConfig],
   );
   const pagingControls = usePagingControls(
-    listItemConfig as PagingInfo,
+    listItemsConfig as PagingInfo,
     onPagingInfoChange,
   );
   const onLoadMore = useCallback(() => {
@@ -205,34 +199,13 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       cursor: nextPagingCursor,
     });
   }, [nextPagingCursor, onPatchListItemsConfig]);
-  const selectedIndicesFromRelationShipCheckResults = useMemo(
-    () =>
-      primaryField && relationshipCheckResults
-        ? getSelectedIndices(
-            itemResults,
-            relationshipCheckResults,
-            primaryField,
-          )
-        : [],
-    [itemResults, relationshipCheckResults, primaryField],
-  );
-  const [selectedIndices, setSelectedIndices] = useState<number[]>(
-    selectedIndicesFromRelationShipCheckResults,
-  );
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const onSelectedIndicesChange = useCallback(
     (newSelectedIndices: number[]) => {
-      // TODO: Needs to be converted to update actions.
-      //  - Accumulate and submit changes? (Seems impossible to do this with paging at play.)
-      //    - Maybe maintain an internal version of the relationship check results?
-      //      - Then, when the user is done, they can submit the changes.
+      // TODO: Used for managing objects and using them for relationships.
       setSelectedIndices(newSelectedIndices);
     },
     [],
-  );
-
-  useEffect(
-    () => setSelectedIndices(selectedIndicesFromRelationShipCheckResults),
-    [selectedIndicesFromRelationShipCheckResults],
   );
 
   return (
