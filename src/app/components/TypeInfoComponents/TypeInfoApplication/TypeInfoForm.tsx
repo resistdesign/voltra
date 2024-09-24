@@ -6,17 +6,17 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Form } from "../Form";
+import { Form } from "../../Form";
 import {
   InputComponent,
   NameOrIndex,
   TypeInfoDataItem,
   TypeNavigation,
   TypeNavigationMode,
-} from "./Types";
-import { TypeInfo, TypeOperation } from "../../../common/TypeParsing/TypeInfo";
+} from "../Types";
+import { TypeInfo, TypeOperation } from "../../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
-import { TypeInfoInput } from "./TypeInfoInput";
+import { TypeInfoInput } from "../TypeInfoInput";
 
 const LabelText = styled.span`
   &:has(+ input[type="checkbox"]) {

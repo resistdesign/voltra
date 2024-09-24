@@ -5,11 +5,11 @@ import {
   TypeInfoField,
   TypeInfoMap,
   TypeOperation,
-} from "../../../../../common/TypeParsing/TypeInfo";
-import { TypeNavigation, TypeNavigationMode } from "../../Types";
-import { ItemButton } from "../../../Basic/ItemButton";
-import { MaterialSymbol } from "../../../MaterialSymbol";
-import { transformValueToString } from "../../../../../common/StringTransformers";
+} from "../../../../../../common/TypeParsing/TypeInfo";
+import { TypeNavigation, TypeNavigationMode } from "../../../Types";
+import { ItemButton } from "../../../../Basic/ItemButton";
+import { MaterialSymbol } from "../../../../MaterialSymbol";
+import { transformValueToString } from "../../../../../../common/StringTransformers";
 
 export type ItemFieldCellProps = {
   typeInfoMap: TypeInfoMap;

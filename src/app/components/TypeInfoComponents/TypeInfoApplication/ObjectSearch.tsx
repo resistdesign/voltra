@@ -20,7 +20,7 @@ import {
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
 import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
-import { ObjectTable } from "./ObjectTable";
+import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
 import { IndexButton } from "../../Basic/IndexButton";

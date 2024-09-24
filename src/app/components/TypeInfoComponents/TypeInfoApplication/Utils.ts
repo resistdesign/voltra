@@ -1,3 +1,7 @@
-export const useTypeInfoApplicationStateManager = () => {
+export const useTypeInfoDataManager = () => {
+
+};
+
+export const useTypeInfoRelationshipManager = () => {
 
 };

@@ -2,8 +2,8 @@ import { FC, useCallback, useMemo } from "react";
 import {
   TypeInfo,
   TypeInfoMap,
-} from "../../../../../common/TypeParsing/TypeInfo";
-import { TypeInfoDataItem, TypeNavigation } from "../../Types";
+} from "../../../../../../common/TypeParsing/TypeInfo";
+import { TypeInfoDataItem, TypeNavigation } from "../../../Types";
 import { ItemFieldCell } from "./ItemFieldCell";
 
 export type ItemRowProps = {
