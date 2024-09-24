@@ -1,4 +1,7 @@
-import { ItemRelationshipOriginItemInfo } from "./ItemRelationshipInfo";
+import {
+  ItemRelationshipInfo,
+  ItemRelationshipOriginItemInfo,
+} from "./ItemRelationshipInfo";
 
 /**
  * The logical operators for a search criteria.
@@ -58,7 +61,7 @@ export type SearchCriteria = {
 /**
  * The results from a request to list items.
  * */
-export type ListItemResults<ItemType extends Record<any, any>> = {
+export type ListItemsResults<ItemType extends Record<any, any>> = {
   cursor?: string;
   items: ItemType[];
 };
@@ -113,14 +116,6 @@ export type ListRelationshipsConfig = PagingInfo &
   };
 
 /**
- * A configuration for checking multiple items for a relationship to a specific item.
+ * The results from a request to list relationships.
  * */
-export type MultiRelationshipCheckConfig = {
-  fromInfo: ItemRelationshipOriginItemInfo;
-  toPrimaryFieldValues: string[];
-};
-
-/**
- * The results from checking multiple items for a relationship to a specific item.
- * */
-export type MultiRelationshipCheckResultsMap = Record<string, boolean>;
+export type ListRelationshipsResults = ListItemsResults<ItemRelationshipInfo>;

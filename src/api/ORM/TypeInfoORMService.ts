@@ -17,7 +17,7 @@ import {
 import { TypeInfoDataItem } from "../../app/components";
 import {
   ComparisonOperators,
-  ListItemResults,
+  ListItemsResults,
   ListItemsConfig,
   ListRelationshipsConfig,
   LogicalOperators,
@@ -237,7 +237,7 @@ export class TypeInfoORMService {
         ],
       },
       checkExistence: false,
-    })) as ListItemResults<ItemRelationshipInfo>;
+    })) as ListItemsResults<ItemRelationshipInfo>;
 
     for (const item of itemList) {
       const { id: itemId } = item;
@@ -253,7 +253,7 @@ export class TypeInfoORMService {
    * */
   listRelationships = async (
     config: ListRelationshipsConfig,
-  ): Promise<boolean | ListItemResults<ItemRelationshipInfo>> => {
+  ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
     const { relationshipItemOrigin, checkExistence, ...remainingConfig } =
       config;
     this.validateRelationshipItem(relationshipItemOrigin);
@@ -391,7 +391,7 @@ export class TypeInfoORMService {
   list = async (
     typeName: string,
     config: ListItemsConfig,
-  ): Promise<boolean | ListItemResults<TypeInfoDataItem>> => {
+  ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
     const { fields: {} = {} } = this.getTypeInfo(typeName);
     const { criteria } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
