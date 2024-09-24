@@ -59,11 +59,11 @@ export type ObjectSearchProps = {
   listItemsConfig: ListItemsConfig;
   onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
   listItemsResults: ListItemsResults<TypeInfoDataItem>;
-  listRelationshipsConfig?: ListRelationshipsConfig;
-  onListRelationshipsConfigChange?: (
+  listRelationshipsConfig: ListRelationshipsConfig;
+  onListRelationshipsConfigChange: (
     listRelationshipsConfig: ListRelationshipsConfig,
   ) => void;
-  listRelationshipsResults?: ListRelationshipsResults;
+  listRelationshipsResults: ListRelationshipsResults;
   // TODO: CRUD ops for relationships.
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
