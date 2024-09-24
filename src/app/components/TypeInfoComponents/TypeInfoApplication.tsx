@@ -1,5 +1,5 @@
 import { FC, useCallback, useMemo, useState } from "react";
-import { TypeInfoForm } from "./TypeInfoForm";
+import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
   TypeInfoField,
@@ -16,7 +16,7 @@ import {
   TypeNavigation,
   TypeNavigationMode,
 } from "./Types";
-import { ObjectSearch } from "./Inputs/ObjectSearch";
+import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
 import { SearchCriteria } from "../../../common/SearchTypes";
 import { isValidTypeNavigation } from "./TypeNavigationUtils";
 

@@ -1,7 +1,7 @@
 import { FC, HTMLAttributes, useCallback, useMemo } from "react";
 import styled from "styled-components";
-import { TypeInfoField } from "../../../../../common/TypeParsing/TypeInfo";
-import { MaterialSymbol } from "../../../MaterialSymbol";
+import { TypeInfoField } from "../../../../../../common/TypeParsing/TypeInfo";
+import { MaterialSymbol } from "../../../../MaterialSymbol";
 
 const HeaderCellBase = styled.th`
   cursor: pointer;

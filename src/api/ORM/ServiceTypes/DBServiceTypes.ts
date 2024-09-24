@@ -1,9 +1,4 @@
-import {
-  ListItemResults,
-  ListItemsConfig,
-  MultiRelationshipCheckConfig,
-  MultiRelationshipCheckResultsMap,
-} from "../../../common/SearchTypes";
+import { ListItemResults, ListItemsConfig } from "../../../common/SearchTypes";
 import { ItemRelationshipInfo } from "../../../common";
 
 /**
@@ -34,8 +29,4 @@ export type DBServiceItemDriver<
 export type DBRelatedItemDriver = DBServiceItemDriver<
   ItemRelationshipInfo,
   "id"
-> & {
-  itemsAreRelated: (
-    config: MultiRelationshipCheckConfig,
-  ) => Promise<MultiRelationshipCheckResultsMap>;
-};
+>;

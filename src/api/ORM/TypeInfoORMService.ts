@@ -16,16 +16,20 @@ import {
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoDataItem } from "../../app/components";
 import {
-  ComparisonOperators, ListItemResults, ListItemsConfig, ListRelationshipsConfig,
+  ComparisonOperators,
+  ListItemResults,
+  ListItemsConfig,
+  ListRelationshipsConfig,
   LogicalOperators,
   SearchCriteria,
 } from "../../common/SearchTypes";
 import { validateSearchFields } from "../../common/SearchValidation";
 import {
   BaseItemRelationshipInfo,
-  ItemRelationshipInfo, ItemRelationshipInfoKeys,
+  ItemRelationshipInfo,
+  ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
-  ItemRelationshipOriginatingItemInfo
+  ItemRelationshipOriginatingItemInfo,
 } from "../../common";
 
 export const cleanRelationshipItem = (

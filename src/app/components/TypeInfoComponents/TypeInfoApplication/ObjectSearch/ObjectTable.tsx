@@ -4,13 +4,13 @@ import {
   TypeInfo,
   TypeInfoField,
   TypeInfoMap,
-} from "../../../../common/TypeParsing/TypeInfo";
-import { TypeInfoDataItem, TypeNavigation } from "../Types";
+} from "../../../../../common/TypeParsing/TypeInfo";
+import { TypeInfoDataItem, TypeNavigation } from "../../Types";
 import {
   CheckedState,
   PartiallySelectableCheckbox,
-} from "../../Basic/PartiallySelectableCheckbox";
-import { SortField } from "../../../../common";
+} from "../../../Basic/PartiallySelectableCheckbox";
+import { SortField } from "../../../../../common";
 import { HeaderCell } from "./ObjectTable/HeaderCell";
 import { ItemRow } from "./ObjectTable/ItemRow";
 
