@@ -2,19 +2,15 @@ import {
   DBRelatedItemDriver,
   DBServiceItemDriver,
   validateRelationshipItem,
-} from "./ServiceTypes";
-import {
-  TypeInfo,
-  TypeInfoMap,
-  TypeOperation,
-} from "../../common/TypeParsing/TypeInfo";
+} from "../api/ORM/ServiceTypes";
+import { TypeInfo, TypeInfoMap, TypeOperation } from "./TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
   TypeInfoValidationResults,
   validateTypeInfoValue,
-} from "../../common/TypeParsing/Validation";
-import { TypeInfoDataItem } from "../../app/components";
+} from "./TypeParsing/Validation";
+import { TypeInfoDataItem } from "../app/components";
 import {
   ComparisonOperators,
   ListItemsConfig,
@@ -22,15 +18,15 @@ import {
   ListRelationshipsConfig,
   LogicalOperators,
   SearchCriteria,
-} from "../../common/SearchTypes";
-import { validateSearchFields } from "../../common/SearchValidation";
+} from "./SearchTypes";
+import { validateSearchFields } from "./SearchValidation";
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
   ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
   ItemRelationshipOriginatingItemInfo,
-} from "../../common";
+} from "./index";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
