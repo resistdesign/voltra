@@ -17,8 +17,8 @@ import {
 import { TypeInfoDataItem } from "../../app/components";
 import {
   ComparisonOperators,
-  ListItemsResults,
   ListItemsConfig,
+  ListItemsResults,
   ListRelationshipsConfig,
   LogicalOperators,
   SearchCriteria,
