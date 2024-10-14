@@ -1,7 +1,7 @@
-export const useTypeInfoDataManager = () => {
+// TODO: HTTP Drivers.
 
-};
+export const useTypeInfoORMService = () => {};
 
-export const useTypeInfoRelationshipManager = () => {
+export const useTypeInfoDataManager = () => {};
 
-};
+export const useTypeInfoRelationshipManager = () => {};

@@ -1,8 +1,4 @@
-import {
-  DBRelatedItemDriver,
-  DBServiceItemDriver,
-  validateRelationshipItem,
-} from "../api/ORM/ServiceTypes";
+import { DBRelatedItemDriver, DBServiceItemDriver } from "./ServiceTypes";
 import { TypeInfo, TypeInfoMap, TypeOperation } from "./TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
@@ -27,6 +23,7 @@ import {
   ItemRelationshipInfoType,
   ItemRelationshipOriginatingItemInfo,
 } from "./index";
+import { validateRelationshipItem } from "./ItemRelationships";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
