@@ -1,10 +1,16 @@
 import { DBServiceItemDriver } from "../../../common/ServiceTypes";
 
+export type FetchDBServiceItemDriverConfig = {
+  baseUrl: string;
+};
+
 export class FetchDBServiceItemDriver<
   ItemType extends Record<any, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > implements DBServiceItemDriver<ItemType, UniquelyIdentifyingFieldName>
 {
+  constructor(protected config: FetchDBServiceItemDriverConfig) {}
+
   createItem(
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> {
