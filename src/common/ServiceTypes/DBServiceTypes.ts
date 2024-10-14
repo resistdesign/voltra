@@ -1,5 +1,5 @@
-import { ListItemsResults, ListItemsConfig } from "../../../common/SearchTypes";
-import { ItemRelationshipInfo } from "../../../common";
+import { ListItemsResults, ListItemsConfig } from "../SearchTypes";
+import { ItemRelationshipInfo } from "../index";
 
 /**
  * A driver for a database service.
