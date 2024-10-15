@@ -1,7 +1,9 @@
 import { DBServiceItemDriver } from "../../../common/ServiceTypes";
+import { ListItemsConfig, ListItemsResults } from "../../../common";
 
 export type FetchDBServiceItemDriverConfig = {
   baseUrl: string;
+  authorization?: string;
 };
 
 export class FetchDBServiceItemDriver<
@@ -11,33 +13,50 @@ export class FetchDBServiceItemDriver<
 {
   constructor(protected config: FetchDBServiceItemDriverConfig) {}
 
-  createItem(
+  protected makeRequest = async (path: string, args: any[]): Promise<any> => {
+    const { baseUrl, authorization } = this.config;
+    const result = await fetch(`${baseUrl}/${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(authorization
+          ? {
+              Authorization: authorization,
+            }
+          : {}),
+      },
+      credentials: authorization ? "include" : undefined,
+      method: "POST",
+      body: JSON.stringify(args),
+    });
+
+    return await result.json();
+  };
+
+  createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ): Promise<ItemType[UniquelyIdentifyingFieldName]> {
-    throw new Error("Method not implemented.");
-  }
+  ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
+    return await this.makeRequest("create-item", [newItem]);
+  };
 
-  readItem(
+  readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ): Promise<ItemType> {
-    throw new Error("Method not implemented.");
-  }
+  ): Promise<ItemType> => {
+    return await this.makeRequest("read-item", [uniqueIdentifier]);
+  };
 
-  updateItem(updatedItem: Partial<ItemType>): Promise<boolean> {
-    throw new Error("Method not implemented.");
-  }
+  updateItem = async (updatedItem: Partial<ItemType>): Promise<boolean> => {
+    return await this.makeRequest("update-item", [updatedItem]);
+  };
 
-  deleteItem(
+  deleteItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ): Promise<boolean> {
-    throw new Error("Method not implemented.");
-  }
+  ): Promise<boolean> => {
+    return await this.makeRequest("delete-item", [uniqueIdentifier]);
+  };
 
-  listItems(
-    config: import("../../../common/SearchTypes").ListItemsConfig,
-  ): Promise<
-    boolean | import("../../../common/SearchTypes").ListItemsResults<ItemType>
-  > {
-    throw new Error("Method not implemented.");
-  }
+  listItems = async (
+    config: ListItemsConfig,
+  ): Promise<boolean | ListItemsResults<ItemType>> => {
+    return await this.makeRequest("list-items", [config]);
+  };
 }
