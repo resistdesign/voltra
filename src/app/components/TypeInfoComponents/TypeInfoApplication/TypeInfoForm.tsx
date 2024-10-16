@@ -10,11 +10,10 @@ import { Form } from "../../Form";
 import {
   InputComponent,
   NameOrIndex,
-  TypeInfoDataItem,
   TypeNavigation,
   TypeNavigationMode,
 } from "../Types";
-import { TypeInfo, TypeOperation } from "../../../../common/TypeParsing/TypeInfo";
+import {TypeInfo, TypeInfoDataItem, TypeOperation} from "../../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
 import { TypeInfoInput } from "../TypeInfoInput";
 

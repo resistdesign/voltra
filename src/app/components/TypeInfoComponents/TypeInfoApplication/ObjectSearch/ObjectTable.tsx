@@ -1,11 +1,11 @@
 import { FC, useCallback, useMemo } from "react";
 import {
   SupportedFieldTags,
-  TypeInfo,
+  TypeInfo, TypeInfoDataItem,
   TypeInfoField,
   TypeInfoMap,
 } from "../../../../../common/TypeParsing/TypeInfo";
-import { TypeInfoDataItem, TypeNavigation } from "../../Types";
+import { TypeNavigation } from "../../Types";
 import {
   CheckedState,
   PartiallySelectableCheckbox,

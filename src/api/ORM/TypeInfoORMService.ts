@@ -1,12 +1,16 @@
-import { DBRelatedItemDriver, DBServiceItemDriver } from "./ServiceTypes";
-import { TypeInfo, TypeInfoMap, TypeOperation } from "./TypeParsing/TypeInfo";
+import { DBRelatedItemDriver, DBServiceItemDriver } from "../ServiceTypes";
+import {
+  TypeInfo,
+  TypeInfoDataItem,
+  TypeInfoMap,
+  TypeOperation,
+} from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
   TypeInfoValidationResults,
   validateTypeInfoValue,
-} from "./TypeParsing/Validation";
-import { TypeInfoDataItem } from "../app/components";
+} from "../../common/TypeParsing/Validation";
 import {
   ComparisonOperators,
   ListItemsConfig,
@@ -14,16 +18,17 @@ import {
   ListRelationshipsConfig,
   LogicalOperators,
   SearchCriteria,
-} from "./SearchTypes";
-import { validateSearchFields } from "./SearchValidation";
+} from "../../common/SearchTypes";
+import { validateSearchFields } from "../../common/SearchValidation";
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
   ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
   ItemRelationshipOriginatingItemInfo,
-} from "./index";
-import { validateRelationshipItem } from "./ItemRelationships";
+} from "../../common";
+import { validateRelationshipItem } from "../../common/ItemRelationships";
+import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -38,6 +43,9 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
+/**
+ * Error types for the TypeInfoORM service.
+ * */
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
   NO_RELATIONSHIP_DRIVERS_SUPPLIED: "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
@@ -48,6 +56,9 @@ export const TYPE_INFO_ORM_SERVICE_ERRORS = {
   INVALID_RELATIONSHIP: "INVALID_RELATIONSHIP",
 };
 
+/**
+ * The configuration for the TypeInfoORM service.
+ * */
 export type TypeInfoORMServiceConfig = {
   typeInfoMap: TypeInfoMap;
   getDriver: (typeName: string) => DBServiceItemDriver<any, any>;
@@ -61,7 +72,10 @@ export type TypeInfoORMServiceConfig = {
   customValidators?: CustomTypeInfoFieldValidatorMap;
 };
 
-export class TypeInfoORMService {
+/**
+ * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
+ * */
+export class TypeInfoORMService implements TypeInfoORMAPI {
   constructor(protected config: TypeInfoORMServiceConfig) {
     if (!config.getDriver) {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.NO_DRIVERS_SUPPLIED);

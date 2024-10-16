@@ -17,8 +17,8 @@ import {
   SearchCriteria,
   SortField,
 } from "../../../../common/SearchTypes";
-import { InputComponent, TypeInfoDataItem, TypeNavigation } from "../Types";
-import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
+import { InputComponent, TypeNavigation } from "../Types";
+import {TypeInfo, TypeInfoDataItem, TypeInfoMap} from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
 import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";

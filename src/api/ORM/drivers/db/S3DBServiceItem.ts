@@ -9,7 +9,7 @@ import {
   BaseFile,
   BaseFileLocationInfo,
   DBServiceItemDriver,
-} from "../../../../common/ServiceTypes";
+} from "../../../ServiceTypes";
 import {
   getBaseFileLocationInfo,
   getFullFileKey,
