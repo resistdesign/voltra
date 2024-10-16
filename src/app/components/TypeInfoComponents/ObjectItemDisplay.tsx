@@ -1,6 +1,5 @@
 import { FC } from "react";
-import {TypeInfo, TypeInfoMap} from "../../../common/TypeParsing/TypeInfo";
-import { TypeInfoDataItem } from "./Types";
+import {TypeInfo, TypeInfoDataItem, TypeInfoMap} from "../../../common/TypeParsing/TypeInfo";
 
 export type ObjectItemDisplayProps = {
   typeInfoMap: TypeInfoMap;

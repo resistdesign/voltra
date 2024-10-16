@@ -79,3 +79,8 @@ export type TypeInfo = {
  * A map of type information maps.
  */
 export type TypeInfoMap = Record<string, TypeInfo>;
+
+/**
+ * An actual data item described by type info.
+ * */
+export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;

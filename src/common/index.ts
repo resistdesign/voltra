@@ -17,5 +17,4 @@ export { ItemsExistenceInfo } from "./SearchTypes";
 export { PagingInfo } from "./SearchTypes";
 export { SortField } from "./SearchTypes";
 export { ListItemsResults } from "./SearchTypes";
-export * as ServiceTypes from "./ServiceTypes";
 export * as ItemRelationships from "./ItemRelationships";

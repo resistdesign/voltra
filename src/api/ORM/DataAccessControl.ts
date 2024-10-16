@@ -1,5 +1,4 @@
-import { TypeInfoDataItem } from "../../app/components";
-import { LiteralValue, TypeInfo } from "../../common/TypeParsing/TypeInfo";
+import {LiteralValue, TypeInfo, TypeInfoDataItem} from "../../common/TypeParsing/TypeInfo";
 
 /**
  * The possible types of a data access control (DAC) constraint.

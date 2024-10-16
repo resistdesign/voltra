@@ -1,7 +1,7 @@
 import { FC, useCallback, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
-  TypeInfo,
+  TypeInfo, TypeInfoDataItem,
   TypeInfoField,
   TypeInfoMap,
   TypeOperation,
@@ -10,7 +10,6 @@ import {
   InputComponent,
   ItemRelationshipInfoStructure,
   TypeDataStateMap,
-  TypeInfoDataItem,
   TypeInfoDataMap,
   TypeInfoDataStructure,
   TypeNavigation,

@@ -1,11 +1,10 @@
-import { TypeInfo, TypeInfoField, TypeInfoMap } from "./TypeParsing/TypeInfo";
+import {TypeInfo, TypeInfoDataItem, TypeInfoField, TypeInfoMap} from "./TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
   FieldCriterion,
   LogicalOperators,
   SearchCriteria, SortField,
 } from "./SearchTypes";
-import { TypeInfoDataItem } from "../app/components";
 
 /**
  * Basic comparison operators for filtering data.
