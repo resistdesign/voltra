@@ -11,7 +11,20 @@ import {
 import { TypeInfoDataItem } from "../TypeParsing/TypeInfo";
 
 /**
- * A collection of kebab-case paths for the TypeInfoORM API.
+ * Error types for a TypeInfoORM service.
+ * */
+export const TYPE_INFO_ORM_SERVICE_ERRORS = {
+  NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
+  NO_RELATIONSHIP_DRIVERS_SUPPLIED: "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
+  NO_PRIMARY_FIELD_VALUE_SUPPLIED: "NO_PRIMARY_FIELD_VALUE_SUPPLIED",
+  INVALID_DRIVER: "INVALID_DRIVER",
+  INVALID_RELATIONSHIP_DRIVER: "INVALID_RELATIONSHIP_DRIVER",
+  INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
+  INVALID_RELATIONSHIP: "INVALID_RELATIONSHIP",
+};
+
+/**
+ * A collection of kebab-case route paths for a TypeInfoORM API.
  * */
 export enum TypeInfoORMAPIRoutePaths {
   CREATE = "create",

@@ -28,7 +28,10 @@ import {
   ItemRelationshipOriginatingItemInfo,
 } from "../../common";
 import { validateRelationshipItem } from "../../common/ItemRelationships";
-import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
+import {
+  TYPE_INFO_ORM_SERVICE_ERRORS,
+  TypeInfoORMAPI,
+} from "../../common/TypeInfoORM";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -41,19 +44,6 @@ export const cleanRelationshipItem = (
   }
 
   return cleanedItem as BaseItemRelationshipInfo;
-};
-
-/**
- * Error types for the TypeInfoORM service.
- * */
-export const TYPE_INFO_ORM_SERVICE_ERRORS = {
-  NO_DRIVERS_SUPPLIED: "NO_DRIVERS_SUPPLIED",
-  NO_RELATIONSHIP_DRIVERS_SUPPLIED: "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
-  NO_PRIMARY_FIELD_VALUE_SUPPLIED: "NO_PRIMARY_FIELD_VALUE_SUPPLIED",
-  INVALID_DRIVER: "INVALID_DRIVER",
-  INVALID_RELATIONSHIP_DRIVER: "INVALID_RELATIONSHIP_DRIVER",
-  INVALID_TYPE_INFO: "INVALID_TYPE_INFO",
-  INVALID_RELATIONSHIP: "INVALID_RELATIONSHIP",
 };
 
 /**
