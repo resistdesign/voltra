@@ -1,6 +1,10 @@
-// TODO: HTTP ORM Service.
+import { TypeInfoORMClient } from "../../../utils";
 
-export const useTypeInfoORMService = () => {};
+export const useTypeInfoORMClient = () => {
+  // TODO: memo.
+
+  return TypeInfoORMClient;
+};
 
 export const useTypeInfoDataManager = () => {};
 
