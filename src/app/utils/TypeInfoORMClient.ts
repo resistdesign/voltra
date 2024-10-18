@@ -17,7 +17,6 @@ import {
  * A client for a TypeInfoORM API or service.
  * */
 export class TypeInfoORMClient implements TypeInfoORMAPI {
-  // TODO: Implement all methods.
   constructor(private config: ServiceConfig) {}
 
   protected makeRequest = async (
