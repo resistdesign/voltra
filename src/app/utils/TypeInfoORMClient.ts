@@ -1,19 +1,18 @@
 import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
-
-/**
- * The configuration for the TypeInfoORM client.
- * */
-export type TypeInfoORMClientConfig = {
-  baseURL: string;
-  authorization?: string;
-};
+import { sendServiceRequest, ServiceConfig } from "./Service";
 
 /**
  * A client for a TypeInfoORM API or service.
  * */
 export class TypeInfoORMClient implements TypeInfoORMAPI {
   // TODO: Implement all methods.
-  constructor(private config: TypeInfoORMClientConfig) {}
+  constructor(private config: ServiceConfig) {}
+
+  protected makeRequest = async (path: string, args: any[]): Promise<any> => {
+    const result = await sendServiceRequest(this.config, path, args);
+
+    return result;
+  };
 
   create = async (typeName: string, item: any): Promise<any> => {
     return null;
