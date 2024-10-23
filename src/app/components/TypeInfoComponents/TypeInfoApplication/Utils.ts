@@ -1,9 +1,13 @@
-import { TypeInfoORMClient } from "../../../utils";
+import { ServiceConfig, TypeInfoORMClient } from "../../../utils";
+import { useMemo } from "react";
 
-export const useTypeInfoORMClient = () => {
-  // TODO: memo.
+export const useTypeInfoORMClient = (config: ServiceConfig) => {
+  const client = useMemo<TypeInfoORMClient>(
+    () => new TypeInfoORMClient(config),
+    [config],
+  );
 
-  return TypeInfoORMClient;
+  return client;
 };
 
 export const useTypeInfoDataManager = () => {};
