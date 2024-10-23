@@ -1,5 +1,6 @@
 import { ServiceConfig, TypeInfoORMClient } from "../../../utils";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ItemRelationshipInfoStructure, TypeInfoDataStructure } from "../Types";
 
 export const useTypeInfoORMClient = (config: ServiceConfig) => {
   const client = useMemo<TypeInfoORMClient>(
@@ -11,7 +12,16 @@ export const useTypeInfoORMClient = (config: ServiceConfig) => {
 };
 
 export const useTypeInfoDataManager = (config: ServiceConfig) => {
-  // TODO: Manage TypeInfo application state.
+  const [value, setValue] = useState<TypeInfoDataStructure>({});
+  const client = useTypeInfoORMClient(config);
+  // TODO: Cache???
+  // TODO: What to return???
 };
 
-export const useTypeInfoRelationshipManager = () => {};
+export const useTypeInfoRelationshipManager = (config: ServiceConfig) => {
+  const [relationshipInfo, setRelationshipInfo] =
+    useState<ItemRelationshipInfoStructure>({});
+  const client = useTypeInfoORMClient(config);
+  // TODO: Cache???
+  // TODO: What to return???
+};
