@@ -10,6 +10,8 @@ export const useTypeInfoORMClient = (config: ServiceConfig) => {
   return client;
 };
 
-export const useTypeInfoDataManager = () => {};
+export const useTypeInfoDataManager = (config: ServiceConfig) => {
+  // TODO: Manage TypeInfo application state.
+};
 
 export const useTypeInfoRelationshipManager = () => {};
