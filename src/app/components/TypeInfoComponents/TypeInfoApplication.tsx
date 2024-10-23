@@ -1,7 +1,8 @@
 import { FC, useCallback, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
-  TypeInfo, TypeInfoDataItem,
+  TypeInfo,
+  TypeInfoDataItem,
   TypeInfoField,
   TypeInfoMap,
   TypeOperation,
@@ -76,7 +77,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   //  - Object Creation
   //  - Object Deletion
   //    - Delete Relationships???
-  //  - Object Relationships (CRUD + LIst/Check)
+  //  - Object Relationships (CRUD + List/Check)
   //    - Object Selection
   //  - Item/Form Editing
   const baseTypeNavigation = useMemo<TypeNavigation>(
