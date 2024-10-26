@@ -19,10 +19,19 @@ export const useTypeInfoORMClient = (
 };
 
 export const useTypeInfoDataManager = (config: ServiceConfig) => {
-  const [value, setValue] = useState<TypeInfoDataStructure>({});
-  const [relationshipInfo, setRelationshipInfo] =
+  const [dataStructure, setDataStructure] = useState<TypeInfoDataStructure>({});
+  const [relationshipStructure, setRelationshipStructure] =
     useState<ItemRelationshipInfoStructure>({});
   const client = useTypeInfoORMClient(config);
+  const typeInfoDataManager = useMemo<TypeInfoDataManager>(() => {
+    return {
+      dataStructure,
+      relationshipStructure,
+    };
+  }, [dataStructure, relationshipStructure]);
+
   // TODO: Cache???
   // TODO: What to return???
+  // TODO: Controls???
+  return typeInfoDataManager;
 };
