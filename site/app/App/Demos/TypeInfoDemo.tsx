@@ -3,9 +3,9 @@ import {
   ItemRelationshipInfoStructure,
   TypeInfoApplication,
   TypeInfoDataStructure,
-} from "../../../src/app/components";
-import { TypeInfoMap } from "../../../src/common/TypeParsing/TypeInfo";
-import { getTypeInfoMapFromTypeScript } from "../../../src/common/TypeParsing";
+} from "../../../../src/app/components";
+import { TypeInfoMap } from "../../../../src/common/TypeParsing/TypeInfo";
+import { getTypeInfoMapFromTypeScript } from "../../../../src/common/TypeParsing";
 
 const DEMO_TS = `
 export type PersistableItem = {
