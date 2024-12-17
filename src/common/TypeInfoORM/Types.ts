@@ -59,7 +59,4 @@ export type TypeInfoORMAPI = {
   listRelationships: (
     config: ListRelationshipsConfig,
   ) => Promise<boolean | ListItemsResults<ItemRelationshipInfo>>;
-  cleanupRelationships: (
-    relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
-  ) => Promise<void>;
 };

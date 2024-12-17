@@ -169,6 +169,16 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  protected cleanupRelationships = async (
+    relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
+  ): Promise<void> => {
+    if (this.config.createRelationshipCleanupItem) {
+      await this.config.createRelationshipCleanupItem(
+        relationshipOriginatingItem,
+      );
+    }
+  };
+
   /**
    * Create a new relationship between two items.
    * */
@@ -287,19 +297,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     });
 
     return results;
-  };
-
-  /**
-   * Queue the cleanup of relationships for a given item.
-   * */
-  cleanupRelationships = async (
-    relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
-  ): Promise<void> => {
-    if (this.config.createRelationshipCleanupItem) {
-      await this.config.createRelationshipCleanupItem(
-        relationshipOriginatingItem,
-      );
-    }
   };
 
   /**
