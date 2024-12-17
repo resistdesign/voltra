@@ -38,7 +38,6 @@ export enum TypeInfoORMAPIRoutePaths {
   CLEANUP_RELATIONSHIPS = "cleanup-relationships",
 }
 
-// TODO: THis API is too raw. It should be more about connecting (relating) items.
 /**
  * The API type for TypeInfoORM providers to implement.
  * */
