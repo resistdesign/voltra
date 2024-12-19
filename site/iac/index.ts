@@ -1,6 +1,6 @@
 // We need an API to be able to test backend code.
 import { SimpleCFT } from "../../src/iac";
-import { addDNS, addSecureFileStorage } from "../../src/iac/packs";
+import { addDNS, addGateway, addSecureFileStorage } from "../../src/iac/packs";
 
 const IDS = {
   PARAMETERS: {
@@ -57,4 +57,14 @@ const IaC = new SimpleCFT({
         },
       ],
     },
+  })
+  .applyPack(addGateway, {
+    id: IDS.API.GATEWAY,
+    domainName: DOMAINS.API,
+    certificateArn: "",
+    cloudFunction: {
+      id: IDS.API.FUNCTION,
+      region: "us-east-1",
+    },
+    hostedZoneId: IDS.PARAMETERS.HOSTED_ZONE_ID,
   });
