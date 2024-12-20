@@ -69,8 +69,10 @@ const IaC = new SimpleCFT({
     },
   })
   .applyPack(addDNS, {
-    hostedZoneIdParameterName: IDS.PARAMETERS.HOSTED_ZONE_ID,
-    domainNameParameterName: BASE_DOMAIN,
+    hostedZoneId: {
+      Ref: IDS.PARAMETERS.HOSTED_ZONE_ID,
+    },
+    domainName: DOMAINS.API,
   })
   .applyPack(addSSLCertificate, {
     id: IDS.COMMON.SSL_CERTIFICATE,

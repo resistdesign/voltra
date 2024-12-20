@@ -1,9 +1,10 @@
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
+import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
 export type AddDNSConfig = {
-  hostedZoneIdParameterName: string;
-  domainNameParameterName: string;
+  hostedZoneId: CloudFormationPrimitiveValue<string>;
+  domainName: CloudFormationPrimitiveValue<string>;
   localUIDevelopmentDomainName?: string;
   localUIDevelopmentIPAddress?: string;
 };
@@ -14,27 +15,12 @@ export type AddDNSConfig = {
  * */
 export const addDNS = createResourcePack(
   ({
-    hostedZoneIdParameterName,
-    domainNameParameterName,
+    hostedZoneId,
+    domainName,
     localUIDevelopmentDomainName,
     localUIDevelopmentIPAddress,
   }: AddDNSConfig) => {
-    let cft = new SimpleCFT().addParameterGroup({
-      Label: "DNS",
-      Parameters: {
-        [hostedZoneIdParameterName]: {
-          Label: "Hosted Zone ID",
-          Type: "AWS::Route53::HostedZone::Id",
-          Description: "Hosted Zone ID",
-        },
-        [domainNameParameterName]: {
-          Label: "Domain Name",
-          Type: "String",
-          Description: "Domain name for the hosted zone",
-          Default: "example.com",
-        },
-      },
-    });
+    let cft = new SimpleCFT();
 
     if (localUIDevelopmentDomainName) {
       cft = cft.patch({
@@ -43,17 +29,13 @@ export const addDNS = createResourcePack(
             Type: "AWS::Route53::RecordSet",
             DeletionPolicy: "Delete",
             Properties: {
-              HostedZoneId: {
-                Ref: hostedZoneIdParameterName,
-              },
+              HostedZoneId: hostedZoneId,
               Type: "A",
               Name: {
                 "Fn::Sub": [
                   "app-local.${BaseDomainName}",
                   {
-                    BaseDomainName: {
-                      Ref: domainNameParameterName,
-                    },
+                    BaseDomainName: domainName,
                   },
                 ],
               },
