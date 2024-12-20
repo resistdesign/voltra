@@ -20,7 +20,7 @@
     "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .releaserc dist/",
     "site:build:app": "parcel build site/app/index.html --dist-dir site-dist --target app && yarn finalize-site",
     "site:build:api": "parcel build ./site/api/index.ts --dist-dir site-dist --target api --no-source-maps",
-    "site:build:iac": "ts-node ./src/iac/index.ts",
+    "site:build:iac": "ts-node ./site/iac/index.ts",
     "start": "parcel site/app/index.html --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/ && cp ./favicon/assets/* site-dist/app/"
   },
