@@ -19,6 +19,7 @@
     "doc-to-site": "cp -r ./docs site-dist/app/",
     "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .releaserc dist/",
     "site:build": "parcel build site/app/index.html --dist-dir site-dist/app --target site && yarn finalize-site",
+    "site:build:api": "parcel build site/api/index.ts --dist-dir site-dist/api --target site-api",
     "start": "parcel site/app/index.html --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/ && cp ./favicon/assets/* site-dist/app/"
   },
@@ -64,6 +65,16 @@
           "not dead",
           "> 0.2%"
         ]
+      },
+      "includeNodeModules": true,
+      "outputFormat": "commonjs",
+      "isLibrary": false,
+      "scopeHoist": false
+    },
+    "site-api": {
+      "context": "node",
+      "engines": {
+        "node": "20"
       },
       "includeNodeModules": true,
       "outputFormat": "commonjs",
