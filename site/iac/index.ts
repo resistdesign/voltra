@@ -166,7 +166,9 @@ const IaC = new SimpleCFT({
       id: IDS.API.FUNCTION,
       region: "us-east-1",
     },
-    hostedZoneId: IDS.PARAMETERS.HOSTED_ZONE_ID,
+    hostedZoneId: {
+      Ref: IDS.PARAMETERS.HOSTED_ZONE_ID,
+    },
   });
 
 if (!FS.existsSync(DIR_NAME)) {
