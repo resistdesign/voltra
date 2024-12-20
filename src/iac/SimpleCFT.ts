@@ -86,5 +86,8 @@ export class SimpleCFT {
   /**
    * Convert the stack template to a YAML string.
    * */
-  public toYAML = () => YAML.stringify(this.template);
+  public toYAML = () =>
+    YAML.stringify(this.template, {
+      aliasDuplicateObjects: false,
+    });
 }
