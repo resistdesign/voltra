@@ -56,4 +56,4 @@ jobs:
           template: site-dist/iac/index.yml
           capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: >-
-            HostedZoneId=${{ secrets.HOSTEDZONEID }},
+            HostedZoneId=${{ secrets.HOSTEDZONEID }}
