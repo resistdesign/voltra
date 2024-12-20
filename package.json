@@ -18,8 +18,9 @@
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",
     "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .releaserc dist/",
-    "site:build": "parcel build site/app/index.html --dist-dir site-dist/app --target site && yarn finalize-site",
-    "site:build:api": "parcel build site/api/index.ts --dist-dir site-dist/api --target site-api",
+    "site:build:app": "parcel build site/app/index.html --dist-dir site-dist --target app && yarn finalize-site",
+    "site:build:api": "parcel build ./site/api/index.ts --dist-dir site-dist --target api --no-source-maps",
+    "site:build:iac": "ts-node ./src/iac/index.ts",
     "start": "parcel site/app/index.html --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/ && cp ./favicon/assets/* site-dist/app/"
   },
@@ -57,7 +58,7 @@
     "typedoc-material-theme": "^1.0.2"
   },
   "targets": {
-    "site": {
+    "app": {
       "context": "browser",
       "engines": {
         "browsers": [
@@ -71,15 +72,15 @@
       "isLibrary": false,
       "scopeHoist": false
     },
-    "site-api": {
+    "api": {
       "context": "node",
       "engines": {
-        "node": "20"
+        "node": ">=10"
       },
+      "sourceMap": false,
       "includeNodeModules": true,
       "outputFormat": "commonjs",
-      "isLibrary": false,
-      "scopeHoist": false
+      "isLibrary": true
     }
   }
 }

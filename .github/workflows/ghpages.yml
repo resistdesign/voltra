@@ -21,7 +21,7 @@ jobs:
       - name: Install and Build 🔧
         run: |
           yarn
-          yarn site:build
+          yarn site:build:app
           yarn doc
 
       - name: Deploy 🚀
