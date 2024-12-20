@@ -154,18 +154,10 @@ const IaC = new SimpleCFT({
       ],
     },
     repoConfig: {
-      owner: {
-        Ref: REPO_CREDENTIALS.OWNER,
-      },
-      repo: {
-        Ref: REPO_CREDENTIALS.NAME,
-      },
-      branch: {
-        Ref: REPO_CREDENTIALS.BRANCH,
-      },
-      oauthToken: {
-        Ref: REPO_CREDENTIALS.TOKEN,
-      },
+      owner: REPO_CREDENTIALS.OWNER,
+      repo: REPO_CREDENTIALS.NAME,
+      branch: REPO_CREDENTIALS.BRANCH,
+      oauthToken: REPO_CREDENTIALS.TOKEN,
     },
   })
   .applyPack(addGateway, {
