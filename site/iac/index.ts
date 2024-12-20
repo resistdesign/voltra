@@ -3,7 +3,6 @@ import { SimpleCFT } from "../../src/iac";
 import {
   addBuildPipeline,
   addCloudFunction,
-  addDNS,
   addGateway,
   addSecureFileStorage,
   addSSLCertificate,
@@ -68,12 +67,6 @@ const IaC = new SimpleCFT({
         Description: "The Hosted Zone ID for the domain",
       },
     },
-  })
-  .applyPack(addDNS, {
-    hostedZoneId: {
-      Ref: IDS.PARAMETERS.HOSTED_ZONE_ID,
-    },
-    domainName: DOMAINS.API,
   })
   .applyPack(addSSLCertificate, {
     id: IDS.COMMON.SSL_CERTIFICATE,
