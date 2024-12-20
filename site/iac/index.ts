@@ -18,7 +18,6 @@ const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_NAME",
   "REPO_BRANCH",
   "REPO_TOKEN",
-  "NODE_AUTH_TOKEN",
 ]);
 const OUTPUT_PATH = Path.join(
   __dirname,
@@ -120,13 +119,6 @@ const IaC = new SimpleCFT({
     environmentComputeType: "BUILD_GENERAL1_SMALL",
     environmentImage: "aws/codebuild/standard:7.0",
     environmentType: "LINUX_CONTAINER",
-    environmentVariables: [
-      {
-        Name: "NODE_AUTH_TOKEN",
-        Type: "PLAINTEXT",
-        Value: ENV_VARS.NODE_AUTH_TOKEN,
-      },
-    ],
     timeoutInMinutes: 10,
     buildSpec: {
       "Fn::Sub": [
@@ -137,14 +129,10 @@ const IaC = new SimpleCFT({
               "runtime-versions": {
                 nodejs: 20,
               },
-              commands: [
-                'echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" >> ./.npmrc',
-                "npm i yarn",
-                "yarn",
-              ],
+              commands: ["npm i yarn", "yarn"],
             },
             build: {
-              commands: ["yarn build-site:api"],
+              commands: ["yarn site:build:api"],
             },
             post_build: {
               commands: [
