@@ -5,9 +5,12 @@ import {
   addDNS,
   addGateway,
   addSecureFileStorage,
+  addSSLCertificate,
 } from "../../src/iac/packs";
 import Path from "path";
 import FS from "fs";
+
+// TODO: Need to build and deploy API code to Cloud Function.
 
 const OUTPUT_PATH = Path.join(
   __dirname,
@@ -18,10 +21,12 @@ const OUTPUT_PATH = Path.join(
   "index.yml",
 );
 const DIR_NAME = Path.dirname(OUTPUT_PATH);
-
 const IDS = {
   PARAMETERS: {
     HOSTED_ZONE_ID: "HostedZoneId",
+  },
+  COMMON: {
+    SSL_CERTIFICATE: "SSLCertificate",
   },
   API: {
     FILE_STORAGE: "ApiFileStorage",
@@ -52,6 +57,13 @@ const IaC = new SimpleCFT({
   .applyPack(addDNS, {
     hostedZoneIdParameterName: IDS.PARAMETERS.HOSTED_ZONE_ID,
     domainNameParameterName: BASE_DOMAIN,
+  })
+  .applyPack(addSSLCertificate, {
+    id: IDS.COMMON.SSL_CERTIFICATE,
+    domainName: BASE_DOMAIN,
+    hostedZoneId: {
+      Ref: IDS.PARAMETERS.HOSTED_ZONE_ID,
+    },
   })
   .applyPack(addSecureFileStorage, {
     id: IDS.API.FILE_STORAGE,
