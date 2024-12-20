@@ -14,7 +14,10 @@
   "include": [
     "src/**/*.js",
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "site/**/*.js",
+    "site/**/*.ts",
+    "site/**/*.tsx"
   ],
   "exclude": [
     "node_modules",
