@@ -1,6 +1,11 @@
 // We need an API to be able to test backend code.
 import { SimpleCFT } from "../../src/iac";
-import { addDNS, addGateway, addSecureFileStorage } from "../../src/iac/packs";
+import {
+  addCloudFunction,
+  addDNS,
+  addGateway,
+  addSecureFileStorage,
+} from "../../src/iac/packs";
 import Path from "path";
 import FS from "fs";
 
@@ -69,6 +74,18 @@ const IaC = new SimpleCFT({
         },
       ],
     },
+  })
+  .applyPack(addCloudFunction, {
+    id: IDS.API.FUNCTION,
+    environment: {
+      Variables: {
+        CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
+        S3_API_BUCKET_NAME: {
+          Ref: IDS.API.FILE_STORAGE,
+        },
+      },
+    },
+    runtime: "nodejs20.x" as any,
   })
   .applyPack(addGateway, {
     id: IDS.API.GATEWAY,
