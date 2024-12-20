@@ -1,4 +1,4 @@
-// We need an API to be able to test backend code.
+// This is the IaC for a Demo API used to test `api` package code.
 import { SimpleCFT } from "../../src/iac";
 import {
   addBuildPipeline,
@@ -11,21 +11,15 @@ import {
 } from "../../src/iac/packs";
 import Path from "path";
 import FS from "fs";
+import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 
-const ENV_VARS = {
-  REPO_OWNER: process.env.REPO_OWNER,
-  REPO_NAME: process.env.REPO_NAME,
-  REPO_BRANCH: process.env.REPO_BRANCH,
-  REPO_TOKEN: process.env.REPO_TOKEN,
-};
-
-// IMPORTANT: Verify that we have all required environment variables.
-for (const k in ENV_VARS) {
-  if (!ENV_VARS[k as keyof typeof ENV_VARS]) {
-    throw new Error(`Missing required environment variable: ${k}`);
-  }
-}
-
+const ENV_VARS = collectRequiredEnvironmentVariables([
+  "REPO_OWNER",
+  "REPO_NAME",
+  "REPO_BRANCH",
+  "REPO_TOKEN",
+  "NODE_AUTH_TOKEN",
+]);
 const OUTPUT_PATH = Path.join(
   __dirname,
   "..",
@@ -130,7 +124,7 @@ const IaC = new SimpleCFT({
       {
         Name: "NODE_AUTH_TOKEN",
         Type: "PLAINTEXT",
-        Value: process.env.NODE_AUTH_TOKEN,
+        Value: ENV_VARS.NODE_AUTH_TOKEN,
       },
     ],
     timeoutInMinutes: 10,
@@ -150,7 +144,7 @@ const IaC = new SimpleCFT({
               ],
             },
             build: {
-              commands: ["yarn build:api"],
+              commands: ["yarn build-site:api"],
             },
             post_build: {
               commands: [
@@ -165,9 +159,9 @@ const IaC = new SimpleCFT({
           APIFunctionArn: {
             "Fn::GetAtt": [IDS.API.FUNCTION, "Arn"],
           },
-          OutputDirectory: "./dist/api",
+          OutputDirectory: "./site-dist/api",
           ZipFileName: "api",
-          ZipFileDirectory: "./dist/",
+          ZipFileDirectory: "./site-dist/",
         },
       ],
     },
