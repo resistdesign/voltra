@@ -159,7 +159,9 @@ const IaC = new SimpleCFT({
   .applyPack(addGateway, {
     id: IDS.API.GATEWAY,
     domainName: DOMAINS.API,
-    certificateArn: "",
+    certificateArn: {
+      Ref: IDS.COMMON.SSL_CERTIFICATE,
+    },
     cloudFunction: {
       id: IDS.API.FUNCTION,
       region: "us-east-1",

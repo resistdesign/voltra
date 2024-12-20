@@ -1,5 +1,6 @@
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
+import {CloudFormationPrimitiveValue} from "../types/IaCTypes";
 
 export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 
@@ -14,7 +15,7 @@ export type AddGatewayConfig = {
   id: string;
   hostedZoneId: any;
   domainName: any;
-  certificateArn: any;
+  certificateArn: CloudFormationPrimitiveValue<string>;
   cloudFunction: { id: string; region?: string };
   stageName?: any;
   authorizer?: AddGatewayAuthorizerConfig | boolean;
