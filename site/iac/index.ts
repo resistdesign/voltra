@@ -1,6 +1,18 @@
 // We need an API to be able to test backend code.
 import { SimpleCFT } from "../../src/iac";
 import { addDNS, addGateway, addSecureFileStorage } from "../../src/iac/packs";
+import Path from "path";
+import FS from "fs";
+
+const OUTPUT_PATH = Path.join(
+  __dirname,
+  "..",
+  "..",
+  "site-dist",
+  "iac",
+  "index.yml",
+);
+const DIR_NAME = Path.dirname(OUTPUT_PATH);
 
 const IDS = {
   PARAMETERS: {
@@ -68,3 +80,9 @@ const IaC = new SimpleCFT({
     },
     hostedZoneId: IDS.PARAMETERS.HOSTED_ZONE_ID,
   });
+
+if (!FS.existsSync(DIR_NAME)) {
+  FS.mkdirSync(DIR_NAME, { recursive: true });
+}
+
+FS.writeFileSync(OUTPUT_PATH, IaC.toYAML(), "utf8");

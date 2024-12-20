@@ -7,6 +7,7 @@ import {
   patchTemplate,
   ResourcePackApplier,
 } from "./utils";
+import YAML from "yaml";
 
 /**
  * The basis for your stack template.
@@ -71,4 +72,19 @@ export class SimpleCFT {
 
     return this;
   };
+
+  /**
+   * Convert the stack template to a string.
+   * */
+  public toString = () => JSON.stringify(this.template, null, 2);
+
+  /**
+   * Convert the stack template to a JSON object.
+   * */
+  public toJSON = () => this.template;
+
+  /**
+   * Convert the stack template to a YAML string.
+   * */
+  public toYAML = () => YAML.stringify(this.template);
 }
