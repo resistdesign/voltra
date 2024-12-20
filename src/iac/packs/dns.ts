@@ -3,10 +3,11 @@ import { SimpleCFT } from "../SimpleCFT";
 import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
 export type AddDNSConfig = {
+  id: string;
   hostedZoneId: CloudFormationPrimitiveValue<string>;
   domainName: CloudFormationPrimitiveValue<string>;
-  localUIDevelopmentDomainName?: string;
-  localUIDevelopmentIPAddress?: string;
+  resourceRecords: CloudFormationPrimitiveValue<string>[];
+  recordType?: CloudFormationPrimitiveValue<string>;
 };
 
 /**
@@ -15,41 +16,26 @@ export type AddDNSConfig = {
  * */
 export const addDNS = createResourcePack(
   ({
+    id,
     hostedZoneId,
     domainName,
-    localUIDevelopmentDomainName,
-    localUIDevelopmentIPAddress,
+    resourceRecords,
+    recordType = "A",
   }: AddDNSConfig) => {
-    let cft = new SimpleCFT();
-
-    if (localUIDevelopmentDomainName) {
-      cft = cft.patch({
-        Resources: {
-          [localUIDevelopmentDomainName]: {
-            Type: "AWS::Route53::RecordSet",
-            DeletionPolicy: "Delete",
-            Properties: {
-              HostedZoneId: hostedZoneId,
-              Type: "A",
-              Name: {
-                "Fn::Sub": [
-                  "app-local.${BaseDomainName}",
-                  {
-                    BaseDomainName: domainName,
-                  },
-                ],
-              },
-              ResourceRecords: [
-                localUIDevelopmentIPAddress
-                  ? localUIDevelopmentIPAddress
-                  : "127.0.0.1",
-              ],
-              TTL: "300",
-            },
+    let cft = new SimpleCFT().patch({
+      Resources: {
+        [id]: {
+          Type: "AWS::Route53::RecordSet",
+          Properties: {
+            HostedZoneId: hostedZoneId,
+            Type: recordType,
+            Name: domainName,
+            ResourceRecords: resourceRecords,
+            TTL: "300",
           },
         },
-      });
-    }
+      },
+    });
 
     return cft.template;
   },
