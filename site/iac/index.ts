@@ -1,16 +1,30 @@
 // We need an API to be able to test backend code.
 import { SimpleCFT } from "../../src/iac";
 import {
+  addBuildPipeline,
   addCloudFunction,
   addDNS,
   addGateway,
   addSecureFileStorage,
   addSSLCertificate,
+  createBuildSpec,
 } from "../../src/iac/packs";
 import Path from "path";
 import FS from "fs";
 
-// TODO: Need to build and deploy API code to Cloud Function.
+const ENV_VARS = {
+  REPO_OWNER: process.env.REPO_OWNER,
+  REPO_NAME: process.env.REPO_NAME,
+  REPO_BRANCH: process.env.REPO_BRANCH,
+  REPO_TOKEN: process.env.REPO_TOKEN,
+};
+
+// IMPORTANT: Verify that we have all required environment variables.
+for (const k in ENV_VARS) {
+  if (!ENV_VARS[k as keyof typeof ENV_VARS]) {
+    throw new Error(`Missing required environment variable: ${k}`);
+  }
+}
 
 const OUTPUT_PATH = Path.join(
   __dirname,
@@ -32,12 +46,19 @@ const IDS = {
     FILE_STORAGE: "ApiFileStorage",
     GATEWAY: "APIGateway",
     FUNCTION: "APIFunction",
+    BUILD_PIPELINE: "APIBuildPipeline",
   },
 };
 const BASE_DOMAIN = "demo.voltra.app";
 const DOMAINS = {
   APP: `app.${BASE_DOMAIN}`,
   API: `api.${BASE_DOMAIN}`,
+};
+const REPO_CREDENTIALS = {
+  OWNER: ENV_VARS.REPO_OWNER,
+  NAME: ENV_VARS.REPO_NAME,
+  BRANCH: ENV_VARS.REPO_BRANCH,
+  TOKEN: ENV_VARS.REPO_TOKEN,
 };
 
 const IaC = new SimpleCFT({
@@ -98,6 +119,72 @@ const IaC = new SimpleCFT({
       },
     },
     runtime: "nodejs20.x" as any,
+  })
+  .applyPack(addBuildPipeline, {
+    id: IDS.API.BUILD_PIPELINE,
+    dependsOn: [IDS.API.FUNCTION],
+    environmentComputeType: "BUILD_GENERAL1_SMALL",
+    environmentImage: "aws/codebuild/standard:7.0",
+    environmentType: "LINUX_CONTAINER",
+    environmentVariables: [
+      {
+        Name: "NODE_AUTH_TOKEN",
+        Type: "PLAINTEXT",
+        Value: process.env.NODE_AUTH_TOKEN,
+      },
+    ],
+    timeoutInMinutes: 10,
+    buildSpec: {
+      "Fn::Sub": [
+        createBuildSpec({
+          version: 0.2,
+          phases: {
+            install: {
+              "runtime-versions": {
+                nodejs: 20,
+              },
+              commands: [
+                'echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" >> ./.npmrc',
+                "npm i yarn",
+                "yarn",
+              ],
+            },
+            build: {
+              commands: ["yarn build:api"],
+            },
+            post_build: {
+              commands: [
+                'PWD_RETURN_DIR="${!PWD}"',
+                "cd ${OutputDirectory} && zip -qr ../${ZipFileName}.zip * && cd ${!PWD_RETURN_DIR}",
+                'aws lambda update-function-code --function-name "${APIFunctionArn}" --zip-file "fileb://${ZipFileDirectory}${ZipFileName}.zip"',
+              ],
+            },
+          },
+        }),
+        {
+          APIFunctionArn: {
+            "Fn::GetAtt": [IDS.API.FUNCTION, "Arn"],
+          },
+          OutputDirectory: "./dist/api",
+          ZipFileName: "api",
+          ZipFileDirectory: "./dist/",
+        },
+      ],
+    },
+    repoConfig: {
+      owner: {
+        Ref: REPO_CREDENTIALS.OWNER,
+      },
+      repo: {
+        Ref: REPO_CREDENTIALS.NAME,
+      },
+      branch: {
+        Ref: REPO_CREDENTIALS.BRANCH,
+      },
+      oauthToken: {
+        Ref: REPO_CREDENTIALS.TOKEN,
+      },
+    },
   })
   .applyPack(addGateway, {
     id: IDS.API.GATEWAY,
