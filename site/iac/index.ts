@@ -46,6 +46,7 @@ const BASE_DOMAIN = "demo.voltra.app";
 const DOMAINS = {
   APP: `app.${BASE_DOMAIN}`,
   API: `api.${BASE_DOMAIN}`,
+  API_FILES: `api-files.${BASE_DOMAIN}`,
 };
 const REPO_CREDENTIALS = {
   OWNER: ENV_VARS.REPO_OWNER,
@@ -83,14 +84,7 @@ const IaC = new SimpleCFT({
   })
   .applyPack(addSecureFileStorage, {
     id: IDS.API.FILE_STORAGE,
-    bucketName: {
-      "Fn::Sub": [
-        "api-files.${BaseDomainName}",
-        {
-          BaseDomainName: { Ref: BASE_DOMAIN },
-        },
-      ],
-    },
+    bucketName: DOMAINS.API_FILES,
     shouldDelete: true,
     blockPublicAccess: true,
     cors: {
