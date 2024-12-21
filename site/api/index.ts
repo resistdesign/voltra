@@ -18,6 +18,8 @@ const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
   },
 ]);
 
+console.log(ROUTE_MAP);
+
 export const handler = async (event: any): Promise<CloudFunctionResponse> =>
   handleCloudFunctionEvent(event, normalizeCloudFunctionEvent, ROUTE_MAP, [
     process.env.CLIENT_ORIGIN as string,
