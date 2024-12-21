@@ -105,8 +105,8 @@ const IaC = new SimpleCFT({
   .applyPack(addBuildPipeline, {
     id: IDS.API.BUILD_PIPELINE,
     dependsOn: [IDS.API.FUNCTION],
-    environmentComputeType: "BUILD_GENERAL1_MEDIUM",
-    environmentImage: "aws/codebuild/standard:7.0-24.10.29",
+    environmentComputeType: "BUILD_GENERAL1_SMALL",
+    environmentImage: "aws/codebuild/standard:7.0-23.04.13",
     environmentType: "LINUX_CONTAINER",
     timeoutInMinutes: 10,
     buildSpec: {
