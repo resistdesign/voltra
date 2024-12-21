@@ -10,7 +10,11 @@ import {
 } from "./Types";
 import { getRouteIsAuthorized } from "./Auth";
 import { getHeadersWithCORS } from "./CORS";
-import { mergeStringPaths } from "../../common/Routing";
+import {
+  getPathArray,
+  getPathString,
+  mergeStringPaths,
+} from "../../common/Routing";
 
 export * from "./AWS";
 
@@ -103,7 +107,9 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
     const normalizedOrigin =
       typeof providedOrigin === "string" ? providedOrigin : "";
     const normalizedBody = Array.isArray(body) ? body : [body];
-    const route = routeMap[path];
+    // TODO: Wildcard Path parts and such.
+    const normalizedPath = getPathString(getPathArray(`${path}`));
+    const route = routeMap[normalizedPath];
     const responseHeaders = getHeadersWithCORS(
       normalizedOrigin,
       allowedOrigins,
