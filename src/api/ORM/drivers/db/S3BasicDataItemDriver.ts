@@ -7,6 +7,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
+import { IBasicDatabaseDriver } from "./Types";
 
 export const tokenizeText = (text: string): string[] =>
   text
@@ -27,32 +28,10 @@ export const expendPath = (path: string): string[] =>
     (part) => decodeURIComponent(part),
   );
 
-export interface IBasicDatabase {
-  createItem: (
-    type: string,
-    id: string,
-    item: Record<string, string>,
-  ) => Promise<void>;
-  readItem: (
-    type: string,
-    id: string,
-    getProperties?: string[],
-  ) => Promise<Record<string, string>>;
-  updateItem: (
-    type: string,
-    id: string,
-    item: Record<string, string | null>,
-  ) => Promise<void>;
-  deleteItem: (type: string, id: string) => Promise<void>;
-  findItems: (
-    type: string,
-    properties: string[],
-    value: string,
-    getProperties?: string[],
-  ) => Promise<Record<string, string>[]>;
-}
-
-export class FileDatabase implements IBasicDatabase {
+/**
+ * A database that stores `TypeInfoDataItem`s in S3 with _advanced_ indexing for searching.
+ * */
+export class S3BasicDataItemDriver implements IBasicDatabaseDriver {
   public static INDEX_FOLDER = "INDEX";
   public static REVERSE_INDEX_FOLDER = "REVERSE_INDEX";
   public static INDEX_MARKER = "TRUE";
@@ -171,18 +150,18 @@ export class FileDatabase implements IBasicDatabase {
   };
 
   protected indexPathExists = async (path: string[]) => {
-    return this.databasePathExists([FileDatabase.INDEX_FOLDER, ...path]);
+    return this.databasePathExists([S3BasicDataItemDriver.INDEX_FOLDER, ...path]);
   };
 
   protected reverseIndexPathExists = async (path: string[]) => {
     return this.databasePathExists([
-      FileDatabase.REVERSE_INDEX_FOLDER,
+      S3BasicDataItemDriver.REVERSE_INDEX_FOLDER,
       ...path,
     ]);
   };
 
   protected dataPathExists = async (path: string[]) => {
-    return this.databasePathExists([FileDatabase.DATA_FOLDER, ...path]);
+    return this.databasePathExists([S3BasicDataItemDriver.DATA_FOLDER, ...path]);
   };
 
   protected storeDatabaseValue = async (path: string[], value: string = "") => {
@@ -190,7 +169,7 @@ export class FileDatabase implements IBasicDatabase {
   };
 
   protected storeIndexValue = async (path: string[], value: string = "") => {
-    return this.storeDatabaseValue([FileDatabase.INDEX_FOLDER, ...path], value);
+    return this.storeDatabaseValue([S3BasicDataItemDriver.INDEX_FOLDER, ...path], value);
   };
 
   protected storeReverseIndexValue = async (
@@ -198,13 +177,13 @@ export class FileDatabase implements IBasicDatabase {
     value: string = "",
   ) => {
     return this.storeDatabaseValue(
-      [FileDatabase.REVERSE_INDEX_FOLDER, ...path],
+      [S3BasicDataItemDriver.REVERSE_INDEX_FOLDER, ...path],
       value,
     );
   };
 
   protected storeDataValue = async (path: string[], value: string = "") => {
-    return this.storeDatabaseValue([FileDatabase.DATA_FOLDER, ...path], value);
+    return this.storeDatabaseValue([S3BasicDataItemDriver.DATA_FOLDER, ...path], value);
   };
 
   protected storeItemPropertyValue = async (
@@ -222,11 +201,11 @@ export class FileDatabase implements IBasicDatabase {
     for (const token of tokens) {
       await this.storeIndexValue(
         [token, ...indexItemPropertyPath],
-        FileDatabase.INDEX_MARKER,
+        S3BasicDataItemDriver.INDEX_MARKER,
       );
       await this.storeReverseIndexValue(
         [...indexItemPropertyPath, token],
-        FileDatabase.INDEX_MARKER,
+        S3BasicDataItemDriver.INDEX_MARKER,
       );
     }
 
@@ -238,18 +217,18 @@ export class FileDatabase implements IBasicDatabase {
   };
 
   protected getStoredIndexValue = async (path: string[]) => {
-    return this.getStoredDatabaseValue([FileDatabase.INDEX_FOLDER, ...path]);
+    return this.getStoredDatabaseValue([S3BasicDataItemDriver.INDEX_FOLDER, ...path]);
   };
 
   protected getStoredReverseIndexValue = async (path: string[]) => {
     return this.getStoredDatabaseValue([
-      FileDatabase.REVERSE_INDEX_FOLDER,
+      S3BasicDataItemDriver.REVERSE_INDEX_FOLDER,
       ...path,
     ]);
   };
 
   protected getStoredDataValue = async (path: string[]) => {
-    return this.getStoredDatabaseValue([FileDatabase.DATA_FOLDER, ...path]);
+    return this.getStoredDatabaseValue([S3BasicDataItemDriver.DATA_FOLDER, ...path]);
   };
 
   protected getItemPropertyValue = async (
@@ -265,18 +244,18 @@ export class FileDatabase implements IBasicDatabase {
   };
 
   protected removeIndexValue = async (path: string[]) => {
-    return this.removeDatabaseValue([FileDatabase.INDEX_FOLDER, ...path]);
+    return this.removeDatabaseValue([S3BasicDataItemDriver.INDEX_FOLDER, ...path]);
   };
 
   protected removeReverseIndexValue = async (path: string[]) => {
     return this.removeDatabaseValue([
-      FileDatabase.REVERSE_INDEX_FOLDER,
+      S3BasicDataItemDriver.REVERSE_INDEX_FOLDER,
       ...path,
     ]);
   };
 
   protected removeDataValue = async (path: string[]) => {
-    return this.removeDatabaseValue([FileDatabase.DATA_FOLDER, ...path]);
+    return this.removeDatabaseValue([S3BasicDataItemDriver.DATA_FOLDER, ...path]);
   };
 
   protected removeItemPropertyValue = async (
@@ -349,18 +328,18 @@ export class FileDatabase implements IBasicDatabase {
   };
 
   protected listIndexContentPaths = async (path: string[]) => {
-    return this.listDatabaseContentPaths([FileDatabase.INDEX_FOLDER, ...path]);
+    return this.listDatabaseContentPaths([S3BasicDataItemDriver.INDEX_FOLDER, ...path]);
   };
 
   protected listReverseIndexContentPaths = async (path: string[]) => {
     return this.listDatabaseContentPaths([
-      FileDatabase.REVERSE_INDEX_FOLDER,
+      S3BasicDataItemDriver.REVERSE_INDEX_FOLDER,
       ...path,
     ]);
   };
 
   protected listDataContentPaths = async (path: string[]) => {
-    return this.listDatabaseContentPaths([FileDatabase.DATA_FOLDER, ...path]);
+    return this.listDatabaseContentPaths([S3BasicDataItemDriver.DATA_FOLDER, ...path]);
   };
 
   protected findItemIdsByPropertyToken = async (
