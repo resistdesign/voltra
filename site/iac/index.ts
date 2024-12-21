@@ -116,9 +116,9 @@ const IaC = new SimpleCFT({
           phases: {
             install: {
               "runtime-versions": {
-                nodejs: 22,
+                nodejs: 20,
               },
-              commands: ["npm i yarn", "yarn"],
+              commands: ["yarn"],
             },
             build: {
               commands: ["yarn site:build:api"],
