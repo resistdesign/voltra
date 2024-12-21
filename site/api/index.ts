@@ -10,7 +10,7 @@ const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
   {
     path: "/hello",
     handler: async () => {
-      return "Hello, world!";
+      return "UPDATES! :D";
     },
     authConfig: {
       public: true,
