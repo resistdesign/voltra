@@ -107,7 +107,6 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
     const normalizedOrigin =
       typeof providedOrigin === "string" ? providedOrigin : "";
     const normalizedBody = Array.isArray(body) ? body : [body];
-    // TODO: Wildcard Path parts and such.
     const normalizedPath = getPathString(getPathArray(`${path}`));
     const route = routeMap[normalizedPath];
     const responseHeaders = getHeadersWithCORS(
