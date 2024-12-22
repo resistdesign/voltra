@@ -1,4 +1,3 @@
-import { DBRelatedItemDriver, DBServiceItemDriver } from "../ServiceTypes";
 import {
   TypeInfo,
   TypeInfoDataItem,
@@ -32,6 +31,7 @@ import {
   TYPE_INFO_ORM_SERVICE_ERRORS,
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
+import {DBRelatedItemDriver, DBServiceItemDriver} from "./drivers";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
