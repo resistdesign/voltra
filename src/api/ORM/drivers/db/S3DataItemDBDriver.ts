@@ -5,11 +5,7 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-import {
-  getBaseFileLocationInfo,
-  getFullFileKey,
-  getS3FileDriver,
-} from "../file";
+import { getBaseFileLocationInfo, getFullFileKey, S3FileDriver } from "../file";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
@@ -18,7 +14,7 @@ import {
   BaseFile,
   BaseFileLocationInfo,
   DBServiceItemDriver,
-  FileServiceDriver,
+  CloudFileServiceDriver,
 } from "../Types";
 import { ListItemsConfig } from "../../../../common";
 
@@ -49,14 +45,14 @@ export class S3DataItemDBDriver
   implements DBServiceItemDriver<BaseFileItem, "id">
 {
   protected s3: S3;
-  protected s3FileDriver: FileServiceDriver;
+  protected s3FileDriver: CloudFileServiceDriver;
 
   constructor(protected config: S3DataItemDBDriverConfig) {
     const { s3Config = {}, bucketName, urlExpirationInSeconds } = config;
 
     this.s3 = new S3(s3Config);
-    this.s3FileDriver = getS3FileDriver({
-      config: s3Config,
+    this.s3FileDriver = new S3FileDriver({
+      s3Config: s3Config,
       bucketName,
       urlExpirationInSeconds,
     });

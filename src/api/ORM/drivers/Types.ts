@@ -106,9 +106,9 @@ export type ListFilesResult = {
 };
 
 /**
- * A driver for a file service.
+ * An API for a cloud file service driver.
  * */
-export type FileServiceDriver = {
+export type CloudFileServiceDriver = {
   getFileUploadUrl: (
     file: BaseFileLocationInfo,
     baseDirectory?: string,
