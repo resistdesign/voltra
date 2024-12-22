@@ -150,10 +150,7 @@ export class S3BasicDBDriver implements BasicDBDriver {
   };
 
   protected indexPathExists = async (path: string[]) => {
-    return this.databasePathExists([
-      S3BasicDBDriver.INDEX_FOLDER,
-      ...path,
-    ]);
+    return this.databasePathExists([S3BasicDBDriver.INDEX_FOLDER, ...path]);
   };
 
   protected reverseIndexPathExists = async (path: string[]) => {
@@ -164,10 +161,7 @@ export class S3BasicDBDriver implements BasicDBDriver {
   };
 
   protected dataPathExists = async (path: string[]) => {
-    return this.databasePathExists([
-      S3BasicDBDriver.DATA_FOLDER,
-      ...path,
-    ]);
+    return this.databasePathExists([S3BasicDBDriver.DATA_FOLDER, ...path]);
   };
 
   protected storeDatabaseValue = async (path: string[], value: string = "") => {
@@ -229,10 +223,7 @@ export class S3BasicDBDriver implements BasicDBDriver {
   };
 
   protected getStoredIndexValue = async (path: string[]) => {
-    return this.getStoredDatabaseValue([
-      S3BasicDBDriver.INDEX_FOLDER,
-      ...path,
-    ]);
+    return this.getStoredDatabaseValue([S3BasicDBDriver.INDEX_FOLDER, ...path]);
   };
 
   protected getStoredReverseIndexValue = async (path: string[]) => {
@@ -243,10 +234,7 @@ export class S3BasicDBDriver implements BasicDBDriver {
   };
 
   protected getStoredDataValue = async (path: string[]) => {
-    return this.getStoredDatabaseValue([
-      S3BasicDBDriver.DATA_FOLDER,
-      ...path,
-    ]);
+    return this.getStoredDatabaseValue([S3BasicDBDriver.DATA_FOLDER, ...path]);
   };
 
   protected getItemPropertyValue = async (
@@ -262,10 +250,7 @@ export class S3BasicDBDriver implements BasicDBDriver {
   };
 
   protected removeIndexValue = async (path: string[]) => {
-    return this.removeDatabaseValue([
-      S3BasicDBDriver.INDEX_FOLDER,
-      ...path,
-    ]);
+    return this.removeDatabaseValue([S3BasicDBDriver.INDEX_FOLDER, ...path]);
   };
 
   protected removeReverseIndexValue = async (path: string[]) => {
@@ -276,10 +261,7 @@ export class S3BasicDBDriver implements BasicDBDriver {
   };
 
   protected removeDataValue = async (path: string[]) => {
-    return this.removeDatabaseValue([
-      S3BasicDBDriver.DATA_FOLDER,
-      ...path,
-    ]);
+    return this.removeDatabaseValue([S3BasicDBDriver.DATA_FOLDER, ...path]);
   };
 
   protected removeItemPropertyValue = async (
@@ -409,7 +391,10 @@ export class S3BasicDBDriver implements BasicDBDriver {
     return Array.from(uniqueItemIds);
   };
 
-  createItem = async (
+  /**
+   * Create a new item.
+   */
+  public createItem = async (
     type: string,
     id: string,
     item: Record<string, string>,
@@ -419,7 +404,14 @@ export class S3BasicDBDriver implements BasicDBDriver {
     }
   };
 
-  readItem = async (type: string, id: string, getProperties?: string[]) => {
+  /**
+   * Read an item.
+   * */
+  public readItem = async (
+    type: string,
+    id: string,
+    getProperties?: string[],
+  ) => {
     const item: Record<string, string> = {};
     const itemPropertyPaths = await this.listDataContentPaths([type, id]);
 
@@ -442,7 +434,10 @@ export class S3BasicDBDriver implements BasicDBDriver {
     return item;
   };
 
-  updateItem = async (
+  /**
+   * Update an item.
+   * */
+  public updateItem = async (
     type: string,
     id: string,
     item: Record<string, string | null>,
@@ -458,7 +453,10 @@ export class S3BasicDBDriver implements BasicDBDriver {
     }
   };
 
-  deleteItem = async (type: string, id: string) => {
+  /**
+   * Delete an item.
+   * */
+  public deleteItem = async (type: string, id: string) => {
     const itemPropertyPaths = await this.listDataContentPaths([type, id]);
 
     for (const itemPropertyPath of itemPropertyPaths) {
@@ -470,7 +468,10 @@ export class S3BasicDBDriver implements BasicDBDriver {
     }
   };
 
-  findItems = async (
+  /**
+   * Find items.
+   * */
+  public findItems = async (
     type: string,
     properties: string[],
     value: string,
