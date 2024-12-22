@@ -13,7 +13,11 @@ import {
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
 
-import { BaseFile, BaseFileLocationInfo, CloudFileServiceDriver } from "../Types";
+import {
+  BaseFile,
+  BaseFileLocationInfo,
+  CloudFileServiceDriver,
+} from "../Types";
 
 export const getFullFileKey = ({
   file,
@@ -59,6 +63,9 @@ export class S3FileDriver implements CloudFileServiceDriver {
     this.s3 = new S3(s3Config);
   }
 
+  /**
+   * Get a signed URL for uploading a file.
+   */
   public getFileUploadUrl = async (
     file: BaseFileLocationInfo,
     baseDirectory?: string,
@@ -74,6 +81,9 @@ export class S3FileDriver implements CloudFileServiceDriver {
     });
   };
 
+  /**
+   * Get a signed URL for downloading a file.
+   */
   public getFileDownloadUrl = async (
     file: BaseFileLocationInfo,
     baseDirectory?: string,
@@ -89,6 +99,9 @@ export class S3FileDriver implements CloudFileServiceDriver {
     });
   };
 
+  /**
+   * Delete a file.
+   */
   public deleteFile = async (
     file: BaseFileLocationInfo,
     baseDirectory?: string,
@@ -102,6 +115,9 @@ export class S3FileDriver implements CloudFileServiceDriver {
     );
   };
 
+  /**
+   * List the files and directories in a directory.
+   */
   public listFiles = async (
     path?: string,
     baseDirectory?: string,
