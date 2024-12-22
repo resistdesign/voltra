@@ -40,7 +40,7 @@ export const S3_DB_SERVICE_ITEM_DRIVER_ERRORS = {
 /**
  * Use S3 as a {@link DBServiceItemDriver} for {@link BaseFileItem}s.
  * */
-export const getS3DBServiceItemDriver = ({
+export const getS3DataItemDBDriver = ({
   config = {},
   bucketName,
   baseDirectory,
