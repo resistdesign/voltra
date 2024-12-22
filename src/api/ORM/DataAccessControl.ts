@@ -1,4 +1,8 @@
-import {LiteralValue, TypeInfo, TypeInfoDataItem} from "../../common/TypeParsing/TypeInfo";
+import {
+  LiteralValue,
+  TypeInfo,
+  TypeInfoDataItem,
+} from "../../common/TypeParsing/TypeInfo";
 
 /**
  * The possible types of a data access control (DAC) constraint.
@@ -149,8 +153,11 @@ export const getResourceAccessByDACRole = (
   fullResourcePath: LiteralValue[],
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
+  cachedFlattenedConstraints?: DACConstraint[],
 ): DACAccessResult => {
-  const flattenedConstraints = getFlattenedDACConstraints(role, getDACRoleById);
+  const flattenedConstraints = cachedFlattenedConstraints
+    ? cachedFlattenedConstraints
+    : getFlattenedDACConstraints(role, getDACRoleById);
 
   let allowed = false,
     denied = false,
@@ -210,6 +217,7 @@ export const getDACRoleHasAccessToDataItem = (
   typeInfo: TypeInfo,
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
+  cachedFlattenedConstraints?: DACConstraint[],
 ): DACDataItemResourceAccessResultMap => {
   const resultMap: DACDataItemResourceAccessResultMap = {
     primaryAllowed: false,
@@ -228,8 +236,16 @@ export const getDACRoleHasAccessToDataItem = (
     ] as LiteralValue;
     const dataItemFields = Object.keys(dataItem);
     const primaryResourcePath = [typeName, primaryFieldValue];
+    const internallyCachedFlattenedConstraints = cachedFlattenedConstraints
+      ? cachedFlattenedConstraints
+      : getFlattenedDACConstraints(role, getDACRoleById);
     const { allowed: primaryResourceAllowed, denied: primaryResourceDenied } =
-      getResourceAccessByDACRole(primaryResourcePath, role, getDACRoleById);
+      getResourceAccessByDACRole(
+        primaryResourcePath,
+        role,
+        getDACRoleById,
+        internallyCachedFlattenedConstraints,
+      );
 
     resultMap.primaryAllowed = primaryResourceAllowed && !primaryResourceDenied;
 
@@ -247,7 +263,12 @@ export const getDACRoleHasAccessToDataItem = (
             dataItem[dIF] as LiteralValue,
           ];
           const { allowed: fieldResourceAllowed, denied: fieldResourceDenied } =
-            getResourceAccessByDACRole(fieldResourcePath, role, getDACRoleById);
+            getResourceAccessByDACRole(
+              fieldResourcePath,
+              role,
+              getDACRoleById,
+              internallyCachedFlattenedConstraints,
+            );
 
           resultMap.fieldsResources = {
             ...resultMap.fieldsResources,
