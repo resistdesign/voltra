@@ -1,3 +1,3 @@
-export * from "./S3DBServiceItem";
-export * from "./S3BasicDatabaseDriver";
+export * from "./S3DataItemDBDriver";
+export * from "./S3BasicDBDriver";
 export { IBasicDatabaseDriver } from "./Types";
