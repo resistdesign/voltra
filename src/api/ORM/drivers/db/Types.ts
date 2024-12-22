@@ -1,5 +1,5 @@
 /**
- * The basic API for a database driver with CRUD and Find.
+ * A basic API for a database driver with CRUD and Find.
  * */
 export interface IBasicDatabaseDriver {
   /**
