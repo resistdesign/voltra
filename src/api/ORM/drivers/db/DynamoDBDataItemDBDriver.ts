@@ -1,5 +1,5 @@
 import { DataItemDBDriver } from "../Types";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { ListItemsConfig, ListItemsResults } from "../../../../common";
 
 /**
@@ -29,7 +29,11 @@ export class DynamoDBDataItemDBDriver<
   public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
-    // Implement this method.
+    // TODO: Marshal input.
+    const command = new PutItemCommand({});
+    const result = await this.dynamoDBClient.send(command);
+
+    // TODO: Marshal output.
   };
 
   /**
