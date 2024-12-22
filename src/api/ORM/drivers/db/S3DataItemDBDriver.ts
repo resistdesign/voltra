@@ -59,6 +59,9 @@ export class S3DataItemDBDriver
     });
   }
 
+  /**
+   * Create a new @{@link BaseFileItem}.
+   * */
   public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
     const { readOnly, bucketName, baseDirectory } = this.config;
 
@@ -82,6 +85,9 @@ export class S3DataItemDBDriver
     });
   };
 
+  /**
+   * Read a @{@link BaseFileItem} by its id.
+   * */
   public readItem = async (id: string) => {
     const { bucketName, baseDirectory } = this.config;
 
@@ -120,6 +126,9 @@ export class S3DataItemDBDriver
     }
   };
 
+  /**
+   * Update a @{@link BaseFileItem}.
+   * */
   public updateItem = async (item: Partial<BaseFileItem>) => {
     const { directory, name, id } = item;
     const { readOnly, bucketName, baseDirectory } = this.config;
@@ -160,6 +169,9 @@ export class S3DataItemDBDriver
     return true;
   };
 
+  /**
+   * Delete a @{@link BaseFileItem} by its id.
+   */
   public deleteItem = async (id: string) => {
     const { readOnly, baseDirectory } = this.config;
 
@@ -180,6 +192,9 @@ export class S3DataItemDBDriver
     return true;
   };
 
+  /**
+   * List @{@link BaseFileItem}s by a given criteria.
+   */
   public listItems = async (config: ListItemsConfig) => {
     const { baseDirectory } = this.config;
     const {
