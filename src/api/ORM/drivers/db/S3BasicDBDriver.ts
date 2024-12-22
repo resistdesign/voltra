@@ -7,7 +7,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
-import { IBasicDatabaseDriver } from "../Types";
+import { BasicDBDriver } from "../Types";
 
 export const tokenizeText = (text: string): string[] =>
   text
@@ -31,7 +31,7 @@ export const expendPath = (path: string): string[] =>
 /**
  * A basic database driver that stores objects in S3 with _advanced_ indexing for searching.
  * */
-export class S3BasicDBDriver implements IBasicDatabaseDriver {
+export class S3BasicDBDriver implements BasicDBDriver {
   public static INDEX_FOLDER = "INDEX";
   public static REVERSE_INDEX_FOLDER = "REVERSE_INDEX";
   public static INDEX_MARKER = "TRUE";

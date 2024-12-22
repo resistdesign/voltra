@@ -13,7 +13,7 @@ import {
 import {
   BaseFile,
   BaseFileLocationInfo,
-  DBServiceItemDriver,
+  DataItemDBDriver,
   CloudFileServiceDriver,
 } from "../Types";
 import { ListItemsConfig } from "../../../../common";
@@ -39,10 +39,10 @@ export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
 };
 
 /**
- * Use S3 as a {@link DBServiceItemDriver} for {@link BaseFileItem}s.
+ * Use S3 as a {@link DataItemDBDriver} for {@link BaseFileItem}s.
  * */
 export class S3DataItemDBDriver
-  implements DBServiceItemDriver<BaseFileItem, "id">
+  implements DataItemDBDriver<BaseFileItem, "id">
 {
   protected s3: S3;
   protected s3FileDriver: CloudFileServiceDriver;
