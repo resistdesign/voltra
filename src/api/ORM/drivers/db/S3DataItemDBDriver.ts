@@ -14,8 +14,7 @@ import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
 } from "../../../../common/SearchUtils";
-import { DBServiceItemDriver } from "./Types";
-import { BaseFile, BaseFileLocationInfo } from "../file/Types";
+import {BaseFile, BaseFileLocationInfo, DBServiceItemDriver} from "../Types";
 
 export type BaseFileItem = {
   id: string;

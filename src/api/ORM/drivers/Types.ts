@@ -2,7 +2,7 @@ import {
   ItemRelationshipInfo,
   ListItemsConfig,
   ListItemsResults,
-} from "../../../../common";
+} from "../../../common";
 
 /**
  * A basic API for a database driver with CRUD and Find.
@@ -68,6 +68,7 @@ export type DBServiceItemDriver<
     config: ListItemsConfig,
   ) => Promise<boolean | ListItemsResults<ItemType>>;
 };
+
 /**
  * A driver for a database service that handles relationship items.
  * */
@@ -75,3 +76,55 @@ export type DBRelatedItemDriver = DBServiceItemDriver<
   ItemRelationshipInfo,
   "id"
 >;
+
+/**
+ * The location information for a file.
+ * */
+export type BaseFileLocationInfo = {
+  directory?: string;
+  name: string;
+};
+
+/**
+ * The most integral information about a file.
+ * */
+export type BaseFile = BaseFileLocationInfo & {
+  updatedOn: number;
+  mimeType: string;
+  sizeInBytes: number;
+  isDirectory?: boolean;
+  uploadUrl?: string;
+  downloadUrl?: string;
+};
+
+/**
+ * The result returned when listing files.
+ * */
+export type ListFilesResult = {
+  cursor?: string;
+  files: BaseFile[];
+};
+
+/**
+ * A driver for a file service.
+ * */
+export type FileServiceDriver = {
+  getFileUploadUrl: (
+    file: BaseFileLocationInfo,
+    baseDirectory?: string,
+  ) => Promise<string>;
+  getFileDownloadUrl: (
+    file: BaseFileLocationInfo,
+    baseDirectory?: string,
+  ) => Promise<string>;
+  deleteFile: (
+    file: BaseFileLocationInfo,
+    baseDirectory?: string,
+  ) => Promise<void>;
+  listFiles: (
+    path?: string,
+    baseDirectory?: string,
+    maxNumberOfFiles?: number,
+    cursor?: string,
+  ) => Promise<ListFilesResult>;
+};
