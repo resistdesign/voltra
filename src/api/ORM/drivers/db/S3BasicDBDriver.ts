@@ -7,7 +7,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
-import { IBasicDatabaseDriver } from "./Types";
+import { IBasicDatabaseDriver } from "../Types";
 
 export const tokenizeText = (text: string): string[] =>
   text

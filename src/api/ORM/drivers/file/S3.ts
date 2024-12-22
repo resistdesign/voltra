@@ -12,7 +12,8 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-import { BaseFile, BaseFileLocationInfo, FileServiceDriver } from "./Types";
+
+import {BaseFile, BaseFileLocationInfo, FileServiceDriver} from "../Types";
 
 export const getFullFileKey = ({
   file,
