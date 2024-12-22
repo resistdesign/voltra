@@ -31,7 +31,7 @@ import {
   TYPE_INFO_ORM_SERVICE_ERRORS,
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
-import {DBRelatedItemDriver, DBServiceItemDriver} from "./drivers";
+import {ItemRelationshipDBDriver, DataItemDBDriver} from "./drivers";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -51,11 +51,11 @@ export const cleanRelationshipItem = (
  * */
 export type TypeInfoORMServiceConfig = {
   typeInfoMap: TypeInfoMap;
-  getDriver: (typeName: string) => DBServiceItemDriver<any, any>;
+  getDriver: (typeName: string) => DataItemDBDriver<any, any>;
   getRelationshipDriver: (
     typeName: string,
     fieldName: string,
-  ) => DBRelatedItemDriver;
+  ) => ItemRelationshipDBDriver;
   createRelationshipCleanupItem?: (
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
@@ -80,7 +80,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   protected getDriverInternal = (
     typeName: string,
-  ): DBServiceItemDriver<any, any> => {
+  ): DataItemDBDriver<any, any> => {
     const driver = this.config.getDriver(typeName);
 
     if (!driver) {
@@ -93,7 +93,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected getRelationshipDriverInternal = (
     typeName: string,
     fieldName: string,
-  ): DBRelatedItemDriver => {
+  ): ItemRelationshipDBDriver => {
     const driver = this.config.getRelationshipDriver(typeName, fieldName);
 
     if (!driver) {

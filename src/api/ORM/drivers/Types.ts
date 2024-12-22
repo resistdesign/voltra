@@ -5,9 +5,9 @@ import {
 } from "../../../common";
 
 /**
- * A basic API for a database driver with CRUD and Find.
+ * The basic API for a database driver with CRUD and Find.
  * */
-export interface IBasicDatabaseDriver {
+export type BasicDBDriver = {
   /**
    * Create an item in the database.
    * */
@@ -45,12 +45,12 @@ export interface IBasicDatabaseDriver {
     value: string,
     getProperties?: string[],
   ) => Promise<Record<string, string>[]>;
-}
+};
 
 /**
- * A driver for a database service.
+ * The API for a database driver.
  * */
-export type DBServiceItemDriver<
+export type DataItemDBDriver<
   ItemType extends Record<any, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
@@ -70,9 +70,9 @@ export type DBServiceItemDriver<
 };
 
 /**
- * A driver for a database service that handles relationship items.
+ * The API for a database driver that handles item relationships.
  * */
-export type DBRelatedItemDriver = DBServiceItemDriver<
+export type ItemRelationshipDBDriver = DataItemDBDriver<
   ItemRelationshipInfo,
   "id"
 >;
