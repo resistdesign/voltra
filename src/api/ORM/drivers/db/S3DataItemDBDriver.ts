@@ -26,7 +26,10 @@ export type BaseFileItem = {
   id: string;
 } & BaseFile;
 
-export type S3DBServiceItemDriverConfig = {
+/**
+ * The configuration for an {@link S3DataItemDBDriver}.
+ * */
+export type S3DataItemDBDriverConfig = {
   s3Config?: S3ClientConfig;
   bucketName: string;
   baseDirectory: string;
@@ -34,7 +37,7 @@ export type S3DBServiceItemDriverConfig = {
   readOnly?: boolean;
 };
 
-export const S3_DB_SERVICE_ITEM_DRIVER_ERRORS = {
+export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
   INVALID_REQUEST: "INVALID_REQUEST",
   MISSING_ID: "MISSING_ID",
 };
@@ -48,7 +51,7 @@ export class S3DataItemDBDriver
   protected s3: S3;
   protected s3FileDriver: FileServiceDriver;
 
-  constructor(protected config: S3DBServiceItemDriverConfig) {
+  constructor(protected config: S3DataItemDBDriverConfig) {
     const { s3Config = {}, bucketName, urlExpirationInSeconds } = config;
 
     this.s3 = new S3(s3Config);
@@ -66,7 +69,7 @@ export class S3DataItemDBDriver
     const { readOnly, bucketName, baseDirectory } = this.config;
 
     if (readOnly) {
-      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
+      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
     }
 
     await this.s3.send(
@@ -92,7 +95,7 @@ export class S3DataItemDBDriver
     const { bucketName, baseDirectory } = this.config;
 
     if (typeof id === "undefined") {
-      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
       const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
       const {
@@ -134,11 +137,11 @@ export class S3DataItemDBDriver
     const { readOnly, bucketName, baseDirectory } = this.config;
 
     if (readOnly) {
-      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
+      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
     }
 
     if (typeof id === "undefined") {
-      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
       const oldItemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
       const { name: oldName, directory: oldDirectory } = oldItemLoc;
@@ -176,11 +179,11 @@ export class S3DataItemDBDriver
     const { readOnly, baseDirectory } = this.config;
 
     if (readOnly) {
-      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
+      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
     }
 
     if (typeof id === "undefined") {
-      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
       await this.readItem(id);
       await this.s3FileDriver.deleteFile(
