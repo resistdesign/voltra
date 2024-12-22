@@ -14,14 +14,20 @@ import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
 } from "../../../../common/SearchUtils";
-import {BaseFile, BaseFileLocationInfo, DBServiceItemDriver} from "../Types";
+import {
+  BaseFile,
+  BaseFileLocationInfo,
+  DBServiceItemDriver,
+  FileServiceDriver,
+} from "../Types";
+import { ListItemsConfig } from "../../../../common";
 
 export type BaseFileItem = {
   id: string;
 } & BaseFile;
 
 export type S3DBServiceItemDriverConfig = {
-  config?: S3ClientConfig;
+  s3Config?: S3ClientConfig;
   bucketName: string;
   baseDirectory: string;
   urlExpirationInSeconds?: number;
@@ -36,188 +42,198 @@ export const S3_DB_SERVICE_ITEM_DRIVER_ERRORS = {
 /**
  * Use S3 as a {@link DBServiceItemDriver} for {@link BaseFileItem}s.
  * */
-export const getS3DataItemDBDriver = ({
-  config = {},
-  bucketName,
-  baseDirectory,
-  urlExpirationInSeconds,
-  readOnly = false,
-}: S3DBServiceItemDriverConfig): DBServiceItemDriver<BaseFileItem, "id"> => {
-  const s3 = new S3(config);
-  const s3FileDriver = getS3FileDriver({
-    config,
-    bucketName,
-    urlExpirationInSeconds,
-  });
-  const driver: DBServiceItemDriver<BaseFileItem, "id"> = {
-    createItem: async (item) => {
-      await s3.send(
-        new PutObjectCommand({
+export class S3DataItemDBDriver
+  implements DBServiceItemDriver<BaseFileItem, "id">
+{
+  protected s3: S3;
+  protected s3FileDriver: FileServiceDriver;
+
+  constructor(protected config: S3DBServiceItemDriverConfig) {
+    const { s3Config = {}, bucketName, urlExpirationInSeconds } = config;
+
+    this.s3 = new S3(s3Config);
+    this.s3FileDriver = getS3FileDriver({
+      config: s3Config,
+      bucketName,
+      urlExpirationInSeconds,
+    });
+  }
+
+  public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
+    const { readOnly, bucketName, baseDirectory } = this.config;
+
+    if (readOnly) {
+      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
+    }
+
+    await this.s3.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: getFullFileKey({
+          file: item as BaseFileLocationInfo,
+          baseDirectory,
+        }),
+        Body: "",
+      }),
+    );
+
+    return getFullFileKey({
+      file: item as BaseFileLocationInfo,
+    });
+  };
+
+  public readItem = async (id: string) => {
+    const { bucketName, baseDirectory } = this.config;
+
+    if (typeof id === "undefined") {
+      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+    } else {
+      const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
+      const {
+        ContentType = "",
+        ContentLength = 0,
+        LastModified,
+        Metadata: {} = {},
+      } = await this.s3.send(
+        new HeadObjectCommand({
           Bucket: bucketName,
           Key: getFullFileKey({
-            file: item as BaseFileLocationInfo,
+            file: itemLoc,
             baseDirectory,
           }),
-          Body: "",
         }),
       );
+      const item: BaseFile = {
+        ...itemLoc,
+        updatedOn: LastModified?.getTime() || 0,
+        mimeType: ContentType,
+        sizeInBytes: ContentLength,
+        isDirectory: ContentType === "application/x-directory",
+      };
 
-      return getFullFileKey({
-        file: item as BaseFileLocationInfo,
-      });
-    },
-    readItem: async (id) => {
-      if (typeof id === "undefined") {
-        throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
-      } else {
-        const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
-        const {
-          ContentType = "",
-          ContentLength = 0,
-          LastModified,
-          Metadata: {} = {},
-        } = await s3.send(
-          new HeadObjectCommand({
+      return {
+        id: getFullFileKey({
+          file: itemLoc,
+        }),
+        ...item,
+      };
+    }
+  };
+
+  public updateItem = async (item: Partial<BaseFileItem>) => {
+    const { directory, name, id } = item;
+    const { readOnly, bucketName, baseDirectory } = this.config;
+
+    if (readOnly) {
+      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
+    }
+
+    if (typeof id === "undefined") {
+      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+    } else {
+      const oldItemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
+      const { name: oldName, directory: oldDirectory } = oldItemLoc;
+
+      if (name && (name !== oldName || directory !== oldDirectory)) {
+        await this.s3.send(
+          new CopyObjectCommand({
             Bucket: bucketName,
             Key: getFullFileKey({
-              file: itemLoc,
+              file: {
+                directory,
+                name,
+              },
+              baseDirectory,
+            }),
+            CopySource: getFullFileKey({
+              file: oldItemLoc,
               baseDirectory,
             }),
           }),
         );
-        const item: BaseFile = {
-          ...itemLoc,
-          updatedOn: LastModified?.getTime() || 0,
-          mimeType: ContentType,
-          sizeInBytes: ContentLength,
-          isDirectory: ContentType === "application/x-directory",
-        };
-
-        return {
-          id: getFullFileKey({
-            file: itemLoc,
-          }),
-          ...item,
-        };
-      }
-    },
-    updateItem: async (item) => {
-      const { directory, name, id } = item;
-
-      if (typeof id === "undefined") {
-        throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
-      } else {
-        const oldItemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
-        const { name: oldName, directory: oldDirectory } = oldItemLoc;
-
-        if (name && (name !== oldName || directory !== oldDirectory)) {
-          await s3.send(
-            new CopyObjectCommand({
-              Bucket: bucketName,
-              Key: getFullFileKey({
-                file: {
-                  directory,
-                  name,
-                },
-                baseDirectory,
-              }),
-              CopySource: getFullFileKey({
-                file: oldItemLoc,
-                baseDirectory,
-              }),
-            }),
-          );
-          await s3FileDriver.deleteFile(oldItemLoc, baseDirectory);
-        }
-
-        await driver.readItem(id);
+        await this.s3FileDriver.deleteFile(oldItemLoc, baseDirectory);
       }
 
-      return true;
-    },
-    deleteItem: async (id) => {
-      if (typeof id === "undefined") {
-        throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
-      } else {
-        await driver.readItem(id);
-        await s3FileDriver.deleteFile(
-          getBaseFileLocationInfo(id),
-          baseDirectory,
-        );
-      }
+      await this.readItem(id);
+    }
 
-      return true;
-    },
-    listItems: async (config) => {
-      const {
-        itemsPerPage = Infinity,
-        cursor,
-        sortFields = [],
-        criteria,
-        checkExistence,
-      } = config;
-
-      let filteredFiles: BaseFileItem[] = [],
-        initiatedListing: boolean = false,
-        nextCursor: string | undefined = undefined;
-
-      while (
-        (checkExistence || filteredFiles.length < itemsPerPage) &&
-        (!initiatedListing || nextCursor)
-      ) {
-        const { files: baseFileList = [], cursor: newCursor } =
-          await s3FileDriver.listFiles(
-            undefined,
-            baseDirectory,
-            checkExistence ? 100 : itemsPerPage - filteredFiles.length,
-            cursor,
-          );
-        const currentFileItems = baseFileList.map((bF) => ({
-          id: getFullFileKey({
-            file: bF,
-          }),
-          ...bF,
-        }));
-
-        initiatedListing = true;
-
-        filteredFiles = criteria
-          ? (getFilterTypeInfoDataItemsBySearchCriteria(
-              criteria,
-              currentFileItems,
-            ) as BaseFileItem[])
-          : currentFileItems;
-        nextCursor = newCursor;
-
-        if (checkExistence && filteredFiles.length > 0) {
-          break;
-        }
-      }
-
-      if (checkExistence) {
-        return filteredFiles.length > 0;
-      } else {
-        return {
-          items: getSortedItems(sortFields, filteredFiles) as BaseFileItem[],
-          cursor: nextCursor,
-        };
-      }
-    },
+    return true;
   };
 
-  return readOnly
-    ? {
-        createItem: async () => {
-          throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
-        },
-        readItem: driver.readItem,
-        updateItem: async () => {
-          throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
-        },
-        deleteItem: async () => {
-          throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
-        },
-        listItems: driver.listItems,
+  public deleteItem = async (id: string) => {
+    const { readOnly, baseDirectory } = this.config;
+
+    if (readOnly) {
+      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.INVALID_REQUEST);
+    }
+
+    if (typeof id === "undefined") {
+      throw new Error(S3_DB_SERVICE_ITEM_DRIVER_ERRORS.MISSING_ID);
+    } else {
+      await this.readItem(id);
+      await this.s3FileDriver.deleteFile(
+        getBaseFileLocationInfo(id),
+        baseDirectory,
+      );
+    }
+
+    return true;
+  };
+
+  public listItems = async (config: ListItemsConfig) => {
+    const { baseDirectory } = this.config;
+    const {
+      itemsPerPage = Infinity,
+      cursor,
+      sortFields = [],
+      criteria,
+      checkExistence,
+    } = config;
+
+    let filteredFiles: BaseFileItem[] = [],
+      initiatedListing: boolean = false,
+      nextCursor: string | undefined = undefined;
+
+    while (
+      (checkExistence || filteredFiles.length < itemsPerPage) &&
+      (!initiatedListing || nextCursor)
+    ) {
+      const { files: baseFileList = [], cursor: newCursor } =
+        await this.s3FileDriver.listFiles(
+          undefined,
+          baseDirectory,
+          checkExistence ? 100 : itemsPerPage - filteredFiles.length,
+          cursor,
+        );
+      const currentFileItems = baseFileList.map((bF) => ({
+        id: getFullFileKey({
+          file: bF,
+        }),
+        ...bF,
+      }));
+
+      initiatedListing = true;
+
+      filteredFiles = criteria
+        ? (getFilterTypeInfoDataItemsBySearchCriteria(
+            criteria,
+            currentFileItems,
+          ) as BaseFileItem[])
+        : currentFileItems;
+      nextCursor = newCursor;
+
+      if (checkExistence && filteredFiles.length > 0) {
+        break;
       }
-    : driver;
-};
+    }
+
+    if (checkExistence) {
+      return filteredFiles.length > 0;
+    } else {
+      return {
+        items: getSortedItems(sortFields, filteredFiles) as BaseFileItem[],
+        cursor: nextCursor,
+      };
+    }
+  };
+}
