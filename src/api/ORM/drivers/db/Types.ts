@@ -1,3 +1,9 @@
+import {
+  ItemRelationshipInfo,
+  ListItemsConfig,
+  ListItemsResults,
+} from "../../../../common";
+
 /**
  * A basic API for a database driver with CRUD and Find.
  * */
@@ -40,3 +46,32 @@ export interface IBasicDatabaseDriver {
     getProperties?: string[],
   ) => Promise<Record<string, string>[]>;
 }
+
+/**
+ * A driver for a database service.
+ * */
+export type DBServiceItemDriver<
+  ItemType extends Record<any, any>,
+  UniquelyIdentifyingFieldName extends keyof ItemType,
+> = {
+  createItem: (
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+  ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
+  readItem: (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+  ) => Promise<ItemType>;
+  updateItem: (updatedItem: Partial<ItemType>) => Promise<boolean>;
+  deleteItem: (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+  ) => Promise<boolean>;
+  listItems: (
+    config: ListItemsConfig,
+  ) => Promise<boolean | ListItemsResults<ItemType>>;
+};
+/**
+ * A driver for a database service that handles relationship items.
+ * */
+export type DBRelatedItemDriver = DBServiceItemDriver<
+  ItemRelationshipInfo,
+  "id"
+>;
