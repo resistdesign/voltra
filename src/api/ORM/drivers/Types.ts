@@ -57,18 +57,18 @@ export type DataItemDBDriver<
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
-  // TODO: Specific fields.
   readItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ) => Promise<ItemType>;
+    selectedFields?: (keyof ItemType)[],
+  ) => Promise<Partial<ItemType>>;
   updateItem: (updatedItem: Partial<ItemType>) => Promise<boolean>;
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<boolean>;
-  // TODO: Specific fields.
   listItems: (
     config: ListItemsConfig,
-  ) => Promise<boolean | ListItemsResults<ItemType>>;
+    selectedFields?: (keyof ItemType)[],
+  ) => Promise<boolean | ListItemsResults<Partial<ItemType>>>;
 };
 
 /**

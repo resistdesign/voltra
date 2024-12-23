@@ -13,10 +13,11 @@ import {
 import {
   BaseFile,
   BaseFileLocationInfo,
-  DataItemDBDriver,
   CloudFileServiceDriver,
+  DataItemDBDriver,
 } from "../Types";
 import { ListItemsConfig } from "../../../../common";
+import { getDataItemWithOnlySelectedFields } from "./Utils";
 
 export type BaseFileItem = {
   id: string;
@@ -87,7 +88,10 @@ export class S3DataItemDBDriver
   /**
    * Read a @{@link BaseFileItem} by its id.
    * */
-  public readItem = async (id: string) => {
+  public readItem = async (
+    id: string,
+    selectFields?: (keyof BaseFileItem)[],
+  ) => {
     const { bucketName, baseDirectory } = this.config;
 
     if (typeof id === "undefined") {
@@ -115,13 +119,12 @@ export class S3DataItemDBDriver
         sizeInBytes: ContentLength,
         isDirectory: ContentType === "application/x-directory",
       };
+      const itemWithOnlySelectedFields = getDataItemWithOnlySelectedFields(
+        item,
+        selectFields,
+      ) as Partial<BaseFileItem>;
 
-      return {
-        id: getFullFileKey({
-          file: itemLoc,
-        }),
-        ...item,
-      };
+      return itemWithOnlySelectedFields;
     }
   };
 
@@ -194,7 +197,10 @@ export class S3DataItemDBDriver
   /**
    * List @{@link BaseFileItem}s by a given criteria.
    */
-  public listItems = async (config: ListItemsConfig) => {
+  public listItems = async (
+    config: ListItemsConfig,
+    selectFields?: (keyof BaseFileItem)[],
+  ) => {
     const { baseDirectory } = this.config;
     const {
       itemsPerPage = Infinity,
@@ -204,7 +210,7 @@ export class S3DataItemDBDriver
       checkExistence,
     } = config;
 
-    let filteredFiles: BaseFileItem[] = [],
+    let filteredFiles: Partial<BaseFileItem>[] = [],
       initiatedListing: boolean = false,
       nextCursor: string | undefined = undefined;
 
@@ -235,6 +241,13 @@ export class S3DataItemDBDriver
           ) as BaseFileItem[])
         : currentFileItems;
       nextCursor = newCursor;
+      filteredFiles = filteredFiles.map(
+        (f) =>
+          getDataItemWithOnlySelectedFields(
+            f,
+            selectFields,
+          ) as Partial<BaseFileItem>,
+      );
 
       if (checkExistence && filteredFiles.length > 0) {
         break;
