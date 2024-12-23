@@ -7,12 +7,17 @@ import { v4 as UUIDV4 } from "uuid";
 /**
  * The configuration for the {@link DynamoDBDataItemDBDriver}.
  * */
-export type DynamoDBDataItemDBDriverConfig = {
+export type DynamoDBDataItemDBDriverConfig<
+  ItemType extends Record<any, any>,
+  UniquelyIdentifyingFieldName extends keyof ItemType,
+> = {
   dynamoDBClientConfig: any;
   tableName: string;
-  uniquelyIdentifyingFieldName: string;
-  // TODO: Maybe add a function for generating new `uniquelyIdentifyingFieldName` values.
+  uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
+  generateUniqueIdentifier?: (targetItem: ItemType) => string;
 };
+
+// TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
 
 /**
  * A {@link DataItemDBDriver} that uses DynamoDB as its database.
@@ -24,7 +29,12 @@ export class DynamoDBDataItemDBDriver<
 {
   protected dynamoDBClient: DynamoDBClient;
 
-  constructor(protected config: DynamoDBDataItemDBDriverConfig) {
+  constructor(
+    protected config: DynamoDBDataItemDBDriverConfig<
+      ItemType,
+      UniquelyIdentifyingFieldName
+    >,
+  ) {
     this.dynamoDBClient = new DynamoDBClient(config.dynamoDBClientConfig);
   }
 
@@ -34,11 +44,19 @@ export class DynamoDBDataItemDBDriver<
   public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
-    const { tableName, uniquelyIdentifyingFieldName } = this.config;
-    const newItemId = UUIDV4();
+    const {
+      tableName,
+      uniquelyIdentifyingFieldName,
+      generateUniqueIdentifier = () => UUIDV4(),
+    } = this.config;
+    const {
+      [uniquelyIdentifyingFieldName]: _unusedId,
+      ...cleanNewItem
+    }: ItemType = newItem as any;
+    const newItemId = generateUniqueIdentifier(cleanNewItem as ItemType);
     const cleanNewItemWithId: ItemType = {
       [uniquelyIdentifyingFieldName]: newItemId,
-      ...newItem,
+      ...cleanNewItem,
     } as any;
     const command = new PutItemCommand({
       TableName: tableName,
