@@ -57,6 +57,7 @@ export type DataItemDBDriver<
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
+  // TODO: Specific fields.
   readItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<ItemType>;
@@ -64,6 +65,7 @@ export type DataItemDBDriver<
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<boolean>;
+  // TODO: Specific fields.
   listItems: (
     config: ListItemsConfig,
   ) => Promise<boolean | ListItemsResults<ItemType>>;
