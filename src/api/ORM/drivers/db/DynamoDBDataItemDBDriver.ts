@@ -1,8 +1,18 @@
 import { DataItemDBDriver } from "../Types";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+} from "@aws-sdk/client-dynamodb";
 import { ListItemsConfig, ListItemsResults } from "../../../../common";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
+import { removeTypeReferenceFieldsFromDataItem } from "../../../../common/TypeParsing/Utils";
+import { TypeInfo } from "../../../../common/TypeParsing/TypeInfo";
+
+export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
+  ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
+};
 
 /**
  * The configuration for the {@link DynamoDBDataItemDBDriver}.
@@ -12,6 +22,7 @@ export type DynamoDBDataItemDBDriverConfig<
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   dynamoDBClientConfig: any;
+  typeInfo: TypeInfo;
   tableName: string;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   generateUniqueIdentifier?: (targetItem: ItemType) => string;
@@ -45,6 +56,7 @@ export class DynamoDBDataItemDBDriver<
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
     const {
+      typeInfo,
       tableName,
       uniquelyIdentifyingFieldName,
       generateUniqueIdentifier = () => UUIDV4(),
@@ -54,9 +66,13 @@ export class DynamoDBDataItemDBDriver<
       ...cleanNewItem
     }: ItemType = newItem as any;
     const newItemId = generateUniqueIdentifier(cleanNewItem as ItemType);
+    const nonRelationalNewItem = removeTypeReferenceFieldsFromDataItem(
+      cleanNewItem,
+      typeInfo,
+    );
     const cleanNewItemWithId: ItemType = {
       [uniquelyIdentifyingFieldName]: newItemId,
-      ...cleanNewItem,
+      ...nonRelationalNewItem,
     } as any;
     const command = new PutItemCommand({
       TableName: tableName,
@@ -74,7 +90,23 @@ export class DynamoDBDataItemDBDriver<
   public readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ): Promise<ItemType> => {
-    // Implement this method.
+    const { tableName } = this.config;
+    const command = new GetItemCommand({
+      TableName: tableName,
+      Key: marshall({
+        [this.config.uniquelyIdentifyingFieldName]: uniqueIdentifier,
+      }),
+      // TODO: Only get the requested fields!!!???
+    });
+    const { Item } = await this.dynamoDBClient.send(command);
+
+    if (typeof Item === "undefined") {
+      throw new Error(DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+    } else {
+      const cleanItem = unmarshall(Item) as ItemType;
+
+      return cleanItem;
+    }
   };
 
   /**
