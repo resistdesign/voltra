@@ -1,12 +1,17 @@
 import { DataItemDBDriver } from "../Types";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { ListItemsConfig, ListItemsResults } from "../../../../common";
+import { marshall } from "@aws-sdk/util-dynamodb";
+import { v4 as UUIDV4 } from "uuid";
 
 /**
  * The configuration for the {@link DynamoDBDataItemDBDriver}.
  * */
 export type DynamoDBDataItemDBDriverConfig = {
   dynamoDBClientConfig: any;
+  tableName: string;
+  uniquelyIdentifyingFieldName: string;
+  // TODO: Maybe add a function for generating new `uniquelyIdentifyingFieldName` values.
 };
 
 /**
@@ -29,11 +34,20 @@ export class DynamoDBDataItemDBDriver<
   public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
-    // TODO: Marshal input.
-    const command = new PutItemCommand({});
-    const result = await this.dynamoDBClient.send(command);
+    const { tableName, uniquelyIdentifyingFieldName } = this.config;
+    const newItemId = UUIDV4();
+    const cleanNewItemWithId: ItemType = {
+      [uniquelyIdentifyingFieldName]: newItemId,
+      ...newItem,
+    } as any;
+    const command = new PutItemCommand({
+      TableName: tableName,
+      Item: marshall(cleanNewItemWithId),
+    });
 
-    // TODO: Marshal output.
+    await this.dynamoDBClient.send(command);
+
+    return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
   /**
