@@ -151,6 +151,7 @@ export class DynamoDBDataItemDBDriver<
    */
   public listItems = async (
     config: ListItemsConfig,
+    selectFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
     // Implement this method.
   };
