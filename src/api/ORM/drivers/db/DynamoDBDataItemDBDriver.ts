@@ -89,14 +89,33 @@ export class DynamoDBDataItemDBDriver<
    */
   public readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ): Promise<ItemType> => {
+    selectFields?: (keyof ItemType)[],
+  ): Promise<Partial<ItemType>> => {
     const { tableName } = this.config;
+    const selectedFieldParams =
+      typeof selectFields !== "undefined"
+        ? {
+            ExpressionAttributeNames: selectFields.reduce(
+              (acc: Record<string, string>, field) => {
+                const fieldAsString = String(field);
+
+                acc[`#${fieldAsString}`] = fieldAsString;
+
+                return acc;
+              },
+              {} as Record<string, string>,
+            ) as Record<string, string>,
+            ProjectionExpression: selectFields
+              .map((field) => `#${String(field)}`)
+              .join(", "),
+          }
+        : {};
     const command = new GetItemCommand({
       TableName: tableName,
       Key: marshall({
         [this.config.uniquelyIdentifyingFieldName]: uniqueIdentifier,
       }),
-      // TODO: Only get the requested fields!!!???
+      ...selectedFieldParams,
     });
     const { Item } = await this.dynamoDBClient.send(command);
 
