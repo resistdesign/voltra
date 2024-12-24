@@ -2,7 +2,7 @@ name: Build and Deploy Docs 📚
 on:
   push:
     branches:
-      - type-info-driven-form
+      - main
     paths:
       - 'src/**'
 permissions:
