@@ -16,31 +16,31 @@ export type DeniedOperations = Partial<Record<TypeOperation, boolean>>;
 /**
  * Voltra supported `TypeInfo` tags.
  * */
-export type SupportedTags = {
-  label?: string;
-  deniedOperations?: DeniedOperations;
-  fullPaging?: boolean;
-};
+export type SupportedTags = Partial<{
+  label: string;
+  deniedOperations: DeniedOperations;
+  fullPaging: boolean;
+}>;
 
 /**
  * Voltra supported `TypeInfoField` tags.
  * */
-export type SupportedFieldTags = {
-  primaryField?: boolean;
-  label?: string;
-  format?: string;
-  allowCustomSelection?: boolean;
-  customType?: string;
-  hidden?: boolean;
-  constraints?: {
-    defaultValue?: any;
-    step?: number;
-    min?: number;
-    max?: number;
-    pattern?: string;
-  };
-  deniedOperations?: DeniedOperations;
-};
+export type SupportedFieldTags = Partial<{
+  primaryField: boolean;
+  label: string;
+  format: string;
+  allowCustomSelection: boolean;
+  customType: string;
+  hidden: boolean;
+  constraints: Partial<{
+    defaultValue: any;
+    step: number;
+    min: number;
+    max: number;
+    pattern: string;
+  }>;
+  deniedOperations: DeniedOperations;
+}>;
 
 /**
  * The set of acceptable literal value types.
