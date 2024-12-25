@@ -1,5 +1,6 @@
 import { DataItemDBDriver } from "../Types";
 import {
+  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
@@ -143,7 +144,17 @@ export class DynamoDBDataItemDBDriver<
   public deleteItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ): Promise<boolean> => {
-    // Implement this method.
+    const { tableName, uniquelyIdentifyingFieldName } = this.config;
+    const command = new DeleteItemCommand({
+      TableName: tableName,
+      Key: marshall({
+        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+      }),
+      ReturnValues: "ALL_OLD",
+    });
+    const { Attributes } = await this.dynamoDBClient.send(command);
+
+    return !!Attributes;
   };
 
   /**
