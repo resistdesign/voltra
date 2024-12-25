@@ -4,13 +4,57 @@ import {
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
+  UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { ListItemsConfig, ListItemsResults } from "../../../../common";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import { removeTypeReferenceFieldsFromDataItem } from "../../../../common/TypeParsing/Utils";
-import { TypeInfo } from "../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoDataItem,
+} from "../../../../common/TypeParsing/TypeInfo";
 
+const buildUpdateExpression = (
+  updatedItem: Partial<TypeInfoDataItem>,
+  typeInfo: TypeInfo,
+  uniquelyIdentifyingFieldName: any,
+) => {
+  const { fields = {} } = typeInfo;
+  const updateExpressionParts: string[] = [];
+  const attributeNames: Record<string, string> = {};
+  const attributeValues: Record<string, any> = {};
+
+  for (const f in fields) {
+    const { typeReference } = fields[f];
+    const value = updatedItem[f];
+
+    // IMPORTANT: DO NOT use the `primaryField`, only use non-relational fields and there must be a value.
+    if (
+      f !== uniquelyIdentifyingFieldName &&
+      typeof typeReference === "undefined" &&
+      typeof value !== "undefined"
+    ) {
+      const placeholderName = `#${f}`;
+      const placeholderValue = `:${f}`;
+
+      updateExpressionParts.push(`${placeholderName} = ${placeholderValue}`);
+      attributeNames[placeholderName] = f;
+      attributeValues[placeholderValue] = marshall(value);
+    }
+  }
+
+  return {
+    UpdateExpression: `SET ${updateExpressionParts.join(", ")}`,
+    ExpressionAttributeNames: attributeNames,
+    ExpressionAttributeValues: attributeValues,
+  };
+};
+
+// TODO: Maybe these should be universal, at the API level.
+/**
+ * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
+ * */
 export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
   ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
 };
@@ -135,7 +179,28 @@ export class DynamoDBDataItemDBDriver<
   public updateItem = async (
     updatedItem: Partial<ItemType>,
   ): Promise<boolean> => {
-    // Implement this method.
+    const { typeInfo, tableName, uniquelyIdentifyingFieldName } = this.config;
+    // SECURITY: Remove the uniquely identifying field from the updated item.
+    const {
+      [uniquelyIdentifyingFieldName]: _unusedId,
+      ...cleanUpdatedItem
+    }: ItemType = updatedItem as any;
+    const command = new UpdateItemCommand({
+      TableName: tableName,
+      Key: marshall({
+        [uniquelyIdentifyingFieldName]:
+          updatedItem[uniquelyIdentifyingFieldName],
+      }),
+      ReturnValues: "ALL_NEW",
+      ...buildUpdateExpression(
+        cleanUpdatedItem,
+        typeInfo,
+        uniquelyIdentifyingFieldName,
+      ),
+    });
+    const { Attributes } = await this.dynamoDBClient.send(command);
+
+    return !!Attributes;
   };
 
   /**
