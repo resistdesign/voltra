@@ -229,6 +229,9 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
+    const { typeInfo, tableName, uniquelyIdentifyingFieldName } = this.config;
+    const { itemsPerPage, cursor, sortFields, criteria, checkExistence } =
+      config;
     // Implement this method.
   };
 }
