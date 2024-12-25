@@ -232,6 +232,7 @@ export class DynamoDBDataItemDBDriver<
     const { typeInfo, tableName, uniquelyIdentifyingFieldName } = this.config;
     const { itemsPerPage, cursor, sortFields, criteria, checkExistence } =
       config;
+    // TODO: Only work with non-relational fields.
     // Implement this method.
   };
 }
