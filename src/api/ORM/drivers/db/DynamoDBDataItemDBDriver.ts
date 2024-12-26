@@ -13,7 +13,13 @@ import { removeTypeReferenceFieldsFromDataItem } from "../../../../common/TypePa
 import {
   TypeInfo,
   TypeInfoDataItem,
+  TypeInfoField,
 } from "../../../../common/TypeParsing/TypeInfo";
+import {
+  FieldCriterion,
+  LogicalOperators,
+  SearchCriteria,
+} from "../../../../common/SearchTypes";
 
 const buildUpdateExpression = (
   updatedItem: Partial<TypeInfoDataItem>,
@@ -51,12 +57,38 @@ const buildUpdateExpression = (
   };
 };
 
+const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
+  selectFields?: (keyof ItemType)[],
+) => {
+  const selectedFieldParams =
+    typeof selectFields !== "undefined"
+      ? {
+          ExpressionAttributeNames: selectFields.reduce(
+            (acc: Record<string, string>, field) => {
+              const fieldAsString = String(field);
+
+              acc[`#${fieldAsString}`] = fieldAsString;
+
+              return acc;
+            },
+            {} as Record<string, string>,
+          ) as Record<string, string>,
+          ProjectionExpression: selectFields
+            .map((field) => `#${String(field)}`)
+            .join(", "),
+        }
+      : {};
+
+  return selectedFieldParams;
+};
+
 // TODO: Maybe these should be universal, at the API level.
 /**
  * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
  * */
 export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
   ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
+  INVALID_CRITERION_VALUE: "INVALID_CRITERION_VALUE",
 };
 
 /**
@@ -67,6 +99,7 @@ export type DynamoDBDataItemDBDriverConfig<
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   dynamoDBClientConfig: any;
+  typeName: string;
   typeInfo: TypeInfo;
   tableName: string;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
@@ -136,29 +169,12 @@ export class DynamoDBDataItemDBDriver<
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>> => {
-    const { tableName } = this.config;
-    const selectedFieldParams =
-      typeof selectFields !== "undefined"
-        ? {
-            ExpressionAttributeNames: selectFields.reduce(
-              (acc: Record<string, string>, field) => {
-                const fieldAsString = String(field);
-
-                acc[`#${fieldAsString}`] = fieldAsString;
-
-                return acc;
-              },
-              {} as Record<string, string>,
-            ) as Record<string, string>,
-            ProjectionExpression: selectFields
-              .map((field) => `#${String(field)}`)
-              .join(", "),
-          }
-        : {};
+    const { tableName, uniquelyIdentifyingFieldName } = this.config;
+    const selectedFieldParams = buildSelectedFieldParams(selectFields);
     const command = new GetItemCommand({
       TableName: tableName,
       Key: marshall({
-        [this.config.uniquelyIdentifyingFieldName]: uniqueIdentifier,
+        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
       }),
       ...selectedFieldParams,
     });
@@ -229,10 +245,61 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
-    const { typeInfo, tableName, uniquelyIdentifyingFieldName } = this.config;
-    const { itemsPerPage, cursor, sortFields, criteria, checkExistence } =
-      config;
-    // TODO: Only work with non-relational fields.
-    // Implement this method.
+    const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
+      this.config;
+    const { fields = {} } = typeInfo;
+    const {
+      itemsPerPage = 10,
+      cursor,
+      sortFields,
+      criteria: {
+        logicalOperator = LogicalOperators.AND,
+        fieldCriteria = [],
+      } = {} as SearchCriteria,
+      checkExistence = false,
+    } = config;
+    const selectedFieldParams = buildSelectedFieldParams(selectFields);
+    // TODO: What to do with the logical operator?
+    const searchKeyValues: Record<string, any> = {};
+
+    for (const fC of fieldCriteria) {
+      const { fieldName, value, operator, valueOptions }: FieldCriterion = fC;
+      const { typeReference, possibleValues }: Partial<TypeInfoField> =
+        fields[fieldName] || {};
+
+      // IMPORTANT: Only allow searching for `possibleValues` when supplied.
+      if (
+        Array.isArray(possibleValues) &&
+        ((Array.isArray(valueOptions) &&
+          !valueOptions.every((vO) => possibleValues.includes(vO))) ||
+          !possibleValues.includes(value))
+      ) {
+        throw {
+          message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CRITERION_VALUE,
+          typeName,
+          fieldName,
+          value,
+        };
+      }
+
+      // IMPORTANT: Use only non-relational fields.
+      if (typeof typeReference === "undefined") {
+        // TODO: Handle the operator.
+      }
+    }
+
+    // TODO: Loop until end is reach or itemsPerPage is reached.
+    // TODO: Use the cursor.
+    // TODO: How do we sort?
+    // TODO: Handle existence checks.
+    const command = new GetItemCommand({
+      TableName: tableName,
+      Key: marshall(searchKeyValues),
+      ...selectedFieldParams,
+    });
+    const {} = await this.dynamoDBClient.send(command);
+
+    // TODO: Return the right results.
+    return true;
   };
 }
