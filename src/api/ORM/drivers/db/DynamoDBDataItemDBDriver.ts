@@ -4,6 +4,7 @@ import {
   DynamoDBClient,
   GetItemCommand,
   PutItemCommand,
+  ScanCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { ListItemsConfig, ListItemsResults } from "../../../../common";
@@ -292,10 +293,14 @@ export class DynamoDBDataItemDBDriver<
     // TODO: Use the cursor.
     // TODO: How do we sort?
     // TODO: Handle existence checks.
-    const command = new GetItemCommand({
+    const command = new ScanCommand({
       TableName: tableName,
-      Key: marshall(searchKeyValues),
       ...selectedFieldParams,
+      Select: checkExistence
+        ? "COUNT"
+        : selectFields && selectFields.length > 0
+          ? "SPECIFIC_ATTRIBUTES"
+          : "ALL_ATTRIBUTES",
     });
     const {} = await this.dynamoDBClient.send(command);
 

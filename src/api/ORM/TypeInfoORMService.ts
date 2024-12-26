@@ -63,6 +63,7 @@ export type TypeInfoORMServiceConfig = {
 };
 
 // TODO: Integrate DAC.
+// TODO: IMPORTANT: Make sure all selected fields are valid fields.
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
