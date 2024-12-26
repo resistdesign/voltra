@@ -290,7 +290,7 @@ export class DynamoDBDataItemDBDriver<
     }
 
     // TODO: Loop until end is reach or itemsPerPage is reached.
-    // TODO: Use the cursor.
+    // TODO: Use the cursor when ACCUMULATING ENOUGH items while looping ^.
     // TODO: How do we sort?
     // TODO: Handle existence checks.
     const command = new ScanCommand({
