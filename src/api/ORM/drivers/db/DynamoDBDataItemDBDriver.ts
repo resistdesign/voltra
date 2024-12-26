@@ -294,6 +294,7 @@ export class DynamoDBDataItemDBDriver<
     // TODO: How do we sort?
     // TODO: Handle existence checks.
     const command = new ScanCommand({
+      ExclusiveStartKey: cursor ? marshall(cursor) : undefined,
       TableName: tableName,
       ...selectedFieldParams,
       Select: checkExistence
