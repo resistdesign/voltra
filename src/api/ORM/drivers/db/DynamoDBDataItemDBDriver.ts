@@ -17,10 +17,121 @@ import {
   TypeInfoField,
 } from "../../../../common/TypeParsing/TypeInfo";
 import {
+  ComparisonOperators,
   FieldCriterion,
   LogicalOperators,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
+
+/**
+ * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
+ * */
+export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
+  ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
+  INVALID_CRITERION_VALUE: "INVALID_CRITERION_VALUE",
+  SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED:
+    "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED",
+};
+
+const DynamoDBOperatorMappings: Partial<
+  Record<ComparisonOperators, (fieldName: string) => string>
+> = {
+  [ComparisonOperators.EQUALS]: (fieldName) => `#${fieldName} = :${fieldName}`,
+  [ComparisonOperators.NOT_EQUALS]: (fieldName) =>
+    `#${fieldName} <> :${fieldName}`,
+  [ComparisonOperators.GREATER_THAN]: (fieldName) =>
+    `#${fieldName} > :${fieldName}`,
+  [ComparisonOperators.GREATER_THAN_OR_EQUAL]: (fieldName) =>
+    `#${fieldName} >= :${fieldName}`,
+  [ComparisonOperators.LESS_THAN]: (fieldName) =>
+    `#${fieldName} < :${fieldName}`,
+  [ComparisonOperators.LESS_THAN_OR_EQUAL]: (fieldName) =>
+    `#${fieldName} <= :${fieldName}`,
+  [ComparisonOperators.IN]: (fieldName) => `#${fieldName} IN (:${fieldName})`,
+  [ComparisonOperators.LIKE]: (fieldName) =>
+    `contains(#${fieldName}, :${fieldName})`,
+  [ComparisonOperators.EXISTS]: (fieldName) =>
+    `attribute_exists(#${fieldName})`,
+  [ComparisonOperators.NOT_EXISTS]: (fieldName) =>
+    `attribute_not_exists(#${fieldName})`,
+  [ComparisonOperators.IS_EMPTY]: (fieldName) => `size(#${fieldName}) = 0`,
+  [ComparisonOperators.IS_NOT_EMPTY]: (fieldName) => `size(#${fieldName}) > 0`,
+  [ComparisonOperators.BETWEEN]: (fieldName) =>
+    `#${fieldName} BETWEEN :${fieldName}_start AND :${fieldName}_end`,
+  [ComparisonOperators.CONTAINS]: (fieldName) =>
+    `contains(#${fieldName}, :${fieldName})`,
+  [ComparisonOperators.STARTS_WITH]: (fieldName) =>
+    `begins_with(#${fieldName}, :${fieldName})`,
+};
+
+const DynamoDBLogicalOperatorMappings: Record<LogicalOperators, string> = {
+  [LogicalOperators.AND]: "AND",
+  [LogicalOperators.OR]: "OR",
+};
+
+const createFilterExpression = (
+  typeName: string,
+  typeInfo: TypeInfo,
+  fieldCriteria: FieldCriterion[],
+  logicalOperator: LogicalOperators,
+): {
+  FilterExpression?: string;
+  ExpressionAttributeNames?: Record<string, string>;
+  ExpressionAttributeValues?: Record<string, any>;
+} => {
+  const { fields = {} } = typeInfo;
+  const expressions: string[] = [];
+  const attributeNames: Record<string, string> = {};
+  const attributeValues: Record<string, any> = {};
+
+  for (const criterion of fieldCriteria) {
+    const { fieldName, operator, value, valueOptions } = criterion;
+    const { [fieldName]: tIF = {} as TypeInfoField } = fields;
+    const { typeReference, possibleValues } = tIF;
+
+    // IMPORTANT: Only allow searching for `possibleValues` when supplied.
+    if (
+      Array.isArray(possibleValues) &&
+      ((Array.isArray(valueOptions) &&
+        !valueOptions.every((vO) => possibleValues.includes(vO))) ||
+        !possibleValues.includes(value))
+    ) {
+      throw {
+        message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CRITERION_VALUE,
+        typeName,
+        fieldName,
+        value,
+      };
+    }
+
+    // IMPORTANT: Use only non-relational fields.
+    if (tIF && typeof typeReference === "undefined") {
+      const createExpression =
+        DynamoDBOperatorMappings[operator as ComparisonOperators];
+
+      if (!createExpression) {
+        throw {
+          message:
+            DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
+          operator,
+          fieldName,
+        };
+      }
+
+      expressions.push(createExpression(fieldName));
+      attributeNames[`#${fieldName}`] = fieldName;
+      attributeValues[`:${fieldName}`] = value;
+    }
+  }
+
+  return {
+    FilterExpression: expressions.join(
+      ` ${DynamoDBLogicalOperatorMappings[logicalOperator]} `,
+    ),
+    ExpressionAttributeNames: attributeNames,
+    ExpressionAttributeValues: attributeValues,
+  };
+};
 
 const buildUpdateExpression = (
   updatedItem: Partial<TypeInfoDataItem>,
@@ -83,15 +194,6 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
   return selectedFieldParams;
 };
 
-// TODO: Maybe these should be universal, at the API level.
-/**
- * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
- * */
-export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
-  ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
-  INVALID_CRITERION_VALUE: "INVALID_CRITERION_VALUE",
-};
-
 /**
  * The configuration for the {@link DynamoDBDataItemDBDriver}.
  * */
@@ -106,8 +208,6 @@ export type DynamoDBDataItemDBDriverConfig<
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   generateUniqueIdentifier?: (targetItem: ItemType) => string;
 };
-
-// TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
 
 /**
  * A {@link DataItemDBDriver} that uses DynamoDB as its database.
@@ -134,6 +234,7 @@ export class DynamoDBDataItemDBDriver<
   public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
+    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
     const {
       typeInfo,
       tableName,
@@ -170,6 +271,7 @@ export class DynamoDBDataItemDBDriver<
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>> => {
+    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const selectedFieldParams = buildSelectedFieldParams(selectFields);
     const command = new GetItemCommand({
@@ -196,6 +298,7 @@ export class DynamoDBDataItemDBDriver<
   public updateItem = async (
     updatedItem: Partial<ItemType>,
   ): Promise<boolean> => {
+    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
     const { typeInfo, tableName, uniquelyIdentifyingFieldName } = this.config;
     // SECURITY: Remove the uniquely identifying field from the updated item.
     const {
@@ -246,6 +349,7 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
+    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
     const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
       this.config;
     const { fields = {} } = typeInfo;
@@ -259,50 +363,41 @@ export class DynamoDBDataItemDBDriver<
       } = {} as SearchCriteria,
       checkExistence = false,
     } = config;
-    const selectedFieldParams = buildSelectedFieldParams(selectFields);
-    // TODO: What to do with the logical operator?
-    const searchKeyValues: Record<string, any> = {};
+    const {
+      ProjectionExpression,
+      ExpressionAttributeNames: selectFieldParamsAttributeNames,
+    } = buildSelectedFieldParams(selectFields);
+    const {
+      FilterExpression,
+      ExpressionAttributeNames,
+      ExpressionAttributeValues,
+    } = createFilterExpression(
+      typeName,
+      typeInfo,
+      fieldCriteria,
+      logicalOperator,
+    );
 
-    for (const fC of fieldCriteria) {
-      const { fieldName, value, operator, valueOptions }: FieldCriterion = fC;
-      const { typeReference, possibleValues }: Partial<TypeInfoField> =
-        fields[fieldName] || {};
-
-      // IMPORTANT: Only allow searching for `possibleValues` when supplied.
-      if (
-        Array.isArray(possibleValues) &&
-        ((Array.isArray(valueOptions) &&
-          !valueOptions.every((vO) => possibleValues.includes(vO))) ||
-          !possibleValues.includes(value))
-      ) {
-        throw {
-          message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CRITERION_VALUE,
-          typeName,
-          fieldName,
-          value,
-        };
-      }
-
-      // IMPORTANT: Use only non-relational fields.
-      if (typeof typeReference === "undefined") {
-        // TODO: Handle the operator.
-      }
-    }
-
-    // TODO: Loop until end is reach or itemsPerPage is reached.
-    // TODO: Use the cursor when ACCUMULATING ENOUGH items while looping ^.
-    // TODO: How do we sort?
-    // TODO: Handle existence checks.
+    // TODO: Loop until end is reach or `itemsPerPage` is reached.
+    // TODO: Use the `cursor` when ACCUMULATING ENOUGH items while looping ^.
     const command = new ScanCommand({
       ExclusiveStartKey: cursor ? marshall(cursor) : undefined,
       TableName: tableName,
-      ...selectedFieldParams,
       Select: checkExistence
         ? "COUNT"
         : selectFields && selectFields.length > 0
           ? "SPECIFIC_ATTRIBUTES"
           : "ALL_ATTRIBUTES",
+      ProjectionExpression: checkExistence ? undefined : ProjectionExpression,
+      FilterExpression,
+      ExpressionAttributeNames: {
+        ...selectFieldParamsAttributeNames,
+        ...ExpressionAttributeNames,
+      },
+      ExpressionAttributeValues,
     });
+    // TODO: How do we sort?
+    // TODO: Handle existence checks.
     const {} = await this.dynamoDBClient.send(command);
 
     // TODO: Return the right results.
