@@ -5,12 +5,17 @@ import {
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
+  ScanCommandInput,
+  ScanCommandOutput,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { ListItemsConfig, ListItemsResults } from "../../../../common";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
-import { removeTypeReferenceFieldsFromDataItem } from "../../../../common/TypeParsing/Utils";
+import {
+  removeTypeReferenceFieldsFromDataItem,
+  removeTypeReferenceFieldsFromSelectedFields,
+} from "../../../../common/TypeParsing/Utils";
 import {
   TypeInfo,
   TypeInfoDataItem,
@@ -349,10 +354,8 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
-    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
     const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
       this.config;
-    const { fields = {} } = typeInfo;
     const {
       itemsPerPage = 10,
       cursor,
@@ -366,7 +369,9 @@ export class DynamoDBDataItemDBDriver<
     const {
       ProjectionExpression,
       ExpressionAttributeNames: selectFieldParamsAttributeNames,
-    } = buildSelectedFieldParams(selectFields);
+    } = buildSelectedFieldParams(
+      removeTypeReferenceFieldsFromSelectedFields(selectFields, typeInfo),
+    );
     const {
       FilterExpression,
       ExpressionAttributeNames,
@@ -377,11 +382,7 @@ export class DynamoDBDataItemDBDriver<
       fieldCriteria,
       logicalOperator,
     );
-
-    // TODO: Loop until end is reach or `itemsPerPage` is reached.
-    // TODO: Use the `cursor` when ACCUMULATING ENOUGH items while looping ^.
-    const command = new ScanCommand({
-      ExclusiveStartKey: cursor ? marshall(cursor) : undefined,
+    const params: ScanCommandInput = {
       TableName: tableName,
       Select: checkExistence
         ? "COUNT"
@@ -395,12 +396,80 @@ export class DynamoDBDataItemDBDriver<
         ...ExpressionAttributeNames,
       },
       ExpressionAttributeValues,
-    });
+    };
+    const foundItems: ItemType[] = [];
+
+    let itemsPerPageQuotaMet = false,
+      notEnoughItemsToFillPage = false,
+      itemExists = false,
+      nextCursor: ScanCommandInput["ExclusiveStartKey"] = cursor
+        ? marshall(cursor)
+        : undefined;
+
+    while (
+      itemsPerPage > 0 &&
+      !itemsPerPageQuotaMet &&
+      !notEnoughItemsToFillPage &&
+      !itemExists
+    ) {
+      // IMPORTANT: Loop until end is reach or `itemsPerPage` is reached.
+      //   -Use the `cursor` when ACCUMULATING ENOUGH items while looping ^.
+      const command = new ScanCommand({
+        ...params,
+        ExclusiveStartKey: nextCursor,
+        // NO REASON to exceed the `itemsPerPage` limit. AND... this makes it so that if there is a `nextCursor`, then THERE IS a `nextCursor`.
+        Limit: itemsPerPage - foundItems.length,
+      });
+      const {
+        Items,
+        Count = 0,
+        LastEvaluatedKey,
+      }: ScanCommandOutput = await this.dynamoDBClient.send(command);
+
+      // IMPORTANT: Set the `nextCursor`.
+      nextCursor = LastEvaluatedKey;
+
+      // IMPORTANT: Handle existence checks.
+      if (checkExistence) {
+        itemExists = Count > 0;
+        nextCursor = undefined;
+      } else if (Items) {
+        const numItemsMissing = itemsPerPage - foundItems.length;
+
+        for (const Item of Items) {
+          const unmarshalledItem = unmarshall(Item) as ItemType;
+
+          if (!itemsPerPageQuotaMet) {
+            foundItems.push(
+              removeTypeReferenceFieldsFromDataItem(
+                unmarshalledItem,
+                typeInfo,
+              ) as ItemType,
+            );
+            itemsPerPageQuotaMet = foundItems.length == itemsPerPage;
+
+            if (itemsPerPageQuotaMet) {
+              break;
+            }
+          }
+        }
+      } else {
+        notEnoughItemsToFillPage = true;
+        nextCursor = undefined;
+      }
+
+      // IMPORTANT: DO NOT keep looping if there will never be enough items to fill the page.
+      if (
+        !LastEvaluatedKey &&
+        !(checkExistence ? itemExists : itemsPerPageQuotaMet)
+      ) {
+        notEnoughItemsToFillPage = true;
+      }
+    }
+
     // TODO: How do we sort?
-    // TODO: Handle existence checks.
-    const {} = await this.dynamoDBClient.send(command);
 
     // TODO: Return the right results.
-    return true;
+    return checkExistence ? itemExists : {};
   };
 }
