@@ -13,6 +13,7 @@ import { ListItemsConfig, ListItemsResults } from "../../../../common";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import {
+  removeNonexistentFieldsFromDataItem,
   removeTypeReferenceFieldsFromDataItem,
   removeTypeReferenceFieldsFromSelectedFields,
 } from "../../../../common/TypeParsing/Utils";
@@ -27,12 +28,15 @@ import {
   LogicalOperators,
   SearchCriteria,
 } from "../../../../common/SearchTypes";
+import { getSortedItems } from "../../../../common/SearchUtils";
 
 /**
  * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
  * */
 export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
+  INVALID_CURSOR: "INVALID_CURSOR",
   ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
+  MISSING_UNIQUE_IDENTIFIER: "MISSING_UNIQUE_IDENTIFIER",
   INVALID_CRITERION_VALUE: "INVALID_CRITERION_VALUE",
   SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED:
     "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED",
@@ -175,12 +179,12 @@ const buildUpdateExpression = (
 };
 
 const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
-  selectFields?: (keyof ItemType)[],
+  selectedFields?: (keyof ItemType)[],
 ) => {
   const selectedFieldParams =
-    typeof selectFields !== "undefined"
+    typeof selectedFields !== "undefined"
       ? {
-          ExpressionAttributeNames: selectFields.reduce(
+          ExpressionAttributeNames: selectedFields.reduce(
             (acc: Record<string, string>, field) => {
               const fieldAsString = String(field);
 
@@ -190,7 +194,7 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
             },
             {} as Record<string, string>,
           ) as Record<string, string>,
-          ProjectionExpression: selectFields
+          ProjectionExpression: selectedFields
             .map((field) => `#${String(field)}`)
             .join(", "),
         }
@@ -239,7 +243,6 @@ export class DynamoDBDataItemDBDriver<
   public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
-    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
     const {
       typeInfo,
       tableName,
@@ -252,8 +255,8 @@ export class DynamoDBDataItemDBDriver<
     }: ItemType = newItem as any;
     const newItemId = generateUniqueIdentifier(cleanNewItem as ItemType);
     const nonRelationalNewItem = removeTypeReferenceFieldsFromDataItem(
-      cleanNewItem,
       typeInfo,
+      cleanNewItem,
     );
     const cleanNewItemWithId: ItemType = {
       [uniquelyIdentifyingFieldName]: newItemId,
@@ -274,11 +277,12 @@ export class DynamoDBDataItemDBDriver<
    */
   public readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    selectFields?: (keyof ItemType)[],
+    selectedFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>> => {
-    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
-    const { tableName, uniquelyIdentifyingFieldName } = this.config;
-    const selectedFieldParams = buildSelectedFieldParams(selectFields);
+    const { tableName, typeInfo, uniquelyIdentifyingFieldName } = this.config;
+    const selectedFieldParams = buildSelectedFieldParams(
+      removeTypeReferenceFieldsFromSelectedFields(typeInfo, selectedFields),
+    );
     const command = new GetItemCommand({
       TableName: tableName,
       Key: marshall({
@@ -293,7 +297,10 @@ export class DynamoDBDataItemDBDriver<
     } else {
       const cleanItem = unmarshall(Item) as ItemType;
 
-      return cleanItem;
+      return removeTypeReferenceFieldsFromDataItem(
+        typeInfo,
+        cleanItem,
+      ) as ItemType;
     }
   };
 
@@ -303,29 +310,39 @@ export class DynamoDBDataItemDBDriver<
   public updateItem = async (
     updatedItem: Partial<ItemType>,
   ): Promise<boolean> => {
-    // TODO: Important: ONLY WORK WITH NON-RELATIONAL FIELDS.
-    const { typeInfo, tableName, uniquelyIdentifyingFieldName } = this.config;
-    // SECURITY: Remove the uniquely identifying field from the updated item.
+    const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
+      this.config;
     const {
-      [uniquelyIdentifyingFieldName]: _unusedId,
+      [uniquelyIdentifyingFieldName]: uniqueIdentifier,
       ...cleanUpdatedItem
-    }: ItemType = updatedItem as any;
-    const command = new UpdateItemCommand({
-      TableName: tableName,
-      Key: marshall({
-        [uniquelyIdentifyingFieldName]:
-          updatedItem[uniquelyIdentifyingFieldName],
-      }),
-      ReturnValues: "ALL_NEW",
-      ...buildUpdateExpression(
-        cleanUpdatedItem,
-        typeInfo,
-        uniquelyIdentifyingFieldName,
-      ),
-    });
-    const { Attributes } = await this.dynamoDBClient.send(command);
+    }: ItemType = removeTypeReferenceFieldsFromDataItem(
+      typeInfo,
+      removeNonexistentFieldsFromDataItem(updatedItem),
+    ) as any;
 
-    return !!Attributes;
+    if (typeof uniqueIdentifier !== "undefined") {
+      const command = new UpdateItemCommand({
+        TableName: tableName,
+        Key: marshall({
+          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+        }),
+        ReturnValues: "ALL_NEW",
+        ...buildUpdateExpression(
+          cleanUpdatedItem,
+          typeInfo,
+          uniquelyIdentifyingFieldName,
+        ),
+      });
+      const { Attributes } = await this.dynamoDBClient.send(command);
+
+      return !!Attributes;
+    } else {
+      throw {
+        message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
+        typeName,
+        uniquelyIdentifyingFieldName,
+      };
+    }
   };
 
   /**
@@ -352,7 +369,7 @@ export class DynamoDBDataItemDBDriver<
    */
   public listItems = async (
     config: ListItemsConfig,
-    selectFields?: (keyof ItemType)[],
+    selectedFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
     const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
       this.config;
@@ -370,7 +387,7 @@ export class DynamoDBDataItemDBDriver<
       ProjectionExpression,
       ExpressionAttributeNames: selectFieldParamsAttributeNames,
     } = buildSelectedFieldParams(
-      removeTypeReferenceFieldsFromSelectedFields(selectFields, typeInfo),
+      removeTypeReferenceFieldsFromSelectedFields(typeInfo, selectedFields),
     );
     const {
       FilterExpression,
@@ -386,7 +403,7 @@ export class DynamoDBDataItemDBDriver<
       TableName: tableName,
       Select: checkExistence
         ? "COUNT"
-        : selectFields && selectFields.length > 0
+        : selectedFields && selectedFields.length > 0
           ? "SPECIFIC_ATTRIBUTES"
           : "ALL_ATTRIBUTES",
       ProjectionExpression: checkExistence ? undefined : ProjectionExpression,
@@ -402,9 +419,19 @@ export class DynamoDBDataItemDBDriver<
     let itemsPerPageQuotaMet = false,
       notEnoughItemsToFillPage = false,
       itemExists = false,
-      nextCursor: ScanCommandInput["ExclusiveStartKey"] = cursor
-        ? marshall(cursor)
-        : undefined;
+      nextCursor: ScanCommandInput["ExclusiveStartKey"] = undefined;
+
+    if (!checkExistence && typeof cursor === "string") {
+      try {
+        nextCursor = marshall(JSON.parse(cursor));
+      } catch (error) {
+        throw {
+          message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
+          typeName,
+          cursor,
+        };
+      }
+    }
 
     while (
       itemsPerPage > 0 &&
@@ -434,16 +461,14 @@ export class DynamoDBDataItemDBDriver<
         itemExists = Count > 0;
         nextCursor = undefined;
       } else if (Items) {
-        const numItemsMissing = itemsPerPage - foundItems.length;
-
         for (const Item of Items) {
           const unmarshalledItem = unmarshall(Item) as ItemType;
 
           if (!itemsPerPageQuotaMet) {
             foundItems.push(
               removeTypeReferenceFieldsFromDataItem(
-                unmarshalledItem,
                 typeInfo,
+                unmarshalledItem,
               ) as ItemType,
             );
             itemsPerPageQuotaMet = foundItems.length == itemsPerPage;
@@ -467,9 +492,20 @@ export class DynamoDBDataItemDBDriver<
       }
     }
 
-    // TODO: How do we sort?
+    // Sort the items.
+    const sortedItems = getSortedItems(sortFields, foundItems);
 
-    // TODO: Return the right results.
-    return checkExistence ? itemExists : {};
+    return checkExistence
+      ? itemExists
+      : {
+          items: sortedItems as ItemType[],
+          cursor: nextCursor
+            ? JSON.stringify(unmarshall(nextCursor))
+            : undefined,
+        };
   };
 }
+
+// TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
+// TODO: Drivers SHOULD have an API for `new` and a method to return a `TypeInfo(Map)` for its specific config parameters.
+// TODO: Error Type SHOULD be defined at the Driver API level.
