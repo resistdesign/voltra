@@ -1,4 +1,8 @@
-import { DataItemDBDriver, DataItemDBDriverConfig } from "../Types";
+import {
+  DataItemDBDriver,
+  DataItemDBDriverConfig,
+  SupportedDataItemDBDriverEntry,
+} from "../Types";
 import {
   DeleteItemCommand,
   DynamoDBClient,
@@ -22,6 +26,7 @@ import {
   TypeInfo,
   TypeInfoDataItem,
   TypeInfoField,
+  TypeInfoPack,
 } from "../../../../common/TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
@@ -229,24 +234,6 @@ export class DynamoDBDataItemDBDriver<
       dbSpecificConfig as DynamoDBClientConfig,
     );
   }
-
-  // TODO: This method REALLY NEEDS to be in a driver config object and not part of the class.
-  /**
-   * Get the type information for the database driver configuration.
-   * */
-  public getDBSpecificConfigTypeInfo = (): TypeInfo => {
-    const configTypesPath = Path.join(
-      __dirname,
-      "DynamoDBDataItemDBDriver",
-      "ConfigTypes.ts",
-    );
-    const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
-    const { DynamoDBSpecificConfig } =
-      getTypeInfoMapFromTypeScript(configTypesTS);
-
-    // TODO: NEED the entire map AND the config `typeName` to get the `TypeInfo`.
-    return DynamoDBSpecificConfig;
-  };
 
   /**
    * Create an item in the database.
@@ -516,6 +503,31 @@ export class DynamoDBDataItemDBDriver<
   };
 }
 
+export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
+  {
+    factory: <
+      ItemType extends Record<any, any>,
+      UniquelyIdentifyingFieldName extends keyof ItemType,
+    >(
+      config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
+    ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
+      return new DynamoDBDataItemDBDriver(config);
+    },
+    getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
+      const configTypesPath = Path.join(
+        __dirname,
+        "DynamoDBDataItemDBDriver",
+        "ConfigTypes.ts",
+      );
+      const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
+      const typeInfoMap = getTypeInfoMapFromTypeScript(configTypesTS);
+
+      return {
+        entryTypeName: "DynamoDBSpecificConfig",
+        typeInfoMap,
+      };
+    },
+  };
+
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
-// TODO: Drivers SHOULD have an API for `new` and a method to return a `TypeInfo(Map)` for its specific config parameters.
-// TODO: Error Type SHOULD be defined at the Driver API level.
+// TODO: Error Types SHOULD be defined at the Driver API level.
