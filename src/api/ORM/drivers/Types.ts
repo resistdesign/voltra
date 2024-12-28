@@ -3,6 +3,7 @@ import {
   ListItemsConfig,
   ListItemsResults,
 } from "../../../common";
+import { TypeInfo } from "../../../common/TypeParsing/TypeInfo";
 
 /**
  * The basic API for a database driver with CRUD and Find.
@@ -48,12 +49,31 @@ export type BasicDBDriver = {
 };
 
 /**
+ * The generic type for a database driver configuration.
+ * */
+export type DataItemDBDriverConfig<
+  ItemType extends Record<any, any>,
+  UniquelyIdentifyingFieldName extends keyof ItemType,
+> = {
+  typeName: string;
+  typeInfo: TypeInfo;
+  tableName: string;
+  uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
+  generateUniqueIdentifier?: (targetItem: ItemType) => string;
+  dbSpecificConfig?: Record<string, any>;
+};
+
+/**
  * The API for a database driver.
  * */
 export type DataItemDBDriver<
   ItemType extends Record<any, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
+  new: (
+    config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
+  ) => DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>;
+  getDBSpecificConfigTypeInfo: () => TypeInfo;
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
