@@ -29,43 +29,48 @@ const outputFile = project.createSourceFile(
   { overwrite: true },
 );
 
-// Helper to recursively flatten a type
-function flattenType(type: Type): any {
+// Helper to generate TypeScript type definitions
+function generateTypeScriptDefinition(type: Type): string {
   if (type.isIntersection()) {
     // Flatten all parts of the intersection
-    return type.getIntersectionTypes().reduce((acc, subType) => {
-      return { ...acc, ...flattenType(subType) };
-    }, {});
+    return type
+      .getIntersectionTypes()
+      .map((subType) => generateTypeScriptDefinition(subType))
+      .join(" & ");
   } else if (type.isObject()) {
     // Handle object types (e.g., interfaces)
     const properties = type.getProperties();
-    const flattened: Record<string, any> = {};
+    const lines = properties.map((prop) => {
+      const name = prop.getName();
+      const propType = prop.getTypeAtLocation(sourceFile).getText();
+      const optional = prop.isOptional() ? "?" : "";
+      return `  ${name}${optional}: ${propType};`;
+    });
 
-    for (const prop of properties) {
-      const propName = prop.getName();
-      const propType = prop.getTypeAtLocation(sourceFile);
-      flattened[propName] = flattenType(propType);
-    }
-
-    return flattened;
+    return `{\n${lines.join("\n")}\n}`;
   } else if (type.isUnion()) {
-    // Handle union types (optional for your use case)
-    return type.getUnionTypes().map((unionType) => flattenType(unionType));
+    // Handle union types
+    return type
+      .getUnionTypes()
+      .map((unionType) => generateTypeScriptDefinition(unionType))
+      .join(" | ");
   } else {
     // Base case: primitive or other resolved type
     return type.getText();
   }
 }
 
-// Locate the DynamoDBClientConfig type and resolve it
-const dynamoDBConfigType = sourceFile.getTypeAliasOrThrow(
+// Locate the DynamoDBClientConfig interface and resolve it
+const dynamoDBConfigInterface = sourceFile.getInterfaceOrThrow(
   "DynamoDBClientConfig",
 );
-const resolvedType = flattenType(dynamoDBConfigType.getType());
+const resolvedType = generateTypeScriptDefinition(
+  dynamoDBConfigInterface.getType(),
+);
 
-// Write the flattened type to the new file
+// Write the resolved type to a TypeScript file
 outputFile.addStatements([
-  `export type DynamoDBClientConfig = ${JSON.stringify(resolvedType, null, 2)};`,
+  `export type FlattenedDynamoDBClientConfig = ${resolvedType};`,
 ]);
 
 // Save the output file
