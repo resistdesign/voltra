@@ -3,7 +3,11 @@ import {
   ListItemsConfig,
   ListItemsResults,
 } from "../../../common";
-import { TypeInfo, TypeInfoPack } from "../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoDataItem,
+  TypeInfoPack,
+} from "../../../common/TypeParsing/TypeInfo";
 
 /**
  * The basic API for a database driver with CRUD and Find.
@@ -52,7 +56,7 @@ export type BasicDBDriver = {
  * The generic type for a database driver configuration.
  * */
 export type DataItemDBDriverConfig<
-  ItemType extends Record<any, any>,
+  ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   typeName: string;
@@ -67,7 +71,7 @@ export type DataItemDBDriverConfig<
  * The API for a database driver.
  * */
 export type DataItemDBDriver<
-  ItemType extends Record<any, any>,
+  ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   createItem: (

@@ -15,24 +15,19 @@ import {
   BaseFileLocationInfo,
   CloudFileServiceDriver,
   DataItemDBDriver,
+  DataItemDBDriverConfig,
+  SupportedDataItemDBDriverEntry,
 } from "../Types";
 import { ListItemsConfig } from "../../../../common";
 import { getDataItemWithOnlySelectedFields } from "./Utils";
+import { S3SpecificConfig } from "./S3DataItemDBDriver/ConfigTypes";
+import Path from "path";
+import FS from "fs";
+import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
 
 export type BaseFileItem = {
   id: string;
 } & BaseFile;
-
-/**
- * The configuration for an {@link S3DataItemDBDriver}.
- * */
-export type S3DataItemDBDriverConfig = {
-  s3Config?: S3ClientConfig;
-  bucketName: string;
-  baseDirectory: string;
-  urlExpirationInSeconds?: number;
-  readOnly?: boolean;
-};
 
 export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
   INVALID_REQUEST: "INVALID_REQUEST",
@@ -49,15 +44,33 @@ export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
 export class S3DataItemDBDriver
   implements DataItemDBDriver<BaseFileItem, "id">
 {
+  protected specificConfig: S3SpecificConfig;
   protected s3: S3;
   protected s3FileDriver: CloudFileServiceDriver;
 
-  constructor(protected config: S3DataItemDBDriverConfig) {
-    const { s3Config = {}, bucketName, urlExpirationInSeconds } = config;
+  constructor(protected config: DataItemDBDriverConfig<BaseFileItem, "id">) {
+    const {
+      // TODO: Use this for Errors???
+      typeName,
+      dbSpecificConfig,
+      // TODO: Make `tableName` and `bucketName` (or `baseDirectory`???) interchangeable.
+      //   - Call it `storageName`???
+      tableName,
+      // TODO: It's great but we don't need it here because we know that we use `id`.
+      uniquelyIdentifyingFieldName,
+      // TODO: Already known as `BaseFileItem`.
+      typeInfo,
+      // TODO: Incorporate this.
+      //   - Do we even need this given that we use paths as IDs???
+      generateUniqueIdentifier,
+    } = config;
+    const { s3Config, bucketName, baseDirectory, urlExpirationInSeconds } =
+      dbSpecificConfig as S3SpecificConfig;
 
-    this.s3 = new S3(s3Config);
+    this.specificConfig = dbSpecificConfig as S3SpecificConfig;
+    this.s3 = new S3(s3Config as S3ClientConfig);
     this.s3FileDriver = new S3FileDriver({
-      s3Config: s3Config,
+      s3Config: s3Config as S3ClientConfig,
       bucketName,
       urlExpirationInSeconds,
     });
@@ -67,7 +80,7 @@ export class S3DataItemDBDriver
    * Create a new @{@link BaseFileItem}.
    * */
   public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
-    const { readOnly, bucketName, baseDirectory } = this.config;
+    const { readOnly, bucketName, baseDirectory } = this.specificConfig;
 
     if (readOnly) {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
@@ -76,6 +89,8 @@ export class S3DataItemDBDriver
     await this.s3.send(
       new PutObjectCommand({
         Bucket: bucketName,
+        // TODO: SECURITY: Is `getFullFileKey` safe from "../" path parts???
+        // TODO: Should it use the Route Pathing utils to clean and encode the path???
         Key: getFullFileKey({
           file: item as BaseFileLocationInfo,
           baseDirectory,
@@ -96,7 +111,7 @@ export class S3DataItemDBDriver
     id: string,
     selectFields?: (keyof BaseFileItem)[],
   ) => {
-    const { bucketName, baseDirectory } = this.config;
+    const { bucketName, baseDirectory } = this.specificConfig;
 
     if (typeof id === "undefined") {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -137,7 +152,7 @@ export class S3DataItemDBDriver
    * */
   public updateItem = async (item: Partial<BaseFileItem>) => {
     const { directory, name, id } = item;
-    const { readOnly, bucketName, baseDirectory } = this.config;
+    const { readOnly, bucketName, baseDirectory } = this.specificConfig;
 
     if (readOnly) {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
@@ -179,7 +194,7 @@ export class S3DataItemDBDriver
    * Delete a @{@link BaseFileItem} by its id.
    */
   public deleteItem = async (id: string) => {
-    const { readOnly, baseDirectory } = this.config;
+    const { readOnly, baseDirectory } = this.specificConfig;
 
     if (readOnly) {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
@@ -205,7 +220,7 @@ export class S3DataItemDBDriver
     config: ListItemsConfig,
     selectFields?: (keyof BaseFileItem)[],
   ) => {
-    const { baseDirectory } = this.config;
+    const { baseDirectory } = this.specificConfig;
     const {
       itemsPerPage = Infinity,
       cursor,
@@ -268,3 +283,32 @@ export class S3DataItemDBDriver
     }
   };
 }
+
+/**
+ * The supported DB driver entry for the S3 {@link DataItemDBDriver}.
+ * */
+export const S3SupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
+  {
+    factory: <
+      ItemType extends Record<any, any>,
+      UniquelyIdentifyingFieldName extends keyof ItemType,
+    >(
+      config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
+    ) => {
+      return new S3DataItemDBDriver(config as any) as any;
+    },
+    getDBSpecificConfigTypeInfo: () => {
+      const configTypesPath = Path.join(
+        __dirname,
+        "S3DataItemDBDriver",
+        "ConfigTypes.ts",
+      );
+      const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
+      const typeInfoMap = getTypeInfoMapFromTypeScript(configTypesTS);
+
+      return {
+        entryTypeName: "S3SpecificConfig",
+        typeInfoMap,
+      };
+    },
+  };

@@ -216,7 +216,7 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
  * A {@link DataItemDBDriver} that uses DynamoDB as its database.
  * */
 export class DynamoDBDataItemDBDriver<
-  ItemType extends Record<any, any>,
+  ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>
 {
@@ -503,6 +503,9 @@ export class DynamoDBDataItemDBDriver<
   };
 }
 
+/**
+ * The supported DB driver entry for the DynamoDB {@link DataItemDBDriver}.
+ * */
 export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
   {
     factory: <
