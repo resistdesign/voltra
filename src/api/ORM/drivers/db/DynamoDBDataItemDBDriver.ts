@@ -1,7 +1,7 @@
-import { DataItemDBDriver } from "../Types";
+import {DataItemDBDriver, DataItemDBDriverConfig} from "../Types";
 import {
   DeleteItemCommand,
-  DynamoDBClient,
+  DynamoDBClient, DynamoDBClientConfig,
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
@@ -204,21 +204,6 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
 };
 
 /**
- * The configuration for the {@link DynamoDBDataItemDBDriver}.
- * */
-export type DynamoDBDataItemDBDriverConfig<
-  ItemType extends Record<any, any>,
-  UniquelyIdentifyingFieldName extends keyof ItemType,
-> = {
-  dynamoDBClientConfig: any;
-  typeName: string;
-  typeInfo: TypeInfo;
-  tableName: string;
-  uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
-  generateUniqueIdentifier?: (targetItem: ItemType) => string;
-};
-
-/**
  * A {@link DataItemDBDriver} that uses DynamoDB as its database.
  * */
 export class DynamoDBDataItemDBDriver<
@@ -229,12 +214,18 @@ export class DynamoDBDataItemDBDriver<
   protected dynamoDBClient: DynamoDBClient;
 
   constructor(
-    protected config: DynamoDBDataItemDBDriverConfig<
-      ItemType,
-      UniquelyIdentifyingFieldName
-    >,
+    protected config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
   ) {
-    this.dynamoDBClient = new DynamoDBClient(config.dynamoDBClientConfig);
+    const {
+      dbSpecificConfig,
+    } = config;
+    const {
+      apiVersion = "string",
+      base64Encoder = "string",
+
+    }: DynamoDBClientConfig = dbSpecificConfig as DynamoDBClientConfig;
+
+    this.dynamoDBClient = new DynamoDBClient(dbSpecificConfig as DynamoDBClientConfig);
   }
 
   /**
