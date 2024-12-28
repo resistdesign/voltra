@@ -55,6 +55,7 @@
     "process": "^0.11.10",
     "react-dom": "^18.3.1",
     "semantic-release": "^23.0.0",
+    "ts-morph": "^24.0.0",
     "ts-node": "^10.9.2",
     "typedoc": "^0.25.8",
     "typedoc-material-theme": "^1.0.2"
