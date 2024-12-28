@@ -70,9 +70,9 @@ export type DataItemDBDriver<
   ItemType extends Record<any, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
-  new: (
+  new (
     config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
-  ) => DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>;
+  ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>;
   getDBSpecificConfigTypeInfo: () => TypeInfo;
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,

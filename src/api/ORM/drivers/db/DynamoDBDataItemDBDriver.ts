@@ -1,7 +1,8 @@
-import {DataItemDBDriver, DataItemDBDriverConfig} from "../Types";
+import { DataItemDBDriver, DataItemDBDriverConfig } from "../Types";
 import {
   DeleteItemCommand,
-  DynamoDBClient, DynamoDBClientConfig,
+  DynamoDBClient,
+  DynamoDBClientConfig,
   GetItemCommand,
   PutItemCommand,
   ScanCommand,
@@ -29,6 +30,9 @@ import {
   SearchCriteria,
 } from "../../../../common/SearchTypes";
 import { getSortedItems } from "../../../../common/SearchUtils";
+import FS from "fs";
+import Path from "path";
+import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
 
 /**
  * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
@@ -214,19 +218,35 @@ export class DynamoDBDataItemDBDriver<
   protected dynamoDBClient: DynamoDBClient;
 
   constructor(
-    protected config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
+    protected config: DataItemDBDriverConfig<
+      ItemType,
+      UniquelyIdentifyingFieldName
+    >,
   ) {
-    const {
-      dbSpecificConfig,
-    } = config;
-    const {
-      apiVersion = "string",
-      base64Encoder = "string",
+    const { dbSpecificConfig } = config;
 
-    }: DynamoDBClientConfig = dbSpecificConfig as DynamoDBClientConfig;
-
-    this.dynamoDBClient = new DynamoDBClient(dbSpecificConfig as DynamoDBClientConfig);
+    this.dynamoDBClient = new DynamoDBClient(
+      dbSpecificConfig as DynamoDBClientConfig,
+    );
   }
+
+  // TODO: This method REALLY NEEDS to be in a driver config object and not part of the class.
+  /**
+   * Get the type information for the database driver configuration.
+   * */
+  public getDBSpecificConfigTypeInfo = (): TypeInfo => {
+    const configTypesPath = Path.join(
+      __dirname,
+      "DynamoDBDataItemDBDriver",
+      "ConfigTypes.ts",
+    );
+    const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
+    const { DynamoDBSpecificConfig } =
+      getTypeInfoMapFromTypeScript(configTypesTS);
+
+    // TODO: NEED the entire map AND the config `typeName` to get the `TypeInfo`.
+    return DynamoDBSpecificConfig;
+  };
 
   /**
    * Create an item in the database.
