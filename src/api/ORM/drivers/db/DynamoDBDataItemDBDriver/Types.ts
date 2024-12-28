@@ -11,19 +11,19 @@ export type Logger = {
 export type Endpoint = {
   protocol: string;
   hostname: string;
-  port?: string | string;
+  port?: string;
   path: string;
-  query?: string | string;
+  query?: string;
 };
 
 export type RetryStrategy = {
-  mode?: string | string;
+  mode?: string;
   retry: any;
 };
 
 export type DynamoDBSpecificConfig = {
   requestHandler?: string;
-  apiVersion?: string | string;
+  apiVersion?: string;
   sha256?: string;
   urlParser?: string;
   bodyLengthChecker?: string;
@@ -32,18 +32,18 @@ export type DynamoDBSpecificConfig = {
   base64Encoder?: string;
   utf8Decoder?: string;
   utf8Encoder?: string;
-  runtime?: string | string;
+  runtime?: string;
   disableHostPrefix?: string | false | true;
-  serviceId?: string | string;
+  serviceId?: string;
   useDualstackEndpoint?: string | false | true;
   useFipsEndpoint?: string | false | true;
   defaultUserAgentProvider?: string;
-  region?: string | string;
+  region?: string;
   credentialDefaultProvider?: string;
-  maxAttempts?: string | string;
-  retryMode?: string | string;
+  maxAttempts?: string;
+  retryMode?: string;
   logger?: string | Logger;
-  extensions?: string | string;
+  extensions?: string;
   defaultsMode?:
     | string
     | "standard"
@@ -53,19 +53,19 @@ export type DynamoDBSpecificConfig = {
     | "auto"
     | "legacy";
   endpointDiscoveryEnabledProvider?: string;
-  endpoint?: string | string | Endpoint;
+  endpoint?: string | Endpoint;
   endpointProvider?: string;
   tls?: string | false | true;
   retryStrategy?: string | RetryStrategy;
-  customUserAgent?: string | string | string;
-  httpAuthSchemes?: string | string;
+  customUserAgent?: string;
+  httpAuthSchemes?: string;
   httpAuthSchemeProvider?: string;
   credentials?: string;
   signer?: string;
   signingEscapePath?: string | false | true;
-  systemClockOffset?: string | string;
-  signingRegion?: string | string;
+  systemClockOffset?: string;
+  signingRegion?: string;
   signerConstructor?: string;
-  endpointCacheSize?: string | string;
+  endpointCacheSize?: string;
   endpointDiscoveryEnabled?: string | false | true;
 };
