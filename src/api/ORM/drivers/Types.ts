@@ -3,7 +3,7 @@ import {
   ListItemsConfig,
   ListItemsResults,
 } from "../../../common";
-import { TypeInfo } from "../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoPack } from "../../../common/TypeParsing/TypeInfo";
 
 /**
  * The basic API for a database driver with CRUD and Find.
@@ -70,10 +70,6 @@ export type DataItemDBDriver<
   ItemType extends Record<any, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
-  new (
-    config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
-  ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>;
-  getDBSpecificConfigTypeInfo: () => TypeInfo;
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
@@ -89,6 +85,19 @@ export type DataItemDBDriver<
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
   ) => Promise<boolean | ListItemsResults<Partial<ItemType>>>;
+};
+
+/**
+ * An entry for a supported database driver.
+ * */
+export type SupportedDataItemDBDriverEntry = {
+  factory: <
+    ItemType extends Record<any, any>,
+    UniquelyIdentifyingFieldName extends keyof ItemType,
+  >(
+    config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
+  ) => DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>;
+  getDBSpecificConfigTypeInfo: () => TypeInfoPack;
 };
 
 /**
