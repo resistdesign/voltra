@@ -64,6 +64,8 @@ export type TypeInfoORMServiceConfig = {
 
 // TODO: Integrate DAC.
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
+// TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
+// TODO: Error Types SHOULD be defined at the Driver API level.
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
@@ -299,7 +301,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       },
     });
 
-    return results;
+    return results as ListItemsResults<ItemRelationshipInfo>;
   };
 
   /**
