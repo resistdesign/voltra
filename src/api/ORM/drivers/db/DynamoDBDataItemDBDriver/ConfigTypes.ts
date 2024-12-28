@@ -44,8 +44,10 @@ export type DynamoDBSpecificConfig = {
   retryMode?: string;
   logger?: string | Logger;
   extensions?: string;
+  /**
+   * @allowCustomSelection
+   * */
   defaultsMode?:
-    | string
     | "standard"
     | "in-region"
     | "cross-region"
