@@ -371,8 +371,7 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
-    const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
-      this.config;
+    const { typeName, typeInfo, tableName } = this.config;
     const {
       itemsPerPage = 10,
       cursor,
