@@ -135,7 +135,9 @@ export class S3DataItemDBDriver
   /**
    * Update a @{@link BaseFileItem}.
    * */
-  public updateItem = async (item: Partial<BaseFileItem>) => {
+  public updateItem = async (
+    item: Record<"id", BaseFileItem["id"]> & Partial<BaseFileItem>,
+  ) => {
     const { directory, name, id } = item;
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;

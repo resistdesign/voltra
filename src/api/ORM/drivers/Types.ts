@@ -81,7 +81,13 @@ export type DataItemDBDriver<
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
   ) => Promise<Partial<ItemType>>;
-  updateItem: (updatedItem: Partial<ItemType>) => Promise<boolean>;
+  updateItem: (
+    updatedItem: Record<
+      UniquelyIdentifyingFieldName,
+      ItemType[UniquelyIdentifyingFieldName]
+    > &
+      Partial<ItemType>,
+  ) => Promise<boolean>;
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ) => Promise<boolean>;
