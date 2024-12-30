@@ -29,14 +29,12 @@ export type BaseFileItem = {
   id: string;
 } & BaseFile;
 
-// TODO: This should be handled at the ORM Service level.
+// TODO: Error Types SHOULD be defined at the Driver API level.
 export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
   MISSING_ID: "MISSING_ID",
 };
 
-// TODO: Need to export a supported DB driver entry object.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
-// TODO: Error Types SHOULD be defined at the Driver API level.
 
 /**
  * Use S3 as a {@link DataItemDBDriver} for {@link BaseFileItem}s.
