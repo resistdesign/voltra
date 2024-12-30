@@ -77,6 +77,8 @@ export class S3DataItemDBDriver
           // SECURITY: `baseDirectory` is only used internally here, and not as part of the `id`.
           baseDirectory: tableName,
         }),
+        // TODO: Uhm, so we make the body of the item and then what!?!
+        //   - Should we not save the item!?!
         Body: "",
       }),
     );
