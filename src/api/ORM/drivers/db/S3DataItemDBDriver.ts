@@ -29,8 +29,8 @@ export type BaseFileItem = {
   id: string;
 } & BaseFile;
 
+// TODO: This should be handled at the ORM Service level.
 export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
-  INVALID_REQUEST: "INVALID_REQUEST",
   MISSING_ID: "MISSING_ID",
 };
 
@@ -49,22 +49,8 @@ export class S3DataItemDBDriver
   protected s3FileDriver: CloudFileServiceDriver;
 
   constructor(protected config: DataItemDBDriverConfig<BaseFileItem, "id">) {
-    const {
-      // TODO: Use this for Errors???
-      typeName,
-      dbSpecificConfig,
-      // TODO: Make `tableName` and `bucketName` (or `baseDirectory`???) interchangeable.
-      //   - Call it `storageName`???
-      tableName,
-      // TODO: It's great but we don't need it here because we know that we use `id`.
-      uniquelyIdentifyingFieldName,
-      // TODO: Already known as `BaseFileItem`.
-      typeInfo,
-      // TODO: Incorporate this.
-      //   - Do we even need this given that we use paths as IDs???
-      generateUniqueIdentifier,
-    } = config;
-    const { s3Config, bucketName, baseDirectory, urlExpirationInSeconds } =
+    const { dbSpecificConfig } = config;
+    const { s3Config, bucketName, urlExpirationInSeconds } =
       dbSpecificConfig as S3SpecificConfig;
 
     this.specificConfig = dbSpecificConfig as S3SpecificConfig;
@@ -80,11 +66,8 @@ export class S3DataItemDBDriver
    * Create a new @{@link BaseFileItem}.
    * */
   public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
-    const { readOnly, bucketName, baseDirectory } = this.specificConfig;
-
-    if (readOnly) {
-      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
-    }
+    const { tableName } = this.config;
+    const { bucketName } = this.specificConfig;
 
     await this.s3.send(
       new PutObjectCommand({
@@ -93,7 +76,8 @@ export class S3DataItemDBDriver
         // TODO: Should it use the Route Pathing utils to clean and encode the path???
         Key: getFullFileKey({
           file: item as BaseFileLocationInfo,
-          baseDirectory,
+          // SECURITY: `baseDirectory` is only used internally here, and not as part of the `id`.
+          baseDirectory: tableName,
         }),
         Body: "",
       }),
@@ -111,7 +95,8 @@ export class S3DataItemDBDriver
     id: string,
     selectFields?: (keyof BaseFileItem)[],
   ) => {
-    const { bucketName, baseDirectory } = this.specificConfig;
+    const { tableName } = this.config;
+    const { bucketName } = this.specificConfig;
 
     if (typeof id === "undefined") {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -127,7 +112,7 @@ export class S3DataItemDBDriver
           Bucket: bucketName,
           Key: getFullFileKey({
             file: itemLoc,
-            baseDirectory,
+            baseDirectory: tableName,
           }),
         }),
       );
@@ -152,11 +137,8 @@ export class S3DataItemDBDriver
    * */
   public updateItem = async (item: Partial<BaseFileItem>) => {
     const { directory, name, id } = item;
-    const { readOnly, bucketName, baseDirectory } = this.specificConfig;
-
-    if (readOnly) {
-      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
-    }
+    const { tableName } = this.config;
+    const { bucketName } = this.specificConfig;
 
     if (typeof id === "undefined") {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -173,15 +155,15 @@ export class S3DataItemDBDriver
                 directory,
                 name,
               },
-              baseDirectory,
+              baseDirectory: tableName,
             }),
             CopySource: getFullFileKey({
               file: oldItemLoc,
-              baseDirectory,
+              baseDirectory: tableName,
             }),
           }),
         );
-        await this.s3FileDriver.deleteFile(oldItemLoc, baseDirectory);
+        await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
       }
 
       await this.readItem(id);
@@ -194,11 +176,7 @@ export class S3DataItemDBDriver
    * Delete a @{@link BaseFileItem} by its id.
    */
   public deleteItem = async (id: string) => {
-    const { readOnly, baseDirectory } = this.specificConfig;
-
-    if (readOnly) {
-      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.INVALID_REQUEST);
-    }
+    const { tableName } = this.config;
 
     if (typeof id === "undefined") {
       throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -206,7 +184,7 @@ export class S3DataItemDBDriver
       await this.readItem(id);
       await this.s3FileDriver.deleteFile(
         getBaseFileLocationInfo(id),
-        baseDirectory,
+        tableName,
       );
     }
 
@@ -220,7 +198,7 @@ export class S3DataItemDBDriver
     config: ListItemsConfig,
     selectFields?: (keyof BaseFileItem)[],
   ) => {
-    const { baseDirectory } = this.specificConfig;
+    const { tableName } = this.config;
     const {
       itemsPerPage = Infinity,
       cursor,
@@ -240,7 +218,7 @@ export class S3DataItemDBDriver
       const { files: baseFileList = [], cursor: newCursor } =
         await this.s3FileDriver.listFiles(
           undefined,
-          baseDirectory,
+          tableName,
           checkExistence ? 100 : itemsPerPage - filteredFiles.length,
           cursor,
         );

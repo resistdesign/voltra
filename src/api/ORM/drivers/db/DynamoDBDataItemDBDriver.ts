@@ -39,6 +39,7 @@ import FS from "fs";
 import Path from "path";
 import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
 
+// TODO: Handle at ORM Service level.
 /**
  * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
  * */
@@ -122,6 +123,7 @@ const createFilterExpression = (
       };
     }
 
+    // TODO: Handle in at ORM Service level.
     // IMPORTANT: Use only non-relational fields.
     if (tIF && typeof typeReference === "undefined") {
       const createExpression =
@@ -165,6 +167,7 @@ const buildUpdateExpression = (
     const { typeReference } = fields[f];
     const value = updatedItem[f];
 
+    // TODO: Handle relational field removal at ORM Service level.
     // IMPORTANT: DO NOT use the `primaryField`, only use non-relational fields and there must be a value.
     if (
       f !== uniquelyIdentifyingFieldName &&
