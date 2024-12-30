@@ -100,7 +100,5 @@ export type AbridgedS3ClientConfig = {
 export type S3SpecificConfig = {
   s3Config?: AbridgedS3ClientConfig;
   bucketName: string;
-  baseDirectory: string;
   urlExpirationInSeconds?: number;
-  readOnly?: boolean;
 };
