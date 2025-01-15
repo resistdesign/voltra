@@ -78,7 +78,7 @@ export const resolvePath = (currentPath: string, newPath: string): string => {
 };
 
 /**
- * Get the parameter values from a path string and test the path against a test path.
+ * Get the parameter values from a path string and test the `path` against a `testPath`.
  * */
 export const getParamsAndTestPath = (
   path: string,
