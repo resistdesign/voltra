@@ -2,7 +2,7 @@ import {
   LiteralValue,
   TypeInfo,
   TypeInfoDataItem,
-} from "../../common/TypeParsing/TypeInfo";
+} from "../common/TypeParsing/TypeInfo";
 
 /**
  * The possible types of a data access control (DAC) constraint.
