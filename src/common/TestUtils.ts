@@ -172,14 +172,14 @@ export const compare = (
   return op(result, expectation);
 };
 
-export const runTest = (
-  testFunction: (...args: unknown[]) => unknown,
+export const runTest = async (
+  testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
   test: TestCondition,
   index: number,
-): void => {
+): Promise<void> => {
   const { conditions, expectation, operation } = test;
   try {
-    const result = testFunction(...conditions);
+    const result = await testFunction(...conditions);
     const passed = compare(result, expectation, operation);
     if (passed) {
       console.log(
@@ -219,12 +219,17 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
     }
 
     console.log(`Running tests from ${testFilePath}`);
-    tests.forEach((test, index) => runTest(testFunction, test, index));
+    for (const [index, test] of tests.entries()) {
+      await runTest(testFunction, test, index);
+    }
   } catch (err: any) {
     console.error(`Error processing test file ${testFilePath}: ${err.message}`);
   }
 };
 
+/**
+ * Use the `TestUtils` as a CLI to run all of the tests in a specified directory.
+ * */
 export const runTests = async (testPath: string): Promise<void> => {
   try {
     const files = await fs.readdir(testPath);
@@ -250,7 +255,7 @@ if (require.main === module) {
   const testPath = process.argv[2];
 
   if (!testPath) {
-    console.error("Usage: node voltraTestUtility.ts <test-directory-path>");
+    console.error("Usage: node TestUtils.ts <test-directory-path>");
     process.exit(1);
   }
 
