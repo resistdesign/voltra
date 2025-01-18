@@ -257,7 +257,7 @@ if (require.main === module) {
   const testPath = process.argv[2];
 
   if (!testPath) {
-    console.error("Usage: node TestUtils.ts <test-directory-path>");
+    console.error("Usage: vest <test-directory-path>");
     process.exit(1);
   }
 

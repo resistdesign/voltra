@@ -12,7 +12,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "bin": {
-    "voltra-test": "./src/common/TestUtils.ts"
+    "vest": "ts-node/register ./src/common/TestUtils.ts"
   },
   "scripts": {
     "build": "tsc && yarn prep-dist",
@@ -26,7 +26,8 @@
     "site:build:iac": "ts-node ./site/iac/index.ts",
     "start": "parcel site/app/index.html --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/ && cp ./favicon/assets/* site-dist/app/",
-    "iac:types:gen": "ts-node ./src/iac/types/generate.ts"
+    "iac:types:gen": "ts-node ./src/iac/types/generate.ts",
+    "vest": "ts-node ./src/common/TestUtils.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
