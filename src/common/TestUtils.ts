@@ -4,16 +4,16 @@ import { promises as FS } from "fs";
 import Path from "path";
 import fastGlob from "fast-glob";
 
-export enum TestConditionOperation {
+export enum Operation {
   EQUALS = "===",
   NOT_EQUALS = "!==",
   IN = "IN",
+  ARRAY_CONTAINS = "ARRAY_CONTAINS",
   BETWEEN = "BETWEEN",
   CONTAINS = "CONTAINS",
   REGEX = "REGEX",
   EXT_REGEX = "EXT_REGEX",
   DEEP_EQUALS = "DEEP_EQUALS",
-  ARRAY_CONTAINS = "ARRAY_CONTAINS",
   ARRAY_EQUALS = "ARRAY_EQUALS",
 }
 
@@ -24,39 +24,35 @@ export type BaseTestCondition = {
 export type TestCondition = BaseTestCondition &
   (
     | {
-        operation?:
-          | TestConditionOperation.EQUALS
-          | TestConditionOperation.NOT_EQUALS;
+        operation?: Operation.EQUALS | Operation.NOT_EQUALS;
         expectation: string | number | boolean;
       }
     | {
-        operation:
-          | TestConditionOperation.IN
-          | TestConditionOperation.ARRAY_CONTAINS;
+        operation: Operation.IN | Operation.ARRAY_CONTAINS;
         expectation: unknown[];
       }
     | {
-        operation: TestConditionOperation.BETWEEN;
+        operation: Operation.BETWEEN;
         expectation: [number, number];
       }
     | {
-        operation: TestConditionOperation.CONTAINS;
+        operation: Operation.CONTAINS;
         expectation: string;
       }
     | {
-        operation: TestConditionOperation.REGEX;
+        operation: Operation.REGEX;
         expectation: RegexExpectation;
       }
     | {
-        operation: TestConditionOperation.EXT_REGEX;
+        operation: Operation.EXT_REGEX;
         expectation: EXTRegexExpectation;
       }
     | {
-        operation: TestConditionOperation.DEEP_EQUALS;
+        operation: Operation.DEEP_EQUALS;
         expectation: Record<string, unknown>;
       }
     | {
-        operation: TestConditionOperation.ARRAY_EQUALS;
+        operation: Operation.ARRAY_EQUALS;
         expectation: unknown[];
       }
   );
@@ -84,15 +80,11 @@ export type RegexExpectation = {
   flags?: string;
 };
 
-// Supported operations for test expectations
-export const OPERATIONS: Record<
-  TestConditionOperation,
-  (a: unknown, b: unknown) => boolean
-> = {
-  [TestConditionOperation.EQUALS]: (a, b) => a === b,
-  [TestConditionOperation.NOT_EQUALS]: (a, b) => a !== b,
-  [TestConditionOperation.IN]: (a, b) => Array.isArray(b) && b.includes(a),
-  [TestConditionOperation.BETWEEN]: (a, b) => {
+export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
+  [Operation.EQUALS]: (a, b) => a === b,
+  [Operation.NOT_EQUALS]: (a, b) => a !== b,
+  [Operation.IN]: (a, b) => Array.isArray(b) && b.includes(a),
+  [Operation.BETWEEN]: (a, b) => {
     if (
       Array.isArray(b) &&
       b.length === 2 &&
@@ -103,9 +95,9 @@ export const OPERATIONS: Record<
     }
     throw new Error("BETWEEN requires an array of two numbers as expectation.");
   },
-  [TestConditionOperation.CONTAINS]: (a, b) =>
+  [Operation.CONTAINS]: (a, b) =>
     typeof a === "string" && typeof b === "string" && a.includes(b),
-  [TestConditionOperation.REGEX]: (a, b) => {
+  [Operation.REGEX]: (a, b) => {
     if (typeof b === "object" && b !== null && "pattern" in b) {
       const { pattern, flags } = b as RegexExpectation;
       try {
@@ -119,7 +111,7 @@ export const OPERATIONS: Record<
       "REGEX requires an expectation with 'pattern' and optional 'flags'.",
     );
   },
-  [TestConditionOperation.EXT_REGEX]: (a, b) => {
+  [Operation.EXT_REGEX]: (a, b) => {
     if (typeof b === "object" && b !== null && "pattern" in b) {
       const { pattern, flags } = b as EXTRegexExpectation;
       const buildRegexFromPattern = (
@@ -130,7 +122,6 @@ export const OPERATIONS: Record<
           throw new Error("EXT_REGEX pattern must be an array of objects.");
         }
 
-        // Build the regex string
         const regexBody = pattern
           .map(({ value, escaped }) => {
             if (typeof value !== "string") {
@@ -158,7 +149,7 @@ export const OPERATIONS: Record<
       "EXT_REGEX requires an expectation with 'pattern' as an array of PatternElement and optional 'flags'.",
     );
   },
-  [TestConditionOperation.DEEP_EQUALS]: (a, b) => {
+  [Operation.DEEP_EQUALS]: (a, b) => {
     if (
       typeof a === "object" &&
       typeof b === "object" &&
@@ -169,13 +160,13 @@ export const OPERATIONS: Record<
     }
     return false;
   },
-  [TestConditionOperation.ARRAY_CONTAINS]: (a, b) => {
+  [Operation.ARRAY_CONTAINS]: (a, b) => {
     if (Array.isArray(a)) {
       return a.includes(b);
     }
     throw new Error("ARRAY_CONTAINS requires an array as the first argument.");
   },
-  [TestConditionOperation.ARRAY_EQUALS]: (a, b) => {
+  [Operation.ARRAY_EQUALS]: (a, b) => {
     if (Array.isArray(a) && Array.isArray(b)) {
       return JSON.stringify(a) === JSON.stringify(b);
     }
@@ -186,7 +177,7 @@ export const OPERATIONS: Record<
 export const compare = (
   result: unknown,
   expectation: unknown,
-  operation: TestConditionOperation = TestConditionOperation.EQUALS,
+  operation: string = Operation.EQUALS,
 ): boolean => {
   const op = OPERATIONS[operation];
   if (!op) {
@@ -220,6 +211,65 @@ export const runTest = async (
   }
 };
 
+export const generateTestsForFile = async (
+  testFilePath: string,
+): Promise<void> => {
+  try {
+    const testConfig: TestConfig = JSON.parse(
+      await FS.readFile(testFilePath, "utf8"),
+    );
+    const { subject, tests } = testConfig;
+
+    if (!subject || !subject.file || !subject.export) {
+      throw new Error(`Invalid subject configuration in ${testFilePath}`);
+    }
+
+    const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
+    const module = require(modulePath);
+    const testFunction = module[subject.export];
+
+    if (typeof testFunction !== "function") {
+      throw new Error(
+        `Export "${subject.export}" from "${subject.file}" is not a function.`,
+      );
+    }
+
+    console.log(`Generating tests for ${testFilePath}`);
+
+    const generatedTests = [];
+    for (const test of tests) {
+      const { conditions, expectation, operation } = test;
+
+      if (expectation !== undefined) {
+        generatedTests.push(test); // Skip if expectation already exists
+        continue;
+      }
+
+      const result = await testFunction(...conditions);
+      console.log(
+        `  Captured expectation for conditions ${JSON.stringify(
+          conditions,
+        )}: ${JSON.stringify(result)}`,
+      );
+
+      generatedTests.push({
+        conditions,
+        expectation: result,
+        operation: operation || Operation.EQUALS,
+      });
+    }
+
+    const updatedTestConfig = { ...testConfig, tests: generatedTests };
+    await FS.writeFile(
+      testFilePath,
+      JSON.stringify(updatedTestConfig, null, 2),
+    );
+    console.log(`Generated test file saved to ${testFilePath}`);
+  } catch (err: any) {
+    console.error(`Error processing test file ${testFilePath}: ${err.message}`);
+  }
+};
+
 export const runTestsForFile = async (testFilePath: string): Promise<void> => {
   try {
     const testConfig: TestConfig = JSON.parse(
@@ -250,10 +300,10 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
   }
 };
 
-/**
- * Use the `TestUtils` as a CLI to run all of the tests in a specified directory.
- * */
-export const runTests = async (testPath: string): Promise<void> => {
+export const runTests = async (
+  testPath: string,
+  generateMode = false,
+): Promise<void> => {
   try {
     const testFiles = await fastGlob(testPath);
 
@@ -263,7 +313,11 @@ export const runTests = async (testPath: string): Promise<void> => {
     }
 
     for (const testFile of testFiles) {
-      await runTestsForFile(Path.resolve(testFile));
+      if (generateMode) {
+        await generateTestsForFile(Path.resolve(testFile));
+      } else {
+        await runTestsForFile(Path.resolve(testFile));
+      }
     }
 
     console.log("Testing complete.");
@@ -272,14 +326,15 @@ export const runTests = async (testPath: string): Promise<void> => {
   }
 };
 
-// CLI entry point
 if (require.main === module) {
-  const testPath = process.argv[2];
+  const args = process.argv.slice(2);
+  const generateMode = args.includes("--generate");
+  const testPath = args.filter((arg) => arg !== "--generate")[0];
 
   if (!testPath) {
-    console.error("Usage: vest <test-directory-path>");
+    console.error("Usage: vest [--generate] <test-directory-path>");
     process.exit(1);
   }
 
-  runTests(testPath);
+  runTests(testPath, generateMode);
 }
