@@ -1,0 +1,32 @@
+{
+  "subject": {
+    "file": "./demo.ts",
+    "export": "add"
+  },
+  "tests": [
+    {
+      "conditions": [
+        1,
+        2
+      ],
+      "expectation": 3,
+      "operation": "==="
+    },
+    {
+      "conditions": [
+        5,
+        5
+      ],
+      "expectation": 10,
+      "operation": "==="
+    },
+    {
+      "conditions": [
+        3,
+        7
+      ],
+      "expectation": 11,
+      "operation": "!=="
+    }
+  ]
+}
