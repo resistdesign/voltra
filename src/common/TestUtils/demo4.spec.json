@@ -16,7 +16,8 @@
         "(",
         ")"
       ],
-      "operation": "==="
+      "operation": "===",
+      "expectation": "(Class Test)"
     }
   ]
 }
