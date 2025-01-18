@@ -4,6 +4,19 @@ import { promises as FS } from "fs";
 import Path from "path";
 import fastGlob from "fast-glob";
 
+export enum TestConditionOperation {
+  EQUALS = "===",
+  NOT_EQUALS = "!==",
+  IN = "IN",
+  BETWEEN = "BETWEEN",
+  CONTAINS = "CONTAINS",
+  REGEX = "REGEX",
+  EXT_REGEX = "EXT_REGEX",
+  DEEP_EQUALS = "DEEP_EQUALS",
+  ARRAY_CONTAINS = "ARRAY_CONTAINS",
+  ARRAY_EQUALS = "ARRAY_EQUALS",
+}
+
 export type BaseTestCondition = {
   conditions: unknown[];
 };
@@ -11,35 +24,39 @@ export type BaseTestCondition = {
 export type TestCondition = BaseTestCondition &
   (
     | {
-        operation?: "===" | "!==";
+        operation?:
+          | TestConditionOperation.EQUALS
+          | TestConditionOperation.NOT_EQUALS;
         expectation: string | number | boolean;
       }
     | {
-        operation: "IN" | "ARRAY_CONTAINS";
+        operation:
+          | TestConditionOperation.IN
+          | TestConditionOperation.ARRAY_CONTAINS;
         expectation: unknown[];
       }
     | {
-        operation: "BETWEEN";
+        operation: TestConditionOperation.BETWEEN;
         expectation: [number, number];
       }
     | {
-        operation: "CONTAINS";
+        operation: TestConditionOperation.CONTAINS;
         expectation: string;
       }
     | {
-        operation: "REGEX";
+        operation: TestConditionOperation.REGEX;
         expectation: RegexExpectation;
       }
     | {
-        operation: "EXT_REGEX";
+        operation: TestConditionOperation.EXT_REGEX;
         expectation: EXTRegexExpectation;
       }
     | {
-        operation: "DEEP_EQUALS";
+        operation: TestConditionOperation.DEEP_EQUALS;
         expectation: Record<string, unknown>;
       }
     | {
-        operation: "ARRAY_EQUALS";
+        operation: TestConditionOperation.ARRAY_EQUALS;
         expectation: unknown[];
       }
   );
@@ -68,11 +85,14 @@ export type RegexExpectation = {
 };
 
 // Supported operations for test expectations
-export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
-  "===": (a, b) => a === b,
-  "!==": (a, b) => a !== b,
-  IN: (a, b) => Array.isArray(b) && b.includes(a),
-  BETWEEN: (a, b) => {
+export const OPERATIONS: Record<
+  TestConditionOperation,
+  (a: unknown, b: unknown) => boolean
+> = {
+  [TestConditionOperation.EQUALS]: (a, b) => a === b,
+  [TestConditionOperation.NOT_EQUALS]: (a, b) => a !== b,
+  [TestConditionOperation.IN]: (a, b) => Array.isArray(b) && b.includes(a),
+  [TestConditionOperation.BETWEEN]: (a, b) => {
     if (
       Array.isArray(b) &&
       b.length === 2 &&
@@ -83,9 +103,9 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
     }
     throw new Error("BETWEEN requires an array of two numbers as expectation.");
   },
-  CONTAINS: (a, b) =>
+  [TestConditionOperation.CONTAINS]: (a, b) =>
     typeof a === "string" && typeof b === "string" && a.includes(b),
-  REGEX: (a, b) => {
+  [TestConditionOperation.REGEX]: (a, b) => {
     if (typeof b === "object" && b !== null && "pattern" in b) {
       const { pattern, flags } = b as RegexExpectation;
       try {
@@ -99,7 +119,7 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
       "REGEX requires an expectation with 'pattern' and optional 'flags'.",
     );
   },
-  EXT_REGEX: (a, b) => {
+  [TestConditionOperation.EXT_REGEX]: (a, b) => {
     if (typeof b === "object" && b !== null && "pattern" in b) {
       const { pattern, flags } = b as EXTRegexExpectation;
       const buildRegexFromPattern = (
@@ -138,7 +158,7 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
       "EXT_REGEX requires an expectation with 'pattern' as an array of PatternElement and optional 'flags'.",
     );
   },
-  DEEP_EQUALS: (a, b) => {
+  [TestConditionOperation.DEEP_EQUALS]: (a, b) => {
     if (
       typeof a === "object" &&
       typeof b === "object" &&
@@ -149,13 +169,13 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
     }
     return false;
   },
-  ARRAY_CONTAINS: (a, b) => {
+  [TestConditionOperation.ARRAY_CONTAINS]: (a, b) => {
     if (Array.isArray(a)) {
       return a.includes(b);
     }
     throw new Error("ARRAY_CONTAINS requires an array as the first argument.");
   },
-  ARRAY_EQUALS: (a, b) => {
+  [TestConditionOperation.ARRAY_EQUALS]: (a, b) => {
     if (Array.isArray(a) && Array.isArray(b)) {
       return JSON.stringify(a) === JSON.stringify(b);
     }
@@ -166,7 +186,7 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
 export const compare = (
   result: unknown,
   expectation: unknown,
-  operation: string = "===",
+  operation: TestConditionOperation = TestConditionOperation.EQUALS,
 ): boolean => {
   const op = OPERATIONS[operation];
   if (!op) {

@@ -11,6 +11,14 @@
       ],
       "expectation": "hello with world",
       "operation": "==="
+    },
+    {
+      "conditions": [
+        "hello",
+        "world"
+      ],
+      "expectation": "hello",
+      "operation": "CONTAINS"
     }
   ]
 }
