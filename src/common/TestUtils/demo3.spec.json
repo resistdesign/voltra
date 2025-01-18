@@ -16,7 +16,7 @@
           ]
         }
       ],
-      "expectation": "",
+      "expectUndefined": true,
       "operation": "DEEP_EQUALS"
     }
   ]
