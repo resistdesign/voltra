@@ -4,7 +4,10 @@ import { promises as FS } from "fs";
 import Path from "path";
 import fastGlob from "fast-glob";
 
-export enum Operation {
+/**
+ * Operations used for comparison of during tests.
+ * */
+export enum TestComparisonOperation {
   EQUALS = "===",
   NOT_EQUALS = "!==",
   IN = "IN",
@@ -17,53 +20,69 @@ export enum Operation {
   ARRAY_EQUALS = "ARRAY_EQUALS",
 }
 
+/**
+ * The basis for a test condition.
+ * */
 export type BaseTestCondition = {
   conditions: unknown[];
   expectUndefined?: boolean;
 };
 
+/**
+ * A singular test condition with specific types of expectations for a given operation.
+ * */
 export type TestCondition = BaseTestCondition &
   (
     | {
-        operation?: Operation.EQUALS | Operation.NOT_EQUALS;
+        operation?:
+          | TestComparisonOperation.EQUALS
+          | TestComparisonOperation.NOT_EQUALS;
         expectation: string | number | boolean | null | undefined;
       }
     | {
-        operation: Operation.IN | Operation.ARRAY_CONTAINS;
+        operation:
+          | TestComparisonOperation.IN
+          | TestComparisonOperation.ARRAY_CONTAINS;
         expectation: unknown[];
       }
     | {
-        operation: Operation.BETWEEN;
+        operation: TestComparisonOperation.BETWEEN;
         expectation: [number, number];
       }
     | {
-        operation: Operation.CONTAINS;
+        operation: TestComparisonOperation.CONTAINS;
         expectation: string;
       }
     | {
-        operation: Operation.REGEX;
+        operation: TestComparisonOperation.REGEX;
         expectation: RegexExpectation;
       }
     | {
-        operation: Operation.EXT_REGEX;
+        operation: TestComparisonOperation.EXT_REGEX;
         expectation: EXTRegexExpectation;
       }
     | {
-        operation: Operation.DEEP_EQUALS;
+        operation: TestComparisonOperation.DEEP_EQUALS;
         expectation: Record<string, unknown>;
       }
     | {
-        operation: Operation.ARRAY_EQUALS;
+        operation: TestComparisonOperation.ARRAY_EQUALS;
         expectation: unknown[];
       }
   );
 
+/**
+ * Preparation for a test when some setup is required or a class needs to be instantiated.
+ * */
 export type TestSetup = {
   conditions: unknown[];
   export: string;
   instantiate?: boolean;
 };
 
+/**
+ * A configuration for a test. Designed to be used in JSON for declarative test files.
+ * */
 export type TestConfig = {
   subject: {
     file: string;
@@ -73,26 +92,44 @@ export type TestConfig = {
   tests: TestCondition[];
 };
 
+/**
+ * A pattern definition object for use with extended regex expectations.
+ * */
 export type PatternElement = {
   value: string;
   escaped?: boolean;
 };
 
+/**
+ * An extended regex expectation with a patter structure, optional flags and
+ * escaping properties that allow for clear and explicit declaration of regex
+ * patterns in JSON.
+ *
+ * Used when a `TestCondition` `operation` is `TestComparisonOperation.EXT_REGEX`.
+ * */
 export type EXTRegexExpectation = {
   pattern: PatternElement[];
   flags?: string;
 };
 
+/**
+ * A regex expectation with a pattern and optional flags.
+ *
+ * Used when a `TestCondition` `operation` is `TestComparisonOperation.REGEX`.
+ * */
 export type RegexExpectation = {
   pattern: string;
   flags?: string;
 };
 
+/**
+ * A map of comparison functions for each `TestComparisonOperation`.
+ * */
 export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
-  [Operation.EQUALS]: (a, b) => a === b,
-  [Operation.NOT_EQUALS]: (a, b) => a !== b,
-  [Operation.IN]: (a, b) => Array.isArray(b) && b.includes(a),
-  [Operation.BETWEEN]: (a, b) => {
+  [TestComparisonOperation.EQUALS]: (a, b) => a === b,
+  [TestComparisonOperation.NOT_EQUALS]: (a, b) => a !== b,
+  [TestComparisonOperation.IN]: (a, b) => Array.isArray(b) && b.includes(a),
+  [TestComparisonOperation.BETWEEN]: (a, b) => {
     if (
       Array.isArray(b) &&
       b.length === 2 &&
@@ -103,9 +140,9 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
     }
     throw new Error("BETWEEN requires an array of two numbers as expectation.");
   },
-  [Operation.CONTAINS]: (a, b) =>
+  [TestComparisonOperation.CONTAINS]: (a, b) =>
     typeof a === "string" && typeof b === "string" && a.includes(b),
-  [Operation.REGEX]: (a, b) => {
+  [TestComparisonOperation.REGEX]: (a, b) => {
     if (typeof b === "object" && b !== null && "pattern" in b) {
       const { pattern, flags } = b as RegexExpectation;
       try {
@@ -119,7 +156,7 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
       "REGEX requires an expectation with 'pattern' and optional 'flags'.",
     );
   },
-  [Operation.EXT_REGEX]: (a, b) => {
+  [TestComparisonOperation.EXT_REGEX]: (a, b) => {
     if (typeof b === "object" && b !== null && "pattern" in b) {
       const { pattern, flags } = b as EXTRegexExpectation;
       const buildRegexFromPattern = (
@@ -157,7 +194,7 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
       "EXT_REGEX requires an expectation with 'pattern' as an array of PatternElement and optional 'flags'.",
     );
   },
-  [Operation.DEEP_EQUALS]: (a, b) => {
+  [TestComparisonOperation.DEEP_EQUALS]: (a, b) => {
     if (
       typeof a === "object" &&
       typeof b === "object" &&
@@ -168,13 +205,13 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
     }
     return false;
   },
-  [Operation.ARRAY_CONTAINS]: (a, b) => {
+  [TestComparisonOperation.ARRAY_CONTAINS]: (a, b) => {
     if (Array.isArray(a)) {
       return a.includes(b);
     }
     throw new Error("ARRAY_CONTAINS requires an array as the first argument.");
   },
-  [Operation.ARRAY_EQUALS]: (a, b) => {
+  [TestComparisonOperation.ARRAY_EQUALS]: (a, b) => {
     if (Array.isArray(a) && Array.isArray(b)) {
       return JSON.stringify(a) === JSON.stringify(b);
     }
@@ -182,10 +219,13 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
   },
 };
 
+/**
+ * Compare a result with an expectation using a specified `TestComparisonOperation`.
+ * */
 export const compare = (
   result: unknown,
   expectation: unknown,
-  operation: string = Operation.EQUALS,
+  operation: TestComparisonOperation = TestComparisonOperation.EQUALS,
 ): boolean => {
   const op = OPERATIONS[operation];
   if (!op) {
@@ -194,7 +234,10 @@ export const compare = (
   return op(result, expectation);
 };
 
-const getSetupInstance = async (
+/**
+ * Get the target base instance from a module, for a given test setup.
+ * */
+export const getSetupInstance = async (
   module: any,
   setup: TestSetup | undefined,
 ): Promise<any> => {
@@ -211,6 +254,9 @@ const getSetupInstance = async (
     : await setupFunction(...setup.conditions);
 };
 
+/**
+ * Run a test using a test function and a test condition.
+ * */
 export const runTest = async (
   testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
   test: TestCondition,
@@ -236,6 +282,9 @@ export const runTest = async (
   }
 };
 
+/**
+ * Generate tests for a file by running the tests, capturing the current result and storing it as the new expectation.
+ * */
 export const generateTestsForFile = async (
   testFilePath: string,
 ): Promise<void> => {
@@ -283,7 +332,7 @@ export const generateTestsForFile = async (
       generatedTests.push({
         ...test,
         expectation: result,
-        operation: operation || Operation.EQUALS,
+        operation: operation || TestComparisonOperation.EQUALS,
       });
       hasNewExpectations = true;
     }
@@ -303,6 +352,11 @@ export const generateTestsForFile = async (
   }
 };
 
+/**
+ * Run the tests for a given test file.
+ *
+ * The test file content is expected to be a JSON in the structure of a `TestConfig`.
+ * */
 export const runTestsForFile = async (testFilePath: string): Promise<void> => {
   try {
     const testConfig: TestConfig = JSON.parse(
@@ -334,6 +388,9 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
   }
 };
 
+/**
+ * Run or generate all of the tests in the specified `testPath` glob.
+ * */
 export const runTests = async (
   testPath: string,
   generateMode = false,
@@ -360,6 +417,7 @@ export const runTests = async (
   }
 };
 
+// CLI entry point.
 if (require.main === module) {
   const args = process.argv.slice(2);
   const generateMode = args.includes("--generate");
