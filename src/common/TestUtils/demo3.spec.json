@@ -16,6 +16,19 @@
           ]
         }
       ],
+      "expectation": {
+        "target": [
+          "a",
+          "b",
+          "c"
+        ],
+        "args": [
+          2,
+          "four",
+          6,
+          "eight"
+        ]
+      },
       "operation": "DEEP_EQUALS"
     }
   ]
