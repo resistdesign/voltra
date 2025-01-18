@@ -5,7 +5,7 @@
   },
   "setup": {
     "conditions": [
-      "Class Test"
+      "My Text Value"
     ],
     "export": "TextTools",
     "instantiate": true
@@ -13,11 +13,11 @@
   "tests": [
     {
       "conditions": [
-        "(",
-        ")"
+        "[",
+        "]"
       ],
       "operation": "===",
-      "expectation": "(Class Test)"
+      "expectation": "[My Text Value]"
     }
   ]
 }
