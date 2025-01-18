@@ -12,7 +12,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "bin": {
-    "vest": "ts-node ./src/common/TestUtils.ts"
+    "vest": "./src/common/TestUtils.ts"
   },
   "scripts": {
     "build": "tsc && yarn prep-dist",
