@@ -11,38 +11,38 @@ export type BaseTestCondition = {
 export type TestCondition = BaseTestCondition &
   (
     | {
-    operation?: "===" | "!==";
-    expectation: string | number | boolean;
-  }
+        operation?: "===" | "!==";
+        expectation: string | number | boolean;
+      }
     | {
-    operation: "IN" | "ARRAY_CONTAINS";
-    expectation: unknown[];
-  }
+        operation: "IN" | "ARRAY_CONTAINS";
+        expectation: unknown[];
+      }
     | {
-    operation: "BETWEEN";
-    expectation: [number, number];
-  }
+        operation: "BETWEEN";
+        expectation: [number, number];
+      }
     | {
-    operation: "CONTAINS";
-    expectation: string;
-  }
+        operation: "CONTAINS";
+        expectation: string;
+      }
     | {
-    operation: "REGEX";
-    expectation: RegexExpectation;
-  }
+        operation: "REGEX";
+        expectation: RegexExpectation;
+      }
     | {
-    operation: "EXT_REGEX";
-    expectation: EXTRegexExpectation;
-  }
+        operation: "EXT_REGEX";
+        expectation: EXTRegexExpectation;
+      }
     | {
-    operation: "DEEP_EQUALS";
-    expectation: Record<string, unknown>;
-  }
+        operation: "DEEP_EQUALS";
+        expectation: Record<string, unknown>;
+      }
     | {
-    operation: "ARRAY_EQUALS";
-    expectation: unknown[];
-  }
-    );
+        operation: "ARRAY_EQUALS";
+        expectation: unknown[];
+      }
+  );
 
 export type TestConfig = {
   subject: {
@@ -211,7 +211,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
       throw new Error(`Invalid subject configuration in ${testFilePath}`);
     }
 
-    const modulePath = path.resolve(subject.file);
+    const modulePath = path.resolve(path.dirname(testFilePath), subject.file);
     const module = await import(modulePath);
     const testFunction = module[subject.export];
 
