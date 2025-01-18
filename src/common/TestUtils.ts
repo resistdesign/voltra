@@ -58,11 +58,18 @@ export type TestCondition = BaseTestCondition &
       }
   );
 
+export type TestSetup = {
+  conditions: unknown[];
+  export: string;
+  instantiate?: boolean;
+};
+
 export type TestConfig = {
   subject: {
     file: string;
     export: string;
   };
+  setup?: TestSetup;
   tests: TestCondition[];
 };
 
