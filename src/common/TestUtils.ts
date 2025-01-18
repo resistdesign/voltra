@@ -203,7 +203,10 @@ const getSetupInstance = async (
   const setupFunction = module[setup.export];
 
   if (typeof setupFunction !== "function") {
-    throw new Error(`Setup export "${setup.export}" is not a function.`);
+    throw new Error(
+      `Setup export "${setup.export}" is not a function.`,
+      setupFunction,
+    );
   }
 
   return setup.instantiate
@@ -251,12 +254,8 @@ export const generateTestsForFile = async (
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
     const module = require(modulePath);
-
     const instance = await getSetupInstance(module, setup);
-
-    const testFunction = instance
-      ? instance[subject.export].bind(instance)
-      : module[subject.export];
+    const testFunction = instance[subject.export];
 
     if (typeof testFunction !== "function") {
       throw new Error(
@@ -320,12 +319,8 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
     const module = require(modulePath);
-
     const instance = await getSetupInstance(module, setup);
-
-    const testFunction = instance
-      ? instance[subject.export].bind(instance)
-      : module[subject.export];
+    const testFunction = instance[subject.export];
 
     if (typeof testFunction !== "function") {
       throw new Error(
