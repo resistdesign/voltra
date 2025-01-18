@@ -1,6 +1,6 @@
 {
   "subject": {
-    "file": "./demo3.ts",
+    "file": "./demo4.ts",
     "export": "encapsulate"
   },
   "setup": {

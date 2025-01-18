@@ -203,10 +203,7 @@ const getSetupInstance = async (
   const setupFunction = module[setup.export];
 
   if (typeof setupFunction !== "function") {
-    throw new Error(
-      `Setup export "${setup.export}" is not a function.`,
-      setupFunction,
-    );
+    throw new Error(`Setup export "${setup.export}" is not a function.`);
   }
 
   return setup.instantiate
