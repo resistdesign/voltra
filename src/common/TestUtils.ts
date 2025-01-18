@@ -12,38 +12,38 @@ export type BaseTestCondition = {
 export type TestCondition = BaseTestCondition &
   (
     | {
-        operation?: "===" | "!==";
-        expectation: string | number | boolean;
-      }
+    operation?: "===" | "!==";
+    expectation: string | number | boolean;
+  }
     | {
-        operation: "IN" | "ARRAY_CONTAINS";
-        expectation: unknown[];
-      }
+    operation: "IN" | "ARRAY_CONTAINS";
+    expectation: unknown[];
+  }
     | {
-        operation: "BETWEEN";
-        expectation: [number, number];
-      }
+    operation: "BETWEEN";
+    expectation: [number, number];
+  }
     | {
-        operation: "CONTAINS";
-        expectation: string;
-      }
+    operation: "CONTAINS";
+    expectation: string;
+  }
     | {
-        operation: "REGEX";
-        expectation: RegexExpectation;
-      }
+    operation: "REGEX";
+    expectation: RegexExpectation;
+  }
     | {
-        operation: "EXT_REGEX";
-        expectation: EXTRegexExpectation;
-      }
+    operation: "EXT_REGEX";
+    expectation: EXTRegexExpectation;
+  }
     | {
-        operation: "DEEP_EQUALS";
-        expectation: Record<string, unknown>;
-      }
+    operation: "DEEP_EQUALS";
+    expectation: Record<string, unknown>;
+  }
     | {
-        operation: "ARRAY_EQUALS";
-        expectation: unknown[];
-      }
-  );
+    operation: "ARRAY_EQUALS";
+    expectation: unknown[];
+  }
+    );
 
 export type TestConfig = {
   subject: {
@@ -254,7 +254,7 @@ export const runTests = async (testPath: string): Promise<void> => {
 };
 
 // CLI entry point
-if (require.main === module) {
+if (import.meta.url === pathToFileURL(process.argv[1]).toString()) {
   const testPath = process.argv[2];
 
   if (!testPath) {

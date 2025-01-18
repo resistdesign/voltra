@@ -11,8 +11,9 @@
   },
   "main": "index.js",
   "types": "index.d.ts",
+  "type": "module",
   "bin": {
-    "vest": "ts-node/register ./src/common/TestUtils.ts"
+    "vest": "ts-node ./src/common/TestUtils.ts"
   },
   "scripts": {
     "build": "tsc && yarn prep-dist",
