@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsc && yarn prep-dist",
     "test": "ts-node ./src/common/TestUtils.ts ./src/**/*.spec.json",
+    "test:gen": "ts-node ./src/common/TestUtils.ts --generate ./src/**/*.spec.json",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",
