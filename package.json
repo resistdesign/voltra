@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "tsc && yarn prep-dist",
-    "test": "tsc --noEmit",
+    "test": "ts-node ./src/common/TestUtils.ts ./src/**/*.spec.json",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",
@@ -26,8 +26,7 @@
     "site:build:iac": "ts-node ./site/iac/index.ts",
     "start": "parcel site/app/index.html --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/ && cp ./favicon/assets/* site-dist/app/",
-    "iac:types:gen": "ts-node ./src/iac/types/generate.ts",
-    "vest": "ts-node ./src/common/TestUtils.ts ./src/**/*.spec.json"
+    "iac:types:gen": "ts-node ./src/iac/types/generate.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
