@@ -237,6 +237,8 @@ export const generateTestsForFile = async (
     console.log(`Generating tests for ${testFilePath}`);
 
     const generatedTests = [];
+    let hasNewExpectations = false;
+
     for (const test of tests) {
       const { conditions, expectation, operation } = test;
 
@@ -257,14 +259,19 @@ export const generateTestsForFile = async (
         expectation: result,
         operation: operation || Operation.EQUALS,
       });
+      hasNewExpectations = true;
     }
 
-    const updatedTestConfig = { ...testConfig, tests: generatedTests };
-    await FS.writeFile(
-      testFilePath,
-      JSON.stringify(updatedTestConfig, null, 2),
-    );
-    console.log(`Generated test file saved to ${testFilePath}`);
+    if (hasNewExpectations) {
+      const updatedTestConfig = { ...testConfig, tests: generatedTests };
+      await FS.writeFile(
+        testFilePath,
+        JSON.stringify(updatedTestConfig, null, 2),
+      );
+      console.log(`Updated test file saved to ${testFilePath}`);
+    } else {
+      console.log(`No new expectations were generated for ${testFilePath}`);
+    }
   } catch (err: any) {
     console.error(`Error processing test file ${testFilePath}: ${err.message}`);
   }
