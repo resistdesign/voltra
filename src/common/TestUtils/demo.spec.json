@@ -27,6 +27,14 @@
       ],
       "expectation": 11,
       "operation": "!=="
+    },
+    {
+      "conditions": [
+        19,
+        44
+      ],
+      "expectation": 200,
+      "operation": "==="
     }
   ]
 }
