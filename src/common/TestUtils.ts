@@ -212,7 +212,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
     }
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
-    const module = await import(modulePath);
+    const module = require(modulePath);
     const testFunction = module[subject.export];
 
     if (typeof testFunction !== "function") {
