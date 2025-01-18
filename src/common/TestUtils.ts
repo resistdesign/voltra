@@ -2,10 +2,8 @@
 
 import { promises as FS } from "fs";
 import Path from "path";
+import { pathToFileURL } from "url";
 import fastGlob from "fast-glob";
-import { register as tsNodeRegister } from "ts-node";
-
-tsNodeRegister();
 
 export type BaseTestCondition = {
   conditions: unknown[];
@@ -215,7 +213,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
     }
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
-    const module = await import(modulePath);
+    const module = await import(pathToFileURL(modulePath).toString());
     const testFunction = module[subject.export];
 
     if (typeof testFunction !== "function") {
