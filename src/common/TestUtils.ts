@@ -19,13 +19,14 @@ export enum Operation {
 
 export type BaseTestCondition = {
   conditions: unknown[];
+  expectUndefined?: boolean;
 };
 
 export type TestCondition = BaseTestCondition &
   (
     | {
         operation?: Operation.EQUALS | Operation.NOT_EQUALS;
-        expectation: string | number | boolean;
+        expectation: string | number | boolean | null | undefined;
       }
     | {
         operation: Operation.IN | Operation.ARRAY_CONTAINS;
@@ -191,10 +192,10 @@ export const runTest = async (
   test: TestCondition,
   index: number,
 ): Promise<void> => {
-  const { conditions, expectation, operation } = test;
+  const { conditions, expectation, operation, expectUndefined } = test;
   try {
     const result = await testFunction(...conditions);
-    const passed = compare(result, expectation, operation);
+    const passed = expectUndefined || compare(result, expectation, operation);
     if (passed) {
       console.log(
         `  Test ${index + 1}: PASSED - Conditions: ${JSON.stringify(conditions)}`,
@@ -240,9 +241,9 @@ export const generateTestsForFile = async (
     let hasNewExpectations = false;
 
     for (const test of tests) {
-      const { conditions, expectation, operation } = test;
+      const { conditions, expectation, operation, expectUndefined } = test;
 
-      if ("expectation" in test) {
+      if (expectation !== undefined || expectUndefined) {
         generatedTests.push(test); // Skip if expectation already exists
         continue;
       }
