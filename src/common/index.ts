@@ -18,3 +18,4 @@ export { PagingInfo } from "./SearchTypes";
 export { SortField } from "./SearchTypes";
 export { ListItemsResults } from "./SearchTypes";
 export * as ItemRelationships from "./ItemRelationships";
+export * as Testing from "./TestUtils";
