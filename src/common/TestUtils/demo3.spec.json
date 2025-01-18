@@ -1,0 +1,35 @@
+{
+  "subject": {
+    "file": "./demo3.ts",
+    "export": "handler"
+  },
+  "tests": [
+    {
+      "conditions": [
+        {
+          "path": "a/b/c",
+          "body": [
+            2,
+            "four",
+            6,
+            "eight"
+          ]
+        }
+      ],
+      "expectation": {
+        "target": [
+          "a",
+          "b",
+          "c"
+        ],
+        "args": [
+          2,
+          "four",
+          6,
+          "eight"
+        ]
+      },
+      "operation": "DEEP_EQUALS"
+    }
+  ]
+}
