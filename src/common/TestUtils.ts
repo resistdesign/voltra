@@ -2,7 +2,6 @@
 
 import { promises as FS } from "fs";
 import Path from "path";
-import { pathToFileURL } from "url";
 import fastGlob from "fast-glob";
 
 export type BaseTestCondition = {
@@ -12,38 +11,38 @@ export type BaseTestCondition = {
 export type TestCondition = BaseTestCondition &
   (
     | {
-    operation?: "===" | "!==";
-    expectation: string | number | boolean;
-  }
+        operation?: "===" | "!==";
+        expectation: string | number | boolean;
+      }
     | {
-    operation: "IN" | "ARRAY_CONTAINS";
-    expectation: unknown[];
-  }
+        operation: "IN" | "ARRAY_CONTAINS";
+        expectation: unknown[];
+      }
     | {
-    operation: "BETWEEN";
-    expectation: [number, number];
-  }
+        operation: "BETWEEN";
+        expectation: [number, number];
+      }
     | {
-    operation: "CONTAINS";
-    expectation: string;
-  }
+        operation: "CONTAINS";
+        expectation: string;
+      }
     | {
-    operation: "REGEX";
-    expectation: RegexExpectation;
-  }
+        operation: "REGEX";
+        expectation: RegexExpectation;
+      }
     | {
-    operation: "EXT_REGEX";
-    expectation: EXTRegexExpectation;
-  }
+        operation: "EXT_REGEX";
+        expectation: EXTRegexExpectation;
+      }
     | {
-    operation: "DEEP_EQUALS";
-    expectation: Record<string, unknown>;
-  }
+        operation: "DEEP_EQUALS";
+        expectation: Record<string, unknown>;
+      }
     | {
-    operation: "ARRAY_EQUALS";
-    expectation: unknown[];
-  }
-    );
+        operation: "ARRAY_EQUALS";
+        expectation: unknown[];
+      }
+  );
 
 export type TestConfig = {
   subject: {
@@ -213,7 +212,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
     }
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
-    const module = await import(pathToFileURL(modulePath).toString());
+    const module = await import(modulePath);
     const testFunction = module[subject.export];
 
     if (typeof testFunction !== "function") {
@@ -236,7 +235,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
  * */
 export const runTests = async (testPath: string): Promise<void> => {
   try {
-    const testFiles = await fastGlob(`${testPath}/**/*.spec.json`);
+    const testFiles = await fastGlob(testPath);
 
     if (testFiles.length === 0) {
       console.warn(`No test files found in ${testPath}`);
@@ -254,7 +253,7 @@ export const runTests = async (testPath: string): Promise<void> => {
 };
 
 // CLI entry point
-if (import.meta.url === pathToFileURL(process.argv[1]).toString()) {
+if (require.main === module) {
   const testPath = process.argv[2];
 
   if (!testPath) {
