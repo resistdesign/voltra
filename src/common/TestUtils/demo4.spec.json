@@ -1,0 +1,22 @@
+{
+  "subject": {
+    "file": "./demo3.ts",
+    "export": "encapsulate"
+  },
+  "setup": {
+    "conditions": [
+      "Class Test"
+    ],
+    "export": "TextTools",
+    "instantiate": true
+  },
+  "tests": [
+    {
+      "conditions": [
+        "(",
+        ")"
+      ],
+      "operation": "==="
+    }
+  ]
+}
