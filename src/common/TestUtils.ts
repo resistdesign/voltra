@@ -226,7 +226,7 @@ export const generateTestsForFile = async (
     const testConfig: TestConfig = JSON.parse(
       await FS.readFile(testFilePath, "utf8"),
     );
-    const { subject, tests } = testConfig;
+    const { subject, setup, tests } = testConfig;
 
     if (!subject || !subject.file || !subject.export) {
       throw new Error(`Invalid subject configuration in ${testFilePath}`);
@@ -234,7 +234,26 @@ export const generateTestsForFile = async (
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
     const module = require(modulePath);
-    const testFunction = module[subject.export];
+
+    let instance: any = null;
+
+    if (setup) {
+      const setupFunction = module[setup.export];
+
+      if (typeof setupFunction !== "function") {
+        throw new Error(
+          `Setup export "${setup.export}" from "${subject.file}" is not a function.`,
+        );
+      }
+
+      instance = setup.instantiate
+        ? new setupFunction(...setup.conditions)
+        : await setupFunction(...setup.conditions);
+    }
+
+    const testFunction = instance
+      ? instance[subject.export].bind(instance)
+      : module[subject.export];
 
     if (typeof testFunction !== "function") {
       throw new Error(
@@ -290,7 +309,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
     const testConfig: TestConfig = JSON.parse(
       await FS.readFile(testFilePath, "utf8"),
     );
-    const { subject, tests } = testConfig;
+    const { subject, setup, tests } = testConfig;
 
     if (!subject || !subject.file || !subject.export) {
       throw new Error(`Invalid subject configuration in ${testFilePath}`);
@@ -298,7 +317,26 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
 
     const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
     const module = require(modulePath);
-    const testFunction = module[subject.export];
+
+    let instance: any = null;
+
+    if (setup) {
+      const setupFunction = module[setup.export];
+
+      if (typeof setupFunction !== "function") {
+        throw new Error(
+          `Setup export "${setup.export}" from "${subject.file}" is not a function.`,
+        );
+      }
+
+      instance = setup.instantiate
+        ? new setupFunction(...setup.conditions)
+        : await setupFunction(...setup.conditions);
+    }
+
+    const testFunction = instance
+      ? instance[subject.export].bind(instance)
+      : module[subject.export];
 
     if (typeof testFunction !== "function") {
       throw new Error(
