@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-import { promises as fs } from "fs";
-import path from "path";
-import fg from "fast-glob";
+import { promises as FS } from "fs";
+import Path from "path";
+import fastGlob from "fast-glob";
+import { register as tsNodeRegister } from "ts-node";
+
+tsNodeRegister();
 
 export type BaseTestCondition = {
   conditions: unknown[];
@@ -203,7 +206,7 @@ export const runTest = async (
 export const runTestsForFile = async (testFilePath: string): Promise<void> => {
   try {
     const testConfig: TestConfig = JSON.parse(
-      await fs.readFile(testFilePath, "utf8"),
+      await FS.readFile(testFilePath, "utf8"),
     );
     const { subject, tests } = testConfig;
 
@@ -211,7 +214,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
       throw new Error(`Invalid subject configuration in ${testFilePath}`);
     }
 
-    const modulePath = path.resolve(path.dirname(testFilePath), subject.file);
+    const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
     const module = await import(modulePath);
     const testFunction = module[subject.export];
 
@@ -235,7 +238,7 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
  * */
 export const runTests = async (testPath: string): Promise<void> => {
   try {
-    const testFiles = await fg(`${testPath}/**/*.spec.json`);
+    const testFiles = await fastGlob(`${testPath}/**/*.spec.json`);
 
     if (testFiles.length === 0) {
       console.warn(`No test files found in ${testPath}`);
@@ -243,7 +246,7 @@ export const runTests = async (testPath: string): Promise<void> => {
     }
 
     for (const testFile of testFiles) {
-      await runTestsForFile(path.resolve(testFile));
+      await runTestsForFile(Path.resolve(testFile));
     }
 
     console.log("Testing complete.");
