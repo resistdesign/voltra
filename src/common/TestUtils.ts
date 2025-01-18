@@ -242,7 +242,7 @@ export const generateTestsForFile = async (
     for (const test of tests) {
       const { conditions, expectation, operation } = test;
 
-      if (expectation !== undefined) {
+      if ("expectation" in test) {
         generatedTests.push(test); // Skip if expectation already exists
         continue;
       }
