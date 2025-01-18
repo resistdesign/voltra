@@ -19,6 +19,21 @@
       ],
       "expectation": "hello",
       "operation": "CONTAINS"
+    },
+    {
+      "conditions": [
+        "hello",
+        "world"
+      ],
+      "expectation": {
+        "pattern": [
+          {
+            "value": "^hello.*?world$"
+          }
+        ],
+        "flags": "gmi"
+      },
+      "operation": "EXT_REGEX"
     }
   ]
 }
