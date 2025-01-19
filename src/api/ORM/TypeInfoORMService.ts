@@ -66,25 +66,21 @@ export type TypeInfoORMServiceConfig = {
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
 //   - Clean relational fields where applicable. Use the utils.
-//     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean nonexistent fields where applicable. Use a utils.
-//     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean nonexistent selected fields where applicable. Use the utils.
-//     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean relational selected fields where applicable. Use the utils.
-//     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
@@ -299,8 +295,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   listRelationships = async (
     config: ListRelationshipsConfig,
   ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
-    const { relationshipItemOrigin, ...remainingConfig } =
-      config;
+    const { relationshipItemOrigin, ...remainingConfig } = config;
     this.validateRelationshipItem(relationshipItemOrigin);
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
