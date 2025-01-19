@@ -66,28 +66,24 @@ export type TypeInfoORMServiceConfig = {
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
 //   - Clean relational fields where applicable. Use the utils.
-//     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean nonexistent fields where applicable. Use a utils.
-//     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean nonexistent selected fields where applicable. Use the utils.
-//     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean relational selected fields where applicable. Use the utils.
-//     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
@@ -258,6 +254,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeName,
       fromTypeFieldName,
     );
+    // TODO: This is not robust in big data environments. Cursors/Queues???
     const { items: itemList = [] } = (await driver.listItems({
       criteria: {
         logicalOperator: LogicalOperators.AND,
