@@ -299,7 +299,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   listRelationships = async (
     config: ListRelationshipsConfig,
   ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
-    const { relationshipItemOrigin, checkExistence, ...remainingConfig } =
+    const { relationshipItemOrigin, ...remainingConfig } =
       config;
     this.validateRelationshipItem(relationshipItemOrigin);
 
@@ -311,7 +311,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     );
     const results = await driver.listItems({
       ...remainingConfig,
-      checkExistence,
       criteria: {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
