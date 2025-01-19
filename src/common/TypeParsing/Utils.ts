@@ -1,6 +1,29 @@
 import { TypeInfo, TypeInfoDataItem } from "./TypeInfo";
 
 /**
+ * Remove all fields, from a list of selected fields, that are not in the type info.
+ * */
+export const removeNonexistentFieldsFromSelectedFields = <ItemType>(
+  typeInfo: TypeInfo = {},
+  selectedFields?: (keyof ItemType)[],
+) => {
+  if (Array.isArray(selectedFields)) {
+    const { fields = {} } = typeInfo;
+    const cleanSelectFields: (keyof ItemType)[] = [];
+
+    for (const tIF in fields) {
+      if (selectedFields.includes(tIF as keyof ItemType)) {
+        cleanSelectFields.push(tIF as keyof ItemType);
+      }
+    }
+
+    return cleanSelectFields;
+  } else {
+    return selectedFields;
+  }
+};
+
+/**
  * Remove all fields, from a list of selected fields, that are a type reference.
  * */
 export const removeTypeReferenceFieldsFromSelectedFields = <ItemType>(
