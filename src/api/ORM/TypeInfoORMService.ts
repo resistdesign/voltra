@@ -66,8 +66,14 @@ export type TypeInfoORMServiceConfig = {
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
 //   - Clean relational fields. Use the utils.
-//   - Clean nonexistent fields. Make a util?
+//   - Clean nonexistent fields. Use a utils.
 //   - Clean selected fields. Use the utils.
+//   - import {
+//   -   removeNonexistentFieldsFromDataItem,
+//   -   removeTypeReferenceFieldsFromDataItem,
+//   -   removeNonexistentFieldsFromSelectedFields,
+//   -   removeTypeReferenceFieldsFromSelectedFields,
+//   - } from "../../../../common/TypeParsing/Utils";
 // TODO: Error Types SHOULD be defined at the Driver API level.
 
 /**
