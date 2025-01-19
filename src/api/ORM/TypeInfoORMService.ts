@@ -189,6 +189,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       itemIsPartial,
     );
 
+    // TODO: Field value type validation.
+
     if (!validationResults.valid) {
       throw validationResults;
     }
