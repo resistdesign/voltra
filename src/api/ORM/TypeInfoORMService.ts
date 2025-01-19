@@ -65,9 +65,66 @@ export type TypeInfoORMServiceConfig = {
 // TODO: Integrate DAC.
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
-//   - Clean relational fields. Use the utils.
-//   - Clean nonexistent fields. Use a utils.
-//   - Clean selected fields. Use the utils.
+//   - Clean relational fields where applicable. Use the utils.
+//     - [] getDriverInternal
+//     - [] getRelationshipDriverInternal
+//     - [] getTypeInfo
+//     - [] validate
+//     - [] validateRelationshipItem
+//     - [] cleanupRelationships
+//     - [] createRelationship
+//     - [] deletedRelationship
+//     - [] listRelationships
+//     - [] create
+//     - [] read
+//     - [] update
+//     - [] delete
+//     - [] list
+//   - Clean nonexistent fields where applicable. Use a utils.
+//     - [] getDriverInternal
+//     - [] getRelationshipDriverInternal
+//     - [] getTypeInfo
+//     - [] validate
+//     - [] validateRelationshipItem
+//     - [] cleanupRelationships
+//     - [] createRelationship
+//     - [] deletedRelationship
+//     - [] listRelationships
+//     - [] create
+//     - [] read
+//     - [] update
+//     - [] delete
+//     - [] list
+//   - Clean nonexistent selected fields where applicable. Use the utils.
+//     - [] getDriverInternal
+//     - [] getRelationshipDriverInternal
+//     - [] getTypeInfo
+//     - [] validate
+//     - [] validateRelationshipItem
+//     - [] cleanupRelationships
+//     - [] createRelationship
+//     - [] deletedRelationship
+//     - [] listRelationships
+//     - [] create
+//     - [] read
+//     - [] update
+//     - [] delete
+//     - [] list
+//   - Clean relational selected fields where applicable. Use the utils.
+//     - [] getDriverInternal
+//     - [] getRelationshipDriverInternal
+//     - [] getTypeInfo
+//     - [] validate
+//     - [] validateRelationshipItem
+//     - [] cleanupRelationships
+//     - [] createRelationship
+//     - [] deletedRelationship
+//     - [] listRelationships
+//     - [] create
+//     - [] read
+//     - [] update
+//     - [] delete
+//     - [] list
 //   - import {
 //   -   removeNonexistentFieldsFromDataItem,
 //   -   removeTypeReferenceFieldsFromDataItem,
