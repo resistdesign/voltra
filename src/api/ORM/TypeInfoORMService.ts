@@ -66,44 +66,36 @@ export type TypeInfoORMServiceConfig = {
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
 //   - Clean relational fields where applicable. Use the utils.
-//     - [] cleanupRelationships
 //     - [] createRelationship
 //     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
-//     - [] delete
 //     - [] list
 //   - Clean nonexistent fields where applicable. Use a utils.
-//     - [] cleanupRelationships
 //     - [] createRelationship
 //     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
-//     - [] delete
 //     - [] list
 //   - Clean nonexistent selected fields where applicable. Use the utils.
-//     - [] cleanupRelationships
 //     - [] createRelationship
 //     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
-//     - [] delete
 //     - [] list
 //   - Clean relational selected fields where applicable. Use the utils.
-//     - [] cleanupRelationships
 //     - [] createRelationship
 //     - [] deletedRelationship
 //     - [] listRelationships
 //     - [] create
 //     - [] read
 //     - [] update
-//     - [] delete
 //     - [] list
 //   - import {
 //   -   removeNonexistentFieldsFromDataItem,
