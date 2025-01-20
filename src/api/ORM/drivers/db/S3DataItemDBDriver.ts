@@ -64,15 +64,11 @@ export class S3DataItemDBDriver
     await this.s3.send(
       new PutObjectCommand({
         Bucket: bucketName,
-        // TODO: SECURITY: Is `getFullFileKey` safe from "../" path parts???
-        // TODO: Should it use the Route Pathing utils to clean and encode the path???
         Key: getFullFileKey({
           file: item as BaseFileLocationInfo,
           // SECURITY: `baseDirectory` is only used internally here, and not as part of the `id`.
           baseDirectory: tableName,
         }),
-        // TODO: Uhm, so we make the body of the item and then what!?!
-        //   - Should we not save the item!?!
         Body: "",
       }),
     );

@@ -12,12 +12,16 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-
 import {
   BaseFile,
   BaseFileLocationInfo,
   CloudFileServiceDriver,
 } from "../Types";
+import { getPathArray } from "../../../../common/Routing";
+
+export const S3_FILE_DRIVER_ERRORS = {
+  INVALID_PATH: "INVALID_PATH",
+};
 
 export const getFullFileKey = ({
   file,
@@ -25,12 +29,26 @@ export const getFullFileKey = ({
 }: {
   file: BaseFileLocationInfo;
   baseDirectory?: string;
-}) => {
+}): string => {
   const { directory, name } = file;
-
-  return `${baseDirectory ? `${baseDirectory}/` : ""}${
+  const fullFileKey = `${baseDirectory ? `${baseDirectory}/` : ""}${
     directory ? `${directory}/` : ""
   }${name}`;
+  const pathArray = getPathArray(fullFileKey, "/", false);
+
+  if (
+    pathArray.includes("..") ||
+    pathArray.includes(".") ||
+    pathArray.includes("")
+  ) {
+    throw {
+      message: S3_FILE_DRIVER_ERRORS.INVALID_PATH,
+      file,
+      baseDirectory,
+    };
+  } else {
+    return fullFileKey;
+  }
 };
 
 export const getBaseFileLocationInfo = (path: string): BaseFileLocationInfo => {
