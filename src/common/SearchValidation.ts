@@ -1,6 +1,11 @@
 import { ComparisonOperators, FieldCriterion } from "./SearchTypes";
-import { TypeInfoValidationResults } from "./TypeParsing/Validation";
-import { TypeInfoMap } from "./TypeParsing/TypeInfo";
+import {
+  CustomTypeInfoFieldValidatorMap,
+  RelationshipValidationType,
+  TypeInfoValidationResults,
+  validateTypeInfoFieldValue,
+} from "./TypeParsing/Validation";
+import { TypeInfoMap, TypeOperation } from "./TypeParsing/TypeInfo";
 
 /**
  * Search validation errors.
@@ -21,6 +26,7 @@ export const validateSearchFields = (
   typeInfoMap: TypeInfoMap,
   searchFields: FieldCriterion[] = [],
   disallowRelationalFields?: boolean,
+  customValidators?: CustomTypeInfoFieldValidatorMap,
 ) => {
   const typeInfo = typeInfoMap[typeInfoName];
   const results: TypeInfoValidationResults = {
@@ -47,9 +53,15 @@ export const validateSearchFields = (
         const tIF = fields[fieldName];
 
         if (tIF) {
-          const { typeReference, tags = {}, possibleValues } = tIF;
+          const { type, typeReference, tags = {}, possibleValues } = tIF;
+          const { deniedOperations: { READ: denyRead = false } = {} } = tags;
 
-          if (
+          if (denyRead) {
+            results.valid = false;
+            results.errorMap[fieldName] = [
+              SEARCH_VALIDATION_ERRORS.INVALID_FIELD,
+            ];
+          } else if (
             Array.isArray(possibleValues) &&
             ((Array.isArray(valueOptions) &&
               !valueOptions.every((vO) => possibleValues.includes(vO))) ||
@@ -65,13 +77,24 @@ export const validateSearchFields = (
               SEARCH_VALIDATION_ERRORS.RELATIONAL_FIELDS_NOT_ALLOWED,
             ];
           } else {
-            const { deniedOperations: { READ: denyRead = false } = {} } = tags;
+            const { valid: valueIsValid, errorMap: valueErrorMap } =
+              validateTypeInfoFieldValue(
+                value,
+                tIF,
+                typeInfoMap,
+                false,
+                true,
+                customValidators,
+                TypeOperation.READ,
+                disallowRelationalFields
+                  ? RelationshipValidationType.STRICT_EXCLUDE
+                  : RelationshipValidationType.INCLUDE,
+                true,
+              );
 
-            if (denyRead) {
+            if (!valueIsValid) {
               results.valid = false;
-              results.errorMap[fieldName] = [
-                SEARCH_VALIDATION_ERRORS.INVALID_FIELD,
-              ];
+              results.errorMap[fieldName] = [valueErrorMap];
             }
           }
         } else {
