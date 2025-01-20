@@ -54,7 +54,7 @@ export const validateSearchFields = (
         const tIF = fields[fieldName];
 
         if (tIF) {
-          const { type, typeReference, tags = {}, possibleValues } = tIF;
+          const { typeReference, tags = {}, possibleValues } = tIF;
           const { deniedOperations: { READ: denyRead = false } = {} } = tags;
 
           if (denyRead) {
