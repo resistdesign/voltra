@@ -474,6 +474,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { fields: {} = {} } = this.getTypeInfo(typeName);
     const { criteria } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
+    // TODO: Clean all `fieldCriteria` fields based on existing and non-relational.
+    // TODO: Clean all `fieldCriteria` values and valueOptions based on possibleValues.
     const searchFieldValidationResults = validateSearchFields(
       typeName,
       this.config.typeInfoMap,
