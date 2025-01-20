@@ -1,4 +1,5 @@
 import {
+  DATA_ITEM_DB_DRIVER_ERRORS,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -31,19 +32,6 @@ import { getSortedItems } from "../../../../common/SearchUtils";
 import FS from "fs";
 import Path from "path";
 import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
-
-// TODO: Error Types SHOULD be defined at the Driver API level.
-/**
- * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
- * */
-export const DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS = {
-  INVALID_CURSOR: "INVALID_CURSOR",
-  ITEM_NOT_FOUND: "ITEM_NOT_FOUND",
-  MISSING_UNIQUE_IDENTIFIER: "MISSING_UNIQUE_IDENTIFIER",
-  INVALID_CRITERION_VALUE: "INVALID_CRITERION_VALUE",
-  SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED:
-    "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED",
-};
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>
@@ -94,14 +82,14 @@ const createFilterExpression = (
   const attributeValues: Record<string, any> = {};
 
   for (const criterion of fieldCriteria) {
-    const { fieldName, operator, value, valueOptions } = criterion;
+    const { fieldName, operator, value } = criterion;
     const createExpression =
       DynamoDBOperatorMappings[operator as ComparisonOperators];
 
     if (!createExpression) {
       throw {
         message:
-          DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
+          DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
         operator,
         fieldName,
       };
@@ -243,7 +231,7 @@ export class DynamoDBDataItemDBDriver<
     const { Item } = await this.dynamoDBClient.send(command);
 
     if (typeof Item === "undefined") {
-      throw new Error(DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
     } else {
       const cleanItem = unmarshall(Item) as ItemType;
 
@@ -281,7 +269,7 @@ export class DynamoDBDataItemDBDriver<
       return !!Attributes;
     } else {
       throw {
-        message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
+        message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
         uniquelyIdentifyingFieldName,
       };
     }
@@ -360,7 +348,7 @@ export class DynamoDBDataItemDBDriver<
         nextCursor = marshall(JSON.parse(cursor));
       } catch (error) {
         throw {
-          message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
+          message: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
           cursor,
         };
       }

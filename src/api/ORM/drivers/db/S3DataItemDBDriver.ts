@@ -14,6 +14,7 @@ import {
   BaseFile,
   BaseFileLocationInfo,
   CloudFileServiceDriver,
+  DATA_ITEM_DB_DRIVER_ERRORS,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -28,11 +29,6 @@ import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
 export type BaseFileItem = {
   id: string;
 } & BaseFile;
-
-// TODO: Error Types SHOULD be defined at the Driver API level.
-export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
-  MISSING_ID: "MISSING_ID",
-};
 
 /**
  * Use S3 as a {@link DataItemDBDriver} for {@link BaseFileItem}s.
@@ -97,7 +93,7 @@ export class S3DataItemDBDriver
     const { bucketName } = this.specificConfig;
 
     if (typeof id === "undefined") {
-      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
       const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
       const {
@@ -177,7 +173,7 @@ export class S3DataItemDBDriver
     const { tableName } = this.config;
 
     if (typeof id === "undefined") {
-      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
       await this.readItem(id);
       await this.s3FileDriver.deleteFile(
