@@ -52,6 +52,35 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
+export const getDriverMethodWithModifiedError = <
+  ItemType extends TypeInfoDataItem,
+  UniquelyIdentifyingFieldName extends keyof ItemType,
+  DriverMethodNameType extends keyof DataItemDBDriver<
+    ItemType,
+    UniquelyIdentifyingFieldName
+  >,
+  MethodType extends DataItemDBDriver<
+    ItemType,
+    UniquelyIdentifyingFieldName
+  >[DriverMethodNameType],
+>(
+  typeName: string,
+  driver: DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>,
+  driverMethodName: DriverMethodNameType,
+): MethodType =>
+  ((...args: Parameters<MethodType>): Promise<any> => {
+    try {
+      return (driver[driverMethodName] as (...args: any[]) => Promise<any>)(
+        ...(args as Parameters<MethodType>),
+      ) as Promise<any>;
+    } catch (error: any) {
+      throw {
+        ...(error as Record<any, any>),
+        typeName,
+      };
+    }
+  }) as MethodType;
+
 /**
  * The configuration for the TypeInfoORM service.
  * */
@@ -69,7 +98,6 @@ export type TypeInfoORMServiceConfig = {
 };
 
 // TODO: Integrate DAC. 📛
-// TODO: Intercept Driver Errors and add things like `typeName`.
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
@@ -96,7 +124,28 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_DRIVER);
     }
 
-    return driver;
+    // IMPORTANT: Wrap driver to handle modifying errors.
+    const driverMethodList: (keyof DataItemDBDriver<any, any>)[] = [
+      "createItem",
+      "readItem",
+      "updateItem",
+      "deleteItem",
+      "listItems",
+    ];
+    const driverWrapper: DataItemDBDriver<any, any> = {} as DataItemDBDriver<
+      any,
+      any
+    >;
+
+    for (const dM of driverMethodList) {
+      driverWrapper[dM] = getDriverMethodWithModifiedError(
+        typeName,
+        driver,
+        dM,
+      );
+    }
+
+    return driverWrapper;
   };
 
   protected getRelationshipDriverInternal = (
