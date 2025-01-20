@@ -30,7 +30,7 @@ export type CustomTypeInfoFieldValidatorMap = Record<
  * A map of errors.
  * */
 export type ErrorMap = {
-  [key: string]: (string | ErrorMap)[];
+  [key: string]: string[];
 };
 
 /**
