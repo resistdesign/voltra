@@ -70,22 +70,20 @@ export type TypeInfoORMServiceConfig = {
 // TODO: IMPORTANT: Make sure all selected fields are valid fields.
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
 //   - Clean relational fields where applicable. Use the utils.
-//     - [] create
+//     - [x] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean nonexistent fields where applicable. Use a utils.
-//     - [] create
+//     - [x] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean nonexistent selected fields where applicable. Use the utils.
-//     - [] create
 //     - [] read
 //     - [] update
 //     - [] list
 //   - Clean relational selected fields where applicable. Use the utils.
-//     - [] create
 //     - [] read
 //     - [] update
 //     - [] list

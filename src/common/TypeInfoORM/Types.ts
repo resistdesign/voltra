@@ -6,7 +6,6 @@ import {
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
-  ItemRelationshipOriginatingItemInfo,
 } from "../ItemRelationshipInfo";
 import { TypeInfoDataItem } from "../TypeParsing/TypeInfo";
 
@@ -43,7 +42,11 @@ export enum TypeInfoORMAPIRoutePaths {
  * */
 export type TypeInfoORMAPI = {
   create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
-  read: (typeName: string, primaryFieldValue: any) => Promise<TypeInfoDataItem>;
+  read: (
+    typeName: string,
+    primaryFieldValue: any,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => Promise<TypeInfoDataItem>;
   update: (typeName: string, item: TypeInfoDataItem) => Promise<boolean>;
   delete: (typeName: string, primaryFieldValue: any) => Promise<boolean>;
   list: (
@@ -58,5 +61,6 @@ export type TypeInfoORMAPI = {
   ) => Promise<boolean>;
   listRelationships: (
     config: ListRelationshipsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<boolean | ListItemsResults<ItemRelationshipInfo>>;
 };
