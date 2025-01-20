@@ -98,6 +98,7 @@ export type TypeInfoORMServiceConfig = {
 };
 
 // TODO: Integrate DAC. 📛
+// TODO: DAC to include the concept of an `admin` and/or a role with access to all resources automatically???
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
