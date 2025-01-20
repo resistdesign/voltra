@@ -295,6 +295,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeName,
       fromTypeFieldName,
     );
+    // TODO: VALIDATION: Need to update when the field is not an array.
     const newIdentifier = await driver.createItem(cleanedItem);
 
     return newIdentifier;
