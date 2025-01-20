@@ -32,6 +32,10 @@ import {
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
 import { DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
+import {
+  removeNonexistentFieldsFromDataItem,
+  removeTypeReferenceFieldsFromDataItem,
+} from "../../common/TypeParsing/Utils";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -166,6 +170,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (!validationResults.valid) {
       throw validationResults;
     }
+  };
+
+  protected getCleanItem = (
+    typeName: string,
+    item: TypeInfoDataItem,
+  ): TypeInfoDataItem => {
+    const typeInfo = this.getTypeInfo(typeName);
+    const cleanItem = removeTypeReferenceFieldsFromDataItem(
+      typeInfo,
+      removeNonexistentFieldsFromDataItem(typeInfo, item),
+    );
+
+    return cleanItem;
   };
 
   protected validateRelationshipItem = (
