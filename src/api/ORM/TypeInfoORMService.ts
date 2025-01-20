@@ -355,7 +355,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validate(typeName, item, TypeOperation.CREATE);
 
     const driver = this.getDriverInternal(typeName);
-    const newIdentifier = await driver.createItem(item);
+    const cleanItem = this.getCleanItem(typeName, item);
+    const newIdentifier = await driver.createItem(cleanItem);
 
     return newIdentifier;
   };
