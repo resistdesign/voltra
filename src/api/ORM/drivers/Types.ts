@@ -4,7 +4,6 @@ import {
   ListItemsResults,
 } from "../../../common";
 import {
-  TypeInfo,
   TypeInfoDataItem,
   TypeInfoPack,
 } from "../../../common/TypeParsing/TypeInfo";
@@ -59,8 +58,6 @@ export type DataItemDBDriverConfig<
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
-  typeName: string;
-  typeInfo: TypeInfo;
   tableName: string;
   uniquelyIdentifyingFieldName: UniquelyIdentifyingFieldName;
   generateUniqueIdentifier?: (targetItem: ItemType) => string;

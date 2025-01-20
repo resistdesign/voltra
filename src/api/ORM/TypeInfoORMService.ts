@@ -425,6 +425,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw validationResults;
     } else {
       const driver = this.getDriverInternal(typeName);
+
       const result = await driver.updateItem(item);
 
       return result;
@@ -455,6 +456,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   list = async (
     typeName: string,
     config: ListItemsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
   ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
     const { fields: {} = {} } = this.getTypeInfo(typeName);
     const { criteria } = config;
@@ -469,7 +471,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
-      const results = await driver.listItems(config);
+      const cleanSelectedFields = this.getCleanSelectedFields(typeName, selectedFields );
+      const results = await driver.listItems(config, cleanSelectedFields);
 
       return results;
     } else {
