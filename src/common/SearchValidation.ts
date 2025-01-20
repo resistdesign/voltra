@@ -54,7 +54,7 @@ export const validateSearchFields = (
         const tIF = fields[fieldName];
 
         if (tIF) {
-          const { typeReference, tags = {}, possibleValues } = tIF;
+          const { typeReference, tags = {} } = tIF;
           const { deniedOperations: { READ: denyRead = false } = {} } = tags;
 
           if (denyRead) {
@@ -62,43 +62,39 @@ export const validateSearchFields = (
             results.errorMap[fieldName] = [
               SEARCH_VALIDATION_ERRORS.INVALID_FIELD,
             ];
-          } else if (
-            Array.isArray(possibleValues) &&
-            ((Array.isArray(valueOptions) &&
-              !valueOptions.every((vO) => possibleValues.includes(vO))) ||
-              !possibleValues.includes(value))
-          ) {
-            results.valid = false;
-            results.errorMap[fieldName] = [
-              SEARCH_VALIDATION_ERRORS.INVALID_VALUE_OPTION,
-            ];
           } else if (disallowRelationalFields && typeReference) {
             results.valid = false;
             results.errorMap[fieldName] = [
               SEARCH_VALIDATION_ERRORS.RELATIONAL_FIELDS_NOT_ALLOWED,
             ];
           } else {
-            const { valid: valueIsValid, errorMap: valueErrorMap } =
-              validateTypeInfoFieldValue(
-                value,
-                tIF,
-                typeInfoMap,
-                false,
-                true,
-                customValidators,
-                TypeOperation.READ,
-                disallowRelationalFields
-                  ? RelationshipValidationType.STRICT_EXCLUDE
-                  : RelationshipValidationType.INCLUDE,
-                true,
-              );
+            const targetValueOptions = Array.isArray(valueOptions)
+              ? valueOptions
+              : [value];
 
-            if (!valueIsValid) {
-              results.valid = false;
+            for (const tVO of targetValueOptions) {
+              const { valid: valueIsValid, errorMap: valueErrorMap } =
+                validateTypeInfoFieldValue(
+                  tVO,
+                  tIF,
+                  typeInfoMap,
+                  false,
+                  true,
+                  customValidators,
+                  TypeOperation.READ,
+                  disallowRelationalFields
+                    ? RelationshipValidationType.STRICT_EXCLUDE
+                    : RelationshipValidationType.INCLUDE,
+                  true,
+                );
 
-              for (const fE in valueErrorMap) {
-                results.errorMap[getPathString([fieldName, fE])] =
-                  valueErrorMap[fE];
+              if (!valueIsValid) {
+                results.valid = false;
+
+                for (const fE in valueErrorMap) {
+                  results.errorMap[getPathString([fieldName, fE])] =
+                    valueErrorMap[fE];
+                }
               }
             }
           }
