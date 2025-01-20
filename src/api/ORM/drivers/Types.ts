@@ -80,11 +80,7 @@ export type DataItemDBDriver<
   ) => Promise<Partial<ItemType>>;
   updateItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    updatedItem: Record<
-      UniquelyIdentifyingFieldName,
-      ItemType[UniquelyIdentifyingFieldName]
-    > &
-      Partial<ItemType>,
+    updatedItem: Partial<ItemType>,
   ) => Promise<boolean>;
   deleteItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
