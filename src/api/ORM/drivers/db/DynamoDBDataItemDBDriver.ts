@@ -256,11 +256,7 @@ export class DynamoDBDataItemDBDriver<
    */
   public updateItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    updatedItem: Record<
-      UniquelyIdentifyingFieldName,
-      ItemType[UniquelyIdentifyingFieldName]
-    > &
-      Partial<ItemType>,
+    updatedItem: Partial<ItemType>,
   ): Promise<boolean> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const {

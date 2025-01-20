@@ -34,8 +34,6 @@ export const S3__DATA_ITEM_DB_DRIVER_ERRORS = {
   MISSING_ID: "MISSING_ID",
 };
 
-// TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
-
 /**
  * Use S3 as a {@link DataItemDBDriver} for {@link BaseFileItem}s.
  * */
@@ -136,40 +134,38 @@ export class S3DataItemDBDriver
    * Update a @{@link BaseFileItem}.
    * */
   public updateItem = async (
-    item: Record<"id", BaseFileItem["id"]> & Partial<BaseFileItem>,
+    uniqueIdentifier: BaseFileItem["id"],
+    item: Partial<BaseFileItem>,
   ) => {
-    const { directory, name, id } = item;
+    const { directory, name } = item;
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
 
-    if (typeof id === "undefined") {
-      throw new Error(S3__DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
-    } else {
-      const oldItemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
-      const { name: oldName, directory: oldDirectory } = oldItemLoc;
+    const oldItemLoc: BaseFileLocationInfo =
+      getBaseFileLocationInfo(uniqueIdentifier);
+    const { name: oldName, directory: oldDirectory } = oldItemLoc;
 
-      if (name && (name !== oldName || directory !== oldDirectory)) {
-        await this.s3.send(
-          new CopyObjectCommand({
-            Bucket: bucketName,
-            Key: getFullFileKey({
-              file: {
-                directory,
-                name,
-              },
-              baseDirectory: tableName,
-            }),
-            CopySource: getFullFileKey({
-              file: oldItemLoc,
-              baseDirectory: tableName,
-            }),
+    if (name && (name !== oldName || directory !== oldDirectory)) {
+      await this.s3.send(
+        new CopyObjectCommand({
+          Bucket: bucketName,
+          Key: getFullFileKey({
+            file: {
+              directory,
+              name,
+            },
+            baseDirectory: tableName,
           }),
-        );
-        await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
-      }
-
-      await this.readItem(id);
+          CopySource: getFullFileKey({
+            file: oldItemLoc,
+            baseDirectory: tableName,
+          }),
+        }),
+      );
+      await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
     }
+
+    await this.readItem(uniqueIdentifier);
 
     return true;
   };
