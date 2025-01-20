@@ -73,19 +73,17 @@ export type TypeInfoORMServiceConfig = {
 // TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
 //   - Clean relational fields where applicable. Use the utils.
 //     - [x] create
-//     - [] update
+//     - [x] update
 //     - [] list
 //   - Clean nonexistent fields where applicable. Use a utils.
 //     - [x] create
-//     - [] update
+//     - [x] update
 //     - [] list
 //   - Clean nonexistent selected fields where applicable. Use the utils.
 //     - [x] read
-//     - [] update
 //     - [] list
 //   - Clean relational selected fields where applicable. Use the utils.
 //     - [x] read
-//     - [] update
 //     - [] list
 //   - import {
 //   -   removeNonexistentFieldsFromDataItem,
@@ -425,7 +423,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw validationResults;
     } else {
       const driver = this.getDriverInternal(typeName);
-      const result = await driver.updateItem(primaryFieldValue, item);
+      const cleanItem = this.getCleanItem(typeName, item);
+      const result = await driver.updateItem(primaryFieldValue, cleanItem);
 
       return result;
     }
