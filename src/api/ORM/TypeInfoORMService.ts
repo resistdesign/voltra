@@ -69,7 +69,7 @@ export type TypeInfoORMServiceConfig = {
 };
 
 // TODO: Integrate DAC. 📛
-// TODO: Error Types SHOULD be defined at the Driver API level.
+// TODO: Intercept Driver Errors and add things like `typeName`.
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
