@@ -317,7 +317,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeName,
       fromTypeFieldName,
     );
-    // FIXME: This is not robust in big data environments. Cursors/Queues???
+    // TODO: This is not robust in big data environments. Cursors/Queues???
     const { items: itemList = [] } = (await driver.listItems({
       criteria: {
         logicalOperator: LogicalOperators.AND,
