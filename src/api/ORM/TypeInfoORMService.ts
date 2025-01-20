@@ -1,9 +1,4 @@
-import {
-  TypeInfo,
-  TypeInfoDataItem,
-  TypeInfoMap,
-  TypeOperation,
-} from "../../common/TypeParsing/TypeInfo";
+import {TypeInfo, TypeInfoDataItem, TypeInfoMap, TypeOperation,} from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
   RelationshipValidationType,
@@ -18,7 +13,7 @@ import {
   LogicalOperators,
   SearchCriteria,
 } from "../../common/SearchTypes";
-import { validateSearchFields } from "../../common/SearchValidation";
+import {validateSearchFields} from "../../common/SearchValidation";
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
@@ -26,15 +21,14 @@ import {
   ItemRelationshipInfoType,
   ItemRelationshipOriginatingItemInfo,
 } from "../../common";
-import { validateRelationshipItem } from "../../common/ItemRelationships";
-import {
-  TYPE_INFO_ORM_SERVICE_ERRORS,
-  TypeInfoORMAPI,
-} from "../../common/TypeInfoORM";
-import { DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
+import {validateRelationshipItem} from "../../common/ItemRelationships";
+import {TYPE_INFO_ORM_SERVICE_ERRORS, TypeInfoORMAPI,} from "../../common/TypeInfoORM";
+import {DataItemDBDriver, ItemRelationshipDBDriver} from "./drivers";
 import {
   removeNonexistentFieldsFromDataItem,
+  removeNonexistentFieldsFromSelectedFields,
   removeTypeReferenceFieldsFromDataItem,
+  removeTypeReferenceFieldsFromSelectedFields,
 } from "../../common/TypeParsing/Utils";
 
 export const cleanRelationshipItem = (
@@ -183,6 +177,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return cleanItem;
   };
 
+  protected getCleanSelectedFields = (
+    typeName: string,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ): (keyof TypeInfoDataItem)[] | undefined => {
+    const typeInfo = this.getTypeInfo(typeName);
+    const cleanSelectedFields = removeTypeReferenceFieldsFromSelectedFields<TypeInfoDataItem>(
+      typeInfo,
+      removeNonexistentFieldsFromSelectedFields<TypeInfoDataItem>(typeInfo, selectedFields),
+    );
+
+    return cleanSelectedFields;
+  };
+
   protected validateRelationshipItem = (
     relationshipItem: ItemRelationshipInfoType,
     omitFields: ItemRelationshipInfoKeys[] = [],
@@ -195,10 +202,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (!validationResults.valid) {
       throw validationResults;
     } else {
-      const { fromTypeName, fromTypeFieldName } = relationshipItem;
+      const {fromTypeName, fromTypeFieldName} = relationshipItem;
       const {
         fields: {
-          [fromTypeFieldName]: { typeReference = undefined } = {},
+          [fromTypeFieldName]: {typeReference = undefined} = {},
         } = {},
       } = this.getTypeInfo(fromTypeName);
       const relatedTypeInfo = typeReference
@@ -236,7 +243,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validateRelationshipItem(relationshipItem);
 
     const cleanedItem = cleanRelationshipItem(relationshipItem);
-    const { fromTypeName, fromTypeFieldName } = cleanedItem;
+    const {fromTypeName, fromTypeFieldName} = cleanedItem;
     const driver = this.getRelationshipDriverInternal(
       fromTypeName,
       fromTypeFieldName,
@@ -266,7 +273,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeFieldName,
     );
     // TODO: This is not robust in big data environments. Cursors/Queues???
-    const { items: itemList = [] } = (await driver.listItems({
+    const {items: itemList = []} = (await driver.listItems({
       criteria: {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
@@ -296,7 +303,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     })) as ListItemsResults<ItemRelationshipInfo>;
 
     for (const item of itemList) {
-      const { id: itemId } = item;
+      const {id: itemId} = item;
 
       await driver.deleteItem(itemId);
     }
@@ -310,10 +317,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   listRelationships = async (
     config: ListRelationshipsConfig,
   ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
-    const { relationshipItemOrigin, ...remainingConfig } = config;
+    const {relationshipItemOrigin, ...remainingConfig} = config;
     this.validateRelationshipItem(relationshipItemOrigin);
 
-    const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
+    const {fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue} =
       relationshipItemOrigin;
     const driver = this.getRelationshipDriverInternal(
       fromTypeName,
@@ -365,9 +372,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   read = async (
     typeName: string,
     primaryFieldValue: any,
+    selectedFields?: string[],
   ): Promise<TypeInfoDataItem> => {
     const driver = this.getDriverInternal(typeName);
-    const item = await driver.readItem(primaryFieldValue);
+    const
+      const
+    item = await driver.readItem(primaryFieldValue, selectedFields);
 
     return item;
   };
@@ -387,7 +397,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     this.validate(typeName, item, TypeOperation.UPDATE, true);
 
-    const { primaryField } = this.getTypeInfo(typeName);
+    const {primaryField} = this.getTypeInfo(typeName);
     const primaryFieldValue =
       typeof item === "object" && item !== null
         ? item[primaryField as keyof TypeInfoDataItem]
@@ -434,16 +444,16 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     config: ListItemsConfig,
   ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
-    const { fields: {} = {} } = this.getTypeInfo(typeName);
-    const { criteria } = config;
-    const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
+    const {fields: {} = {}} = this.getTypeInfo(typeName);
+    const {criteria} = config;
+    const {fieldCriteria = []}: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
       typeName,
       this.config.typeInfoMap,
       fieldCriteria,
       true,
     );
-    const { valid: searchFieldsValid } = searchFieldValidationResults;
+    const {valid: searchFieldsValid} = searchFieldValidationResults;
 
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
