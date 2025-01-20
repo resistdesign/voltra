@@ -79,6 +79,7 @@ export type DataItemDBDriver<
     selectedFields?: (keyof ItemType)[],
   ) => Promise<Partial<ItemType>>;
   updateItem: (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Record<
       UniquelyIdentifyingFieldName,
       ItemType[UniquelyIdentifyingFieldName]
