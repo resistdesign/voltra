@@ -6,6 +6,7 @@ import {
   validateTypeInfoFieldValue,
 } from "./TypeParsing/Validation";
 import { TypeInfoMap, TypeOperation } from "./TypeParsing/TypeInfo";
+import { getPathString } from "./Routing";
 
 /**
  * Search validation errors.
@@ -94,7 +95,11 @@ export const validateSearchFields = (
 
             if (!valueIsValid) {
               results.valid = false;
-              results.errorMap[fieldName] = [valueErrorMap];
+
+              for (const fE in valueErrorMap) {
+                results.errorMap[getPathString([fieldName, fE])] =
+                  valueErrorMap[fE];
+              }
             }
           }
         } else {
