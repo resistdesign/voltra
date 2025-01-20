@@ -64,7 +64,7 @@ export const getDriverMethodWithModifiedError = <
     UniquelyIdentifyingFieldName
   >[DriverMethodNameType],
 >(
-  typeName: string,
+  extendedData: Record<any, any>,
   driver: DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>,
   driverMethodName: DriverMethodNameType,
 ): MethodType =>
@@ -76,7 +76,7 @@ export const getDriverMethodWithModifiedError = <
     } catch (error: any) {
       throw {
         ...(error as Record<any, any>),
-        typeName,
+        ...extendedData,
       };
     }
   }) as MethodType;
@@ -115,16 +115,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   }
 
-  protected getDriverInternal = (
-    typeName: string,
-  ): DataItemDBDriver<any, any> => {
-    const driver = this.config.getDriver(typeName);
-
-    if (!driver) {
-      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_DRIVER);
-    }
-
-    // IMPORTANT: Wrap driver to handle modifying errors.
+  protected getWrappedDriverWithExtendedErrorData = <
+    ItemType extends TypeInfoDataItem,
+    UniquelyIdentifyingFieldName extends keyof ItemType,
+  >(
+    driver: DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>,
+    extendedData: Record<any, any>,
+  ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
     const driverMethodList: (keyof DataItemDBDriver<any, any>)[] = [
       "createItem",
       "readItem",
@@ -139,13 +136,25 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     for (const dM of driverMethodList) {
       driverWrapper[dM] = getDriverMethodWithModifiedError(
-        typeName,
+        extendedData,
         driver,
         dM,
       );
     }
 
     return driverWrapper;
+  };
+
+  protected getDriverInternal = (
+    typeName: string,
+  ): DataItemDBDriver<any, any> => {
+    const driver = this.config.getDriver(typeName);
+
+    if (!driver) {
+      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_DRIVER);
+    }
+
+    return this.getWrappedDriverWithExtendedErrorData(driver, { typeName });
   };
 
   protected getRelationshipDriverInternal = (
@@ -158,26 +167,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP_DRIVER);
     }
 
-    // IMPORTANT: Wrap driver to handle modifying errors.
-    const driverMethodList: (keyof ItemRelationshipDBDriver)[] = [
-      "createItem",
-      "readItem",
-      "updateItem",
-      "deleteItem",
-      "listItems",
-    ];
-    const driverWrapper: ItemRelationshipDBDriver =
-      {} as ItemRelationshipDBDriver;
-
-    for (const dM of driverMethodList) {
-      driverWrapper[dM] = getDriverMethodWithModifiedError(
-        typeName,
-        driver,
-        dM,
-      );
-    }
-
-    return driverWrapper;
+    return this.getWrappedDriverWithExtendedErrorData(driver, {
+      typeName,
+      fieldName,
+    });
   };
 
   protected getTypeInfo = (typeName: string): TypeInfo => {
