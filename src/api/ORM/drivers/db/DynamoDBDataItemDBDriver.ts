@@ -245,23 +245,14 @@ export class DynamoDBDataItemDBDriver<
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
     const {
-      typeInfo,
       tableName,
       uniquelyIdentifyingFieldName,
       generateUniqueIdentifier = () => UUIDV4(),
     } = this.config;
-    const {
-      [uniquelyIdentifyingFieldName]: _unusedId,
-      ...cleanNewItem
-    }: ItemType = newItem as any;
     const newItemId = generateUniqueIdentifier(cleanNewItem as ItemType);
-    const nonRelationalNewItem = removeTypeReferenceFieldsFromDataItem(
-      typeInfo,
-      cleanNewItem,
-    );
     const cleanNewItemWithId: ItemType = {
+      ...newItem,
       [uniquelyIdentifyingFieldName]: newItemId,
-      ...nonRelationalNewItem,
     } as any;
     const command = new PutItemCommand({
       TableName: tableName,
@@ -280,10 +271,8 @@ export class DynamoDBDataItemDBDriver<
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>> => {
-    const { tableName, typeInfo, uniquelyIdentifyingFieldName } = this.config;
-    const selectedFieldParams = buildSelectedFieldParams(
-      removeTypeReferenceFieldsFromSelectedFields(typeInfo, selectedFields),
-    );
+    const { tableName, uniquelyIdentifyingFieldName } = this.config;
+    const selectedFieldParams = buildSelectedFieldParams(selectedFields);
     const command = new GetItemCommand({
       TableName: tableName,
       Key: marshall({
@@ -298,10 +287,7 @@ export class DynamoDBDataItemDBDriver<
     } else {
       const cleanItem = unmarshall(Item) as ItemType;
 
-      return removeTypeReferenceFieldsFromDataItem(
-        typeInfo,
-        cleanItem,
-      ) as ItemType;
+      return cleanItem;
     }
   };
 
@@ -309,14 +295,14 @@ export class DynamoDBDataItemDBDriver<
    * Update an item in the database.
    */
   public updateItem = async (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Record<
       UniquelyIdentifyingFieldName,
       ItemType[UniquelyIdentifyingFieldName]
     > &
       Partial<ItemType>,
   ): Promise<boolean> => {
-    const { typeName, typeInfo, tableName, uniquelyIdentifyingFieldName } =
-      this.config;
+    const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const {
       [uniquelyIdentifyingFieldName]: uniqueIdentifier,
       ...cleanUpdatedItem
