@@ -493,26 +493,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
-    // TODO: Handle `possibleValues` (use `value` || `valueOptions` in all criteria) at ORM Service level.
-    // CODE FROM DynamoDBDriver:
-    // IMPORTANT: Only allow searching for `possibleValues` when supplied.
-    // if (
-    //   Array.isArray(possibleValues) &&
-    //   ((Array.isArray(valueOptions) &&
-    //     !valueOptions.every((vO) => possibleValues.includes(vO))) ||
-    //     !possibleValues.includes(value))
-    // ) {
-    //   throw {
-    //     message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CRITERION_VALUE,
-    //     fieldName,
-    //     value,
-    //   };
-    // }
     const { fields: {} = {} } = this.getTypeInfo(typeName);
     const { criteria } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
-    // TODO: Clean all `fieldCriteria` fields based on existing and non-relational.
-    // TODO: Clean all `fieldCriteria` values and valueOptions based on possibleValues.
     const searchFieldValidationResults = validateSearchFields(
       typeName,
       this.config.typeInfoMap,
