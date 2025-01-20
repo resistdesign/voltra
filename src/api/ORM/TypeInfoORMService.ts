@@ -158,7 +158,26 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP_DRIVER);
     }
 
-    return driver;
+    // IMPORTANT: Wrap driver to handle modifying errors.
+    const driverMethodList: (keyof ItemRelationshipDBDriver)[] = [
+      "createItem",
+      "readItem",
+      "updateItem",
+      "deleteItem",
+      "listItems",
+    ];
+    const driverWrapper: ItemRelationshipDBDriver =
+      {} as ItemRelationshipDBDriver;
+
+    for (const dM of driverMethodList) {
+      driverWrapper[dM] = getDriverMethodWithModifiedError(
+        typeName,
+        driver,
+        dM,
+      );
+    }
+
+    return driverWrapper;
   };
 
   protected getTypeInfo = (typeName: string): TypeInfo => {
