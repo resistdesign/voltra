@@ -18,14 +18,7 @@ import { ListItemsConfig, ListItemsResults } from "../../../../common";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import {
-  removeNonexistentFieldsFromDataItem,
-  removeTypeReferenceFieldsFromDataItem,
-  removeTypeReferenceFieldsFromSelectedFields,
-} from "../../../../common/TypeParsing/Utils";
-import {
-  TypeInfo,
   TypeInfoDataItem,
-  TypeInfoField,
   TypeInfoPack,
 } from "../../../../common/TypeParsing/TypeInfo";
 import {
@@ -39,7 +32,7 @@ import FS from "fs";
 import Path from "path";
 import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
 
-// TODO: Handle at ORM Service level.
+// TODO: Error Types SHOULD be defined at the Driver API level.
 /**
  * The errors that can be thrown by the {@link DynamoDBDataItemDBDriver}.
  * */
@@ -89,8 +82,6 @@ const DynamoDBLogicalOperatorMappings: Record<LogicalOperators, string> = {
 };
 
 const createFilterExpression = (
-  typeName: string,
-  typeInfo: TypeInfo,
   fieldCriteria: FieldCriterion[],
   logicalOperator: LogicalOperators,
 ): {
@@ -98,50 +89,27 @@ const createFilterExpression = (
   ExpressionAttributeNames?: Record<string, string>;
   ExpressionAttributeValues?: Record<string, any>;
 } => {
-  const { fields = {} } = typeInfo;
   const expressions: string[] = [];
   const attributeNames: Record<string, string> = {};
   const attributeValues: Record<string, any> = {};
 
   for (const criterion of fieldCriteria) {
     const { fieldName, operator, value, valueOptions } = criterion;
-    const { [fieldName]: tIF = {} as TypeInfoField } = fields;
-    const { typeReference, possibleValues } = tIF;
+    const createExpression =
+      DynamoDBOperatorMappings[operator as ComparisonOperators];
 
-    // IMPORTANT: Only allow searching for `possibleValues` when supplied.
-    if (
-      Array.isArray(possibleValues) &&
-      ((Array.isArray(valueOptions) &&
-        !valueOptions.every((vO) => possibleValues.includes(vO))) ||
-        !possibleValues.includes(value))
-    ) {
+    if (!createExpression) {
       throw {
-        message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CRITERION_VALUE,
-        typeName,
+        message:
+          DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
+        operator,
         fieldName,
-        value,
       };
     }
 
-    // TODO: Handle in at ORM Service level.
-    // IMPORTANT: Use only non-relational fields.
-    if (tIF && typeof typeReference === "undefined") {
-      const createExpression =
-        DynamoDBOperatorMappings[operator as ComparisonOperators];
-
-      if (!createExpression) {
-        throw {
-          message:
-            DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
-          operator,
-          fieldName,
-        };
-      }
-
-      expressions.push(createExpression(fieldName));
-      attributeNames[`#${fieldName}`] = fieldName;
-      attributeValues[`:${fieldName}`] = value;
-    }
+    expressions.push(createExpression(fieldName));
+    attributeNames[`#${fieldName}`] = fieldName;
+    attributeValues[`:${fieldName}`] = value;
   }
 
   return {
@@ -155,25 +123,17 @@ const createFilterExpression = (
 
 const buildUpdateExpression = (
   updatedItem: Partial<TypeInfoDataItem>,
-  typeInfo: TypeInfo,
   uniquelyIdentifyingFieldName: any,
 ) => {
-  const { fields = {} } = typeInfo;
   const updateExpressionParts: string[] = [];
   const attributeNames: Record<string, string> = {};
   const attributeValues: Record<string, any> = {};
 
-  for (const f in fields) {
-    const { typeReference } = fields[f];
+  for (const f in updatedItem) {
     const value = updatedItem[f];
 
-    // TODO: Handle relational field removal at ORM Service level.
-    // IMPORTANT: DO NOT use the `primaryField`, only use non-relational fields and there must be a value.
-    if (
-      f !== uniquelyIdentifyingFieldName &&
-      typeof typeReference === "undefined" &&
-      typeof value !== "undefined"
-    ) {
+    // IMPORTANT: DO NOT use the `uniquelyIdentifyingFieldName`.
+    if (f !== uniquelyIdentifyingFieldName && typeof value !== "undefined") {
       const placeholderName = `#${f}`;
       const placeholderValue = `:${f}`;
 
@@ -249,7 +209,7 @@ export class DynamoDBDataItemDBDriver<
       uniquelyIdentifyingFieldName,
       generateUniqueIdentifier = () => UUIDV4(),
     } = this.config;
-    const newItemId = generateUniqueIdentifier(cleanNewItem as ItemType);
+    const newItemId = generateUniqueIdentifier(newItem as ItemType);
     const cleanNewItemWithId: ItemType = {
       ...newItem,
       [uniquelyIdentifyingFieldName]: newItemId,
@@ -304,12 +264,9 @@ export class DynamoDBDataItemDBDriver<
   ): Promise<boolean> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const {
-      [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+      [uniquelyIdentifyingFieldName]: _unusedUniqueIdentifier,
       ...cleanUpdatedItem
-    }: ItemType = removeTypeReferenceFieldsFromDataItem(
-      typeInfo,
-      removeNonexistentFieldsFromDataItem(updatedItem),
-    ) as any;
+    }: ItemType = updatedItem as ItemType;
 
     if (typeof uniqueIdentifier !== "undefined") {
       const command = new UpdateItemCommand({
@@ -320,7 +277,6 @@ export class DynamoDBDataItemDBDriver<
         ReturnValues: "ALL_NEW",
         ...buildUpdateExpression(
           cleanUpdatedItem,
-          typeInfo,
           uniquelyIdentifyingFieldName,
         ),
       });
@@ -330,7 +286,6 @@ export class DynamoDBDataItemDBDriver<
     } else {
       throw {
         message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
-        typeName,
         uniquelyIdentifyingFieldName,
       };
     }
@@ -362,7 +317,7 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
   ): Promise<boolean | ListItemsResults<ItemType>> => {
-    const { typeName, typeInfo, tableName } = this.config;
+    const { tableName } = this.config;
     const {
       itemsPerPage = 10,
       cursor,
@@ -376,19 +331,12 @@ export class DynamoDBDataItemDBDriver<
     const {
       ProjectionExpression,
       ExpressionAttributeNames: selectFieldParamsAttributeNames,
-    } = buildSelectedFieldParams(
-      removeTypeReferenceFieldsFromSelectedFields(typeInfo, selectedFields),
-    );
+    } = buildSelectedFieldParams(selectedFields);
     const {
       FilterExpression,
       ExpressionAttributeNames,
       ExpressionAttributeValues,
-    } = createFilterExpression(
-      typeName,
-      typeInfo,
-      fieldCriteria,
-      logicalOperator,
-    );
+    } = createFilterExpression(fieldCriteria, logicalOperator);
     const params: ScanCommandInput = {
       TableName: tableName,
       Select: checkExistence
@@ -417,7 +365,6 @@ export class DynamoDBDataItemDBDriver<
       } catch (error) {
         throw {
           message: DYNAMODB_DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
-          typeName,
           cursor,
         };
       }
@@ -455,12 +402,7 @@ export class DynamoDBDataItemDBDriver<
           const unmarshalledItem = unmarshall(Item) as ItemType;
 
           if (!itemsPerPageQuotaMet) {
-            foundItems.push(
-              removeTypeReferenceFieldsFromDataItem(
-                typeInfo,
-                unmarshalledItem,
-              ) as ItemType,
-            );
+            foundItems.push(unmarshalledItem as ItemType);
             itemsPerPageQuotaMet = foundItems.length == itemsPerPage;
 
             if (itemsPerPageQuotaMet) {
@@ -524,6 +466,3 @@ export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
       };
     },
   };
-
-// TODO: Cleaning relational, nonexistent and selected fields SHOULD be done at the `TypeInfoORMService` level.
-// TODO: Error Types SHOULD be defined at the Driver API level.
