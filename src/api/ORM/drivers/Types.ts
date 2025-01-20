@@ -9,6 +9,18 @@ import {
 } from "../../../common/TypeParsing/TypeInfo";
 
 /**
+ * The errors that can be thrown by a {@link DataItemDBDriver}.
+ * */
+export enum DATA_ITEM_DB_DRIVER_ERRORS {
+  MISSING_ID = "MISSING_ID",
+  INVALID_CURSOR = "INVALID_CURSOR",
+  ITEM_NOT_FOUND = "ITEM_NOT_FOUND",
+  MISSING_UNIQUE_IDENTIFIER = "MISSING_UNIQUE_IDENTIFIER",
+  INVALID_CRITERION_VALUE = "INVALID_CRITERION_VALUE",
+  SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED = "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED",
+}
+
+/**
  * The basic API for a database driver with CRUD and Find.
  * */
 export type BasicDBDriver = {
