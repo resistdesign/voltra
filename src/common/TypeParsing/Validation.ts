@@ -27,12 +27,19 @@ export type CustomTypeInfoFieldValidatorMap = Record<
 >;
 
 /**
+ * A map of errors.
+ * */
+export type ErrorMap = {
+  [key: string]: (string | ErrorMap)[];
+};
+
+/**
  * The validation results for type info fields.
  */
 export type TypeInfoValidationResults = {
   valid: boolean;
   error: string;
-  errorMap: Record<string, string[]>;
+  errorMap: ErrorMap;
 };
 
 export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
