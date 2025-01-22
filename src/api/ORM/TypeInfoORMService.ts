@@ -38,6 +38,7 @@ import {
   removeTypeReferenceFieldsFromDataItem,
   removeTypeReferenceFieldsFromSelectedFields,
 } from "../../common/TypeParsing/Utils";
+import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -293,14 +294,58 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const cleanedItem = cleanRelationshipItem(relationshipItem);
     const { fromTypeName, fromTypeFieldName } = cleanedItem;
+    const {
+      fields: {
+        [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
+      } = {},
+    } = this.getTypeInfo(fromTypeName);
     const driver = this.getRelationshipDriverInternal(
       fromTypeName,
       fromTypeFieldName,
     );
-    // TODO: VALIDATION: Need to update when the field is not an array.
-    const newIdentifier = await driver.createItem(cleanedItem);
 
-    return newIdentifier;
+    let identifier: string;
+
+    if (relationshipIsMultiple) {
+      identifier = await driver.createItem(cleanedItem);
+    } else {
+      // VALIDATION: Need to update when the field is not an array.
+      const {
+        items: [
+          { [ItemRelationshipInfoIdentifyingKeys.id]: existingIdentifier },
+        ] = [{} as ItemRelationshipInfo],
+      } = (await driver.listItems(
+        {
+          criteria: {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              {
+                fieldName: ItemRelationshipInfoKeys.fromTypeName,
+                operator: ComparisonOperators.EQUALS,
+                value: fromTypeName,
+              },
+              {
+                fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
+                operator: ComparisonOperators.EQUALS,
+                value: fromTypeFieldName,
+              },
+            ],
+          },
+          itemsPerPage: 1,
+        },
+        [ItemRelationshipInfoIdentifyingKeys.id],
+      )) as ListItemsResults<ItemRelationshipInfo>;
+
+      if (existingIdentifier) {
+        identifier = existingIdentifier;
+
+        await driver.updateItem(existingIdentifier, cleanedItem);
+      } else {
+        identifier = await driver.createItem(cleanedItem);
+      }
+    }
+
+    return identifier;
   };
 
   /**

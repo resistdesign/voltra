@@ -9,6 +9,13 @@ export enum ItemRelationshipInfoKeys {
 }
 
 /**
+ * The identifying keys for item relationship info.
+ * */
+export enum ItemRelationshipInfoIdentifyingKeys {
+  id = "id",
+}
+
+/**
  * The basis for an `ItemRelationshipInfo` without an assigned identifier.
  * */
 export type BaseItemRelationshipInfo = Record<ItemRelationshipInfoKeys, string>;
@@ -16,9 +23,8 @@ export type BaseItemRelationshipInfo = Record<ItemRelationshipInfoKeys, string>;
 /**
  * An item containing the information about a relationship between two items.
  * */
-export type ItemRelationshipInfo = BaseItemRelationshipInfo & {
-  id: string;
-};
+export type ItemRelationshipInfo = BaseItemRelationshipInfo &
+  Record<ItemRelationshipInfoIdentifyingKeys, string>;
 
 /**
  * The origination portion of an `ItemRelationshipInfo`.
