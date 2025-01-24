@@ -1,13 +1,6 @@
-import {
-  ListItemsConfig,
-  ListItemsResults,
-  ListRelationshipsConfig,
-} from "../SearchTypes";
-import {
-  BaseItemRelationshipInfo,
-  ItemRelationshipInfo,
-} from "../ItemRelationshipInfo";
-import { TypeInfoDataItem } from "../TypeParsing/TypeInfo";
+import {ListItemsConfig, ListItemsResults, ListRelationshipsConfig,} from "../SearchTypes";
+import {BaseItemRelationshipInfo, ItemRelationshipInfo,} from "../ItemRelationshipInfo";
+import {TypeInfoDataItem} from "../TypeParsing/TypeInfo";
 
 /**
  * Error types for a TypeInfoORM service.
@@ -41,6 +34,16 @@ export enum TypeInfoORMAPIRoutePaths {
  * The API type for TypeInfoORM providers to implement.
  * */
 export type TypeInfoORMAPI = {
+  createRelationship: (
+    relationshipItem: BaseItemRelationshipInfo,
+  ) => Promise<string>;
+  deletedRelationship: (
+    relationshipItem: BaseItemRelationshipInfo,
+  ) => Promise<boolean>;
+  listRelationships: (
+    config: ListRelationshipsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => Promise<boolean | ListItemsResults<ItemRelationshipInfo>>;
   create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
   read: (
     typeName: string,
@@ -53,14 +56,4 @@ export type TypeInfoORMAPI = {
     typeName: string,
     config: ListItemsConfig,
   ) => Promise<boolean | ListItemsResults<TypeInfoDataItem>>;
-  createRelationship: (
-    relationshipItem: BaseItemRelationshipInfo,
-  ) => Promise<string>;
-  deletedRelationship: (
-    relationshipItem: BaseItemRelationshipInfo,
-  ) => Promise<boolean>;
-  listRelationships: (
-    config: ListRelationshipsConfig,
-    selectedFields?: (keyof TypeInfoDataItem)[],
-  ) => Promise<boolean | ListItemsResults<ItemRelationshipInfo>>;
 };
