@@ -1,6 +1,13 @@
-import {ListItemsConfig, ListItemsResults, ListRelationshipsConfig,} from "../SearchTypes";
-import {BaseItemRelationshipInfo, ItemRelationshipInfo,} from "../ItemRelationshipInfo";
-import {TypeInfoDataItem} from "../TypeParsing/TypeInfo";
+import {
+  ListItemsConfig,
+  ListItemsResults,
+  ListRelationshipsConfig,
+} from "../SearchTypes";
+import {
+  BaseItemRelationshipInfo,
+  ItemRelationshipInfo,
+} from "../ItemRelationshipInfo";
+import { TypeInfoDataItem } from "../TypeParsing/TypeInfo";
 
 /**
  * Error types for a TypeInfoORM service.
@@ -31,6 +38,14 @@ export enum TypeInfoORMAPIRoutePaths {
 }
 
 /**
+ * The results of a delete relationship operation.
+ */
+export type DeleteRelationshipResults = {
+  success: boolean;
+  remainingItemsExist: boolean;
+};
+
+/**
  * The API type for TypeInfoORM providers to implement.
  * */
 export type TypeInfoORMAPI = {
@@ -39,7 +54,7 @@ export type TypeInfoORMAPI = {
   ) => Promise<string>;
   deletedRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
-  ) => Promise<boolean>;
+  ) => Promise<DeleteRelationshipResults>;
   listRelationships: (
     config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
