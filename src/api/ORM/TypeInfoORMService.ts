@@ -103,8 +103,6 @@ export type TypeInfoORMServiceConfig = {
 // TODO: DAC to include the concept of an `admin` and/or a role with access to all resources automatically???
 // TODO: DAC to be hardened against path traversal attacks with path parts such as `..`, `.`, `//`, `` or `/`.
 
-// TODO: Consider the concept of `Write Only Once` for types and fields.
-
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
  * */
