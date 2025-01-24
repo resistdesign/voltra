@@ -1,4 +1,5 @@
 import {
+  DeleteRelationshipResults,
   TypeInfoORMAPI,
   TypeInfoORMAPIRoutePaths,
 } from "../../common/TypeInfoORM";
@@ -86,7 +87,7 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
 
   deletedRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
-  ): Promise<boolean> => {
+  ): Promise<DeleteRelationshipResults> => {
     return await this.makeRequest(
       TypeInfoORMAPIRoutePaths.DELETE_RELATIONSHIP,
       [relationshipItem],
