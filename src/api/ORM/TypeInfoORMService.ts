@@ -101,7 +101,6 @@ export type TypeInfoORMServiceConfig = {
 
 // TODO: Integrate DAC. 📛
 // TODO: DAC to include the concept of an `admin` and/or a role with access to all resources automatically???
-// TODO: DAC to be hardened against path traversal attacks with path parts such as `..`, `.`, `//`, `` or `/`.
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
