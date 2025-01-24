@@ -7,6 +7,7 @@ import {
   TypeInfoDataItem,
   TypeInfoPack,
 } from "../../../common/TypeParsing/TypeInfo";
+import { ItemRelationshipInfoIdentifyingKeys } from "../../../common/ItemRelationshipInfo";
 
 /**
  * The errors that can be thrown by a {@link DataItemDBDriver}.
@@ -121,7 +122,7 @@ export type SupportedDataItemDBDriverEntry = {
  * */
 export type ItemRelationshipDBDriver = DataItemDBDriver<
   ItemRelationshipInfo,
-  "id"
+  ItemRelationshipInfoIdentifyingKeys.id
 >;
 
 /**
