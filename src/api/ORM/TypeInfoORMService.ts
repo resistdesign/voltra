@@ -28,6 +28,7 @@ import {
 } from "../../common";
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
+  DeleteRelationshipResults,
   TYPE_INFO_ORM_SERVICE_ERRORS,
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
@@ -353,7 +354,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * */
   deletedRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
-  ): Promise<boolean> => {
+  ): Promise<DeleteRelationshipResults> => {
     this.validateRelationshipItem(relationshipItem);
 
     const cleanedItem = cleanRelationshipItem(relationshipItem);
@@ -367,8 +368,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeName,
       fromTypeFieldName,
     );
-    // TODO: This is not robust in big data environments. Cursors/Queues???
-    const { items: itemList = [] } = (await driver.listItems({
+    const { items: itemList = [], cursor } = (await driver.listItems({
       criteria: {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
@@ -403,7 +403,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       await driver.deleteItem(itemId);
     }
 
-    return true;
+    return {
+      success: true,
+      remainingItemsExist: !!cursor,
+    };
   };
 
   /**
