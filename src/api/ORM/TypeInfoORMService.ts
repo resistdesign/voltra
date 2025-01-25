@@ -113,6 +113,7 @@ export type TypeInfoORMServiceConfig = {
 };
 
 // TODO: Integrate DAC. 📛
+// TODO: DAC integration to including adding DACConstraints when a DACRole creates an item or relationship???
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
@@ -133,6 +134,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected validateItemDAC = (
     item: TypeInfoDataItem,
     typeInfo: TypeInfo,
+    typeOperation: TypeOperation,
   ) => {};
 
   protected getWrappedDriverWithExtendedErrorData = <
