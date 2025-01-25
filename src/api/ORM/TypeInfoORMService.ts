@@ -90,6 +90,7 @@ export const getDriverMethodWithModifiedError = <
 export type TypeInfoORMDACConfig = {
   itemResourcePathPrefix: string;
   relationshipResourcePathPrefix: string;
+  accessingRole: DACRole;
   getDACRoleById: (id: string) => DACRole;
 };
 
