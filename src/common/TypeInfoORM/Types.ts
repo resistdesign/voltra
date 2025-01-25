@@ -10,6 +10,24 @@ import {
 import { TypeInfoDataItem } from "../TypeParsing/TypeInfo";
 
 /**
+ * A set of possible operations for a {@link ItemRelationshipInfo}.
+ * */
+export enum RelationshipOperation {
+  GET = "GET",
+  SET = "SET",
+  UNSET = "UNSET",
+}
+
+/**
+ * A set groups of possible operations for a type, field value or relationship.
+ * */
+export enum TypeOperationGroup {
+  ALL_OPERATIONS = "ALL_OPERATIONS",
+  ALL_ITEM_OPERATIONS = "ALL_ITEM_OPERATIONS",
+  ALL_RELATIONSHIP_OPERATIONS = "ALL_RELATIONSHIP_OPERATIONS",
+}
+
+/**
  * Error types for a TypeInfoORM service.
  * */
 export const TYPE_INFO_ORM_SERVICE_ERRORS = {
