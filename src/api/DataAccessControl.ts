@@ -217,8 +217,10 @@ export const getDACRoleHasAccessToDataItem = (
   typeInfo: TypeInfo,
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
+  itemPathPrefix?: LiteralValue[],
   cachedFlattenedConstraints?: DACConstraint[],
 ): DACDataItemResourceAccessResultMap => {
+  const cleanItemPathPrefix = itemPathPrefix ? itemPathPrefix : [];
   const resultMap: DACDataItemResourceAccessResultMap = {
     primaryAllowed: false,
     fieldsResources: {},
@@ -235,7 +237,11 @@ export const getDACRoleHasAccessToDataItem = (
       primaryField as keyof TypeInfoDataItem
     ] as LiteralValue;
     const dataItemFields = Object.keys(dataItem);
-    const primaryResourcePath = [typeName, primaryFieldValue];
+    const primaryResourcePath = [
+      ...cleanItemPathPrefix,
+      typeName,
+      primaryFieldValue,
+    ];
     const internallyCachedFlattenedConstraints = cachedFlattenedConstraints
       ? cachedFlattenedConstraints
       : getFlattenedDACConstraints(role, getDACRoleById);
@@ -257,8 +263,7 @@ export const getDACRoleHasAccessToDataItem = (
 
         if (!typeReference && !fieldIsArray) {
           const fieldResourcePath = [
-            typeName,
-            primaryFieldValue as LiteralValue,
+            ...primaryResourcePath,
             dIF,
             dataItem[dIF] as LiteralValue,
           ];
