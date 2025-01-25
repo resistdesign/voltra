@@ -30,6 +30,7 @@ import {
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
   DeleteRelationshipResults,
+  ORMOperation,
   TYPE_INFO_ORM_SERVICE_ERRORS,
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
@@ -41,7 +42,7 @@ import {
   removeTypeReferenceFieldsFromSelectedFields,
 } from "../../common/TypeParsing/Utils";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
-import {DACConstraint, DACRole} from "../DataAccessControl";
+import { DACConstraint, DACRole } from "../DataAccessControl";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -135,7 +136,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected validateItemDAC = (
     item: TypeInfoDataItem,
     typeInfo: TypeInfo,
-    typeOperation: TypeOperation,
+    typeOperation: ORMOperation,
   ) => {
     // TODO: DAC validation at the field level???
   };

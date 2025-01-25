@@ -7,7 +7,7 @@ import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
 } from "../ItemRelationshipInfo";
-import { TypeInfoDataItem } from "../TypeParsing/TypeInfo";
+import { TypeInfoDataItem, TypeOperation } from "../TypeParsing/TypeInfo";
 
 /**
  * A set of possible operations for a {@link ItemRelationshipInfo}.
@@ -26,6 +26,14 @@ export enum TypeOperationGroup {
   ALL_ITEM_OPERATIONS = "ALL_ITEM_OPERATIONS",
   ALL_RELATIONSHIP_OPERATIONS = "ALL_RELATIONSHIP_OPERATIONS",
 }
+
+/**
+ * A set of possible ORM operations.
+ * */
+export type ORMOperation =
+  | TypeOperation
+  | RelationshipOperation
+  | TypeOperationGroup;
 
 /**
  * Error types for a TypeInfoORM service.
