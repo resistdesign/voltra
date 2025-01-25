@@ -41,7 +41,7 @@ import {
   removeTypeReferenceFieldsFromSelectedFields,
 } from "../../common/TypeParsing/Utils";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
-import { DACRole } from "../DataAccessControl";
+import {DACConstraint, DACRole} from "../DataAccessControl";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -118,6 +118,8 @@ export type TypeInfoORMServiceConfig = {
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
  * */
 export class TypeInfoORMService implements TypeInfoORMAPI {
+  protected cachedFlattenedConstraints: DACConstraint[] = [];
+
   constructor(protected config: TypeInfoORMServiceConfig) {
     if (!config.getDriver) {
       throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.NO_DRIVERS_SUPPLIED);
