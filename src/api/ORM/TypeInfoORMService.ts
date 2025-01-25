@@ -40,6 +40,7 @@ import {
   removeTypeReferenceFieldsFromSelectedFields,
 } from "../../common/TypeParsing/Utils";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
+import { DACRole } from "../DataAccessControl";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -84,7 +85,16 @@ export const getDriverMethodWithModifiedError = <
   }) as MethodType;
 
 /**
- * The configuration for the TypeInfoORM service.
+ * The configuration for the TypeInfoORMService DAC features.
+ * */
+export type TypeInfoORMDACConfig = {
+  itemResourcePathPrefix: string;
+  relationshipResourcePathPrefix: string;
+  getDACRoleById: (id: string) => DACRole;
+};
+
+/**
+ * The configuration for the TypeInfoORMService.
  * */
 export type TypeInfoORMServiceConfig = {
   typeInfoMap: TypeInfoMap;
@@ -97,6 +107,7 @@ export type TypeInfoORMServiceConfig = {
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
   customValidators?: CustomTypeInfoFieldValidatorMap;
+  dacConfig?: TypeInfoORMDACConfig;
 };
 
 // TODO: Integrate DAC. 📛
