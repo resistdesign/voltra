@@ -30,6 +30,7 @@ import {
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
   DeleteRelationshipResults,
+  ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
   OperationGroup,
   RelationshipOperation,
   TYPE_INFO_ORM_SERVICE_ERRORS,
@@ -231,6 +232,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           [
             relationshipOperation,
             ...relationshipResourcePathPrefix,
+            ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
             ...itemRelationshipPath,
           ],
           accessingRole,
@@ -241,6 +243,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           [
             OperationGroup.ALL_RELATIONSHIP_OPERATIONS,
             ...relationshipResourcePathPrefix,
+            ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
             ...itemRelationshipPath,
           ],
           accessingRole,
@@ -251,6 +254,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           [
             OperationGroup.ALL_OPERATIONS,
             ...relationshipResourcePathPrefix,
+            ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
             ...itemRelationshipPath,
           ],
           accessingRole,
@@ -602,11 +606,31 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
     this.validate(typeName, item, TypeOperation.CREATE);
 
-    const driver = this.getDriverInternal(typeName);
-    const cleanItem = this.getCleanItem(typeName, item);
-    const newIdentifier = await driver.createItem(cleanItem);
+    const {
+      allowed: createAllowed,
+      denied: createDenied,
+      fieldsResources = {},
+    } = this.getItemDACValidation(
+      item,
+      typeName,
+      this.getTypeInfo(typeName),
+      TypeOperation.CREATE,
+    );
 
-    return newIdentifier;
+    if (createDenied || !createAllowed) {
+      throw {
+        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        typeName,
+        item,
+      };
+    } else {
+      const driver = this.getDriverInternal(typeName);
+      // TODO: Consider DAC in `getCleanItem`???
+      const cleanItem = this.getCleanItem(typeName, item);
+      const newIdentifier = await driver.createItem(cleanItem);
+
+      return newIdentifier;
+    }
   };
 
   /**
