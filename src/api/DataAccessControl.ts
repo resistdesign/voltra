@@ -26,7 +26,7 @@ export type DACConstraint = {
  * */
 export type DACRole = {
   id: string;
-  parentRoleIds?: string[];
+  childRoleIds?: string[];
   constraints: DACConstraint[];
 };
 
@@ -130,16 +130,16 @@ export const getFlattenedDACConstraints = (
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
 ): DACConstraint[] => {
-  const { parentRoleIds = [], constraints = [] } = role;
+  const { childRoleIds = [], constraints = [] } = role;
 
   let flattenedConstraints: DACConstraint[] = [...constraints];
 
-  for (const pRI of parentRoleIds) {
-    const parentRole = getDACRoleById(pRI);
+  for (const cRI of childRoleIds) {
+    const childRole = getDACRoleById(cRI);
 
     flattenedConstraints = [
       ...flattenedConstraints,
-      ...getFlattenedDACConstraints(parentRole, getDACRoleById),
+      ...getFlattenedDACConstraints(childRole, getDACRoleById),
     ];
   }
 
