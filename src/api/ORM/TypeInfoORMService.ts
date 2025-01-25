@@ -30,7 +30,8 @@ import {
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
   DeleteRelationshipResults,
-  ORMOperation,
+  OperationGroup,
+  RelationshipOperation,
   TYPE_INFO_ORM_SERVICE_ERRORS,
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
@@ -42,7 +43,16 @@ import {
   removeTypeReferenceFieldsFromSelectedFields,
 } from "../../common/TypeParsing/Utils";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
-import { DACConstraint, DACRole } from "../DataAccessControl";
+import {
+  DACAccessResult,
+  DACConstraint,
+  DACDataItemResourceAccessResultMap,
+  DACRole,
+  getDACRoleHasAccessToDataItem,
+  getResourceAccessByDACRole,
+  mergeDACAccessResults,
+  mergeDACDataItemResourceAccessResultMaps,
+} from "../DataAccessControl";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -110,8 +120,15 @@ export type TypeInfoORMServiceConfig = {
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
   customValidators?: CustomTypeInfoFieldValidatorMap;
-  dacConfig?: TypeInfoORMDACConfig;
-};
+} & (
+  | {
+      useDAC: true;
+      dacConfig: TypeInfoORMDACConfig;
+    }
+  | {
+      useDAC: false;
+    }
+);
 
 // TODO: Integrate DAC. 📛
 
@@ -133,12 +150,120 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   }
 
-  protected validateItemDAC = (
+  // TODO: Incorporate getItemDACValidation.
+  protected getItemDACValidation = (
     item: TypeInfoDataItem,
+    typeName: string,
     typeInfo: TypeInfo,
-    typeOperation: ORMOperation,
-  ) => {
-    // TODO: DAC validation at the field level???
+    typeOperation: TypeOperation,
+  ): DACDataItemResourceAccessResultMap => {
+    const { useDAC } = this.config;
+
+    if (useDAC) {
+      const { dacConfig } = this.config;
+      const { itemResourcePathPrefix, accessingRole, getDACRoleById } =
+        dacConfig;
+
+      return mergeDACDataItemResourceAccessResultMaps(
+        getDACRoleHasAccessToDataItem(
+          item,
+          typeName,
+          typeInfo,
+          accessingRole,
+          getDACRoleById,
+          [typeOperation, ...itemResourcePathPrefix],
+          this.cachedFlattenedConstraints,
+        ),
+        getDACRoleHasAccessToDataItem(
+          item,
+          typeName,
+          typeInfo,
+          accessingRole,
+          getDACRoleById,
+          [OperationGroup.ALL_ITEM_OPERATIONS, ...itemResourcePathPrefix],
+          this.cachedFlattenedConstraints,
+        ),
+        getDACRoleHasAccessToDataItem(
+          item,
+          typeName,
+          typeInfo,
+          accessingRole,
+          getDACRoleById,
+          [OperationGroup.ALL_OPERATIONS, ...itemResourcePathPrefix],
+          this.cachedFlattenedConstraints,
+        ),
+      );
+    } else {
+      return {
+        allowed: true,
+        denied: false,
+        fieldsResources: {},
+      };
+    }
+  };
+
+  // TODO: Incorporate getRelationshipDACValidation.
+  protected getRelationshipDACValidation = (
+    itemRelationship: BaseItemRelationshipInfo,
+    relationshipOperation: RelationshipOperation,
+  ): DACAccessResult => {
+    const { useDAC } = this.config;
+
+    if (useDAC) {
+      const { dacConfig } = this.config;
+      const { relationshipResourcePathPrefix, accessingRole, getDACRoleById } =
+        dacConfig;
+      const {
+        fromTypeName,
+        fromTypeFieldName,
+        fromTypePrimaryFieldValue,
+        toTypePrimaryFieldValue,
+      } = itemRelationship;
+      const itemRelationshipPath: LiteralValue[] = [
+        fromTypeName,
+        fromTypeFieldName,
+        fromTypePrimaryFieldValue,
+        toTypePrimaryFieldValue,
+      ];
+
+      return mergeDACAccessResults(
+        getResourceAccessByDACRole(
+          [
+            relationshipOperation,
+            ...relationshipResourcePathPrefix,
+            ...itemRelationshipPath,
+          ],
+          accessingRole,
+          getDACRoleById,
+          this.cachedFlattenedConstraints,
+        ),
+        getResourceAccessByDACRole(
+          [
+            OperationGroup.ALL_RELATIONSHIP_OPERATIONS,
+            ...relationshipResourcePathPrefix,
+            ...itemRelationshipPath,
+          ],
+          accessingRole,
+          getDACRoleById,
+          this.cachedFlattenedConstraints,
+        ),
+        getResourceAccessByDACRole(
+          [
+            OperationGroup.ALL_OPERATIONS,
+            ...relationshipResourcePathPrefix,
+            ...itemRelationshipPath,
+          ],
+          accessingRole,
+          getDACRoleById,
+          this.cachedFlattenedConstraints,
+        ),
+      );
+    } else {
+      return {
+        allowed: true,
+        denied: false,
+      };
+    }
   };
 
   protected getWrappedDriverWithExtendedErrorData = <

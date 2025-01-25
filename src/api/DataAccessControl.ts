@@ -41,9 +41,8 @@ export type DACAccessResult = {
 /**
  * The result of a data access control (DAC) check for a data item.
  * */
-export type DACDataItemResourceAccessResultMap = {
-  primaryAllowed: boolean;
-  fieldsResources?: Record<string, boolean>;
+export type DACDataItemResourceAccessResultMap = DACAccessResult & {
+  fieldsResources?: Record<string, DACAccessResult>;
 };
 
 /**
@@ -222,7 +221,8 @@ export const getDACRoleHasAccessToDataItem = (
 ): DACDataItemResourceAccessResultMap => {
   const cleanItemPathPrefix = itemPathPrefix ? itemPathPrefix : [];
   const resultMap: DACDataItemResourceAccessResultMap = {
-    primaryAllowed: false,
+    allowed: false,
+    denied: false,
     fieldsResources: {},
   };
 
@@ -253,7 +253,8 @@ export const getDACRoleHasAccessToDataItem = (
         internallyCachedFlattenedConstraints,
       );
 
-    resultMap.primaryAllowed = primaryResourceAllowed && !primaryResourceDenied;
+    resultMap.allowed = primaryResourceAllowed;
+    resultMap.denied = primaryResourceDenied;
 
     for (const dIF of dataItemFields) {
       const typeInfoField = fields[dIF];
@@ -277,7 +278,10 @@ export const getDACRoleHasAccessToDataItem = (
 
           resultMap.fieldsResources = {
             ...resultMap.fieldsResources,
-            [dIF]: fieldResourceAllowed && !fieldResourceDenied,
+            [dIF]: {
+              allowed: fieldResourceAllowed,
+              denied: fieldResourceDenied,
+            },
           };
         }
       }
@@ -285,4 +289,65 @@ export const getDACRoleHasAccessToDataItem = (
   }
 
   return resultMap;
+};
+
+/**
+ * Merge multiple DAC access results.
+ * */
+export const mergeDACAccessResults = (
+  ...results: DACAccessResult[]
+): DACAccessResult => {
+  let newResult: DACAccessResult = {
+    allowed: false,
+    denied: false,
+  };
+
+  for (const r of results) {
+    const { allowed: rAllowed, denied: rDenied } = r;
+    const { allowed: nAllowed, denied: nDenied } = newResult;
+
+    newResult = {
+      allowed: rAllowed || nAllowed,
+      denied: rDenied || nDenied,
+    };
+  }
+
+  return newResult;
+};
+
+/**
+ * Merge multiple DAC data item resource access result maps.
+ * */
+export const mergeDACDataItemResourceAccessResultMaps = (
+  ...maps: DACDataItemResourceAccessResultMap[]
+): DACDataItemResourceAccessResultMap => {
+  let outputMap: DACDataItemResourceAccessResultMap = {
+    allowed: false,
+    denied: false,
+    fieldsResources: {},
+  };
+
+  for (const m of maps) {
+    const { fieldsResources: mFR = {} } = m;
+    const { fieldsResources: oFR = {} } = outputMap;
+
+    let newFieldsResources = {};
+
+    for (const mFRField in mFR) {
+      const mFRFieldData = mFR[mFRField];
+      const oFRFieldData = oFR[mFRField];
+
+      newFieldsResources = {
+        ...newFieldsResources,
+        [mFRField]: mergeDACAccessResults(mFRFieldData, oFRFieldData),
+      };
+    }
+
+    outputMap = {
+      ...mergeDACAccessResults(m, outputMap),
+      fieldsResources: newFieldsResources,
+    };
+  }
+
+  return outputMap;
 };

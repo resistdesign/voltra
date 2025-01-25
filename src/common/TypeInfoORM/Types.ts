@@ -10,6 +10,12 @@ import {
 import { TypeInfoDataItem, TypeOperation } from "../TypeParsing/TypeInfo";
 
 /**
+ * The DAC Resource name for item relationships.
+ * */
+export const ITEM_RELATIONSHIP_DAC_RESOURCE_NAME =
+  "TYPE_INFO_ORM_ITEM_RELATIONSHIP";
+
+/**
  * A set of possible operations for a {@link ItemRelationshipInfo}.
  * */
 export enum RelationshipOperation {
@@ -21,7 +27,7 @@ export enum RelationshipOperation {
 /**
  * A set groups of possible operations for a type, field value or relationship.
  * */
-export enum TypeOperationGroup {
+export enum OperationGroup {
   ALL_OPERATIONS = "ALL_OPERATIONS",
   ALL_ITEM_OPERATIONS = "ALL_ITEM_OPERATIONS",
   ALL_RELATIONSHIP_OPERATIONS = "ALL_RELATIONSHIP_OPERATIONS",
@@ -33,7 +39,7 @@ export enum TypeOperationGroup {
 export type ORMOperation =
   | TypeOperation
   | RelationshipOperation
-  | TypeOperationGroup;
+  | OperationGroup;
 
 /**
  * Error types for a TypeInfoORM service.
@@ -61,7 +67,6 @@ export enum TypeInfoORMAPIRoutePaths {
   CREATE_RELATIONSHIP = "create-relationship",
   DELETE_RELATIONSHIP = "delete-relationship",
   LIST_RELATIONSHIPS = "list-relationships",
-  CLEANUP_RELATIONSHIPS = "cleanup-relationships",
 }
 
 /**
