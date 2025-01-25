@@ -152,6 +152,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   }
 
   // TODO: Incorporate getItemDACValidation.
+  //   - [x] create
+  //   - [] read
+  //   - [] update
+  //   - [] delete
+  //   - [] list
   protected getItemDACValidation = (
     item: TypeInfoDataItem,
     typeName: string,
@@ -204,6 +209,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   // TODO: Incorporate getRelationshipDACValidation.
+  //   - [] createRelationship
+  //   - [] deleteRelationship
+  //   - [] listRelationships
   protected getRelationshipDACValidation = (
     itemRelationship: BaseItemRelationshipInfo,
     relationshipOperation: RelationshipOperation,
@@ -363,12 +371,28 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected getCleanItem = (
     typeName: string,
     item: TypeInfoDataItem,
+    dacFieldResources: Partial<Record<keyof TypeInfoDataItem, DACAccessResult>>,
   ): TypeInfoDataItem => {
     const typeInfo = this.getTypeInfo(typeName);
-    const cleanItem = removeTypeReferenceFieldsFromDataItem(
+    const itemCleanedByTypeInfo = removeTypeReferenceFieldsFromDataItem(
       typeInfo,
       removeNonexistentFieldsFromDataItem(typeInfo, item),
     );
+    const cleanItem: TypeInfoDataItem = {};
+
+    for (const fN in itemCleanedByTypeInfo) {
+      const fR = dacFieldResources[fN];
+
+      if (fR) {
+        const { allowed, denied } = fR;
+
+        if (allowed && !denied) {
+          cleanItem[fN] = itemCleanedByTypeInfo[fN];
+        }
+      } else {
+        cleanItem[fN] = itemCleanedByTypeInfo[fN];
+      }
+    }
 
     return cleanItem;
   };
@@ -625,8 +649,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       };
     } else {
       const driver = this.getDriverInternal(typeName);
-      // TODO: Consider DAC in `getCleanItem`???
-      const cleanItem = this.getCleanItem(typeName, item);
+      const cleanItem = this.getCleanItem(typeName, item, fieldsResources);
       const newIdentifier = await driver.createItem(cleanItem);
 
       return newIdentifier;
