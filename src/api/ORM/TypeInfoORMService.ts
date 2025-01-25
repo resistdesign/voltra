@@ -1,4 +1,5 @@
 import {
+  LiteralValue,
   TypeInfo,
   TypeInfoDataItem,
   TypeInfoMap,
@@ -88,8 +89,8 @@ export const getDriverMethodWithModifiedError = <
  * The configuration for the TypeInfoORMService DAC features.
  * */
 export type TypeInfoORMDACConfig = {
-  itemResourcePathPrefix: string;
-  relationshipResourcePathPrefix: string;
+  itemResourcePathPrefix: LiteralValue[];
+  relationshipResourcePathPrefix: LiteralValue[];
   accessingRole: DACRole;
   getDACRoleById: (id: string) => DACRole;
 };
@@ -128,6 +129,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       );
     }
   }
+
+  protected validateItemDAC = (
+    item: TypeInfoDataItem,
+    typeInfo: TypeInfo,
+  ) => {};
 
   protected getWrappedDriverWithExtendedErrorData = <
     ItemType extends TypeInfoDataItem,
