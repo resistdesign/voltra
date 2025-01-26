@@ -20,11 +20,11 @@ import {
   SupportedDataItemDBDriverEntry,
 } from "../Types";
 import { ListItemsConfig } from "../../../../common";
-import { getDataItemWithOnlySelectedFields } from "./Utils";
 import { S3SpecificConfig } from "./S3DataItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
 import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
+import { removeUnselectedFieldsFromDataItem } from "../../../../common/TypeParsing/Utils";
 
 export type BaseFileItem = {
   id: string;
@@ -106,14 +106,23 @@ export class S3DataItemDBDriver
           }),
         }),
       );
-      const item: BaseFile = {
+      const item: BaseFileItem = {
         ...itemLoc,
+        id,
         updatedOn: LastModified?.getTime() || 0,
         mimeType: ContentType,
         sizeInBytes: ContentLength,
         isDirectory: ContentType === "application/x-directory",
+        uploadUrl:
+          selectFields && selectFields.includes("uploadUrl")
+            ? await this.s3FileDriver.getFileUploadUrl(itemLoc, tableName)
+            : undefined,
+        downloadUrl:
+          selectFields && selectFields.includes("downloadUrl")
+            ? await this.s3FileDriver.getFileDownloadUrl(itemLoc, tableName)
+            : undefined,
       };
-      const itemWithOnlySelectedFields = getDataItemWithOnlySelectedFields(
+      const itemWithOnlySelectedFields = removeUnselectedFieldsFromDataItem(
         item,
         selectFields,
       ) as Partial<BaseFileItem>;
@@ -196,9 +205,9 @@ export class S3DataItemDBDriver
       criteria,
       checkExistence,
     } = config;
+    const filteredFiles: Partial<BaseFileItem>[] = [];
 
-    let filteredFiles: Partial<BaseFileItem>[] = [],
-      initiatedListing: boolean = false,
+    let initiatedListing: boolean = false,
       nextCursor: string | undefined = undefined;
 
     while (
@@ -218,26 +227,30 @@ export class S3DataItemDBDriver
         }),
         ...bF,
       }));
-
-      initiatedListing = true;
-
-      filteredFiles = criteria
+      const newFilteredFiles = criteria
         ? (getFilterTypeInfoDataItemsBySearchCriteria(
             criteria,
             currentFileItems,
           ) as BaseFileItem[])
         : currentFileItems;
       nextCursor = newCursor;
-      filteredFiles = filteredFiles.map(
-        (f) =>
-          getDataItemWithOnlySelectedFields(
-            f,
-            selectFields,
-          ) as Partial<BaseFileItem>,
-      );
 
-      if (checkExistence && filteredFiles.length > 0) {
+      initiatedListing = true;
+
+      if (checkExistence && newFilteredFiles.length > 0) {
         break;
+      }
+
+      for (const nFF of newFilteredFiles) {
+        filteredFiles.push({
+          ...removeUnselectedFieldsFromDataItem(nFF, selectFields),
+          uploadUrl: selectFields?.includes("uploadUrl")
+            ? await this.s3FileDriver.getFileUploadUrl(nFF, tableName)
+            : undefined,
+          downloadUrl: selectFields?.includes("downloadUrl")
+            ? await this.s3FileDriver.getFileDownloadUrl(nFF, tableName)
+            : undefined,
+        } as Partial<BaseFileItem>);
       }
     }
 
