@@ -7,9 +7,12 @@ import {
 } from "../../common/TypeParsing/TypeInfo";
 import {
   CustomTypeInfoFieldValidatorMap,
+  ERROR_MESSAGE_CONSTANTS,
+  getValidityValue,
   RelationshipValidationType,
   TypeInfoValidationResults,
   validateTypeInfoValue,
+  validateTypeOperationAllowed,
 } from "../../common/TypeParsing/Validation";
 import {
   ComparisonOperators,
@@ -359,6 +362,51 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return typeInfo;
   };
 
+  protected validateReadOperation = (
+    typeName: string,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => {
+    const typeInfo = this.getTypeInfo(typeName);
+    const { fields = {} } = typeInfo;
+    const cleanSelectedFields = this.getCleanSelectedFields(
+      typeName,
+      selectedFields,
+    );
+    const results: TypeInfoValidationResults = {
+      valid: !!typeInfo,
+      error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,
+      errorMap: {},
+    };
+    const {
+      valid: operationValid,
+      error: operationError,
+      errorMap: operationErrorMap,
+    } = validateTypeOperationAllowed(
+      cleanSelectedFields ? cleanSelectedFields : Object.keys(fields),
+      TypeOperation.READ,
+      typeInfo,
+    );
+
+    results.valid = getValidityValue(results.valid, operationValid);
+    results.error = operationError;
+
+    for (const oE in operationErrorMap) {
+      const existingError = results.errorMap[oE] ?? [];
+
+      results.errorMap[oE] = existingError
+        ? [...existingError, ...operationErrorMap[oE]]
+        : operationErrorMap[oE];
+    }
+
+    if (!operationValid && operationError) {
+      results.error = operationError;
+    }
+
+    if (!results.valid) {
+      throw results;
+    }
+  };
+
   protected validate = (
     typeName: string,
     item: TypeInfoDataItem,
@@ -672,31 +720,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     primaryFieldValue: any,
     selectedFields?: string[],
   ): Promise<TypeInfoDataItem> => {
-    const { useDAC } = this.config;
-    const driver = this.getDriverInternal(typeName);
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
       selectedFields,
     );
+
+    this.validateReadOperation(typeName, cleanSelectedFields);
+
+    const { useDAC } = this.config;
+    const driver = this.getDriverInternal(typeName);
     const item = await driver.readItem(
       primaryFieldValue,
       // SECURITY: Dac validation could fail when item is missing unselected fields.
       // CANNOT pass selected fields to driver when DAC is enabled.
       useDAC ? undefined : cleanSelectedFields,
     );
-
-    this.validate(
-      typeName,
-      // TRICKY: When using DAC, there may be disallowed fields from the `TypeInfo` layer
-      // that we need to potentially remove by using the selected fields as applicable.
-      removeUnselectedFieldsFromDataItem(
-        this.getTypeInfo(typeName),
-        item,
-        cleanSelectedFields,
-      ),
-      TypeOperation.READ,
-    );
-
     const {
       allowed: readAllowed,
       denied: readDenied,
@@ -881,6 +919,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         typeName,
         selectedFields,
       );
+      // TODO: How to implement DAC?
+      // TODO: How to implement validation for `TypeInfo` layer operation denials?
       const results = await driver.listItems(config, cleanSelectedFields);
 
       return results;
