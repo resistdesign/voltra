@@ -262,7 +262,7 @@ export const S3SupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
       UniquelyIdentifyingFieldName extends keyof ItemType,
     >(
       config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
-    ) => {
+    ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
       return new S3DataItemDBDriver(config as any) as any;
     },
     getDBSpecificConfigTypeInfo: () => {
