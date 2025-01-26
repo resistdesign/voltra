@@ -671,6 +671,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     );
     const item = await driver.readItem(primaryFieldValue, cleanSelectedFields);
 
+    // TODO: Ensure selected fields only.
+    // TODO: Ensure DAC validation with a clean item.
+
     return item;
   };
 
