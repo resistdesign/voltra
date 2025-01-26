@@ -3,7 +3,9 @@ import { TypeInfo, TypeInfoDataItem } from "./TypeInfo";
 /**
  * Remove all fields, from a list of selected fields, that are not in the type info.
  * */
-export const removeNonexistentFieldsFromSelectedFields = <ItemType>(
+export const removeNonexistentFieldsFromSelectedFields = <
+  ItemType extends TypeInfoDataItem,
+>(
   typeInfo: TypeInfo = {},
   selectedFields?: (keyof ItemType)[],
 ) => {
@@ -97,23 +99,27 @@ export const removeNonexistentFieldsFromDataItem = (
 /**
  * Remove all fields, from a data item, that are not selected.
  * */
-export const removeUnselectedFieldsFromDataItem = <ItemType>(
-  typeInfo: TypeInfo = {},
+export const removeUnselectedFieldsFromDataItem = <
+  ItemType extends TypeInfoDataItem,
+>(
   dataItem: ItemType = {} as ItemType,
   selectedFields?: (keyof ItemType)[],
 ): ItemType => {
-  const { fields = {} } = typeInfo;
-  const cleanSelectedFields: (keyof ItemType)[] =
-    ((selectedFields
-      ? removeNonexistentFieldsFromSelectedFields(typeInfo, selectedFields)
-      : Object.keys(fields)) as (keyof ItemType)[]) || [];
-  const cleanItem: ItemType = {} as ItemType;
+  if (!selectedFields) {
+    return dataItem;
+  } else {
+    const cleanInitialDataItem: ItemType =
+      typeof dataItem === "object" && dataItem !== null
+        ? dataItem
+        : ({} as ItemType);
+    const cleanItem: ItemType = {} as ItemType;
 
-  for (const f in fields) {
-    if (cleanSelectedFields?.includes(f as keyof ItemType)) {
-      cleanItem[f as keyof ItemType] = dataItem[f as keyof ItemType];
+    for (const f in cleanInitialDataItem) {
+      if (selectedFields.includes(f as keyof ItemType)) {
+        cleanItem[f as keyof ItemType] = dataItem[f as keyof ItemType];
+      }
     }
-  }
 
-  return cleanItem;
+    return cleanItem;
+  }
 };

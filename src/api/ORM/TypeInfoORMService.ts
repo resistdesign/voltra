@@ -750,7 +750,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       };
     } else {
       const cleanItem = removeUnselectedFieldsFromDataItem(
-        this.getTypeInfo(typeName),
         this.getCleanItem(typeName, item, fieldsResources),
         cleanSelectedFields,
       );
