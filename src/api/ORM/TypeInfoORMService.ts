@@ -684,6 +684,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       // CANNOT pass selected fields to driver when DAC is enabled.
       useDAC ? undefined : cleanSelectedFields,
     );
+
+    this.validate(
+      typeName,
+      // TRICKY: When using DAC, there may be disallowed fields from the `TypeInfo` layer
+      // that we need to potentially remove by using the selected fields as applicable.
+      removeUnselectedFieldsFromDataItem(
+        this.getTypeInfo(typeName),
+        item,
+        cleanSelectedFields,
+      ),
+      TypeOperation.READ,
+    );
+
     const {
       allowed: readAllowed,
       denied: readDenied,
