@@ -155,8 +155,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   // TODO: Incorporate getItemDACValidation.
   //   - [x] create
   //   - [x] read
-  //   - [x] update
-  //   - [] delete
+  //   - [] update
+  //   - [x] delete
   //   - [] list
   protected getItemDACValidation = (
     item: TypeInfoDataItem,
@@ -341,7 +341,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const typeInfo = this.config.typeInfoMap[typeName];
 
     if (!typeInfo) {
-      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_TYPE_INFO);
+      throw {
+        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_TYPE_INFO,
+        typeName,
+      };
+    } else {
+      const { primaryField } = typeInfo;
+
+      if (typeof primaryField === "undefined") {
+        throw {
+          message: TYPE_INFO_ORM_SERVICE_ERRORS.TYPE_INFO_MISSING_PRIMARY_FIELD,
+          typeName,
+        };
+      }
     }
 
     return typeInfo;
@@ -660,15 +672,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     primaryFieldValue: any,
     selectedFields?: string[],
   ): Promise<TypeInfoDataItem> => {
+    const { useDAC } = this.config;
     const driver = this.getDriverInternal(typeName);
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
       selectedFields,
     );
-    // SECURITY: Dac validation could fail when item is missing unselected fields.
-    // CANNOT pass selected fields to driver.
-    // TODO: This is not ideal.
-    const item = await driver.readItem(primaryFieldValue);
+    const item = await driver.readItem(
+      primaryFieldValue,
+      // SECURITY: Dac validation could fail when item is missing unselected fields.
+      // CANNOT pass selected fields to driver when DAC is enabled.
+      useDAC ? undefined : cleanSelectedFields,
+    );
     const {
       allowed: readAllowed,
       denied: readDenied,
@@ -742,6 +757,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item,
         };
       } else {
+        // TODO: Update could potentially delete fields.
+        //   - Use `fieldsResources` from `TypeOperation.DELETE` to prevent this issue.
         const cleanItem = this.getCleanItem(typeName, item, fieldsResources);
         const result = await driver.updateItem(primaryFieldValue, cleanItem);
 
@@ -757,15 +774,32 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     primaryFieldValue: any,
   ): Promise<boolean> => {
+    const { primaryField } = this.getTypeInfo(typeName);
+    const itemWithPrimaryFieldOnly: TypeInfoDataItem = {
+      [primaryField as keyof TypeInfoDataItem]: primaryFieldValue,
+    };
+    this.validate(typeName, itemWithPrimaryFieldOnly, TypeOperation.DELETE);
     const driver = this.getDriverInternal(typeName);
-    const result = await driver.deleteItem(primaryFieldValue);
+    const existingItem = await driver.readItem(primaryFieldValue);
+    const { allowed: deleteAllowed, denied: deleteDenied } =
+      this.getItemDACValidation(existingItem, typeName, TypeOperation.DELETE);
 
-    await this.cleanupRelationships({
-      fromTypeName: typeName,
-      fromTypePrimaryFieldValue: primaryFieldValue,
-    });
+    if (deleteDenied || !deleteAllowed) {
+      throw {
+        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        typeName,
+        primaryFieldValue,
+      };
+    } else {
+      const result = await driver.deleteItem(primaryFieldValue);
 
-    return result;
+      await this.cleanupRelationships({
+        fromTypeName: typeName,
+        fromTypePrimaryFieldValue: primaryFieldValue,
+      });
+
+      return result;
+    }
   };
 
   /**
