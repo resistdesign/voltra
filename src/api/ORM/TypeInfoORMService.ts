@@ -774,13 +774,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     primaryFieldValue: any,
   ): Promise<boolean> => {
+    const { useDAC } = this.config;
     const { primaryField } = this.getTypeInfo(typeName);
     const itemWithPrimaryFieldOnly: TypeInfoDataItem = {
       [primaryField as keyof TypeInfoDataItem]: primaryFieldValue,
     };
     this.validate(typeName, itemWithPrimaryFieldOnly, TypeOperation.DELETE);
     const driver = this.getDriverInternal(typeName);
-    const existingItem = await driver.readItem(primaryFieldValue);
+    const existingItem =
+      // SECURITY: Dac validation could fail when item is missing unselected fields.
+      useDAC
+        ? await driver.readItem(primaryFieldValue)
+        : itemWithPrimaryFieldOnly;
     const { allowed: deleteAllowed, denied: deleteDenied } =
       this.getItemDACValidation(existingItem, typeName, TypeOperation.DELETE);
 
