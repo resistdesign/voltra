@@ -42,6 +42,7 @@ import {
   removeNonexistentFieldsFromSelectedFields,
   removeTypeReferenceFieldsFromDataItem,
   removeTypeReferenceFieldsFromSelectedFields,
+  removeUnselectedFieldsFromDataItem,
 } from "../../common/TypeParsing/Utils";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
 import {
@@ -153,19 +154,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   // TODO: Incorporate getItemDACValidation.
   //   - [x] create
-  //   - [] read
+  //   - [x] read
   //   - [] update
   //   - [] delete
   //   - [] list
   protected getItemDACValidation = (
     item: TypeInfoDataItem,
     typeName: string,
-    typeInfo: TypeInfo,
     typeOperation: TypeOperation,
   ): DACDataItemResourceAccessResultMap => {
     const { useDAC } = this.config;
 
     if (useDAC) {
+      const typeInfo = this.getTypeInfo(typeName);
       const { dacConfig } = this.config;
       const { itemResourcePathPrefix, accessingRole, getDACRoleById } =
         dacConfig;
@@ -634,12 +635,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       allowed: createAllowed,
       denied: createDenied,
       fieldsResources = {},
-    } = this.getItemDACValidation(
-      item,
-      typeName,
-      this.getTypeInfo(typeName),
-      TypeOperation.CREATE,
-    );
+    } = this.getItemDACValidation(item, typeName, TypeOperation.CREATE);
 
     if (createDenied || !createAllowed) {
       throw {
@@ -669,12 +665,32 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       typeName,
       selectedFields,
     );
-    const item = await driver.readItem(primaryFieldValue, cleanSelectedFields);
+    // SECURITY: Dac validation could fail when item is missing unselected fields.
+    // CANNOT pass selected fields to driver.
+    // TODO: This is not ideal.
+    const item = await driver.readItem(primaryFieldValue);
+    const {
+      allowed: readAllowed,
+      denied: readDenied,
+      fieldsResources = {},
+    } = this.getItemDACValidation(item, typeName, TypeOperation.READ);
 
-    // TODO: Ensure selected fields only.
-    // TODO: Ensure DAC validation with a clean item.
+    if (readDenied || !readAllowed) {
+      throw {
+        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        typeName,
+        primaryFieldValue,
+        selectedFields,
+      };
+    } else {
+      const cleanItem = removeUnselectedFieldsFromDataItem(
+        this.getTypeInfo(typeName),
+        this.getCleanItem(typeName, item, fieldsResources),
+        cleanSelectedFields,
+      );
 
-    return item;
+      return cleanItem;
+    }
   };
 
   /**

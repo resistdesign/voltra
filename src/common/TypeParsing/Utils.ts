@@ -93,3 +93,27 @@ export const removeNonexistentFieldsFromDataItem = (
 
   return cleanItem;
 };
+
+/**
+ * Remove all fields, from a data item, that are not selected.
+ * */
+export const removeUnselectedFieldsFromDataItem = <ItemType>(
+  typeInfo: TypeInfo = {},
+  dataItem: ItemType = {} as ItemType,
+  selectedFields?: (keyof ItemType)[],
+): ItemType => {
+  const { fields = {} } = typeInfo;
+  const cleanSelectedFields: (keyof ItemType)[] =
+    ((selectedFields
+      ? removeNonexistentFieldsFromSelectedFields(typeInfo, selectedFields)
+      : Object.keys(fields)) as (keyof ItemType)[]) || [];
+  const cleanItem: ItemType = {} as ItemType;
+
+  for (const f in fields) {
+    if (cleanSelectedFields?.includes(f as keyof ItemType)) {
+      cleanItem[f as keyof ItemType] = dataItem[f as keyof ItemType];
+    }
+  }
+
+  return cleanItem;
+};
