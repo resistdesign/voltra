@@ -155,7 +155,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   // TODO: Incorporate getItemDACValidation.
   //   - [x] create
   //   - [x] read
-  //   - [] update
+  //   - [x] update
   //   - [] delete
   //   - [] list
   protected getItemDACValidation = (
@@ -724,10 +724,29 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw validationResults;
     } else {
       const driver = this.getDriverInternal(typeName);
-      const cleanItem = this.getCleanItem(typeName, item);
-      const result = await driver.updateItem(primaryFieldValue, cleanItem);
+      const initialCleanItem = this.getCleanItem(typeName, item, {});
+      const {
+        allowed: updateAllowed,
+        denied: updateDenied,
+        fieldsResources = {},
+      } = this.getItemDACValidation(
+        initialCleanItem,
+        typeName,
+        TypeOperation.UPDATE,
+      );
 
-      return result;
+      if (updateDenied || !updateAllowed) {
+        throw {
+          message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+          typeName,
+          item,
+        };
+      } else {
+        const cleanItem = this.getCleanItem(typeName, item, fieldsResources);
+        const result = await driver.updateItem(primaryFieldValue, cleanItem);
+
+        return result;
+      }
     }
   };
 
