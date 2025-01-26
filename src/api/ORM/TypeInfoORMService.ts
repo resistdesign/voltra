@@ -155,7 +155,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   // TODO: Incorporate getItemDACValidation.
   //   - [x] create
   //   - [x] read
-  //   - [] update
+  //   - [x] update
   //   - [x] delete
   //   - [] list
   protected getItemDACValidation = (
@@ -757,9 +757,45 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item,
         };
       } else {
-        // TODO: Update could potentially delete fields.
-        //   - Use `fieldsResources` from `TypeOperation.DELETE` to prevent this issue.
-        const cleanItem = this.getCleanItem(typeName, item, fieldsResources);
+        // SECURITY: Update could potentially delete fields. Use `fieldsResources` from `TypeOperation.DELETE` to prevent this issue.
+        const { fieldsResources: fieldsResourcesForDeleteOperation = {} } =
+          this.getItemDACValidation(
+            initialCleanItem,
+            typeName,
+            TypeOperation.DELETE,
+          );
+        const fieldsResourcesForUpdateOperationForNullFields = Object.keys(
+          initialCleanItem,
+        ).reduce(
+          (acc, fN) => ({
+            ...acc,
+            // TRICKY: Remove delete fields for fields not being deleted.
+            ...(initialCleanItem[fN] === null
+              ? {
+                  [fN]: fieldsResourcesForDeleteOperation[fN],
+                }
+              : undefined),
+          }),
+          {},
+        );
+        const { fieldsResources: mergedFieldsResources = {} } =
+          mergeDACDataItemResourceAccessResultMaps(
+            {
+              allowed: true,
+              denied: false,
+              fieldsResources,
+            },
+            {
+              allowed: true,
+              denied: false,
+              fieldsResources: fieldsResourcesForUpdateOperationForNullFields,
+            },
+          );
+        const cleanItem = this.getCleanItem(
+          typeName,
+          item,
+          mergedFieldsResources,
+        );
         const result = await driver.updateItem(primaryFieldValue, cleanItem);
 
         return result;
