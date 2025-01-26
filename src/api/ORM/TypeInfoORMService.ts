@@ -901,12 +901,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
+    const cleanSelectedFields = this.getCleanSelectedFields(
+      typeName,
+      selectedFields,
+    );
+    this.validateReadOperation(typeName, cleanSelectedFields);
+
+    const { typeInfoMap } = this.config;
     const { fields: {} = {} } = this.getTypeInfo(typeName);
     const { criteria } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
       typeName,
-      this.config.typeInfoMap,
+      typeInfoMap,
       fieldCriteria,
       true,
     );
@@ -914,12 +921,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
-      const cleanSelectedFields = this.getCleanSelectedFields(
-        typeName,
-        selectedFields,
-      );
       // TODO: How to implement DAC?
-      // TODO: How to implement validation for `TypeInfo` layer operation denials?
       const results = await driver.listItems(config, cleanSelectedFields);
 
       return results;
