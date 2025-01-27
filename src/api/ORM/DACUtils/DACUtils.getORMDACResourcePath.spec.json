@@ -1,0 +1,23 @@
+{
+  "subject": {
+    "file": "../DACUtils.ts",
+    "export": "getORMDACResourcePath"
+  },
+  "tests": [
+    {
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS"
+      ],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "DEMO",
+        "APP",
+        "ALL_OPERATIONS"
+      ]
+    }
+  ]
+}
