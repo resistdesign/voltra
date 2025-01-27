@@ -9,6 +9,7 @@ import {
 } from "../../common/TypeInfoORM";
 import {
   DACConstraint,
+  DACConstraintType,
   DACDataItemResourceAccessResultMap,
   DACRole,
   getFlattenedDACConstraints,
@@ -18,6 +19,15 @@ import {
 import { BaseItemRelationshipInfo } from "../../common";
 
 /**
+ * Get the DAC Resource Path for a given item type.
+ * */
+export const getItemTypeDACResourcePath = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+  typeName: string,
+): LiteralValue[] => [...prefixPath, operation, typeName];
+
+/**
  * Get the DAC Resource Path for a given data item.
  * */
 export const getDataItemDACResourcePath = (
@@ -25,7 +35,10 @@ export const getDataItemDACResourcePath = (
   operation: ORMOperation,
   typeName: string,
   primaryKeyValue: LiteralValue,
-): LiteralValue[] => [...prefixPath, operation, typeName, primaryKeyValue];
+): LiteralValue[] => [
+  ...getItemTypeDACResourcePath(prefixPath, operation, typeName),
+  primaryKeyValue,
+];
 
 /**
  * Get the DAC Resource Path for a given relationship item.
@@ -43,9 +56,11 @@ export const getRelationshipItemDACResourcePath = (
   } = itemRelationship;
 
   return [
-    ...prefixPath,
-    operation,
-    ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+    ...getItemTypeDACResourcePath(
+      prefixPath,
+      operation,
+      ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+    ),
     fromTypeName,
     fromTypeFieldName,
     fromTypePrimaryFieldValue,
@@ -62,7 +77,22 @@ export const getDataItemFieldValueDACResourcePath = (
   fieldValue: LiteralValue,
 ): LiteralValue[] => [...itemPath, fieldName, fieldValue];
 
-// TODO: Create and export default DAC Roles for various, common purposes.
+/**
+ * Get a DAC Constraint for a given item type.
+ * */
+export const getORMDACItemTypeConstraint = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+  typeName: string,
+  constraintType: DACConstraintType,
+): DACConstraint => ({
+  type: constraintType,
+  pathIsPrefix: true,
+  resourcePath: getItemTypeDACResourcePath(prefixPath, operation, typeName),
+});
+
+// TODO: Create and export a method to create a default DAC Roles for
+//  full access to a given item type with all relationships.
 
 /**
  * Get the access to a given data item resource for a given DAC role.
