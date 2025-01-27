@@ -208,7 +208,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   // TODO: Incorporate getRelationshipDACValidation.
   //   - [x] createRelationship
-  //   - [] deleteRelationship
+  //   - [x] deleteRelationship
   //   - [] listRelationships
   protected getRelationshipDACValidation = (
     itemRelationship: BaseItemRelationshipInfo,
@@ -526,7 +526,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * */
   createRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
-  ): Promise<string> => {
+  ): Promise<boolean> => {
     this.validateRelationshipItem(relationshipItem);
 
     const { allowed: createAllowed, denied: createDenied } =
@@ -553,10 +553,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         fromTypeFieldName,
       );
 
-      let identifier: string;
-
       if (relationshipIsMultiple) {
-        identifier = await driver.createItem(cleanedItem);
+        await driver.createItem(cleanedItem);
       } else {
         // VALIDATION: Need to update when the field is not an array.
         const {
@@ -586,15 +584,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         )) as ListItemsResults<ItemRelationshipInfo>;
 
         if (existingIdentifier) {
-          identifier = existingIdentifier;
-
           await driver.updateItem(existingIdentifier, cleanedItem);
         } else {
-          identifier = await driver.createItem(cleanedItem);
+          await driver.createItem(cleanedItem);
         }
       }
 
-      return identifier;
+      return true;
     }
   };
 
@@ -606,56 +602,69 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<DeleteRelationshipResults> => {
     this.validateRelationshipItem(relationshipItem);
 
-    const cleanedItem = cleanRelationshipItem(relationshipItem);
-    const {
-      fromTypeName,
-      fromTypeFieldName,
-      fromTypePrimaryFieldValue,
-      toTypePrimaryFieldValue,
-    } = cleanedItem;
-    const driver = this.getRelationshipDriverInternal(
-      fromTypeName,
-      fromTypeFieldName,
-    );
-    const { items: itemList = [], cursor } = (await driver.listItems({
-      criteria: {
-        logicalOperator: LogicalOperators.AND,
-        fieldCriteria: [
-          {
-            fieldName: ItemRelationshipInfoKeys.fromTypeName,
-            operator: ComparisonOperators.EQUALS,
-            value: fromTypeName,
-          },
-          {
-            fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
-            operator: ComparisonOperators.EQUALS,
-            value: fromTypePrimaryFieldValue,
-          },
-          {
-            fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
-            operator: ComparisonOperators.EQUALS,
-            value: fromTypeFieldName,
-          },
-          {
-            fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
-            operator: ComparisonOperators.EQUALS,
-            value: toTypePrimaryFieldValue,
-          },
-        ],
-      },
-      checkExistence: false,
-    })) as ListItemsResults<ItemRelationshipInfo>;
+    const { allowed: deleteAllowed, denied: deleteDenied } =
+      this.getRelationshipDACValidation(
+        relationshipItem,
+        RelationshipOperation.UNSET,
+      );
 
-    for (const item of itemList) {
-      const { id: itemId } = item;
+    if (deleteDenied || !deleteAllowed) {
+      throw {
+        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        relationshipItem,
+      };
+    } else {
+      const cleanedItem = cleanRelationshipItem(relationshipItem);
+      const {
+        fromTypeName,
+        fromTypeFieldName,
+        fromTypePrimaryFieldValue,
+        toTypePrimaryFieldValue,
+      } = cleanedItem;
+      const driver = this.getRelationshipDriverInternal(
+        fromTypeName,
+        fromTypeFieldName,
+      );
+      const { items: itemList = [], cursor } = (await driver.listItems({
+        criteria: {
+          logicalOperator: LogicalOperators.AND,
+          fieldCriteria: [
+            {
+              fieldName: ItemRelationshipInfoKeys.fromTypeName,
+              operator: ComparisonOperators.EQUALS,
+              value: fromTypeName,
+            },
+            {
+              fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
+              operator: ComparisonOperators.EQUALS,
+              value: fromTypePrimaryFieldValue,
+            },
+            {
+              fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
+              operator: ComparisonOperators.EQUALS,
+              value: fromTypeFieldName,
+            },
+            {
+              fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+              operator: ComparisonOperators.EQUALS,
+              value: toTypePrimaryFieldValue,
+            },
+          ],
+        },
+        checkExistence: false,
+      })) as ListItemsResults<ItemRelationshipInfo>;
 
-      await driver.deleteItem(itemId);
+      for (const item of itemList) {
+        const { id: itemId } = item;
+
+        await driver.deleteItem(itemId);
+      }
+
+      return {
+        success: true,
+        remainingItemsExist: !!cursor,
+      };
     }
-
-    return {
-      success: true,
-      remainingItemsExist: !!cursor,
-    };
   };
 
   /**
