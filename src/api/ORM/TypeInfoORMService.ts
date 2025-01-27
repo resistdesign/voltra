@@ -135,8 +135,6 @@ export type TypeInfoORMServiceConfig = {
     }
 );
 
-// TODO: Integrate DAC. 📛
-
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
  * */
@@ -206,10 +204,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
-  // TODO: Incorporate getRelationshipDACValidation.
-  //   - [x] createRelationship
-  //   - [x] deleteRelationship
-  //   - [] listRelationships
   protected getRelationshipDACValidation = (
     itemRelationship: BaseItemRelationshipInfo,
     relationshipOperation: RelationshipOperation,
@@ -673,6 +667,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   listRelationships = async (
     config: ListRelationshipsConfig,
   ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
+    const { useDAC } = this.config;
     const { relationshipItemOrigin, ...remainingConfig } = config;
     this.validateRelationshipItem(relationshipItemOrigin);
 
@@ -682,8 +677,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeName,
       fromTypeFieldName,
     );
+    const { checkExistence = false } = remainingConfig;
     const results = await driver.listItems({
       ...remainingConfig,
+      checkExistence: useDAC ? false : checkExistence,
       criteria: {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
@@ -706,7 +703,34 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       },
     });
 
-    return results as ListItemsResults<ItemRelationshipInfo>;
+    if (useDAC) {
+      const { items = [], cursor: nextCursor } = results as ListItemsResults<
+        Partial<ItemRelationshipInfo>
+      >;
+      const revisedItems: ItemRelationshipInfo[] = [];
+
+      for (const rItm of items) {
+        const { allowed: readAllowed, denied: readDenied } =
+          this.getRelationshipDACValidation(
+            rItm as ItemRelationshipInfo,
+            RelationshipOperation.GET,
+          );
+        const listDenied = readDenied || !readAllowed;
+
+        if (!listDenied) {
+          revisedItems.push(rItm as ItemRelationshipInfo);
+        }
+      }
+
+      return checkExistence
+        ? revisedItems.length > 0
+        : {
+            items: revisedItems,
+            cursor: nextCursor,
+          };
+    } else {
+      return results as boolean | ListItemsResults<ItemRelationshipInfo>;
+    }
   };
 
   /**
@@ -947,55 +971,60 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
-      const results = (await driver.listItems(
+      const results = await driver.listItems(
         {
           ...config,
           // SECURITY: We need to run the items through DAC before we expose their existence.
-          checkExistence: false,
+          checkExistence: useDAC ? false : checkExistence,
         },
         // SECURITY: Dac validation could fail when item is missing unselected fields.
         // CANNOT pass selected fields to driver when DAC is enabled.
         useDAC ? undefined : cleanSelectedFields,
-      )) as ListItemsResults<Partial<TypeInfoDataItem>>;
-      const { items = [], cursor: nextCursor } = results;
-      const revisedItems: TypeInfoDataItem[] = [];
+      );
 
-      for (const rItm of items) {
-        const {
-          allowed: readAllowed,
-          denied: readDenied,
-          fieldsResources = {},
-        } = this.getItemDACValidation(rItm, typeName, TypeOperation.READ);
-        const listDenied = readDenied || !readAllowed;
+      if (useDAC) {
+        const { items = [], cursor: nextCursor } = results as ListItemsResults<
+          Partial<TypeInfoDataItem>
+        >;
+        const revisedItems: TypeInfoDataItem[] = [];
 
-        if (!listDenied) {
-          revisedItems.push(
-            this.getCleanItem(
-              typeName,
-              rItm,
-              fieldsResources,
-              cleanSelectedFields,
-            ),
-          );
+        for (const rItm of items) {
+          const {
+            allowed: readAllowed,
+            denied: readDenied,
+            fieldsResources = {},
+          } = this.getItemDACValidation(rItm, typeName, TypeOperation.READ);
+          const listDenied = readDenied || !readAllowed;
 
-          if (checkExistence) {
-            break;
+          if (!listDenied) {
+            revisedItems.push(
+              this.getCleanItem(
+                typeName,
+                rItm,
+                fieldsResources,
+                cleanSelectedFields,
+              ),
+            );
+
+            if (checkExistence) {
+              break;
+            }
           }
         }
-      }
 
-      return checkExistence
-        ? revisedItems.length > 0
-        : {
-            items: revisedItems,
-            // TODO: SECURITY: Really, while using DAC, if `revisedItems` is empty, we should keep getting more items until we have
-            //  a full page OR there is no more `nextCursor`.
-            //  Because, otherwise, we are exposing that items exist but we are just hiding them.
-            //  Also, the timing of the request could expose the existence of items.
-            cursor: nextCursor,
-          };
+        return checkExistence
+          ? revisedItems.length > 0
+          : {
+              items: revisedItems,
+              cursor: nextCursor,
+            };
+      } else {
+        return results;
+      }
     } else {
       throw searchFieldValidationResults;
     }
   };
 }
+
+// TODO: Create and export default DAC Roles for various, common purposes.
