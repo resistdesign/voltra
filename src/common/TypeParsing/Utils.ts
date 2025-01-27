@@ -58,10 +58,10 @@ export const removeTypeReferenceFieldsFromSelectedFields = <ItemType>(
  * */
 export const removeTypeReferenceFieldsFromDataItem = (
   typeInfo: TypeInfo = {},
-  dataItem: TypeInfoDataItem = {},
-): TypeInfoDataItem => {
+  dataItem: Partial<TypeInfoDataItem> = {},
+): Partial<TypeInfoDataItem> => {
   const { fields = {} } = typeInfo;
-  const cleanItem: TypeInfoDataItem = {};
+  const cleanItem: Partial<TypeInfoDataItem> = {};
 
   for (const tIF in fields) {
     const { typeReference } = fields[tIF];
@@ -82,10 +82,10 @@ export const removeTypeReferenceFieldsFromDataItem = (
  * */
 export const removeNonexistentFieldsFromDataItem = (
   typeInfo: TypeInfo = {},
-  dataItem: TypeInfoDataItem = {},
-): TypeInfoDataItem => {
+  dataItem: Partial<TypeInfoDataItem> = {},
+): Partial<TypeInfoDataItem> => {
   const { fields = {} } = typeInfo;
-  const cleanItem: TypeInfoDataItem = {};
+  const cleanItem: Partial<TypeInfoDataItem> = {};
 
   for (const tIF in dataItem) {
     if (fields[tIF]) {
@@ -102,17 +102,17 @@ export const removeNonexistentFieldsFromDataItem = (
 export const removeUnselectedFieldsFromDataItem = <
   ItemType extends TypeInfoDataItem,
 >(
-  dataItem: ItemType = {} as ItemType,
+  dataItem: Partial<ItemType> = {},
   selectedFields?: (keyof ItemType)[],
-): ItemType => {
+): Partial<ItemType> => {
   if (!selectedFields) {
     return dataItem;
   } else {
-    const cleanInitialDataItem: ItemType =
+    const cleanInitialDataItem: Partial<ItemType> =
       typeof dataItem === "object" && dataItem !== null
         ? dataItem
-        : ({} as ItemType);
-    const cleanItem: ItemType = {} as ItemType;
+        : ({} as Partial<ItemType>);
+    const cleanItem: Partial<ItemType> = {};
 
     for (const f in cleanInitialDataItem) {
       if (selectedFields.includes(f as keyof ItemType)) {

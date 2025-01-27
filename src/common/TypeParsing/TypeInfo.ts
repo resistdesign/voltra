@@ -45,7 +45,7 @@ export type SupportedFieldTags = Partial<{
 /**
  * The set of acceptable literal value types.
  */
-export type LiteralValue = string | number | boolean | null | undefined;
+export type LiteralValue = string | number | boolean | null;
 
 /**
  * The set of acceptable type keywords.

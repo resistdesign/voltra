@@ -1,8 +1,4 @@
-import {
-  LiteralValue,
-  TypeInfo,
-  TypeInfoDataItem,
-} from "../common/TypeParsing/TypeInfo";
+import { LiteralValue } from "../common/TypeParsing/TypeInfo";
 
 /**
  * The possible types of a data access control (DAC) constraint.
@@ -208,90 +204,6 @@ export const getResourceAccessByDACRole = (
 };
 
 /**
- * Get the access to a given data item resource for a given DAC role.
- * */
-export const getDACRoleHasAccessToDataItem = (
-  dataItem: TypeInfoDataItem,
-  typeName: string,
-  typeInfo: TypeInfo,
-  role: DACRole,
-  getDACRoleById: (id: string) => DACRole,
-  itemPathPrefix?: LiteralValue[],
-  cachedFlattenedConstraints?: DACConstraint[],
-): DACDataItemResourceAccessResultMap => {
-  const cleanItemPathPrefix = itemPathPrefix ? itemPathPrefix : [];
-  const resultMap: DACDataItemResourceAccessResultMap = {
-    allowed: false,
-    denied: false,
-    fieldsResources: {},
-  };
-
-  if (
-    typeof dataItem === "object" &&
-    dataItem !== null &&
-    typeName &&
-    typeInfo
-  ) {
-    const { primaryField, fields = {} } = typeInfo;
-    const primaryFieldValue = dataItem[
-      primaryField as keyof TypeInfoDataItem
-    ] as LiteralValue;
-    const dataItemFields = Object.keys(dataItem);
-    const primaryResourcePath = [
-      ...cleanItemPathPrefix,
-      typeName,
-      primaryFieldValue,
-    ];
-    const internallyCachedFlattenedConstraints = cachedFlattenedConstraints
-      ? cachedFlattenedConstraints
-      : getFlattenedDACConstraints(role, getDACRoleById);
-    const { allowed: primaryResourceAllowed, denied: primaryResourceDenied } =
-      getResourceAccessByDACRole(
-        primaryResourcePath,
-        role,
-        getDACRoleById,
-        internallyCachedFlattenedConstraints,
-      );
-
-    resultMap.allowed = primaryResourceAllowed;
-    resultMap.denied = primaryResourceDenied;
-
-    for (const dIF of dataItemFields) {
-      const typeInfoField = fields[dIF];
-
-      if (typeInfoField) {
-        const { typeReference, array: fieldIsArray } = typeInfoField;
-
-        if (!typeReference && !fieldIsArray) {
-          const fieldResourcePath = [
-            ...primaryResourcePath,
-            dIF,
-            dataItem[dIF] as LiteralValue,
-          ];
-          const { allowed: fieldResourceAllowed, denied: fieldResourceDenied } =
-            getResourceAccessByDACRole(
-              fieldResourcePath,
-              role,
-              getDACRoleById,
-              internallyCachedFlattenedConstraints,
-            );
-
-          resultMap.fieldsResources = {
-            ...resultMap.fieldsResources,
-            [dIF]: {
-              allowed: fieldResourceAllowed,
-              denied: fieldResourceDenied,
-            },
-          };
-        }
-      }
-    }
-  }
-
-  return resultMap;
-};
-
-/**
  * Merge multiple DAC access results.
  * */
 export const mergeDACAccessResults = (
@@ -313,41 +225,4 @@ export const mergeDACAccessResults = (
   }
 
   return newResult;
-};
-
-/**
- * Merge multiple DAC data item resource access result maps.
- * */
-export const mergeDACDataItemResourceAccessResultMaps = (
-  ...maps: DACDataItemResourceAccessResultMap[]
-): DACDataItemResourceAccessResultMap => {
-  let outputMap: DACDataItemResourceAccessResultMap = {
-    allowed: false,
-    denied: false,
-    fieldsResources: {},
-  };
-
-  for (const m of maps) {
-    const { fieldsResources: mFR = {} } = m;
-    const { fieldsResources: oFR = {} } = outputMap;
-
-    let newFieldsResources = {};
-
-    for (const mFRField in mFR) {
-      const mFRFieldData = mFR[mFRField];
-      const oFRFieldData = oFR[mFRField];
-
-      newFieldsResources = {
-        ...newFieldsResources,
-        [mFRField]: mergeDACAccessResults(mFRFieldData, oFRFieldData),
-      };
-    }
-
-    outputMap = {
-      ...mergeDACAccessResults(m, outputMap),
-      fieldsResources: newFieldsResources,
-    };
-  }
-
-  return outputMap;
 };
