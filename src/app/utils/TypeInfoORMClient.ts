@@ -1,10 +1,6 @@
-import {
-  DeleteRelationshipResults,
-  TypeInfoORMAPI,
-  TypeInfoORMAPIRoutePaths,
-} from "../../common/TypeInfoORM";
-import { sendServiceRequest, ServiceConfig } from "./Service";
-import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
+import {DeleteRelationshipResults, TypeInfoORMAPI, TypeInfoORMAPIRoutePaths,} from "../../common/TypeInfoORM";
+import {sendServiceRequest, ServiceConfig} from "./Service";
+import {TypeInfoDataItem} from "../../common/TypeParsing/TypeInfo";
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
@@ -77,7 +73,7 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
 
   createRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
-  ): Promise<string> => {
+  ): Promise<boolean> => {
     return await this.makeRequest(
       TypeInfoORMAPIRoutePaths.CREATE_RELATIONSHIP,
       [relationshipItem],
