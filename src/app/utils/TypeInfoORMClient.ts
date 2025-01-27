@@ -8,7 +8,6 @@ import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
-  ItemRelationshipOriginatingItemInfo,
   ListItemsConfig,
   ListItemsResults,
   ListRelationshipsConfig,
@@ -100,14 +99,5 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST_RELATIONSHIPS, [
       config,
     ]);
-  };
-
-  cleanupRelationships = async (
-    relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
-  ): Promise<void> => {
-    return await this.makeRequest(
-      TypeInfoORMAPIRoutePaths.CLEANUP_RELATIONSHIPS,
-      [relationshipOriginatingItem],
-    );
   };
 }
