@@ -97,11 +97,11 @@ export type TypeInfoORMAPI = {
     typeName: string,
     primaryFieldValue: any,
     selectedFields?: (keyof TypeInfoDataItem)[],
-  ) => Promise<TypeInfoDataItem>;
+  ) => Promise<Partial<TypeInfoDataItem>>;
   update: (typeName: string, item: TypeInfoDataItem) => Promise<boolean>;
   delete: (typeName: string, primaryFieldValue: any) => Promise<boolean>;
   list: (
     typeName: string,
     config: ListItemsConfig,
-  ) => Promise<boolean | ListItemsResults<TypeInfoDataItem>>;
+  ) => Promise<boolean | ListItemsResults<Partial<TypeInfoDataItem>>>;
 };

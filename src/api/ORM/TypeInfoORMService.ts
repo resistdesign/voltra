@@ -33,7 +33,6 @@ import {
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
   DeleteRelationshipResults,
-  ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
   OperationGroup,
   RelationshipOperation,
   TYPE_INFO_ORM_SERVICE_ERRORS,
@@ -53,11 +52,14 @@ import {
   DACConstraint,
   DACDataItemResourceAccessResultMap,
   DACRole,
-  getDACRoleHasAccessToDataItem,
   getResourceAccessByDACRole,
   mergeDACAccessResults,
-  mergeDACDataItemResourceAccessResultMaps,
 } from "../DataAccessControl";
+import {
+  getDACRoleHasAccessToDataItem,
+  getRelationshipItemDACResourcePath,
+  mergeDACDataItemResourceAccessResultMaps,
+} from "./DACUtils";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -154,7 +156,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   }
 
   protected getItemDACValidation = (
-    item: TypeInfoDataItem,
+    item: Partial<TypeInfoDataItem>,
     typeName: string,
     typeOperation: TypeOperation,
   ): DACDataItemResourceAccessResultMap => {
@@ -168,30 +170,33 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       return mergeDACDataItemResourceAccessResultMaps(
         getDACRoleHasAccessToDataItem(
-          item,
+          itemResourcePathPrefix,
+          typeOperation,
           typeName,
+          item,
           typeInfo,
           accessingRole,
           getDACRoleById,
-          [typeOperation, ...itemResourcePathPrefix],
           this.cachedFlattenedConstraints,
         ),
         getDACRoleHasAccessToDataItem(
-          item,
+          itemResourcePathPrefix,
+          OperationGroup.ALL_ITEM_OPERATIONS,
           typeName,
+          item,
           typeInfo,
           accessingRole,
           getDACRoleById,
-          [OperationGroup.ALL_ITEM_OPERATIONS, ...itemResourcePathPrefix],
           this.cachedFlattenedConstraints,
         ),
         getDACRoleHasAccessToDataItem(
-          item,
+          itemResourcePathPrefix,
+          OperationGroup.ALL_OPERATIONS,
           typeName,
+          item,
           typeInfo,
           accessingRole,
           getDACRoleById,
-          [OperationGroup.ALL_OPERATIONS, ...itemResourcePathPrefix],
           this.cachedFlattenedConstraints,
         ),
       );
@@ -214,49 +219,34 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const { dacConfig } = this.config;
       const { relationshipResourcePathPrefix, accessingRole, getDACRoleById } =
         dacConfig;
-      const {
-        fromTypeName,
-        fromTypeFieldName,
-        fromTypePrimaryFieldValue,
-        toTypePrimaryFieldValue,
-      } = itemRelationship;
-      const itemRelationshipPath: LiteralValue[] = [
-        fromTypeName,
-        fromTypeFieldName,
-        fromTypePrimaryFieldValue,
-        toTypePrimaryFieldValue,
-      ];
 
       return mergeDACAccessResults(
         getResourceAccessByDACRole(
-          [
+          getRelationshipItemDACResourcePath(
+            relationshipResourcePathPrefix,
             relationshipOperation,
-            ...relationshipResourcePathPrefix,
-            ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
-            ...itemRelationshipPath,
-          ],
+            itemRelationship,
+          ),
           accessingRole,
           getDACRoleById,
           this.cachedFlattenedConstraints,
         ),
         getResourceAccessByDACRole(
-          [
+          getRelationshipItemDACResourcePath(
+            relationshipResourcePathPrefix,
             OperationGroup.ALL_RELATIONSHIP_OPERATIONS,
-            ...relationshipResourcePathPrefix,
-            ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
-            ...itemRelationshipPath,
-          ],
+            itemRelationship,
+          ),
           accessingRole,
           getDACRoleById,
           this.cachedFlattenedConstraints,
         ),
         getResourceAccessByDACRole(
-          [
+          getRelationshipItemDACResourcePath(
+            relationshipResourcePathPrefix,
             OperationGroup.ALL_OPERATIONS,
-            ...relationshipResourcePathPrefix,
-            ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
-            ...itemRelationshipPath,
-          ],
+            itemRelationship,
+          ),
           accessingRole,
           getDACRoleById,
           this.cachedFlattenedConstraints,
@@ -419,10 +409,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   protected getCleanItem = (
     typeName: string,
-    item: TypeInfoDataItem,
+    item: Partial<TypeInfoDataItem>,
     dacFieldResources: Partial<Record<keyof TypeInfoDataItem, DACAccessResult>>,
     selectedFields?: (keyof TypeInfoDataItem)[],
-  ): TypeInfoDataItem => {
+  ): Partial<TypeInfoDataItem> => {
     const typeInfo = this.getTypeInfo(typeName);
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
@@ -435,7 +425,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       ),
       cleanSelectedFields,
     );
-    const cleanItem: TypeInfoDataItem = {};
+    const cleanItem: Partial<TypeInfoDataItem> = {};
 
     for (const fN in itemCleanedByTypeInfo) {
       const fR = dacFieldResources[fN];
@@ -767,7 +757,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     primaryFieldValue: any,
     selectedFields?: string[],
-  ): Promise<TypeInfoDataItem> => {
+  ): Promise<Partial<TypeInfoDataItem>> => {
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
       selectedFields,
@@ -950,7 +940,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
-  ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
+  ): Promise<boolean | ListItemsResults<Partial<TypeInfoDataItem>>> => {
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
       selectedFields,
@@ -986,7 +976,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         const { items = [], cursor: nextCursor } = results as ListItemsResults<
           Partial<TypeInfoDataItem>
         >;
-        const revisedItems: TypeInfoDataItem[] = [];
+        const revisedItems: Partial<TypeInfoDataItem>[] = [];
 
         for (const rItm of items) {
           const {
