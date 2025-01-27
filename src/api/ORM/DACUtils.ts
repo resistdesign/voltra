@@ -17,8 +17,6 @@ import {
 } from "../DataAccessControl";
 import { BaseItemRelationshipInfo } from "../../common";
 
-// TODO: Create and export default DAC Roles for various, common purposes.
-
 /**
  * Get the DAC Resource Path for a given data item.
  * */
@@ -63,6 +61,8 @@ export const getDataItemFieldValueDACResourcePath = (
   fieldName: string,
   fieldValue: LiteralValue,
 ): LiteralValue[] => [...itemPath, fieldName, fieldValue];
+
+// TODO: Create and export default DAC Roles for various, common purposes.
 
 /**
  * Get the access to a given data item resource for a given DAC role.
