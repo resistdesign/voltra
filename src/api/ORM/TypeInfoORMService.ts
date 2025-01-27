@@ -433,11 +433,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     item: TypeInfoDataItem,
     dacFieldResources: Partial<Record<keyof TypeInfoDataItem, DACAccessResult>>,
+    selectedFields?: (keyof TypeInfoDataItem)[],
   ): TypeInfoDataItem => {
     const typeInfo = this.getTypeInfo(typeName);
-    const itemCleanedByTypeInfo = removeTypeReferenceFieldsFromDataItem(
-      typeInfo,
-      removeNonexistentFieldsFromDataItem(typeInfo, item),
+    const cleanSelectedFields = this.getCleanSelectedFields(
+      typeName,
+      selectedFields,
+    );
+    const itemCleanedByTypeInfo = removeUnselectedFieldsFromDataItem(
+      removeTypeReferenceFieldsFromDataItem(
+        typeInfo,
+        removeNonexistentFieldsFromDataItem(typeInfo, item),
+      ),
+      cleanSelectedFields,
     );
     const cleanItem: TypeInfoDataItem = {};
 
@@ -749,8 +757,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         selectedFields,
       };
     } else {
-      const cleanItem = removeUnselectedFieldsFromDataItem(
-        this.getCleanItem(typeName, item, fieldsResources),
+      const cleanItem = this.getCleanItem(
+        typeName,
+        item,
+        fieldsResources,
         cleanSelectedFields,
       );
 
@@ -907,9 +917,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     );
     this.validateReadOperation(typeName, cleanSelectedFields);
 
-    const { typeInfoMap } = this.config;
+    const { typeInfoMap, useDAC } = this.config;
     const { fields: {} = {} } = this.getTypeInfo(typeName);
-    const { criteria } = config;
+    const { criteria, checkExistence } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
       typeName,
@@ -922,9 +932,49 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
       // TODO: How to implement DAC?
-      const results = await driver.listItems(config, cleanSelectedFields);
+      const results = (await driver.listItems(
+        {
+          ...config,
+          // SECURITY: We need to run the items through DAC before we expose their existence.
+          checkExistence: false,
+        },
+        // SECURITY: Dac validation could fail when item is missing unselected fields.
+        // CANNOT pass selected fields to driver when DAC is enabled.
+        useDAC ? undefined : cleanSelectedFields,
+      )) as ListItemsResults<Partial<TypeInfoDataItem>>;
+      const { items = [], cursor: nextCursor } = results;
+      const revisedItems: TypeInfoDataItem[] = [];
 
-      return results;
+      for (const rItm of items) {
+        const {
+          allowed: readAllowed,
+          denied: readDenied,
+          fieldsResources = {},
+        } = this.getItemDACValidation(rItm, typeName, TypeOperation.READ);
+        const listDenied = readDenied || !readAllowed;
+
+        if (!listDenied) {
+          revisedItems.push(
+            this.getCleanItem(
+              typeName,
+              rItm,
+              fieldsResources,
+              cleanSelectedFields,
+            ),
+          );
+
+          if (checkExistence) {
+            break;
+          }
+        }
+      }
+
+      return checkExistence
+        ? revisedItems.length > 0
+        : {
+            items: revisedItems,
+            cursor: nextCursor,
+          };
     } else {
       throw searchFieldValidationResults;
     }
