@@ -207,7 +207,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   // TODO: Incorporate getRelationshipDACValidation.
-  //   - [] createRelationship
+  //   - [x] createRelationship
   //   - [] deleteRelationship
   //   - [] listRelationships
   protected getRelationshipDACValidation = (
@@ -529,60 +529,73 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<string> => {
     this.validateRelationshipItem(relationshipItem);
 
-    const cleanedItem = cleanRelationshipItem(relationshipItem);
-    const { fromTypeName, fromTypeFieldName } = cleanedItem;
-    const {
-      fields: {
-        [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
-      } = {},
-    } = this.getTypeInfo(fromTypeName);
-    const driver = this.getRelationshipDriverInternal(
-      fromTypeName,
-      fromTypeFieldName,
-    );
+    const { allowed: createAllowed, denied: createDenied } =
+      this.getRelationshipDACValidation(
+        relationshipItem,
+        RelationshipOperation.SET,
+      );
 
-    let identifier: string;
-
-    if (relationshipIsMultiple) {
-      identifier = await driver.createItem(cleanedItem);
+    if (createDenied || !createAllowed) {
+      throw {
+        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        relationshipItem,
+      };
     } else {
-      // VALIDATION: Need to update when the field is not an array.
+      const cleanedItem = cleanRelationshipItem(relationshipItem);
+      const { fromTypeName, fromTypeFieldName } = cleanedItem;
       const {
-        items: [
-          { [ItemRelationshipInfoIdentifyingKeys.id]: existingIdentifier },
-        ] = [{} as ItemRelationshipInfo],
-      } = (await driver.listItems(
-        {
-          criteria: {
-            logicalOperator: LogicalOperators.AND,
-            fieldCriteria: [
-              {
-                fieldName: ItemRelationshipInfoKeys.fromTypeName,
-                operator: ComparisonOperators.EQUALS,
-                value: fromTypeName,
-              },
-              {
-                fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
-                operator: ComparisonOperators.EQUALS,
-                value: fromTypeFieldName,
-              },
-            ],
-          },
-          itemsPerPage: 1,
-        },
-        [ItemRelationshipInfoIdentifyingKeys.id],
-      )) as ListItemsResults<ItemRelationshipInfo>;
+        fields: {
+          [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
+        } = {},
+      } = this.getTypeInfo(fromTypeName);
+      const driver = this.getRelationshipDriverInternal(
+        fromTypeName,
+        fromTypeFieldName,
+      );
 
-      if (existingIdentifier) {
-        identifier = existingIdentifier;
+      let identifier: string;
 
-        await driver.updateItem(existingIdentifier, cleanedItem);
-      } else {
+      if (relationshipIsMultiple) {
         identifier = await driver.createItem(cleanedItem);
-      }
-    }
+      } else {
+        // VALIDATION: Need to update when the field is not an array.
+        const {
+          items: [
+            { [ItemRelationshipInfoIdentifyingKeys.id]: existingIdentifier },
+          ] = [{} as ItemRelationshipInfo],
+        } = (await driver.listItems(
+          {
+            criteria: {
+              logicalOperator: LogicalOperators.AND,
+              fieldCriteria: [
+                {
+                  fieldName: ItemRelationshipInfoKeys.fromTypeName,
+                  operator: ComparisonOperators.EQUALS,
+                  value: fromTypeName,
+                },
+                {
+                  fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
+                  operator: ComparisonOperators.EQUALS,
+                  value: fromTypeFieldName,
+                },
+              ],
+            },
+            itemsPerPage: 1,
+          },
+          [ItemRelationshipInfoIdentifyingKeys.id],
+        )) as ListItemsResults<ItemRelationshipInfo>;
 
-    return identifier;
+        if (existingIdentifier) {
+          identifier = existingIdentifier;
+
+          await driver.updateItem(existingIdentifier, cleanedItem);
+        } else {
+          identifier = await driver.createItem(cleanedItem);
+        }
+      }
+
+      return identifier;
+    }
   };
 
   /**
