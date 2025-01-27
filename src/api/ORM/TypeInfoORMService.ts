@@ -960,6 +960,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { valid: searchFieldsValid } = searchFieldValidationResults;
 
     if (searchFieldsValid) {
+      // TODO: Satisfy `itemsPerPage` here instead of in the drivers.
       const driver = this.getDriverInternal(typeName);
       const results = await driver.listItems(
         {
