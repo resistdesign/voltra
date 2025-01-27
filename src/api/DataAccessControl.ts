@@ -18,13 +18,19 @@ export type DACConstraint = {
 };
 
 /**
- * A data access control (DAC) role.
+ * The primary properties for a data access control (DAC) role.
  * */
-export type DACRole = {
-  id: string;
+export type BaseDACRole = {
   childRoleIds?: string[];
   constraints: DACConstraint[];
 };
+
+/**
+ * A data access control (DAC) role which has been stored and can be accessed by an `id`.
+ * */
+export type DACRole = {
+  id: string;
+} & BaseDACRole;
 
 /**
  * The result of a data access control (DAC) check.
