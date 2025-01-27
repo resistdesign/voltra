@@ -5,9 +5,11 @@ import {
 } from "../../common/TypeParsing/TypeInfo";
 import {
   ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+  OperationGroup,
   ORMOperation,
 } from "../../common/TypeInfoORM";
 import {
+  BaseDACRole,
   DACConstraint,
   DACConstraintType,
   DACDataItemResourceAccessResultMap,
@@ -16,7 +18,18 @@ import {
   getResourceAccessByDACRole,
   mergeDACAccessResults,
 } from "../DataAccessControl";
-import { BaseItemRelationshipInfo } from "../../common";
+import {
+  BaseItemRelationshipInfo,
+  ItemRelationshipOriginInfo,
+} from "../../common";
+
+/**
+ * Get the DAC Resource Path for a given operation performed using an ORM with the given DAC prefix.
+ * */
+export const getORMDACResourcePath = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+): LiteralValue[] => [...prefixPath, operation];
 
 /**
  * Get the DAC Resource Path for a given item type.
@@ -25,7 +38,10 @@ export const getItemTypeDACResourcePath = (
   prefixPath: LiteralValue[] = [],
   operation: ORMOperation,
   typeName: string,
-): LiteralValue[] => [...prefixPath, operation, typeName];
+): LiteralValue[] => [
+  ...getORMDACResourcePath(prefixPath, operation),
+  typeName,
+];
 
 /**
  * Get the DAC Resource Path for a given data item.
@@ -41,9 +57,30 @@ export const getDataItemDACResourcePath = (
 ];
 
 /**
- * Get the DAC Resource Path for a given relationship item.
+ * Get the DAC Resource Path for a given item relationship origin.
  * */
-export const getRelationshipItemDACResourcePath = (
+export const getItemRelationshipOriginDACResourcePath = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+  itemRelationshipOrigin: ItemRelationshipOriginInfo,
+): LiteralValue[] => {
+  const { fromTypeName, fromTypeFieldName } = itemRelationshipOrigin;
+
+  return [
+    ...getItemTypeDACResourcePath(
+      prefixPath,
+      operation,
+      ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+    ),
+    fromTypeName,
+    fromTypeFieldName,
+  ];
+};
+
+/**
+ * Get the DAC Resource Path for a given item relationship.
+ * */
+export const getItemRelationshipDACResourcePath = (
   prefixPath: LiteralValue[] = [],
   operation: ORMOperation,
   itemRelationship: BaseItemRelationshipInfo,
@@ -80,7 +117,7 @@ export const getDataItemFieldValueDACResourcePath = (
 /**
  * Get a DAC Constraint for a given item type.
  * */
-export const getORMDACItemTypeConstraint = (
+export const getItemTypeDACConstraint = (
   prefixPath: LiteralValue[] = [],
   operation: ORMOperation,
   typeName: string,
@@ -91,8 +128,75 @@ export const getORMDACItemTypeConstraint = (
   resourcePath: getItemTypeDACResourcePath(prefixPath, operation, typeName),
 });
 
-// TODO: Create and export a method to create a default DAC Roles for
-//  full access to a given item type with all relationships.
+/**
+ * Get a DAC Constraint for a given item relationship origin.
+ * */
+export const getItemRelationshipOriginDACConstraint = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+  itemRelationshipOrigin: ItemRelationshipOriginInfo,
+  constraintType: DACConstraintType,
+): DACConstraint => ({
+  type: constraintType,
+  pathIsPrefix: true,
+  resourcePath: getItemRelationshipOriginDACResourcePath(
+    prefixPath,
+    operation,
+    itemRelationshipOrigin,
+  ),
+});
+
+/**
+ * Get a DAC Role for a given item type.
+ * */
+export const getItemTypeDACRole = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+  typeName: string,
+  constraintType: DACConstraintType,
+): BaseDACRole => ({
+  constraints: [
+    getItemTypeDACConstraint(prefixPath, operation, typeName, constraintType),
+  ],
+});
+
+/**
+ * Get a DAC Role for a given item type.
+ * */
+export const getItemRelationshipOriginDACRole = (
+  prefixPath: LiteralValue[] = [],
+  operation: ORMOperation,
+  itemRelationshipOrigin: ItemRelationshipOriginInfo,
+  constraintType: DACConstraintType,
+): BaseDACRole => ({
+  constraints: [
+    getItemRelationshipOriginDACConstraint(
+      prefixPath,
+      operation,
+      itemRelationshipOrigin,
+      constraintType,
+    ),
+  ],
+});
+
+/**
+ * Get a DAC Role encompassing all operations for all types and relationships for an ORM with the given DAC prefix.
+ * */
+export const getFullORMDACRole = (
+  prefixPath: LiteralValue[] = [],
+  constraintType: DACConstraintType,
+): BaseDACRole => ({
+  constraints: [
+    {
+      type: constraintType,
+      pathIsPrefix: true,
+      resourcePath: getORMDACResourcePath(
+        prefixPath,
+        OperationGroup.ALL_OPERATIONS,
+      ),
+    },
+  ],
+});
 
 /**
  * Get the access to a given data item resource for a given DAC role.

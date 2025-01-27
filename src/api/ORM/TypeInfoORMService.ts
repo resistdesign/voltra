@@ -57,7 +57,7 @@ import {
 } from "../DataAccessControl";
 import {
   getDACRoleHasAccessToDataItem,
-  getRelationshipItemDACResourcePath,
+  getItemRelationshipDACResourcePath,
   mergeDACDataItemResourceAccessResultMaps,
 } from "./DACUtils";
 
@@ -222,7 +222,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       return mergeDACAccessResults(
         getResourceAccessByDACRole(
-          getRelationshipItemDACResourcePath(
+          getItemRelationshipDACResourcePath(
             relationshipResourcePathPrefix,
             relationshipOperation,
             itemRelationship,
@@ -232,7 +232,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           this.cachedFlattenedConstraints,
         ),
         getResourceAccessByDACRole(
-          getRelationshipItemDACResourcePath(
+          getItemRelationshipDACResourcePath(
             relationshipResourcePathPrefix,
             OperationGroup.ALL_RELATIONSHIP_OPERATIONS,
             itemRelationship,
@@ -242,7 +242,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           this.cachedFlattenedConstraints,
         ),
         getResourceAccessByDACRole(
-          getRelationshipItemDACResourcePath(
+          getItemRelationshipDACResourcePath(
             relationshipResourcePathPrefix,
             OperationGroup.ALL_OPERATIONS,
             itemRelationship,
