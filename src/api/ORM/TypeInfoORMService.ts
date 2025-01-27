@@ -155,12 +155,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   }
 
-  // TODO: Incorporate getItemDACValidation.
-  //   - [x] create
-  //   - [x] read
-  //   - [x] update
-  //   - [x] delete
-  //   - [] list
   protected getItemDACValidation = (
     item: TypeInfoDataItem,
     typeName: string,
@@ -931,7 +925,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
-      // TODO: How to implement DAC?
       const results = (await driver.listItems(
         {
           ...config,
@@ -973,6 +966,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         ? revisedItems.length > 0
         : {
             items: revisedItems,
+            // TODO: SECURITY: Really, while using DAC, if `revisedItems` is empty, we should keep getting more items until we have
+            //  a full page OR there is no more `nextCursor`.
+            //  Because, otherwise, we are exposing that items exist but we are just hiding them.
+            //  Also, the timing of the request could expose the existence of items.
             cursor: nextCursor,
           };
     } else {
