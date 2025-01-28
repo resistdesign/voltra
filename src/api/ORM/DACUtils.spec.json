@@ -232,6 +232,30 @@
           }
         ]
       }
+    },
+    {
+      "export": "getFullORMDACRole",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALLOW"
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "constraints": [
+          {
+            "type": "ALLOW",
+            "pathIsPrefix": true,
+            "resourcePath": [
+              "DEMO",
+              "APP",
+              "ALL_OPERATIONS"
+            ]
+          }
+        ]
+      }
     }
   ]
 }
