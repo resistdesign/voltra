@@ -34,6 +34,26 @@
         "ALL_OPERATIONS",
         "Contact"
       ]
+    },
+    {
+      "export": "getDataItemDACResourcePath",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS",
+        "Contact",
+        "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
+      ],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "DEMO",
+        "APP",
+        "ALL_OPERATIONS",
+        "Contact",
+        "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
+      ]
     }
   ]
 }
