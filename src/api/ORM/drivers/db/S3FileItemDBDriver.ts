@@ -20,7 +20,7 @@ import {
   SupportedDataItemDBDriverEntry,
 } from "../Types";
 import { ListItemsConfig } from "../../../../common";
-import { S3SpecificConfig } from "./S3DataItemDBDriver/ConfigTypes";
+import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
 import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
@@ -33,7 +33,7 @@ export type BaseFileItem = {
 /**
  * Use S3 as a {@link DataItemDBDriver} for {@link BaseFileItem}s.
  * */
-export class S3DataItemDBDriver
+export class S3FileItemDBDriver
   implements DataItemDBDriver<BaseFileItem, "id">
 {
   protected specificConfig: S3SpecificConfig;
@@ -266,9 +266,9 @@ export class S3DataItemDBDriver
 }
 
 /**
- * The supported DB driver entry for the S3 {@link DataItemDBDriver}.
+ * The supported DB driver entry for the S3 File {@link DataItemDBDriver}.
  * */
-export const S3SupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
+export const S3SupportedFileItemDBDriverEntry: SupportedDataItemDBDriverEntry =
   {
     factory: <
       ItemType extends Record<any, any>,
@@ -276,7 +276,7 @@ export const S3SupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
     >(
       config: DataItemDBDriverConfig<ItemType, UniquelyIdentifyingFieldName>,
     ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
-      return new S3DataItemDBDriver(config as any) as any;
+      return new S3FileItemDBDriver(config as any) as any;
     },
     getDBSpecificConfigTypeInfo: () => {
       const configTypesPath = Path.join(
