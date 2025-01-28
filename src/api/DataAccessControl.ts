@@ -130,17 +130,31 @@ export const getDACPathsMatch = (
 export const getFlattenedDACConstraints = (
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
+  /**
+   * SECURITY: Don't use this if you want realtime role resolution.
+   * */
+  dacRoleCache?: Record<string, DACRole>,
 ): DACConstraint[] => {
   const { childRoleIds = [], constraints = [] } = role;
 
   let flattenedConstraints: DACConstraint[] = [...constraints];
 
   for (const cRI of childRoleIds) {
-    const childRole = getDACRoleById(cRI);
+    let childRole: DACRole;
+
+    if (dacRoleCache && dacRoleCache[cRI]) {
+      childRole = dacRoleCache[cRI];
+    } else {
+      childRole = getDACRoleById(cRI);
+
+      if (dacRoleCache) {
+        dacRoleCache[cRI] = childRole;
+      }
+    }
 
     flattenedConstraints = [
       ...flattenedConstraints,
-      ...getFlattenedDACConstraints(childRole, getDACRoleById),
+      ...getFlattenedDACConstraints(childRole, getDACRoleById, dacRoleCache),
     ];
   }
 
@@ -154,11 +168,13 @@ export const getResourceAccessByDACRole = (
   fullResourcePath: LiteralValue[],
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
-  cachedFlattenedConstraints?: DACConstraint[],
+  dacRoleCache?: Record<string, DACRole>,
 ): DACAccessResult => {
-  const flattenedConstraints = cachedFlattenedConstraints
-    ? cachedFlattenedConstraints
-    : getFlattenedDACConstraints(role, getDACRoleById);
+  const flattenedConstraints = getFlattenedDACConstraints(
+    role,
+    getDACRoleById,
+    dacRoleCache,
+  );
 
   let allowed = false,
     denied = false,
