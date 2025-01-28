@@ -54,6 +54,29 @@
         "Contact",
         "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
       ]
+    },
+    {
+      "export": "getItemRelationshipOriginDACResourcePath",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS",
+        {
+          "fromTypeName": "Contact",
+          "fromTypeFieldName": "id"
+        }
+      ],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "DEMO",
+        "APP",
+        "ALL_OPERATIONS",
+        "TYPE_INFO_ORM_ITEM_RELATIONSHIP",
+        "Contact",
+        "id"
+      ]
     }
   ]
 }
