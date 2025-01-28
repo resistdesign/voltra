@@ -314,12 +314,19 @@ export const mergeDACDataItemResourceAccessResultMaps = (
   for (const m of maps) {
     const { fieldsResources: mFR = {} } = m;
     const { fieldsResources: oFR = {} } = outputMap;
+    const fRFieldNames = [...Object.keys(mFR), ...Object.keys(oFR)];
 
     let newFieldsResources = {};
 
-    for (const mFRField in mFR) {
-      const mFRFieldData = mFR[mFRField];
-      const oFRFieldData = oFR[mFRField];
+    for (const mFRField of fRFieldNames) {
+      const mFRFieldData = mFR[mFRField] || {
+        allowed: false,
+        denied: false,
+      };
+      const oFRFieldData = oFR[mFRField] || {
+        allowed: false,
+        denied: false,
+      };
 
       newFieldsResources = {
         ...newFieldsResources,

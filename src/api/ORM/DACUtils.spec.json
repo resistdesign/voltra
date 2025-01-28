@@ -274,6 +274,32 @@
           }
         }
       }
+    },
+    {
+      "export": "mergeDACDataItemResourceAccessResultMaps",
+      "conditions": {
+        "file": "./DACUtils.conditions.spec.ts",
+        "export": "mergeDACDataItemResourceAccessResultMapsConditions"
+      },
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "allowed": true,
+        "denied": true,
+        "fieldsResources": {
+          "dateOfBirth": {
+            "allowed": true,
+            "denied": false
+          },
+          "id": {
+            "allowed": true,
+            "denied": false
+          },
+          "name": {
+            "allowed": true,
+            "denied": false
+          }
+        }
+      }
     }
   ]
 }
