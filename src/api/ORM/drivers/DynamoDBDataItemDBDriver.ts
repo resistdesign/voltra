@@ -3,7 +3,7 @@ import {
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "../Types";
+} from "./Types";
 import {
   DeleteItemCommand,
   DynamoDBClient,
@@ -15,23 +15,23 @@ import {
   ScanCommandOutput,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { ListItemsConfig, ListItemsResults } from "../../../../common";
+import { ListItemsConfig, ListItemsResults } from "../../../common";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import {
   TypeInfoDataItem,
   TypeInfoPack,
-} from "../../../../common/TypeParsing/TypeInfo";
+} from "../../../common/TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
   FieldCriterion,
   LogicalOperators,
   SearchCriteria,
-} from "../../../../common/SearchTypes";
-import { getSortedItems } from "../../../../common/SearchUtils";
+} from "../../../common/SearchTypes";
+import { getSortedItems } from "../../../common/SearchUtils";
 import FS from "fs";
 import Path from "path";
-import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
+import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>

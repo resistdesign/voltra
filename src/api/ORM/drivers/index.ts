@@ -1,3 +1,4 @@
-export * as DB from "./db";
-export * as File from "./file";
+export * from "./S3FileItemDBDriver";
+export * from "./DynamoDBDataItemDBDriver";
+export * from "./SupportedTypeInfoORMDBDrivers";
 export * from "./Types";
