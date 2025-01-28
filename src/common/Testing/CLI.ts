@@ -36,6 +36,7 @@ export const main = async (): Promise<void> => {
     (latestResults: TestResults) => {
       const {
         messages = [],
+        generated = [],
         passes = [],
         failures = [],
         errors = [],
@@ -45,6 +46,9 @@ export const main = async (): Promise<void> => {
 
       messages.forEach((message) =>
         console.log(`${picocolors.blue("MESSAGE:")} ${message}`),
+      );
+      generated.forEach((generated) =>
+        console.log(`${picocolors.green("GENERATED:")} ${generated}`),
       );
       passes.forEach((pass) =>
         console.log(`${picocolors.green("PASSED:")} ${pass}`),
@@ -58,14 +62,21 @@ export const main = async (): Promise<void> => {
     },
   );
 
-  const { passes = [], failures = [], errors = [] } = results;
+  const { generated = [], passes = [], failures = [], errors = [] } = results;
   const exitValue = failures.length + errors.length;
 
-  console.log(`
+  if (generateMode) {
+    console.log(`
+${picocolors.greenBright("GENERATED:")} ${generated.length}
+${picocolors.redBright("ERRORS:")} ${errors.length}
+`);
+  } else {
+    console.log(`
 ${picocolors.greenBright("PASSES:")} ${passes.length}
 ${picocolors.red("FAILURES:")} ${failures.length}
 ${picocolors.redBright("ERRORS:")} ${errors.length}
-  `);
+`);
+  }
 
   process.exit(exitValue);
 };

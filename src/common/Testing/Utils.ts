@@ -304,8 +304,8 @@ export const generateTestsForFile = async (
         const result = await testFunction(...conditions);
 
         report({
-          messages: [
-            `Captured expectation for ${targetExport} with conditions ${JSON.stringify(
+          generated: [
+            `Expectation for ${targetExport} with conditions ${JSON.stringify(
               conditions,
             )}: ${JSON.stringify(result)}`,
           ],
