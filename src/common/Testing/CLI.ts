@@ -64,6 +64,7 @@ export const main = async (): Promise<void> => {
   console.log(`
 ${picocolors.greenBright("PASSES:")} ${passes.length}
 ${picocolors.red("FAILURES:")} ${failures.length}
+${picocolors.redBright("ERRORS:")} ${errors.length}
   `);
 
   process.exit(exitValue);
