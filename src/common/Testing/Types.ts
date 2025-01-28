@@ -120,3 +120,13 @@ export type TestConfig = {
 export type ResolvedTestConfig = {
   targetModule: any;
 } & TestConfig;
+
+/**
+ * The results from running one or more tests.
+ * */
+export type TestResults = {
+  messages: string[];
+  passes: string[];
+  failures: string[];
+  errors: string[];
+};
