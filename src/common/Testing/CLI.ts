@@ -67,12 +67,12 @@ export const main = async (): Promise<void> => {
 
   if (generateMode) {
     console.log(`
-${picocolors.greenBright("GENERATED:")} ${generated.length}
+${picocolors.green("GENERATED:")} ${generated.length}
 ${picocolors.redBright("ERRORS:")} ${errors.length}
 `);
   } else {
     console.log(`
-${picocolors.greenBright("PASSES:")} ${passes.length}
+${picocolors.green("PASSES:")} ${passes.length}
 ${picocolors.red("FAILURES:")} ${failures.length}
 ${picocolors.redBright("ERRORS:")} ${errors.length}
 `);
