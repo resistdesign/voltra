@@ -45,10 +45,18 @@ export type RegexExpectation = {
 };
 
 /**
+ * A configuration used to acquire conditions from code instead of a JSON array.
+ * */
+export type ConditionConfig = {
+  file: string;
+  export: string;
+};
+
+/**
  * Preparation for a test when some setup is required or a class needs to be instantiated.
  * */
 export type TestSetup = {
-  conditions: unknown[];
+  conditions: unknown[] | ConditionConfig;
   export: string;
   instantiate?: boolean;
 };
@@ -59,7 +67,7 @@ export type TestSetup = {
 export type BaseTest = {
   export: string;
   setup?: TestSetup;
-  conditions: unknown[];
+  conditions: unknown[] | ConditionConfig;
   expectUndefined?: boolean;
 };
 
