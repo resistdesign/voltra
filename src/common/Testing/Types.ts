@@ -126,6 +126,7 @@ export type ResolvedTestConfig = {
  * */
 export type TestResults = {
   messages?: string[];
+  generated?: string[];
   passes?: string[];
   failures?: string[];
   errors?: string[];
