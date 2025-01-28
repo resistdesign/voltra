@@ -259,34 +259,10 @@
     },
     {
       "export": "getDACRoleHasAccessToDataItem",
-      "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
-        "ALLOW",
-        "Contact",
-        {
-          "id": "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
-        },
-        {
-          "primaryField": "id",
-          "fields": {
-            "id": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "id": "5fbf571d-ea6b-4008-b40f-706dfd430236",
-          "childRoleIds": [
-            "ec14ac8f-6fda-458c-b2df-e431dced0947"
-          ],
-          "constraints": []
-        },
-        "() => true",
-        []
-      ],
+      "conditions": {
+        "file": "./DACUtils.conditions.spec.ts",
+        "export": "getDACRoleHasAccessToDataItemConditions"
+      },
       "operation": "DEEP_EQUALS"
     }
   ]
