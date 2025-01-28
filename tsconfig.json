@@ -21,6 +21,8 @@
   ],
   "exclude": [
     "node_modules",
+    "**/*.spec.json",
+    "**/*.spec.js",
     "**/*.spec.ts",
     "**/*.spec.tsx"
   ]
