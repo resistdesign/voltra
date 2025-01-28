@@ -1,10 +1,8 @@
 {
-  "subject": {
-    "file": "../DACUtils.ts",
-    "export": "getORMDACResourcePath"
-  },
+  "file": "../DACUtils.ts",
   "tests": [
     {
+      "export": "getORMDACResourcePath",
       "conditions": [
         [
           "DEMO",
