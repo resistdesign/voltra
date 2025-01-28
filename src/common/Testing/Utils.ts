@@ -412,11 +412,11 @@ export const generateTestsForFile = async (
           generated: [
             `Expectation for TEST ${i + 1} (${targetExport}):
 
-${JSON.stringify(result)}
+${JSON.stringify(result, null, 2)}
 
 Conditions:
 
-${JSON.stringify(conditions)}`,
+${JSON.stringify(conditions, null, 2)}`,
           ],
         });
         generatedTests.push({
