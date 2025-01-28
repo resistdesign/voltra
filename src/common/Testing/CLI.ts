@@ -10,7 +10,7 @@ export const main = async (): Promise<void> => {
   const generateMode = args.includes("--generate");
   const testPath = args.filter((arg) => arg !== "--generate")[0];
 
-  console.log("\n");
+  console.log(`${picocolors.bgMagenta(picocolors.whiteBright(" VEST "))}\n`);
 
   if (!testPath) {
     console.error("Usage: vest [--generate] <test-directory-path>");
@@ -47,19 +47,21 @@ export const main = async (): Promise<void> => {
       results = mergeTestResults(results, latestResults);
 
       messages.forEach((message) =>
-        console.log(`${picocolors.blue("MESSAGE:")} ${message}\n`),
+        console.log(`${picocolors.blueBright("MESSAGE:")} ${message}\n`),
       );
       generated.forEach((generated) =>
-        console.log(`${picocolors.green("GENERATED:")} ${generated}\n`),
+        console.log(`${picocolors.greenBright("GENERATED:")} ${generated}\n`),
       );
       passes.forEach((pass) =>
-        console.log(`${picocolors.green("PASSED:")} ${pass}\n`),
+        console.log(`${picocolors.greenBright("PASSED:")} ${pass}\n`),
       );
       failures.forEach((failure) =>
-        console.error(`${picocolors.red("FAILED:")} ${failure}\n`),
+        console.error(`${picocolors.redBright("FAILED:")} ${failure}\n`),
       );
       errors.forEach((error) =>
-        console.error(`${picocolors.redBright("ERROR:")} ${error}\n`),
+        console.error(
+          `${picocolors.redBright(picocolors.italic("ERROR:"))} ${error}\n`,
+        ),
       );
     },
   );
@@ -68,15 +70,13 @@ export const main = async (): Promise<void> => {
   const exitValue = failures.length + errors.length;
 
   if (generateMode) {
-    console.log(`
-${picocolors.green("GENERATED:")} ${generated.length}
-${picocolors.redBright("ERRORS:")} ${errors.length}
+    console.log(`${picocolors.greenBright("GENERATED:")} ${generated.length}
+${picocolors.redBright(picocolors.italic("ERRORS:"))} ${errors.length}
 `);
   } else {
-    console.log(`
-${picocolors.green("PASSES:")} ${passes.length}
-${picocolors.red("FAILURES:")} ${failures.length}
-${picocolors.redBright("ERRORS:")} ${errors.length}
+    console.log(`${picocolors.greenBright("PASSES:")} ${passes.length}
+${picocolors.redBright("FAILURES:")} ${failures.length}
+${picocolors.redBright(picocolors.italic("ERRORS:"))} ${errors.length}
 `);
   }
 
