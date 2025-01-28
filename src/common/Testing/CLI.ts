@@ -58,8 +58,13 @@ export const main = async (): Promise<void> => {
     },
   );
 
-  const { failures = [], errors = [] } = results;
+  const { passes = [], failures = [], errors = [] } = results;
   const exitValue = failures.length + errors.length;
+
+  console.log(`
+${picocolors.greenBright("PASSES:")} ${passes.length}
+${picocolors.red("FAILURES:")} ${failures.length}
+  `);
 
   process.exit(exitValue);
 };
