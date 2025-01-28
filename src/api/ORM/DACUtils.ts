@@ -14,7 +14,6 @@ import {
   DACConstraintType,
   DACDataItemResourceAccessResultMap,
   DACRole,
-  getFlattenedDACConstraints,
   getResourceAccessByDACRole,
   mergeDACAccessResults,
 } from "../DataAccessControl";
@@ -209,7 +208,10 @@ export const getDACRoleHasAccessToDataItem = (
   typeInfo: TypeInfo,
   role: DACRole,
   getDACRoleById: (id: string) => DACRole,
-  cachedFlattenedConstraints?: DACConstraint[],
+  /**
+   * SECURITY: Don't use this if you want realtime role resolution.
+   * */
+  dacRoleCache?: Record<string, DACRole>,
 ): DACDataItemResourceAccessResultMap => {
   const cleanItemPathPrefix = prefixPath ? prefixPath : [];
   const resultMap: DACDataItemResourceAccessResultMap = {
@@ -245,9 +247,6 @@ export const getDACRoleHasAccessToDataItem = (
           typeName,
           primaryFieldValue,
         );
-        const internallyCachedFlattenedConstraints = cachedFlattenedConstraints
-          ? cachedFlattenedConstraints
-          : getFlattenedDACConstraints(role, getDACRoleById);
         const {
           allowed: primaryResourceAllowed,
           denied: primaryResourceDenied,
@@ -255,7 +254,7 @@ export const getDACRoleHasAccessToDataItem = (
           primaryResourcePath,
           role,
           getDACRoleById,
-          internallyCachedFlattenedConstraints,
+          dacRoleCache,
         );
 
         resultMap.allowed = primaryResourceAllowed;
@@ -280,7 +279,7 @@ export const getDACRoleHasAccessToDataItem = (
                 fieldResourcePath,
                 role,
                 getDACRoleById,
-                internallyCachedFlattenedConstraints,
+                dacRoleCache,
               );
 
               resultMap.fieldsResources = {
