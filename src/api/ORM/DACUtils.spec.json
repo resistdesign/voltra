@@ -1,5 +1,5 @@
 {
-  "file": "../DACUtils.ts",
+  "file": "./DACUtils.ts",
   "tests": [
     {
       "export": "getORMDACResourcePath",
