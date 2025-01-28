@@ -21,17 +21,58 @@ export enum TestComparisonOperation {
 }
 
 /**
- * The basis for a test condition.
+ * A pattern definition object for use with extended regex expectations.
  * */
-export type BaseTestCondition = {
+export type PatternElement = {
+  value: string;
+  escaped?: boolean;
+};
+
+/**
+ * An extended regex expectation with a patter structure, optional flags and
+ * escaping properties that allow for clear and explicit declaration of regex
+ * patterns in JSON.
+ *
+ * Used when a `TestCondition` `operation` is `TestComparisonOperation.EXT_REGEX`.
+ * */
+export type EXTRegexExpectation = {
+  pattern: PatternElement[];
+  flags?: string;
+};
+
+/**
+ * A regex expectation with a pattern and optional flags.
+ *
+ * Used when a `TestCondition` `operation` is `TestComparisonOperation.REGEX`.
+ * */
+export type RegexExpectation = {
+  pattern: string;
+  flags?: string;
+};
+
+/**
+ * Preparation for a test when some setup is required or a class needs to be instantiated.
+ * */
+export type TestSetup = {
+  conditions: unknown[];
+  export: string;
+  instantiate?: boolean;
+};
+
+/**
+ * The basis for a test.
+ * */
+export type BaseTest = {
+  export: string;
+  setup?: TestSetup;
   conditions: unknown[];
   expectUndefined?: boolean;
 };
 
 /**
- * A singular test condition with specific types of expectations for a given operation.
+ * A singular test with specific types of expectations for a given operation.
  * */
-export type TestCondition = BaseTestCondition &
+export type Test = BaseTest &
   (
     | {
         operation?:
@@ -72,54 +113,11 @@ export type TestCondition = BaseTestCondition &
   );
 
 /**
- * Preparation for a test when some setup is required or a class needs to be instantiated.
- * */
-export type TestSetup = {
-  conditions: unknown[];
-  export: string;
-  instantiate?: boolean;
-};
-
-/**
  * A configuration for a test. Designed to be used in JSON for declarative test files.
  * */
 export type TestConfig = {
-  subject: {
-    file: string;
-    export: string;
-  };
-  setup?: TestSetup;
-  tests: TestCondition[];
-};
-
-/**
- * A pattern definition object for use with extended regex expectations.
- * */
-export type PatternElement = {
-  value: string;
-  escaped?: boolean;
-};
-
-/**
- * An extended regex expectation with a patter structure, optional flags and
- * escaping properties that allow for clear and explicit declaration of regex
- * patterns in JSON.
- *
- * Used when a `TestCondition` `operation` is `TestComparisonOperation.EXT_REGEX`.
- * */
-export type EXTRegexExpectation = {
-  pattern: PatternElement[];
-  flags?: string;
-};
-
-/**
- * A regex expectation with a pattern and optional flags.
- *
- * Used when a `TestCondition` `operation` is `TestComparisonOperation.REGEX`.
- * */
-export type RegexExpectation = {
-  pattern: string;
-  flags?: string;
+  file: string;
+  tests: Test[];
 };
 
 /**
@@ -259,7 +257,7 @@ export const getSetupInstance = async (
  * */
 export const runTest = async (
   testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
-  test: TestCondition,
+  test: Test,
   index: number,
 ): Promise<void> => {
   const { conditions, expectation, operation, expectUndefined } = test;
@@ -292,22 +290,14 @@ export const generateTestsForFile = async (
     const testConfig: TestConfig = JSON.parse(
       await FS.readFile(testFilePath, "utf8"),
     );
-    const { subject, setup, tests } = testConfig;
+    const { file, tests } = testConfig;
 
-    if (!subject || !subject.file || !subject.export) {
-      throw new Error(`Invalid subject configuration in ${testFilePath}`);
+    if (!file) {
+      throw new Error(`Invalid test configuration in ${testFilePath}`);
     }
 
-    const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
+    const modulePath = Path.resolve(Path.dirname(testFilePath), file);
     const module = require(modulePath);
-    const instance = await getSetupInstance(module, setup);
-    const testFunction = instance[subject.export];
-
-    if (typeof testFunction !== "function") {
-      throw new Error(
-        `Export "${subject.export}" from "${subject.file}" is not a function.`,
-      );
-    }
 
     console.log(`Generating tests for ${testFilePath}`);
 
@@ -315,7 +305,27 @@ export const generateTestsForFile = async (
     let hasNewExpectations = false;
 
     for (const test of tests) {
-      const { conditions, expectation, operation, expectUndefined } = test;
+      const {
+        setup,
+        export: targetExport,
+        conditions,
+        expectation,
+        operation,
+        expectUndefined,
+      } = test;
+
+      if (!targetExport) {
+        throw new Error(`Invalid test export in ${testFilePath}`);
+      }
+
+      const instance = await getSetupInstance(module, setup);
+      const testFunction = instance[targetExport];
+
+      if (typeof testFunction !== "function") {
+        throw new Error(
+          `Export "${targetExport}" from "${file}" is not a function.`,
+        );
+      }
 
       if (expectation !== undefined || expectUndefined) {
         generatedTests.push(test); // Skip if expectation already exists
@@ -362,25 +372,33 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
     const testConfig: TestConfig = JSON.parse(
       await FS.readFile(testFilePath, "utf8"),
     );
-    const { subject, setup, tests } = testConfig;
+    const { file, tests } = testConfig;
 
-    if (!subject || !subject.file || !subject.export) {
-      throw new Error(`Invalid subject configuration in ${testFilePath}`);
+    if (!file) {
+      throw new Error(`Invalid test configuration in ${testFilePath}`);
     }
 
-    const modulePath = Path.resolve(Path.dirname(testFilePath), subject.file);
+    const modulePath = Path.resolve(Path.dirname(testFilePath), file);
     const module = require(modulePath);
-    const instance = await getSetupInstance(module, setup);
-    const testFunction = instance[subject.export];
-
-    if (typeof testFunction !== "function") {
-      throw new Error(
-        `Export "${subject.export}" from "${subject.file}" is not a function.`,
-      );
-    }
 
     console.log(`Running tests from ${testFilePath}`);
+
     for (const [index, test] of tests.entries()) {
+      const { setup, export: targetExport } = test;
+
+      if (!targetExport) {
+        throw new Error(`Invalid test export in ${testFilePath}`);
+      }
+
+      const instance = await getSetupInstance(module, setup);
+      const testFunction = instance[targetExport];
+
+      if (typeof testFunction !== "function") {
+        throw new Error(
+          `Export "${targetExport}" from "${file}" is not a function.`,
+        );
+      }
+
       await runTest(testFunction, test, index);
     }
   } catch (err: any) {
