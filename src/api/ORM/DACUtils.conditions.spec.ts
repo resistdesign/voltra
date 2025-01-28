@@ -1,4 +1,7 @@
-import { getDACRoleHasAccessToDataItem } from "./DACUtils";
+import {
+  getDACRoleHasAccessToDataItem,
+  mergeDACDataItemResourceAccessResultMaps,
+} from "./DACUtils";
 import { OperationGroup } from "../../common/TypeInfoORM";
 import { DACConstraintType } from "../DataAccessControl";
 
@@ -45,4 +48,33 @@ export const getDACRoleHasAccessToDataItemConditions: Parameters<
     ],
   }),
   {},
+];
+
+export const mergeDACDataItemResourceAccessResultMapsConditions: Parameters<
+  typeof mergeDACDataItemResourceAccessResultMaps
+> = [
+  {
+    allowed: true,
+    denied: false,
+    fieldsResources: {
+      id: {
+        allowed: true,
+        denied: false,
+      },
+      name: {
+        allowed: true,
+        denied: false,
+      },
+    },
+  },
+  {
+    allowed: false,
+    denied: true,
+    fieldsResources: {
+      dateOfBirth: {
+        allowed: true,
+        denied: false,
+      },
+    },
+  },
 ];
