@@ -16,6 +16,24 @@
         "APP",
         "ALL_OPERATIONS"
       ]
+    },
+    {
+      "export": "getItemTypeDACResourcePath",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS",
+        "Contact"
+      ],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "DEMO",
+        "APP",
+        "ALL_OPERATIONS",
+        "Contact"
+      ]
     }
   ]
 }
