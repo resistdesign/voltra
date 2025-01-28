@@ -382,6 +382,10 @@ export const executeTestingCommand = async (
   generateMode = false,
   report: (results: TestResults) => void,
 ): Promise<void> => {
+  const completeMessage = generateMode
+    ? "Test generation complete."
+    : "Testing complete.";
+
   try {
     for (const testFile of testFiles) {
       const resolvedTestFile = Path.resolve(testFile);
@@ -393,7 +397,9 @@ export const executeTestingCommand = async (
       }
     }
 
-    report({ messages: ["Testing complete."] });
+    report({
+      messages: [completeMessage],
+    });
   } catch (err: any) {
     report({ errors: [`Error running tests: ${err.message}`] });
   }
