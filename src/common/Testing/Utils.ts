@@ -317,20 +317,44 @@ export const runTest = async (
     if (passed) {
       report({
         passes: [
-          `Test ${index + 1} (${targetExport}): Conditions:\n\n${JSON.stringify(conditions, null, 2)}`,
+          `Test ${index + 1} (${targetExport}):
+
+Conditions:
+
+${JSON.stringify(conditions, null, 2)}`,
         ],
       });
     } else {
       report({
         failures: [
-          `Test ${index + 1} (${targetExport}): Conditions:\n\n${JSON.stringify(conditions, null, 2)}, Expectation:\n\n${JSON.stringify(expectation, null, 2)}, Result:\n\n${JSON.stringify(result, null, 2)}`,
+          `Test ${index + 1} (${targetExport}):
+
+Conditions:
+
+${JSON.stringify(conditions, null, 2)},
+
+Expectation:
+
+${JSON.stringify(expectation, null, 2)},
+
+Result:
+
+${JSON.stringify(result, null, 2)}`,
         ],
       });
     }
   } catch (err: any) {
     report({
       errors: [
-        `Test ${index + 1} (${targetExport}): Conditions:\n\n${JSON.stringify(conditions, null, 2)}, Error: ${err.message}`,
+        `Test ${index + 1} (${targetExport}):
+
+Conditions:
+
+${JSON.stringify(conditions, null, 2)},
+
+Error:
+
+${err.message}`,
       ],
     });
   }
@@ -386,9 +410,13 @@ export const generateTestsForFile = async (
 
         report({
           generated: [
-            `Expectation for ${targetExport} with conditions ${JSON.stringify(
-              conditions,
-            )}: ${JSON.stringify(result)}`,
+            `Expectation for TEST ${i + 1} (${targetExport}):
+
+${JSON.stringify(result)}
+
+Conditions:
+
+${JSON.stringify(conditions)}`,
           ],
         });
         generatedTests.push({

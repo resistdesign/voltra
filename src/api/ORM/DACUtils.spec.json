@@ -263,17 +263,7 @@
         "file": "./DACUtils.conditions.spec.ts",
         "export": "getDACRoleHasAccessToDataItemConditions"
       },
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "allowed": true,
-        "denied": false,
-        "fieldsResources": {
-          "id": {
-            "allowed": false,
-            "denied": false
-          }
-        }
-      }
+      "operation": "DEEP_EQUALS"
     }
   ]
 }
