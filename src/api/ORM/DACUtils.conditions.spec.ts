@@ -27,22 +27,26 @@ export const getDACRoleHasAccessToDataItemConditions: Parameters<
     childRoleIds: ["ec14ac8f-6fda-458c-b2df-e431dced0947"],
     constraints: [],
   },
-  (roleId: string) => ({
-    id: roleId,
-    childRoleIds: [],
-    constraints: [
-      {
-        type: DACConstraintType.ALLOW,
-        pathIsPrefix: true,
-        resourcePath: [
-          "DEMO",
-          "APP",
-          OperationGroup.ALL_OPERATIONS,
-          "Contact",
-          "a38bc40e-052d-47e2-89c5-6a1e5593bc7f",
-        ],
-      },
-    ],
-  }),
+  (roleId: string) => {
+    console.log("\n\nCALLED GET ROLE BY ID", roleId, "\n\n");
+
+    return {
+      id: roleId,
+      childRoleIds: [],
+      constraints: [
+        {
+          type: DACConstraintType.ALLOW,
+          pathIsPrefix: true,
+          resourcePath: [
+            "DEMO",
+            "APP",
+            OperationGroup.ALL_OPERATIONS,
+            "Contact",
+            "a38bc40e-052d-47e2-89c5-6a1e5593bc7f",
+          ],
+        },
+      ],
+    };
+  },
   [],
 ];
