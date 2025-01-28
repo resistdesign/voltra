@@ -10,6 +10,8 @@ export const main = async (): Promise<void> => {
   const generateMode = args.includes("--generate");
   const testPath = args.filter((arg) => arg !== "--generate")[0];
 
+  console.log("\n");
+
   if (!testPath) {
     console.error("Usage: vest [--generate] <test-directory-path>");
     process.exit(1);
@@ -45,19 +47,19 @@ export const main = async (): Promise<void> => {
       results = mergeTestResults(results, latestResults);
 
       messages.forEach((message) =>
-        console.log(`${picocolors.blue("MESSAGE:")} ${message}`),
+        console.log(`${picocolors.blue("MESSAGE:")} ${message}\n`),
       );
       generated.forEach((generated) =>
-        console.log(`${picocolors.green("GENERATED:")} ${generated}`),
+        console.log(`${picocolors.green("GENERATED:")} ${generated}\n`),
       );
       passes.forEach((pass) =>
-        console.log(`${picocolors.green("PASSED:")} ${pass}`),
+        console.log(`${picocolors.green("PASSED:")} ${pass}\n`),
       );
       failures.forEach((failure) =>
-        console.error(`${picocolors.red("FAILED:")} ${failure}`),
+        console.error(`${picocolors.red("FAILED:")} ${failure}\n`),
       );
       errors.forEach((error) =>
-        console.error(`${picocolors.redBright("ERROR:")} ${error}`),
+        console.error(`${picocolors.redBright("ERROR:")} ${error}\n`),
       );
     },
   );
