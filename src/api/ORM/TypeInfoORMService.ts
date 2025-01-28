@@ -49,7 +49,6 @@ import {
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
 import {
   DACAccessResult,
-  DACConstraint,
   DACDataItemResourceAccessResultMap,
   DACRole,
   getResourceAccessByDACRole,
@@ -141,7 +140,7 @@ export type TypeInfoORMServiceConfig = {
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
  * */
 export class TypeInfoORMService implements TypeInfoORMAPI {
-  protected cachedFlattenedConstraints: DACConstraint[] = [];
+  protected dacRoleCache: Record<string, DACRole> = {};
 
   constructor(protected config: TypeInfoORMServiceConfig) {
     if (!config.getDriver) {
@@ -177,7 +176,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           typeInfo,
           accessingRole,
           getDACRoleById,
-          this.cachedFlattenedConstraints,
+          this.dacRoleCache,
         ),
         getDACRoleHasAccessToDataItem(
           itemResourcePathPrefix,
@@ -187,7 +186,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           typeInfo,
           accessingRole,
           getDACRoleById,
-          this.cachedFlattenedConstraints,
+          this.dacRoleCache,
         ),
         getDACRoleHasAccessToDataItem(
           itemResourcePathPrefix,
@@ -197,7 +196,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           typeInfo,
           accessingRole,
           getDACRoleById,
-          this.cachedFlattenedConstraints,
+          this.dacRoleCache,
         ),
       );
     } else {
@@ -229,7 +228,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           ),
           accessingRole,
           getDACRoleById,
-          this.cachedFlattenedConstraints,
+          this.dacRoleCache,
         ),
         getResourceAccessByDACRole(
           getItemRelationshipDACResourcePath(
@@ -239,7 +238,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           ),
           accessingRole,
           getDACRoleById,
-          this.cachedFlattenedConstraints,
+          this.dacRoleCache,
         ),
         getResourceAccessByDACRole(
           getItemRelationshipDACResourcePath(
@@ -249,7 +248,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           ),
           accessingRole,
           getDACRoleById,
-          this.cachedFlattenedConstraints,
+          this.dacRoleCache,
         ),
       );
     } else {
