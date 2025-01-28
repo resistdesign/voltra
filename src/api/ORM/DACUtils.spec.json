@@ -104,6 +104,24 @@
         "a38bc40e-052d-47e2-89c5-6a1e5593bc7f",
         "657d251a-d192-4238-9921-72af7b29e2da"
       ]
+    },
+    {
+      "export": "getDataItemFieldValueDACResourcePath",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "id",
+        "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
+      ],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "DEMO",
+        "APP",
+        "id",
+        "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
+      ]
     }
   ]
 }
