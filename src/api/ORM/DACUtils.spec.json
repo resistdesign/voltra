@@ -200,6 +200,38 @@
           }
         ]
       }
+    },
+    {
+      "export": "getItemRelationshipOriginDACRole",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS",
+        {
+          "fromTypeName": "Contact",
+          "fromTypeFieldName": "id"
+        },
+        "ALLOW"
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "constraints": [
+          {
+            "type": "ALLOW",
+            "pathIsPrefix": true,
+            "resourcePath": [
+              "DEMO",
+              "APP",
+              "ALL_OPERATIONS",
+              "TYPE_INFO_ORM_ITEM_RELATIONSHIP",
+              "Contact",
+              "id"
+            ]
+          }
+        ]
+      }
     }
   ]
 }
