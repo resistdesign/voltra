@@ -17,52 +17,8 @@ export enum DATA_ITEM_DB_DRIVER_ERRORS {
   INVALID_CURSOR = "INVALID_CURSOR",
   ITEM_NOT_FOUND = "ITEM_NOT_FOUND",
   MISSING_UNIQUE_IDENTIFIER = "MISSING_UNIQUE_IDENTIFIER",
-  INVALID_CRITERION_VALUE = "INVALID_CRITERION_VALUE",
   SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED = "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED",
 }
-
-/**
- * The basic API for a database driver with CRUD and Find.
- * */
-export type BasicDBDriver = {
-  /**
-   * Create an item in the database.
-   * */
-  createItem: (
-    type: string,
-    id: string,
-    item: Record<string, string>,
-  ) => Promise<void>;
-  /**
-   * Read an item from the database.
-   * */
-  readItem: (
-    type: string,
-    id: string,
-    getProperties?: string[],
-  ) => Promise<Record<string, string>>;
-  /**
-   * Update an item in the database.
-   * */
-  updateItem: (
-    type: string,
-    id: string,
-    item: Record<string, string | null>,
-  ) => Promise<void>;
-  /**
-   * Delete an item from the database.
-   * */
-  deleteItem: (type: string, id: string) => Promise<void>;
-  /**
-   * List items in the database.
-   * */
-  findItems: (
-    type: string,
-    properties: string[],
-    value: string,
-    getProperties?: string[],
-  ) => Promise<Record<string, string>[]>;
-};
 
 /**
  * The generic type for a database driver configuration.

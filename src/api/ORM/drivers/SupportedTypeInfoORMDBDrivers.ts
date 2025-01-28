@@ -1,4 +1,4 @@
-import { SupportedDataItemDBDriverEntry } from "../Types";
+import { SupportedDataItemDBDriverEntry } from "./Types";
 import { DynamoDBSupportedDataItemDBDriverEntry } from "./DynamoDBDataItemDBDriver";
 import { S3SupportedFileItemDBDriverEntry } from "./S3FileItemDBDriver";
 

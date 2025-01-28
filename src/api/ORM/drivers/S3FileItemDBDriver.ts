@@ -5,11 +5,11 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-import { getBaseFileLocationInfo, getFullFileKey, S3FileDriver } from "../file";
+import { getBaseFileLocationInfo, getFullFileKey, S3FileDriver } from "../../FS/drivers";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
-} from "../../../../common/SearchUtils";
+} from "../../../common/SearchUtils";
 import {
   BaseFile,
   BaseFileLocationInfo,
@@ -18,13 +18,13 @@ import {
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "../Types";
-import { ListItemsConfig } from "../../../../common";
+} from "./Types";
+import { ListItemsConfig } from "../../../common";
 import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
-import { getTypeInfoMapFromTypeScript } from "../../../../common/TypeParsing";
-import { removeUnselectedFieldsFromDataItem } from "../../../../common/TypeParsing/Utils";
+import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+import { removeUnselectedFieldsFromDataItem } from "../../../common/TypeParsing/Utils";
 
 export type BaseFileItem = {
   id: string;
