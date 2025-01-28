@@ -210,13 +210,21 @@ export const mergeTestResults = (...results: TestResults[]): TestResults =>
     (
       {
         messages: accMessages = [],
+        generated: accGenerated = [],
         passes: accPasses = [],
         failures: accFailures = [],
         errors: accErrors = [],
       },
-      { messages = [], passes = [], failures = [], errors = [] },
+      {
+        messages = [],
+        generated = [],
+        passes = [],
+        failures = [],
+        errors = [],
+      },
     ) => ({
       messages: [...accMessages, ...messages],
+      generated: [...accGenerated, ...generated],
       passes: [...accPasses, ...passes],
       failures: [...accFailures, ...failures],
       errors: [...accErrors, ...errors],
