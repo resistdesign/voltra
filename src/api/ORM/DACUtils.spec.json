@@ -122,6 +122,29 @@
         "id",
         "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
       ]
+    },
+    {
+      "export": "getItemTypeDACConstraint",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS",
+        "Contact",
+        "ALLOW"
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "ALLOW",
+        "pathIsPrefix": true,
+        "resourcePath": [
+          "DEMO",
+          "APP",
+          "ALL_OPERATIONS",
+          "Contact"
+        ]
+      }
     }
   ]
 }
