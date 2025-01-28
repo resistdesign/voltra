@@ -231,6 +231,7 @@ export const runTest = async (
   testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
   test: Test,
   index: number,
+  targetExport: string,
   report: (results: TestResults) => void,
 ): Promise<void> => {
   const { conditions, expectation, operation, expectUndefined } = test;
@@ -242,20 +243,20 @@ export const runTest = async (
     if (passed) {
       report({
         passes: [
-          `Test ${index + 1}: Conditions: ${JSON.stringify(conditions)}`,
+          `Test ${index + 1} (${targetExport}): Conditions: ${JSON.stringify(conditions)}`,
         ],
       });
     } else {
       report({
         failures: [
-          `Test ${index + 1}: Conditions: ${JSON.stringify(conditions)}, Expectation: ${JSON.stringify(expectation)}, Result: ${JSON.stringify(result)}`,
+          `Test ${index + 1} (${targetExport}): Conditions: ${JSON.stringify(conditions)}, Expectation: ${JSON.stringify(expectation)}, Result: ${JSON.stringify(result)}`,
         ],
       });
     }
   } catch (err: any) {
     report({
       errors: [
-        `Test ${index + 1}: Conditions: ${JSON.stringify(conditions)}, Error: ${err.message}`,
+        `Test ${index + 1} (${targetExport}): Conditions: ${JSON.stringify(conditions)}, Error: ${err.message}`,
       ],
     });
   }
@@ -365,7 +366,7 @@ export const runTestsForFile = async (
         targetExport,
       );
 
-      await runTest(testFunction, test, index, report);
+      await runTest(testFunction, test, index, targetExport, report);
     }
   } catch (err: any) {
     report({
