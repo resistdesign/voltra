@@ -259,8 +259,11 @@ export const runTest = async (
   testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
   test: Test,
   index: number,
-): Promise<void> => {
+): Promise<number> => {
   const { conditions, expectation, operation, expectUndefined } = test;
+
+  let failureCount = 0;
+
   try {
     const result = await testFunction(...conditions);
     const passed = expectUndefined || compare(result, expectation, operation);
@@ -269,15 +272,21 @@ export const runTest = async (
         `  Test ${index + 1}: PASSED - Conditions: ${JSON.stringify(conditions)}`,
       );
     } else {
+      failureCount++;
+
       console.error(
         `  Test ${index + 1}: FAILED - Conditions: ${JSON.stringify(conditions)}, Expectation: ${JSON.stringify(expectation)}, Result: ${JSON.stringify(result)}`,
       );
     }
   } catch (err: any) {
+    failureCount++;
+
     console.error(
       `  Test ${index + 1}: ERROR - Conditions: ${JSON.stringify(conditions)}, Error: ${err.message}`,
     );
   }
+
+  return failureCount;
 };
 
 /**
@@ -367,7 +376,11 @@ export const generateTestsForFile = async (
  *
  * The test file content is expected to be a JSON in the structure of a `TestConfig`.
  * */
-export const runTestsForFile = async (testFilePath: string): Promise<void> => {
+export const runTestsForFile = async (
+  testFilePath: string,
+): Promise<number> => {
+  let failureCount = 0;
+
   try {
     const testConfig: TestConfig = JSON.parse(
       await FS.readFile(testFilePath, "utf8"),
@@ -399,11 +412,13 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
         );
       }
 
-      await runTest(testFunction, test, index);
+      failureCount += await runTest(testFunction, test, index);
     }
   } catch (err: any) {
     console.error(`Error processing test file ${testFilePath}: ${err.message}`);
   }
+
+  return failureCount;
 };
 
 /**
@@ -412,20 +427,23 @@ export const runTestsForFile = async (testFilePath: string): Promise<void> => {
 export const runTests = async (
   testPath: string,
   generateMode = false,
-): Promise<void> => {
+): Promise<number> => {
+  let failureCount = 0;
+
   try {
     const testFiles = await fastGlob(testPath);
 
     if (testFiles.length === 0) {
       console.warn(`No test files found in ${testPath}`);
-      return;
+
+      return failureCount;
     }
 
     for (const testFile of testFiles) {
       if (generateMode) {
         await generateTestsForFile(Path.resolve(testFile));
       } else {
-        await runTestsForFile(Path.resolve(testFile));
+        failureCount += await runTestsForFile(Path.resolve(testFile));
       }
     }
 
@@ -433,6 +451,8 @@ export const runTests = async (
   } catch (err: any) {
     console.error(`Error running tests: ${err.message}`);
   }
+
+  return failureCount;
 };
 
 // CLI entry point.
@@ -446,5 +466,7 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  runTests(testPath, generateMode);
+  runTests(testPath, generateMode).then((failureCount) => {
+    process.exit(failureCount);
+  });
 }
