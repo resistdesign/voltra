@@ -1,124 +1,16 @@
-#!/usr/bin/env ts-node
-
+import {
+  EXTRegexExpectation,
+  PatternElement,
+  RegexExpectation,
+  ResolvedTestConfig,
+  Test,
+  TestComparisonOperation,
+  TestConfig,
+  TestSetup,
+} from "./Types";
 import { promises as FS } from "fs";
 import Path from "path";
 import fastGlob from "fast-glob";
-
-/**
- * Operations used for comparison of during tests.
- * */
-export enum TestComparisonOperation {
-  EQUALS = "===",
-  NOT_EQUALS = "!==",
-  IN = "IN",
-  ARRAY_CONTAINS = "ARRAY_CONTAINS",
-  BETWEEN = "BETWEEN",
-  CONTAINS = "CONTAINS",
-  REGEX = "REGEX",
-  EXT_REGEX = "EXT_REGEX",
-  DEEP_EQUALS = "DEEP_EQUALS",
-  ARRAY_EQUALS = "ARRAY_EQUALS",
-}
-
-/**
- * A pattern definition object for use with extended regex expectations.
- * */
-export type PatternElement = {
-  value: string;
-  escaped?: boolean;
-};
-
-/**
- * An extended regex expectation with a patter structure, optional flags and
- * escaping properties that allow for clear and explicit declaration of regex
- * patterns in JSON.
- *
- * Used when a `TestCondition` `operation` is `TestComparisonOperation.EXT_REGEX`.
- * */
-export type EXTRegexExpectation = {
-  pattern: PatternElement[];
-  flags?: string;
-};
-
-/**
- * A regex expectation with a pattern and optional flags.
- *
- * Used when a `TestCondition` `operation` is `TestComparisonOperation.REGEX`.
- * */
-export type RegexExpectation = {
-  pattern: string;
-  flags?: string;
-};
-
-/**
- * Preparation for a test when some setup is required or a class needs to be instantiated.
- * */
-export type TestSetup = {
-  conditions: unknown[];
-  export: string;
-  instantiate?: boolean;
-};
-
-/**
- * The basis for a test.
- * */
-export type BaseTest = {
-  export: string;
-  setup?: TestSetup;
-  conditions: unknown[];
-  expectUndefined?: boolean;
-};
-
-/**
- * A singular test with specific types of expectations for a given operation.
- * */
-export type Test = BaseTest &
-  (
-    | {
-        operation?:
-          | TestComparisonOperation.EQUALS
-          | TestComparisonOperation.NOT_EQUALS;
-        expectation: string | number | boolean | null | undefined;
-      }
-    | {
-        operation:
-          | TestComparisonOperation.IN
-          | TestComparisonOperation.ARRAY_CONTAINS;
-        expectation: unknown[];
-      }
-    | {
-        operation: TestComparisonOperation.BETWEEN;
-        expectation: [number, number];
-      }
-    | {
-        operation: TestComparisonOperation.CONTAINS;
-        expectation: string;
-      }
-    | {
-        operation: TestComparisonOperation.REGEX;
-        expectation: RegexExpectation;
-      }
-    | {
-        operation: TestComparisonOperation.EXT_REGEX;
-        expectation: EXTRegexExpectation;
-      }
-    | {
-        operation: TestComparisonOperation.DEEP_EQUALS;
-        expectation: Record<string, unknown>;
-      }
-    | {
-        operation: TestComparisonOperation.ARRAY_EQUALS;
-        expectation: unknown[];
-      }
-  );
-
-/**
- * A configuration for a test. Designed to be used in JSON for declarative test files.
- * */
-export type TestConfig = {
-  file: string;
-  tests: Test[];
-};
 
 /**
  * A map of comparison functions for each `TestComparisonOperation`.
@@ -252,6 +144,64 @@ export const getSetupInstance = async (
     : await setupFunction(...setup.conditions);
 };
 
+export const getTestFunction = async (
+  testFilePath: string,
+  file: string,
+  targetModule: any,
+  setup: TestSetup | undefined,
+  targetExport: string,
+): Promise<(...args: unknown[]) => Promise<unknown> | unknown> => {
+  if (!targetExport) {
+    throw new Error(`Invalid test export in ${testFilePath}`);
+  }
+
+  const instance = await getSetupInstance(targetModule, setup);
+  const testFunction = instance[targetExport];
+
+  if (typeof testFunction !== "function") {
+    throw new Error(
+      `Export "${targetExport}" from "${file}" is not a function.`,
+    );
+  }
+
+  return testFunction;
+};
+
+/**
+ * Get the test configuration from a test file.
+ * */
+export const getTestConfig = async (
+  testFilePath: string,
+): Promise<TestConfig> => {
+  const testConfig: TestConfig = JSON.parse(
+    await FS.readFile(testFilePath, "utf8"),
+  );
+
+  return testConfig;
+};
+
+/**
+ * Get the target module for testing from a file being tested.
+ * */
+export const getResolvedTestConfig = async (
+  testFilePath: string,
+): Promise<ResolvedTestConfig> => {
+  const { file, tests } = await getTestConfig(testFilePath);
+
+  if (!file) {
+    throw new Error(`Invalid test configuration in ${testFilePath}`);
+  }
+
+  const modulePath = Path.resolve(Path.dirname(testFilePath), file);
+  const targetModule = require(modulePath);
+
+  return {
+    file,
+    targetModule,
+    tests,
+  };
+};
+
 /**
  * Run a test using a test function and a test condition.
  * */
@@ -296,17 +246,8 @@ export const generateTestsForFile = async (
   testFilePath: string,
 ): Promise<void> => {
   try {
-    const testConfig: TestConfig = JSON.parse(
-      await FS.readFile(testFilePath, "utf8"),
-    );
-    const { file, tests } = testConfig;
-
-    if (!file) {
-      throw new Error(`Invalid test configuration in ${testFilePath}`);
-    }
-
-    const modulePath = Path.resolve(Path.dirname(testFilePath), file);
-    const module = require(modulePath);
+    const { file, targetModule, tests } =
+      await getResolvedTestConfig(testFilePath);
 
     console.log(`Generating tests for ${testFilePath}`);
 
@@ -323,45 +264,41 @@ export const generateTestsForFile = async (
         expectUndefined,
       } = test;
 
-      if (!targetExport) {
-        throw new Error(`Invalid test export in ${testFilePath}`);
-      }
-
-      const instance = await getSetupInstance(module, setup);
-      const testFunction = instance[targetExport];
-
-      if (typeof testFunction !== "function") {
-        throw new Error(
-          `Export "${targetExport}" from "${file}" is not a function.`,
-        );
-      }
-
       if (expectation !== undefined || expectUndefined) {
-        generatedTests.push(test); // Skip if expectation already exists
-        continue;
+        // IMPORTANT: Skip if expectation already exists
+        generatedTests.push(test);
+      } else {
+        const testFunction = await getTestFunction(
+          testFilePath,
+          file,
+          targetModule,
+          setup,
+          targetExport,
+        );
+        const result = await testFunction(...conditions);
+
+        console.log(
+          `  Captured expectation for conditions ${JSON.stringify(
+            conditions,
+          )}: ${JSON.stringify(result)}`,
+        );
+        generatedTests.push({
+          ...test,
+          expectation: result,
+          operation: operation || TestComparisonOperation.EQUALS,
+        });
+        hasNewExpectations = true;
       }
-
-      const result = await testFunction(...conditions);
-      console.log(
-        `  Captured expectation for conditions ${JSON.stringify(
-          conditions,
-        )}: ${JSON.stringify(result)}`,
-      );
-
-      generatedTests.push({
-        ...test,
-        expectation: result,
-        operation: operation || TestComparisonOperation.EQUALS,
-      });
-      hasNewExpectations = true;
     }
 
     if (hasNewExpectations) {
-      const updatedTestConfig = { ...testConfig, tests: generatedTests };
+      const updatedTestConfig = { file, tests: generatedTests };
+
       await FS.writeFile(
         testFilePath,
         JSON.stringify(updatedTestConfig, null, 2),
       );
+
       console.log(`Updated test file saved to ${testFilePath}`);
     } else {
       console.log(`No new expectations were generated for ${testFilePath}`);
@@ -382,35 +319,19 @@ export const runTestsForFile = async (
   let failureCount = 0;
 
   try {
-    const testConfig: TestConfig = JSON.parse(
-      await FS.readFile(testFilePath, "utf8"),
-    );
-    const { file, tests } = testConfig;
-
-    if (!file) {
-      throw new Error(`Invalid test configuration in ${testFilePath}`);
-    }
-
-    const modulePath = Path.resolve(Path.dirname(testFilePath), file);
-    const module = require(modulePath);
+    const { targetModule, tests } = await getResolvedTestConfig(testFilePath);
 
     console.log(`Running tests from ${testFilePath}`);
 
     for (const [index, test] of tests.entries()) {
       const { setup, export: targetExport } = test;
-
-      if (!targetExport) {
-        throw new Error(`Invalid test export in ${testFilePath}`);
-      }
-
-      const instance = await getSetupInstance(module, setup);
-      const testFunction = instance[targetExport];
-
-      if (typeof testFunction !== "function") {
-        throw new Error(
-          `Export "${targetExport}" from "${file}" is not a function.`,
-        );
-      }
+      const testFunction = await getTestFunction(
+        testFilePath,
+        targetModule,
+        targetModule,
+        setup,
+        targetExport,
+      );
 
       failureCount += await runTest(testFunction, test, index);
     }
@@ -424,7 +345,7 @@ export const runTestsForFile = async (
 /**
  * Run or generate all of the tests in the specified `testPath` glob.
  * */
-export const runTests = async (
+export const executeTestingCommand = async (
   testPath: string,
   generateMode = false,
 ): Promise<number> => {
@@ -440,10 +361,12 @@ export const runTests = async (
     }
 
     for (const testFile of testFiles) {
+      const resolvedTestFile = Path.resolve(testFile);
+
       if (generateMode) {
-        await generateTestsForFile(Path.resolve(testFile));
+        await generateTestsForFile(resolvedTestFile);
       } else {
-        failureCount += await runTestsForFile(Path.resolve(testFile));
+        failureCount += await runTestsForFile(resolvedTestFile);
       }
     }
 
@@ -454,19 +377,3 @@ export const runTests = async (
 
   return failureCount;
 };
-
-// CLI entry point.
-if (require.main === module) {
-  const args = process.argv.slice(2);
-  const generateMode = args.includes("--generate");
-  const testPath = args.filter((arg) => arg !== "--generate")[0];
-
-  if (!testPath) {
-    console.error("Usage: vest [--generate] <test-directory-path>");
-    process.exit(1);
-  }
-
-  runTests(testPath, generateMode).then((failureCount) => {
-    process.exit(failureCount);
-  });
-}
