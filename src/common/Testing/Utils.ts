@@ -1,4 +1,5 @@
 import {
+  ConditionConfig,
   EXTRegexExpectation,
   PatternElement,
   RegexExpectation,
@@ -7,7 +8,6 @@ import {
   TestComparisonOperation,
   TestConfig,
   TestResults,
-  TestSetup,
 } from "./Types";
 import { promises as FS } from "fs";
 import Path from "path";
@@ -125,42 +125,96 @@ export const compare = (
 };
 
 /**
+ * Get the target module for testing from a file being tested.
+ * */
+export const getResolvedConditions = (
+  testFilePath: string,
+  targetTestIndex: number,
+  targetTestExport: string,
+  conditions: unknown[] | ConditionConfig,
+  isSetup: boolean = false,
+): unknown[] => {
+  if (Array.isArray(conditions)) {
+    return conditions;
+  } else if (typeof conditions === "object" && conditions !== null) {
+    const { file, export: targetConditionExport } =
+      conditions as ConditionConfig;
+    const modulePath = Path.resolve(Path.dirname(testFilePath), file);
+    const targetModule = require(modulePath);
+    const conditionArray = targetModule[targetConditionExport];
+
+    if (Array.isArray(conditionArray)) {
+      return conditionArray;
+    }
+  }
+
+  throw new Error(
+    `Invalid conditions for TEST${
+      isSetup ? " SETUP" : ""
+    } ${targetTestIndex + 1} (${targetTestExport}) in ${testFilePath}`,
+  );
+};
+
+/**
  * Get the target base instance from a module, for a given test setup.
  * */
 export const getSetupInstance = async (
+  testFilePath: string,
+  targetTestIndex: number,
+  targetTestExport: string,
+  test: Test,
   module: any,
-  setup: TestSetup | undefined,
 ): Promise<any> => {
+  const { setup } = test;
+
   if (!setup) return module;
 
-  const setupFunction = module[setup.export];
+  const { conditions: baseConditions, export: targetSetupExport } = setup;
+  const setupFunction = module[targetSetupExport];
+  const conditions = getResolvedConditions(
+    testFilePath,
+    targetTestIndex,
+    targetTestExport,
+    baseConditions,
+    true,
+  );
 
   if (typeof setupFunction !== "function") {
     throw new Error(`Setup export "${setup.export}" is not a function.`);
   }
 
   return setup.instantiate
-    ? new setupFunction(...setup.conditions)
-    : await setupFunction(...setup.conditions);
+    ? new setupFunction(...conditions)
+    : await setupFunction(...conditions);
 };
 
 export const getTestFunction = async (
   testFilePath: string,
   file: string,
+  targetTestIndex: number,
+  test: Test,
   targetModule: any,
-  setup: TestSetup | undefined,
-  targetExport: string,
 ): Promise<(...args: unknown[]) => Promise<unknown> | unknown> => {
+  const { export: targetExport } = test;
+
   if (!targetExport) {
-    throw new Error(`Invalid test export in ${testFilePath}`);
+    throw new Error(
+      `Invalid test export (${targetExport}) for TEST ${targetTestIndex + 1} in ${testFilePath}`,
+    );
   }
 
-  const instance = await getSetupInstance(targetModule, setup);
+  const instance = await getSetupInstance(
+    testFilePath,
+    targetTestIndex,
+    targetExport,
+    test,
+    targetModule,
+  );
   const testFunction = instance[targetExport];
 
   if (typeof testFunction !== "function") {
     throw new Error(
-      `Export "${targetExport}" from "${file}" is not a function.`,
+      `Export "${targetExport}" from "${file}", declared in TEST ${targetTestIndex + 1}, is not a function.`,
     );
   }
 
@@ -236,13 +290,25 @@ export const mergeTestResults = (...results: TestResults[]): TestResults =>
  * Run a test using a test function and a test condition.
  * */
 export const runTest = async (
+  testFilePath: string,
   testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
   test: Test,
   index: number,
   targetExport: string,
   report: (results: TestResults) => void,
 ): Promise<void> => {
-  const { conditions, expectation, operation, expectUndefined } = test;
+  const {
+    conditions: baseConditions,
+    expectation,
+    operation,
+    expectUndefined,
+  } = test;
+  const conditions = getResolvedConditions(
+    testFilePath,
+    index,
+    targetExport,
+    baseConditions,
+  );
 
   try {
     const result = await testFunction(...conditions);
@@ -288,15 +354,22 @@ export const generateTestsForFile = async (
     const generatedTests = [];
     let hasNewExpectations = false;
 
-    for (const test of tests) {
+    for (let i = 0; i < tests.length; i++) {
+      const test = tests[i] as Test;
+
       const {
-        setup,
         export: targetExport,
-        conditions,
+        conditions: baseConditions,
         expectation,
         operation,
         expectUndefined,
       } = test;
+      const conditions = getResolvedConditions(
+        testFilePath,
+        i,
+        targetExport,
+        baseConditions,
+      );
 
       if (expectation !== undefined || expectUndefined) {
         // IMPORTANT: Skip if expectation already exists
@@ -305,9 +378,9 @@ export const generateTestsForFile = async (
         const testFunction = await getTestFunction(
           testFilePath,
           file,
+          i,
+          test,
           targetModule,
-          setup,
-          targetExport,
         );
         const result = await testFunction(...conditions);
 
@@ -358,23 +431,31 @@ export const runTestsForFile = async (
   report: (results: TestResults) => void,
 ): Promise<void> => {
   try {
-    const { targetModule, tests } = await getResolvedTestConfig(testFilePath);
+    const { file, targetModule, tests } =
+      await getResolvedTestConfig(testFilePath);
 
     report({
       messages: [`Running tests from ${testFilePath}`],
     });
 
     for (const [index, test] of tests.entries()) {
-      const { setup, export: targetExport } = test;
+      const { export: targetExport } = test;
       const testFunction = await getTestFunction(
         testFilePath,
+        file,
+        index,
+        test,
         targetModule,
-        targetModule,
-        setup,
-        targetExport,
       );
 
-      await runTest(testFunction, test, index, targetExport, report);
+      await runTest(
+        testFilePath,
+        testFunction,
+        test,
+        index,
+        targetExport,
+        report,
+      );
     }
   } catch (err: any) {
     report({
