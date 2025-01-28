@@ -12,6 +12,15 @@ import {
 import { promises as FS } from "fs";
 import Path from "path";
 
+const stringifyOutput = (value: any): string =>
+  JSON.stringify(
+    value,
+    function (this: any, _key: string, value: any) {
+      return typeof value === "function" ? "[Function]" : value;
+    },
+    2,
+  );
+
 /**
  * A map of comparison functions for each `TestComparisonOperation`.
  * */
@@ -316,30 +325,16 @@ export const runTest = async (
 
     if (passed) {
       report({
-        passes: [
-          `Test ${index + 1} (${targetExport}):
-
-Conditions:
-
-${JSON.stringify(conditions, null, 2)}`,
-        ],
+        passes: [`Test ${index + 1} (${targetExport})`],
       });
     } else {
       report({
         failures: [
           `Test ${index + 1} (${targetExport}):
 
-Conditions:
-
-${JSON.stringify(conditions, null, 2)},
-
-Expectation:
-
-${JSON.stringify(expectation, null, 2)},
-
 Result:
 
-${JSON.stringify(result, null, 2)}`,
+${stringifyOutput(result)}`,
         ],
       });
     }
@@ -347,10 +342,6 @@ ${JSON.stringify(result, null, 2)}`,
     report({
       errors: [
         `Test ${index + 1} (${targetExport}):
-
-Conditions:
-
-${JSON.stringify(conditions, null, 2)},
 
 Error:
 
@@ -412,11 +403,7 @@ export const generateTestsForFile = async (
           generated: [
             `Expectation for TEST ${i + 1} (${targetExport}):
 
-${JSON.stringify(result, null, 2)}
-
-Conditions:
-
-${JSON.stringify(conditions, null, 2)}`,
+${stringifyOutput(result)}`,
           ],
         });
         generatedTests.push({
@@ -444,7 +431,7 @@ ${JSON.stringify(conditions, null, 2)}`,
     }
   } catch (err: any) {
     report({
-      errors: [`Error processing test file ${testFilePath}: ${err.message}`],
+      errors: [`Error processing test file ${testFilePath}:\n\n${err.message}`],
     });
   }
 };
@@ -519,6 +506,6 @@ export const executeTestingCommand = async (
       messages: [completeMessage],
     });
   } catch (err: any) {
-    report({ errors: [`Error running tests: ${err.message}`] });
+    report({ errors: [`Error running tests:\n\n${err.message}`] });
   }
 };
