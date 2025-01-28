@@ -1,7 +1,9 @@
 #!/usr/bin/env ts-node
 
-import { executeTestingCommand } from "./Utils";
+import { executeTestingCommand, mergeTestResults } from "./Utils";
 import fastGlob from "fast-glob";
+import picocolors from "picocolors";
+import { TestResults } from "./Types";
 
 export const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
@@ -21,18 +23,43 @@ export const main = async (): Promise<void> => {
     process.exit(0);
   }
 
-  const {
-    messages = [],
-    passes = [],
-    failures = [],
-    errors = [],
-  } = await executeTestingCommand(testFiles, generateMode);
-  const exitValue = failures.length + errors.length;
+  let results: TestResults = {
+    messages: [],
+    passes: [],
+    failures: [],
+    errors: [],
+  };
 
-  messages.forEach((message) => console.log(message));
-  passes.forEach((pass) => console.log(pass));
-  failures.forEach((failure) => console.error(failure));
-  errors.forEach((error) => console.error(error));
+  await executeTestingCommand(
+    testFiles,
+    generateMode,
+    (latestResults: TestResults) => {
+      const {
+        messages = [],
+        passes = [],
+        failures = [],
+        errors = [],
+      } = latestResults;
+
+      results = mergeTestResults(results, latestResults);
+
+      messages.forEach((message) =>
+        console.log(`${picocolors.blue("MESSAGE:")} ${message}`),
+      );
+      passes.forEach((pass) =>
+        console.log(`${picocolors.green("PASSED:")} ${pass}`),
+      );
+      failures.forEach((failure) =>
+        console.error(`${picocolors.red("FAILED:")} ${failure}`),
+      );
+      errors.forEach((error) =>
+        console.error(`${picocolors.redBright("ERROR:")} ${error}`),
+      );
+    },
+  );
+
+  const { failures = [], errors = [] } = results;
+  const exitValue = failures.length + errors.length;
 
   process.exit(exitValue);
 };
