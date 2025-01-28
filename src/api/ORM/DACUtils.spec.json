@@ -173,6 +173,33 @@
           "id"
         ]
       }
+    },
+    {
+      "export": "getItemTypeDACRole",
+      "conditions": [
+        [
+          "DEMO",
+          "APP"
+        ],
+        "ALL_OPERATIONS",
+        "Contact",
+        "ALLOW"
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "constraints": [
+          {
+            "type": "ALLOW",
+            "pathIsPrefix": true,
+            "resourcePath": [
+              "DEMO",
+              "APP",
+              "ALL_OPERATIONS",
+              "Contact"
+            ]
+          }
+        ]
+      }
     }
   ]
 }
