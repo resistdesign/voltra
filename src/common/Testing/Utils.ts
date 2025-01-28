@@ -6,11 +6,11 @@ import {
   Test,
   TestComparisonOperation,
   TestConfig,
+  TestResults,
   TestSetup,
 } from "./Types";
 import { promises as FS } from "fs";
 import Path from "path";
-import fastGlob from "fast-glob";
 
 /**
  * A map of comparison functions for each `TestComparisonOperation`.
@@ -59,7 +59,7 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
 
         const regexBody = pattern
           .map(({ value, escaped }) => {
-            if (typeof value !== "string") {
+            if (typeof (value as unknown) !== "string") {
               throw new Error(
                 "Each pattern element must have a string 'value'.",
               );
@@ -203,40 +203,65 @@ export const getResolvedTestConfig = async (
 };
 
 /**
+ * Merge multiple test results into a single result.
+ * */
+export const mergeTestResults = (...results: TestResults[]): TestResults =>
+  results.reduce(
+    (
+      {
+        messages: accMessages = [],
+        passes: accPasses = [],
+        failures: accFailures = [],
+        errors: accErrors = [],
+      },
+      { messages = [], passes = [], failures = [], errors = [] },
+    ) => ({
+      messages: [...accMessages, ...messages],
+      passes: [...accPasses, ...passes],
+      failures: [...accFailures, ...failures],
+      errors: [...accErrors, ...errors],
+    }),
+    { messages: [], passes: [], failures: [], errors: [] } as TestResults,
+  );
+
+/**
  * Run a test using a test function and a test condition.
  * */
 export const runTest = async (
   testFunction: (...args: unknown[]) => Promise<unknown> | unknown,
   test: Test,
   index: number,
-): Promise<number> => {
+): Promise<TestResults> => {
   const { conditions, expectation, operation, expectUndefined } = test;
-
-  let failureCount = 0;
+  const passes: string[] = [];
+  const failures: string[] = [];
+  const errors: string[] = [];
 
   try {
     const result = await testFunction(...conditions);
     const passed = expectUndefined || compare(result, expectation, operation);
+
     if (passed) {
-      console.log(
-        `  Test ${index + 1}: PASSED - Conditions: ${JSON.stringify(conditions)}`,
+      passes.push(
+        `Test ${index + 1}: Conditions: ${JSON.stringify(conditions)}`,
       );
     } else {
-      failureCount++;
-
-      console.error(
-        `  Test ${index + 1}: FAILED - Conditions: ${JSON.stringify(conditions)}, Expectation: ${JSON.stringify(expectation)}, Result: ${JSON.stringify(result)}`,
+      failures.push(
+        `Test ${index + 1}: Conditions: ${JSON.stringify(conditions)}, Expectation: ${JSON.stringify(expectation)}, Result: ${JSON.stringify(result)}`,
       );
     }
   } catch (err: any) {
-    failureCount++;
-
-    console.error(
-      `  Test ${index + 1}: ERROR - Conditions: ${JSON.stringify(conditions)}, Error: ${err.message}`,
+    errors.push(
+      `Test ${index + 1}: Conditions: ${JSON.stringify(conditions)}, Error: ${err.message}`,
     );
   }
 
-  return failureCount;
+  return {
+    messages: [],
+    passes,
+    failures,
+    errors,
+  };
 };
 
 /**
@@ -244,12 +269,15 @@ export const runTest = async (
  * */
 export const generateTestsForFile = async (
   testFilePath: string,
-): Promise<void> => {
+): Promise<TestResults> => {
+  const messages: string[] = [];
+  const errors: string[] = [];
+
   try {
     const { file, targetModule, tests } =
       await getResolvedTestConfig(testFilePath);
 
-    console.log(`Generating tests for ${testFilePath}`);
+    messages.push(`Scanned ${testFilePath} for tests to be generated.`);
 
     const generatedTests = [];
     let hasNewExpectations = false;
@@ -277,8 +305,8 @@ export const generateTestsForFile = async (
         );
         const result = await testFunction(...conditions);
 
-        console.log(
-          `  Captured expectation for conditions ${JSON.stringify(
+        messages.push(
+          `Captured expectation for conditions ${JSON.stringify(
             conditions,
           )}: ${JSON.stringify(result)}`,
         );
@@ -299,13 +327,20 @@ export const generateTestsForFile = async (
         JSON.stringify(updatedTestConfig, null, 2),
       );
 
-      console.log(`Updated test file saved to ${testFilePath}`);
+      messages.push(`Updated test file saved to ${testFilePath}`);
     } else {
-      console.log(`No new expectations were generated for ${testFilePath}`);
+      messages.push(`No new expectations were generated for ${testFilePath}`);
     }
   } catch (err: any) {
-    console.error(`Error processing test file ${testFilePath}: ${err.message}`);
+    errors.push(`Error processing test file ${testFilePath}: ${err.message}`);
   }
+
+  return {
+    messages,
+    passes: [],
+    failures: [],
+    errors,
+  };
 };
 
 /**
@@ -315,13 +350,18 @@ export const generateTestsForFile = async (
  * */
 export const runTestsForFile = async (
   testFilePath: string,
-): Promise<number> => {
-  let failureCount = 0;
+): Promise<TestResults> => {
+  let results: TestResults = {
+    messages: [],
+    passes: [],
+    failures: [],
+    errors: [],
+  };
 
   try {
     const { targetModule, tests } = await getResolvedTestConfig(testFilePath);
 
-    console.log(`Running tests from ${testFilePath}`);
+    results.messages.push(`Running tests from ${testFilePath}`);
 
     for (const [index, test] of tests.entries()) {
       const { setup, export: targetExport } = test;
@@ -333,47 +373,55 @@ export const runTestsForFile = async (
         targetExport,
       );
 
-      failureCount += await runTest(testFunction, test, index);
+      results = mergeTestResults(
+        results,
+        await runTest(testFunction, test, index),
+      );
     }
   } catch (err: any) {
-    console.error(`Error processing test file ${testFilePath}: ${err.message}`);
+    results.errors.push(
+      `Error processing test file ${testFilePath}: ${err.message}`,
+    );
   }
 
-  return failureCount;
+  return results;
 };
 
 /**
  * Run or generate all of the tests in the specified `testPath` glob.
  * */
 export const executeTestingCommand = async (
-  testPath: string,
+  testFiles: string[],
   generateMode = false,
-): Promise<number> => {
-  let failureCount = 0;
+): Promise<TestResults> => {
+  let results: TestResults = {
+    messages: [],
+    passes: [],
+    failures: [],
+    errors: [],
+  };
 
   try {
-    const testFiles = await fastGlob(testPath);
-
-    if (testFiles.length === 0) {
-      console.warn(`No test files found in ${testPath}`);
-
-      return failureCount;
-    }
-
     for (const testFile of testFiles) {
       const resolvedTestFile = Path.resolve(testFile);
 
       if (generateMode) {
-        await generateTestsForFile(resolvedTestFile);
+        results = mergeTestResults(
+          results,
+          await generateTestsForFile(resolvedTestFile),
+        );
       } else {
-        failureCount += await runTestsForFile(resolvedTestFile);
+        results = mergeTestResults(
+          results,
+          await runTestsForFile(resolvedTestFile),
+        );
       }
     }
 
-    console.log("Testing complete.");
+    results.messages.push("Testing complete.");
   } catch (err: any) {
-    console.error(`Error running tests: ${err.message}`);
+    results.errors.push(`Error running tests: ${err.message}`);
   }
 
-  return failureCount;
+  return results;
 };
