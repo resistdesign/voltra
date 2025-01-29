@@ -336,16 +336,11 @@ export class DynamoDBDataItemDBDriver<
       },
       ExpressionAttributeValues,
     };
-    const foundItems: ItemType[] = [];
-
-    let itemsPerPageQuotaMet = false,
-      notEnoughItemsToFillPage = false,
-      itemExists = false,
-      nextCursor: ScanCommandInput["ExclusiveStartKey"] = undefined;
+    let structuredCursor: ScanCommandInput["ExclusiveStartKey"] = undefined;
 
     if (!checkExistence && typeof cursor === "string") {
       try {
-        nextCursor = marshall(JSON.parse(cursor));
+        structuredCursor = marshall(JSON.parse(cursor));
       } catch (error) {
         throw {
           message: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
@@ -354,70 +349,27 @@ export class DynamoDBDataItemDBDriver<
       }
     }
 
-    // TODO: Move this kind of logic up to the ORM.
-    while (
-      itemsPerPage > 0 &&
-      !itemsPerPageQuotaMet &&
-      !notEnoughItemsToFillPage &&
-      !itemExists
-    ) {
-      // IMPORTANT: Loop until end is reach or `itemsPerPage` is reached.
-      //   -Use the `cursor` when ACCUMULATING ENOUGH items while looping ^.
-      const command = new ScanCommand({
-        ...params,
-        ExclusiveStartKey: nextCursor,
-        // NO REASON to exceed the `itemsPerPage` limit. AND... this makes it so that if there is a `nextCursor`, then THERE IS a `nextCursor`.
-        Limit: itemsPerPage - foundItems.length,
-      });
-      const {
-        Items,
-        Count = 0,
-        LastEvaluatedKey,
-      }: ScanCommandOutput = await this.dynamoDBClient.send(command);
-
-      // IMPORTANT: Set the `nextCursor`.
-      nextCursor = LastEvaluatedKey;
-
-      // IMPORTANT: Handle existence checks.
-      if (checkExistence) {
-        itemExists = Count > 0;
-        nextCursor = undefined;
-      } else if (Items) {
-        for (const Item of Items) {
-          const unmarshalledItem = unmarshall(Item) as ItemType;
-
-          if (!itemsPerPageQuotaMet) {
-            foundItems.push(unmarshalledItem as ItemType);
-            itemsPerPageQuotaMet = foundItems.length == itemsPerPage;
-
-            if (itemsPerPageQuotaMet) {
-              break;
-            }
-          }
-        }
-      } else {
-        notEnoughItemsToFillPage = true;
-        nextCursor = undefined;
-      }
-
-      // IMPORTANT: DO NOT keep looping if there will never be enough items to fill the page.
-      if (
-        !LastEvaluatedKey &&
-        !(checkExistence ? itemExists : itemsPerPageQuotaMet)
-      ) {
-        notEnoughItemsToFillPage = true;
-      }
-    }
+    const command = new ScanCommand({
+      ...params,
+      ExclusiveStartKey: structuredCursor,
+      Limit: itemsPerPage,
+    });
+    const {
+      Items = [],
+      Count = 0,
+      LastEvaluatedKey,
+    }: ScanCommandOutput = await this.dynamoDBClient.send(command);
+    const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
 
     // Sort the items.
-    const sortedItems = getSortedItems(sortFields, foundItems);
+    const sortedItems = getSortedItems(sortFields, unmarshalledItems);
 
     return checkExistence
-      ? itemExists
+      ? Count > 0
       : {
           items: sortedItems as ItemType[],
-          cursor: nextCursor
-            ? JSON.stringify(unmarshall(nextCursor))
+          cursor: LastEvaluatedKey
+            ? JSON.stringify(unmarshall(LastEvaluatedKey))
             : undefined,
         };
   };
