@@ -202,14 +202,12 @@ export class S3FileItemDBDriver
       cursor,
       sortFields = [],
       criteria,
-      checkExistence,
     } = config;
     const { files: baseFileList = [], cursor: newCursor } =
       await this.s3FileDriver.listFiles(
         undefined,
         tableName,
-        // TODO: Check existence could give a false result if the files exist beyond the first page.
-        checkExistence ? 100 : itemsPerPage,
+        itemsPerPage,
         cursor,
       );
     const currentFileItems = baseFileList.map((bF) => ({
@@ -224,32 +222,27 @@ export class S3FileItemDBDriver
           currentFileItems,
         ) as BaseFileItem[])
       : currentFileItems;
+    const expandedFiles: Partial<BaseFileItem>[] = [];
 
-    if (checkExistence) {
-      return filteredFiles.length > 0;
-    } else {
-      const expandedFiles: Partial<BaseFileItem>[] = [];
-
-      for (const fF of filteredFiles) {
-        expandedFiles.push({
-          ...fF,
-          uploadUrl: selectFields?.includes("uploadUrl")
-            ? await this.s3FileDriver.getFileUploadUrl(fF, tableName)
-            : undefined,
-          downloadUrl: selectFields?.includes("downloadUrl")
-            ? await this.s3FileDriver.getFileDownloadUrl(fF, tableName)
-            : undefined,
-        } as Partial<BaseFileItem>);
-      }
-
-      return {
-        items: getSortedItems(
-          sortFields,
-          expandedFiles,
-        ) as Partial<BaseFileItem>[],
-        cursor: newCursor,
-      };
+    for (const fF of filteredFiles) {
+      expandedFiles.push({
+        ...fF,
+        uploadUrl: selectFields?.includes("uploadUrl")
+          ? await this.s3FileDriver.getFileUploadUrl(fF, tableName)
+          : undefined,
+        downloadUrl: selectFields?.includes("downloadUrl")
+          ? await this.s3FileDriver.getFileDownloadUrl(fF, tableName)
+          : undefined,
+      } as Partial<BaseFileItem>);
     }
+
+    return {
+      items: getSortedItems(
+        sortFields,
+        expandedFiles,
+      ) as Partial<BaseFileItem>[],
+      cursor: newCursor,
+    };
   };
 }
 
