@@ -86,7 +86,7 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     );
   };
 
-  deletedRelationship = async (
+  deleteRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
   ): Promise<DeleteRelationshipResults> => {
     return await this.makeRequest(

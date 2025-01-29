@@ -85,7 +85,7 @@ export type TypeInfoORMAPI = {
   createRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
   ) => Promise<boolean>;
-  deletedRelationship: (
+  deleteRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
   ) => Promise<DeleteRelationshipResults>;
   listRelationships: (

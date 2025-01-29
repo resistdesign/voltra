@@ -114,9 +114,9 @@ export type TypeInfoORMDACConfig = {
 };
 
 /**
- * The configuration for the TypeInfoORMService.
+ * The basis for the configuration for the TypeInfoORMService.
  * */
-export type TypeInfoORMServiceConfig = {
+export type BaseTypeInfoORMServiceConfig = {
   typeInfoMap: TypeInfoMap;
   getDriver: (typeName: string) => DataItemDBDriver<any, any>;
   getRelationshipDriver: (
@@ -127,7 +127,12 @@ export type TypeInfoORMServiceConfig = {
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
   customValidators?: CustomTypeInfoFieldValidatorMap;
-} & (
+};
+
+/**
+ * The configuration for the TypeInfoORMService, including DAC features.
+ * */
+export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig & (
   | {
       useDAC: true;
       dacConfig: TypeInfoORMDACConfig;
@@ -588,7 +593,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Delete a relationship between two items.
    * */
-  deletedRelationship = async (
+  deleteRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
   ): Promise<DeleteRelationshipResults> => {
     this.validateRelationshipItem(relationshipItem);
