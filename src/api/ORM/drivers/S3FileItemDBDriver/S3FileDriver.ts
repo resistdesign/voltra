@@ -16,8 +16,8 @@ import {
   BaseFile,
   BaseFileLocationInfo,
   CloudFileServiceDriver,
-} from "../../ORM/drivers/Types";
-import { getPathArray } from "../../../common/Routing";
+} from "../Types";
+import { getPathArray } from "../../../../common/Routing";
 
 export const S3_FILE_DRIVER_ERRORS = {
   INVALID_PATH: "INVALID_PATH",

@@ -9,7 +9,7 @@ import {
   getBaseFileLocationInfo,
   getFullFileKey,
   S3FileDriver,
-} from "../../FS/drivers";
+} from "./S3FileItemDBDriver/S3FileDriver";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
@@ -28,7 +28,6 @@ import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
-import { removeUnselectedFieldsFromDataItem } from "../../../common/TypeParsing/Utils";
 
 export type BaseFileItem = {
   id: string;
@@ -126,12 +125,8 @@ export class S3FileItemDBDriver
             ? await this.s3FileDriver.getFileDownloadUrl(itemLoc, tableName)
             : undefined,
       };
-      const itemWithOnlySelectedFields = removeUnselectedFieldsFromDataItem(
-        item,
-        selectFields,
-      ) as Partial<BaseFileItem>;
 
-      return itemWithOnlySelectedFields;
+      return item;
     }
   };
 
@@ -209,62 +204,50 @@ export class S3FileItemDBDriver
       criteria,
       checkExistence,
     } = config;
-    const filteredFiles: Partial<BaseFileItem>[] = [];
-
-    let initiatedListing: boolean = false,
-      nextCursor: string | undefined = undefined;
-
-    // TODO: Move this kind of logic up to the ORM.
-    while (
-      (checkExistence || filteredFiles.length < itemsPerPage) &&
-      (!initiatedListing || nextCursor)
-    ) {
-      const { files: baseFileList = [], cursor: newCursor } =
-        await this.s3FileDriver.listFiles(
-          undefined,
-          tableName,
-          checkExistence ? 100 : itemsPerPage - filteredFiles.length,
-          cursor,
-        );
-      const currentFileItems = baseFileList.map((bF) => ({
-        id: getFullFileKey({
-          file: bF,
-        }),
-        ...bF,
-      }));
-      const newFilteredFiles = criteria
-        ? (getFilterTypeInfoDataItemsBySearchCriteria(
-            criteria,
-            currentFileItems,
-          ) as BaseFileItem[])
-        : currentFileItems;
-      nextCursor = newCursor;
-
-      initiatedListing = true;
-
-      if (checkExistence && newFilteredFiles.length > 0) {
-        break;
-      }
-
-      for (const nFF of newFilteredFiles) {
-        filteredFiles.push({
-          ...removeUnselectedFieldsFromDataItem(nFF, selectFields),
-          uploadUrl: selectFields?.includes("uploadUrl")
-            ? await this.s3FileDriver.getFileUploadUrl(nFF, tableName)
-            : undefined,
-          downloadUrl: selectFields?.includes("downloadUrl")
-            ? await this.s3FileDriver.getFileDownloadUrl(nFF, tableName)
-            : undefined,
-        } as Partial<BaseFileItem>);
-      }
-    }
+    const { files: baseFileList = [], cursor: newCursor } =
+      await this.s3FileDriver.listFiles(
+        undefined,
+        tableName,
+        // TODO: Check existence could give a false result if the files exist beyond the first page.
+        checkExistence ? 100 : itemsPerPage,
+        cursor,
+      );
+    const currentFileItems = baseFileList.map((bF) => ({
+      id: getFullFileKey({
+        file: bF,
+      }),
+      ...bF,
+    }));
+    const filteredFiles = criteria
+      ? (getFilterTypeInfoDataItemsBySearchCriteria(
+          criteria,
+          currentFileItems,
+        ) as BaseFileItem[])
+      : currentFileItems;
 
     if (checkExistence) {
       return filteredFiles.length > 0;
     } else {
+      const expandedFiles: Partial<BaseFileItem>[] = [];
+
+      for (const fF of filteredFiles) {
+        expandedFiles.push({
+          ...fF,
+          uploadUrl: selectFields?.includes("uploadUrl")
+            ? await this.s3FileDriver.getFileUploadUrl(fF, tableName)
+            : undefined,
+          downloadUrl: selectFields?.includes("downloadUrl")
+            ? await this.s3FileDriver.getFileDownloadUrl(fF, tableName)
+            : undefined,
+        } as Partial<BaseFileItem>);
+      }
+
       return {
-        items: getSortedItems(sortFields, filteredFiles) as BaseFileItem[],
-        cursor: nextCursor,
+        items: getSortedItems(
+          sortFields,
+          expandedFiles,
+        ) as Partial<BaseFileItem>[],
+        cursor: newCursor,
       };
     }
   };
