@@ -161,10 +161,10 @@ export * as App from "./app";
  *   .applyPack(
  *     addDNS,
  *     {
- *       hostedZoneIdParameterName: "<YOUR_INFO_HERE>"
- *       domainNameParameterName: "<YOUR_INFO_HERE>"
- *       localUIDevelopmentDomainName: "<YOUR_INFO_HERE>"
- *       localUIDevelopmentIPAddress: "<YOUR_INFO_HERE>"
+ *       hostedZoneIdParameterName: "<YOUR_INFO_HERE>",
+ *       domainNameParameterName: "<YOUR_INFO_HERE>",
+ *       localUIDevelopmentDomainName: "<YOUR_INFO_HERE>",
+ *       localUIDevelopmentIPAddress: "<YOUR_INFO_HERE>",
  *     }
  *   );
  *
