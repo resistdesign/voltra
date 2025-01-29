@@ -717,9 +717,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       }
 
       return {
-            items: revisedItems,
-            cursor: nextCursor,
-          };
+        items: revisedItems,
+        cursor: nextCursor,
+      };
     } else {
       return results as boolean | ListItemsResults<ItemRelationshipInfo>;
     }
@@ -984,10 +984,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             }
           : undefined,
         (item: Partial<TypeInfoDataItem>): Partial<TypeInfoDataItem> => {
+          const fieldsResources: Record<string, DACAccessResult> | undefined =
+            fieldsResourcesCache[fieldsResourcesCache.length - 1];
+
           return this.getCleanItem(
             typeName,
             item,
-            fieldsResourcesCache[fieldsResourcesCache.length - 1],
+            fieldsResources,
             cleanSelectedFields,
           );
         },
