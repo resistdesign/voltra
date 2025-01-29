@@ -642,7 +642,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             },
           ],
         },
-        checkExistence: false,
       })) as ListItemsResults<ItemRelationshipInfo>;
 
       for (const item of itemList) {
@@ -674,10 +673,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       fromTypeName,
       fromTypeFieldName,
     );
-    const { checkExistence = false } = remainingConfig;
     const results = await driver.listItems({
       ...remainingConfig,
-      checkExistence: useDAC ? false : checkExistence,
       criteria: {
         logicalOperator: LogicalOperators.AND,
         fieldCriteria: [
@@ -719,9 +716,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         }
       }
 
-      return checkExistence
-        ? revisedItems.length > 0
-        : {
+      return {
             items: revisedItems,
             cursor: nextCursor,
           };
@@ -947,7 +942,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
-  ): Promise<boolean | ListItemsResults<Partial<TypeInfoDataItem>>> => {
+  ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> => {
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
       selectedFields,
@@ -956,7 +951,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const { typeInfoMap, useDAC } = this.config;
     const { fields: {} = {} } = this.getTypeInfo(typeName);
-    const { criteria, checkExistence } = config;
+    const { criteria } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
       typeName,

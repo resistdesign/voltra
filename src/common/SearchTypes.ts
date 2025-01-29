@@ -92,28 +92,19 @@ export type PagingInfo = {
 };
 
 /**
- * The information for checking the existence of items.
- * */
-export type ItemsExistenceInfo = {
-  checkExistence?: boolean | undefined;
-};
-
-/**
  * The configuration for listing and searching for items.
  * */
-export type ListItemsConfig = PagingInfo &
-  ItemsExistenceInfo & {
-    criteria?: SearchCriteria;
-    sortFields?: SortField[];
-  };
+export type ListItemsConfig = PagingInfo & {
+  criteria?: SearchCriteria;
+  sortFields?: SortField[];
+};
 
 /**
  * A configuration for listing relationships.
  * */
-export type ListRelationshipsConfig = PagingInfo &
-  ItemsExistenceInfo & {
-    relationshipItemOrigin: ItemRelationshipOriginItemInfo;
-  };
+export type ListRelationshipsConfig = PagingInfo & {
+  relationshipItemOrigin: ItemRelationshipOriginItemInfo;
+};
 
 /**
  * The results from a request to list relationships.

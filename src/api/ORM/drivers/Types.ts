@@ -57,7 +57,7 @@ export type DataItemDBDriver<
   listItems: (
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
-  ) => Promise<boolean | ListItemsResults<Partial<ItemType>>>;
+  ) => Promise<ListItemsResults<Partial<ItemType>>>;
 };
 
 /**
