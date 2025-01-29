@@ -59,6 +59,7 @@ import {
   getItemRelationshipDACResourcePath,
   mergeDACDataItemResourceAccessResultMaps,
 } from "./DACUtils";
+import { satisfyItemsPerPage } from "./ListItemUtils";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -409,7 +410,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected getCleanItem = (
     typeName: string,
     item: Partial<TypeInfoDataItem>,
-    dacFieldResources: Partial<Record<keyof TypeInfoDataItem, DACAccessResult>>,
+    dacFieldResources?: Partial<
+      Record<keyof TypeInfoDataItem, DACAccessResult>
+    >,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): Partial<TypeInfoDataItem> => {
     const typeInfo = this.getTypeInfo(typeName);
@@ -424,23 +427,28 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       ),
       cleanSelectedFields,
     );
-    const cleanItem: Partial<TypeInfoDataItem> = {};
 
-    for (const fN in itemCleanedByTypeInfo) {
-      const fR = dacFieldResources[fN];
+    if (dacFieldResources) {
+      const itemCleanedByDAC: Partial<TypeInfoDataItem> = {};
 
-      if (fR) {
-        const { allowed, denied } = fR;
+      for (const fN in itemCleanedByTypeInfo) {
+        const fR = dacFieldResources[fN];
 
-        if (allowed && !denied) {
-          cleanItem[fN] = itemCleanedByTypeInfo[fN];
+        if (fR) {
+          const { allowed, denied } = fR;
+
+          if (allowed && !denied) {
+            itemCleanedByDAC[fN] = itemCleanedByTypeInfo[fN];
+          }
+        } else {
+          itemCleanedByDAC[fN] = itemCleanedByTypeInfo[fN];
         }
-      } else {
-        cleanItem[fN] = itemCleanedByTypeInfo[fN];
       }
-    }
 
-    return cleanItem;
+      return itemCleanedByDAC;
+    } else {
+      return itemCleanedByTypeInfo;
+    }
   };
 
   protected getCleanSelectedFields = (
@@ -959,58 +967,39 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { valid: searchFieldsValid } = searchFieldValidationResults;
 
     if (searchFieldsValid) {
-      // TODO: Satisfy `itemsPerPage` here instead of in the drivers.
       const driver = this.getDriverInternal(typeName);
-      const results = await driver.listItems(
-        {
-          ...config,
-          // SECURITY: We need to run the items through DAC before we expose their existence.
-          checkExistence: useDAC ? false : checkExistence,
+      const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
+      const results = await satisfyItemsPerPage(
+        driver,
+        config,
+        useDAC
+          ? (item: Partial<TypeInfoDataItem>): boolean => {
+              const {
+                allowed: readAllowed,
+                denied: readDenied,
+                fieldsResources = {},
+              } = this.getItemDACValidation(item, typeName, TypeOperation.READ);
+              const listDenied = readDenied || !readAllowed;
+
+              if (!listDenied) {
+                fieldsResourcesCache.push(fieldsResources);
+              }
+
+              return !listDenied;
+            }
+          : undefined,
+        (item: Partial<TypeInfoDataItem>): Partial<TypeInfoDataItem> => {
+          return this.getCleanItem(
+            typeName,
+            item,
+            fieldsResourcesCache[fieldsResourcesCache.length - 1],
+            cleanSelectedFields,
+          );
         },
-        // SECURITY: Dac validation could fail when item is missing unselected fields.
-        // CANNOT pass selected fields to driver when DAC is enabled.
-        useDAC ? undefined : cleanSelectedFields,
+        cleanSelectedFields,
       );
 
-      if (useDAC) {
-        const { items = [], cursor: nextCursor } = results as ListItemsResults<
-          Partial<TypeInfoDataItem>
-        >;
-        const revisedItems: Partial<TypeInfoDataItem>[] = [];
-
-        for (const rItm of items) {
-          const {
-            allowed: readAllowed,
-            denied: readDenied,
-            fieldsResources = {},
-          } = this.getItemDACValidation(rItm, typeName, TypeOperation.READ);
-          const listDenied = readDenied || !readAllowed;
-
-          if (!listDenied) {
-            revisedItems.push(
-              this.getCleanItem(
-                typeName,
-                rItm,
-                fieldsResources,
-                cleanSelectedFields,
-              ),
-            );
-
-            if (checkExistence) {
-              break;
-            }
-          }
-        }
-
-        return checkExistence
-          ? revisedItems.length > 0
-          : {
-              items: revisedItems,
-              cursor: nextCursor,
-            };
-      } else {
-        return results;
-      }
+      return results;
     } else {
       throw searchFieldValidationResults;
     }
