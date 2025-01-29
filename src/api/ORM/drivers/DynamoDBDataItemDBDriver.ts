@@ -354,6 +354,7 @@ export class DynamoDBDataItemDBDriver<
       }
     }
 
+    // TODO: Move this kind of logic up to the ORM.
     while (
       itemsPerPage > 0 &&
       !itemsPerPageQuotaMet &&
