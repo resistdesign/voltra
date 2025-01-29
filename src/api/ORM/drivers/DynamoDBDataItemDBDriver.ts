@@ -300,7 +300,7 @@ export class DynamoDBDataItemDBDriver<
   public listItems = async (
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
-  ): Promise<boolean | ListItemsResults<ItemType>> => {
+  ): Promise<ListItemsResults<ItemType>> => {
     const { tableName } = this.config;
     const {
       itemsPerPage = 10,
@@ -310,7 +310,6 @@ export class DynamoDBDataItemDBDriver<
         logicalOperator = LogicalOperators.AND,
         fieldCriteria = [],
       } = {} as SearchCriteria,
-      checkExistence = false,
     } = config;
     const {
       ProjectionExpression,
@@ -323,12 +322,11 @@ export class DynamoDBDataItemDBDriver<
     } = createFilterExpression(fieldCriteria, logicalOperator);
     const params: ScanCommandInput = {
       TableName: tableName,
-      Select: checkExistence
-        ? "COUNT"
-        : selectedFields && selectedFields.length > 0
+      Select:
+        selectedFields && selectedFields.length > 0
           ? "SPECIFIC_ATTRIBUTES"
           : "ALL_ATTRIBUTES",
-      ProjectionExpression: checkExistence ? undefined : ProjectionExpression,
+      ProjectionExpression: ProjectionExpression,
       FilterExpression,
       ExpressionAttributeNames: {
         ...selectFieldParamsAttributeNames,
@@ -338,7 +336,7 @@ export class DynamoDBDataItemDBDriver<
     };
     let structuredCursor: ScanCommandInput["ExclusiveStartKey"] = undefined;
 
-    if (!checkExistence && typeof cursor === "string") {
+    if (typeof cursor === "string") {
       try {
         structuredCursor = marshall(JSON.parse(cursor));
       } catch (error) {
@@ -354,24 +352,19 @@ export class DynamoDBDataItemDBDriver<
       ExclusiveStartKey: structuredCursor,
       Limit: itemsPerPage,
     });
-    const {
-      Items = [],
-      Count = 0,
-      LastEvaluatedKey,
-    }: ScanCommandOutput = await this.dynamoDBClient.send(command);
+    const { Items = [], LastEvaluatedKey }: ScanCommandOutput =
+      await this.dynamoDBClient.send(command);
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
 
     // Sort the items.
     const sortedItems = getSortedItems(sortFields, unmarshalledItems);
 
-    return checkExistence
-      ? Count > 0
-      : {
-          items: sortedItems as ItemType[],
-          cursor: LastEvaluatedKey
-            ? JSON.stringify(unmarshall(LastEvaluatedKey))
-            : undefined,
-        };
+    return {
+      items: sortedItems as ItemType[],
+      cursor: LastEvaluatedKey
+        ? JSON.stringify(unmarshall(LastEvaluatedKey))
+        : undefined,
+    };
   };
 }
 
