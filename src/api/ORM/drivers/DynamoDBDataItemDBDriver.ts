@@ -15,7 +15,6 @@ import {
   ScanCommandOutput,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { ListItemsConfig, ListItemsResults } from "../../../common";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import {
@@ -25,6 +24,8 @@ import {
 import {
   ComparisonOperators,
   FieldCriterion,
+  ListItemsConfig,
+  ListItemsResults,
   LogicalOperators,
   SearchCriteria,
 } from "../../../common/SearchTypes";

@@ -2,7 +2,7 @@ import { TypeInfoValidationResults } from "../TypeParsing/Validation";
 import {
   ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
-} from "../index";
+} from "../ItemRelationshipInfoTypes";
 
 export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
   INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",

@@ -1,13 +1,19 @@
-import {DeleteRelationshipResults, TypeInfoORMAPI, TypeInfoORMAPIRoutePaths,} from "../../common/TypeInfoORM";
-import {sendServiceRequest, ServiceConfig} from "./Service";
-import {TypeInfoDataItem} from "../../common/TypeParsing/TypeInfo";
 import {
-  BaseItemRelationshipInfo,
-  ItemRelationshipInfo,
+  DeleteRelationshipResults,
+  TypeInfoORMAPI,
+  TypeInfoORMAPIRoutePaths,
+} from "../../common/TypeInfoORM";
+import { sendServiceRequest, ServiceConfig } from "./Service";
+import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
+import {
   ListItemsConfig,
   ListItemsResults,
   ListRelationshipsConfig,
-} from "../../common";
+} from "../../common/SearchTypes";
+import {
+  BaseItemRelationshipInfo,
+  ItemRelationshipInfo,
+} from "../../common/ItemRelationshipInfoTypes";
 
 /**
  * A client for a TypeInfoORM API or service.
@@ -64,7 +70,7 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   list = async (
     typeName: string,
     config: ListItemsConfig,
-  ): Promise<boolean | ListItemsResults<TypeInfoDataItem>> => {
+  ): Promise<ListItemsResults<TypeInfoDataItem>> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST, [
       typeName,
       config,

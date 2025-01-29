@@ -1,7 +1,9 @@
 import { PagingControlsConfig } from "./Types";
-import { PagingInfo } from "../../../../../common";
 import { useCallback, useMemo } from "react";
-import { StandardExpandedPagingCursor } from "../../../../../common/SearchTypes";
+import {
+  PagingInfo,
+  StandardExpandedPagingCursor,
+} from "../../../../../common/SearchTypes";
 
 export const getStandardExpandedPagingCursor = (
   cursor?: string,
