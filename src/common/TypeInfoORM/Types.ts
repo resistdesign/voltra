@@ -103,5 +103,5 @@ export type TypeInfoORMAPI = {
   list: (
     typeName: string,
     config: ListItemsConfig,
-  ) => Promise<boolean | ListItemsResults<Partial<TypeInfoDataItem>>>;
+  ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 };

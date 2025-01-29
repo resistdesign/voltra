@@ -14,50 +14,43 @@ export const satisfyItemsPerPage = async (
   filter?: (item: Partial<TypeInfoDataItem>) => boolean,
   transform?: (item: Partial<TypeInfoDataItem>) => Partial<TypeInfoDataItem>,
   selectedFields?: (keyof TypeInfoDataItem)[],
-): Promise<boolean | ListItemsResults<Partial<TypeInfoDataItem>>> => {
-  const { itemsPerPage = 1, checkExistence, cursor: initialCursor } = config;
+): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> => {
+  const { itemsPerPage = 1, cursor: initialCursor } = config;
 
-  if (checkExistence && !filter) {
-    return await driver.listItems(config, selectedFields);
-  } else {
-    const filteredItems: Partial<TypeInfoDataItem>[] = [];
+  const filteredItems: Partial<TypeInfoDataItem>[] = [];
 
-    let nextCursor: string | undefined = initialCursor,
-      itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
+  let nextCursor: string | undefined = initialCursor,
+    itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
 
-    while (!itemsPerPageSatisfied && nextCursor) {
-      const { items = [], cursor: newCursor } = (await driver.listItems(
-        {
-          ...config,
-          cursor: nextCursor,
-          checkExistence: false,
-        },
-        filter ? undefined : selectedFields,
-      )) as ListItemsResults<Partial<TypeInfoDataItem>>;
+  while (!itemsPerPageSatisfied && nextCursor) {
+    const { items = [], cursor: newCursor } = (await driver.listItems(
+      {
+        ...config,
+        cursor: nextCursor,
+      },
+      filter ? undefined : selectedFields,
+    )) as ListItemsResults<Partial<TypeInfoDataItem>>;
 
-      nextCursor = newCursor;
+    nextCursor = newCursor;
 
-      for (const itm of items) {
-        const includeItem = filter ? filter(itm) : true;
+    for (const itm of items) {
+      const includeItem = filter ? filter(itm) : true;
 
-        if (includeItem) {
-          const transformedItem = transform ? transform(itm) : itm;
+      if (includeItem) {
+        const transformedItem = transform ? transform(itm) : itm;
 
-          filteredItems.push(transformedItem);
-          itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
+        filteredItems.push(transformedItem);
+        itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
 
-          if (itemsPerPageSatisfied) {
-            break;
-          }
+        if (itemsPerPageSatisfied) {
+          break;
         }
       }
     }
-
-    return checkExistence
-      ? filteredItems.length > 0
-      : {
-          items: filteredItems,
-          cursor: itemsPerPageSatisfied ? nextCursor : undefined,
-        };
   }
+
+  return {
+    items: filteredItems,
+    cursor: itemsPerPageSatisfied ? nextCursor : undefined,
+  };
 };
