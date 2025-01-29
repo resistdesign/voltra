@@ -1,7 +1,8 @@
 import { FC, useCallback, useMemo } from "react";
 import {
   SupportedFieldTags,
-  TypeInfo, TypeInfoDataItem,
+  TypeInfo,
+  TypeInfoDataItem,
   TypeInfoField,
   TypeInfoMap,
 } from "../../../../../common/TypeParsing/TypeInfo";
@@ -10,9 +11,9 @@ import {
   CheckedState,
   PartiallySelectableCheckbox,
 } from "../../../Basic/PartiallySelectableCheckbox";
-import { SortField } from "../../../../../common";
 import { HeaderCell } from "./ObjectTable/HeaderCell";
 import { ItemRow } from "./ObjectTable/ItemRow";
+import { SortField } from "../../../../../common/SearchTypes";
 
 export type ObjectTableProps = {
   typeInfoMap: TypeInfoMap;

@@ -1,13 +1,12 @@
 import {
-  ItemRelationshipInfo,
-  ListItemsConfig,
-  ListItemsResults,
-} from "../../../common";
-import {
   TypeInfoDataItem,
   TypeInfoPack,
 } from "../../../common/TypeParsing/TypeInfo";
-import { ItemRelationshipInfoIdentifyingKeys } from "../../../common/ItemRelationshipInfo";
+import {
+  ItemRelationshipInfo,
+  ItemRelationshipInfoIdentifyingKeys,
+} from "../../../common/ItemRelationshipInfoTypes";
+import { ListItemsConfig, ListItemsResults } from "../../../common/SearchTypes";
 
 /**
  * The errors that can be thrown by a {@link DataItemDBDriver}.

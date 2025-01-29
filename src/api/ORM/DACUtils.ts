@@ -20,7 +20,7 @@ import {
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipOriginInfo,
-} from "../../common";
+} from "../../common/ItemRelationshipInfoTypes";
 
 /**
  * Get the DAC Resource Path for a given operation performed using an ORM with the given DAC prefix.

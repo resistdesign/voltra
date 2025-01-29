@@ -1,6 +1,6 @@
 import { DataItemDBDriver } from "./drivers";
-import { ListItemsConfig, ListItemsResults } from "../../common";
 import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
+import { ListItemsConfig, ListItemsResults } from "../../common/SearchTypes";
 
 /**
  * Make sure that a full page of items is either returned or considered when

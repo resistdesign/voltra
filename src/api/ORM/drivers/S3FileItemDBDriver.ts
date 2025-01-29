@@ -23,11 +23,11 @@ import {
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
 } from "./Types";
-import { ListItemsConfig } from "../../../common";
 import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+import { ListItemsConfig } from "../../../common/SearchTypes";
 
 export type BaseFileItem = {
   id: string;

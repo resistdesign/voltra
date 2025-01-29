@@ -1,7 +1,7 @@
 import {
   ItemRelationshipInfo,
   ItemRelationshipOriginItemInfo,
-} from "./ItemRelationshipInfo";
+} from "./ItemRelationshipInfoTypes";
 
 /**
  * The logical operators for a search criteria.

@@ -6,7 +6,7 @@ import {
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
-} from "../ItemRelationshipInfo";
+} from "../ItemRelationshipInfoTypes";
 import { TypeInfoDataItem, TypeOperation } from "../TypeParsing/TypeInfo";
 
 /**

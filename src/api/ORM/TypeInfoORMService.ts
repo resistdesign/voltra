@@ -23,13 +23,6 @@ import {
   SearchCriteria,
 } from "../../common/SearchTypes";
 import { validateSearchFields } from "../../common/SearchValidation";
-import {
-  BaseItemRelationshipInfo,
-  ItemRelationshipInfo,
-  ItemRelationshipInfoKeys,
-  ItemRelationshipInfoType,
-  ItemRelationshipOriginatingItemInfo,
-} from "../../common";
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
   DeleteRelationshipResults,
@@ -46,7 +39,14 @@ import {
   removeTypeReferenceFieldsFromSelectedFields,
   removeUnselectedFieldsFromDataItem,
 } from "../../common/TypeParsing/Utils";
-import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfo";
+import {
+  BaseItemRelationshipInfo,
+  ItemRelationshipInfo,
+  ItemRelationshipInfoIdentifyingKeys,
+  ItemRelationshipInfoKeys,
+  ItemRelationshipInfoType,
+  ItemRelationshipOriginatingItemInfo,
+} from "../../common/ItemRelationshipInfoTypes";
 import {
   DACAccessResult,
   DACDataItemResourceAccessResultMap,

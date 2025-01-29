@@ -8,7 +8,7 @@ import {
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
-} from "../../../common";
+} from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
   LIST = "LIST",
