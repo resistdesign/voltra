@@ -5,7 +5,11 @@ import {
   S3,
   S3ClientConfig,
 } from "@aws-sdk/client-s3";
-import { getBaseFileLocationInfo, getFullFileKey, S3FileDriver } from "../../FS/drivers";
+import {
+  getBaseFileLocationInfo,
+  getFullFileKey,
+  S3FileDriver,
+} from "../../FS/drivers";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
@@ -210,6 +214,7 @@ export class S3FileItemDBDriver
     let initiatedListing: boolean = false,
       nextCursor: string | undefined = undefined;
 
+    // TODO: Move this kind of logic up to the ORM.
     while (
       (checkExistence || filteredFiles.length < itemsPerPage) &&
       (!initiatedListing || nextCursor)
