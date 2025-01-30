@@ -70,10 +70,12 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   list = async (
     typeName: string,
     config: ListItemsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
   ): Promise<ListItemsResults<TypeInfoDataItem>> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST, [
       typeName,
       config,
+      selectedFields,
     ]);
   };
 

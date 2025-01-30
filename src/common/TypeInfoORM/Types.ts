@@ -103,5 +103,6 @@ export type TypeInfoORMAPI = {
   list: (
     typeName: string,
     config: ListItemsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 };
