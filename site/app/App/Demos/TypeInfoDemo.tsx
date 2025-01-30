@@ -76,7 +76,7 @@
 //   /**
 //   * @label Dietary Restrictions
 //   */
-//   dietaryRestrictions: "Vegan" | "Vegitarian" | "Pescatarian" | "Keto" | "Paleo" | "None";
+//   dietaryRestrictions: "Vegan" | "Vegetarian" | "Pescatarian" | "Keto" | "Paleo" | "None";
 // };
 // `;
 // const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
