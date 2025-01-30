@@ -1,5 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
+/**
+ * Examines the changes in the dependencies of a hook.
+ * */
 export const useDebugDependencies = (dependencies: any[]) => {
   const firstRender = useRef(true);
   const prevDeps = useRef(dependencies);
@@ -20,7 +23,7 @@ export const useDebugDependencies = (dependencies: any[]) => {
       .filter((dep) => dep !== null);
 
     if (changedDeps.length > 0) {
-      console.log('Changed dependencies:', changedDeps);
+      console.log("Changed dependencies:", changedDeps);
     }
 
     prevDeps.current = dependencies;
