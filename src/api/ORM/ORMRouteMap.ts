@@ -2,7 +2,7 @@ import {
   BaseTypeInfoORMServiceConfig,
   TypeInfoORMDACConfig,
   TypeInfoORMService,
-  TypeInfoORMServiceConfig,
+  TypeInfoORMServiceDACOptions,
 } from "./TypeInfoORMService";
 import {
   AuthInfo,
@@ -13,11 +13,13 @@ import {
 } from "../Router/Types";
 import { addRouteToRouteMap } from "../Router";
 import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
+import { DACRole } from "../DataAccessControl";
 
 /**
  * A collection of errors that can occur when creating or using a Type Info ORM Route Map.
  * */
 export enum TYPE_INFO_ORM_ROUTE_MAP_ERRORS {
+  MISSING_ACCESSING_ROLE = "MISSING_ACCESSING_ROLE",
   MISSING_ACCESSING_ROLE_GETTER = "MISSING_ACCESSING_ROLE_GETTER",
 }
 
@@ -44,7 +46,7 @@ export const TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP: Record<
 export const getTypeInfoORMRouteMap = (
   config: BaseTypeInfoORMServiceConfig,
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
-  getAccessingRole?: (authInfo: AuthInfo) => string,
+  getAccessingRole?: (authInfo: AuthInfo) => DACRole,
 ) => {
   if (dacConfig && !getAccessingRole) {
     throw {
@@ -60,21 +62,29 @@ export const getTypeInfoORMRouteMap = (
         ? getAccessingRole(authInfo)
         : undefined;
 
-      const dacOptions = dacConfig
-        ? {
-            useDAC: true,
-            dacConfig: {
-              ...dacConfig,
-              accessingRole,
-            },
-          }
-        : { useDAC: false };
-      const orm = new TypeInfoORMService({
-        ...config,
-        ...dacOptions,
-      } as TypeInfoORMServiceConfig);
+      if (dacConfig && !accessingRole) {
+        throw {
+          message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE,
+        };
+      } else {
+        const dacOptions: TypeInfoORMServiceDACOptions = dacConfig
+          ? {
+              useDAC: true,
+              dacConfig: {
+                ...dacConfig,
+                accessingRole: accessingRole as DACRole,
+              },
+            }
+          : {
+              useDAC: false,
+            };
+        const orm = new TypeInfoORMService({
+          ...config,
+          ...dacOptions,
+        });
 
-      return orm[methodName];
+        return orm[methodName];
+      }
     };
     const getRoute = (
       path: string,
