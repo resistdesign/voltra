@@ -130,17 +130,22 @@ export type BaseTypeInfoORMServiceConfig = {
 };
 
 /**
- * The configuration for the TypeInfoORMService, including DAC features.
+ * The options determining the usage of DAC features in a {@link TypeInfoORMServiceConfig}.
  * */
-export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig & (
+export type TypeInfoORMServiceDACOptions =
   | {
       useDAC: true;
       dacConfig: TypeInfoORMDACConfig;
     }
   | {
       useDAC: false;
-    }
-);
+    };
+
+/**
+ * The configuration for the TypeInfoORMService, including DAC features.
+ * */
+export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
+  TypeInfoORMServiceDACOptions;
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
