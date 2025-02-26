@@ -57,7 +57,7 @@
     "aws-sdk": "^2.1545.0",
     "buffer": "^5.5.0||^6.0.0",
     "cfn-response": "^1.0.1",
-    "parcel": "^2.12.0",
+    "parcel": "^2.13.3",
     "prettier": "^3.1.1",
     "process": "^0.11.10",
     "react-dom": "^18.3.1",
