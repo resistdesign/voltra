@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { ObjectSelector } from "./Inputs/ObjectSelector";
 import { getInputType } from "./InputTypeMapUtils";
 import {
@@ -45,33 +45,44 @@ export const TypeInfoInput: FC<TypeInfoInputProps> = ({
     tags = {},
   } = typeInfoField;
   const { label = "", allowCustomSelection, customType, hidden } = tags;
+  const InputComponent = useMemo(() => {
+    if (!hidden && !(ignoreTypeReferences && typeReference)) {
+      const isSelect = possibleValues.length > 0;
+      return typeReference
+        ? ObjectSelector
+        : getInputType(
+            fieldType,
+            array,
+            isSelect,
+            allowCustomSelection,
+            customType,
+            customInputTypeMap,
+          );
+    }
+  }, [
+    fieldType,
+    array,
+    possibleValues,
+    typeReference,
+    allowCustomSelection,
+    customType,
+    customInputTypeMap,
+    hidden,
+    ignoreTypeReferences,
+  ]);
 
-  if (!hidden && !(ignoreTypeReferences && typeReference)) {
-    const isSelect = possibleValues.length > 0;
-    const InputComponent = typeReference
-      ? ObjectSelector
-      : getInputType(
-          fieldType,
-          array,
-          isSelect,
-          allowCustomSelection,
-          customType,
-          customInputTypeMap,
-        );
-
-    return InputComponent ? (
-      <label>
-        <LabelText>{label}&nbsp;</LabelText>
-        <InputComponent
-          nameOrIndex={nameOrIndex}
-          typeInfoField={typeInfoField}
-          value={fieldValue}
-          onChange={onChange}
-          options={tags}
-          onNavigateToType={onNavigateToType}
-        />
-        <LabelText>&nbsp;{label}</LabelText>
-      </label>
-    ) : undefined;
-  }
+  return InputComponent ? (
+    <label>
+      <LabelText>{label}&nbsp;</LabelText>
+      <InputComponent
+        nameOrIndex={nameOrIndex}
+        typeInfoField={typeInfoField}
+        value={fieldValue}
+        onChange={onChange}
+        options={tags}
+        onNavigateToType={onNavigateToType}
+      />
+      <LabelText>&nbsp;{label}</LabelText>
+    </label>
+  ) : undefined;
 };
