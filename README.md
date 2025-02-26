@@ -1,6 +1,6 @@
 # Voltra
 
-![Voltra Gem Logo 2024 Square.png](https://docs.voltra.app/images/Voltra%20Gem%20Logo%202024%20Square.png "Voltra")
+![Voltra Logo Inverse 2025.svg](https://docs.voltra.app/images/Voltra%20Logo%20Inverse%202025.svg "Voltra")
 
 <style>
 
@@ -40,7 +40,7 @@ features like chainable stacks and comprehensive parameter support. Its intuitiv
 databases, storage, authentication, and functions through easy-to-use packs. Furthermore, Voltra enhances development
 workflows with advanced state management, and a smart, lightweight routing system for React
 front-end apps.</td>
-<td><img src="https://docs.voltra.app/images/crystal-mountain.png" style="width: 200em;" /></td>
+<td><img src="https://docs.voltra.app/images/Voltra%20Robot%20Coming%20Together.png" style="width: 200em;" /></td>
 </tr>
 </tbody>
 </table>
