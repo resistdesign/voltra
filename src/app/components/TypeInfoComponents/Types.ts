@@ -19,8 +19,8 @@ export type TypeNavigation = Omit<
   BaseItemRelationshipInfo,
   "toTypePrimaryFieldValue"
 > & {
-  mode: TypeNavigationMode;
   operation: TypeOperation;
+  mode: TypeNavigationMode;
 };
 
 export type NameOrIndex = string | number;
