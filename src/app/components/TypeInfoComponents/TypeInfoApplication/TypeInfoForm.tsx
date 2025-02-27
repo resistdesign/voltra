@@ -14,7 +14,6 @@ import {
   TypeNavigationMode,
 } from "../Types";
 import {
-  LiteralValue,
   TypeInfo,
   TypeInfoDataItem,
   TypeOperation,
@@ -130,13 +129,11 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
       {Object.keys(fields).map((fieldName) => {
         const field = fields[fieldName];
 
-        // TODO: IMPORTANT: Consider Object `fieldValue`s.
-
         return (
           <TypeInfoInput
             key={fieldName}
             typeInfoField={field}
-            fieldValue={internalValue[fieldName] as LiteralValue}
+            fieldValue={internalValue[fieldName]}
             nameOrIndex={fieldName}
             onChange={onFieldChange}
             onNavigateToType={onNavigateToTypeForField}
