@@ -91,4 +91,10 @@ export type TypeInfoPack = {
 /**
  * An actual data item described by type info.
  * */
-export type TypeInfoDataItem = Record<string, LiteralValue | LiteralValue[]>;
+export type TypeInfoDataItem = {
+  [fieldName: string]:
+    | LiteralValue
+    | LiteralValue[]
+    | TypeInfoDataItem
+    | TypeInfoDataItem[];
+};

@@ -4,7 +4,10 @@ import {
   TypeInfoDataStructure,
   TypeNavigationMode,
 } from "../../../../src/app/components";
-import { TypeInfoMap } from "../../../../src/common/TypeParsing/TypeInfo";
+import {
+  TypeInfoMap,
+  TypeOperation,
+} from "../../../../src/common/TypeParsing/TypeInfo";
 import { getTypeInfoMapFromTypeScript } from "../../../../src/common/TypeParsing";
 
 const DEMO_TS = `
@@ -82,7 +85,31 @@ export type Person = PersistableItem & {
 const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
 
 export const TypeInfoDemo: FC = () => {
-  const [value, setValue] = useState<TypeInfoDataStructure>({});
+  const [value, setValue] = useState<TypeInfoDataStructure>({
+    Person: {
+      CREATE: {},
+      READ: {},
+      UPDATE: {
+        first_item: {
+          id: "first_item",
+          firstName: "Velma",
+          lastName: "Vortex",
+          age: 27,
+          phoneNumber: "987-654-3210",
+          email: "velma.v@vexington.view",
+          car: {
+            id: "first_car",
+            make: "",
+            model: "",
+            year: "",
+          },
+          likesCheese: true,
+          dietaryRestrictions: "Keto",
+        },
+      },
+      DELETE: {},
+    },
+  });
   // const [relationshipInfo, setRelationshipInfo] = useState<ItemRelationshipInfoStructure>({});
 
   console.log("Structure:", value);
@@ -94,6 +121,8 @@ export const TypeInfoDemo: FC = () => {
       value={value}
       onChange={setValue}
       mode={TypeNavigationMode.FORM}
+      operation={TypeOperation.UPDATE}
+      primaryKeyValue={"first_item"}
     />
   );
 };
