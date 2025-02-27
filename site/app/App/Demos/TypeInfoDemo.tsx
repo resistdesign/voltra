@@ -111,9 +111,6 @@ export const TypeInfoDemo: FC = () => {
           age: 27,
           phoneNumber: "+1 (987) 654-3210",
           email: "velma.v@vexington.view",
-          car: {
-            id: "first_car",
-          },
           likesCheese: true,
           dietaryRestrictions: "Keto",
         },
