@@ -53,7 +53,7 @@ export type Person = PersistableItem & {
   * @constraints.step 0.5
   * @constraints.min 18.0
   * @constraints.max 150.0
-  * @constraints.pattern \\d*\\.\\d+
+  * @constraints.pattern \\d+
   */
   age: number;
   /**
@@ -108,7 +108,7 @@ export const TypeInfoDemo: FC = () => {
           firstName: "Velma",
           lastName: "Vortex",
           age: 27,
-          phoneNumber: "987-654-3210",
+          phoneNumber: "+1 (987) 654-3210",
           email: "velma.v@vexington.view",
           car: {
             id: "first_car",
