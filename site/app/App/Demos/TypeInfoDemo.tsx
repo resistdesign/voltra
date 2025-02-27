@@ -86,6 +86,19 @@ const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
 
 export const TypeInfoDemo: FC = () => {
   const [value, setValue] = useState<TypeInfoDataStructure>({
+    Car: {
+      CREATE: {},
+      READ: {},
+      UPDATE: {
+        first_car: {
+          id: "first_car",
+          make: "Voxel",
+          model: "Vibrant",
+          year: "2100",
+        },
+      },
+      DELETE: {},
+    },
     Person: {
       CREATE: {},
       READ: {},
@@ -99,9 +112,6 @@ export const TypeInfoDemo: FC = () => {
           email: "velma.v@vexington.view",
           car: {
             id: "first_car",
-            make: "",
-            model: "",
-            year: "",
           },
           likesCheese: true,
           dietaryRestrictions: "Keto",
