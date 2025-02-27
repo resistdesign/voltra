@@ -49,6 +49,7 @@ export type Person = PersistableItem & {
   lastName: string;
   /**
   * @label Age
+  * @format number 
   * @constraints.defaultValue "18.0"
   * @constraints.step 0.5
   * @constraints.min 18.0
