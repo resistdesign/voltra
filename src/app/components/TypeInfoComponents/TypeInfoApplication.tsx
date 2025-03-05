@@ -147,31 +147,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
     [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
   );
-  // const editing = useMemo<boolean>(
-  //   () =>
-  //     currentOperation === TypeOperation.CREATE ||
-  //     currentOperation === TypeOperation.UPDATE,
-  //   [currentOperation],
-  // );
-  // const selectable = useMemo<boolean>(() => {
-  //   const {
-  //     tags: {
-  //       deniedOperations: {
-  //         [currentOperation]: fromOperationDenied = false,
-  //       } = {},
-  //     } = {},
-  //     fields: { [currentFromTypeFieldName]: fromTypeInfoField = {} } = {},
-  //   } = currentFromTypeInfo;
-  //   const {
-  //     tags: {
-  //       deniedOperations: {
-  //         [currentOperation]: fromFieldOperationDenied = false,
-  //       } = {},
-  //     } = {},
-  //   }: Partial<TypeInfoField> = fromTypeInfoField;
-  //
-  //   return editing && !fromOperationDenied && !fromFieldOperationDenied;
-  // }, []);
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
       if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {

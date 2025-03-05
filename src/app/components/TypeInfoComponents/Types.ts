@@ -11,8 +11,9 @@ import {
 } from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
-  LIST = "LIST",
   FORM = "FORM",
+  RELATED_ITEMS = "RELATED_ITEMS",
+  SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
 export type TypeNavigation = Omit<
