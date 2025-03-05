@@ -57,7 +57,7 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
             fromTypePrimaryFieldValue: itemPrimaryFieldValue,
             fromTypeFieldName: fieldName,
             // TODO: Calculate `mode` based on being an array and the operation???
-            mode: TypeNavigationMode.LIST,
+            mode: TypeNavigationMode.RELATED_ITEMS,
             operation: TypeOperation.READ,
           } as TypeNavigation)
         : undefined;

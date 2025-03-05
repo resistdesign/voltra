@@ -104,7 +104,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
           fromTypeName: typeInfoName,
           fromTypePrimaryFieldValue: `${primaryFieldValue}`,
           fromTypeFieldName: `${nameOrIndex}`,
-          mode: TypeNavigationMode.LIST,
+          mode: TypeNavigationMode.RELATED_ITEMS,
           operation,
         });
       }
