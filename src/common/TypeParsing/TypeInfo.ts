@@ -17,8 +17,17 @@ export type DeniedOperations = Partial<Record<TypeOperation, boolean>>;
  * Voltra supported `TypeInfo` tags.
  * */
 export type SupportedTags = Partial<{
+  /**
+   * The human-readable label for the type.
+   * */
   label: string;
+  /**
+   * Operations that will be denied at the type level.
+   * */
   deniedOperations: DeniedOperations;
+  /**
+   * Whether a pagination UI should enable full paging or just expect cursor-based paging.
+   * */
   fullPaging: boolean;
 }>;
 
@@ -26,19 +35,59 @@ export type SupportedTags = Partial<{
  * Voltra supported `TypeInfoField` tags.
  * */
 export type SupportedFieldTags = Partial<{
+  /**
+   * Is this field the primary (uniquely identifying) field for the type?
+   * */
   primaryField: boolean;
+  /**
+   * The human-readable label for the field.
+   * */
   label: string;
+  /**
+   * The format or "type" for the field inout.
+   * Example: "number", "email", "tel", etc.
+   * */
   format: string;
+  /**
+   * Allows a custom entry in a select input.
+   * */
   allowCustomSelection: boolean;
+  /**
+   * A custom type name used to process the field value with custom validators and/or other custom application features.
+   * */
   customType: string;
+  /**
+   * Whether this field is displayed in forms, information displays, lists, etc.
+   * */
   hidden: boolean;
+  /**
+   * A set of constraints for the field value.
+   * */
   constraints: Partial<{
+    /**
+     * The default value for the field.
+     */
     defaultValue: any;
+    /**
+     * The step increment for the field.
+     * */
     step: number;
+    /**
+     * The minimum value for the field.
+     * */
     min: number;
+    /**
+     * The maximum value for the field.
+     * */
     max: number;
+    /**
+     * A regex pattern used to validate the field value.
+     * */
     pattern: string;
   }>;
+  /**
+   * Operations that will be denied at the field level.
+   * */
   deniedOperations: DeniedOperations;
 }>;
 
