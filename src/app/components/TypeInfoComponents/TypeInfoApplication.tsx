@@ -14,8 +14,6 @@ import {
   TypeNavigation,
   TypeNavigationMode,
 } from "./Types";
-// import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
-// import { SearchCriteria } from "../../../common/SearchTypes";
 import { isValidTypeNavigation } from "./TypeNavigationUtils";
 
 export type OperationMode = Exclude<TypeOperation, TypeOperation.DELETE>;
@@ -31,15 +29,7 @@ export type TypeInfoApplicationProps = {
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataStructure;
   onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
-  // relationshipInfo: ItemRelationshipInfoStructure;
-  // onRelationshipInfoChange: (
-  //   relationshipInfo: ItemRelationshipInfoStructure,
-  // ) => void;
   mode: TypeNavigationMode;
-  // TODO: Rework search.
-  // searchCriteria: SearchCriteria;
-  // onSearchCriteriaChange: (searchCriteria: SearchCriteria) => void;
-  // searchResults: TypeInfoDataItem[];
 } & (
   | {
       operation: UpdateOperationMode;
@@ -60,24 +50,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   customInputTypeMap,
   value,
   onChange,
-  // relationshipInfo,
-  // onRelationshipInfoChange,
   mode = TypeNavigationMode.FORM,
   operation = TypeOperation.CREATE,
   primaryKeyValue,
-  // searchCriteria,
-  // onSearchCriteriaChange,
-  // searchResults,
 }) => {
-  // TODO: FEATURES:
-  //  - Type Navigation
-  //  - Object Search
-  //  - Object Creation
-  //  - Object Deletion
-  //    - Delete Relationships???
-  //  - Object Relationships (CRUD + List/Check)
-  //    - Object Selection
-  //  - Item/Form Editing
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
       fromTypeName: typeInfoName,
@@ -102,7 +78,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName: currentFromTypeName,
     fromTypePrimaryFieldValue: currentFromTypePrimaryFieldValue,
     fromTypeFieldName: currentFromTypeFieldName,
-    mode: currentMode,
     operation: currentOperation,
   } = currentTypeNavigation;
   const currentFromTypeInfo = useMemo<TypeInfo>(
@@ -192,9 +167,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     ],
   );
 
-  // TODO: Object selection and saving relationship info.
-
-  return currentMode === TypeNavigationMode.FORM ? (
+  return (
     <TypeInfoForm
       typeInfoName={toTypeInfoName}
       typeInfo={toTypeInfo}
@@ -205,19 +178,5 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
-  ) : // <ObjectSearch
-  //   typeInfoMap={typeInfoMap}
-  //   typeInfoName={toTypeInfoName}
-  //   typeInfo={toTypeInfo}
-  //   listItemsConfig={}
-  //   onListItemsConfigChange={}
-  //   listItemsResults={}
-  //   listRelationshipsConfig={}
-  //   onListRelationshipsConfigChange={}
-  //   listRelationshipsResults={}
-  //   onNavigateToType={onNavigateToType}
-  //   customInputTypeMap={}
-  //   selectable={selectable}
-  // />
-  undefined;
+  );
 };
