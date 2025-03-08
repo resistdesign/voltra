@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from "react";
+import { FC, useCallback } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfoDataItem,
@@ -7,8 +7,6 @@ import {
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
-  TypeDataStateMap,
-  TypeInfoDataMap,
   TypeInfoDataStructure,
   TypeNavigation,
   TypeNavigationMode,
@@ -22,7 +20,8 @@ import {
   useBaseTypeNavigation,
   useTypeNavHistory,
 } from "./TypeInfoApplication/TypeNavUtils";
-import { useTypeInfoState } from "./TypeInfoStateUtils";
+import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
+import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -92,18 +91,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     currentFromTypeFieldName,
   });
-  const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
-    () => baseValue[toTypeInfoName],
-    [baseValue, toTypeInfoName],
-  );
-  const currentTypeInfoDataMap = useMemo<TypeInfoDataMap>(
-    () => currentTypeDataStateMap[currentOperation],
-    [currentTypeDataStateMap, currentOperation],
-  );
-  const currentDataItem = useMemo<TypeInfoDataItem>(
-    () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
-    [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
-  );
+  const { currentTypeDataStateMap, currentTypeInfoDataMap, currentDataItem } =
+    useTypeInfoDataStore({
+      baseValue,
+      toTypeInfoName,
+      currentOperation,
+      currentFromTypePrimaryFieldValue,
+    });
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
       if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
