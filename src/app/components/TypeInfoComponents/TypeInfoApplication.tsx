@@ -1,7 +1,6 @@
 import { FC, useCallback, useMemo } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
-  TypeInfo,
   TypeInfoDataItem,
   TypeInfoMap,
   TypeOperation,
@@ -23,6 +22,7 @@ import {
   useBaseTypeNavigation,
   useTypeNavHistory,
 } from "./TypeInfoApplication/TypeNavUtils";
+import { useTypeInfoState } from "./TypeInfoStateUtils";
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -74,10 +74,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseMode,
     baseOperation,
   });
-  const baseTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[baseTypeInfoName],
-    [typeInfoMap, baseTypeInfoName],
-  );
   const {
     // TODO: Use `navHistory`,
     setNavHistory,
@@ -89,36 +85,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   } = useTypeNavHistory({
     baseTypeNavigation,
   });
-  const currentFromTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[currentFromTypeName],
-    [typeInfoMap, currentFromTypeName],
-  );
-  const toTypeInfoName = useMemo<string>(() => {
-    let typeName = baseTypeInfoName;
-
-    if (relationshipMode) {
-      const {
-        fields: {
-          [currentFromTypeFieldName]: { typeReference = undefined } = {},
-        } = {},
-      } = currentFromTypeInfo;
-
-      if (typeof typeReference === "string") {
-        typeName = typeReference;
-      }
-    }
-
-    return typeName;
-  }, [
+  const { toTypeInfoName, toTypeInfo } = useTypeInfoState({
+    typeInfoMap,
     baseTypeInfoName,
+    currentFromTypeName,
     relationshipMode,
     currentFromTypeFieldName,
-    currentFromTypeInfo,
-  ]);
-  const toTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[toTypeInfoName],
-    [typeInfoMap, toTypeInfoName, baseTypeInfo],
-  );
+  });
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
     () => baseValue[toTypeInfoName],
     [baseValue, toTypeInfoName],
