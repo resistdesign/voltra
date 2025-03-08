@@ -8,10 +8,8 @@ import {
 import {
   InputComponent,
   TypeInfoDataStructure,
-  TypeNavigation,
   TypeNavigationMode,
 } from "./Types";
-import { isValidTypeNavigation } from "./TypeNavigationUtils";
 import {
   NonUpdateOperationMode,
   UpdateOperationMode,
@@ -74,15 +72,16 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseOperation,
   });
   const {
-    // TODO: Use `navHistory`,
-    setNavHistory,
     relationshipMode,
     currentFromTypeName,
     currentFromTypePrimaryFieldValue,
     currentFromTypeFieldName,
     currentOperation,
+    onNavigateToType,
+    onCloseCurrentNavHistoryItem,
   } = useTypeNavHistory({
     baseTypeNavigation,
+    typeInfoMap,
   });
   const { toTypeInfoName, toTypeInfo } = useTypeInfoState({
     typeInfoMap,
@@ -98,27 +97,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       currentOperation,
       currentFromTypePrimaryFieldValue,
     });
-  const onNavigateToType = useCallback(
-    (typeNavigation: TypeNavigation) => {
-      if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
-        setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
-      }
-    },
-    [typeInfoMap, typeInfoMap],
-  );
-  const onCloseCurrentNavHistoryItem = useCallback(() => {
-    setNavHistory((prevNavHistory) => {
-      if (prevNavHistory.length > 0) {
-        const [_currentNavHistoryItem, ...restNavHistory] = [
-          ...prevNavHistory,
-        ].reverse();
-
-        return restNavHistory.reverse();
-      } else {
-        return prevNavHistory;
-      }
-    });
-  }, []);
   const onCurrentDataItemChange = useCallback(
     (newDataItem: TypeInfoDataItem) => {
       onBaseValueChange({

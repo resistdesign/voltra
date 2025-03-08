@@ -1,7 +1,11 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { TypeNavigation, TypeNavigationMode } from "../Types";
 import { NonUpdateOperationMode, UpdateOperationMode } from "./Types";
-import { TypeOperation } from "../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfoMap,
+  TypeOperation,
+} from "../../../../common/TypeParsing/TypeInfo";
+import { isValidTypeNavigation } from "../TypeNavigationUtils";
 
 export const useBaseTypeNavigation = <BaseOperationType extends TypeOperation>({
   baseTypeInfoName,
@@ -32,8 +36,10 @@ export const useBaseTypeNavigation = <BaseOperationType extends TypeOperation>({
 
 export const useTypeNavHistory = ({
   baseTypeNavigation,
+  typeInfoMap,
 }: {
   baseTypeNavigation: TypeNavigation;
+  typeInfoMap: TypeInfoMap;
 }) => {
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const relationshipMode = navHistory.length > 0;
@@ -47,14 +53,35 @@ export const useTypeNavHistory = ({
     fromTypeFieldName: currentFromTypeFieldName,
     operation: currentOperation,
   } = currentTypeNavigation;
+  const onNavigateToType = useCallback(
+    (typeNavigation: TypeNavigation) => {
+      if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
+        setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
+      }
+    },
+    [typeInfoMap],
+  );
+  const onCloseCurrentNavHistoryItem = useCallback(() => {
+    setNavHistory((prevNavHistory) => {
+      if (prevNavHistory.length > 0) {
+        const [_currentNavHistoryItem, ...restNavHistory] = [
+          ...prevNavHistory,
+        ].reverse();
+
+        return restNavHistory.reverse();
+      } else {
+        return prevNavHistory;
+      }
+    });
+  }, []);
 
   return {
-    navHistory,
-    setNavHistory,
     relationshipMode,
     currentFromTypeName,
     currentFromTypePrimaryFieldValue,
     currentFromTypeFieldName,
     currentOperation,
+    onNavigateToType,
+    onCloseCurrentNavHistoryItem,
   };
 };
