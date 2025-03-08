@@ -15,13 +15,11 @@ import {
   TypeNavigationMode,
 } from "./Types";
 import { isValidTypeNavigation } from "./TypeNavigationUtils";
-
-export type OperationMode = Exclude<TypeOperation, TypeOperation.DELETE>;
-export type UpdateOperationMode = TypeOperation.UPDATE;
-export type NonUpdateOperationMode = Exclude<
-  OperationMode,
-  UpdateOperationMode
->;
+import {
+  NonUpdateOperationMode,
+  UpdateOperationMode,
+} from "./TypeInfoApplication/Types";
+import { useBaseTypeNavigation } from "./TypeInfoApplication/TypeNavUtils";
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -32,12 +30,12 @@ export type TypeInfoApplicationProps = {
   baseMode: TypeNavigationMode;
 } & (
   | {
-      baseOperation: UpdateOperationMode;
-      basePrimaryKeyValue: string;
-    }
-  | {
       baseOperation?: NonUpdateOperationMode;
       basePrimaryKeyValue?: string;
+    }
+  | {
+      baseOperation: UpdateOperationMode;
+      basePrimaryKeyValue: string;
     }
 );
 
@@ -67,16 +65,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   //     - Type Info Service Client Map?
   //       - Or we could just maintain the [Type Info Data Store] and allow the implementation to call services???
 
-  const baseTypeNavigation = useMemo<TypeNavigation>(
-    () => ({
-      fromTypeName: baseTypeInfoName,
-      fromTypePrimaryFieldValue: `${basePrimaryKeyValue}`,
-      fromTypeFieldName: "",
-      mode: baseMode,
-      operation: baseOperation,
-    }),
-    [baseTypeInfoName, basePrimaryKeyValue, baseMode, baseOperation],
-  );
+  const baseTypeNavigation = useBaseTypeNavigation({
+    baseTypeInfoName,
+    basePrimaryKeyValue,
+    baseMode,
+    baseOperation,
+  });
   const baseTypeInfo = useMemo<TypeInfo>(
     () => typeInfoMap[baseTypeInfoName],
     [typeInfoMap, baseTypeInfoName],
