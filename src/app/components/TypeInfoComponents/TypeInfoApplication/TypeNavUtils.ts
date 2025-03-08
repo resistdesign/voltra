@@ -34,13 +34,29 @@ export const useBaseTypeNavigation = <BaseOperationType extends TypeOperation>({
   );
 };
 
-export const useTypeNavHistory = ({
-  baseTypeNavigation,
+export const useTypeNavHistory = <BaseOperationType extends TypeOperation>({
   typeInfoMap,
+  baseTypeInfoName,
+  baseMode,
+  baseOperation,
+  basePrimaryKeyValue,
 }: {
-  baseTypeNavigation: TypeNavigation;
   typeInfoMap: TypeInfoMap;
+  baseTypeInfoName: string;
+  baseMode: TypeNavigationMode;
+  baseOperation: BaseOperationType extends UpdateOperationMode
+    ? UpdateOperationMode
+    : NonUpdateOperationMode | undefined;
+  basePrimaryKeyValue: BaseOperationType extends UpdateOperationMode
+    ? string
+    : string | undefined;
 }) => {
+  const baseTypeNavigation = useBaseTypeNavigation({
+    baseTypeInfoName,
+    basePrimaryKeyValue,
+    baseMode,
+    baseOperation,
+  });
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const relationshipMode = navHistory.length > 0;
   const currentTypeNavigation = useMemo<TypeNavigation>(

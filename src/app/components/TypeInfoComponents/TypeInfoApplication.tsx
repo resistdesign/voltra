@@ -13,10 +13,7 @@ import {
   NonUpdateOperationMode,
   UpdateOperationMode,
 } from "./TypeInfoApplication/Types";
-import {
-  useBaseTypeNavigation,
-  useTypeNavHistory,
-} from "./TypeInfoApplication/TypeNavUtils";
+import { useTypeNavHistory } from "./TypeInfoApplication/TypeNavUtils";
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
 
@@ -63,13 +60,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   //     - Using Nav History to determine when/if/how to Store/Update/Manage Item Relationships
   //     - Type Info Service Client Map?
   //       - Or we could just maintain the [Type Info Data Store] and allow the implementation to call services???
-
-  const baseTypeNavigation = useBaseTypeNavigation({
-    baseTypeInfoName,
-    basePrimaryKeyValue,
-    baseMode,
-    baseOperation,
-  });
   const {
     relationshipMode,
     currentFromTypeName,
@@ -79,8 +69,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
   } = useTypeNavHistory({
-    baseTypeNavigation,
     typeInfoMap,
+    baseTypeInfoName,
+    baseMode,
+    baseOperation,
+    basePrimaryKeyValue,
   });
   const { toTypeInfoName, toTypeInfo } = useTypeInfoState({
     typeInfoMap,
