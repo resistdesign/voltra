@@ -16,6 +16,16 @@ export enum TypeNavigationMode {
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
+// TODO: We need to support the following scenarios:
+//  - Working with a parent item.
+//  - Working with a parent item and viewing its related items.
+//  - Working with a parent item and searching for items to relate to it.
+
+export type TypeInfoState = {
+  typeName: string;
+  primaryFieldValue?: string;
+};
+
 export type TypeNavigation = Omit<
   BaseItemRelationshipInfo,
   "toTypePrimaryFieldValue"
