@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import {
   TypeDataStateMap,
   TypeInfoDataMap,
@@ -13,12 +13,16 @@ export const useTypeInfoDataStore = ({
   baseValue,
   toTypeInfoName,
   currentOperation,
+  currentFromTypeName,
   currentFromTypePrimaryFieldValue,
+  onBaseValueChange,
 }: {
   baseValue: TypeInfoDataStructure;
   toTypeInfoName: string;
   currentOperation: TypeOperation;
+  currentFromTypeName: string;
   currentFromTypePrimaryFieldValue: string;
+  onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
 }) => {
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
     () => baseValue[toTypeInfoName],
@@ -32,10 +36,34 @@ export const useTypeInfoDataStore = ({
     () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
     [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
   );
+  const onCurrentDataItemChange = useCallback(
+    (newDataItem: TypeInfoDataItem) => {
+      onBaseValueChange({
+        ...baseValue,
+        [currentFromTypeName]: {
+          ...currentTypeDataStateMap,
+          [currentOperation]: {
+            ...currentTypeInfoDataMap,
+            [currentFromTypePrimaryFieldValue]: newDataItem,
+          },
+        },
+      });
+    },
+    [
+      baseValue,
+      currentFromTypeName,
+      currentTypeDataStateMap,
+      currentOperation,
+      currentTypeInfoDataMap,
+      currentFromTypePrimaryFieldValue,
+      onBaseValueChange,
+    ],
+  );
 
   return {
     currentTypeDataStateMap,
     currentTypeInfoDataMap,
     currentDataItem,
+    onCurrentDataItemChange,
   };
 };
