@@ -61,8 +61,6 @@ export const useTypeInfoDataStore = ({
   );
 
   return {
-    currentTypeDataStateMap,
-    currentTypeInfoDataMap,
     currentDataItem,
     onCurrentDataItemChange,
   };

@@ -90,8 +90,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     currentFromTypeFieldName,
   });
   const {
-    currentTypeDataStateMap,
-    currentTypeInfoDataMap,
     currentDataItem,
     onCurrentDataItemChange,
   } = useTypeInfoDataStore({
