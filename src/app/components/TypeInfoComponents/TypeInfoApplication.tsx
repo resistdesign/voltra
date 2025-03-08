@@ -89,10 +89,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     currentFromTypeFieldName,
   });
-  const {
-    currentDataItem,
-    onCurrentDataItemChange,
-  } = useTypeInfoDataStore({
+  const { currentDataItem, onCurrentDataItemChange } = useTypeInfoDataStore({
     baseValue,
     toTypeInfoName,
     currentOperation,
