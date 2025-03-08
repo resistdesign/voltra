@@ -11,26 +11,31 @@ import {
 } from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
+  /**
+   * You edit and submit an item and it is saved.
+   * */
   FORM = "FORM",
+  /**
+   * You view the item or list of items that are related to a previous item.
+   * */
   RELATED_ITEMS = "RELATED_ITEMS",
+  /**
+   * You search for and relate items to a previous item.
+   * */
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
-
-// TODO: We need to support the following scenarios:
-//  - Working with a parent item.
-//  - Working with a parent item and viewing its related items.
-//  - Working with a parent item and searching for items to relate to it.
-
-export type TypeInfoState = {
-  typeName: string;
-  primaryFieldValue?: string;
-};
 
 export type TypeNavigation = Omit<
   BaseItemRelationshipInfo,
   "toTypePrimaryFieldValue"
 > & {
+  /**
+   * Implementations need to set this based on user intent when coming from the source item in an item relationship.
+   * */
   operation: TypeOperation;
+  /**
+   * How are we interacting with an item or items?
+   * */
   mode: TypeNavigationMode;
 };
 
