@@ -54,7 +54,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseOperation = TypeOperation.CREATE,
   basePrimaryKeyValue,
 }) => {
-  // TODO: Make hooks for all these constants.
+  // TODO: Make hooks for all of these constants.
   //   - Break down into logical groups for hooks:
   //     - Type Navigation (w/ Utils)
   //     - Current/Selected Type State (Type/Mode/Operation)
