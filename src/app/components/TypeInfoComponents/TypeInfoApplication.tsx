@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useMemo } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -19,7 +19,10 @@ import {
   NonUpdateOperationMode,
   UpdateOperationMode,
 } from "./TypeInfoApplication/Types";
-import { useBaseTypeNavigation } from "./TypeInfoApplication/TypeNavUtils";
+import {
+  useBaseTypeNavigation,
+  useTypeNavHistory,
+} from "./TypeInfoApplication/TypeNavUtils";
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -75,18 +78,17 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => typeInfoMap[baseTypeInfoName],
     [typeInfoMap, baseTypeInfoName],
   );
-  const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
-  const relationshipMode = navHistory.length > 0;
-  const currentTypeNavigation = useMemo<TypeNavigation>(
-    () => navHistory[navHistory.length - 1] || baseTypeNavigation,
-    [navHistory, baseTypeNavigation],
-  );
   const {
-    fromTypeName: currentFromTypeName,
-    fromTypePrimaryFieldValue: currentFromTypePrimaryFieldValue,
-    fromTypeFieldName: currentFromTypeFieldName,
-    operation: currentOperation,
-  } = currentTypeNavigation;
+    // TODO: Use `navHistory`,
+    setNavHistory,
+    relationshipMode,
+    currentFromTypeName,
+    currentFromTypePrimaryFieldValue,
+    currentFromTypeFieldName,
+    currentOperation,
+  } = useTypeNavHistory({
+    baseTypeNavigation,
+  });
   const currentFromTypeInfo = useMemo<TypeInfo>(
     () => typeInfoMap[currentFromTypeName],
     [typeInfoMap, currentFromTypeName],
