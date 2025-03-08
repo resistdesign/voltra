@@ -25,19 +25,19 @@ export type NonUpdateOperationMode = Exclude<
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
-  typeInfoName: string;
+  baseTypeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
-  value: TypeInfoDataStructure;
-  onChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
-  mode: TypeNavigationMode;
+  baseValue: TypeInfoDataStructure;
+  onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
+  baseMode: TypeNavigationMode;
 } & (
   | {
-      operation: UpdateOperationMode;
-      primaryKeyValue: string;
+      baseOperation: UpdateOperationMode;
+      basePrimaryKeyValue: string;
     }
   | {
-      operation?: NonUpdateOperationMode;
-      primaryKeyValue?: string;
+      baseOperation?: NonUpdateOperationMode;
+      basePrimaryKeyValue?: string;
     }
 );
 
@@ -46,27 +46,27 @@ export type TypeInfoApplicationProps = {
  * */
 export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
-  typeInfoName,
+  baseTypeInfoName,
   customInputTypeMap,
-  value,
-  onChange,
-  mode = TypeNavigationMode.FORM,
-  operation = TypeOperation.CREATE,
-  primaryKeyValue,
+  baseValue,
+  onBaseValueChange,
+  baseMode = TypeNavigationMode.FORM,
+  baseOperation = TypeOperation.CREATE,
+  basePrimaryKeyValue,
 }) => {
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
-      fromTypeName: typeInfoName,
-      fromTypePrimaryFieldValue: `${primaryKeyValue}`,
+      fromTypeName: baseTypeInfoName,
+      fromTypePrimaryFieldValue: `${basePrimaryKeyValue}`,
       fromTypeFieldName: "",
-      mode,
-      operation,
+      mode: baseMode,
+      operation: baseOperation,
     }),
-    [typeInfoName, primaryKeyValue, mode, operation],
+    [baseTypeInfoName, basePrimaryKeyValue, baseMode, baseOperation],
   );
   const baseTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[typeInfoName],
-    [typeInfoMap, typeInfoName],
+    () => typeInfoMap[baseTypeInfoName],
+    [typeInfoMap, baseTypeInfoName],
   );
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const relationshipMode = navHistory.length > 0;
@@ -85,7 +85,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     [typeInfoMap, currentFromTypeName],
   );
   const toTypeInfoName = useMemo<string>(() => {
-    let typeName = typeInfoName;
+    let typeName = baseTypeInfoName;
 
     if (relationshipMode) {
       const {
@@ -101,7 +101,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     return typeName;
   }, [
-    typeInfoName,
+    baseTypeInfoName,
     relationshipMode,
     currentFromTypeFieldName,
     currentFromTypeInfo,
@@ -111,8 +111,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     [typeInfoMap, toTypeInfoName, baseTypeInfo],
   );
   const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
-    () => value[toTypeInfoName],
-    [value, toTypeInfoName],
+    () => baseValue[toTypeInfoName],
+    [baseValue, toTypeInfoName],
   );
   const currentTypeInfoDataMap = useMemo<TypeInfoDataMap>(
     () => currentTypeDataStateMap[currentOperation],
@@ -145,8 +145,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   }, []);
   const onCurrentDataItemChange = useCallback(
     (newDataItem: TypeInfoDataItem) => {
-      onChange({
-        ...value,
+      onBaseValueChange({
+        ...baseValue,
         [currentFromTypeName]: {
           ...currentTypeDataStateMap,
           [currentOperation]: {
@@ -157,13 +157,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       });
     },
     [
-      value,
+      baseValue,
       currentFromTypeName,
       currentTypeDataStateMap,
       currentOperation,
       currentTypeInfoDataMap,
       currentFromTypePrimaryFieldValue,
-      onChange,
+      onBaseValueChange,
     ],
   );
 
@@ -173,7 +173,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       typeInfo={toTypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem}
-      operation={operation}
+      operation={currentOperation}
       onCancel={onCloseCurrentNavHistoryItem}
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
