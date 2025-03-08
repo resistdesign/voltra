@@ -57,7 +57,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   // TODO: Make hooks for all these constants.
   //   - Break down into logical groups for hooks:
   //     - Type Navigation (w/ Utils)
-  //     - Current/Selected Type State (Type/Mode/Operation)
+  //       - Current/Selected Type State (Type/Mode/Operation)
+  //         - Edit
+  //         - List Related Items
+  //         - Search for Items
   //     - Type Info Data Store
   //     - Using Nav History to Store/Update/Manage Item Relationships
   //     - Type Info Service Client Map?
