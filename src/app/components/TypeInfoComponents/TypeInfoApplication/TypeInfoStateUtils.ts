@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { TypeInfo, TypeInfoMap } from "../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 
 export const useTypeInfoState = ({
   typeInfoMap,
