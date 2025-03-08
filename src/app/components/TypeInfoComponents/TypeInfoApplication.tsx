@@ -54,6 +54,14 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseOperation = TypeOperation.CREATE,
   basePrimaryKeyValue,
 }) => {
+  // TODO: Make hooks for all these constants.
+  //   - Break down into logical groups for hooks:
+  //     - Type Navigation
+  //     - Current/Selected Type State (Type/Mode/Operation)
+  //     - Type Info Data Store
+  //     - Using Nav History to Store/Update/Manage Item Relationships
+  //     - Type Info Service Client Map?
+
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
       fromTypeName: baseTypeInfoName,
