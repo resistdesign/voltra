@@ -57,13 +57,15 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   // TODO: Make hooks for all these constants.
   //   - Break down into logical groups for hooks:
   //     - Type Navigation (w/ Utils)
-  //       - Current/Selected Type State (Type/Mode/Operation)
-  //         - Edit
-  //         - List Related Items
-  //         - Search for Items
+  //     - Current/Selected Type State (Type/Mode/Operation)
+  //       - Edit
+  //       - List Related Items
+  //       - Search for Items
   //     - Type Info Data Store
-  //     - Using Nav History to Store/Update/Manage Item Relationships
+  //       - Mapped by [Type Name > Operation > Primary Key Value]
+  //     - Using Nav History to determine when/if/how to Store/Update/Manage Item Relationships
   //     - Type Info Service Client Map?
+  //       - Or we could just maintain the [Type Info Data Store] and allow the implementation to call services???
 
   const baseTypeNavigation = useMemo<TypeNavigation>(
     () => ({
