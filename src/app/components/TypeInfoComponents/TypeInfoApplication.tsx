@@ -1,7 +1,6 @@
-import { FC, useCallback } from "react";
+import { FC } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
-  TypeInfoDataItem,
   TypeInfoMap,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
@@ -90,36 +89,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     currentFromTypeFieldName,
   });
-  const { currentTypeDataStateMap, currentTypeInfoDataMap, currentDataItem } =
-    useTypeInfoDataStore({
-      baseValue,
-      toTypeInfoName,
-      currentOperation,
-      currentFromTypePrimaryFieldValue,
-    });
-  const onCurrentDataItemChange = useCallback(
-    (newDataItem: TypeInfoDataItem) => {
-      onBaseValueChange({
-        ...baseValue,
-        [currentFromTypeName]: {
-          ...currentTypeDataStateMap,
-          [currentOperation]: {
-            ...currentTypeInfoDataMap,
-            [currentFromTypePrimaryFieldValue]: newDataItem,
-          },
-        },
-      });
-    },
-    [
-      baseValue,
-      currentFromTypeName,
-      currentTypeDataStateMap,
-      currentOperation,
-      currentTypeInfoDataMap,
-      currentFromTypePrimaryFieldValue,
-      onBaseValueChange,
-    ],
-  );
+  const {
+    currentTypeDataStateMap,
+    currentTypeInfoDataMap,
+    currentDataItem,
+    onCurrentDataItemChange,
+  } = useTypeInfoDataStore({
+    baseValue,
+    toTypeInfoName,
+    currentOperation,
+    currentFromTypeName,
+    currentFromTypePrimaryFieldValue,
+    onBaseValueChange,
+  });
 
   return (
     <TypeInfoForm
