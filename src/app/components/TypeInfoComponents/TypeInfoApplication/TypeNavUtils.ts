@@ -16,21 +16,18 @@ export type TypeNavigationOperationConfig =
 export const useBaseTypeNavigation = ({
   baseTypeInfoName,
   baseMode,
-  baseOperation = TypeOperation.CREATE,
-  basePrimaryKeyValue,
+  baseOperation,
 }: {
   baseTypeInfoName: string;
   baseMode: TypeNavigationMode;
 } & TypeNavigationOperationConfig) => {
   return useMemo<TypeNavigation>(
     () => ({
-      fromTypeName: baseTypeInfoName,
-      fromTypePrimaryFieldValue: `${basePrimaryKeyValue}`,
-      fromTypeFieldName: "",
-      mode: baseMode,
+      typeName: baseTypeInfoName,
       operation: baseOperation,
+      mode: baseMode,
     }),
-    [baseTypeInfoName, basePrimaryKeyValue, baseMode, baseOperation],
+    [baseTypeInfoName, baseMode, baseOperation],
   );
 };
 
@@ -59,17 +56,18 @@ export const useTypeNavHistory = ({
         }),
   });
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
-  const relationshipMode = navHistory.length > 0;
   const currentTypeNavigation = useMemo<TypeNavigation>(
     () => navHistory[navHistory.length - 1] || baseTypeNavigation,
     [navHistory, baseTypeNavigation],
   );
   const {
-    fromTypeName: currentFromTypeName,
-    fromTypePrimaryFieldValue: currentFromTypePrimaryFieldValue,
-    fromTypeFieldName: currentFromTypeFieldName,
+    typeName: currentTypeName,
+    fieldName: currentFieldName,
     operation: currentOperation,
+    mode: currentMode,
   } = currentTypeNavigation;
+  const relationshipMode =
+    navHistory.length > 0 && typeof currentFieldName !== "undefined";
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
       if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
@@ -94,10 +92,10 @@ export const useTypeNavHistory = ({
 
   return {
     relationshipMode,
-    currentFromTypeName,
-    currentFromTypePrimaryFieldValue,
-    currentFromTypeFieldName,
+    currentTypeName,
+    currentFieldName,
     currentOperation,
+    currentMode,
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
   };

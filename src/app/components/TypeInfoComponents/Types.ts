@@ -5,10 +5,7 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-import {
-  BaseItemRelationshipInfo,
-  ItemRelationshipInfo,
-} from "../../../common/ItemRelationshipInfoTypes";
+import { ItemRelationshipInfo } from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
   /**
@@ -25,14 +22,19 @@ export enum TypeNavigationMode {
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
-export type TypeNavigation = Omit<
-  BaseItemRelationshipInfo,
-  "toTypePrimaryFieldValue"
-> & {
+export type TypeNavigation = {
+  /**
+   * The name of the type to navigate to.
+   * */
+  typeName: string;
+  /**
+   * The name of the field to show relationships for.
+   * */
+  fieldName?: string;
   /**
    * Implementations need to set this based on user intent when coming from the source item in an item relationship.
    * */
-  operation: TypeOperation;
+  operation?: TypeOperation;
   /**
    * How are we interacting with an item or items?
    * */

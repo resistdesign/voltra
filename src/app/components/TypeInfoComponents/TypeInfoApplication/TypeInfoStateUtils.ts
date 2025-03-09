@@ -4,33 +4,31 @@ import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 export const useTypeInfoState = ({
   typeInfoMap,
   baseTypeInfoName,
-  currentFromTypeName,
+  currentTypeName,
   relationshipMode,
-  currentFromTypeFieldName,
+  currentFieldName,
 }: {
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;
-  currentFromTypeName: string;
+  currentTypeName: string;
   relationshipMode: boolean;
-  currentFromTypeFieldName: string;
+  currentFieldName?: string;
 }) => {
   const baseTypeInfo = useMemo<TypeInfo>(
     () => typeInfoMap[baseTypeInfoName],
     [typeInfoMap, baseTypeInfoName],
   );
-  const currentFromTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[currentFromTypeName],
-    [typeInfoMap, currentFromTypeName],
+  const currentTypeInfo = useMemo<TypeInfo>(
+    () => typeInfoMap[currentTypeName],
+    [typeInfoMap, currentTypeName],
   );
-  const toTypeInfoName = useMemo<string>(() => {
-    let typeName = baseTypeInfoName;
+  const toTypeInfoName = useMemo<string | undefined>(() => {
+    let typeName = relationshipMode ? undefined : baseTypeInfoName;
 
-    if (relationshipMode) {
+    if (relationshipMode && typeof currentFieldName !== "undefined") {
       const {
-        fields: {
-          [currentFromTypeFieldName]: { typeReference = undefined } = {},
-        } = {},
-      } = currentFromTypeInfo;
+        fields: { [currentFieldName]: { typeReference = undefined } = {} } = {},
+      } = currentTypeInfo;
 
       if (typeof typeReference === "string") {
         typeName = typeReference;
@@ -38,20 +36,18 @@ export const useTypeInfoState = ({
     }
 
     return typeName;
-  }, [
-    baseTypeInfoName,
-    relationshipMode,
-    currentFromTypeFieldName,
-    currentFromTypeInfo,
-  ]);
-  const toTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[toTypeInfoName],
+  }, [baseTypeInfoName, relationshipMode, currentFieldName, currentTypeInfo]);
+  const toTypeInfo = useMemo<TypeInfo | undefined>(
+    () =>
+      typeof toTypeInfoName !== "undefined"
+        ? typeInfoMap[toTypeInfoName]
+        : undefined,
     [typeInfoMap, toTypeInfoName, baseTypeInfo],
   );
 
   return {
     baseTypeInfo,
-    currentFromTypeInfo,
+    currentTypeInfo,
     toTypeInfoName,
     toTypeInfo,
   };
