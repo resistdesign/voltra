@@ -4,25 +4,25 @@ import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 export const useTypeInfoState = ({
   typeInfoMap,
   relationshipMode,
-  currentTypeName,
-  currentFieldName,
+  fromTypeName,
+  fromFieldName,
 }: {
   typeInfoMap: TypeInfoMap;
   relationshipMode: boolean;
-  currentTypeName: string;
-  currentFieldName?: string;
+  fromTypeName: string;
+  fromFieldName?: string;
 }) => {
-  const currentTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[currentTypeName],
-    [typeInfoMap, currentTypeName],
+  const fromTypeInfo = useMemo<TypeInfo>(
+    () => typeInfoMap[fromTypeName],
+    [typeInfoMap, fromTypeName],
   );
-  const relatedTypeName = useMemo<string | undefined>(() => {
+  const toTypeName = useMemo<string | undefined>(() => {
     let typeName: string | undefined;
 
-    if (relationshipMode && typeof currentFieldName !== "undefined") {
+    if (relationshipMode && typeof fromFieldName !== "undefined") {
       const {
-        fields: { [currentFieldName]: { typeReference = undefined } = {} } = {},
-      } = currentTypeInfo;
+        fields: { [fromFieldName]: { typeReference = undefined } = {} } = {},
+      } = fromTypeInfo;
 
       if (typeof typeReference === "string") {
         typeName = typeReference;
@@ -30,17 +30,15 @@ export const useTypeInfoState = ({
     }
 
     return typeName;
-  }, [relationshipMode, currentFieldName, currentTypeInfo]);
-  const relatedTypeInfo = useMemo<TypeInfo | undefined>(
+  }, [relationshipMode, fromFieldName, fromTypeInfo]);
+  const toTypeInfo = useMemo<TypeInfo | undefined>(
     () =>
-      typeof relatedTypeName !== "undefined"
-        ? typeInfoMap[relatedTypeName]
-        : undefined,
-    [typeInfoMap, relatedTypeName],
+      typeof toTypeName !== "undefined" ? typeInfoMap[toTypeName] : undefined,
+    [typeInfoMap, toTypeName],
   );
 
   return {
-    relatedTypeName,
-    relatedTypeInfo,
+    targetTypeName: relationshipMode ? toTypeName : fromTypeName,
+    targetTypeInfo: relationshipMode ? toTypeInfo : fromTypeInfo,
   };
 };

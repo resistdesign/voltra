@@ -42,10 +42,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 }): ReactNode => {
   const {
     relationshipMode,
-    currentTypeName,
-    currentFieldName,
-    currentOperation,
-    currentMode,
+    fromTypeName,
+    fromFieldName,
+    toOperation,
+    toMode,
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
   } = useTypeNavHistory({
@@ -62,34 +62,31 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           basePrimaryKeyValue: basePrimaryKeyValue as string,
         }),
   });
-  const {
-    // TODO: URGENT: `current` VS `related` is a problem!!! Maybe go back to `from` and `to`?
-    relatedTypeName,
-    relatedTypeInfo,
-  } = useTypeInfoState({
+  const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
     relationshipMode,
-    currentTypeName,
-    currentFieldName,
+    fromTypeName,
+    fromFieldName,
   });
-  const { currentDataItem, onCurrentDataItemChange } = useTypeInfoDataStore({
+  const { dataItem, onDataItemChange } = useTypeInfoDataStore({
     baseValue,
-    relatedTypeName,
-    currentOperation,
-    currentTypeName,
     onBaseValueChange,
+    typeName: targetTypeName,
+    operation: toOperation,
+    // TODO: URGENT: This needs to be updated.
+    primaryFieldValue: basePrimaryKeyValue,
   });
 
   // TODO: Add components for each `TypeNavigationMode`.
-  return currentMode ? (
+  return toMode ? (
     <TypeInfoForm
-      typeInfoName={relatedTypeName as string}
-      typeInfo={relatedTypeInfo as TypeInfo}
+      typeInfoName={targetTypeName as string}
+      typeInfo={targetTypeInfo as TypeInfo}
       customInputTypeMap={customInputTypeMap}
-      value={currentDataItem as TypeInfoDataItem}
-      operation={currentOperation}
+      value={dataItem as TypeInfoDataItem}
+      operation={toOperation}
       onCancel={onCloseCurrentNavHistoryItem}
-      onSubmit={onCurrentDataItemChange}
+      onSubmit={onDataItemChange}
       onNavigateToType={onNavigateToType}
     />
   ) : undefined;
