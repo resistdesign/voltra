@@ -48,18 +48,17 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
     }: Partial<TypeInfo> = typeReference
       ? typeInfoMap[typeReference as keyof TypeInfoMap] || {}
       : {};
-    const tN =
+    const tN: TypeNavigation | undefined =
       typeReference &&
       !targetTypeReadDenied &&
       typeof itemPrimaryFieldValue !== "undefined"
-        ? ({
+        ? {
             fromTypeName: typeInfoName,
             fromTypePrimaryFieldValue: itemPrimaryFieldValue,
             fromTypeFieldName: fieldName,
-            // TODO: Calculate `mode` based on being an array and the operation???
-            mode: TypeNavigationMode.RELATED_ITEMS,
-            operation: TypeOperation.READ,
-          } as TypeNavigation)
+            toOperation: TypeOperation.READ,
+            toMode: TypeNavigationMode.RELATED_ITEMS,
+          }
         : undefined;
 
     return tN;

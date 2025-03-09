@@ -4,7 +4,6 @@ import {
   TypeInfo,
   TypeInfoDataItem,
   TypeInfoMap,
-  TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
@@ -18,6 +17,10 @@ import {
 } from "./TypeInfoApplication/TypeNavUtils";
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
+import {
+  ListRelationshipsConfig,
+  ListRelationshipsResults,
+} from "../../../common/SearchTypes";
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -26,11 +29,9 @@ export type TypeInfoApplicationProps = {
   baseValue: TypeInfoDataStructure;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
-  // TODO: Needs paging.
-  onRequestRelatedItems?: (
-    typeInfoName: string,
-    primaryFieldValue: any,
-    fromFieldName: string,
+  listRelationshipsResults?: ListRelationshipsResults;
+  onListRelationships?: (
+    listRelationshipsConfig: ListRelationshipsConfig,
   ) => void;
 } & TypeNavigationOperationConfig;
 
@@ -46,16 +47,18 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseMode = TypeNavigationMode.FORM,
   baseOperation,
   basePrimaryKeyValue,
-  onRequestRelatedItems,
+  listRelationshipsResults,
+  onListRelationships,
 }): ReactNode => {
   // TODO: Change when selecting an item from list mode.
+  // TODO: Probably needs to be in the history.
   const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
     string | undefined
   >(basePrimaryKeyValue);
   const {
     relationshipMode,
     fromTypeName,
-    fromFieldName,
+    fromTypeFieldName,
     toOperation,
     toMode,
     onNavigateToType,
@@ -64,21 +67,14 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     typeInfoMap,
     baseTypeInfoName,
     baseMode,
-    ...(baseOperation === TypeOperation.CREATE || baseOperation === undefined
-      ? {
-          baseOperation,
-          basePrimaryKeyValue,
-        }
-      : {
-          baseOperation,
-          basePrimaryKeyValue: basePrimaryKeyValue as string,
-        }),
+    baseOperation,
+    basePrimaryKeyValue,
   });
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
     relationshipMode,
     fromTypeName,
-    fromFieldName,
+    fromTypeFieldName,
   });
   const { dataItem, onDataItemChange } = useTypeInfoDataStore({
     baseValue,
@@ -91,25 +87,34 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     (typeNavigation: TypeNavigation) => {
       onNavigateToType(typeNavigation);
 
-      if (onRequestRelatedItems) {
-        const { fromTypeName, fromFieldName } = typeNavigation;
+      if (onListRelationships) {
+        const {
+          fromTypeName: tNFromTypeName,
+          fromTypePrimaryFieldValue: tNFromTypePrimaryFieldValue,
+          fromTypeFieldName: tNFromTypeFieldName,
+        } = typeNavigation;
 
-        if (typeof fromFieldName !== "undefined") {
-          onRequestRelatedItems(
-            fromTypeName,
-            targetPrimaryFieldValue,
-            fromFieldName,
-          );
-        }
+        // TODO: This probably get done by the list table that shows up, not here.
+        onListRelationships({
+          relationshipItemOrigin: {
+            fromTypeName: tNFromTypeName,
+            fromTypePrimaryFieldValue: tNFromTypePrimaryFieldValue,
+            fromTypeFieldName: tNFromTypeFieldName,
+          },
+          // TODO: These are placeholders.
+          cursor: "",
+          itemsPerPage: 10,
+        });
       }
     },
-    [onRequestRelatedItems, onNavigateToType, targetPrimaryFieldValue],
+    [onListRelationships, onNavigateToType, targetPrimaryFieldValue],
   );
 
   // TODO: Add components for each `TypeNavigationMode`.
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={targetTypeName as string}
+      primaryFieldValue={targetPrimaryFieldValue as string}
       typeInfo={targetTypeInfo as TypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={dataItem as TypeInfoDataItem}

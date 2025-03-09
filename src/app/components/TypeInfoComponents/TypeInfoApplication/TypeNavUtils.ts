@@ -5,15 +5,14 @@ import {
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
 
-export type TypeNavigationOperationConfig =
-  | { baseOperation?: TypeOperation.CREATE; basePrimaryKeyValue?: string }
-  | {
-      baseOperation: TypeOperation.READ | TypeOperation.UPDATE;
-      basePrimaryKeyValue: string;
-    };
+export type TypeNavigationOperationConfig = {
+  baseOperation: Exclude<TypeOperation, TypeOperation.DELETE>;
+  basePrimaryKeyValue: string;
+};
 
 export const useBaseTypeNavigation = ({
   baseTypeInfoName,
+  basePrimaryKeyValue,
   baseMode,
   baseOperation,
 }: {
@@ -23,10 +22,12 @@ export const useBaseTypeNavigation = ({
   return useMemo<TypeNavigation>(
     () => ({
       fromTypeName: baseTypeInfoName,
+      fromTypePrimaryFieldValue: basePrimaryKeyValue,
+      fromTypeFieldName: "",
       toOperation: baseOperation,
       toMode: baseMode,
     }),
-    [baseTypeInfoName, baseMode, baseOperation],
+    [baseTypeInfoName, basePrimaryKeyValue, baseOperation, baseMode],
   );
 };
 
@@ -44,25 +45,18 @@ export const useTypeNavHistory = ({
   const baseTypeNavigation = useBaseTypeNavigation({
     baseTypeInfoName,
     baseMode,
-    ...(baseOperation === TypeOperation.CREATE || baseOperation === undefined
-      ? {
-          baseOperation,
-          basePrimaryKeyValue,
-        }
-      : {
-          baseOperation,
-          basePrimaryKeyValue: basePrimaryKeyValue as string,
-        }),
+    baseOperation,
+    basePrimaryKeyValue,
   });
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const currentTypeNavigation = useMemo<TypeNavigation>(
     () => navHistory[navHistory.length - 1] || baseTypeNavigation,
     [navHistory, baseTypeNavigation],
   );
-  const { fromTypeName, fromFieldName, toOperation, toMode } =
+  const { fromTypeName, fromTypeFieldName, toOperation, toMode } =
     currentTypeNavigation;
   const relationshipMode =
-    navHistory.length > 0 && typeof fromFieldName !== "undefined";
+    navHistory.length > 0 && typeof fromTypeFieldName !== "undefined";
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
       setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
@@ -86,7 +80,7 @@ export const useTypeNavHistory = ({
   return {
     relationshipMode,
     fromTypeName,
-    fromFieldName,
+    fromTypeFieldName,
     toOperation,
     toMode,
     onNavigateToType,

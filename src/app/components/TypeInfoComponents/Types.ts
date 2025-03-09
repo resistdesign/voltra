@@ -5,7 +5,10 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-import { ItemRelationshipInfo } from "../../../common/ItemRelationshipInfoTypes";
+import {
+  ItemRelationshipInfo,
+  ItemRelationshipOriginItemInfo,
+} from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
   /**
@@ -22,15 +25,7 @@ export enum TypeNavigationMode {
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
-export type TypeNavigation = {
-  /**
-   * The name of the type to navigate to.
-   * */
-  fromTypeName: string;
-  /**
-   * The name of the field to show relationships for.
-   * */
-  fromFieldName?: string;
+export type TypeNavigation = ItemRelationshipOriginItemInfo & {
   /**
    * Implementations need to set this based on user intent when coming from the source item in an item relationship.
    * */
