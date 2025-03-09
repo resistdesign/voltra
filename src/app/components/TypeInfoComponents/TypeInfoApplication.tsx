@@ -26,6 +26,7 @@ export type TypeInfoApplicationProps = {
   baseValue: TypeInfoDataStructure;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
+  // TODO: Needs paging.
   onRequestRelatedItems?: (
     typeInfoName: string,
     primaryFieldValue: any,
