@@ -7,28 +7,33 @@ import {
 } from "../../../../common/TypeParsing/TypeInfo";
 import { isValidTypeNavigation } from "../TypeNavigationUtils";
 
-export const useBaseTypeNavigation = <BaseOperationType extends TypeOperation>({
-  baseTypeInfoName,
-  basePrimaryKeyValue,
-  baseMode,
-  baseOperation,
-}: {
-  baseTypeInfoName: string;
-  baseMode: TypeNavigationMode;
+export type TypeNavigationOperationConfig<
+  BaseOperationType extends TypeOperation,
+> = {
   baseOperation: BaseOperationType extends UpdateOperationMode
     ? UpdateOperationMode
     : NonUpdateOperationMode | undefined;
   basePrimaryKeyValue: BaseOperationType extends UpdateOperationMode
     ? string
     : string | undefined;
-}) => {
+};
+
+export const useBaseTypeNavigation = <BaseOperationType extends TypeOperation>({
+  baseTypeInfoName,
+  baseMode,
+  baseOperation = TypeOperation.CREATE,
+  basePrimaryKeyValue,
+}: {
+  baseTypeInfoName: string;
+  baseMode: TypeNavigationMode;
+} & TypeNavigationOperationConfig<BaseOperationType>) => {
   return useMemo<TypeNavigation>(
     () => ({
       fromTypeName: baseTypeInfoName,
       fromTypePrimaryFieldValue: `${basePrimaryKeyValue}`,
       fromTypeFieldName: "",
       mode: baseMode,
-      operation: baseOperation ? baseOperation : TypeOperation.CREATE,
+      operation: baseOperation,
     }),
     [baseTypeInfoName, basePrimaryKeyValue, baseMode, baseOperation],
   );
@@ -44,18 +49,12 @@ export const useTypeNavHistory = <BaseOperationType extends TypeOperation>({
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;
   baseMode: TypeNavigationMode;
-  baseOperation: BaseOperationType extends UpdateOperationMode
-    ? UpdateOperationMode
-    : NonUpdateOperationMode | undefined;
-  basePrimaryKeyValue: BaseOperationType extends UpdateOperationMode
-    ? string
-    : string | undefined;
-}) => {
+} & TypeNavigationOperationConfig<BaseOperationType>) => {
   const baseTypeNavigation = useBaseTypeNavigation({
     baseTypeInfoName,
-    basePrimaryKeyValue,
     baseMode,
     baseOperation,
+    basePrimaryKeyValue,
   });
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const relationshipMode = navHistory.length > 0;
