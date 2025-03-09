@@ -130,7 +130,7 @@ export const TypeInfoDemo: FC = () => {
       onBaseValueChange={setValue}
       baseMode={TypeNavigationMode.FORM}
       baseOperation={TypeOperation.UPDATE}
-      basePrimaryKeyValue={"first_item"}
+      basePrimaryKeyValue="first_item"
     />
   );
 };
