@@ -16,23 +16,19 @@ import {
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
 
-export type TypeInfoApplicationProps<
-  BaseOperationType extends TypeOperation = TypeOperation,
-> = {
+export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   baseValue: TypeInfoDataStructure;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
-} & TypeNavigationOperationConfig<BaseOperationType>;
+} & TypeNavigationOperationConfig;
 
 /**
  * Create a multi-type driven type information form application.
  * */
-export const TypeInfoApplication: FC<TypeInfoApplicationProps> = <
-  BaseOperationType extends TypeOperation,
->({
+export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   baseTypeInfoName,
   customInputTypeMap,
@@ -41,7 +37,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = <
   baseMode = TypeNavigationMode.FORM,
   baseOperation,
   basePrimaryKeyValue,
-}: TypeInfoApplicationProps<BaseOperationType>): ReactNode => {
+}): ReactNode => {
   const {
     relationshipMode,
     currentFromTypeName,
@@ -54,8 +50,15 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = <
     typeInfoMap,
     baseTypeInfoName,
     baseMode,
-    baseOperation,
-    basePrimaryKeyValue,
+    ...(baseOperation === TypeOperation.CREATE || baseOperation === undefined
+      ? {
+          baseOperation,
+          basePrimaryKeyValue,
+        }
+      : {
+          baseOperation,
+          basePrimaryKeyValue: basePrimaryKeyValue as string,
+        }),
   });
   const { toTypeInfoName, toTypeInfo } = useTypeInfoState({
     typeInfoMap,
