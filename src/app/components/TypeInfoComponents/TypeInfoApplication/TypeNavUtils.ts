@@ -4,7 +4,6 @@ import {
   TypeInfoMap,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
-import { isValidTypeNavigation } from "../TypeNavigationUtils";
 
 export type TypeNavigationOperationConfig =
   | { baseOperation?: TypeOperation.CREATE; basePrimaryKeyValue?: string }
@@ -66,9 +65,7 @@ export const useTypeNavHistory = ({
     navHistory.length > 0 && typeof fromFieldName !== "undefined";
   const onNavigateToType = useCallback(
     (typeNavigation: TypeNavigation) => {
-      if (isValidTypeNavigation(typeNavigation, typeInfoMap)) {
-        setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
-      }
+      setNavHistory((prevNavHistory) => [...prevNavHistory, typeNavigation]);
     },
     [typeInfoMap],
   );
