@@ -78,7 +78,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   });
 
   // TODO: Add components for each `TypeNavigationMode`.
-  return toMode ? (
+  return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={targetTypeName as string}
       typeInfo={targetTypeInfo as TypeInfo}
