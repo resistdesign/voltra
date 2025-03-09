@@ -62,16 +62,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           basePrimaryKeyValue: basePrimaryKeyValue as string,
         }),
   });
-  const { toTypeInfoName, toTypeInfo } = useTypeInfoState({
+  const {
+    // TODO: URGENT: `current` VS `related` is a problem!!! Maybe go back to `from` and `to`?
+    relatedTypeName,
+    relatedTypeInfo,
+  } = useTypeInfoState({
     typeInfoMap,
-    baseTypeInfoName,
-    currentTypeName,
     relationshipMode,
+    currentTypeName,
     currentFieldName,
   });
   const { currentDataItem, onCurrentDataItemChange } = useTypeInfoDataStore({
     baseValue,
-    toTypeInfoName,
+    relatedTypeName,
     currentOperation,
     currentTypeName,
     onBaseValueChange,
@@ -80,8 +83,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   // TODO: Add components for each `TypeNavigationMode`.
   return currentMode ? (
     <TypeInfoForm
-      typeInfoName={toTypeInfoName as string}
-      typeInfo={toTypeInfo as TypeInfo}
+      typeInfoName={relatedTypeName as string}
+      typeInfo={relatedTypeInfo as TypeInfo}
       customInputTypeMap={customInputTypeMap}
       value={currentDataItem as TypeInfoDataItem}
       operation={currentOperation}

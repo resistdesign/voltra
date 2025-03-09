@@ -11,14 +11,14 @@ import {
 
 export const useTypeInfoDataStore = ({
   baseValue,
-  toTypeInfoName,
+  relatedTypeName,
   currentOperation,
   currentTypeName,
   currentTypePrimaryFieldValue,
   onBaseValueChange,
 }: {
   baseValue: TypeInfoDataStructure;
-  toTypeInfoName?: string;
+  relatedTypeName?: string;
   currentOperation?: TypeOperation;
   currentTypeName?: string;
   currentTypePrimaryFieldValue?: string;
@@ -26,10 +26,10 @@ export const useTypeInfoDataStore = ({
 }) => {
   const currentTypeDataStateMap = useMemo<TypeDataStateMap | undefined>(
     () =>
-      typeof toTypeInfoName !== "undefined"
-        ? baseValue[toTypeInfoName]
+      typeof relatedTypeName !== "undefined"
+        ? baseValue[relatedTypeName]
         : undefined,
-    [baseValue, toTypeInfoName],
+    [baseValue, relatedTypeName],
   );
   const currentTypeInfoDataMap = useMemo<TypeInfoDataMap | undefined>(
     () =>
