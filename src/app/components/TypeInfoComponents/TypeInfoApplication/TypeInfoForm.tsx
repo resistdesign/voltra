@@ -3,7 +3,6 @@ import {
   InputHTMLAttributes,
   useCallback,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import { Form } from "../../Form";
@@ -21,15 +20,6 @@ import {
 import styled from "styled-components";
 import { TypeInfoInput } from "../TypeInfoInput";
 
-const LabelText = styled.span`
-  &:has(+ input[type="checkbox"]) {
-    display: none;
-  }
-
-  :not(input[type="checkbox"]) + & {
-    display: none;
-  }
-`;
 // TODO: Do options based grid layout.
 const BaseForm = styled(Form)`
   flex: 1 0 auto;
@@ -79,14 +69,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   onSubmit,
   onNavigateToType,
 }) => {
-  const { primaryField, fields = {} } = typeInfo;
-  const primaryFieldValue = useMemo<any>(
-    () =>
-      typeof value === "object" && value !== null
-        ? value[primaryField as keyof TypeInfoDataItem]
-        : undefined,
-    [value],
-  );
+  const { fields = {} } = typeInfo;
   const [internalValue, setInternalValue] = useState<TypeInfoDataItem>({});
   const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
     setInternalValue((prev) => ({
@@ -99,17 +82,16 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   }, [internalValue, onSubmit]);
   const onNavigateToTypeForField = useCallback(
     (nameOrIndex: NameOrIndex) => {
-      if (onNavigateToType && typeof primaryFieldValue !== "undefined") {
+      if (onNavigateToType) {
         onNavigateToType({
-          fromTypeName: typeInfoName,
-          fromTypePrimaryFieldValue: `${primaryFieldValue}`,
-          fromTypeFieldName: `${nameOrIndex}`,
+          typeName: typeInfoName,
+          fieldName: `${nameOrIndex}`,
           mode: TypeNavigationMode.RELATED_ITEMS,
           operation,
         });
       }
     },
-    [onNavigateToType, primaryFieldValue, typeInfoName, operation],
+    [onNavigateToType, typeInfoName, operation],
   );
 
   useEffect(() => {
@@ -123,6 +105,8 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   //  [X] navigation to sub-types
   //  [ ] arrays
   //  [ ] validation
+
+  // TODO: Do we need a form label?
 
   return (
     <BaseForm onSubmit={onSubmitInternal}>

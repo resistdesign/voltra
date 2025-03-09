@@ -1,6 +1,8 @@
 import { FC, ReactNode } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
+  TypeInfo,
+  TypeInfoDataItem,
   TypeInfoMap,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
@@ -40,10 +42,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 }): ReactNode => {
   const {
     relationshipMode,
-    currentFromTypeName,
-    currentFromTypePrimaryFieldValue,
-    currentFromTypeFieldName,
+    currentTypeName,
+    currentFieldName,
     currentOperation,
+    currentMode,
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
   } = useTypeNavHistory({
@@ -63,30 +65,29 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const { toTypeInfoName, toTypeInfo } = useTypeInfoState({
     typeInfoMap,
     baseTypeInfoName,
-    currentFromTypeName,
+    currentTypeName,
     relationshipMode,
-    currentFromTypeFieldName,
+    currentFieldName,
   });
   const { currentDataItem, onCurrentDataItemChange } = useTypeInfoDataStore({
     baseValue,
     toTypeInfoName,
     currentOperation,
-    currentFromTypeName,
-    currentFromTypePrimaryFieldValue,
+    currentTypeName,
     onBaseValueChange,
   });
 
   // TODO: Add components for each `TypeNavigationMode`.
-  return (
+  return currentMode ? (
     <TypeInfoForm
-      typeInfoName={toTypeInfoName}
-      typeInfo={toTypeInfo}
+      typeInfoName={toTypeInfoName as string}
+      typeInfo={toTypeInfo as TypeInfo}
       customInputTypeMap={customInputTypeMap}
-      value={currentDataItem}
+      value={currentDataItem as TypeInfoDataItem}
       operation={currentOperation}
       onCancel={onCloseCurrentNavHistoryItem}
       onSubmit={onCurrentDataItemChange}
       onNavigateToType={onNavigateToType}
     />
-  );
+  ) : undefined;
 };

@@ -13,49 +13,69 @@ export const useTypeInfoDataStore = ({
   baseValue,
   toTypeInfoName,
   currentOperation,
-  currentFromTypeName,
-  currentFromTypePrimaryFieldValue,
+  currentTypeName,
+  currentTypePrimaryFieldValue,
   onBaseValueChange,
 }: {
   baseValue: TypeInfoDataStructure;
-  toTypeInfoName: string;
-  currentOperation: TypeOperation;
-  currentFromTypeName: string;
-  currentFromTypePrimaryFieldValue: string;
+  toTypeInfoName?: string;
+  currentOperation?: TypeOperation;
+  currentTypeName?: string;
+  currentTypePrimaryFieldValue?: string;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
 }) => {
-  const currentTypeDataStateMap = useMemo<TypeDataStateMap>(
-    () => baseValue[toTypeInfoName],
+  const currentTypeDataStateMap = useMemo<TypeDataStateMap | undefined>(
+    () =>
+      typeof toTypeInfoName !== "undefined"
+        ? baseValue[toTypeInfoName]
+        : undefined,
     [baseValue, toTypeInfoName],
   );
-  const currentTypeInfoDataMap = useMemo<TypeInfoDataMap>(
-    () => currentTypeDataStateMap[currentOperation],
+  const currentTypeInfoDataMap = useMemo<TypeInfoDataMap | undefined>(
+    () =>
+      typeof currentTypeDataStateMap !== "undefined" &&
+      typeof currentOperation !== "undefined"
+        ? currentTypeDataStateMap[currentOperation]
+        : undefined,
     [currentTypeDataStateMap, currentOperation],
   );
-  const currentDataItem = useMemo<TypeInfoDataItem>(
-    () => currentTypeInfoDataMap[currentFromTypePrimaryFieldValue],
-    [currentTypeInfoDataMap, currentFromTypePrimaryFieldValue],
+  const currentDataItem = useMemo<TypeInfoDataItem | undefined>(
+    () =>
+      typeof currentTypeInfoDataMap !== "undefined" &&
+      typeof currentTypePrimaryFieldValue !== "undefined"
+        ? currentTypeInfoDataMap[currentTypePrimaryFieldValue]
+        : undefined,
+    [currentTypeInfoDataMap, currentTypePrimaryFieldValue],
   );
   const onCurrentDataItemChange = useCallback(
     (newDataItem: TypeInfoDataItem) => {
-      onBaseValueChange({
-        ...baseValue,
-        [currentFromTypeName]: {
-          ...currentTypeDataStateMap,
-          [currentOperation]: {
-            ...currentTypeInfoDataMap,
-            [currentFromTypePrimaryFieldValue]: newDataItem,
+      if (
+        typeof currentTypeName !== "undefined" &&
+        typeof currentOperation !== "undefined" &&
+        typeof currentTypePrimaryFieldValue !== "undefined" &&
+        typeof baseValue !== "undefined" &&
+        typeof currentTypeDataStateMap !== "undefined" &&
+        typeof currentTypeInfoDataMap !== "undefined"
+      ) {
+        onBaseValueChange({
+          ...baseValue,
+          [currentTypeName]: {
+            ...currentTypeDataStateMap,
+            [currentOperation]: {
+              ...currentTypeInfoDataMap,
+              [currentTypePrimaryFieldValue]: newDataItem,
+            },
           },
-        },
-      });
+        });
+      }
     },
     [
       baseValue,
-      currentFromTypeName,
+      currentTypeName,
       currentTypeDataStateMap,
       currentOperation,
       currentTypeInfoDataMap,
-      currentFromTypePrimaryFieldValue,
+      currentTypePrimaryFieldValue,
       onBaseValueChange,
     ],
   );
