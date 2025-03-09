@@ -72,7 +72,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     toTypeInfoName,
     currentOperation,
     currentFromTypeName,
-    // TODO: This is wrong.
     currentFromTypePrimaryFieldValue,
     onBaseValueChange,
   });
