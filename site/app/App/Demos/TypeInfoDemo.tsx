@@ -1,5 +1,6 @@
 import { FC, useState } from "react";
 import {
+  ItemRelationshipInfoStructure,
   TypeInfoApplication,
   TypeInfoDataStructure,
   TypeNavigationMode,
@@ -118,7 +119,10 @@ export const TypeInfoDemo: FC = () => {
       DELETE: {},
     },
   });
-  // const [relationshipInfo, setRelationshipInfo] = useState<ItemRelationshipInfoStructure>({});
+  // TODO: Oh hmmm... these will probably be relationship items not actual items.
+  //  And we will need to get the actual item for each of these.
+  const [relationshipInfo, setRelationshipInfo] =
+    useState<ItemRelationshipInfoStructure>({});
 
   console.log("Structure:", value);
 
