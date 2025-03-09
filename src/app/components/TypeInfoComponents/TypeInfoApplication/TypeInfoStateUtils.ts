@@ -3,27 +3,21 @@ import { TypeInfo, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 
 export const useTypeInfoState = ({
   typeInfoMap,
-  baseTypeInfoName,
-  currentTypeName,
   relationshipMode,
+  currentTypeName,
   currentFieldName,
 }: {
   typeInfoMap: TypeInfoMap;
-  baseTypeInfoName: string;
-  currentTypeName: string;
   relationshipMode: boolean;
+  currentTypeName: string;
   currentFieldName?: string;
 }) => {
-  const baseTypeInfo = useMemo<TypeInfo>(
-    () => typeInfoMap[baseTypeInfoName],
-    [typeInfoMap, baseTypeInfoName],
-  );
   const currentTypeInfo = useMemo<TypeInfo>(
     () => typeInfoMap[currentTypeName],
     [typeInfoMap, currentTypeName],
   );
-  const toTypeInfoName = useMemo<string | undefined>(() => {
-    let typeName = relationshipMode ? undefined : baseTypeInfoName;
+  const relatedTypeName = useMemo<string | undefined>(() => {
+    let typeName: string | undefined;
 
     if (relationshipMode && typeof currentFieldName !== "undefined") {
       const {
@@ -36,19 +30,17 @@ export const useTypeInfoState = ({
     }
 
     return typeName;
-  }, [baseTypeInfoName, relationshipMode, currentFieldName, currentTypeInfo]);
-  const toTypeInfo = useMemo<TypeInfo | undefined>(
+  }, [relationshipMode, currentFieldName, currentTypeInfo]);
+  const relatedTypeInfo = useMemo<TypeInfo | undefined>(
     () =>
-      typeof toTypeInfoName !== "undefined"
-        ? typeInfoMap[toTypeInfoName]
+      typeof relatedTypeName !== "undefined"
+        ? typeInfoMap[relatedTypeName]
         : undefined,
-    [typeInfoMap, toTypeInfoName, baseTypeInfo],
+    [typeInfoMap, relatedTypeName],
   );
 
   return {
-    baseTypeInfo,
-    currentTypeInfo,
-    toTypeInfoName,
-    toTypeInfo,
+    relatedTypeName,
+    relatedTypeInfo,
   };
 };
