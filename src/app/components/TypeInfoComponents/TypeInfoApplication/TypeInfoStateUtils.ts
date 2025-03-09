@@ -5,12 +5,12 @@ export const useTypeInfoState = ({
   typeInfoMap,
   relationshipMode,
   fromTypeName,
-  fromFieldName,
+  fromTypeFieldName,
 }: {
   typeInfoMap: TypeInfoMap;
   relationshipMode: boolean;
   fromTypeName: string;
-  fromFieldName?: string;
+  fromTypeFieldName?: string;
 }) => {
   const fromTypeInfo = useMemo<TypeInfo>(
     () => typeInfoMap[fromTypeName],
@@ -19,9 +19,11 @@ export const useTypeInfoState = ({
   const toTypeName = useMemo<string | undefined>(() => {
     let typeName: string | undefined;
 
-    if (relationshipMode && typeof fromFieldName !== "undefined") {
+    if (relationshipMode && typeof fromTypeFieldName !== "undefined") {
       const {
-        fields: { [fromFieldName]: { typeReference = undefined } = {} } = {},
+        fields: {
+          [fromTypeFieldName]: { typeReference = undefined } = {},
+        } = {},
       } = fromTypeInfo;
 
       if (typeof typeReference === "string") {
@@ -30,7 +32,7 @@ export const useTypeInfoState = ({
     }
 
     return typeName;
-  }, [relationshipMode, fromFieldName, fromTypeInfo]);
+  }, [relationshipMode, fromTypeFieldName, fromTypeInfo]);
   const toTypeInfo = useMemo<TypeInfo | undefined>(
     () =>
       typeof toTypeName !== "undefined" ? typeInfoMap[toTypeName] : undefined,

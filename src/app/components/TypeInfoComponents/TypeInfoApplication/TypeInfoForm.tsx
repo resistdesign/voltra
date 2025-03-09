@@ -50,6 +50,7 @@ export type TypeInfoFormProps = Omit<
   "value" | "onSubmit"
 > & {
   typeInfoName: string;
+  primaryFieldValue: string;
   typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   value: TypeInfoDataItem;
@@ -61,6 +62,7 @@ export type TypeInfoFormProps = Omit<
 
 export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   typeInfoName,
+  primaryFieldValue,
   typeInfo,
   customInputTypeMap = {},
   value,
@@ -82,16 +84,20 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   }, [internalValue, onSubmit]);
   const onNavigateToTypeForField = useCallback(
     (nameOrIndex: NameOrIndex) => {
-      if (onNavigateToType) {
+      // TODO: Should never happen on array fields.
+      // NOTE: Never open related items on `CREATE` because the item doesn't yet exist to have relationships.
+      if (onNavigateToType && operation !== TypeOperation.CREATE) {
         onNavigateToType({
           fromTypeName: typeInfoName,
-          fromFieldName: `${nameOrIndex}`,
-          toOperation: operation,
+          fromTypePrimaryFieldValue: primaryFieldValue,
+          fromTypeFieldName: `${nameOrIndex}`,
+          // TODO: There should be options here.
+          toOperation: TypeOperation.UPDATE,
           toMode: TypeNavigationMode.RELATED_ITEMS,
         });
       }
     },
-    [onNavigateToType, typeInfoName, operation],
+    [onNavigateToType, typeInfoName, primaryFieldValue, operation],
   );
 
   useEffect(() => {
