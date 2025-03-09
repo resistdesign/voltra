@@ -15,10 +15,9 @@ import {
 } from "./TypeInfoApplication/TypeNavUtils";
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
-import { NonUpdateOperationMode } from "./TypeInfoApplication/Types";
 
 export type TypeInfoApplicationProps<
-  BaseOperationType extends TypeOperation = NonUpdateOperationMode,
+  BaseOperationType extends TypeOperation = TypeOperation,
 > = {
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;

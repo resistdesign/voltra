@@ -125,12 +125,12 @@ export const TypeInfoDemo: FC = () => {
   return (
     <TypeInfoApplication
       typeInfoMap={DEMO_TYPE_INFO_MAP}
-      typeInfoName="Person"
-      value={value}
-      onChange={setValue}
-      mode={TypeNavigationMode.FORM}
-      operation={TypeOperation.UPDATE}
-      primaryKeyValue={"first_item"}
+      baseTypeInfoName="Person"
+      baseValue={value}
+      onBaseValueChange={setValue}
+      baseMode={TypeNavigationMode.FORM}
+      baseOperation={TypeOperation.UPDATE}
+      basePrimaryKeyValue={"first_item"}
     />
   );
 };
