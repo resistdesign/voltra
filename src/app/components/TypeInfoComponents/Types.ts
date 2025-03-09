@@ -26,19 +26,19 @@ export type TypeNavigation = {
   /**
    * The name of the type to navigate to.
    * */
-  typeName: string;
+  fromTypeName: string;
   /**
    * The name of the field to show relationships for.
    * */
-  fieldName?: string;
+  fromFieldName?: string;
   /**
    * Implementations need to set this based on user intent when coming from the source item in an item relationship.
    * */
-  operation?: TypeOperation;
+  toOperation?: TypeOperation;
   /**
    * How are we interacting with an item or items?
    * */
-  mode: TypeNavigationMode;
+  toMode: TypeNavigationMode;
 };
 
 export type NameOrIndex = string | number;

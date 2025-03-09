@@ -84,10 +84,10 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
     (nameOrIndex: NameOrIndex) => {
       if (onNavigateToType) {
         onNavigateToType({
-          typeName: typeInfoName,
-          fieldName: `${nameOrIndex}`,
-          mode: TypeNavigationMode.RELATED_ITEMS,
-          operation,
+          fromTypeName: typeInfoName,
+          fromFieldName: `${nameOrIndex}`,
+          toOperation: operation,
+          toMode: TypeNavigationMode.RELATED_ITEMS,
         });
       }
     },
