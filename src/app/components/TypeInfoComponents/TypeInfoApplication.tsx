@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useCallback, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -9,6 +9,7 @@ import {
 import {
   InputComponent,
   TypeInfoDataStructure,
+  TypeNavigation,
   TypeNavigationMode,
 } from "./Types";
 import {
@@ -25,6 +26,11 @@ export type TypeInfoApplicationProps = {
   baseValue: TypeInfoDataStructure;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
+  onRequestRelatedItems?: (
+    typeInfoName: string,
+    primaryFieldValue: any,
+    fromFieldName: string,
+  ) => void;
 } & TypeNavigationOperationConfig;
 
 /**
@@ -39,7 +45,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseMode = TypeNavigationMode.FORM,
   baseOperation,
   basePrimaryKeyValue,
+  onRequestRelatedItems,
 }): ReactNode => {
+  // TODO: Change when selecting an item from list mode.
+  const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
+    string | undefined
+  >(basePrimaryKeyValue);
   const {
     relationshipMode,
     fromTypeName,
@@ -73,9 +84,26 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     onBaseValueChange,
     typeName: targetTypeName,
     operation: toOperation,
-    // TODO: URGENT: This needs to be updated.
-    primaryFieldValue: basePrimaryKeyValue,
+    primaryFieldValue: targetPrimaryFieldValue,
   });
+  const onNavigateToTypeInternal = useCallback(
+    (typeNavigation: TypeNavigation) => {
+      onNavigateToType(typeNavigation);
+
+      if (onRequestRelatedItems) {
+        const { fromTypeName, fromFieldName } = typeNavigation;
+
+        if (typeof fromFieldName !== "undefined") {
+          onRequestRelatedItems(
+            fromTypeName,
+            targetPrimaryFieldValue,
+            fromFieldName,
+          );
+        }
+      }
+    },
+    [onRequestRelatedItems, onNavigateToType, targetPrimaryFieldValue],
+  );
 
   // TODO: Add components for each `TypeNavigationMode`.
   return toMode === TypeNavigationMode.FORM ? (
@@ -87,7 +115,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       operation={toOperation}
       onCancel={onCloseCurrentNavHistoryItem}
       onSubmit={onDataItemChange}
-      onNavigateToType={onNavigateToType}
+      onNavigateToType={onNavigateToTypeInternal}
     />
   ) : undefined;
 };
