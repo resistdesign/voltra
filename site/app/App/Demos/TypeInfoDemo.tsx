@@ -121,6 +121,7 @@ export const TypeInfoDemo: FC = () => {
   });
   // TODO: Oh hmmm... these will probably be relationship items not actual items.
   //  And we will need to get the actual item for each of these.
+  //  Might really need to make back-end stuff that resolves these for us.
   const [relationshipInfo, setRelationshipInfo] =
     useState<ItemRelationshipInfoStructure>({});
 
