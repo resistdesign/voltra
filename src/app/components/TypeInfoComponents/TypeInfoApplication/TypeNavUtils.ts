@@ -4,10 +4,13 @@ import {
   TypeInfoMap,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
+import { getSimpleId } from "../../../../common/IdGeneration";
+
+export type ItemViewOperation = Exclude<TypeOperation, TypeOperation.DELETE>;
 
 export type TypeNavigationOperationConfig = {
-  baseOperation: Exclude<TypeOperation, TypeOperation.DELETE>;
-  basePrimaryKeyValue: string;
+  baseOperation: ItemViewOperation;
+  basePrimaryKeyValue?: string;
 };
 
 export const useBaseTypeNavigation = ({
@@ -22,7 +25,11 @@ export const useBaseTypeNavigation = ({
   return useMemo<TypeNavigation>(
     () => ({
       fromTypeName: baseTypeInfoName,
-      fromTypePrimaryFieldValue: basePrimaryKeyValue,
+      fromTypePrimaryFieldValue:
+        typeof basePrimaryKeyValue !== "undefined"
+          ? basePrimaryKeyValue
+          : // TODO: Where should this really be done?
+            getSimpleId(),
       fromTypeFieldName: "",
       toOperation: baseOperation,
       toMode: baseMode,
