@@ -68,8 +68,8 @@ export type TypeInfoDataStructure = {
 
 export type ItemRelationshipInfoStructure = {
   [fromItemType: string]: {
-    [fromItemField: string]: {
-      [fromItemPrimaryKeyValue: string]: ItemRelationshipInfo[];
+    [fromItemPrimaryKeyValue: string]: {
+      [fromItemField: string]: ItemRelationshipInfo[];
     };
   };
 };
