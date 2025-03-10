@@ -4,7 +4,6 @@ import {
   TypeInfoMap,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
-import { getSimpleId } from "../../../../common/IdGeneration";
 
 export type ItemViewOperation = Exclude<TypeOperation, TypeOperation.DELETE>;
 
@@ -26,10 +25,7 @@ export const useBaseTypeNavigation = ({
     () => ({
       fromTypeName: baseTypeInfoName,
       fromTypePrimaryFieldValue:
-        typeof basePrimaryKeyValue !== "undefined"
-          ? basePrimaryKeyValue
-          : // TODO: Where should this really be done?
-            getSimpleId(),
+        typeof basePrimaryKeyValue !== "undefined" ? basePrimaryKeyValue : "",
       fromTypeFieldName: "",
       toOperation: baseOperation,
       toMode: baseMode,
