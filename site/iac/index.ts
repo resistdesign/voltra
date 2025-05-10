@@ -114,6 +114,7 @@ const IaC = new SimpleCFT({
       if (persisted && typeof primaryField === "string") {
         cft.applyPack(addDatabase, {
           tableId: `${typeName}Table`,
+          tableName: typeName,
           attributes: {
             [primaryField]: "S",
           },
@@ -133,6 +134,21 @@ const IaC = new SimpleCFT({
         S3_API_BUCKET_NAME: {
           Ref: IDS.API.FILE_STORAGE,
         },
+        ...Object.keys(DEMO_TYPE_INFO_MAP).reduce<Record<string, any>>(
+          (acc, k) => {
+            const { primaryField, tags: { persisted = false } = {} } =
+              DEMO_TYPE_INFO_MAP[k];
+
+            if (persisted && typeof primaryField === "string") {
+              acc[`TABLE_${k.toUpperCase()}`] = {
+                Ref: `${k}Table`,
+              };
+            }
+
+            return acc;
+          },
+          {},
+        ),
       },
     },
     runtime: "nodejs20.x" as any,
