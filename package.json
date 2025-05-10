@@ -25,7 +25,7 @@
     "site:build:app": "parcel build site/app/index.html --dist-dir site-dist --target app && yarn finalize-site",
     "site:build:api": "parcel build ./site/api/index.ts --dist-dir site-dist --target api --no-source-maps",
     "site:build:iac": "ts-node ./site/iac/index.ts",
-    "start": "parcel site/app/index.html --host docs-local.voltra.app --dist-dir site-dist/app --https",
+    "start": "parcel site/app/index.html --host docs-local.demo.voltra.app --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/",
     "iac:types:gen": "ts-node ./src/iac/types/generate.ts"
   },
