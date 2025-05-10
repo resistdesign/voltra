@@ -5,10 +5,7 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-import {
-  ItemRelationshipInfo,
-  ItemRelationshipOriginItemInfo,
-} from "../../../common/ItemRelationshipInfoTypes";
+import { ItemRelationshipOriginItemInfo } from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
   /**
@@ -64,12 +61,4 @@ export type TypeDataStateMap = Record<TypeOperation, TypeInfoDataMap>;
 
 export type TypeInfoDataStructure = {
   [typeInfoName: string]: TypeDataStateMap;
-};
-
-export type ItemRelationshipInfoStructure = {
-  [fromItemType: string]: {
-    [fromItemPrimaryKeyValue: string]: {
-      [fromItemField: string]: ItemRelationshipInfo[];
-    };
-  };
 };

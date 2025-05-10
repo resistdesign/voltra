@@ -3,6 +3,7 @@ import { SimpleCFT } from "../../src/iac";
 import {
   addBuildPipeline,
   addCloudFunction,
+  addDNS,
   addGateway,
   addSecureFileStorage,
   addSSLCertificate,
@@ -34,6 +35,9 @@ const IDS = {
   COMMON: {
     SSL_CERTIFICATE: "SSLCertificate",
   },
+  APP: {
+    DEV_CLIENT_DOMAIN: "DEV_CLIENT_DOMAIN",
+  },
   API: {
     FILE_STORAGE: "ApiFileStorage",
     GATEWAY: "APIGateway",
@@ -44,6 +48,7 @@ const IDS = {
 const BASE_DOMAIN = "demo.voltra.app";
 const DOMAINS = {
   APP: `app.${BASE_DOMAIN}`,
+  APP_LOCAL: `app-local.${BASE_DOMAIN}`,
   API: `api.${BASE_DOMAIN}`,
   API_FILES: `api-files.${BASE_DOMAIN}`,
 };
@@ -67,6 +72,15 @@ const IaC = new SimpleCFT({
         Description: "The Hosted Zone ID for the domain",
       },
     },
+  })
+  .applyPack(addDNS, {
+    id: IDS.APP.DEV_CLIENT_DOMAIN,
+    domainName: DOMAINS.APP_LOCAL,
+    hostedZoneId: {
+      Ref: IDS.PARAMETERS.HOSTED_ZONE_ID,
+    },
+    recordType: "A",
+    resourceRecords: ["127.0.0.1"],
   })
   .applyPack(addSSLCertificate, {
     id: IDS.COMMON.SSL_CERTIFICATE,
@@ -95,6 +109,7 @@ const IaC = new SimpleCFT({
     environment: {
       Variables: {
         CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
+        DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}`,
         S3_API_BUCKET_NAME: {
           Ref: IDS.API.FILE_STORAGE,
         },
