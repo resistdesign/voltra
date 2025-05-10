@@ -36,7 +36,7 @@ const IDS = {
     SSL_CERTIFICATE: "SSLCertificate",
   },
   APP: {
-    DEV_CLIENT_DOMAIN: "DEV_CLIENT_DOMAIN",
+    DEV_CLIENT_DOMAIN: "DevClientDomain",
   },
   API: {
     FILE_STORAGE: "ApiFileStorage",
