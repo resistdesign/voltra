@@ -29,6 +29,10 @@ export type SupportedTags = Partial<{
    * Whether a pagination UI should enable full paging or just expect cursor-based paging.
    * */
   fullPaging: boolean;
+  /**
+   * Whether this type will be persisted in a storage solution.
+   * */
+  persisted: boolean;
 }>;
 
 /**

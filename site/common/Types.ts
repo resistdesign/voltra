@@ -7,6 +7,9 @@ export type PersistableItem = {
   readonly id?: string;
 };
 
+/**
+ * @persisted
+ * */
 export type Car = PersistableItem & {
   /**
    * @label Make
@@ -25,6 +28,9 @@ export type Car = PersistableItem & {
   year: number;
 };
 
+/**
+ * @persisted
+ * */
 export type Person = PersistableItem & {
   /**
    * @label First Name
