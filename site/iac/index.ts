@@ -3,6 +3,7 @@ import { SimpleCFT } from "../../src/iac";
 import {
   addBuildPipeline,
   addCloudFunction,
+  addDatabase,
   addDNS,
   addGateway,
   addSecureFileStorage,
@@ -12,6 +13,7 @@ import {
 import Path from "path";
 import FS from "fs";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
+import { DEMO_TYPE_INFO_MAP } from "../common/Constants";
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
@@ -103,6 +105,21 @@ const IaC = new SimpleCFT({
         },
       ],
     },
+  })
+  .modify((cft) => {
+    for (const typeName in DEMO_TYPE_INFO_MAP) {
+      const { primaryField = "id" } = DEMO_TYPE_INFO_MAP[typeName];
+
+      cft.applyPack(addDatabase, {
+        tableId: `${typeName}Table`,
+        attributes: {
+          [primaryField]: "S",
+        },
+        keys: {
+          [primaryField]: "HASH",
+        },
+      });
+    }
   })
   .applyPack(addCloudFunction, {
     id: IDS.API.FUNCTION,

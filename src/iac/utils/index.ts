@@ -88,6 +88,9 @@ export const addParameters = (
   template: CloudFormationTemplate,
 ) => parameters.reduce((acc, p) => addParameter(p, acc), template);
 
+/**
+ * A function used to apply a pack to a stack template.
+ * */
 export type ResourcePackApplier<ParamsType> = (
   params: ParamsType,
   template: CloudFormationTemplate,

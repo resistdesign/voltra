@@ -10,6 +10,11 @@ import {
 import YAML from "yaml";
 
 /**
+ * A function used to apply a modification to a SimpleCFT instance.
+ * */
+export type SimpleCFTModification = (simpleCFT: SimpleCFT) => void;
+
+/**
  * The basis for your stack template.
  * Apply packs, patches, parameters and parameter groups.
  * Access the `template` property for the resulting CloudFormation template.
@@ -69,6 +74,15 @@ export class SimpleCFT {
     });
 
     this.template = addParameters(parameterList, this.template);
+
+    return this;
+  };
+
+  /**
+   * Use a modification to dynamically apply various changes at once.
+   * */
+  public modify = (modification: SimpleCFTModification) => {
+    modification(this);
 
     return this;
   };
