@@ -95,5 +95,9 @@
       "outputFormat": "commonjs",
       "isLibrary": true
     }
+  },
+  "@parcel/transformer-js": {
+    "inlineFS": true,
+    "inlineEnvironment": true
   }
 }
