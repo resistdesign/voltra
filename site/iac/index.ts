@@ -47,8 +47,8 @@ const IDS = {
 };
 const BASE_DOMAIN = "demo.voltra.app";
 const DOMAINS = {
-  APP: `app.${BASE_DOMAIN}`,
-  APP_LOCAL: `app-local.${BASE_DOMAIN}`,
+  APP: `docs.${BASE_DOMAIN}`,
+  APP_LOCAL: `docs-local.${BASE_DOMAIN}`,
   API: `api.${BASE_DOMAIN}`,
   API_FILES: `api-files.${BASE_DOMAIN}`,
 };
