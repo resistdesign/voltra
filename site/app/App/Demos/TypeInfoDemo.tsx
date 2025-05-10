@@ -1,90 +1,11 @@
 import { FC, useState } from "react";
 import {
-  ItemRelationshipInfoStructure,
   TypeInfoApplication,
   TypeInfoDataStructure,
   TypeNavigationMode,
 } from "../../../../src/app/components";
-import {
-  TypeInfoMap,
-  TypeOperation,
-} from "../../../../src/common/TypeParsing/TypeInfo";
-import { getTypeInfoMapFromTypeScript } from "../../../../src/common/TypeParsing";
-
-const DEMO_TS = `
-export type PersistableItem = {
-  /**
-  * @label ID
-  * @primaryField
-  * @hidden
-  */
-  readonly id?: string;
-};
-
-export type Car = PersistableItem & {
-  /**
-  * @label Make
-  */
-  make: string;
-  /**
-  * @label Model
-  */
-  model: string;
-  /**
-  * @label Year
-  * @constraints.min 1900
-  * @constraints.max 2022
-  * @constraints.step 1
-  */
-  year: number;
-};
-
-export type Person = PersistableItem & {
-  /**
-  * @label First Name
-  */
-  firstName: string;
-  /**
-  * @label Last Name
-  */
-  lastName: string;
-  /**
-  * @label Age
-  * @format number 
-  * @constraints.defaultValue "18.0"
-  * @constraints.step 0.5
-  * @constraints.min 18.0
-  * @constraints.max 150.0
-  * @constraints.pattern \\d+
-  */
-  age: number;
-  /**
-  * @label Phone Number (+### (###) ###-####)
-  * @format tel
-  * @constraints.pattern ^\\+\\d+(-\\d+)? \\(\\d{3}\\) \\d{3}-\\d{4}$
-  */
-  phoneNumber: string;
-  /**
-  * @label Email
-  * @format email
-  */
-  email: string;
-  /**
-  * @label Car
-  */
-  car: Car;
-  /**
-  * @label Likes Cheese
-  * @constraints.defaultValue
-  */
-  readonly likesCheese: boolean;
-  /**
-  * @label Dietary Restrictions
-  */
-  dietaryRestrictions: "Vegan" | "Vegetarian" | "Pescatarian" | "Keto" | "Paleo" | "None";
-};
-`;
-const DEMO_TYPE_INFO_MAP: TypeInfoMap = getTypeInfoMapFromTypeScript(DEMO_TS);
+import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
+import { DEMO_TYPE_INFO_MAP } from "../../../common/Constants";
 
 export const TypeInfoDemo: FC = () => {
   const [value, setValue] = useState<TypeInfoDataStructure>({
@@ -119,11 +40,6 @@ export const TypeInfoDemo: FC = () => {
       DELETE: {},
     },
   });
-  // TODO: Oh hmmm... these will probably be relationship items not actual items.
-  //  And we will need to get the actual item for each of these.
-  //  Might really need to make back-end stuff that resolves these for us.
-  const [relationshipInfo, setRelationshipInfo] =
-    useState<ItemRelationshipInfoStructure>({});
 
   console.log("Structure:", value);
 
