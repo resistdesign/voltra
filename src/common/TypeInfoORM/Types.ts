@@ -68,6 +68,7 @@ export enum TypeInfoORMAPIRoutePaths {
   CREATE_RELATIONSHIP = "create-relationship",
   DELETE_RELATIONSHIP = "delete-relationship",
   LIST_RELATIONSHIPS = "list-relationships",
+  LIST_RELATED_ITEMS = "list-related-items",
 }
 
 /**
@@ -90,8 +91,11 @@ export type TypeInfoORMAPI = {
   ) => Promise<DeleteRelationshipResults>;
   listRelationships: (
     config: ListRelationshipsConfig,
+  ) => Promise<ListItemsResults<ItemRelationshipInfo>>;
+  listRelatedItems: (
+    config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
-  ) => Promise<boolean | ListItemsResults<ItemRelationshipInfo>>;
+  ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
   create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
   read: (
     typeName: string,

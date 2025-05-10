@@ -99,9 +99,19 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
 
   listRelationships = async (
     config: ListRelationshipsConfig,
-  ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
+  ): Promise<ListItemsResults<ItemRelationshipInfo>> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST_RELATIONSHIPS, [
       config,
+    ]);
+  };
+
+  listRelatedItems = async (
+    config: ListRelationshipsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> => {
+    return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST_RELATED_ITEMS, [
+      config,
+      selectedFields,
     ]);
   };
 }
