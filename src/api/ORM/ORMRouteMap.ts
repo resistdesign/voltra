@@ -47,7 +47,7 @@ export const getTypeInfoORMRouteMap = (
   config: BaseTypeInfoORMServiceConfig,
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
   getAccessingRole?: (authInfo: AuthInfo) => DACRole,
-) => {
+): RouteMap => {
   if (dacConfig && !getAccessingRole) {
     throw {
       message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER,
