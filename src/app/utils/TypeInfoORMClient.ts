@@ -17,6 +17,8 @@ import {
 
 /**
  * A client for a TypeInfoORM API or service.
+ *
+ * @param config - The configuration pointing to the Type Info ORM `RouteMap`.
  * */
 export class TypeInfoORMClient implements TypeInfoORMAPI {
   constructor(private config: ServiceConfig) {}
