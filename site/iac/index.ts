@@ -108,17 +108,20 @@ const IaC = new SimpleCFT({
   })
   .modify((cft) => {
     for (const typeName in DEMO_TYPE_INFO_MAP) {
-      const { primaryField = "id" } = DEMO_TYPE_INFO_MAP[typeName];
+      const { primaryField, tags: { persisted = false } = {} } =
+        DEMO_TYPE_INFO_MAP[typeName];
 
-      cft.applyPack(addDatabase, {
-        tableId: `${typeName}Table`,
-        attributes: {
-          [primaryField]: "S",
-        },
-        keys: {
-          [primaryField]: "HASH",
-        },
-      });
+      if (persisted && typeof primaryField === "string") {
+        cft.applyPack(addDatabase, {
+          tableId: `${typeName}Table`,
+          attributes: {
+            [primaryField]: "S",
+          },
+          keys: {
+            [primaryField]: "HASH",
+          },
+        });
+      }
     }
   })
   .applyPack(addCloudFunction, {
