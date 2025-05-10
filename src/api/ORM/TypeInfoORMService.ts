@@ -2,6 +2,7 @@ import {
   LiteralValue,
   TypeInfo,
   TypeInfoDataItem,
+  TypeInfoField,
   TypeInfoMap,
   TypeOperation,
 } from "../../common/TypeParsing/TypeInfo";
@@ -672,7 +673,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * */
   listRelationships = async (
     config: ListRelationshipsConfig,
-  ): Promise<boolean | ListItemsResults<ItemRelationshipInfo>> => {
+  ): Promise<ListItemsResults<ItemRelationshipInfo>> => {
     const { useDAC } = this.config;
     const { relationshipItemOrigin, ...remainingConfig } = config;
     this.validateRelationshipItem(relationshipItemOrigin);
@@ -731,7 +732,54 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         cursor: nextCursor,
       };
     } else {
-      return results as boolean | ListItemsResults<ItemRelationshipInfo>;
+      return results as ListItemsResults<ItemRelationshipInfo>;
+    }
+  };
+
+  listRelatedItems = async (
+    config: ListRelationshipsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => {
+    const {
+      relationshipItemOrigin: { fromTypeName, fromTypeFieldName },
+    } = config;
+    const {
+      fields: {
+        [fromTypeFieldName]: {
+          typeReference = undefined,
+        } = {} as Partial<TypeInfoField>,
+      } = {},
+    } = this.getTypeInfo(fromTypeName);
+    const targetTypeInfo =
+      typeof typeReference === "string"
+        ? this.getTypeInfo(typeReference)
+        : undefined;
+
+    if (
+      typeof typeReference === "string" &&
+      typeof targetTypeInfo !== "undefined"
+    ) {
+      const { cursor, items: relationshipItems = [] } =
+        await this.listRelationships(config);
+      const items: Partial<TypeInfoDataItem>[] = [];
+
+      for (const rItm of relationshipItems) {
+        const { toTypePrimaryFieldValue } = rItm;
+        const itm: Partial<TypeInfoDataItem> = await this.read(
+          typeReference,
+          toTypePrimaryFieldValue,
+          selectedFields,
+        );
+
+        items.push(itm);
+      }
+
+      return {
+        items,
+        cursor,
+      };
+    } else {
+      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP);
     }
   };
 
@@ -781,8 +829,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const driver = this.getDriverInternal(typeName);
     const item = await driver.readItem(
       primaryFieldValue,
-      // SECURITY: Dac validation could fail when item is missing unselected fields.
-      // CANNOT pass selected fields to driver when DAC is enabled.
+      // SECURITY: Dac validation could fail when `item` is missing unselected fields.
+      // CANNOT pass selected fields to `driver` when DAC is enabled.
       useDAC ? undefined : cleanSelectedFields,
     );
     const {
@@ -920,7 +968,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validate(typeName, itemWithPrimaryFieldOnly, TypeOperation.DELETE);
     const driver = this.getDriverInternal(typeName);
     const existingItem =
-      // SECURITY: Dac validation could fail when item is missing unselected fields.
+      // SECURITY: Dac validation could fail when `item` is missing unselected fields.
       useDAC
         ? await driver.readItem(primaryFieldValue)
         : itemWithPrimaryFieldOnly;
