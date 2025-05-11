@@ -65,6 +65,11 @@ export type SupportedFieldTags = Partial<{
    * */
   hidden: boolean;
   /**
+   * Whether a pagination UI should enable full paging or just expect cursor-based paging.
+   * NOTE: This is only used when the field has type reference.
+   * */
+  fullPaging: boolean;
+  /**
    * A set of constraints for the field value.
    * */
   constraints: Partial<{
