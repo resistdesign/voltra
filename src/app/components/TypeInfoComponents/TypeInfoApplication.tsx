@@ -4,6 +4,7 @@ import {
   TypeInfo,
   TypeInfoDataItem,
   TypeInfoMap,
+  TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   InputComponent,
@@ -12,7 +13,7 @@ import {
   TypeNavigationMode,
 } from "./Types";
 import {
-  TypeNavigationOperationConfig,
+  ItemViewOperation,
   useTypeNavHistory,
 } from "./TypeInfoApplication/TypeNavUtils";
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
@@ -21,6 +22,16 @@ import {
   ListRelationshipsConfig,
   ListRelationshipsResults,
 } from "../../../common/SearchTypes";
+
+export type TypeOperationConfig =
+  | {
+      baseOperation: Exclude<ItemViewOperation, TypeOperation.CREATE>;
+      basePrimaryKeyValue: string;
+    }
+  | {
+      baseOperation?: TypeOperation.CREATE | never;
+      basePrimaryKeyValue?: never;
+    };
 
 export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
@@ -33,7 +44,7 @@ export type TypeInfoApplicationProps = {
   onListRelationships?: (
     listRelationshipsConfig: ListRelationshipsConfig,
   ) => void;
-} & TypeNavigationOperationConfig;
+} & TypeOperationConfig;
 
 /**
  * Create a multi-type driven type information form application.
@@ -45,7 +56,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseValue,
   onBaseValueChange,
   baseMode = TypeNavigationMode.FORM,
-  baseOperation,
+  baseOperation = TypeOperation.CREATE,
   basePrimaryKeyValue,
   listRelationshipsResults,
   onListRelationships,
