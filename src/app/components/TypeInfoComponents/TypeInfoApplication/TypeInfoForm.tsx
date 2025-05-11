@@ -101,7 +101,9 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   );
 
   useEffect(() => {
-    setInternalValue(value);
+    if (typeof value === "object") {
+      setInternalValue(value);
+    }
   }, [value]);
 
   // TODO:
