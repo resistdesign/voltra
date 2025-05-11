@@ -134,5 +134,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       onSubmit={onDataItemChange}
       onNavigateToType={onNavigateToTypeInternal}
     />
-  ) : undefined;
+  ) : // TODO: Add related items list.
+  toMode === TypeNavigationMode.RELATED_ITEMS ? null : undefined;
 };
