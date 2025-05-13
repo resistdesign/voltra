@@ -2,13 +2,15 @@ import { FC, useCallback, useState } from "react";
 import {
   ListItemsConfig,
   ListItemsResults,
-  ListRelationshipsConfig,
-  ListRelationshipsResults,
   PagingInfo,
-  SortField
+  SortField,
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
-import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoDataItem,
+  TypeInfoMap,
+} from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
 import { PagingControls } from "./ObjectSearch/PagingControls";
@@ -31,12 +33,6 @@ export type ObjectSearchProps = {
   listItemsConfig: ListItemsConfig;
   onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
   listItemsResults: ListItemsResults<TypeInfoDataItem>;
-  listRelationshipsConfig: ListRelationshipsConfig;
-  onListRelationshipsConfigChange: (
-    listRelationshipsConfig: ListRelationshipsConfig
-  ) => void;
-  listRelationshipsResults: ListRelationshipsResults;
-  // TODO: CRUD ops for relationships.
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   selectable?: boolean;
@@ -44,69 +40,46 @@ export type ObjectSearchProps = {
 
 // TODO: Add item editing UI/buttons to item rows???
 export const ObjectSearch: FC<ObjectSearchProps> = ({
-                                                      typeInfoMap,
-                                                      typeInfoName,
-                                                      typeInfo,
-                                                      listItemsConfig,
-                                                      onListItemsConfigChange,
-                                                      listItemsResults,
-                                                      // TODO: Handle loading and displaying relationships.
-                                                      listRelationshipsConfig,
-                                                      onListRelationshipsConfigChange,
-                                                      listRelationshipsResults,
-                                                      onNavigateToType,
-                                                      customInputTypeMap,
-                                                      selectable = false
-                                                    }) => {
+  typeInfoMap,
+  typeInfoName,
+  typeInfo,
+  listItemsConfig,
+  onListItemsConfigChange,
+  listItemsResults,
+  onNavigateToType,
+  customInputTypeMap,
+  selectable = false,
+}) => {
   const { tags: { fullPaging = false } = {} } = typeInfo;
-  const {
-    sortFields
-  }: Partial<ListItemsConfig> = listItemsConfig || {};
-  const {
-    cursor: nextPagingCursor,
-    items: itemResults = []
-  }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
-
-  // List Config
-  const onPatchListItemsConfig = useCallback(
-    (patch: Partial<ListItemsConfig>) => {
-      // TODO: >>>IMPORTANT<<<: When should the cursor be reset/removed?
-      onListItemsConfigChange({
-        ...listItemsConfig,
-        ...patch
-      });
-    },
-    [listItemsConfig, onListItemsConfigChange]
-  );
+  const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
+  const { items: itemResults = [] }: ListItemsResults<TypeInfoDataItem> =
+    listItemsResults;
 
   // Paging
   const onPagingInfoChange = useCallback(
     (pagingInfo: PagingInfo) => {
-      onPatchListItemsConfig({
-        ...pagingInfo
+      onListItemsConfigChange({
+        ...listItemsConfig,
+        ...pagingInfo,
       });
     },
-    [onPatchListItemsConfig]
+    [listItemsConfig, onListItemsConfigChange],
   );
   const pagingControls = usePagingControls(
     fullPaging,
     listItemsConfig as PagingInfo,
-    onPagingInfoChange
+    onPagingInfoChange,
   );
-  const onLoadMore = useCallback(() => {
-    onPatchListItemsConfig({
-      cursor: nextPagingCursor
-    });
-  }, [nextPagingCursor, onPatchListItemsConfig]);
 
   // Sort Fields
   const onSortFieldsChange = useCallback(
     (newSortFields: SortField[]) => {
-      onPatchListItemsConfig({
-        sortFields: newSortFields
+      onListItemsConfigChange({
+        ...listItemsConfig,
+        sortFields: newSortFields,
       });
     },
-    [onPatchListItemsConfig]
+    [listItemsConfig, onListItemsConfigChange],
   );
 
   // Selected Items
@@ -116,7 +89,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       // TODO: Used for managing objects and using them for relationships.
       setSelectedIndices(newSelectedIndices);
     },
-    []
+    [],
   );
 
   return (
