@@ -1,20 +1,10 @@
 import { FC, useCallback, useState } from "react";
-import {
-  ListItemsConfig,
-  ListItemsResults,
-  PagingInfo,
-  SortField,
-} from "../../../../common/SearchTypes";
+import { ListItemsConfig, ListItemsResults, SortField } from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
-import {
-  TypeInfo,
-  TypeInfoDataItem,
-  TypeInfoMap,
-} from "../../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
 import { PagingControls } from "./ObjectSearch/PagingControls";
-import { usePagingControls } from "./ObjectSearch/usePagingControls";
 import { SearchControls } from "./ObjectSearch/SearchControls";
 
 const BaseObjectSearch = styled.div`
@@ -40,46 +30,30 @@ export type ObjectSearchProps = {
 
 // TODO: Add item editing UI/buttons to item rows???
 export const ObjectSearch: FC<ObjectSearchProps> = ({
-  typeInfoMap,
-  typeInfoName,
-  typeInfo,
-  listItemsConfig,
-  onListItemsConfigChange,
-  listItemsResults,
-  onNavigateToType,
-  customInputTypeMap,
-  selectable = false,
-}) => {
+                                                      typeInfoMap,
+                                                      typeInfoName,
+                                                      typeInfo,
+                                                      listItemsConfig,
+                                                      onListItemsConfigChange,
+                                                      listItemsResults,
+                                                      onNavigateToType,
+                                                      customInputTypeMap,
+                                                      selectable = false
+                                                    }) => {
   const { tags: { fullPaging = false } = {} } = typeInfo;
   const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
   const { items: itemResults = [] }: ListItemsResults<TypeInfoDataItem> =
     listItemsResults;
-
-  // Paging
-  const onPagingInfoChange = useCallback(
-    (pagingInfo: PagingInfo) => {
-      onListItemsConfigChange({
-        ...listItemsConfig,
-        ...pagingInfo,
-      });
-    },
-    [listItemsConfig, onListItemsConfigChange],
-  );
-  const pagingControls = usePagingControls(
-    fullPaging,
-    listItemsConfig as PagingInfo,
-    onPagingInfoChange,
-  );
 
   // Sort Fields
   const onSortFieldsChange = useCallback(
     (newSortFields: SortField[]) => {
       onListItemsConfigChange({
         ...listItemsConfig,
-        sortFields: newSortFields,
+        sortFields: newSortFields
       });
     },
-    [listItemsConfig, onListItemsConfigChange],
+    [listItemsConfig, onListItemsConfigChange]
   );
 
   // Selected Items
@@ -89,7 +63,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       // TODO: Used for managing objects and using them for relationships.
       setSelectedIndices(newSelectedIndices);
     },
-    [],
+    []
   );
 
   return (
@@ -100,7 +74,12 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         onListItemsConfigChange={onListItemsConfigChange}
         customInputTypeMap={customInputTypeMap}
       />
-      <PagingControls {...pagingControls} />
+      <PagingControls
+        fullPaging={fullPaging}
+        pagingInfo={listItemsConfig}
+        listItemsConfig={listItemsConfig}
+        onListItemsConfigChange={onListItemsConfigChange}
+      />
       <ObjectTable
         typeInfoMap={typeInfoMap}
         typeInfoName={typeInfoName}
@@ -113,7 +92,12 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         onSelectedIndicesChange={onSelectedIndicesChange}
         onNavigateToType={onNavigateToType}
       />
-      <PagingControls {...pagingControls} />
+      <PagingControls
+        fullPaging={fullPaging}
+        pagingInfo={listItemsConfig}
+        listItemsConfig={listItemsConfig}
+        onListItemsConfigChange={onListItemsConfigChange}
+      />
     </BaseObjectSearch>
   );
 };
