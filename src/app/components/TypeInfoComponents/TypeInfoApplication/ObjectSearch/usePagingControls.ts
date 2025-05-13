@@ -22,6 +22,8 @@ export const getStandardExpandedPagingCursor = (
 };
 
 export const usePagingControls = (
+  // TODO: USE!!!
+  fullPaging: boolean,
   pagingInfo: PagingInfo,
   onPagingInfoChange?: (pagingInfo: PagingInfo) => void,
 ): PagingControlsConfig => {

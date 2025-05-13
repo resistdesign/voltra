@@ -1,52 +1,24 @@
+import { FC, useCallback, useState } from "react";
 import {
-  ChangeEvent as ReactChangeEvent,
-  FC,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
-import {
-  ComparisonOperators,
-  FieldCriterion,
   ListItemsConfig,
   ListItemsResults,
   ListRelationshipsConfig,
   ListRelationshipsResults,
-  LogicalOperators,
   PagingInfo,
-  SearchCriteria,
-  SortField,
+  SortField
 } from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
-import {TypeInfo, TypeInfoDataItem, TypeInfoMap} from "../../../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
-import { FieldCriterionControl } from "./ObjectSearch/FieldCriterionControl";
-import { IndexButton } from "../../Basic/IndexButton";
 import { PagingControls } from "./ObjectSearch/PagingControls";
 import { usePagingControls } from "./ObjectSearch/usePagingControls";
-import { MaterialSymbol } from "../../MaterialSymbol";
+import { SearchControls } from "./ObjectSearch/SearchControls";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  gap: 1em;
-`;
-const Controls = styled.div`
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  gap: 1em;
-`;
-const FieldCriterionControlItem = styled.div`
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: row;
   justify-content: flex-start;
   align-items: stretch;
   gap: 1em;
@@ -61,7 +33,7 @@ export type ObjectSearchProps = {
   listItemsResults: ListItemsResults<TypeInfoDataItem>;
   listRelationshipsConfig: ListRelationshipsConfig;
   onListRelationshipsConfigChange: (
-    listRelationshipsConfig: ListRelationshipsConfig,
+    listRelationshipsConfig: ListRelationshipsConfig
   ) => void;
   listRelationshipsResults: ListRelationshipsResults;
   // TODO: CRUD ops for relationships.
@@ -72,171 +44,90 @@ export type ObjectSearchProps = {
 
 // TODO: Add item editing UI/buttons to item rows???
 export const ObjectSearch: FC<ObjectSearchProps> = ({
-  typeInfoMap,
-  typeInfoName,
-  typeInfo,
-  listItemsConfig,
-  onListItemsConfigChange,
-  listItemsResults,
-  // TODO: Handle loading and displaying relationships.
-  listRelationshipsConfig,
-  onListRelationshipsConfigChange,
-  listRelationshipsResults,
-  onNavigateToType,
-  customInputTypeMap,
-  selectable = false,
-}) => {
+                                                      typeInfoMap,
+                                                      typeInfoName,
+                                                      typeInfo,
+                                                      listItemsConfig,
+                                                      onListItemsConfigChange,
+                                                      listItemsResults,
+                                                      // TODO: Handle loading and displaying relationships.
+                                                      listRelationshipsConfig,
+                                                      onListRelationshipsConfigChange,
+                                                      listRelationshipsResults,
+                                                      onNavigateToType,
+                                                      customInputTypeMap,
+                                                      selectable = false
+                                                    }) => {
+  const { tags: { fullPaging = false } = {} } = typeInfo;
   const {
-    sortFields,
-    criteria: searchCriteria = {
-      logicalOperator: LogicalOperators.AND,
-      fieldCriteria: [],
-    },
+    sortFields
   }: Partial<ListItemsConfig> = listItemsConfig || {};
-  const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
-    searchCriteria;
   const {
     cursor: nextPagingCursor,
-    items: itemResults = [],
+    items: itemResults = []
   }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
+
+  // List Config
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
       // TODO: >>>IMPORTANT<<<: When should the cursor be reset/removed?
       onListItemsConfigChange({
         ...listItemsConfig,
-        ...patch,
+        ...patch
       });
     },
-    [listItemsConfig, onListItemsConfigChange],
+    [listItemsConfig, onListItemsConfigChange]
   );
-  const onSortFieldsChange = useCallback(
-    (newSortFields: SortField[]) => {
-      onPatchListItemsConfig({
-        sortFields: newSortFields,
-      });
-    },
-    [onPatchListItemsConfig],
-  );
-  const onPatchSearchCriteria = useCallback(
-    (newSearchCriteria: Partial<SearchCriteria>) => {
-      onPatchListItemsConfig({
-        criteria: {
-          ...searchCriteria,
-          ...newSearchCriteria,
-        },
-      });
-    },
-    [searchCriteria, onPatchListItemsConfig],
-  );
-  const onFieldCriterionChange = useCallback(
-    (index: number, newFieldCriterion: FieldCriterion) => {
-      const newFieldCriteria = [...fieldCriteria].map(
-        (fieldCriterionItem, fieldCriterionIndex) =>
-          fieldCriterionIndex === index
-            ? newFieldCriterion
-            : fieldCriterionItem,
-      );
 
-      onPatchSearchCriteria({
-        fieldCriteria: newFieldCriteria,
-      });
-    },
-    [fieldCriteria, onPatchSearchCriteria],
-  );
-  const onLogicalOperatorChange = useCallback(
-    (event: ReactChangeEvent<HTMLSelectElement>) => {
-      const newLogicalOperator = event.target.value as LogicalOperators;
-
-      onPatchSearchCriteria({
-        logicalOperator: newLogicalOperator,
-      });
-    },
-    [onPatchSearchCriteria],
-  );
-  const logicalOperatorOptions = useMemo(
-    () => Object.values(LogicalOperators),
-    [],
-  );
-  const onAddCriterion = useCallback(() => {
-    onPatchSearchCriteria({
-      fieldCriteria: [
-        ...fieldCriteria,
-        {
-          fieldName: "",
-          operator: ComparisonOperators.EQUALS,
-          value: "",
-        },
-      ],
-    });
-  }, [fieldCriteria, onPatchSearchCriteria]);
-  const onRemoveCriterion = useCallback(
-    (index: number) => {
-      const newFieldCriteria = [...fieldCriteria].filter(
-        (_, fieldCriterionIndex) => fieldCriterionIndex !== index,
-      );
-
-      onPatchSearchCriteria({
-        fieldCriteria: newFieldCriteria,
-      });
-    },
-    [fieldCriteria, onPatchSearchCriteria],
-  );
-  const { tags: { fullPaging } = {} } = typeInfo;
+  // Paging
   const onPagingInfoChange = useCallback(
     (pagingInfo: PagingInfo) => {
       onPatchListItemsConfig({
-        ...pagingInfo,
+        ...pagingInfo
       });
     },
-    [onPatchListItemsConfig],
+    [onPatchListItemsConfig]
   );
   const pagingControls = usePagingControls(
+    fullPaging,
     listItemsConfig as PagingInfo,
-    onPagingInfoChange,
+    onPagingInfoChange
   );
   const onLoadMore = useCallback(() => {
     onPatchListItemsConfig({
-      cursor: nextPagingCursor,
+      cursor: nextPagingCursor
     });
   }, [nextPagingCursor, onPatchListItemsConfig]);
+
+  // Sort Fields
+  const onSortFieldsChange = useCallback(
+    (newSortFields: SortField[]) => {
+      onPatchListItemsConfig({
+        sortFields: newSortFields
+      });
+    },
+    [onPatchListItemsConfig]
+  );
+
+  // Selected Items
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const onSelectedIndicesChange = useCallback(
     (newSelectedIndices: number[]) => {
       // TODO: Used for managing objects and using them for relationships.
       setSelectedIndices(newSelectedIndices);
     },
-    [],
+    []
   );
 
   return (
     <BaseObjectSearch>
-      <Controls>
-        <select value={logicalOperator} onChange={onLogicalOperatorChange}>
-          <option value="">Logical Operator</option>
-          {logicalOperatorOptions.map((operator) => (
-            <option key={operator} value={operator}>
-              {operator}
-            </option>
-          ))}
-        </select>
-        {fieldCriteria.map((fieldCriterionItem, index) => (
-          <FieldCriterionControlItem key={`FieldCriterionControlItem:${index}`}>
-            <FieldCriterionControl
-              key={`TypeInfoInput:${index}`}
-              index={index}
-              fieldCriterion={fieldCriterionItem}
-              typeInfo={typeInfo}
-              onChange={onFieldCriterionChange}
-              customInputTypeMap={customInputTypeMap}
-            />
-            <IndexButton index={index} onClick={onRemoveCriterion}>
-              Remove Criterion
-            </IndexButton>
-          </FieldCriterionControlItem>
-        ))}
-        <button onClick={onAddCriterion}>Add Criterion</button>
-      </Controls>
-      {fullPaging ? <PagingControls {...pagingControls} /> : undefined}
+      <SearchControls
+        typeInfo={typeInfo}
+        listItemsConfig={listItemsConfig}
+        onListItemsConfigChange={onListItemsConfigChange}
+        customInputTypeMap={customInputTypeMap}
+      />
+      <PagingControls {...pagingControls} />
       <ObjectTable
         typeInfoMap={typeInfoMap}
         typeInfoName={typeInfoName}
@@ -249,13 +140,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
         onSelectedIndicesChange={onSelectedIndicesChange}
         onNavigateToType={onNavigateToType}
       />
-      {fullPaging ? (
-        <PagingControls {...pagingControls} />
-      ) : (
-        <button onClick={onLoadMore}>
-          <MaterialSymbol>expand_circle_down</MaterialSymbol>
-        </button>
-      )}
+      <PagingControls {...pagingControls} />
     </BaseObjectSearch>
   );
 };
