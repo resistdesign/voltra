@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback } from "react";
 import { ListItemsConfig, ListItemsResults, SortField } from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
 import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
@@ -26,6 +26,8 @@ export type ObjectSearchProps = {
   onNavigateToType?: (typeNavigation: TypeNavigation) => void;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   selectable?: boolean;
+  selectedIndices?: number[];
+  onSelectedIndicesChange?: (selectedIndices: number[]) => void;
 };
 
 // TODO: Add item editing UI/buttons to item rows???
@@ -38,7 +40,9 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
                                                       listItemsResults,
                                                       onNavigateToType,
                                                       customInputTypeMap,
-                                                      selectable = false
+                                                      selectable = false,
+                                                      selectedIndices = [],
+                                                      onSelectedIndicesChange
                                                     }) => {
   const { tags: { fullPaging = false } = {} } = typeInfo;
   const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
@@ -54,16 +58,6 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       });
     },
     [listItemsConfig, onListItemsConfigChange]
-  );
-
-  // Selected Items
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  const onSelectedIndicesChange = useCallback(
-    (newSelectedIndices: number[]) => {
-      // TODO: Used for managing objects and using them for relationships.
-      setSelectedIndices(newSelectedIndices);
-    },
-    []
   );
 
   return (
