@@ -1,11 +1,20 @@
-import { ChangeEvent as ReactChangeEvent, FC, useCallback, useMemo } from "react";
-import { ListItemsConfig, PagingInfo, StandardExpandedPagingCursor } from "../../../../../common/SearchTypes";
+import {
+  ChangeEvent as ReactChangeEvent,
+  FC,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  ListItemsConfig,
+  PagingInfo,
+  StandardExpandedPagingCursor,
+} from "../../../../../common/SearchTypes";
 import styled from "styled-components";
 import { ValueButton } from "../../../Basic/ValueButton";
 import { MaterialSymbol } from "../../../MaterialSymbol";
 
 export const getStandardExpandedPagingCursor = (
-  cursor?: string
+  cursor?: string,
 ): StandardExpandedPagingCursor => {
   try {
     const { currentPage = 1, totalPages = 1 }: StandardExpandedPagingCursor =
@@ -13,12 +22,12 @@ export const getStandardExpandedPagingCursor = (
 
     return {
       currentPage,
-      totalPages
+      totalPages,
     };
   } catch (error) {
     return {
       currentPage: 1,
-      totalPages: 1
+      totalPages: 1,
     };
   }
 };
@@ -40,12 +49,12 @@ export type PagingControlsProps = {
 };
 
 export const PagingControls: FC<PagingControlsProps> = ({
-                                                          // TODO: USE!!!
-                                                          fullPaging,
-                                                          pagingInfo,
-                                                          listItemsConfig,
-                                                          onListItemsConfigChange
-                                                        }) => {
+  // TODO: USE!!!
+  fullPaging,
+  pagingInfo,
+  listItemsConfig,
+  onListItemsConfigChange,
+}) => {
   const { cursor, itemsPerPage = 1 } = pagingInfo;
   const pagingCursor = useMemo<StandardExpandedPagingCursor>(() => {
     return getStandardExpandedPagingCursor(cursor);
@@ -56,21 +65,21 @@ export const PagingControls: FC<PagingControlsProps> = ({
     (pagingInfo: PagingInfo) => {
       onListItemsConfigChange({
         ...listItemsConfig,
-        ...pagingInfo
+        ...pagingInfo,
       });
     },
-    [listItemsConfig, onListItemsConfigChange]
+    [listItemsConfig, onListItemsConfigChange],
   );
   const onPatchPagingInfo = useCallback(
     (newPagingInfo: Partial<PagingInfo>) => {
       if (onPagingInfoChange) {
         onPagingInfoChange({
           ...pagingInfo,
-          ...newPagingInfo
+          ...newPagingInfo,
         });
       }
     },
-    [onPagingInfoChange, pagingInfo]
+    [onPagingInfoChange, pagingInfo],
   );
   const onPatchCursor = useCallback(
     (newCursor: Partial<StandardExpandedPagingCursor>) => {
@@ -78,49 +87,49 @@ export const PagingControls: FC<PagingControlsProps> = ({
         onPatchPagingInfo({
           cursor: JSON.stringify({
             ...pagingCursor,
-            ...newCursor
-          })
+            ...newCursor,
+          }),
         });
       } catch (error) {
         // Ignore.
       }
     },
-    [pagingCursor, onPatchPagingInfo]
+    [pagingCursor, onPatchPagingInfo],
   );
   const onItemsPerPageChange = useCallback(
     (itemsPerPage: number) => {
       onPatchPagingInfo({
-        itemsPerPage
+        itemsPerPage,
       });
     },
-    [onPatchPagingInfo]
+    [onPatchPagingInfo],
   );
   const onFirst = useCallback(() => {
     onPatchCursor({
-      currentPage: 1
+      currentPage: 1,
     });
   }, [onPatchCursor]);
   const onPrevious = useCallback(() => {
     onPatchCursor({
-      currentPage: Math.max(1, currentPage - 1)
+      currentPage: Math.max(1, currentPage - 1),
     });
   }, [currentPage, onPatchCursor]);
   const onPageNumber = useCallback(
     (pageNumber: number) => {
       onPatchCursor({
-        currentPage: pageNumber
+        currentPage: pageNumber,
       });
     },
-    [onPatchCursor]
+    [onPatchCursor],
   );
   const onNext = useCallback(() => {
     onPatchCursor({
-      currentPage: Math.min(totalPages, currentPage + 1)
+      currentPage: Math.min(totalPages, currentPage + 1),
     });
   }, [currentPage, onPatchCursor, totalPages]);
   const onLast = useCallback(() => {
     onPatchCursor({
-      currentPage: totalPages
+      currentPage: totalPages,
     });
   }, [onPatchCursor, totalPages]);
   const currentPageNumberList = useMemo(() => {
@@ -146,7 +155,7 @@ export const PagingControls: FC<PagingControlsProps> = ({
 
       onItemsPerPageChange(itemsPerPage);
     },
-    [onItemsPerPageChange]
+    [onItemsPerPageChange],
   );
 
   return (
