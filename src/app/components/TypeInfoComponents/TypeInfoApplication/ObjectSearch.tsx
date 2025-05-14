@@ -1,10 +1,21 @@
 import { FC, useCallback } from "react";
-import { ListItemsConfig, ListItemsResults, SortField } from "../../../../common/SearchTypes";
+import {
+  ListItemsConfig,
+  ListItemsResults,
+  SortField,
+} from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
-import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeInfoDataItem,
+  TypeInfoMap,
+} from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
-import { PagingControls, useCursorCacheController } from "./ObjectSearch/PagingControls";
+import {
+  PagingControls,
+  useCursorCacheController,
+} from "./ObjectSearch/PagingControls";
 import { SearchControls } from "./ObjectSearch/SearchControls";
 
 const BaseObjectSearch = styled.div`
@@ -28,27 +39,29 @@ export type ObjectSearchProps = {
   selectable?: boolean;
   selectedIndices?: number[];
   onSelectedIndicesChange?: (selectedIndices: number[]) => void;
+  hideSearchControls?: boolean;
 };
 
 // TODO: Add item editing UI/buttons to item rows???
 export const ObjectSearch: FC<ObjectSearchProps> = ({
-                                                      typeInfoMap,
-                                                      typeInfoName,
-                                                      typeInfo,
-                                                      listItemsConfig,
-                                                      onListItemsConfigChange,
-                                                      listItemsResults,
-                                                      onNavigateToType,
-                                                      customInputTypeMap,
-                                                      selectable = false,
-                                                      selectedIndices = [],
-                                                      onSelectedIndicesChange
-                                                    }) => {
+  typeInfoMap,
+  typeInfoName,
+  typeInfo,
+  listItemsConfig,
+  onListItemsConfigChange,
+  listItemsResults,
+  onNavigateToType,
+  customInputTypeMap,
+  selectable = false,
+  selectedIndices = [],
+  onSelectedIndicesChange,
+  hideSearchControls = false,
+}) => {
   const { tags: { fullPaging = false } = {} } = typeInfo;
   const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
   const {
     cursor: nextCursor,
-    items: itemResults = []
+    items: itemResults = [],
   }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
 
   // Cursor Cache
@@ -59,20 +72,22 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     (newSortFields: SortField[]) => {
       onListItemsConfigChange({
         ...listItemsConfig,
-        sortFields: newSortFields
+        sortFields: newSortFields,
       });
     },
-    [listItemsConfig, onListItemsConfigChange]
+    [listItemsConfig, onListItemsConfigChange],
   );
 
   return (
     <BaseObjectSearch>
-      <SearchControls
-        typeInfo={typeInfo}
-        listItemsConfig={listItemsConfig}
-        onListItemsConfigChange={onListItemsConfigChange}
-        customInputTypeMap={customInputTypeMap}
-      />
+      {!hideSearchControls ? (
+        <SearchControls
+          typeInfo={typeInfo}
+          listItemsConfig={listItemsConfig}
+          onListItemsConfigChange={onListItemsConfigChange}
+          customInputTypeMap={customInputTypeMap}
+        />
+      ) : undefined}
       <PagingControls
         fullPaging={fullPaging}
         cursorCacheController={cursorCacheController}
