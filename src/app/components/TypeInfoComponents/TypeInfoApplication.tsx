@@ -158,8 +158,24 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       onNavigateToType={onNavigateToTypeInternal}
     />
   ) : // TODO: Need ObjectSearch for related items, but without the search.
-  toMode === TypeNavigationMode.RELATED_ITEMS ? null : toMode ===
-    TypeNavigationMode.SEARCH_ITEMS ? (
+  toMode === TypeNavigationMode.RELATED_ITEMS ? (
+    targetTypeName && targetTypeInfo ? (
+      <ObjectSearch
+        typeInfoMap={typeInfoMap}
+        typeInfoName={targetTypeName}
+        typeInfo={targetTypeInfo}
+        listItemsConfig={listItemsConfig}
+        onListItemsConfigChange={setListItemsConfig}
+        listItemsResults={listItemResults}
+        onNavigateToType={onNavigateToType}
+        customInputTypeMap={customInputTypeMap}
+        selectable={selectable}
+        selectedIndices={selectedIndices}
+        onSelectedIndicesChange={setSelectedIndices}
+        hideSearchControls
+      />
+    ) : undefined
+  ) : toMode === TypeNavigationMode.SEARCH_ITEMS ? (
     targetTypeName && targetTypeInfo ? (
       <ObjectSearch
         typeInfoMap={typeInfoMap}
