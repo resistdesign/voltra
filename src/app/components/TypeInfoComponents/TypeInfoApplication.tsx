@@ -157,8 +157,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       onSubmit={onDataItemChange}
       onNavigateToType={onNavigateToTypeInternal}
     />
-  ) : // TODO: Add related items list.
-  toMode === TypeNavigationMode.RELATED_ITEMS ? null : toMode === // TODO: Need ObjectSearch for related items, but without the search.
+  ) : // TODO: Need ObjectSearch for related items, but without the search.
+  toMode === TypeNavigationMode.RELATED_ITEMS ? null : toMode ===
     TypeNavigationMode.SEARCH_ITEMS ? (
     targetTypeName && targetTypeInfo ? (
       <ObjectSearch
