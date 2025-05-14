@@ -2,7 +2,9 @@ import {
   ChangeEvent as ReactChangeEvent,
   FC,
   useCallback,
+  useEffect,
   useMemo,
+  useState,
 } from "react";
 import {
   ListItemsConfig,
@@ -32,6 +34,94 @@ export const getStandardExpandedPagingCursor = (
   }
 };
 
+export type CursorCacheController = {
+  cursorCache: string[];
+  currentCursor: string | undefined;
+  nextCursor: string | undefined;
+  atFirstCursor: boolean;
+  atLastCursor: boolean;
+  onFirstCursor: () => void;
+  onPreviousCursor: () => void;
+  onSpecifyCursorIndex: (index: number) => void;
+  onNextCursor: () => void;
+  onLastCursor: () => void;
+  onReset: () => void;
+};
+
+export const useCursorCacheController = (
+  nextCursor: string | undefined,
+): CursorCacheController => {
+  const [cursorCache, setCursorCache] = useState<string[]>([]);
+  const [cursorIndex, setCursorIndex] = useState<number>(0);
+  const currentCursor = useMemo<string | undefined>(() => {
+    return cursorCache[cursorIndex];
+  }, [cursorCache, cursorIndex]);
+  const atFirstCursor = useMemo(() => {
+    return cursorIndex === 0;
+  }, [cursorIndex]);
+  const atLastCursor = useMemo(() => {
+    return cursorIndex === cursorCache.length - 1;
+  }, [cursorIndex, cursorCache]);
+
+  // Internal
+  const addCursor = useCallback((newCursor: string) => {
+    setCursorCache((prevCache) => [...prevCache, newCursor]);
+  }, []);
+  const onIncrementCursor = useCallback(() => {
+    setCursorIndex((prevIndex) => prevIndex + 1);
+  }, [cursorCache]);
+
+  // API
+  const onFirstCursor = useCallback(() => {
+    setCursorIndex(0);
+  }, []);
+  const onPreviousCursor = useCallback(() => {
+    setCursorIndex((prevIndex) => Math.max(0, prevIndex - 1));
+  }, []);
+  const onSpecifyCursorIndex = useCallback(
+    (index: number) => {
+      if (index > -1 && index < cursorCache.length) {
+        setCursorIndex(index);
+      }
+    },
+    [cursorCache],
+  );
+  const onNextCursor = useCallback(() => {
+    if (!atLastCursor) {
+      onIncrementCursor();
+    }
+  }, [atLastCursor, onIncrementCursor]);
+  const onLastCursor = useCallback(() => {
+    setCursorIndex(cursorCache.length - 1);
+  }, [cursorCache]);
+  const onReset = useCallback(() => {
+    setCursorCache([]);
+    setCursorIndex(0);
+  }, []);
+
+  // Effects
+  useEffect(() => {
+    if (nextCursor !== undefined && !cursorCache.includes(nextCursor)) {
+      addCursor(nextCursor);
+      onIncrementCursor();
+    }
+  }, [nextCursor, cursorCache, addCursor, onIncrementCursor]);
+
+  return {
+    cursorCache,
+    currentCursor,
+    nextCursor,
+    atFirstCursor,
+    atLastCursor,
+    onFirstCursor,
+    onPreviousCursor,
+    onSpecifyCursorIndex,
+    onNextCursor,
+    onLastCursor,
+    onReset,
+  };
+};
+
 const BasePagingControls = styled.div`
   flex: 1 0 auto;
   display: flex;
@@ -44,13 +134,11 @@ const BasePagingControls = styled.div`
 export type PagingControlsProps = (
   | {
       fullPaging: true;
-      cursorCache?: string[];
-      setCursorCache?: (cursorCache: string[]) => void;
+      cursorCacheController?: CursorCacheController;
     }
   | {
       fullPaging: false;
-      cursorCache: string[];
-      setCursorCache: (cursorCache: string[]) => void;
+      cursorCacheController: CursorCacheController;
     }
 ) & {
   pagingInfo: PagingInfo;
@@ -60,19 +148,32 @@ export type PagingControlsProps = (
 
 export const PagingControls: FC<PagingControlsProps> = ({
   fullPaging,
-  // TODO: Track cursors when using non-full-paging.
-  cursorCache,
-  setCursorCache,
+  cursorCacheController,
   pagingInfo,
   listItemsConfig,
   onListItemsConfigChange,
 }) => {
+  const {
+    cursorCache,
+    nextCursor,
+    atFirstCursor,
+    atLastCursor,
+    onFirstCursor,
+    onPreviousCursor,
+    onSpecifyCursorIndex,
+    onNextCursor,
+    onLastCursor,
+    onReset: onResetCursorCache,
+  }: Partial<CursorCacheController> = cursorCacheController || {};
   const { cursor, itemsPerPage = 1 } = pagingInfo;
   const pagingCursor = useMemo<StandardExpandedPagingCursor>(() => {
     return getStandardExpandedPagingCursor(cursor);
   }, [cursor]);
   const { currentPage = 1, totalPages = 1 }: StandardExpandedPagingCursor =
     pagingCursor;
+
+  const hasPrevious = fullPaging ? currentPage > 1 : !atFirstCursor;
+  const hasNext = fullPaging ? currentPage < totalPages : !atLastCursor;
   const onPagingInfoChange = useCallback(
     (pagingInfo: PagingInfo) => {
       onListItemsConfigChange({
@@ -93,74 +194,122 @@ export const PagingControls: FC<PagingControlsProps> = ({
     },
     [onPagingInfoChange, pagingInfo],
   );
-  const onPatchCursor = useCallback(
-    (newCursor: Partial<StandardExpandedPagingCursor>) => {
-      try {
-        onPatchPagingInfo({
-          cursor: JSON.stringify({
-            ...pagingCursor,
-            ...newCursor,
-          }),
-        });
-      } catch (error) {
-        // Ignore.
-      }
-    },
-    [pagingCursor, onPatchPagingInfo],
-  );
-  const onItemsPerPageChange = useCallback(
-    (itemsPerPage: number) => {
+  const onPatchStringCursor = useCallback(
+    (newCursor: string) => {
       onPatchPagingInfo({
-        itemsPerPage,
+        cursor: newCursor,
       });
     },
     [onPatchPagingInfo],
   );
-  const onFirst = useCallback(() => {
-    onPatchCursor({
-      currentPage: 1,
-    });
-  }, [onPatchCursor]);
-  const onPrevious = useCallback(() => {
-    onPatchCursor({
-      currentPage: Math.max(1, currentPage - 1),
-    });
-  }, [currentPage, onPatchCursor]);
-  const onPageNumber = useCallback(
-    (pageNumber: number) => {
-      onPatchCursor({
-        currentPage: pageNumber,
+  const onPatchCursor = useCallback(
+    (newCursor: Partial<StandardExpandedPagingCursor>) => {
+      try {
+        onPatchStringCursor(
+          JSON.stringify({
+            ...pagingCursor,
+            ...newCursor,
+          }),
+        );
+      } catch (error) {
+        // Ignore.
+      }
+    },
+    [pagingCursor, onPatchStringCursor],
+  );
+  const onItemsPerPageChange = useCallback(
+    (itemsPerPage: number) => {
+      onResetCursorCache?.();
+      onPatchPagingInfo({
+        cursor: undefined,
+        itemsPerPage,
       });
     },
-    [onPatchCursor],
+    [onPatchPagingInfo, onResetCursorCache],
+  );
+  const onFirst = useCallback(() => {
+    if (fullPaging) {
+      onPatchCursor({
+        currentPage: 1,
+      });
+    } else {
+      onFirstCursor?.();
+    }
+  }, [fullPaging, onPatchCursor, onFirstCursor]);
+  const onPrevious = useCallback(() => {
+    if (fullPaging) {
+      onPatchCursor({
+        currentPage: Math.max(1, currentPage - 1),
+      });
+    } else {
+      onPreviousCursor?.();
+    }
+  }, [fullPaging, currentPage, onPatchCursor, onPreviousCursor]);
+  const onPageNumber = useCallback(
+    (pageNumber: number) => {
+      if (fullPaging) {
+        onPatchCursor({
+          currentPage: pageNumber,
+        });
+      } else {
+        onSpecifyCursorIndex?.(pageNumber - 1);
+      }
+    },
+    [fullPaging, onPatchCursor, onSpecifyCursorIndex],
   );
   const onNext = useCallback(() => {
-    onPatchCursor({
-      currentPage: Math.min(totalPages, currentPage + 1),
-    });
-  }, [currentPage, onPatchCursor, totalPages]);
+    if (fullPaging) {
+      onPatchCursor({
+        currentPage: Math.min(totalPages, currentPage + 1),
+      });
+    } else {
+      onNextCursor?.();
+
+      if (nextCursor) {
+        onPatchStringCursor(nextCursor);
+      }
+    }
+  }, [
+    fullPaging,
+    currentPage,
+    onPatchCursor,
+    totalPages,
+    onNextCursor,
+    nextCursor,
+    onPatchStringCursor,
+  ]);
   const onLast = useCallback(() => {
-    onPatchCursor({
-      currentPage: totalPages,
-    });
-  }, [onPatchCursor, totalPages]);
+    if (fullPaging) {
+      onPatchCursor({
+        currentPage: totalPages,
+      });
+    } else {
+      onLastCursor?.();
+    }
+  }, [fullPaging, onPatchCursor, totalPages, onLastCursor]);
   const currentPageNumberList = useMemo(() => {
     const pageNumberList = [];
 
-    for (let i = currentPage - 3; i <= totalPages; i++) {
-      const thisPageNumber = i;
+    if (fullPaging) {
+      for (let i = currentPage - 3; i <= totalPages; i++) {
+        const thisPageNumber = i;
 
-      if (thisPageNumber > 0) {
-        pageNumberList.push(thisPageNumber);
+        if (thisPageNumber > 0) {
+          pageNumberList.push(thisPageNumber);
+        }
+
+        if (thisPageNumber === currentPage + 3) {
+          break;
+        }
       }
-
-      if (thisPageNumber === currentPage + 3) {
-        break;
+    } else if (cursorCache) {
+      for (let i = 0; i < cursorCache.length; i++) {
+        pageNumberList.push(i + 1);
       }
     }
 
     return pageNumberList;
-  }, [currentPage, totalPages]);
+  }, [fullPaging, cursorCache, currentPage, totalPages]);
   const onItemsPerPageChangeInternal = useCallback(
     (event: ReactChangeEvent<HTMLSelectElement>) => {
       const itemsPerPage = parseInt(event.target.value, 10);
@@ -172,27 +321,31 @@ export const PagingControls: FC<PagingControlsProps> = ({
 
   return (
     <BasePagingControls>
-      <button onClick={onFirst}>
-        <MaterialSymbol>skip_previous</MaterialSymbol>
-      </button>
-      <button onClick={onPrevious}>
-        <MaterialSymbol>fast_rewind</MaterialSymbol>
-      </button>
-      {fullPaging
-        ? currentPageNumberList.map((pageNumber) => (
-            <ValueButton value={pageNumber} onClick={onPageNumber}>
-              {pageNumber === currentPage ? (
-                <strong>{pageNumber}</strong>
-              ) : (
-                pageNumber
-              )}
-            </ValueButton>
-          ))
-        : undefined}
-      <button onClick={onNext}>
-        <MaterialSymbol>fast_forward</MaterialSymbol>
-      </button>
-      {fullPaging ? (
+      {hasPrevious ? (
+        <>
+          <button onClick={onFirst}>
+            <MaterialSymbol>skip_previous</MaterialSymbol>
+          </button>
+          <button onClick={onPrevious}>
+            <MaterialSymbol>fast_rewind</MaterialSymbol>
+          </button>
+        </>
+      ) : undefined}
+      {currentPageNumberList.map((pageNumber) => (
+        <ValueButton value={pageNumber} onClick={onPageNumber}>
+          {pageNumber === currentPage ? (
+            <strong>{pageNumber}</strong>
+          ) : (
+            pageNumber
+          )}
+        </ValueButton>
+      ))}
+      {hasNext || !fullPaging ? (
+        <button onClick={onNext}>
+          <MaterialSymbol>fast_forward</MaterialSymbol>
+        </button>
+      ) : undefined}
+      {(fullPaging && hasNext) || (!fullPaging && !atLastCursor) ? (
         <button onClick={onLast}>
           <MaterialSymbol>skip_next</MaterialSymbol>
         </button>
