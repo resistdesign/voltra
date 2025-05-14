@@ -19,9 +19,13 @@ import {
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
 import {
+  ListItemsConfig,
+  ListItemsResults,
   ListRelationshipsConfig,
   ListRelationshipsResults,
+  LogicalOperators,
 } from "../../../common/SearchTypes";
+import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
 
 export type TypeOperationConfig =
   | {
@@ -61,6 +65,25 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   listRelationshipsResults,
   onListRelationships,
 }): ReactNode => {
+  // TODO: Need tooling to manage these table/search related values.
+  const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
+    cursor: undefined,
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.OR,
+      fieldCriteria: [],
+    },
+    sortFields: [],
+  });
+  const [listItemResults, setListItemResults] = useState<
+    ListItemsResults<TypeInfoDataItem>
+  >({
+    cursor: undefined,
+    items: [],
+  });
+  const [selectable, setSelectable] = useState<boolean>(false);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+
   // TODO: Change when selecting an item from list mode.
   // TODO: Probably needs to be in the history.
   const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
@@ -135,5 +158,22 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       onNavigateToType={onNavigateToTypeInternal}
     />
   ) : // TODO: Add related items list.
-  toMode === TypeNavigationMode.RELATED_ITEMS ? null : undefined;
+  toMode === TypeNavigationMode.RELATED_ITEMS ? null : toMode ===
+    TypeNavigationMode.SEARCH_ITEMS ? (
+    targetTypeName && targetTypeInfo ? (
+      <ObjectSearch
+        typeInfoMap={typeInfoMap}
+        typeInfoName={targetTypeName}
+        typeInfo={targetTypeInfo}
+        listItemsConfig={listItemsConfig}
+        onListItemsConfigChange={setListItemsConfig}
+        listItemsResults={listItemResults}
+        onNavigateToType={onNavigateToType}
+        customInputTypeMap={customInputTypeMap}
+        selectable={selectable}
+        selectedIndices={selectedIndices}
+        onSelectedIndicesChange={setSelectedIndices}
+      />
+    ) : undefined
+  ) : undefined;
 };
