@@ -1,10 +1,10 @@
-import { FC, useCallback, useState } from "react";
+import { FC, useCallback } from "react";
 import { ListItemsConfig, ListItemsResults, SortField } from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
 import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
-import { PagingControls } from "./ObjectSearch/PagingControls";
+import { PagingControls, useCursorCacheController } from "./ObjectSearch/PagingControls";
 import { SearchControls } from "./ObjectSearch/SearchControls";
 
 const BaseObjectSearch = styled.div`
@@ -44,11 +44,15 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
                                                       selectedIndices = [],
                                                       onSelectedIndicesChange
                                                     }) => {
-  const [cursorCache, setCursorCache] = useState<string[]>([]);
   const { tags: { fullPaging = false } = {} } = typeInfo;
   const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
-  const { items: itemResults = [] }: ListItemsResults<TypeInfoDataItem> =
-    listItemsResults;
+  const {
+    cursor: nextCursor,
+    items: itemResults = []
+  }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
+
+  // Cursor Cache
+  const cursorCacheController = useCursorCacheController(nextCursor);
 
   // Sort Fields
   const onSortFieldsChange = useCallback(
@@ -71,8 +75,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       />
       <PagingControls
         fullPaging={fullPaging}
-        cursorCache={cursorCache}
-        setCursorCache={setCursorCache}
+        cursorCacheController={cursorCacheController}
         pagingInfo={listItemsConfig}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={onListItemsConfigChange}
@@ -91,8 +94,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       />
       <PagingControls
         fullPaging={fullPaging}
-        cursorCache={cursorCache}
-        setCursorCache={setCursorCache}
+        cursorCacheController={cursorCacheController}
         pagingInfo={listItemsConfig}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={onListItemsConfigChange}
