@@ -1,4 +1,4 @@
-import { FC, useCallback } from "react";
+import { FC, useCallback, useState } from "react";
 import { ListItemsConfig, ListItemsResults, SortField } from "../../../../common/SearchTypes";
 import { InputComponent, TypeNavigation } from "../Types";
 import { TypeInfo, TypeInfoDataItem, TypeInfoMap } from "../../../../common/TypeParsing/TypeInfo";
@@ -44,6 +44,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
                                                       selectedIndices = [],
                                                       onSelectedIndicesChange
                                                     }) => {
+  const [cursorCache, setCursorCache] = useState<string[]>([]);
   const { tags: { fullPaging = false } = {} } = typeInfo;
   const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
   const { items: itemResults = [] }: ListItemsResults<TypeInfoDataItem> =
@@ -70,6 +71,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       />
       <PagingControls
         fullPaging={fullPaging}
+        cursorCache={cursorCache}
+        setCursorCache={setCursorCache}
         pagingInfo={listItemsConfig}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={onListItemsConfigChange}
@@ -88,6 +91,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
       />
       <PagingControls
         fullPaging={fullPaging}
+        cursorCache={cursorCache}
+        setCursorCache={setCursorCache}
         pagingInfo={listItemsConfig}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={onListItemsConfigChange}

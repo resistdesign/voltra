@@ -41,16 +41,28 @@ const BasePagingControls = styled.div`
   gap: 1em;
 `;
 
-export type PagingControlsProps = {
-  fullPaging: boolean;
+export type PagingControlsProps = (
+  | {
+      fullPaging: true;
+      cursorCache?: string[];
+      setCursorCache?: (cursorCache: string[]) => void;
+    }
+  | {
+      fullPaging: false;
+      cursorCache: string[];
+      setCursorCache: (cursorCache: string[]) => void;
+    }
+) & {
   pagingInfo: PagingInfo;
   listItemsConfig: ListItemsConfig;
   onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
 };
 
 export const PagingControls: FC<PagingControlsProps> = ({
-  // TODO: USE!!!
   fullPaging,
+  // TODO: Track cursors when using non-full-paging.
+  cursorCache,
+  setCursorCache,
   pagingInfo,
   listItemsConfig,
   onListItemsConfigChange,
@@ -166,21 +178,25 @@ export const PagingControls: FC<PagingControlsProps> = ({
       <button onClick={onPrevious}>
         <MaterialSymbol>fast_rewind</MaterialSymbol>
       </button>
-      {currentPageNumberList.map((pageNumber) => (
-        <ValueButton value={pageNumber} onClick={onPageNumber}>
-          {pageNumber === currentPage ? (
-            <strong>{pageNumber}</strong>
-          ) : (
-            pageNumber
-          )}
-        </ValueButton>
-      ))}
+      {fullPaging
+        ? currentPageNumberList.map((pageNumber) => (
+            <ValueButton value={pageNumber} onClick={onPageNumber}>
+              {pageNumber === currentPage ? (
+                <strong>{pageNumber}</strong>
+              ) : (
+                pageNumber
+              )}
+            </ValueButton>
+          ))
+        : undefined}
       <button onClick={onNext}>
         <MaterialSymbol>fast_forward</MaterialSymbol>
       </button>
-      <button onClick={onLast}>
-        <MaterialSymbol>skip_next</MaterialSymbol>
-      </button>
+      {fullPaging ? (
+        <button onClick={onLast}>
+          <MaterialSymbol>skip_next</MaterialSymbol>
+        </button>
+      ) : undefined}
       <select value={`${itemsPerPage}`} onChange={onItemsPerPageChangeInternal}>
         <option value="10">10</option>
         <option value="20">20</option>
