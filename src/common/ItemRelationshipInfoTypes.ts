@@ -42,6 +42,14 @@ export type ItemRelationshipOriginItemInfo = ItemRelationshipOriginInfo &
   Record<ItemRelationshipInfoKeys.fromTypePrimaryFieldValue, string>;
 
 /**
+ * The destination portion of an `ItemRelationshipInfo` for a specific, related item.
+ * */
+export type ItemRelationshipDestinationItemInfo = Record<
+  ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+  string
+>;
+
+/**
  * The originating item info portion of an `ItemRelationshipInfo`.
  *
  * Used for relationship originating from a specific item, regardless of field relationship.

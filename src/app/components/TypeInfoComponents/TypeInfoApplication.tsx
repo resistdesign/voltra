@@ -141,7 +141,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         });
       }
     },
-    [onListRelationships, onNavigateToType, targetPrimaryFieldValue],
+    [onListRelationships, onNavigateToType],
   );
 
   // TODO: Add components for each `TypeNavigationMode`.
