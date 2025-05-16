@@ -5,7 +5,10 @@ import {
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-import { ItemRelationshipOriginItemInfo } from "../../../common/ItemRelationshipInfoTypes";
+import {
+  ItemRelationshipDestinationItemInfo,
+  ItemRelationshipOriginItemInfo,
+} from "../../../common/ItemRelationshipInfoTypes";
 
 export enum TypeNavigationMode {
   /**
@@ -22,16 +25,17 @@ export enum TypeNavigationMode {
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
-export type TypeNavigation = ItemRelationshipOriginItemInfo & {
-  /**
-   * Implementations need to set this based on user intent when coming from the source item in an item relationship.
-   * */
-  toOperation?: TypeOperation;
-  /**
-   * How are we interacting with an item or items?
-   * */
-  toMode: TypeNavigationMode;
-};
+export type TypeNavigation = ItemRelationshipOriginItemInfo &
+  Partial<ItemRelationshipDestinationItemInfo> & {
+    /**
+     * Implementations need to set this based on user intent when coming from the source item in an item relationship.
+     * */
+    toOperation?: TypeOperation;
+    /**
+     * How are we interacting with an item or items?
+     * */
+    toMode: TypeNavigationMode;
+  };
 
 export type NameOrIndex = string | number;
 
