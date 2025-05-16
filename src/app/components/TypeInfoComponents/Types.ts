@@ -25,17 +25,23 @@ export enum TypeNavigationMode {
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
-export type TypeNavigation = ItemRelationshipOriginItemInfo &
-  Partial<ItemRelationshipDestinationItemInfo> & {
-    /**
-     * Implementations need to set this based on user intent when coming from the source item in an item relationship.
-     * */
-    toOperation?: TypeOperation;
-    /**
-     * How are we interacting with an item or items?
-     * */
-    toMode: TypeNavigationMode;
-  };
+export type TypeNavigationBase = ItemRelationshipOriginItemInfo & {
+  // Optional: Describes what kind of operation the user is performing (e.g., view, edit, create).
+  toOperation?: TypeOperation;
+
+  // Required: Indicates the mode of interaction (form, list, etc.).
+  toMode: TypeNavigationMode;
+};
+
+export type TypeNavigationWithDestination = {
+  // Required when navigating to a form and not creating a new item.
+  toOperation: Exclude<TypeOperation, TypeOperation.CREATE>;
+  toMode: TypeNavigationMode.FORM;
+} & ItemRelationshipDestinationItemInfo;
+
+export type TypeNavigation =
+  | (TypeNavigationBase & Partial<ItemRelationshipDestinationItemInfo>)
+  | (TypeNavigationBase & TypeNavigationWithDestination);
 
 export type NameOrIndex = string | number;
 
