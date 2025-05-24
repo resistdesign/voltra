@@ -41,7 +41,7 @@ export type TypeNavigationWithDestination = {
 
 export type TypeNavigation =
   | (TypeNavigationBase & Partial<ItemRelationshipDestinationItemInfo>)
-  | (TypeNavigationBase & TypeNavigationWithDestination);
+  | TypeNavigationWithDestination;
 
 export type NameOrIndex = string | number;
 
