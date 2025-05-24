@@ -85,7 +85,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       ),
     [fieldNames, typeInfoFields],
   );
-  // TODO: Sort fields utils.
   const { sortFields, sortFieldMap, onToggleSortField } =
     useSortFieldController(originalSortFields);
 
