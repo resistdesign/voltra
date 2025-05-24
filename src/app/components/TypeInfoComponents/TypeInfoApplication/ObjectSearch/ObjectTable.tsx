@@ -1,9 +1,7 @@
 import { FC, useEffect, useMemo } from "react";
 import {
-  SupportedFieldTags,
   TypeInfo,
   TypeInfoDataItem,
-  TypeInfoField,
   TypeInfoMap,
 } from "../../../../../common/TypeParsing/TypeInfo";
 import { TypeNavigation } from "../../Types";
@@ -23,6 +21,7 @@ import {
   sortFieldsAreEqual,
   useSortFieldController,
 } from "./ObjectTable/SortFieldUtils";
+import { useFieldInfo } from "./ObjectTable/FieldInfoUtils";
 
 export type ObjectTableProps = {
   typeInfoMap: TypeInfoMap;
@@ -69,22 +68,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
 
     return false;
   }, [allIndicesAreSelected, someIndicesAreSelected]);
-  const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
-    const { fields: tIF = {} } = typeInfo;
-
-    return tIF;
-  }, [typeInfo]);
-  const fieldNames = useMemo<string[]>(
-    () => Object.keys(typeInfoFields),
-    [typeInfoFields],
-  );
-  const unhiddenFieldNames = useMemo<string[]>(
-    () =>
-      fieldNames.filter(
-        (fN) => !(typeInfoFields[fN].tags as SupportedFieldTags).hidden,
-      ),
-    [fieldNames, typeInfoFields],
-  );
+  const { typeInfoFields, unhiddenFieldNames } = useFieldInfo(typeInfo);
   const { sortFields, sortFieldMap, onToggleSortField } =
     useSortFieldController(originalSortFields);
 
