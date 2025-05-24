@@ -1,21 +1,47 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+export const selectedIndexArraysAreEqual = (
+  selectedIndicesA: number[] = [],
+  selectedIndicesB: number[] = [],
+): boolean =>
+  selectedIndicesA.every((index) => selectedIndicesB.includes(index)) &&
+  selectedIndicesB.every((index) => selectedIndicesA.includes(index));
 
 export type IndexSelectionController = {
   selectedIndices: number[];
+  allIndicesAreSelected: boolean;
+  someIndicesAreSelected: boolean;
+  getIndexIsSelected: (index: number) => boolean;
   onToggleIndexSelection: (index: number) => void;
   onSelectAllIndices: () => void;
   onSelectNone: () => void;
+  onSetAllIndicesSelected: (allSelected: boolean) => void;
   onSelectMultipleIndices: (indices: number[]) => void;
   onDeselectMultipleIndices: (indices: number[]) => void;
 };
 
-export const useIndexSelection = (
+export const useIndexSelectionController = (
+  originalSelectedIndices: number[] = [],
   maximumIndex: number,
 ): IndexSelectionController => {
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>(
+    originalSelectedIndices,
+  );
   const allIndices = useMemo<number[]>(
     () => new Array(maximumIndex + 1).map((_, i) => i),
     [maximumIndex],
+  );
+  const allIndicesAreSelected = useMemo<boolean>(
+    () => allIndices.every((index) => selectedIndices.includes(index)),
+    [allIndices, selectedIndices],
+  );
+  const someIndicesAreSelected = useMemo<boolean>(
+    () => selectedIndices.length > 0 && !allIndicesAreSelected,
+    [selectedIndices, allIndicesAreSelected],
+  );
+  const getIndexIsSelected = useCallback(
+    (index: number) => selectedIndices.includes(index),
+    [selectedIndices],
   );
   const onToggleIndexSelection = useCallback(
     (index: number) => {
@@ -35,6 +61,12 @@ export const useIndexSelection = (
   const onSelectNone = useCallback(() => {
     setSelectedIndices([]);
   }, []);
+  const onSetAllIndicesSelected = useCallback(
+    (allSelected: boolean = false) => {
+      setSelectedIndices(() => (allSelected ? [...allIndices] : []));
+    },
+    [allIndices],
+  );
   const onSelectMultipleIndices = useCallback(
     (indices: number[]) => {
       setSelectedIndices(() =>
@@ -49,11 +81,23 @@ export const useIndexSelection = (
     );
   }, []);
 
+  useEffect(() => {
+    if (
+      !selectedIndexArraysAreEqual(originalSelectedIndices, selectedIndices)
+    ) {
+      setSelectedIndices(originalSelectedIndices);
+    }
+  }, [originalSelectedIndices, selectedIndices]);
+
   return {
     selectedIndices,
+    allIndicesAreSelected,
+    someIndicesAreSelected,
+    getIndexIsSelected,
     onToggleIndexSelection,
     onSelectAllIndices,
     onSelectNone,
+    onSetAllIndicesSelected,
     onSelectMultipleIndices,
     onDeselectMultipleIndices,
   };

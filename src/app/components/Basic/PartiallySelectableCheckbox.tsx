@@ -7,14 +7,16 @@ import {
   useRef,
 } from "react";
 
-export type CheckedState = true | false | "indeterminate";
+export const CheckedStateIndeterminate = "indeterminate" as const;
+
+export type CheckedState = true | false | typeof CheckedStateIndeterminate;
 
 export type CheckboxProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "type" | "checked" | "onChange"
 > & {
   checked?: CheckedState;
-  onChange?: (newChecked: CheckedState) => void;
+  onChange?: (newChecked: boolean) => void;
 };
 
 export const PartiallySelectableCheckbox: FC<CheckboxProps> = ({
