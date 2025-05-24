@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from "react";
+import { FC, useCallback, useEffect, useMemo } from "react";
 import {
   SupportedFieldTags,
   TypeInfo,
@@ -9,11 +9,16 @@ import {
 import { TypeNavigation } from "../../Types";
 import {
   CheckedState,
+  CheckedStateIndeterminate,
   PartiallySelectableCheckbox,
 } from "../../../Basic/PartiallySelectableCheckbox";
 import { HeaderCell } from "./ObjectTable/HeaderCell";
 import { ItemRow } from "./ObjectTable/ItemRow";
 import { SortField } from "../../../../../common/SearchTypes";
+import {
+  selectedIndexArraysAreEqual,
+  useIndexSelectionController,
+} from "./ObjectTable/SelectionUtils";
 
 export type ObjectTableProps = {
   typeInfoMap: TypeInfoMap;
@@ -21,7 +26,7 @@ export type ObjectTableProps = {
   typeInfo: TypeInfo;
   sortFields?: SortField[];
   onSortFieldsChange?: (sortFields: SortField[]) => void;
-  objectList: object[];
+  objectList: TypeInfoDataItem[];
   selectable?: boolean;
   selectedIndices?: number[];
   onSelectedIndicesChange?: (selectedIndices: number[]) => void;
@@ -36,10 +41,30 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   onSortFieldsChange,
   objectList = [],
   selectable = false,
-  selectedIndices = [],
+  selectedIndices: originalSelectedIndices = [],
   onSelectedIndicesChange,
   onNavigateToType,
 }) => {
+  const {
+    selectedIndices,
+    allIndicesAreSelected,
+    someIndicesAreSelected,
+    getIndexIsSelected,
+    onSetAllIndicesSelected,
+    onToggleIndexSelection,
+  } = useIndexSelectionController(
+    originalSelectedIndices,
+    objectList.length - 1,
+  );
+  const indexSelectionState = useMemo<CheckedState>(() => {
+    if (allIndicesAreSelected) {
+      return true;
+    } else if (someIndicesAreSelected) {
+      return CheckedStateIndeterminate;
+    }
+
+    return false;
+  }, [allIndicesAreSelected, someIndicesAreSelected]);
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: tIF = {} } = typeInfo;
 
@@ -55,51 +80,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
         (fN) => !(typeInfoFields[fN].tags as SupportedFieldTags).hidden,
       ),
     [fieldNames, typeInfoFields],
-  );
-  const allIndicesAreSelected = useMemo<boolean>(
-    () => objectList.every((_, index) => selectedIndices.includes(index)),
-    [selectedIndices, objectList],
-  );
-  const indicesArePartiallySelected = useMemo<boolean>(
-    () =>
-      objectList.some((_, index) => selectedIndices.includes(index)) &&
-      !allIndicesAreSelected,
-    [selectedIndices, objectList, allIndicesAreSelected],
-  );
-  const allCheckedState = useMemo<CheckedState>(() => {
-    if (allIndicesAreSelected) {
-      return true;
-    } else if (indicesArePartiallySelected) {
-      return "indeterminate";
-    } else {
-      return false;
-    }
-  }, [allIndicesAreSelected, indicesArePartiallySelected]);
-  const onAllCheckedStateChange = useCallback(
-    (newChecked: CheckedState) => {
-      if (onSelectedIndicesChange) {
-        if (newChecked === true) {
-          onSelectedIndicesChange(objectList.map((_, index) => index));
-        } else if (newChecked === false) {
-          onSelectedIndicesChange([]);
-        }
-      }
-    },
-    [onSelectedIndicesChange, objectList],
-  );
-  const onToggleIndexSelection = useCallback(
-    (index: number) => {
-      if (onSelectedIndicesChange) {
-        const indexIsSelected = selectedIndices.includes(index);
-
-        if (indexIsSelected) {
-          onSelectedIndicesChange(selectedIndices.filter((sI) => sI !== index));
-        } else {
-          onSelectedIndicesChange([...selectedIndices, index]);
-        }
-      }
-    },
-    [selectedIndices, onSelectedIndicesChange],
   );
   const onToggleSortField = useCallback(
     (fieldName: string) => {
@@ -152,6 +132,15 @@ export const ObjectTable: FC<ObjectTableProps> = ({
     [sortFields],
   );
 
+  useEffect(() => {
+    if (
+      onSelectedIndicesChange &&
+      !selectedIndexArraysAreEqual(originalSelectedIndices, selectedIndices)
+    ) {
+      onSelectedIndicesChange(selectedIndices);
+    }
+  }, [originalSelectedIndices, selectedIndices, onSelectedIndicesChange]);
+
   return (
     <table>
       <thead>
@@ -159,8 +148,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({
           {selectable ? (
             <th>
               <PartiallySelectableCheckbox
-                checked={allCheckedState}
-                onChange={onAllCheckedStateChange}
+                checked={indexSelectionState}
+                onChange={onSetAllIndicesSelected}
               />
             </th>
           ) : undefined}
@@ -187,7 +176,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
               item={item as TypeInfoDataItem}
               onNavigateToType={onNavigateToType}
               selectable={selectable}
-              selected={selectedIndices.includes(index)}
+              selected={getIndexIsSelected(index)}
               onToggleSelection={onToggleIndexSelection}
             />
           );
