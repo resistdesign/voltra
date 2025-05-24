@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import {
   SupportedFieldTags,
   TypeInfo,
@@ -19,6 +19,10 @@ import {
   selectedIndexArraysAreEqual,
   useIndexSelectionController,
 } from "./ObjectTable/SelectionUtils";
+import {
+  sortFieldsAreEqual,
+  useSortFieldController,
+} from "./ObjectTable/SortFieldUtils";
 
 export type ObjectTableProps = {
   typeInfoMap: TypeInfoMap;
@@ -37,7 +41,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   typeInfoMap,
   typeInfoName,
   typeInfo,
-  sortFields = [],
+  sortFields: originalSortFields = [],
   onSortFieldsChange,
   objectList = [],
   selectable = false,
@@ -65,7 +69,6 @@ export const ObjectTable: FC<ObjectTableProps> = ({
 
     return false;
   }, [allIndicesAreSelected, someIndicesAreSelected]);
-  // TODO: Sort fields utils.
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: tIF = {} } = typeInfo;
 
@@ -82,56 +85,9 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       ),
     [fieldNames, typeInfoFields],
   );
-  const onToggleSortField = useCallback(
-    (fieldName: string) => {
-      if (onSortFieldsChange) {
-        const fieldIndex = sortFields.findIndex((sf) => sf.field === fieldName);
-
-        if (fieldIndex === -1) {
-          // If there is no sort field, then add one.
-          onSortFieldsChange([
-            ...sortFields,
-            { field: fieldName, reverse: false },
-          ]);
-        } else if (sortFields[fieldIndex]) {
-          const { reverse } = sortFields[fieldIndex];
-          const newSortField = {
-            field: fieldName,
-            reverse,
-          };
-
-          if (!reverse) {
-            newSortField.reverse = true;
-
-            // If there is a sort field, and it is not reversed, then reverse it.
-            onSortFieldsChange(
-              sortFields.map((sf) =>
-                sf.field === fieldName ? newSortField : sf,
-              ),
-            );
-          } else {
-            // If there is a sort field, and it is reversed, then remove it.
-            onSortFieldsChange(
-              sortFields.filter((sf) => sf.field !== fieldName),
-            );
-          }
-        }
-      }
-    },
-    [sortFields, onSortFieldsChange],
-  );
-  const sortFieldMap = useMemo<Record<string, boolean | undefined>>(
-    () =>
-      sortFields.reduce<Record<string, boolean | undefined>>(
-        (acc, { field, reverse }) => {
-          acc[field as keyof typeof acc] = reverse;
-
-          return acc;
-        },
-        {},
-      ),
-    [sortFields],
-  );
+  // TODO: Sort fields utils.
+  const { sortFields, sortFieldMap, onToggleSortField } =
+    useSortFieldController(originalSortFields);
 
   useEffect(() => {
     if (
@@ -141,6 +97,15 @@ export const ObjectTable: FC<ObjectTableProps> = ({
       onSelectedIndicesChange(selectedIndices);
     }
   }, [originalSelectedIndices, selectedIndices, onSelectedIndicesChange]);
+
+  useEffect(() => {
+    if (
+      onSortFieldsChange &&
+      !sortFieldsAreEqual(originalSortFields, sortFields)
+    ) {
+      onSortFieldsChange(sortFields);
+    }
+  }, [originalSortFields, sortFields, onSortFieldsChange]);
 
   return (
     <table>
