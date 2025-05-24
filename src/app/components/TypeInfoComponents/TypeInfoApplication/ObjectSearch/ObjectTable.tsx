@@ -65,6 +65,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({
 
     return false;
   }, [allIndicesAreSelected, someIndicesAreSelected]);
+  // TODO: Sort fields utils.
   const typeInfoFields = useMemo<Record<string, TypeInfoField>>(() => {
     const { fields: tIF = {} } = typeInfo;
 
