@@ -44,10 +44,6 @@ export type TypeInfoApplicationProps = {
   baseValue: TypeInfoDataStructure;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
-  listRelationshipsResults?: ListRelationshipsResults;
-  onListRelationships?: (
-    listRelationshipsConfig: ListRelationshipsConfig,
-  ) => void;
 } & TypeOperationConfig;
 
 /**
@@ -62,8 +58,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseMode = TypeNavigationMode.FORM,
   baseOperation = TypeOperation.CREATE,
   basePrimaryKeyValue,
-  listRelationshipsResults,
-  onListRelationships,
 }): ReactNode => {
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
@@ -117,32 +111,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     operation: toOperation,
     primaryFieldValue: targetPrimaryFieldValue,
   });
-  const onNavigateToTypeInternal = useCallback(
-    (typeNavigation: TypeNavigation) => {
-      onNavigateToType(typeNavigation);
-
-      if (onListRelationships) {
-        const {
-          fromTypeName: tNFromTypeName,
-          fromTypePrimaryFieldValue: tNFromTypePrimaryFieldValue,
-          fromTypeFieldName: tNFromTypeFieldName,
-        } = typeNavigation;
-
-        // TODO: This probably get done by the list table that shows up, not here.
-        onListRelationships({
-          relationshipItemOrigin: {
-            fromTypeName: tNFromTypeName,
-            fromTypePrimaryFieldValue: tNFromTypePrimaryFieldValue,
-            fromTypeFieldName: tNFromTypeFieldName,
-          },
-          // TODO: These are placeholders.
-          cursor: "",
-          itemsPerPage: 10,
-        });
-      }
-    },
-    [onListRelationships, onNavigateToType],
-  );
 
   // TODO: Add components for each `TypeNavigationMode`.
   return toMode === TypeNavigationMode.FORM ? (
@@ -155,7 +123,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       operation={toOperation}
       onCancel={onCloseCurrentNavHistoryItem}
       onSubmit={onDataItemChange}
-      onNavigateToType={onNavigateToTypeInternal}
+      onNavigateToType={onNavigateToType}
     />
   ) : // TODO: Need ObjectSearch for related items, but without the search.
   toMode === TypeNavigationMode.RELATED_ITEMS ? (
