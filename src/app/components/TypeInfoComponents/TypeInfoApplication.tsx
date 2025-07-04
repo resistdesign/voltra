@@ -66,7 +66,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     },
     sortFields: [],
   });
-  const [listItemResults, setListItemResults] = useState<
+  const [listItemsResults, setListItemsResults] = useState<
     ListItemsResults<TypeInfoDataItem>
   >({
     cursor: undefined,
@@ -130,7 +130,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         typeInfo={targetTypeInfo}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={setListItemsConfig}
-        listItemsResults={listItemResults}
+        listItemsResults={listItemsResults}
         onNavigateToType={onNavigateToType}
         customInputTypeMap={customInputTypeMap}
         selectable={selectable}
@@ -147,7 +147,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         typeInfo={targetTypeInfo}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={setListItemsConfig}
-        listItemsResults={listItemResults}
+        listItemsResults={listItemsResults}
         onNavigateToType={onNavigateToType}
         customInputTypeMap={customInputTypeMap}
         selectable={selectable}
