@@ -10,6 +10,8 @@ export type ItemViewOperation = Exclude<TypeOperation, TypeOperation.DELETE>;
 export type TypeNavigationOperationConfig = {
   baseOperation: ItemViewOperation;
   basePrimaryKeyValue?: string;
+  baseTypeInfoName: string;
+  baseMode: TypeNavigationMode;
 };
 
 export const useBaseTypeNavigation = ({
@@ -17,10 +19,7 @@ export const useBaseTypeNavigation = ({
   basePrimaryKeyValue,
   baseMode,
   baseOperation,
-}: {
-  baseTypeInfoName: string;
-  baseMode: TypeNavigationMode;
-} & TypeNavigationOperationConfig) => {
+}: TypeNavigationOperationConfig) => {
   return useMemo<TypeNavigation>(
     () => ({
       fromTypeName: baseTypeInfoName,
@@ -42,8 +41,6 @@ export const useTypeNavHistory = ({
   basePrimaryKeyValue,
 }: {
   typeInfoMap: TypeInfoMap;
-  baseTypeInfoName: string;
-  baseMode: TypeNavigationMode;
 } & TypeNavigationOperationConfig) => {
   const baseTypeNavigation = useBaseTypeNavigation({
     baseTypeInfoName,

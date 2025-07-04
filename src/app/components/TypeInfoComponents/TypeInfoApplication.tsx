@@ -1,4 +1,4 @@
-import { FC, ReactNode, useCallback, useState } from "react";
+import { FC, ReactNode, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -9,7 +9,6 @@ import {
 import {
   InputComponent,
   TypeInfoDataStructure,
-  TypeNavigation,
   TypeNavigationMode,
 } from "./Types";
 import {
@@ -21,8 +20,6 @@ import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
 import {
   ListItemsConfig,
   ListItemsResults,
-  ListRelationshipsConfig,
-  ListRelationshipsResults,
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
@@ -112,7 +109,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     primaryFieldValue: targetPrimaryFieldValue,
   });
 
-  // TODO: Add components for each `TypeNavigationMode`.
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={targetTypeName as string}

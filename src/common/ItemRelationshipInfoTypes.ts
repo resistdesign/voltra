@@ -1,3 +1,5 @@
+import { ExpandComplexType } from "./HelperTypes";
+
 /**
  * The keys for item relationship info.
  * */
@@ -38,8 +40,10 @@ export type ItemRelationshipOriginInfo = Record<
 /**
  * The origination portion of an `ItemRelationshipInfo` for a specific item and field relationship.
  * */
-export type ItemRelationshipOriginItemInfo = ItemRelationshipOriginInfo &
-  Record<ItemRelationshipInfoKeys.fromTypePrimaryFieldValue, string>;
+export type ItemRelationshipOriginItemInfo = ExpandComplexType<
+  ItemRelationshipOriginInfo &
+    Record<ItemRelationshipInfoKeys.fromTypePrimaryFieldValue, string>
+>;
 
 /**
  * The destination portion of an `ItemRelationshipInfo` for a specific, related item.

@@ -9,6 +9,7 @@ import {
   ItemRelationshipDestinationItemInfo,
   ItemRelationshipOriginItemInfo,
 } from "../../../common/ItemRelationshipInfoTypes";
+import { ExpandComplexType } from "../../../common/HelperTypes";
 
 export enum TypeNavigationMode {
   /**
@@ -25,23 +26,33 @@ export enum TypeNavigationMode {
   SEARCH_ITEMS = "SEARCH_ITEMS",
 }
 
-export type TypeNavigationBase = ItemRelationshipOriginItemInfo & {
-  // Optional: Describes what kind of operation the user is performing (e.g., view, edit, create).
-  toOperation?: TypeOperation;
+export type TypeNavigationBase = ExpandComplexType<
+  ItemRelationshipOriginItemInfo & {
+    // Optional: Describes what kind of operation the user is performing (e.g., view, edit, create).
+    toOperation?: TypeOperation;
 
-  // Required: Indicates the mode of interaction (form, list, etc.).
-  toMode: TypeNavigationMode;
-};
+    // Required: Indicates the mode of interaction (form, list, etc.).
+    toMode: TypeNavigationMode;
+  }
+>;
 
-export type TypeNavigationWithDestination = {
-  // Required when navigating to a form and not creating a new item.
-  toOperation: Exclude<TypeOperation, TypeOperation.CREATE>;
-  toMode: TypeNavigationMode.FORM;
-} & ItemRelationshipDestinationItemInfo;
+export type TypeNavigationWithOptionalDestinationItem = ExpandComplexType<
+  TypeNavigationBase & Partial<ItemRelationshipDestinationItemInfo>
+>;
 
-export type TypeNavigation =
-  | (TypeNavigationBase & Partial<ItemRelationshipDestinationItemInfo>)
-  | TypeNavigationWithDestination;
+export type TypeNavigationWithRequiredDestinationItem = ExpandComplexType<
+  ItemRelationshipOriginItemInfo &
+  {
+    // Required when navigating to a form and not creating a new item.
+    toOperation: Exclude<TypeOperation, TypeOperation.CREATE>;
+    toMode: TypeNavigationMode.FORM;
+  } & ItemRelationshipDestinationItemInfo
+>;
+
+export type TypeNavigation = ExpandComplexType<
+  | TypeNavigationWithOptionalDestinationItem
+  | TypeNavigationWithRequiredDestinationItem
+>;
 
 export type NameOrIndex = string | number;
 

@@ -32,7 +32,7 @@ export * as API from "./api";
  *
  * @usage `import * from "@resistdesign/voltra/app";`
  *
- * @see {@link getEasyLayout}, {@link TypeStructureComponent} and {@link useApplicationStateLoader} for some great starting points.
+ * @see {@link getEasyLayout}, {@link TypeInfoApplication} and {@link useApplicationStateLoader} for some great starting points.
  *
  * @example
  * ```tsx
