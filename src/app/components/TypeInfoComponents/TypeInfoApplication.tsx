@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from "react";
+import { FC, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -55,7 +55,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseMode = TypeNavigationMode.FORM,
   baseOperation = TypeOperation.CREATE,
   basePrimaryKeyValue,
-}): ReactNode => {
+}) => {
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
