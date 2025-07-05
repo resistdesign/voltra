@@ -124,6 +124,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
         return (
           <TypeInfoInput
             key={fieldName}
+            operation={operation}
             typeInfoField={field}
             fieldValue={internalValue[fieldName]}
             nameOrIndex={fieldName}

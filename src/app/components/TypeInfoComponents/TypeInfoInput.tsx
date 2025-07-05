@@ -4,6 +4,7 @@ import { getInputType } from "./InputTypeMapUtils";
 import {
   LiteralValue,
   TypeInfoField,
+  TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
 import { InputComponent, NameOrIndex } from "./Types";
 import styled from "styled-components";
@@ -19,6 +20,7 @@ const LabelText = styled.span`
 `;
 
 export type TypeInfoInputProps = {
+  operation: TypeOperation;
   typeInfoField: TypeInfoField;
   fieldValue: LiteralValue | LiteralValue[];
   nameOrIndex: NameOrIndex;
@@ -29,6 +31,7 @@ export type TypeInfoInputProps = {
 };
 
 export const TypeInfoInput: FC<TypeInfoInputProps> = ({
+  operation,
   typeInfoField,
   fieldValue,
   nameOrIndex,
@@ -75,6 +78,7 @@ export const TypeInfoInput: FC<TypeInfoInputProps> = ({
     <label>
       <LabelText>{label}&nbsp;</LabelText>
       <InputComponent
+        operation={operation}
         nameOrIndex={nameOrIndex}
         typeInfoField={typeInfoField}
         value={fieldValue}

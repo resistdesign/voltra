@@ -5,9 +5,18 @@ import {
   TypeNavigationMode,
 } from "../../../../src/app/components";
 import { DEMO_TYPE_INFO_MAP } from "../../../common/Constants";
+import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
+
+const DEMO_PERSON_ID = "1234567";
 
 export const TypeInfoDemo: FC = () => {
-  const [value, setValue] = useState<TypeInfoDataStructure>({});
+  const [value, setValue] = useState<TypeInfoDataStructure>({
+    Person: {
+      [TypeOperation.UPDATE]: {
+        [DEMO_PERSON_ID]: {},
+      },
+    },
+  });
 
   return (
     <TypeInfoApplication
@@ -15,7 +24,9 @@ export const TypeInfoDemo: FC = () => {
       baseTypeInfoName="Person"
       baseValue={value}
       onBaseValueChange={setValue}
+      baseOperation={TypeOperation.UPDATE}
       baseMode={TypeNavigationMode.FORM}
+      basePrimaryKeyValue={DEMO_PERSON_ID}
     />
   );
 };

@@ -41,8 +41,7 @@ export type TypeNavigationWithOptionalDestinationItem = ExpandComplexType<
 >;
 
 export type TypeNavigationWithRequiredDestinationItem = ExpandComplexType<
-  ItemRelationshipOriginItemInfo &
-  {
+  ItemRelationshipOriginItemInfo & {
     // Required when navigating to a form and not creating a new item.
     toOperation: Exclude<TypeOperation, TypeOperation.CREATE>;
     toMode: TypeNavigationMode.FORM;
@@ -60,6 +59,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   ElementPropsType,
   "value" | "onChange"
 > & {
+  operation: TypeOperation;
   nameOrIndex: NameOrIndex;
   typeInfoField?: TypeInfoField;
   value: ValueType;
@@ -78,7 +78,7 @@ export type TypeInfoDataMap = {
   [primaryKeyValue: string]: TypeInfoDataItem;
 };
 
-export type TypeDataStateMap = Record<TypeOperation, TypeInfoDataMap>;
+export type TypeDataStateMap = Partial<Record<TypeOperation, TypeInfoDataMap>>;
 
 export type TypeInfoDataStructure = {
   [typeInfoName: string]: TypeDataStateMap;
