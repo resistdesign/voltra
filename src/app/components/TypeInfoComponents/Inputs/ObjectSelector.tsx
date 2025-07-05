@@ -1,8 +1,10 @@
 import { InputComponent } from "../Types";
 import { useCallback } from "react";
 import { MaterialSymbol } from "../../MaterialSymbol";
+import { TypeOperation } from "../../../../common/TypeParsing/TypeInfo";
 
 export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
+  operation,
   nameOrIndex,
   typeInfoField,
   onNavigateToType,
@@ -17,9 +19,9 @@ export const ObjectSelector: InputComponent<HTMLButtonElement> = ({
     }
   }, [nameOrIndex, typeInfoField, onNavigateToType]);
 
-  return (
+  return operation !== TypeOperation.CREATE ? (
     <button type="button" onClick={onClick}>
       <MaterialSymbol>edit_square</MaterialSymbol>
     </button>
-  );
+  ) : undefined;
 };

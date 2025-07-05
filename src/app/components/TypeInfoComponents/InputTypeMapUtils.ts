@@ -66,6 +66,7 @@ export const getNonInputProps = (
   inputProps: Partial<InputProps<any, any>>,
 ): InputHTMLAttributes<any> => {
   const {
+    operation: _operation,
     typeInfoMap: _typeInfoMap,
     typeInfoField: _typeInfoField,
     customInputTypeMap: _customInputTypeMap,
