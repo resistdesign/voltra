@@ -23,6 +23,7 @@ import {
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
+import { TypeInfoORMClient } from "../../utils";
 
 export type TypeOperationConfig =
   | {
@@ -38,9 +39,11 @@ export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
+  // TODO: Get rid of baseValue and onBaseValueChange. Handle internally.
   baseValue: TypeInfoDataStructure;
   onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
+  typeInfoORMClient: TypeInfoORMClient;
 } & TypeOperationConfig;
 
 /**
@@ -72,7 +75,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     cursor: undefined,
     items: [],
   });
-  const [selectable, setSelectable] = useState<boolean>(false);
+  const [selectable, setSelectable] = useState<boolean>(true);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
 
   // TODO: Change when selecting an item from list mode.
@@ -101,6 +104,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypeFieldName,
   });
+  // TODO: This is going to have to consider the ORM client.
   const { dataItem, onDataItemChange } = useTypeInfoDataStore({
     baseValue,
     onBaseValueChange,
