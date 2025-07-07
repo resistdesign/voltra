@@ -28,11 +28,11 @@ import { TypeInfoORMClient } from "../../utils";
 export type TypeOperationConfig =
   | {
       baseOperation: Exclude<ItemViewOperation, TypeOperation.CREATE>;
-      basePrimaryKeyValue: string;
+      basePrimaryFieldValue: string;
     }
   | {
       baseOperation?: TypeOperation.CREATE | never;
-      basePrimaryKeyValue?: never;
+      basePrimaryFieldValue?: never;
     };
 
 export type TypeInfoApplicationProps = {
@@ -57,7 +57,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   onBaseValueChange,
   baseMode = TypeNavigationMode.FORM,
   baseOperation = TypeOperation.CREATE,
-  basePrimaryKeyValue,
+  basePrimaryFieldValue,
 }) => {
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
@@ -82,7 +82,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   // TODO: Probably needs to be in the history.
   const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
     string | undefined
-  >(basePrimaryKeyValue);
+  >(basePrimaryFieldValue);
   const {
     relationshipMode,
     fromTypeName,
@@ -96,7 +96,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseTypeInfoName,
     baseMode,
     baseOperation,
-    basePrimaryKeyValue,
+    basePrimaryFieldValue,
   });
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
