@@ -1,7 +1,6 @@
 import { FC, InputHTMLAttributes } from "react";
 import {
   SupportedFieldTags,
-  TypeInfoDataItem,
   TypeInfoField,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
@@ -73,13 +72,3 @@ export type InputComponent<ElementPropsType> = FC<
 >;
 
 export type CustomInputComponentMap = Record<string, InputComponent<any>>;
-
-export type TypeInfoDataMap = {
-  [primaryKeyValue: string]: TypeInfoDataItem;
-};
-
-export type TypeDataStateMap = Partial<Record<TypeOperation, TypeInfoDataMap>>;
-
-export type TypeInfoDataStructure = {
-  [typeInfoName: string]: TypeDataStateMap;
-};
