@@ -6,17 +6,12 @@ import {
   TypeInfoMap,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
-import {
-  InputComponent,
-  TypeInfoDataStructure,
-  TypeNavigationMode,
-} from "./Types";
+import { InputComponent, TypeNavigationMode } from "./Types";
 import {
   ItemViewOperation,
   useTypeNavHistory,
 } from "./TypeInfoApplication/TypeNavUtils";
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
-import { useTypeInfoDataStore } from "./TypeInfoApplication/TypeInfoDataUtils";
 import {
   ListItemsConfig,
   ListItemsResults,
@@ -54,9 +49,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseOperation = TypeOperation.CREATE,
   basePrimaryFieldValue,
 }) => {
-  const [typeInfoDataStructure, onTypeInfoDataStructureChange] =
-    useState<TypeInfoDataStructure>({});
-  console.log("DATA:", typeInfoDataStructure);
+  const [typeInfoDataItem, setTypeInfoDataItem] = useState<TypeInfoDataItem>(
+    // TODO: Should we have a default typeInfoDataItem?
+    {},
+  );
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
@@ -103,14 +99,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypeFieldName,
   });
-  // TODO: This is going to have to consider the ORM client.
-  const { dataItem, onDataItemChange } = useTypeInfoDataStore({
-    typeInfoDataStructure,
-    onTypeInfoDataStructureChange,
-    typeName: targetTypeName,
-    operation: toOperation,
-    primaryFieldValue: targetPrimaryFieldValue,
-  });
 
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
@@ -118,10 +106,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       primaryFieldValue={targetPrimaryFieldValue as string}
       typeInfo={targetTypeInfo as TypeInfo}
       customInputTypeMap={customInputTypeMap}
-      value={dataItem as TypeInfoDataItem}
+      value={typeInfoDataItem}
       operation={toOperation}
       onCancel={onCloseCurrentNavHistoryItem}
-      onSubmit={onDataItemChange}
+      onSubmit={setTypeInfoDataItem}
       onNavigateToType={onNavigateToType}
     />
   ) : // TODO: Need ObjectSearch for related items, but without the search.
