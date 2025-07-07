@@ -10,14 +10,16 @@ import {
 } from "../../../../common/TypeParsing/TypeInfo";
 
 export const useTypeInfoDataStore = ({
-  baseValue,
-  onBaseValueChange,
+  typeInfoDataStructure,
+  onTypeInfoDataStructureChange,
   typeName,
   operation,
   primaryFieldValue,
 }: {
-  baseValue: TypeInfoDataStructure;
-  onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
+  typeInfoDataStructure: TypeInfoDataStructure;
+  onTypeInfoDataStructureChange: (
+    typeInfoDataStructure: TypeInfoDataStructure,
+  ) => void;
   typeName?: string;
   operation?: TypeOperation;
   primaryFieldValue?: string;
@@ -25,9 +27,9 @@ export const useTypeInfoDataStore = ({
   const typeDataStateMap = useMemo<TypeDataStateMap | undefined>(
     () =>
       typeof typeName !== "undefined"
-        ? baseValue[typeName]
+        ? typeInfoDataStructure[typeName]
         : undefined,
-    [baseValue, typeName],
+    [typeInfoDataStructure, typeName],
   );
   const typeInfoDataMap = useMemo<TypeInfoDataMap | undefined>(
     () =>
@@ -51,12 +53,12 @@ export const useTypeInfoDataStore = ({
         typeof typeName !== "undefined" &&
         typeof operation !== "undefined" &&
         typeof primaryFieldValue !== "undefined" &&
-        typeof baseValue !== "undefined" &&
+        typeof typeInfoDataStructure !== "undefined" &&
         typeof typeDataStateMap !== "undefined" &&
         typeof typeInfoDataMap !== "undefined"
       ) {
-        onBaseValueChange({
-          ...baseValue,
+        onTypeInfoDataStructureChange({
+          ...typeInfoDataStructure,
           [typeName]: {
             ...typeDataStateMap,
             [operation]: {
@@ -68,13 +70,13 @@ export const useTypeInfoDataStore = ({
       }
     },
     [
-      baseValue,
+      typeInfoDataStructure,
       typeName,
       typeDataStateMap,
       operation,
       typeInfoDataMap,
       primaryFieldValue,
-      onBaseValueChange,
+      onTypeInfoDataStructureChange,
     ],
   );
 
