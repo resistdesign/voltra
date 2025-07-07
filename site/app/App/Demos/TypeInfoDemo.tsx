@@ -1,7 +1,6 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import {
   TypeInfoApplication,
-  TypeInfoDataStructure,
   TypeNavigationMode,
 } from "../../../../src/app/components";
 import {
@@ -20,20 +19,11 @@ export const TypeInfoDemo: FC = () => {
     domain: DOMAINS.API,
     basePath: DEMO_ORM_ROUTE_PATH,
   });
-  const [value, setValue] = useState<TypeInfoDataStructure>({
-    Person: {
-      [TypeOperation.UPDATE]: {
-        [DEMO_PERSON_ID]: {},
-      },
-    },
-  });
 
   return (
     <TypeInfoApplication
       typeInfoMap={DEMO_TYPE_INFO_MAP}
       baseTypeInfoName="Person"
-      baseValue={value}
-      onBaseValueChange={setValue}
       baseOperation={TypeOperation.UPDATE}
       baseMode={TypeNavigationMode.FORM}
       basePrimaryFieldValue={DEMO_PERSON_ID}

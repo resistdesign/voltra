@@ -39,9 +39,6 @@ export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
-  // TODO: Get rid of baseValue and onBaseValueChange. Handle internally.
-  baseValue: TypeInfoDataStructure;
-  onBaseValueChange: (typeInfoDataStructure: TypeInfoDataStructure) => void;
   baseMode: TypeNavigationMode;
   typeInfoORMClient: TypeInfoORMClient;
 } & TypeOperationConfig;
@@ -53,12 +50,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   typeInfoMap,
   baseTypeInfoName,
   customInputTypeMap,
-  baseValue,
-  onBaseValueChange,
   baseMode = TypeNavigationMode.FORM,
   baseOperation = TypeOperation.CREATE,
   basePrimaryFieldValue,
 }) => {
+  const [typeInfoDataStructure, onTypeInfoDataStructureChange] =
+    useState<TypeInfoDataStructure>({});
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
@@ -75,6 +72,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     cursor: undefined,
     items: [],
   });
+  // TODO: Add relationship versions of the above list config/results???
   const [selectable, setSelectable] = useState<boolean>(true);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
 
@@ -106,8 +104,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   });
   // TODO: This is going to have to consider the ORM client.
   const { dataItem, onDataItemChange } = useTypeInfoDataStore({
-    baseValue,
-    onBaseValueChange,
+    typeInfoDataStructure,
+    onTypeInfoDataStructureChange,
     typeName: targetTypeName,
     operation: toOperation,
     primaryFieldValue: targetPrimaryFieldValue,
