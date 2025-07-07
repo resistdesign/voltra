@@ -34,6 +34,7 @@ export type TypeInfoApplicationProps = {
   typeInfoMap: TypeInfoMap;
   baseTypeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
+  // TODO: For list modes, we might need some base list config objects.
   baseMode: TypeNavigationMode;
   // TODO: I think we need a `useTypeInfoORMClient` to watch
   //  loading and errors and things like that.
