@@ -49,10 +49,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseOperation = TypeOperation.CREATE,
   basePrimaryFieldValue,
 }) => {
-  const [typeInfoDataItem, setTypeInfoDataItem] = useState<TypeInfoDataItem>(
-    // TODO: Should we have a default typeInfoDataItem?
-    {},
-  );
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
@@ -99,6 +95,16 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypeFieldName,
   });
+  const { primaryField }: Partial<TypeInfo> = targetTypeInfo || {};
+  const [typeInfoDataItem, setTypeInfoDataItem] = useState<TypeInfoDataItem>(
+    // TODO: Should we have a default typeInfoDataItem?
+    typeof primaryField !== "undefined" &&
+      typeof basePrimaryFieldValue !== "undefined"
+      ? {
+          [primaryField]: basePrimaryFieldValue,
+        }
+      : {},
+  );
 
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
