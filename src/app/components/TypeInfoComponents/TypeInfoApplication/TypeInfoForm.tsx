@@ -20,7 +20,7 @@ import {
 import styled from "styled-components";
 import { TypeInfoInput } from "../TypeInfoInput";
 
-// TODO: Do options based grid layout.
+// TODO: Do options/tags based grid layout.
 const BaseForm = styled(Form)`
   flex: 1 0 auto;
   display: flex;
@@ -72,7 +72,8 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   onNavigateToType,
 }) => {
   const { fields = {} } = typeInfo;
-  const [internalValue, setInternalValue] = useState<TypeInfoDataItem>({});
+  const [internalValue, setInternalValue] = useState<TypeInfoDataItem>(value);
+  const hasChanged = internalValue !== value;
   const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
     setInternalValue((prev) => ({
       ...prev,
@@ -86,12 +87,13 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
     (nameOrIndex: NameOrIndex) => {
       // TODO: Should never happen on array fields.
       // NOTE: Never open related items on `CREATE` because the item doesn't yet exist to have relationships.
+      // TODO: Somthing to work out is what if the related field is required, then what!?
       if (onNavigateToType && operation !== TypeOperation.CREATE) {
         onNavigateToType({
           fromTypeName: typeInfoName,
           fromTypePrimaryFieldValue: primaryFieldValue,
           fromTypeFieldName: `${nameOrIndex}`,
-          // TODO: There should be options here.
+          // TODO: How does `toOperation` work for the various "from" operations?
           toOperation: TypeOperation.UPDATE,
           toMode: TypeNavigationMode.RELATED_ITEMS,
         });
@@ -114,8 +116,6 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   //  [ ] arrays
   //  [ ] validation
 
-  // TODO: Do we need a form label?
-
   return (
     <BaseForm onSubmit={onSubmitInternal}>
       {Object.keys(fields).map((fieldName) => {
@@ -136,11 +136,17 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
       })}
       <FormControls>
         {onCancel ? (
-          <FormControlButton type="button" onClick={onCancel}>
+          <FormControlButton
+            type="button"
+            disabled={!hasChanged}
+            onClick={onCancel}
+          >
             Cancel
           </FormControlButton>
         ) : undefined}
-        <FormControlButton type="submit">Submit</FormControlButton>
+        <FormControlButton type="submit" disabled={!hasChanged}>
+          Submit
+        </FormControlButton>
       </FormControls>
     </BaseForm>
   );
