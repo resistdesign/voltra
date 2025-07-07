@@ -35,6 +35,9 @@ export type TypeInfoApplicationProps = {
   baseTypeInfoName: string;
   customInputTypeMap?: Record<string, InputComponent<any>>;
   baseMode: TypeNavigationMode;
+  // TODO: I think we need a `useTypeInfoORMClient` to watch
+  //  loading and errors and things like that.
+  //  We probably also need to track specific requests.
   typeInfoORMClient: TypeInfoORMClient;
 } & TypeOperationConfig;
 
@@ -105,6 +108,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         }
       : {},
   );
+
+  console.log("ITEM:", typeInfoDataItem);
+
+  // TODO: If there is a basePrimaryFieldValue,
+  //  then maybe we should just fetch it with the ORM client?
 
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
