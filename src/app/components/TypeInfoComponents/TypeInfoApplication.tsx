@@ -56,6 +56,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 }) => {
   const [typeInfoDataStructure, onTypeInfoDataStructureChange] =
     useState<TypeInfoDataStructure>({});
+  console.log("DATA:", typeInfoDataStructure);
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
