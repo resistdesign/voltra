@@ -7,10 +7,10 @@ import {
 import {
   DEMO_ORM_ROUTE_PATH,
   DEMO_TYPE_INFO_MAP,
+  DOMAINS,
 } from "../../../common/Constants";
 import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
-import { DOMAINS } from "../../../iac";
 
 const DEMO_PERSON_ID = "1234567";
 

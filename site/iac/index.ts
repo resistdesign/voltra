@@ -13,7 +13,7 @@ import {
 import Path from "path";
 import FS from "fs";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
-import { DEMO_TYPE_INFO_MAP } from "../common/Constants";
+import { BASE_DOMAIN, DEMO_TYPE_INFO_MAP, DOMAINS } from "../common/Constants";
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
@@ -47,20 +47,12 @@ const IDS = {
     BUILD_PIPELINE: "APIBuildPipeline",
   },
 };
-const BASE_DOMAIN = "demo.voltra.app";
-export const DOMAINS = {
-  APP: `docs.${BASE_DOMAIN}`,
-  APP_LOCAL: `docs-local.${BASE_DOMAIN}`,
-  API: `api.${BASE_DOMAIN}`,
-  API_FILES: `api-files.${BASE_DOMAIN}`,
-};
 const REPO_CREDENTIALS = {
   OWNER: ENV_VARS.REPO_OWNER,
   NAME: ENV_VARS.REPO_NAME,
   BRANCH: ENV_VARS.REPO_BRANCH,
   TOKEN: ENV_VARS.REPO_TOKEN,
 };
-
 const IaC = new SimpleCFT({
   AWSTemplateFormatVersion: "2010-09-09",
   Description: "The Voltra API Demo Backend",
