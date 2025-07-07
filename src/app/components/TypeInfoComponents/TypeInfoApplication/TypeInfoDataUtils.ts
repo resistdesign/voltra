@@ -53,9 +53,7 @@ export const useTypeInfoDataStore = ({
         typeof typeName !== "undefined" &&
         typeof operation !== "undefined" &&
         typeof primaryFieldValue !== "undefined" &&
-        typeof typeInfoDataStructure !== "undefined" &&
-        typeof typeDataStateMap !== "undefined" &&
-        typeof typeInfoDataMap !== "undefined"
+        typeof typeInfoDataStructure !== "undefined"
       ) {
         onTypeInfoDataStructureChange({
           ...typeInfoDataStructure,
