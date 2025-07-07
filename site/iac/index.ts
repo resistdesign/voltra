@@ -48,7 +48,7 @@ const IDS = {
   },
 };
 const BASE_DOMAIN = "demo.voltra.app";
-const DOMAINS = {
+export const DOMAINS = {
   APP: `docs.${BASE_DOMAIN}`,
   APP_LOCAL: `docs-local.${BASE_DOMAIN}`,
   API: `api.${BASE_DOMAIN}`,
