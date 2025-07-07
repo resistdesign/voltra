@@ -36,7 +36,7 @@ export const TypeInfoDemo: FC = () => {
       onBaseValueChange={setValue}
       baseOperation={TypeOperation.UPDATE}
       baseMode={TypeNavigationMode.FORM}
-      basePrimaryKeyValue={DEMO_PERSON_ID}
+      basePrimaryFieldValue={DEMO_PERSON_ID}
       typeInfoORMClient={typeInfoORMClient}
     />
   );
