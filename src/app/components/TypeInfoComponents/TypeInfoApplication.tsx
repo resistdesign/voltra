@@ -19,6 +19,7 @@ import {
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
 import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
+import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 
 export type TypeOperationConfig =
   | {
@@ -36,10 +37,7 @@ export type TypeInfoApplicationProps = {
   customInputTypeMap?: Record<string, InputComponent<any>>;
   // TODO: For list modes, we might need some base list config objects.
   baseMode: TypeNavigationMode;
-  // TODO: I think we need a `useTypeInfoORMClient` to watch
-  //  loading and errors and things like that.
-  //  We probably also need to track specific requests.
-  typeInfoORMClient: TypeInfoORMAPI;
+  typeInfoORMAPI: TypeInfoORMAPI;
 } & TypeOperationConfig;
 
 /**
@@ -52,6 +50,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   baseMode = TypeNavigationMode.FORM,
   baseOperation = TypeOperation.CREATE,
   basePrimaryFieldValue,
+  typeInfoORMAPI,
 }) => {
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
@@ -109,6 +108,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         }
       : {},
   );
+
+  const { state: typeInfoORMAPIState, api: typeInfoORMAPIService } =
+    useTypeInfoORMAPI(typeInfoORMAPI);
 
   console.log("ITEM:", typeInfoDataItem);
 

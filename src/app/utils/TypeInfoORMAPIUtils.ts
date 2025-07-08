@@ -17,7 +17,7 @@ export type SyncRequestHandler<ArgsType extends any[]> = (
   ...args: ArgsType
 ) => string;
 
-export type ControllerAPI = ExpandComplexType<{
+export type ServiceAPI = ExpandComplexType<{
   [K in keyof TypeInfoORMAPI]: TypeInfoORMAPI[K] extends (
     ...args: infer A
   ) => Promise<any>
@@ -37,7 +37,7 @@ export type TypeInfoORMAPIState = {
 
 export type TypeInfoORMAPIController = {
   state: TypeInfoORMAPIState;
-  api: ControllerAPI;
+  api: ServiceAPI;
 };
 
 const handleRequest = async (
@@ -95,8 +95,8 @@ export const useTypeInfoORMAPI = (
     },
     [],
   );
-  const api = useMemo<ControllerAPI>(() => {
-    const apiBase: Partial<ControllerAPI> = {};
+  const api = useMemo<ServiceAPI>(() => {
+    const apiBase: Partial<ServiceAPI> = {};
 
     for (const aM in typeInfoORMAPI) {
       const methodName = aM as keyof TypeInfoORMAPI;
@@ -108,7 +108,7 @@ export const useTypeInfoORMAPI = (
       );
     }
 
-    return apiBase as ControllerAPI;
+    return apiBase as ServiceAPI;
   }, [typeInfoORMAPI, onRequestStateChange]);
 
   return {
