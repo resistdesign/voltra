@@ -82,7 +82,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     fromTypeName,
     fromTypeFieldName,
-    toOperation,
+    toOperation = baseOperation,
     toMode,
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
@@ -131,6 +131,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   toMode === TypeNavigationMode.RELATED_ITEMS ? (
     targetTypeName && targetTypeInfo ? (
       <ObjectSearch
+        operation={toOperation}
         typeInfoMap={typeInfoMap}
         typeInfoName={targetTypeName}
         typeInfo={targetTypeInfo}
@@ -148,6 +149,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   ) : toMode === TypeNavigationMode.SEARCH_ITEMS ? (
     targetTypeName && targetTypeInfo ? (
       <ObjectSearch
+        operation={toOperation}
         typeInfoMap={typeInfoMap}
         typeInfoName={targetTypeName}
         typeInfo={targetTypeInfo}

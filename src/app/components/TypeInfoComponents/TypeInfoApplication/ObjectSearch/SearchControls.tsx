@@ -14,7 +14,10 @@ import {
   LogicalOperators,
   SearchCriteria,
 } from "../../../../../common/SearchTypes";
-import { TypeInfo } from "../../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeOperation,
+} from "../../../../../common/TypeParsing/TypeInfo";
 import { InputComponent } from "../../Types";
 
 const BaseSearchControls = styled.div`
@@ -35,6 +38,7 @@ const FieldCriterionControlItem = styled.div`
 `;
 
 export type SearchControlsProps = {
+  operation: TypeOperation;
   typeInfo: TypeInfo;
   listItemsConfig: ListItemsConfig;
   onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void;
@@ -42,6 +46,7 @@ export type SearchControlsProps = {
 };
 
 export const SearchControls: FC<SearchControlsProps> = ({
+  operation,
   typeInfo,
   listItemsConfig,
   onListItemsConfigChange,
@@ -144,6 +149,7 @@ export const SearchControls: FC<SearchControlsProps> = ({
         <FieldCriterionControlItem key={`FieldCriterionControlItem:${index}`}>
           <FieldCriterionControl
             key={`TypeInfoInput:${index}`}
+            operation={operation}
             index={index}
             fieldCriterion={fieldCriterionItem}
             typeInfo={typeInfo}

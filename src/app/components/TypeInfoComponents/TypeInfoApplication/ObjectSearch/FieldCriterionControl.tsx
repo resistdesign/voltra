@@ -10,7 +10,10 @@ import {
   ComparisonOperators,
   FieldCriterion,
 } from "../../../../../common/SearchTypes";
-import { TypeInfo } from "../../../../../common/TypeParsing/TypeInfo";
+import {
+  TypeInfo,
+  TypeOperation,
+} from "../../../../../common/TypeParsing/TypeInfo";
 import { InputComponent, NameOrIndex } from "../../Types";
 
 const FieldCriterionControlBase = styled.div`
@@ -23,6 +26,7 @@ const FieldCriterionControlBase = styled.div`
 
 export type FieldCriterionControlProps = {
   index: number;
+  operation: TypeOperation;
   fieldCriterion: FieldCriterion;
   typeInfo: TypeInfo;
   onChange: (index: number, fieldCriterion: FieldCriterion) => void;
@@ -31,6 +35,7 @@ export type FieldCriterionControlProps = {
 
 export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
   index,
+  operation,
   fieldCriterion,
   typeInfo,
   onChange,
@@ -106,6 +111,7 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
       </select>
       {typeInfoField ? (
         <TypeInfoInput
+          operation={operation}
           typeInfoField={typeInfoField}
           fieldValue={fieldValue}
           nameOrIndex={fieldName}
