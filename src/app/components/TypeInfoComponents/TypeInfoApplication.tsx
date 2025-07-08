@@ -52,6 +52,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   basePrimaryFieldValue,
   typeInfoORMAPI,
 }) => {
+  const { state: typeInfoORMAPIState, api: typeInfoORMAPIService } =
+    useTypeInfoORMAPI(typeInfoORMAPI);
+
   // TODO: Need tooling to manage these table/search related values.
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
@@ -108,9 +111,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         }
       : {},
   );
-
-  const { state: typeInfoORMAPIState, api: typeInfoORMAPIService } =
-    useTypeInfoORMAPI(typeInfoORMAPI);
 
   console.log("ITEM:", typeInfoDataItem);
 
