@@ -18,7 +18,7 @@ import {
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
-import { TypeInfoORMClient } from "../../utils";
+import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
 
 export type TypeOperationConfig =
   | {
@@ -39,7 +39,7 @@ export type TypeInfoApplicationProps = {
   // TODO: I think we need a `useTypeInfoORMClient` to watch
   //  loading and errors and things like that.
   //  We probably also need to track specific requests.
-  typeInfoORMClient: TypeInfoORMClient;
+  typeInfoORMClient: TypeInfoORMAPI;
 } & TypeOperationConfig;
 
 /**
