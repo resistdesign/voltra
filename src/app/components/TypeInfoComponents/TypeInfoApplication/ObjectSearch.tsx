@@ -9,6 +9,7 @@ import {
   TypeInfo,
   TypeInfoDataItem,
   TypeInfoMap,
+  TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
 import { ObjectTable } from "./ObjectSearch/ObjectTable";
 import styled from "styled-components";
@@ -28,6 +29,7 @@ const BaseObjectSearch = styled.div`
 `;
 
 export type ObjectSearchProps = {
+  operation: TypeOperation;
   typeInfoMap: TypeInfoMap;
   typeInfoName: string;
   typeInfo: TypeInfo;
@@ -44,6 +46,7 @@ export type ObjectSearchProps = {
 
 // TODO: Add item editing UI/buttons to item rows???
 export const ObjectSearch: FC<ObjectSearchProps> = ({
+  operation,
   typeInfoMap,
   typeInfoName,
   typeInfo,
@@ -82,6 +85,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     <BaseObjectSearch>
       {!hideSearchControls ? (
         <SearchControls
+          operation={operation}
           typeInfo={typeInfo}
           listItemsConfig={listItemsConfig}
           onListItemsConfigChange={onListItemsConfigChange}

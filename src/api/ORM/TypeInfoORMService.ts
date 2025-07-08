@@ -29,7 +29,7 @@ import {
   DeleteRelationshipResults,
   OperationGroup,
   RelationshipOperation,
-  TYPE_INFO_ORM_SERVICE_ERRORS,
+  TypeInfoORMServiceError,
   TypeInfoORMAPI,
 } from "../../common/TypeInfoORM";
 import { DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
@@ -156,12 +156,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   constructor(protected config: TypeInfoORMServiceConfig) {
     if (!config.getDriver) {
-      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.NO_DRIVERS_SUPPLIED);
+      throw new Error(TypeInfoORMServiceError.NO_DRIVERS_SUPPLIED);
     }
 
     if (!config.getRelationshipDriver) {
       throw new Error(
-        TYPE_INFO_ORM_SERVICE_ERRORS.NO_RELATIONSHIP_DRIVERS_SUPPLIED,
+        TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED,
       );
     }
   }
@@ -307,7 +307,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const driver = this.config.getDriver(typeName);
 
     if (!driver) {
-      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_DRIVER);
+      throw new Error(TypeInfoORMServiceError.INVALID_DRIVER);
     }
 
     return this.getWrappedDriverWithExtendedErrorData(driver, { typeName });
@@ -320,7 +320,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const driver = this.config.getRelationshipDriver(typeName, fieldName);
 
     if (!driver) {
-      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP_DRIVER);
+      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP_DRIVER);
     }
 
     return this.getWrappedDriverWithExtendedErrorData(driver, {
@@ -334,7 +334,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (!typeInfo) {
       throw {
-        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_TYPE_INFO,
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
         typeName,
       };
     } else {
@@ -342,7 +342,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       if (typeof primaryField === "undefined") {
         throw {
-          message: TYPE_INFO_ORM_SERVICE_ERRORS.TYPE_INFO_MISSING_PRIMARY_FIELD,
+          message: TypeInfoORMServiceError.TYPE_INFO_MISSING_PRIMARY_FIELD,
           typeName,
         };
       }
@@ -504,7 +504,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       if (!relatedTypeInfo) {
         const relationshipValidationResults: TypeInfoValidationResults = {
           valid: false,
-          error: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP,
+          error: TypeInfoORMServiceError.INVALID_RELATIONSHIP,
           errorMap: {},
         };
 
@@ -539,7 +539,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (createDenied || !createAllowed) {
       throw {
-        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        message: TypeInfoORMServiceError.INVALID_OPERATION,
         relationshipItem,
       };
     } else {
@@ -612,7 +612,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (deleteDenied || !deleteAllowed) {
       throw {
-        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        message: TypeInfoORMServiceError.INVALID_OPERATION,
         relationshipItem,
       };
     } else {
@@ -779,7 +779,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         cursor,
       };
     } else {
-      throw new Error(TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_RELATIONSHIP);
+      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
     }
   };
 
@@ -797,7 +797,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (createDenied || !createAllowed) {
       throw {
-        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        message: TypeInfoORMServiceError.INVALID_OPERATION,
         typeName,
         item,
       };
@@ -841,7 +841,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (readDenied || !readAllowed) {
       throw {
-        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        message: TypeInfoORMServiceError.INVALID_OPERATION,
         typeName,
         primaryFieldValue,
         selectedFields,
@@ -882,7 +882,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (typeof primaryFieldValue === "undefined") {
       const validationResults: TypeInfoValidationResults = {
         valid: false,
-        error: TYPE_INFO_ORM_SERVICE_ERRORS.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
+        error: TypeInfoORMServiceError.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
         errorMap: {},
       };
 
@@ -902,7 +902,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       if (updateDenied || !updateAllowed) {
         throw {
-          message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+          message: TypeInfoORMServiceError.INVALID_OPERATION,
           typeName,
           item,
         };
@@ -977,7 +977,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (deleteDenied || !deleteAllowed) {
       throw {
-        message: TYPE_INFO_ORM_SERVICE_ERRORS.INVALID_OPERATION,
+        message: TypeInfoORMServiceError.INVALID_OPERATION,
         typeName,
         primaryFieldValue,
       };
