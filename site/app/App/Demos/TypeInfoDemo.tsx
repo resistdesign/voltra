@@ -27,7 +27,7 @@ export const TypeInfoDemo: FC = () => {
       baseOperation={TypeOperation.UPDATE}
       baseMode={TypeNavigationMode.FORM}
       basePrimaryFieldValue={DEMO_PERSON_ID}
-      typeInfoORMClient={typeInfoORMClient}
+      typeInfoORMAPI={typeInfoORMClient}
     />
   );
 };
