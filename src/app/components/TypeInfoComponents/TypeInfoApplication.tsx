@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -14,12 +14,14 @@ import {
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import {
   ListItemsConfig,
-  ListItemsResults,
+  ListRelationshipsConfig,
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
 import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
+import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
+import { ItemRelationshipInfoKeys } from "../../../common/ItemRelationshipInfoTypes";
 
 export type TypeOperationConfig =
   | {
@@ -54,8 +56,27 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 }) => {
   const { state: typeInfoORMAPIState, api: typeInfoORMAPIService } =
     useTypeInfoORMAPI(typeInfoORMAPI);
-
-  // TODO: Need tooling to manage these table/search related values.
+  const {
+    FORM: {
+      loading: formLoading = false,
+      item: typeInfoDataItem = {},
+      error: formError,
+    } = {},
+    SEARCH_ITEMS: {
+      loading: searchItemsLoading = false,
+      listItemsResults: searchItemsResults = {
+        items: [],
+      },
+      error: searchItemsError,
+    } = {},
+    RELATED_ITEMS: {
+      loading: relatedItemsLoading = false,
+      listItemsResults: relatedItemsResults = {
+        items: [],
+      },
+      error: relatedItemsError,
+    } = {},
+  } = useTypeInfoApplicationState(typeInfoORMAPIState);
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
     itemsPerPage: 10,
@@ -65,16 +86,20 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     },
     sortFields: [],
   });
-  const [listItemsResults, setListItemsResults] = useState<
-    ListItemsResults<TypeInfoDataItem>
-  >({
-    cursor: undefined,
-    items: [],
-  });
+  // TODO: `setListRelationshipsConfig` will need to be wrapped to convert `ListItemsConfig` to `ListRelationshipsConfig`.
+  const [listRelationshipsConfig, setListRelationshipsConfig] =
+    useState<ListRelationshipsConfig>({
+      cursor: undefined,
+      itemsPerPage: 10,
+      relationshipItemOrigin: {
+        [ItemRelationshipInfoKeys.fromTypeName]: "",
+        [ItemRelationshipInfoKeys.fromTypeFieldName]: "",
+        [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: "",
+      },
+    });
   // TODO: Add relationship versions of the above list config/results???
   const [selectable, setSelectable] = useState<boolean>(true);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-
   // TODO: Change when selecting an item from list mode.
   // TODO: Probably needs to be in the history.
   const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
@@ -102,21 +127,33 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeFieldName,
   });
   const { primaryField }: Partial<TypeInfo> = targetTypeInfo || {};
-  const [typeInfoDataItem, setTypeInfoDataItem] = useState<TypeInfoDataItem>(
-    // TODO: Should we have a default typeInfoDataItem?
-    typeof primaryField !== "undefined" &&
-      typeof basePrimaryFieldValue !== "undefined"
-      ? {
-          [primaryField]: basePrimaryFieldValue,
+  const onSubmit = useCallback(
+    (newItem: TypeInfoDataItem) => {
+      if (typeof targetTypeName === "string") {
+        if (toOperation === TypeOperation.CREATE) {
+          typeInfoORMAPIService.create(targetTypeName, newItem);
+        } else if (toOperation === TypeOperation.UPDATE) {
+          typeInfoORMAPIService.update(targetTypeName, newItem);
         }
-      : {},
+      }
+    },
+    [targetTypeName, toOperation, typeInfoORMAPIService],
   );
 
   console.log("ITEM:", typeInfoDataItem);
 
   // TODO: If there is a basePrimaryFieldValue,
   //  then maybe we should just fetch it with the ORM client?
+  // TODO: We also need to read items when selected for edit from a list.
+  useEffect(() => {
+    if (targetTypeName && basePrimaryFieldValue) {
+      // TODO: Do we need to use selected fields???
+      typeInfoORMAPIService.read(targetTypeName, basePrimaryFieldValue);
+    }
+  }, [targetTypeName, basePrimaryFieldValue, typeInfoORMAPIService]);
 
+  // TODO: HOW TO RENDER AND DISMISS ERRORS?
+  // TODO: How to handle loading states?
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={targetTypeName as string}
@@ -126,28 +163,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       value={typeInfoDataItem}
       operation={toOperation}
       onCancel={onCloseCurrentNavHistoryItem}
-      onSubmit={setTypeInfoDataItem}
+      onSubmit={onSubmit}
       onNavigateToType={onNavigateToType}
     />
-  ) : // TODO: Need ObjectSearch for related items, but without the search.
-  toMode === TypeNavigationMode.RELATED_ITEMS ? (
-    targetTypeName && targetTypeInfo ? (
-      <ObjectSearch
-        operation={toOperation}
-        typeInfoMap={typeInfoMap}
-        typeInfoName={targetTypeName}
-        typeInfo={targetTypeInfo}
-        listItemsConfig={listItemsConfig}
-        onListItemsConfigChange={setListItemsConfig}
-        listItemsResults={listItemsResults}
-        onNavigateToType={onNavigateToType}
-        customInputTypeMap={customInputTypeMap}
-        selectable={selectable}
-        selectedIndices={selectedIndices}
-        onSelectedIndicesChange={setSelectedIndices}
-        hideSearchControls
-      />
-    ) : undefined
   ) : toMode === TypeNavigationMode.SEARCH_ITEMS ? (
     targetTypeName && targetTypeInfo ? (
       <ObjectSearch
@@ -157,12 +175,30 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         typeInfo={targetTypeInfo}
         listItemsConfig={listItemsConfig}
         onListItemsConfigChange={setListItemsConfig}
-        listItemsResults={listItemsResults}
+        listItemsResults={searchItemsResults}
         onNavigateToType={onNavigateToType}
         customInputTypeMap={customInputTypeMap}
         selectable={selectable}
         selectedIndices={selectedIndices}
         onSelectedIndicesChange={setSelectedIndices}
+      />
+    ) : undefined
+  ) : toMode === TypeNavigationMode.RELATED_ITEMS ? (
+    targetTypeName && targetTypeInfo ? (
+      <ObjectSearch
+        operation={toOperation}
+        typeInfoMap={typeInfoMap}
+        typeInfoName={targetTypeName}
+        typeInfo={targetTypeInfo}
+        listItemsConfig={listRelationshipsConfig}
+        onListItemsConfigChange={setListRelationshipsConfig}
+        listItemsResults={relatedItemsResults}
+        onNavigateToType={onNavigateToType}
+        customInputTypeMap={customInputTypeMap}
+        selectable={selectable}
+        selectedIndices={selectedIndices}
+        onSelectedIndicesChange={setSelectedIndices}
+        hideSearchControls
       />
     ) : undefined
   ) : undefined;
