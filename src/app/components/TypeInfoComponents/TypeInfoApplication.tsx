@@ -97,9 +97,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: "",
       },
     });
-  // TODO: Add relationship versions of the above list config/results???
   const [selectable, setSelectable] = useState<boolean>(true);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [relatedSelectable, setRelatedSelectable] = useState<boolean>(true);
+  const [relatedSelectedIndices, setRelatedSelectedIndices] = useState<
+    number[]
+  >([]);
   // TODO: Change when selecting an item from list mode.
   // TODO: Probably needs to be in the history.
   const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
@@ -126,10 +129,26 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypeFieldName,
   });
-  const { primaryField }: Partial<TypeInfo> = targetTypeInfo || {};
+  const onListRelationshipsConfigChange = useCallback(
+    ({ cursor, itemsPerPage }: ListItemsConfig) => {
+      if (targetPrimaryFieldValue) {
+        setListRelationshipsConfig({
+          cursor,
+          itemsPerPage,
+          relationshipItemOrigin: {
+            [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
+            [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
+            [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]:
+              targetPrimaryFieldValue,
+          },
+        });
+      }
+    },
+    [fromTypeName, fromTypeFieldName, targetPrimaryFieldValue],
+  );
   const onSubmit = useCallback(
     (newItem: TypeInfoDataItem) => {
-      if (typeof targetTypeName === "string") {
+      if (targetTypeName) {
         if (toOperation === TypeOperation.CREATE) {
           typeInfoORMAPIService.create(targetTypeName, newItem);
         } else if (toOperation === TypeOperation.UPDATE) {
@@ -142,8 +161,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   console.log("ITEM:", typeInfoDataItem);
 
-  // TODO: If there is a basePrimaryFieldValue,
-  //  then maybe we should just fetch it with the ORM client?
   // TODO: We also need to read items when selected for edit from a list.
   useEffect(() => {
     if (targetTypeName && basePrimaryFieldValue) {
@@ -152,8 +169,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     }
   }, [targetTypeName, basePrimaryFieldValue, typeInfoORMAPIService]);
 
+  // TODO: Request a new list when the list items config changes.
+  // TODO: Request a new list when the relationships config changes.
+
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
   // TODO: How to handle loading states?
+  // TODO: Delete selected items in search items mode.
+  // TODO: Delete selected items in related items mode.
   return toMode === TypeNavigationMode.FORM ? (
     <TypeInfoForm
       typeInfoName={targetTypeName as string}
@@ -191,13 +213,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         typeInfoName={targetTypeName}
         typeInfo={targetTypeInfo}
         listItemsConfig={listRelationshipsConfig}
-        onListItemsConfigChange={setListRelationshipsConfig}
+        onListItemsConfigChange={onListRelationshipsConfigChange}
         listItemsResults={relatedItemsResults}
         onNavigateToType={onNavigateToType}
         customInputTypeMap={customInputTypeMap}
-        selectable={selectable}
-        selectedIndices={selectedIndices}
-        onSelectedIndicesChange={setSelectedIndices}
+        selectable={relatedSelectable}
+        selectedIndices={relatedSelectedIndices}
+        onSelectedIndicesChange={setRelatedSelectedIndices}
         hideSearchControls
       />
     ) : undefined
