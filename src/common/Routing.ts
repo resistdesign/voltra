@@ -35,12 +35,12 @@ export const getPathArray = (
 export const getPathString = (
   parts: any[] = [],
   delimiter: string = PATH_DELIMITER,
-  filterEmpty: boolean = false,
+  filterEmptyInput: boolean = false,
   useJson: boolean = true,
   uriEncodeParts: boolean = false,
 ): string =>
   parts
-    .filter((p) => !filterEmpty || p !== "")
+    .filter(filterEmptyInput ? (p) => p ?? false : () => true)
     .map(useJson ? (p) => JSON.stringify(p) : (x) => x)
     .map(uriEncodeParts ? encodeURIComponent : (x) => x)
     .join(delimiter);
@@ -52,7 +52,8 @@ export const mergeStringPaths = (
   path1: string,
   path2: string,
   delimiter: string = PATH_DELIMITER,
-  filterEmpty: boolean = false,
+  filterEmptyOutput: boolean = false,
+  filterEmptyInput: boolean = true,
   useJson: boolean = true,
   uriEncodeParts: boolean = false,
 ): string =>
@@ -61,22 +62,22 @@ export const mergeStringPaths = (
       ...getPathArray(
         path1,
         delimiter,
-        filterEmpty,
-        filterEmpty,
+        filterEmptyOutput,
+        filterEmptyInput,
         useJson,
         uriEncodeParts,
       ),
       ...getPathArray(
         path2,
         delimiter,
-        filterEmpty,
-        filterEmpty,
+        filterEmptyOutput,
+        filterEmptyInput,
         useJson,
         uriEncodeParts,
       ),
     ],
     delimiter,
-    filterEmpty,
+    filterEmptyInput,
     useJson,
     uriEncodeParts,
   );
