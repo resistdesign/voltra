@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -109,6 +109,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeFieldName,
     toOperation = baseOperation,
     toMode,
+    toTypePrimaryFieldValue,
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
   } = useTypeNavHistory({
@@ -118,11 +119,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseOperation,
     basePrimaryFieldValue,
   });
-  // TODO: Change when selecting an item from list mode.
-  // TODO: Probably needs to be in the history. And probably should use useMemo.
-  const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
-    string | undefined
-  >(basePrimaryFieldValue);
+  const targetPrimaryFieldValue = useMemo<string | undefined>(
+    () => toTypePrimaryFieldValue ?? basePrimaryFieldValue,
+    [toTypePrimaryFieldValue, basePrimaryFieldValue],
+  );
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
     relationshipMode,
