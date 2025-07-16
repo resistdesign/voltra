@@ -17,16 +17,17 @@ export const getPotentialJSONValue = (value: string): any => {
 export const getPathArray = (
   path: string,
   delimiter: string = PATH_DELIMITER,
-  filterEmpty: boolean = false,
+  filterEmptyOutput: boolean = false,
+  filterEmptyInput: boolean = true,
   useJson: boolean = true,
   uriDecodeParts: boolean = true,
 ): any[] =>
   path
     .split(delimiter)
-    .filter(filterEmpty ? (p) => p !== "" : () => true)
+    .filter(filterEmptyInput ? (p) => p !== "" : () => true)
     .map(uriDecodeParts ? decodeURIComponent : (x) => x)
     .map(useJson ? getPotentialJSONValue : (p) => p)
-    .filter(filterEmpty ? (p) => p ?? false : () => true);
+    .filter(filterEmptyOutput ? (p) => p ?? false : () => true);
 
 /**
  * Get the path string from path segments.
@@ -57,8 +58,22 @@ export const mergeStringPaths = (
 ): string =>
   getPathString(
     [
-      ...getPathArray(path1, delimiter, filterEmpty, useJson, uriEncodeParts),
-      ...getPathArray(path2, delimiter, filterEmpty, useJson, uriEncodeParts),
+      ...getPathArray(
+        path1,
+        delimiter,
+        filterEmpty,
+        filterEmpty,
+        useJson,
+        uriEncodeParts,
+      ),
+      ...getPathArray(
+        path2,
+        delimiter,
+        filterEmpty,
+        filterEmpty,
+        useJson,
+        uriEncodeParts,
+      ),
     ],
     delimiter,
     filterEmpty,
