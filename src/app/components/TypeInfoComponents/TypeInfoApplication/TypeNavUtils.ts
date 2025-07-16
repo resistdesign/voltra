@@ -4,6 +4,7 @@ import {
   TypeInfoMap,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
+import { ExpandComplexType } from "../../../../common/HelperTypes";
 
 export type ItemViewOperation = Exclude<TypeOperation, TypeOperation.DELETE>;
 
@@ -35,6 +36,14 @@ export const useBaseTypeNavigation = ({
   );
 };
 
+export type TypeNavigationHistoryController = ExpandComplexType<
+  TypeNavigation & {
+    relationshipMode: boolean;
+    onNavigateToType: (typeNavigation: TypeNavigation) => void;
+    onCloseCurrentNavHistoryItem: () => void;
+  }
+>;
+
 export const useTypeNavHistory = ({
   typeInfoMap,
   baseTypeInfoName,
@@ -43,7 +52,7 @@ export const useTypeNavHistory = ({
   basePrimaryFieldValue,
 }: {
   typeInfoMap: TypeInfoMap;
-} & TypeNavigationOperationConfig) => {
+} & TypeNavigationOperationConfig): TypeNavigationHistoryController => {
   const baseTypeNavigation = useBaseTypeNavigation({
     baseTypeInfoName,
     baseMode,
@@ -52,11 +61,17 @@ export const useTypeNavHistory = ({
   });
   const [navHistory, setNavHistory] = useState<TypeNavigation[]>([]);
   const currentTypeNavigation = useMemo<TypeNavigation>(
-    () => navHistory[navHistory.length - 1] || baseTypeNavigation,
+    () => navHistory[navHistory.length - 1] ?? baseTypeNavigation,
     [navHistory, baseTypeNavigation],
   );
-  const { fromTypeName, fromTypeFieldName, toOperation, toMode } =
-    currentTypeNavigation;
+  const {
+    fromTypeName,
+    fromTypeFieldName,
+    fromTypePrimaryFieldValue,
+    toOperation,
+    toMode,
+    toTypePrimaryFieldValue,
+  } = currentTypeNavigation;
   const relationshipMode =
     navHistory.length > 0 && typeof fromTypeFieldName !== "undefined";
   const onNavigateToType = useCallback(
@@ -83,8 +98,10 @@ export const useTypeNavHistory = ({
     relationshipMode,
     fromTypeName,
     fromTypeFieldName,
+    fromTypePrimaryFieldValue,
     toOperation,
     toMode,
+    toTypePrimaryFieldValue,
     onNavigateToType,
     onCloseCurrentNavHistoryItem,
   };
