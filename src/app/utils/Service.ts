@@ -1,4 +1,4 @@
-import { mergeStringPaths } from "../../common/Routing";
+import { mergeStringPaths, PATH_DELIMITER } from "../../common/Routing";
 
 /**
  * The HTTP service configuration, including authorization, to be used for a service call.
@@ -19,7 +19,14 @@ export const getFullUrl = (
   port?: number,
 ): string => {
   const portString = !!port ? `:${port}` : "";
-  const fullPath = mergeStringPaths(basePath, path);
+  const fullPath = mergeStringPaths(
+    basePath,
+    path,
+    PATH_DELIMITER,
+    true,
+    false,
+    false,
+  );
 
   return `${protocol}://${domain}${portString}${fullPath}`;
 };
