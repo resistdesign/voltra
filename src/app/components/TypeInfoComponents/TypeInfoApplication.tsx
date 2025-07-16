@@ -170,7 +170,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   }, [targetTypeName, basePrimaryFieldValue, typeInfoORMAPIService]);
 
   // TODO: Request a new list when the list items config changes.
-  // TODO: Request a new list when the relationships config changes.
+  // TODO: Request a new list when the list relationships config changes.
 
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
   // TODO: How to handle loading states?
