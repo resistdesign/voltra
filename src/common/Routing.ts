@@ -33,18 +33,33 @@ export const getPathString = (
   parts: any[] = [],
   delimiter: string = PATH_DELIMITER,
   filterEmpty: boolean = false,
+  useJson: boolean = true,
+  uriEncodeParts: boolean = false,
 ): string =>
   parts
     .filter((p) => !filterEmpty || p !== "")
-    .map((p) => JSON.stringify(p))
-    .map(encodeURIComponent)
+    .map(useJson ? (p) => JSON.stringify(p) : (x) => x)
+    .map(uriEncodeParts ? encodeURIComponent : (x) => x)
     .join(delimiter);
 
 /**
  * Merge two path strings.
  * */
-export const mergeStringPaths = (path1: string, path2: string): string =>
-  getPathString([...getPathArray(path1), ...getPathArray(path2)]);
+export const mergeStringPaths = (
+  path1: string,
+  path2: string,
+  delimiter: string = PATH_DELIMITER,
+  filterEmpty: boolean = false,
+  useJson: boolean = true,
+  uriEncodeParts: boolean = false,
+): string =>
+  getPathString(
+    [...getPathArray(path1), ...getPathArray(path2)],
+    delimiter,
+    filterEmpty,
+    useJson,
+    uriEncodeParts,
+  );
 
 /**
  * Resolve a path string against another path string.
