@@ -8,12 +8,6 @@ import { getSimpleId } from "../../common/IdGeneration";
 
 type RequestMethod = (...args: any[]) => Promise<any>;
 
-type RequestStateChangeHandler = (
-  methodName: keyof TypeInfoORMAPI,
-  requestId: string,
-  requestState: Omit<TypeInfoORMAPIRequestState, "activeRequests">,
-) => void;
-
 export type SyncRequestHandler<ArgsType extends any[]> = (
   ...args: ArgsType
 ) => string;
@@ -26,12 +20,23 @@ export type TypeInfoORMServiceAPI = ExpandComplexType<{
     : TypeInfoORMAPI[K];
 }>;
 
-export type TypeInfoORMAPIRequestState = {
-  activeRequests?: string[];
+export type BaseTypeInfoORMAPIRequestState = {
   loading?: boolean;
   data?: any;
   error?: TypeInfoORMServiceError;
 };
+
+export type TypeInfoORMAPIRequestState = ExpandComplexType<
+  BaseTypeInfoORMAPIRequestState & {
+    activeRequests?: string[];
+  }
+>;
+
+type RequestStateChangeHandler = (
+  methodName: keyof TypeInfoORMAPI,
+  requestId: string,
+  requestState: BaseTypeInfoORMAPIRequestState,
+) => void;
 
 export type TypeInfoORMAPIState = Partial<
   Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRequestState>
@@ -62,7 +67,10 @@ const handleRequest = async (
   } catch (error) {
     onRequestStateChange(methodName, requestId, {
       loading: false,
-      error: error as TypeInfoORMServiceError,
+      error:
+        typeof error === "object" && error !== null && "message" in error
+          ? (error.message as TypeInfoORMServiceError)
+          : undefined,
     });
   }
 };
