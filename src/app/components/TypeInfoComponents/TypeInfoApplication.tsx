@@ -96,17 +96,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: "",
       },
     });
+  // TODO: WHEN is something selectable?
   const [selectable, setSelectable] = useState<boolean>(true);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [relatedSelectable, setRelatedSelectable] = useState<boolean>(true);
   const [relatedSelectedIndices, setRelatedSelectedIndices] = useState<
     number[]
   >([]);
-  // TODO: Change when selecting an item from list mode.
-  // TODO: Probably needs to be in the history.
-  const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
-    string | undefined
-  >(basePrimaryFieldValue);
   const {
     relationshipMode,
     fromTypeName,
@@ -122,6 +118,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseOperation,
     basePrimaryFieldValue,
   });
+  // TODO: Change when selecting an item from list mode.
+  // TODO: Probably needs to be in the history. And probably should use useMemo.
+  const [targetPrimaryFieldValue, setTargetPrimaryFieldValue] = useState<
+    string | undefined
+  >(basePrimaryFieldValue);
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
     relationshipMode,
@@ -154,8 +155,15 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           typeInfoORMAPIService.update(targetTypeName, newItem);
         }
       }
+
+      onCloseCurrentNavHistoryItem();
     },
-    [targetTypeName, toOperation, typeInfoORMAPIService],
+    [
+      targetTypeName,
+      toOperation,
+      typeInfoORMAPIService,
+      onCloseCurrentNavHistoryItem,
+    ],
   );
 
   console.log("ITEM:", typeInfoDataItem);
