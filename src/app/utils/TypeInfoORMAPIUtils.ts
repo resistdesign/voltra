@@ -102,17 +102,21 @@ export const useTypeInfoORMAPI = (
             error: prevError,
           } = {},
           ...prevState
-        }) => ({
-          ...prevState,
-          [methodName]: {
-            activeRequests: loading
-              ? [...prevActiveRequests, requestId]
-              : prevActiveRequests.filter((id) => id !== requestId),
-            loading: loading ?? prevLoading,
-            data: data ?? prevData,
-            error: error ?? prevError,
-          },
-        }),
+        }) => {
+          const newActiveRequests = loading
+            ? [...prevActiveRequests, requestId]
+            : prevActiveRequests.filter((id) => id !== requestId);
+
+          return {
+            ...prevState,
+            [methodName]: {
+              activeRequests: newActiveRequests,
+              loading: newActiveRequests.length > 0,
+              data: data ?? prevData,
+              error: error ?? prevError,
+            },
+          };
+        },
       );
     },
     [],
