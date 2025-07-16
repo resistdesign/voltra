@@ -9,8 +9,9 @@ import { getSimpleId } from "../../common/IdGeneration";
 type RequestMethod = (...args: any[]) => Promise<any>;
 
 type RequestStateChangeHandler = (
+  methodName: keyof TypeInfoORMAPI,
   requestId: string,
-  requestState: TypeInfoORMAPIRequestState,
+  requestState: Omit<TypeInfoORMAPIRequestState, "activeRequests">,
 ) => void;
 
 export type SyncRequestHandler<ArgsType extends any[]> = (
@@ -26,14 +27,15 @@ export type TypeInfoORMServiceAPI = ExpandComplexType<{
 }>;
 
 export type TypeInfoORMAPIRequestState = {
+  activeRequests?: string[];
   loading?: boolean;
   data?: any;
   error?: TypeInfoORMServiceError;
 };
 
-export type TypeInfoORMAPIState = {
-  [requestId: string]: TypeInfoORMAPIRequestState;
-};
+export type TypeInfoORMAPIState = Partial<
+  Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRequestState>
+>;
 
 export type TypeInfoORMAPIController = {
   state: TypeInfoORMAPIState;
@@ -47,15 +49,18 @@ const handleRequest = async (
   methodName: keyof TypeInfoORMAPI,
   onRequestStateChange: RequestStateChangeHandler,
 ): Promise<void> => {
-  onRequestStateChange(requestId, { loading: true });
+  onRequestStateChange(methodName, requestId, { loading: true });
 
   try {
     const requestMethod: RequestMethod = typeInfoORMAPI[methodName];
     const result = await requestMethod(...args);
 
-    onRequestStateChange(requestId, { loading: false, data: result });
+    onRequestStateChange(methodName, requestId, {
+      loading: false,
+      data: result,
+    });
   } catch (error) {
-    onRequestStateChange(requestId, {
+    onRequestStateChange(methodName, requestId, {
       loading: false,
       error: error as TypeInfoORMServiceError,
     });
@@ -87,11 +92,28 @@ export const useTypeInfoORMAPI = (
 ): TypeInfoORMAPIController => {
   const [state, setState] = useState<TypeInfoORMAPIState>({});
   const onRequestStateChange = useCallback<RequestStateChangeHandler>(
-    (requestId, requestState) => {
-      setState((prevState) => ({
-        ...prevState,
-        [requestId]: requestState,
-      }));
+    (methodName, requestId, { loading, data, error }) => {
+      setState(
+        ({
+          [methodName]: {
+            activeRequests: prevActiveRequests = [],
+            loading: prevLoading,
+            data: prevData,
+            error: prevError,
+          } = {},
+          ...prevState
+        }) => ({
+          ...prevState,
+          [methodName]: {
+            activeRequests: loading
+              ? [...prevActiveRequests, requestId]
+              : prevActiveRequests.filter((id) => id !== requestId),
+            loading: loading ?? prevLoading,
+            data: data ?? prevData,
+            error: error ?? prevError,
+          },
+        }),
+      );
     },
     [],
   );
