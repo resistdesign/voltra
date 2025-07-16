@@ -23,10 +23,10 @@ export const getPathArray = (
 ): any[] =>
   path
     .split(delimiter)
-    .filter((p) => p !== "")
+    .filter(filterEmpty ? (p) => p !== "" : () => true)
     .map(uriDecodeParts ? decodeURIComponent : (x) => x)
     .map(useJson ? getPotentialJSONValue : (p) => p)
-    .filter(filterEmpty ? (p) => !!p : (p) => true);
+    .filter(filterEmpty ? (p) => p ?? false : () => true);
 
 /**
  * Get the path string from path segments.
