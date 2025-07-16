@@ -93,7 +93,7 @@
       "sourceMap": false,
       "includeNodeModules": true,
       "outputFormat": "commonjs",
-      "isLibrary": true
+      "isLibrary": false
     }
   },
   "@parcel/transformer-js": {
