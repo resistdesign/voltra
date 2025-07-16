@@ -28,6 +28,8 @@ export const getFullUrl = (
     false,
   );
 
+  console.log(basePath, fullPath);
+
   return `${protocol}://${domain}${portString}${fullPath}`;
 };
 
