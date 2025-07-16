@@ -86,7 +86,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     },
     sortFields: [],
   });
-  // TODO: `setListRelationshipsConfig` will need to be wrapped to convert `ListItemsConfig` to `ListRelationshipsConfig`.
   const [listRelationshipsConfig, setListRelationshipsConfig] =
     useState<ListRelationshipsConfig>({
       cursor: undefined,
