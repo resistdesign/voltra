@@ -156,6 +156,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         }
       }
 
+      // TODO: What to do when closing the top-level history item?
       onCloseCurrentNavHistoryItem();
     },
     [

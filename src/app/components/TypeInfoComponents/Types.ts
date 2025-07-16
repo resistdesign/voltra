@@ -29,7 +29,7 @@ export type TypeNavigationBase = ExpandComplexType<
   ItemRelationshipOriginItemInfo & {
     // Optional: Describes what kind of operation the user is performing (e.g., view, edit, create).
     toOperation?: TypeOperation;
-
+    // TODO: Do we need a `TypeNavigationMode` specifically for `TypeOperation.READ`?
     // Required: Indicates the mode of interaction (form, list, etc.).
     toMode: TypeNavigationMode;
   }
@@ -42,8 +42,9 @@ export type TypeNavigationWithOptionalDestinationItem = ExpandComplexType<
 export type TypeNavigationWithRequiredDestinationItem = ExpandComplexType<
   ItemRelationshipOriginItemInfo & {
     // Required when navigating to a form and not creating a new item.
-    toOperation: Exclude<TypeOperation, TypeOperation.CREATE>;
+    toOperation: TypeOperation.UPDATE;
     toMode: TypeNavigationMode.FORM;
+    toTypePrimaryFieldValue: string;
   } & ItemRelationshipDestinationItemInfo
 >;
 
