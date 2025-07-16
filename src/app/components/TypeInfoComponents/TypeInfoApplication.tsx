@@ -160,13 +160,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   console.log("ITEM:", typeInfoDataItem);
 
-  // TODO: We also need to read items when selected for edit from a list.
   useEffect(() => {
-    if (targetTypeName && basePrimaryFieldValue) {
+    if (targetTypeName && targetPrimaryFieldValue) {
       // TODO: Do we need to use selected fields???
-      typeInfoORMAPIService.read(targetTypeName, basePrimaryFieldValue);
+      typeInfoORMAPIService.read(targetTypeName, targetPrimaryFieldValue);
     }
-  }, [targetTypeName, basePrimaryFieldValue, typeInfoORMAPIService]);
+  }, [targetTypeName, targetPrimaryFieldValue, typeInfoORMAPIService]);
 
   // TODO: Request a new list when the list items config changes.
   // TODO: Request a new list when the list relationships config changes.
