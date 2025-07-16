@@ -23,7 +23,7 @@ export const getFullUrl = (
     basePath,
     path,
     PATH_DELIMITER,
-    true,
+    false,
     false,
     false,
   );
