@@ -3,13 +3,10 @@ import {
   TypeInfoApplication,
   TypeNavigationMode,
 } from "../../../../src/app/components";
-import {
-  DEMO_ORM_ROUTE_PATH,
-  DEMO_TYPE_INFO_MAP,
-  DOMAINS,
-} from "../../../common/Constants";
+import { DEMO_ORM_ROUTE_PATH, DOMAINS } from "../../../common/Constants";
 import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
+import { DEMO_TYPE_INFO_MAP } from "../../../common/TypeConstants";
 
 const DEMO_PERSON_ID = "1234567";
 

@@ -13,7 +13,8 @@ import {
 import Path from "path";
 import FS from "fs";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
-import { BASE_DOMAIN, DEMO_TYPE_INFO_MAP, DOMAINS } from "../common/Constants";
+import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
+import { DEMO_TYPE_INFO_MAP } from "../common/TypeConstants";
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
