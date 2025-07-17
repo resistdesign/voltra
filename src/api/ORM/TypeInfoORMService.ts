@@ -29,8 +29,8 @@ import {
   DeleteRelationshipResults,
   OperationGroup,
   RelationshipOperation,
-  TypeInfoORMServiceError,
   TypeInfoORMAPI,
+  TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
 import { DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
 import {
@@ -160,9 +160,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     if (!config.getRelationshipDriver) {
-      throw new Error(
-        TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED,
-      );
+      throw new Error(TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED);
     }
   }
 
@@ -362,6 +360,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       selectedFields,
     );
     const results: TypeInfoValidationResults = {
+      typeName,
       valid: !!typeInfo,
       error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,
       errorMap: {},
@@ -503,6 +502,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       if (!relatedTypeInfo) {
         const relationshipValidationResults: TypeInfoValidationResults = {
+          typeName: fromTypeName,
           valid: false,
           error: TypeInfoORMServiceError.INVALID_RELATIONSHIP,
           errorMap: {},
@@ -881,6 +881,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (typeof primaryFieldValue === "undefined") {
       const validationResults: TypeInfoValidationResults = {
+        typeName,
         valid: false,
         error: TypeInfoORMServiceError.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
         errorMap: {},
