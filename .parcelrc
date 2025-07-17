@@ -1,0 +1,15 @@
+{
+  "extends": "@parcel/config-default",
+  "transformers": {
+    // catch both the original .ts import and the post‑TS .js asset
+    "raw:*.{ts,tsx,js,jsx}": ["@parcel/transformer-raw"]
+  },
+  "optimizers": {
+    // turn off all optimizations (minify, etc.) for raw imports
+    "raw:*.{ts,tsx,js,jsx}": []
+  },
+  "packagers": {
+    // emit the asset as a plain string
+    "raw:*.{ts,tsx,js,jsx}": "@parcel/packager-raw"
+  }
+}
