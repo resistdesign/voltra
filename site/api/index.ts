@@ -26,28 +26,35 @@ const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
 ]);
 const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
   ROUTE_MAP,
-  getTypeInfoORMRouteMap({
-    typeInfoMap: DEMO_TYPE_INFO_MAP,
-    getDriver: (typeName: string) => {
-      const { primaryField }: Partial<TypeInfo> =
-        DEMO_TYPE_INFO_MAP[typeName] || {};
+  getTypeInfoORMRouteMap(
+    {
+      typeInfoMap: DEMO_TYPE_INFO_MAP,
+      getDriver: (typeName: string) => {
+        const { primaryField }: Partial<TypeInfo> =
+          DEMO_TYPE_INFO_MAP[typeName] || {};
 
-      if (primaryField) {
+        if (primaryField) {
+          return new DynamoDBDataItemDBDriver({
+            tableName: typeName,
+            uniquelyIdentifyingFieldName: primaryField,
+          });
+        } else {
+          throw new Error("Invalid type.");
+        }
+      },
+      getRelationshipDriver: (_typeName: string, _fieldName: string) => {
         return new DynamoDBDataItemDBDriver({
-          tableName: typeName,
-          uniquelyIdentifyingFieldName: primaryField,
+          tableName: `__RELATIONSHIPS__`,
+          uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
         });
-      } else {
-        throw new Error("Invalid type.");
-      }
+      },
     },
-    getRelationshipDriver: (_typeName: string, _fieldName: string) => {
-      return new DynamoDBDataItemDBDriver({
-        tableName: `__RELATIONSHIPS__`,
-        uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
-      });
+    undefined,
+    undefined,
+    {
+      public: true,
     },
-  }),
+  ),
   DEMO_ORM_ROUTE_PATH,
 );
 
