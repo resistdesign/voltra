@@ -14,8 +14,6 @@ export const originMatches = (
   origin: string = "",
   corsPattern: CORSPatter = "",
 ): boolean => {
-  console.log("CHECKING CORS ORIGIN:", origin, "WITH PATTERN:", corsPattern);
-
   if (typeof corsPattern === "string") {
     return originMatchesString(origin, corsPattern);
   } else {
