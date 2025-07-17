@@ -122,7 +122,7 @@ const IaC = new SimpleCFT({
     environment: {
       Variables: {
         CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
-        DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}`,
+        DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:1234`,
         S3_API_BUCKET_NAME: {
           Ref: IDS.API.FILE_STORAGE,
         },
