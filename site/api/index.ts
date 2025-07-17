@@ -50,9 +50,7 @@ const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
   DEMO_ORM_ROUTE_PATH,
 );
 
-export const handlerInternal = async (
-  event: any,
-): Promise<CloudFunctionResponse> =>
+export const handler = async (event: any): Promise<CloudFunctionResponse> =>
   handleCloudFunctionEvent(
     event,
     normalizeCloudFunctionEvent,
@@ -62,11 +60,3 @@ export const handlerInternal = async (
       process.env.DEV_CLIENT_ORIGIN as string,
     ],
   );
-
-export const handler = async (...args: any[]) => {
-  console.log("HANDLER ARGS:", args);
-  const result = await handlerInternal(...(args as [any]));
-  console.log("HANDLER RESULT:", result);
-
-  return result;
-};
