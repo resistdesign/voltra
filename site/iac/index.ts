@@ -14,7 +14,7 @@ import Path from "path";
 import FS from "fs";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
-import { DEMO_TYPE_INFO_MAP } from "../common/TypeConstants";
+import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../common/ClientSideTypeConstants";
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
@@ -100,9 +100,9 @@ const IaC = new SimpleCFT({
     },
   })
   .modify((cft) => {
-    for (const typeName in DEMO_TYPE_INFO_MAP) {
+    for (const typeName in CLIENT_SIDE_DEMO_TYPE_INFO_MAP) {
       const { primaryField, tags: { persisted = false } = {} } =
-        DEMO_TYPE_INFO_MAP[typeName];
+        CLIENT_SIDE_DEMO_TYPE_INFO_MAP[typeName];
 
       if (persisted && typeof primaryField === "string") {
         cft.applyPack(addDatabase, {
@@ -127,21 +127,20 @@ const IaC = new SimpleCFT({
         S3_API_BUCKET_NAME: {
           Ref: IDS.API.FILE_STORAGE,
         },
-        ...Object.keys(DEMO_TYPE_INFO_MAP).reduce<Record<string, any>>(
-          (acc, k) => {
-            const { primaryField, tags: { persisted = false } = {} } =
-              DEMO_TYPE_INFO_MAP[k];
+        ...Object.keys(CLIENT_SIDE_DEMO_TYPE_INFO_MAP).reduce<
+          Record<string, any>
+        >((acc, k) => {
+          const { primaryField, tags: { persisted = false } = {} } =
+            CLIENT_SIDE_DEMO_TYPE_INFO_MAP[k];
 
-            if (persisted && typeof primaryField === "string") {
-              acc[`TABLE_${k.toUpperCase()}`] = {
-                Ref: `${k}Table`,
-              };
-            }
+          if (persisted && typeof primaryField === "string") {
+            acc[`TABLE_${k.toUpperCase()}`] = {
+              Ref: `${k}Table`,
+            };
+          }
 
-            return acc;
-          },
-          {},
-        ),
+          return acc;
+        }, {}),
       },
     },
     runtime: "nodejs20.x" as any,
