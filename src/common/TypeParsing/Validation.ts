@@ -34,12 +34,19 @@ export type ErrorMap = {
 };
 
 /**
- * The validation results for type info fields.
+ * The base validation results for type info fields.
  */
-export type TypeInfoValidationResults = {
+export type TypeInfoValidationResultsBase = {
   valid: boolean;
   error: string;
   errorMap: ErrorMap;
+};
+
+/**
+ * The validation results for type info fields.
+ */
+export type TypeInfoValidationResults = TypeInfoValidationResultsBase & {
+  typeName: string;
 };
 
 export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
@@ -81,8 +88,8 @@ export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
 export const validateValueMatchesPattern = (
   value?: any,
   pattern?: string,
-): TypeInfoValidationResults => {
-  const results: TypeInfoValidationResults = {
+): TypeInfoValidationResultsBase => {
+  const results: TypeInfoValidationResultsBase = {
     valid: true,
     error: "",
     errorMap: {},
@@ -186,7 +193,7 @@ export const validateTypeInfoFieldValue = (
   typeOperation?: TypeOperation,
   relationshipValidationType?: RelationshipValidationType,
   itemIsPartial?: boolean,
-): TypeInfoValidationResults => {
+): TypeInfoValidationResultsBase => {
   const {
     type,
     typeReference,
@@ -195,7 +202,7 @@ export const validateTypeInfoFieldValue = (
     possibleValues,
     tags: { customType, constraints: { pattern = undefined } = {} } = {},
   } = typeInfoField;
-  const results: TypeInfoValidationResults = {
+  const results: TypeInfoValidationResultsBase = {
     valid: true,
     error: "",
     errorMap: {},
@@ -305,8 +312,8 @@ export const validateArrayOfTypeInfoFieldValues = (
   typeOperation?: TypeOperation,
   relationshipValidationType?: RelationshipValidationType,
   itemIsPartial?: boolean,
-): TypeInfoValidationResults => {
-  const results: TypeInfoValidationResults = {
+): TypeInfoValidationResultsBase => {
+  const results: TypeInfoValidationResultsBase = {
     valid: true,
     error: "",
     errorMap: {},
@@ -348,8 +355,8 @@ export const validateTypeInfoFieldOperationAllowed = (
   fieldName: string,
   fieldOperation?: TypeOperation,
   typeInfoField?: TypeInfoField,
-): TypeInfoValidationResults => {
-  const results: TypeInfoValidationResults = {
+): TypeInfoValidationResultsBase => {
+  const results: TypeInfoValidationResultsBase = {
     valid: true,
     error: "",
     errorMap: {},
@@ -379,8 +386,8 @@ export const validateTypeOperationAllowed = (
   valueFields: string[],
   typeOperation: TypeOperation,
   typeInfo: TypeInfo,
-): TypeInfoValidationResults => {
-  const results: TypeInfoValidationResults = {
+): TypeInfoValidationResultsBase => {
+  const results: TypeInfoValidationResultsBase = {
     valid: true,
     error: "",
     errorMap: {},
@@ -420,9 +427,9 @@ export const validateTypeInfoValue = (
   typeOperation?: TypeOperation,
   relationshipValidationType?: RelationshipValidationType,
   itemIsPartial?: boolean,
-): TypeInfoValidationResults => {
+): TypeInfoValidationResultsBase => {
   const typeInfo = typeInfoMap[typeInfoFullName];
-  const results: TypeInfoValidationResults = {
+  const results: TypeInfoValidationResultsBase = {
     valid: !!typeInfo,
     error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,
     errorMap: {},

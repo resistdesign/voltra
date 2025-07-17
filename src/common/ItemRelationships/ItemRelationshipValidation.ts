@@ -16,7 +16,9 @@ export const validateRelationshipItem = (
   relationshipItem: ItemRelationshipInfoType,
   omitFields: ItemRelationshipInfoKeys[] = [],
 ): TypeInfoValidationResults => {
+  const { fromTypeName } = relationshipItem;
   const results: TypeInfoValidationResults = {
+    typeName: fromTypeName,
     valid: true,
     error: "",
     errorMap: {},
