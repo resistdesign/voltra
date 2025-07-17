@@ -63,8 +63,10 @@ export const handlerInternal = async (
     ],
   );
 
-export const handler = (...args: any[]) => {
+export const handler = async (...args: any[]) => {
   console.log("HANDLER ARGS:", args);
+  const result = await handlerInternal(...(args as [any]));
+  console.log("HANDLER RESULT:", result);
 
-  return handlerInternal(...(args as [any]));
+  return result;
 };
