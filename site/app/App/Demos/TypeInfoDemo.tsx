@@ -6,7 +6,7 @@ import {
 import { DEMO_ORM_ROUTE_PATH, DOMAINS } from "../../../common/Constants";
 import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
-import { DEMO_TYPE_INFO_MAP } from "../../../common/TypeConstants";
+import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../../../common/ClientSideTypeConstants";
 
 const DEMO_PERSON_ID = "1234567";
 
@@ -19,7 +19,7 @@ export const TypeInfoDemo: FC = () => {
 
   return (
     <TypeInfoApplication
-      typeInfoMap={DEMO_TYPE_INFO_MAP}
+      typeInfoMap={CLIENT_SIDE_DEMO_TYPE_INFO_MAP}
       baseTypeInfoName="Person"
       baseOperation={TypeOperation.UPDATE}
       baseMode={TypeNavigationMode.FORM}
