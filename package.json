@@ -23,7 +23,7 @@
     "doc-to-site": "cp -r ./docs site-dist/app/",
     "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .releaserc dist/",
     "site:build:app": "parcel build site/app/index.html --dist-dir site-dist --target app && yarn finalize-site",
-    "site:build:api": "parcel build ./site/api/index.ts --dist-dir site-dist --target api --no-source-maps --no-scope-hoist --no-split",
+    "site:build:api": "parcel build site/api/index.ts --target api --dist-dir site-dist --no-source-maps --no-optimize --no-scope-hoist",
     "site:build:iac": "ts-node ./site/iac/index.ts",
     "start": "parcel site/app/index.html --host docs-local.demo.voltra.app --dist-dir site-dist/app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/",
@@ -88,12 +88,12 @@
     "api": {
       "context": "node",
       "engines": {
-        "node": ">=10"
+        "node": ">=20"
       },
-      "sourceMap": false,
-      "includeNodeModules": true,
       "outputFormat": "commonjs",
-      "isLibrary": false
+      "includeNodeModules": true,
+      "isLibrary": false,
+      "scopeHoist": false
     }
   },
   "@parcel/transformer-js": {
