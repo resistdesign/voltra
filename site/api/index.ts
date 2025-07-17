@@ -9,7 +9,8 @@ import { getTypeInfoORMRouteMap } from "../../src/api/ORM";
 import { TypeInfo } from "../../src/common/TypeParsing/TypeInfo";
 import { DynamoDBDataItemDBDriver } from "../../src/api/ORM/drivers";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../src/common/ItemRelationshipInfoTypes";
-import { DEMO_ORM_ROUTE_PATH, DEMO_TYPE_INFO_MAP } from "../common/Constants";
+import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
+import { DEMO_TYPE_INFO_MAP } from "../common/TypeConstants";
 import normalizeCloudFunctionEvent = AWS.normalizeCloudFunctionEvent;
 
 const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
