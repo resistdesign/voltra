@@ -8,6 +8,7 @@ import {
   AuthInfo,
   NormalizedCloudFunctionEventData,
   Route,
+  RouteAuthConfig,
   RouteHandler,
   RouteMap,
 } from "../Router/Types";
@@ -47,6 +48,7 @@ export const getTypeInfoORMRouteMap = (
   config: BaseTypeInfoORMServiceConfig,
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
   getAccessingRole?: (authInfo: AuthInfo) => DACRole,
+  authConfig?: RouteAuthConfig,
 ): RouteMap => {
   if (dacConfig && !getAccessingRole) {
     throw {
@@ -92,7 +94,7 @@ export const getTypeInfoORMRouteMap = (
       methodName: keyof TypeInfoORMAPI,
     ): Route => ({
       path,
-      authConfig: {
+      authConfig: authConfig ?? {
         anyAuthorized: true,
       },
       handlerFactory: (eventData) => ormMethodFactory(methodName, eventData),
