@@ -37,6 +37,7 @@ export type ErrorMap = {
  * The validation results for type info fields.
  */
 export type TypeInfoValidationResults = {
+  where: string;
   typeName: string | null;
   valid: boolean;
   error: string;
@@ -85,6 +86,7 @@ export const validateValueMatchesPattern = (
   pattern?: string,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
+    where: "validateValueMatchesPattern",
     typeName,
     valid: true,
     error: "",
@@ -199,6 +201,7 @@ export const validateTypeInfoFieldValue = (
     tags: { customType, constraints: { pattern = undefined } = {} } = {},
   } = typeInfoField;
   const results: TypeInfoValidationResults = {
+    where: "validateTypeInfoFieldValue",
     typeName: typeReference ?? type,
     valid: true,
     error: "",
@@ -312,6 +315,7 @@ export const validateArrayOfTypeInfoFieldValues = (
 ): TypeInfoValidationResults => {
   const { type, typeReference } = typeInfoField;
   const results: TypeInfoValidationResults = {
+    where: "validateArrayOfTypeInfoFieldValues",
     typeName: typeReference ?? type,
     valid: true,
     error: "",
@@ -356,6 +360,7 @@ export const validateTypeInfoFieldOperationAllowed = (
   typeInfoField?: TypeInfoField,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
+    where: "validateTypeInfoFieldOperationAllowed",
     typeName: null,
     valid: true,
     error: "",
@@ -395,6 +400,7 @@ export const validateTypeOperationAllowed = (
   typeInfo: TypeInfo,
 ): TypeInfoValidationResults => {
   const results: TypeInfoValidationResults = {
+    where: "validateTypeOperationAllowed",
     typeName,
     valid: true,
     error: "",
@@ -438,6 +444,7 @@ export const validateTypeInfoValue = (
 ): TypeInfoValidationResults => {
   const typeInfo = typeInfoMap[typeInfoFullName];
   const results: TypeInfoValidationResults = {
+    where: "validateTypeInfoValue",
     typeName: typeInfoFullName,
     valid: !!typeInfo,
     error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,

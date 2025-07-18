@@ -18,6 +18,7 @@ export const validateRelationshipItem = (
 ): TypeInfoValidationResults => {
   const { fromTypeName } = relationshipItem;
   const results: TypeInfoValidationResults = {
+    where: "validateRelationshipItem",
     typeName: fromTypeName,
     valid: true,
     error: "",
