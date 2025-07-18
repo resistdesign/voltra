@@ -370,6 +370,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       error: operationError,
       errorMap: operationErrorMap,
     } = validateTypeOperationAllowed(
+      typeName,
       cleanSelectedFields ? cleanSelectedFields : Object.keys(fields),
       TypeOperation.READ,
       typeInfo,
