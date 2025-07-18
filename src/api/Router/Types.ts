@@ -90,4 +90,5 @@ export type CloudFunctionEventRouter = (
   eventTransformer: CloudFunctionEventTransformer,
   routeMap: RouteMap,
   allowedOrigins: CORSPatter[],
+  errorShouldBeExposedToClient?: (error: unknown) => boolean,
 ) => Promise<CloudFunctionResponse>;

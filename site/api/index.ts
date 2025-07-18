@@ -11,6 +11,11 @@ import { DynamoDBDataItemDBDriver } from "../../src/api/ORM/drivers";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../src/common/ItemRelationshipInfoTypes";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DEMO_TYPE_INFO_MAP } from "../common/TypeConstants";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
+} from "../../src/common/TypeParsing/Validation";
+import { TypeInfoORMServiceError } from "../../src/common/TypeInfoORM";
 import normalizeCloudFunctionEvent = AWS.normalizeCloudFunctionEvent;
 
 const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
@@ -67,4 +72,37 @@ export const handler = async (event: any): Promise<CloudFunctionResponse> =>
       process.env.CLIENT_ORIGIN as string,
       process.env.DEV_CLIENT_ORIGIN as string,
     ],
+    // TODO: What to really do with this?
+    //  How do we decide which errors should go to the client?
+    (error: unknown): boolean => {
+      if (error && typeof error === "object" && "error" in error) {
+        const { error: mainError } = error;
+
+        if (typeof mainError === "string") {
+          const primitiveErrorValues = Object.values(
+            PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
+          );
+          const validationErrorValues = Object.values(ERROR_MESSAGE_CONSTANTS);
+          const typeInfoORMErrorValues = Object.values(TypeInfoORMServiceError);
+
+          if (primitiveErrorValues.includes(mainError)) {
+            return true;
+          }
+
+          if (validationErrorValues.includes(mainError)) {
+            return true;
+          }
+
+          if (
+            typeInfoORMErrorValues.includes(
+              mainError as TypeInfoORMServiceError,
+            )
+          ) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
   );

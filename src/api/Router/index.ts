@@ -83,6 +83,7 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
   eventTransformer: CloudFunctionEventTransformer,
   routeMap: RouteMap,
   allowedOrigins: CORSPatter[],
+  errorShouldBeExposedToClient?: (error: unknown) => boolean,
 ): Promise<CloudFunctionResponse> => {
   let transformedEvent: NormalizedCloudFunctionEventData | undefined =
     undefined;
@@ -153,6 +154,9 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
                 {
                   status: "Internal Server Error",
                   message: error?.message,
+                  error: errorShouldBeExposedToClient
+                    ? errorShouldBeExposedToClient(error)
+                    : undefined,
                 },
                 null,
                 2,
