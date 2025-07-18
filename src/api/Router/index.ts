@@ -156,6 +156,8 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
                   message: error?.message,
                   error: errorShouldBeExposedToClient
                     ? errorShouldBeExposedToClient(error)
+                      ? error
+                      : undefined
                     : undefined,
                 },
                 null,
