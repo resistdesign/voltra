@@ -450,7 +450,7 @@ export const validateTypeInfoValue = (
   };
 
   if (typeInfo) {
-    const { fields, unionFieldSets } = typeInfo;
+    const { primaryField, fields, unionFieldSets } = typeInfo;
 
     if (typeOperation) {
       const valueFields =
@@ -514,29 +514,36 @@ export const validateTypeInfoValue = (
 
     if (fields) {
       for (const key in fields) {
-        const typeInfoField = fields[key];
-        const fieldValue = value[key];
-        const {
-          valid: fieldValid,
-          error: fieldError,
-          errorMap: fieldErrorMap,
-        } = validateTypeInfoFieldValue(
-          fieldValue,
-          typeInfoField,
-          typeInfoMap,
-          false,
-          strict,
-          customValidators,
-          typeOperation,
-          relationshipValidationType,
-          itemIsPartial,
-        );
+        // IMPORTANT: Only validate the primary field when not creating.
+        if (
+          typeOperation !== TypeOperation.CREATE ||
+          typeof primaryField !== "string" ||
+          key !== primaryField
+        ) {
+          const typeInfoField = fields[key];
+          const fieldValue = value[key];
+          const {
+            valid: fieldValid,
+            error: fieldError,
+            errorMap: fieldErrorMap,
+          } = validateTypeInfoFieldValue(
+            fieldValue,
+            typeInfoField,
+            typeInfoMap,
+            false,
+            strict,
+            customValidators,
+            typeOperation,
+            relationshipValidationType,
+            itemIsPartial,
+          );
 
-        results.valid = getValidityValue(results.valid, fieldValid);
-        results.errorMap[key] = [fieldError];
+          results.valid = getValidityValue(results.valid, fieldValid);
+          results.errorMap[key] = [fieldError];
 
-        for (const fE in fieldErrorMap) {
-          results.errorMap[getPathString([key, fE])] = fieldErrorMap[fE];
+          for (const fE in fieldErrorMap) {
+            results.errorMap[getPathString([key, fE])] = fieldErrorMap[fE];
+          }
         }
       }
     }
