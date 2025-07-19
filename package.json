@@ -47,11 +47,9 @@
     "yaml": "^2.3.4"
   },
   "devDependencies": {
-    "@parcel/packager-raw-url": "2.13.3",
-    "@parcel/packager-ts": "2.13.3",
-    "@parcel/transformer-inline-string": "2.13.3",
-    "@parcel/transformer-typescript-types": "2.11.0",
-    "@parcel/transformer-webmanifest": "2.13.3",
+    "@parcel/packager-raw-url": "2.15.4",
+    "@parcel/transformer-inline-string": "^2.15.4",
+    "@parcel/transformer-webmanifest": "2.15.4",
     "@picocss/pico": "^2.0.6",
     "@types/cfn-response": "^1.0.8",
     "@types/node": "^20.11.6",
@@ -61,7 +59,7 @@
     "aws-sdk": "^2.1545.0",
     "buffer": "^5.5.0||^6.0.0",
     "cfn-response": "^1.0.1",
-    "parcel": "^2.13.3",
+    "parcel": "^2.15.4",
     "prettier": "^3.1.1",
     "process": "^0.11.10",
     "react-dom": "^18.3.1",
