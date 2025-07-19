@@ -14,7 +14,6 @@ import {
   TypeNavigationMode,
 } from "../Types";
 import {
-  SupportedFieldTags,
   TypeInfo,
   TypeInfoDataItem,
   TypeInfoField,
@@ -22,6 +21,7 @@ import {
 } from "../../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
 import { TypeInfoInput } from "../TypeInfoInput";
+import { getDefaultValueInfo } from "../../../../common/TypeInfoDataItemUtils";
 
 // TODO: Do options/tags based grid layout.
 const BaseForm = styled(Form)`
@@ -88,15 +88,9 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
         const tIF: TypeInfoField = fields[fld];
 
         if (tIF) {
-          const {
-            tags: {
-              constraints = {} as SupportedFieldTags["constraints"],
-            } = {} as SupportedFieldTags,
-          } = tIF;
+          const { hasDefaultValue, defaultValue } = getDefaultValueInfo(tIF);
 
-          if (constraints && "defaultValue" in constraints) {
-            const { defaultValue } = constraints;
-
+          if (hasDefaultValue) {
             newItem[fld] = defaultValue;
           }
         }
