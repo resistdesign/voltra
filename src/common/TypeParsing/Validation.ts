@@ -509,6 +509,8 @@ export const validateTypeInfoValue = (
 
     if (fields) {
       for (const key in fields) {
+        console.log("FIELD VALIDATION:", typeOperation, primaryField, key);
+
         if (
           typeOperation === TypeOperation.CREATE &&
           typeof primaryField === "string" &&
