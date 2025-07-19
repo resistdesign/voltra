@@ -31,7 +31,6 @@ export const validateSearchFields = (
 ) => {
   const typeInfo = typeInfoMap[typeInfoName];
   const results: TypeInfoValidationResults = {
-    where: "validateSearchFields",
     typeName: typeInfoName,
     valid: true,
     error: "",
