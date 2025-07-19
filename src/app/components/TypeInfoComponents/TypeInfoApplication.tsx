@@ -59,7 +59,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const {
     FORM: {
       loading: formLoading = false,
-      item: typeInfoDataItem = {},
+      item: typeInfoDataItem,
       error: formError,
     } = {},
     SEARCH_ITEMS: {
