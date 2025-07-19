@@ -187,7 +187,7 @@ export const validateTypeInfoFieldValue = (
   strict: boolean = false,
   customValidators?: CustomTypeInfoFieldValidatorMap,
   typeOperation?: TypeOperation,
-  relationshipValidationType?: RelationshipValidationType,
+  relationshipValidationType: RelationshipValidationType = RelationshipValidationType.STRICT_EXCLUDE,
   itemIsPartial?: boolean,
 ): TypeInfoValidationResults => {
   const {
@@ -229,10 +229,7 @@ export const validateTypeInfoFieldValue = (
     results.errorMap = arrayErrorMap;
   } else {
     if (typeReference) {
-      if (
-        typeof relationshipValidationType === "undefined" ||
-        relationshipValidationType === RelationshipValidationType.INCLUDE
-      ) {
+      if (relationshipValidationType === RelationshipValidationType.INCLUDE) {
         const {
           valid: validTypeInfo,
           error: typeInfoError,
@@ -261,6 +258,11 @@ export const validateTypeInfoFieldValue = (
           results.error =
             ERROR_MESSAGE_CONSTANTS.RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED;
         }
+      } else if (
+        relationshipValidationType === RelationshipValidationType.EXCLUDE
+      ) {
+        // NOTE: This is just here to explicitly demonstrate the intended outcome.
+        results.valid = getValidityValue(results.valid, true);
       }
     } else if (possibleValues && !possibleValues.includes(value)) {
       results.valid = false;

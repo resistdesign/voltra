@@ -8,8 +8,6 @@ import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
 import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../../../common/ClientSideTypeConstants";
 
-const DEMO_PERSON_ID = "1234567";
-
 export const TypeInfoDemo: FC = () => {
   const typeInfoORMClient = new TypeInfoORMClient({
     protocol: "https",
@@ -21,9 +19,8 @@ export const TypeInfoDemo: FC = () => {
     <TypeInfoApplication
       typeInfoMap={CLIENT_SIDE_DEMO_TYPE_INFO_MAP}
       baseTypeInfoName="Person"
-      baseOperation={TypeOperation.UPDATE}
+      baseOperation={TypeOperation.CREATE}
       baseMode={TypeNavigationMode.FORM}
-      basePrimaryFieldValue={DEMO_PERSON_ID}
       typeInfoORMAPI={typeInfoORMClient}
     />
   );
