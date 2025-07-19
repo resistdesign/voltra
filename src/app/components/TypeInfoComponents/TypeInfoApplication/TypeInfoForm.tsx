@@ -84,7 +84,6 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
     } else {
       const newItem: TypeInfoDataItem = {};
 
-      // TODO: Set default values.
       for (const fld in fields) {
         const tIF: TypeInfoField = fields[fld];
 
