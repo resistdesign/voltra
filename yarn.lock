@@ -1881,7 +1881,7 @@
     "@parcel/utils" "2.15.4"
     nullthrows "^1.1.1"
 
-"@picocss/pico@^2.0.6":
+"@picocss/pico@^2.1.1":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@picocss/pico/-/pico-2.1.1.tgz#f2c4573b0332758b6d9c3caf4ee8b24cf3819f8e"
   integrity sha512-kIDugA7Ps4U+2BHxiNHmvgPIQDWPDU4IeU6TNRdvXQM1uZX+FibqDQT2xUOnnO2yq/LUHcwnGlu1hvf4KfXnMg==

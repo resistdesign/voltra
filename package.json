@@ -9,8 +9,6 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "main": "index.js",
-  "types": "index.d.ts",
   "bin": {
     "vest": "src/common/Testing/CLI.ts"
   },
@@ -34,12 +32,14 @@
     "@aws-sdk/client-s3": "^3.490.0",
     "@aws-sdk/s3-request-presigner": "^3.490.0",
     "@aws-sdk/util-dynamodb": "^3.490.0",
+    "@picocss/pico": "^2.1.1",
     "ace-builds": "^1.32.3",
     "fast-glob": "^3.3.3",
     "material-symbols": "^0.14.6",
     "picocolors": "^1.1.1",
     "react": "^18.2.0",
     "react-ace": "^10.1.0",
+    "react-dom": "^18.3.1",
     "styled-components": "^6.1.8",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
@@ -50,7 +50,6 @@
     "@parcel/packager-raw-url": "2.15.4",
     "@parcel/transformer-inline-string": "^2.15.4",
     "@parcel/transformer-webmanifest": "2.15.4",
-    "@picocss/pico": "^2.0.6",
     "@types/cfn-response": "^1.0.8",
     "@types/node": "^20.11.6",
     "@types/react-dom": "^18.3.0",
@@ -62,7 +61,6 @@
     "parcel": "^2.15.4",
     "prettier": "^3.1.1",
     "process": "^0.11.10",
-    "react-dom": "^18.3.1",
     "semantic-release": "^23.0.0",
     "svgo": "^3",
     "ts-morph": "^24.0.0",
