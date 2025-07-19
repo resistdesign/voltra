@@ -204,8 +204,11 @@ export const validateTypeInfoFieldValue = (
     error: "",
     errorMap: {},
   };
+  const requiredValueAllowed: boolean =
+    !typeReference ||
+    relationshipValidationType === RelationshipValidationType.INCLUDE;
 
-  if (!itemIsPartial && !optional && !hasValue(value)) {
+  if (requiredValueAllowed && !itemIsPartial && !optional && !hasValue(value)) {
     results.valid = false;
     results.error = ERROR_MESSAGE_CONSTANTS.MISSING;
   } else if (array && !ignoreArray) {
