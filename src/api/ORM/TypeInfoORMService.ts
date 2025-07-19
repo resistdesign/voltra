@@ -360,7 +360,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       selectedFields,
     );
     const results: TypeInfoValidationResults = {
-      where: "validateReadOperation",
       typeName,
       valid: !!typeInfo,
       error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,
@@ -504,7 +503,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       if (!relatedTypeInfo) {
         const relationshipValidationResults: TypeInfoValidationResults = {
-          where: "validateRelationshipItem",
           typeName: fromTypeName,
           valid: false,
           error: TypeInfoORMServiceError.INVALID_RELATIONSHIP,
@@ -884,7 +882,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (typeof primaryFieldValue === "undefined") {
       const validationResults: TypeInfoValidationResults = {
-        where: "update",
         typeName,
         valid: false,
         error: TypeInfoORMServiceError.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
