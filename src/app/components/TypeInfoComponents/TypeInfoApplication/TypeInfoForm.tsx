@@ -3,6 +3,7 @@ import {
   InputHTMLAttributes,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { Form } from "../../Form";
@@ -13,8 +14,10 @@ import {
   TypeNavigationMode,
 } from "../Types";
 import {
+  SupportedFieldTags,
   TypeInfo,
   TypeInfoDataItem,
+  TypeInfoField,
   TypeOperation,
 } from "../../../../common/TypeParsing/TypeInfo";
 import styled from "styled-components";
@@ -53,7 +56,7 @@ export type TypeInfoFormProps = Omit<
   primaryFieldValue: string;
   typeInfo: TypeInfo;
   customInputTypeMap?: Record<string, InputComponent<any>>;
-  value: TypeInfoDataItem;
+  value: TypeInfoDataItem | undefined;
   operation?: TypeOperation;
   onCancel?: () => void;
   onSubmit: (newValue: TypeInfoDataItem) => void;
@@ -71,15 +74,50 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   onSubmit,
   onNavigateToType,
 }) => {
-  const { fields = {} } = typeInfo;
-  const [internalValue, setInternalValue] = useState<TypeInfoDataItem>(value);
-  const hasChanged = internalValue !== value;
-  const onFieldChange = useCallback((nameOrIndex: NameOrIndex, value: any) => {
-    setInternalValue((prev) => ({
-      ...prev,
-      [nameOrIndex]: value,
-    }));
-  }, []);
+  const { fields } = useMemo<TypeInfo>(
+    () => typeInfo ?? { fields: {} },
+    [typeInfo],
+  );
+  const initialValue = useMemo<TypeInfoDataItem>(() => {
+    if (typeof value === "object" && value !== null) {
+      return value;
+    } else {
+      const newItem: TypeInfoDataItem = {};
+
+      // TODO: Set default values.
+      for (const fld in fields) {
+        const tIF: TypeInfoField = fields[fld];
+
+        if (tIF) {
+          const {
+            tags: {
+              constraints = {} as SupportedFieldTags["constraints"],
+            } = {} as SupportedFieldTags,
+          } = tIF;
+
+          if (constraints && "defaultValue" in constraints) {
+            const { defaultValue } = constraints;
+
+            newItem[fld] = defaultValue;
+          }
+        }
+      }
+
+      return newItem;
+    }
+  }, [value, fields]);
+  const [internalValue, setInternalValue] =
+    useState<TypeInfoDataItem>(initialValue);
+  const hasChanged = internalValue !== initialValue;
+  const onFieldChange = useCallback(
+    (nameOrIndex: NameOrIndex, newFieldValue: any) => {
+      setInternalValue((prev) => ({
+        ...prev,
+        [nameOrIndex]: newFieldValue,
+      }));
+    },
+    [],
+  );
   const onSubmitInternal = useCallback(() => {
     onSubmit(internalValue);
   }, [internalValue, onSubmit]);
@@ -103,37 +141,40 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   );
 
   useEffect(() => {
-    if (typeof value === "object") {
-      setInternalValue(value);
+    if (typeof initialValue === "object") {
+      setInternalValue(initialValue);
     }
-  }, [value]);
+  }, [initialValue]);
 
   // TODO:
   //  [x] labels
   //  [x] advanced input types, including custom
   //  [x] universal field change handler
   //  [X] navigation to sub-types
+  //  [x] default values
   //  [ ] arrays
   //  [ ] validation
 
   return (
     <BaseForm onSubmit={onSubmitInternal}>
-      {Object.keys(fields).map((fieldName) => {
-        const field = fields[fieldName];
+      {fields
+        ? Object.keys(fields).map((fieldName) => {
+            const field = fields[fieldName];
 
-        return (
-          <TypeInfoInput
-            key={fieldName}
-            operation={operation}
-            typeInfoField={field}
-            fieldValue={internalValue[fieldName]}
-            nameOrIndex={fieldName}
-            onChange={onFieldChange}
-            onNavigateToType={onNavigateToTypeForField}
-            customInputTypeMap={customInputTypeMap}
-          />
-        );
-      })}
+            return (
+              <TypeInfoInput
+                key={fieldName}
+                operation={operation}
+                typeInfoField={field}
+                fieldValue={internalValue[fieldName]}
+                nameOrIndex={fieldName}
+                onChange={onFieldChange}
+                onNavigateToType={onNavigateToTypeForField}
+                customInputTypeMap={customInputTypeMap}
+              />
+            );
+          })
+        : undefined}
       <FormControls>
         {onCancel ? (
           <FormControlButton
