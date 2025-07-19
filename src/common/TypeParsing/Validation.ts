@@ -276,7 +276,7 @@ export const validateTypeInfoFieldValue = (
       results.valid = getValidityValue(results.valid, pendingValid);
       results.valid = getValidityValue(results.valid, customValid);
 
-      if (type === "string") {
+      if (type === "string" && typeof pattern === "string") {
         const { valid: patternValid, error: patternError } =
           validateValueMatchesPattern(value, pattern);
 

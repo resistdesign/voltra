@@ -1,0 +1,39 @@
+{
+  "file": "./Validation.ts",
+  "tests": [
+    {
+      "export": "validateTypeInfoValue",
+      "conditions": [
+        {
+          "name": "Violet"
+        },
+        "Person",
+        {
+          "Person": {
+            "fields": {
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        true,
+        null,
+        "CREATE",
+        null,
+        false
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": true,
+        "error": "",
+        "errorMap": {
+          "name": [
+            ""
+          ]
+        }
+      }
+    }
+  ]
+}
