@@ -167,8 +167,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     ],
   );
 
-  console.log("ITEM:", typeInfoDataItem);
-
   useEffect(() => {
     if (targetTypeName && targetPrimaryFieldValue) {
       // TODO: Do we need to use selected fields???
