@@ -20,7 +20,7 @@ export const TypeInfoDemo: FC = () => {
       typeInfoMap={CLIENT_SIDE_DEMO_TYPE_INFO_MAP}
       baseTypeInfoName="Person"
       baseOperation={TypeOperation.CREATE}
-      baseMode={TypeNavigationMode.FORM}
+      baseMode={TypeNavigationMode.SEARCH_ITEMS}
       typeInfoORMAPI={typeInfoORMClient}
     />
   );
