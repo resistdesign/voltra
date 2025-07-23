@@ -169,12 +169,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   useEffect(() => {
     if (targetTypeName && targetPrimaryFieldValue) {
-      // TODO: Do we need to use selected fields???
+      // TODO: Handle selected fields.
       typeInfoORMAPIService.read(targetTypeName, targetPrimaryFieldValue);
     }
   }, [targetTypeName, targetPrimaryFieldValue, typeInfoORMAPIService]);
 
-  // TODO: Request a new list when the list items config changes.
+  useEffect(() => {
+    // TODO: Test this.
+    if (toMode === TypeNavigationMode.SEARCH_ITEMS && targetTypeName) {
+      // TODO: Handle selected fields.
+      typeInfoORMAPIService.list(targetTypeName, listItemsConfig);
+    }
+  }, [toMode, targetTypeName, listItemsConfig, typeInfoORMAPIService]);
+
   // TODO: Request a new list when the list relationships config changes.
 
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
