@@ -303,7 +303,7 @@ export class DynamoDBDataItemDBDriver<
     selectedFields?: (keyof ItemType)[],
   ): Promise<ListItemsResults<ItemType>> => {
     console.log(
-      "LISTING ITEMS:",
+      "LISTING ITEMS IN DYNAMODB DRIVER:",
       JSON.stringify(config, null, 2),
       JSON.stringify(selectedFields, null, 2),
     );

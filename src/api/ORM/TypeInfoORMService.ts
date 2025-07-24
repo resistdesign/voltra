@@ -1003,6 +1003,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> => {
+    console.log(
+      "LISTING ITEMS IN TypeInfoORMService:",
+      JSON.stringify(config, null, 2),
+      JSON.stringify(selectedFields, null, 2),
+    );
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
       selectedFields,
