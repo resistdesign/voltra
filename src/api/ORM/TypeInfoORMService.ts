@@ -1012,6 +1012,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       typeName,
       selectedFields,
     );
+
     this.validateReadOperation(typeName, cleanSelectedFields);
 
     const { typeInfoMap, useDAC } = this.config;
