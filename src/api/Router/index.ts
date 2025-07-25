@@ -15,6 +15,7 @@ import {
   getPathString,
   mergeStringPaths,
 } from "../../common/Routing";
+import { logFunctionCall } from "../../common/Logging/Utils";
 
 export * from "./AWS";
 
@@ -84,6 +85,7 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
   routeMap: RouteMap,
   allowedOrigins: CORSPatter[],
   errorShouldBeExposedToClient?: (error: unknown) => boolean,
+  debug: boolean = false,
 ): Promise<CloudFunctionResponse> => {
   let transformedEvent: NormalizedCloudFunctionEventData | undefined =
     undefined;
@@ -132,7 +134,12 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
             : handlerFactory(transformedEvent);
 
           try {
-            const result = await handlerInstance(...normalizedBody);
+            const result = await logFunctionCall(
+              normalizedPath,
+              normalizedBody,
+              handlerInstance,
+              debug,
+            );
 
             return {
               statusCode: 200,
