@@ -105,4 +105,5 @@ export const handler = async (event: any): Promise<CloudFunctionResponse> =>
 
       return false;
     },
+    true, // debug
   );
