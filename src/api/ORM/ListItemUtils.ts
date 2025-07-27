@@ -22,6 +22,12 @@ export const satisfyItemsPerPage = async (
   let nextCursor: string | undefined = initialCursor,
     itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
 
+  console.log(
+    "ATTEMPTING TO SATISFY PAGING:",
+    itemsPerPageSatisfied,
+    nextCursor,
+  );
+
   while (!itemsPerPageSatisfied && nextCursor) {
     console.log("FILTERING LISTED ITEMS.");
     const { items = [], cursor: newCursor } = (await driver.listItems(
