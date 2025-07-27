@@ -302,11 +302,6 @@ export class DynamoDBDataItemDBDriver<
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
   ): Promise<ListItemsResults<ItemType>> => {
-    console.log(
-      "LISTING ITEMS IN DYNAMODB DRIVER:",
-      JSON.stringify(config, null, 2),
-      JSON.stringify(selectedFields, null, 2),
-    );
     const { tableName } = this.config;
     const {
       itemsPerPage = 10,

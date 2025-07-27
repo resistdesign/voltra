@@ -25,17 +25,9 @@ export const satisfyItemsPerPage = async (
     nextCursor: string | undefined = initialCursor,
     itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
 
-  console.log(
-    "ATTEMPTING TO SATISFY PAGING:",
-    itemsPerPageSatisfied,
-    nextCursor,
-  );
-
   while (!ranOnce || (!itemsPerPageSatisfied && nextCursor)) {
     // IMPORTANT: Make sure this gets marked true immediately.
     ranOnce = true;
-
-    console.log("FILTERING LISTED ITEMS.");
 
     const { items = [], cursor: newCursor } = (await driver.listItems(
       {
@@ -44,7 +36,6 @@ export const satisfyItemsPerPage = async (
       },
       filter ? undefined : selectedFields,
     )) as ListItemsResults<Partial<TypeInfoDataItem>>;
-    console.log("RAW ITEMS:", JSON.stringify(items, null, 2));
 
     nextCursor = newCursor;
 
