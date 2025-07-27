@@ -5,6 +5,9 @@ export enum LOGGING_MESSAGES {
   ERROR = "ERROR",
 }
 
+/**
+ * Make a function call and automatically log the input, output and errors, asynchronously.
+ * */
 export const logFunctionCall = async (
   label: string,
   args: any[],
