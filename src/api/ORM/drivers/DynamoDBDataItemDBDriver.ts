@@ -143,7 +143,7 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
   selectedFields?: (keyof ItemType)[],
 ) => {
   const selectedFieldParams =
-    typeof selectedFields !== "undefined"
+    typeof (selectedFields ?? false) && Array.isArray(selectedFields)
       ? {
           ExpressionAttributeNames: selectedFields.reduce(
             (acc: Record<string, string>, field) => {
