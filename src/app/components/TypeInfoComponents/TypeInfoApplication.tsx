@@ -180,7 +180,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     //   (Auto-search is not right with criteria objects that could be empty.)
     if (toMode === TypeNavigationMode.SEARCH_ITEMS && targetTypeName) {
       // TODO: Handle selected fields.
-      console.log("LISTING ITEMS:", targetTypeName, listItemsConfig);
       typeInfoORMAPIService.list(targetTypeName, listItemsConfig);
     }
   }, [toMode, targetTypeName, listItemsConfig, typeInfoORMAPIService]);
