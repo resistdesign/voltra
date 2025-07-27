@@ -1015,6 +1015,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     this.validateReadOperation(typeName, cleanSelectedFields);
 
+    console.log("VALIDATION IN LIST SUCCEEDED");
+
     const { typeInfoMap, useDAC } = this.config;
     const { fields: {} = {} } = this.getTypeInfo(typeName);
     const { criteria } = config;
@@ -1026,6 +1028,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       true,
     );
     const { valid: searchFieldsValid } = searchFieldValidationResults;
+
+    console.log("SEARCH FIELD VALIDATION IN LIST SUCCEEDED");
 
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
