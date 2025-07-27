@@ -147,13 +147,6 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
               body: JSON.stringify(result),
             };
           } catch (error: any) {
-            try {
-              // Try to log the error as JSON.
-              console.log("Handler Failed:", JSON.stringify(error, null, 2));
-            } catch (innerError) {
-              console.log("Handler Failed:", `${error}`);
-            }
-
             return {
               statusCode: 500,
               headers: responseHeaders,
