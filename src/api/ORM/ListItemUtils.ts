@@ -19,7 +19,10 @@ export const satisfyItemsPerPage = async (
 
   const filteredItems: Partial<TypeInfoDataItem>[] = [];
 
-  let nextCursor: string | undefined = initialCursor,
+  // IMPORTANT: There might not be a cursor in the first place, so we
+  // need to make sure that the request is made at least once.
+  let ranOnce: boolean = false,
+    nextCursor: string | undefined = initialCursor,
     itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
 
   console.log(
@@ -28,8 +31,12 @@ export const satisfyItemsPerPage = async (
     nextCursor,
   );
 
-  while (!itemsPerPageSatisfied && nextCursor) {
+  while (!ranOnce || (!itemsPerPageSatisfied && nextCursor)) {
+    // IMPORTANT: Make sure this gets marked true immediately.
+    ranOnce = true;
+
     console.log("FILTERING LISTED ITEMS.");
+
     const { items = [], cursor: newCursor } = (await driver.listItems(
       {
         ...config,
