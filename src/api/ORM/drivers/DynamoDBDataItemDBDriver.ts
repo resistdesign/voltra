@@ -70,44 +70,52 @@ const DynamoDBLogicalOperatorMappings: Record<LogicalOperators, string> = {
   [LogicalOperators.OR]: "OR",
 };
 
-const createFilterExpression = (
-  fieldCriteria: FieldCriterion[],
-  logicalOperator: LogicalOperators,
-): {
+type FilterExpressionOutput = {
   FilterExpression?: string;
   ExpressionAttributeNames?: Record<string, string>;
   ExpressionAttributeValues?: Record<string, any>;
-} => {
-  const expressions: string[] = [];
-  const attributeNames: Record<string, string> = {};
-  const attributeValues: Record<string, any> = {};
+};
 
-  for (const criterion of fieldCriteria) {
-    const { fieldName, operator, value } = criterion;
-    const createExpression =
-      DynamoDBOperatorMappings[operator as ComparisonOperators];
+const createFilterExpression = (
+  fieldCriteria: FieldCriterion[],
+  logicalOperator: LogicalOperators,
+): FilterExpressionOutput => {
+  let output: FilterExpressionOutput = {};
 
-    if (!createExpression) {
-      throw {
-        message:
-          DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
-        operator,
-        fieldName,
-      };
+  if (fieldCriteria && fieldCriteria.length > 0) {
+    const expressions: string[] = [];
+    const attributeNames: Record<string, string> = {};
+    const attributeValues: Record<string, any> = {};
+
+    for (const criterion of fieldCriteria) {
+      const { fieldName, operator, value } = criterion;
+      const createExpression =
+        DynamoDBOperatorMappings[operator as ComparisonOperators];
+
+      if (!createExpression) {
+        throw {
+          message:
+            DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
+          operator,
+          fieldName,
+        };
+      }
+
+      expressions.push(createExpression(fieldName));
+      attributeNames[`#${fieldName}`] = fieldName;
+      attributeValues[`:${fieldName}`] = value;
     }
 
-    expressions.push(createExpression(fieldName));
-    attributeNames[`#${fieldName}`] = fieldName;
-    attributeValues[`:${fieldName}`] = value;
+    output = {
+      FilterExpression: expressions.join(
+        ` ${DynamoDBLogicalOperatorMappings[logicalOperator]} `,
+      ),
+      ExpressionAttributeNames: attributeNames,
+      ExpressionAttributeValues: attributeValues,
+    };
   }
 
-  return {
-    FilterExpression: expressions.join(
-      ` ${DynamoDBLogicalOperatorMappings[logicalOperator]} `,
-    ),
-    ExpressionAttributeNames: attributeNames,
-    ExpressionAttributeValues: attributeValues,
-  };
+  return output;
 };
 
 const buildUpdateExpression = (
@@ -321,12 +329,6 @@ export class DynamoDBDataItemDBDriver<
       ExpressionAttributeNames,
       ExpressionAttributeValues,
     } = createFilterExpression(fieldCriteria, logicalOperator);
-    console.log(
-      "DYNAMO LIST ITEMS:",
-      ExpressionAttributeNames,
-      fieldCriteria,
-      logicalOperator,
-    );
     const params: ScanCommandInput = {
       TableName: tableName,
       Select:
