@@ -321,6 +321,12 @@ export class DynamoDBDataItemDBDriver<
       ExpressionAttributeNames,
       ExpressionAttributeValues,
     } = createFilterExpression(fieldCriteria, logicalOperator);
+    console.log(
+      "DYNAMO LIST ITEMS:",
+      ExpressionAttributeNames,
+      fieldCriteria,
+      logicalOperator,
+    );
     const params: ScanCommandInput = {
       TableName: tableName,
       Select:
