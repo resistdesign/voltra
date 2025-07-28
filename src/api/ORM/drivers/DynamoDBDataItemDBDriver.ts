@@ -329,19 +329,43 @@ export class DynamoDBDataItemDBDriver<
       ExpressionAttributeNames,
       ExpressionAttributeValues,
     } = createFilterExpression(fieldCriteria, logicalOperator);
+    // IMPORTANT: DynamoDB is VERY particular about whether to include
+    // properties, AT ALL, based on expressions being used.
     const params: ScanCommandInput = {
       TableName: tableName,
       Select:
         selectedFields && selectedFields.length > 0
           ? "SPECIFIC_ATTRIBUTES"
           : "ALL_ATTRIBUTES",
-      ProjectionExpression: ProjectionExpression,
-      FilterExpression,
-      ExpressionAttributeNames: {
-        ...selectFieldParamsAttributeNames,
-        ...ExpressionAttributeNames,
-      },
-      ExpressionAttributeValues,
+      ...(ProjectionExpression
+        ? {
+            ProjectionExpression: ProjectionExpression,
+          }
+        : {}),
+      ...(FilterExpression
+        ? {
+            FilterExpression,
+          }
+        : {}),
+      ...(FilterExpression
+        ? {
+            ExpressionAttributeNames: {
+              ...selectFieldParamsAttributeNames,
+              ...ExpressionAttributeNames,
+            },
+          }
+        : ProjectionExpression
+          ? {
+              ExpressionAttributeNames: {
+                ...selectFieldParamsAttributeNames,
+              },
+            }
+          : {}),
+      ...(FilterExpression
+        ? {
+            ExpressionAttributeValues,
+          }
+        : {}),
     };
     let structuredCursor: ScanCommandInput["ExclusiveStartKey"] = undefined;
 
