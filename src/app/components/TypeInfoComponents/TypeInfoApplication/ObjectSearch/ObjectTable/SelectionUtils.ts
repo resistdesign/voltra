@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export const selectedIndexArraysAreEqual = (
   selectedIndicesA: number[] = [],
@@ -80,12 +80,20 @@ export const useIndexSelectionController = (
       prevSelectedIndices.filter((index) => !indices.includes(index)),
     );
   }, []);
+  const originalSelectedIndicesRef = useRef<number[]>(originalSelectedIndices);
 
   useEffect(() => {
-    if (
-      !selectedIndexArraysAreEqual(originalSelectedIndices, selectedIndices)
-    ) {
-      setSelectedIndices(originalSelectedIndices);
+    const oSIChanged: boolean =
+      originalSelectedIndicesRef.current !== originalSelectedIndices;
+
+    if (oSIChanged) {
+      originalSelectedIndicesRef.current = originalSelectedIndices;
+
+      if (
+        !selectedIndexArraysAreEqual(originalSelectedIndices, selectedIndices)
+      ) {
+        setSelectedIndices(originalSelectedIndices);
+      }
     }
   }, [originalSelectedIndices, selectedIndices]);
 
