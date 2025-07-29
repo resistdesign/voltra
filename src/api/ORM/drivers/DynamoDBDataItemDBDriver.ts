@@ -5,6 +5,7 @@ import {
   SupportedDataItemDBDriverEntry,
 } from "./Types";
 import {
+  AttributeValue,
   DeleteItemCommand,
   DynamoDBClient,
   DynamoDBClientConfig,
@@ -73,7 +74,7 @@ const DynamoDBLogicalOperatorMappings: Record<LogicalOperators, string> = {
 type FilterExpressionOutput = {
   FilterExpression?: string;
   ExpressionAttributeNames?: Record<string, string>;
-  ExpressionAttributeValues?: Record<string, any>;
+  ExpressionAttributeValues?: Record<string, AttributeValue>;
 };
 
 const createFilterExpression = (
@@ -111,7 +112,7 @@ const createFilterExpression = (
         ` ${DynamoDBLogicalOperatorMappings[logicalOperator]} `,
       ),
       ExpressionAttributeNames: attributeNames,
-      ExpressionAttributeValues: attributeValues,
+      ExpressionAttributeValues: marshall(attributeValues),
     };
   }
 
@@ -385,9 +386,6 @@ export class DynamoDBDataItemDBDriver<
       ExclusiveStartKey: structuredCursor,
       Limit: itemsPerPage,
     });
-
-    console.log("SCAN COMMAND:", JSON.stringify(command, null, 2));
-
     const { Items = [], LastEvaluatedKey }: ScanCommandOutput =
       await this.dynamoDBClient.send(command);
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
