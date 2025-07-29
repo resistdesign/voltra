@@ -45,7 +45,6 @@ export const useIndexSelectionController = (
   );
   const onToggleIndexSelection = useCallback(
     (index: number) => {
-      console.log("SELECTING:", index);
       setSelectedIndices((prevSelectedIndices) =>
         allIndices.includes(index)
           ? prevSelectedIndices.includes(index)
