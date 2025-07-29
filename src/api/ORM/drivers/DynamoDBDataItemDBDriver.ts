@@ -385,6 +385,9 @@ export class DynamoDBDataItemDBDriver<
       ExclusiveStartKey: structuredCursor,
       Limit: itemsPerPage,
     });
+
+    console.log("SCAN COMMAND:", JSON.stringify(structuredCursor, null, 2));
+
     const { Items = [], LastEvaluatedKey }: ScanCommandOutput =
       await this.dynamoDBClient.send(command);
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
