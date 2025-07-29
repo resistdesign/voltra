@@ -28,7 +28,7 @@ export const useIndexSelectionController = (
     originalSelectedIndices,
   );
   const allIndices = useMemo<number[]>(
-    () => new Array(maximumIndex + 1).map((_, i) => i),
+    () => [...new Array(maximumIndex + 1)].map((_, i) => i),
     [maximumIndex],
   );
   const allIndicesAreSelected = useMemo<boolean>(
@@ -45,6 +45,7 @@ export const useIndexSelectionController = (
   );
   const onToggleIndexSelection = useCallback(
     (index: number) => {
+      console.log("SELECTING:", index);
       setSelectedIndices((prevSelectedIndices) =>
         allIndices.includes(index)
           ? prevSelectedIndices.includes(index)
