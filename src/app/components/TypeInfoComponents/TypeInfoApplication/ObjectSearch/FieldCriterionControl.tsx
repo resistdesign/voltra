@@ -17,6 +17,7 @@ import {
 import { InputComponent, NameOrIndex } from "../../Types";
 
 const FieldCriterionControlBase = styled.div`
+  flex: 1 0 auto;
   display: flex;
   flex-direction: row;
   justify-content: stretch;
