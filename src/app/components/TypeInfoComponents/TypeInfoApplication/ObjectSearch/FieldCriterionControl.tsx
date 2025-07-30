@@ -44,7 +44,7 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
 }) => {
   const { fieldName, operator, value: fieldValue } = fieldCriterion;
   const { fields: typeInfoFields = {} } = typeInfo;
-  const typeInfoField = useMemo(
+  const selectedTypeInfoField = useMemo(
     () => typeInfo?.fields?.[fieldName],
     [typeInfo, fieldName],
   );
@@ -82,23 +82,33 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
   );
   const fieldOptions = useMemo<string[]>(() => {
     return Object.keys(typeInfoFields).filter((fieldNameOption) => {
-      // IMPORTANT: DO NOT ALLOW TypeReference fields.
+      // IMPORTANT: DO NOT ALLOW TypeReference fields or fields with READ denied.
       const {
-        [fieldNameOption]: { typeReference },
+        [fieldNameOption]: {
+          typeReference,
+          tags: { deniedOperations: { READ: readDenied = false } = {} } = {},
+        } = {},
       } = typeInfoFields;
 
-      return !typeReference;
+      return !typeReference && !readDenied;
     });
   }, [typeInfoFields]);
+  const fieldLabels = useMemo<string[]>(() => {
+    return fieldOptions.map((fO) => {
+      const { [fO]: { tags: { label = fO } = {} } = {} } = typeInfoFields;
+
+      return label;
+    });
+  }, [typeInfoFields, fieldOptions]);
   const operatorOptions = useMemo(() => Object.values(ComparisonOperators), []);
 
   return (
     <FieldCriterionControlBase>
       <select value={fieldName} onChange={onFieldSelectionChange}>
         <option value="">Field</option>
-        {fieldOptions.map((fieldOption) => (
+        {fieldOptions.map((fieldOption, fOI) => (
           <option key={fieldOption} value={fieldOption}>
-            {fieldOption}
+            {fieldLabels[fOI]}
           </option>
         ))}
       </select>
@@ -110,10 +120,10 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
           </option>
         ))}
       </select>
-      {typeInfoField ? (
+      {selectedTypeInfoField ? (
         <TypeInfoInput
           operation={operation}
-          typeInfoField={typeInfoField}
+          typeInfoField={selectedTypeInfoField}
           fieldValue={fieldValue}
           nameOrIndex={fieldName}
           onChange={onValueChange}
