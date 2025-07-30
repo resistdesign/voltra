@@ -21,7 +21,7 @@ const FieldCriterionControlBase = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: stretch;
-  align-items: center;
+  align-items: flex-end;
   gap: 1em;
 `;
 
@@ -105,7 +105,9 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
   return (
     <FieldCriterionControlBase>
       <select value={fieldName} onChange={onFieldSelectionChange}>
-        <option value="">Field</option>
+        <option value="" disabled>
+          Field
+        </option>
         {fieldOptions.map((fieldOption, fOI) => (
           <option key={fieldOption} value={fieldOption}>
             {fieldLabels[fOI]}
@@ -113,7 +115,9 @@ export const FieldCriterionControl: FC<FieldCriterionControlProps> = ({
         ))}
       </select>
       <select value={operator} onChange={onOperatorSelectionChange}>
-        <option value="">Operator</option>
+        <option value="" disabled>
+          Operator
+        </option>
         {operatorOptions.map((operatorOption) => (
           <option key={operatorOption} value={operatorOption}>
             {operatorOption}
