@@ -1,8 +1,11 @@
 import {
   ChangeEvent as ReactChangeEvent,
   FC,
+  FormEvent as ReactFormEvent,
   useCallback,
+  useEffect,
   useMemo,
+  useState,
 } from "react";
 import { FieldCriterionControl } from "./FieldCriterionControl";
 import { IndexButton } from "../../../Basic/IndexButton";
@@ -22,6 +25,11 @@ import {
 import { InputComponent } from "../../Types";
 import { Form } from "../../../Form";
 import { validateSearchFields } from "../../../../../common/SearchValidation";
+
+const DEFAULT_SEARCH_CRITERIA: SearchCriteria = {
+  logicalOperator: LogicalOperators.OR,
+  fieldCriteria: [],
+};
 
 const BaseSearchControls = styled(Form)`
   flex: 1 0 auto;
@@ -73,13 +81,14 @@ export const SearchControls: FC<SearchControlsProps> = ({
   customInputTypeMap,
 }) => {
   const {
-    criteria: searchCriteria = {
-      logicalOperator: LogicalOperators.AND,
-      fieldCriteria: [],
-    },
+    criteria: searchCriteria = DEFAULT_SEARCH_CRITERIA,
   }: Partial<ListItemsConfig> = listItemsConfig || {};
-  const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
-    searchCriteria;
+  const [internalSearchCriteria, setInternalSearchCriteria] =
+    useState<SearchCriteria>(searchCriteria ?? DEFAULT_SEARCH_CRITERIA);
+  const {
+    logicalOperator = LogicalOperators.OR,
+    fieldCriteria = [],
+  }: Partial<SearchCriteria> = internalSearchCriteria;
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
       onListItemsConfigChange({
@@ -90,17 +99,6 @@ export const SearchControls: FC<SearchControlsProps> = ({
     },
     [listItemsConfig, onListItemsConfigChange],
   );
-  const onPatchSearchCriteria = useCallback(
-    (newSearchCriteria: Partial<SearchCriteria>) => {
-      onPatchListItemsConfig({
-        criteria: {
-          ...searchCriteria,
-          ...newSearchCriteria,
-        },
-      });
-    },
-    [searchCriteria, onPatchListItemsConfig],
-  );
   const onFieldCriterionChange = useCallback(
     (index: number, newFieldCriterion: FieldCriterion) => {
       const newFieldCriteria = [...fieldCriteria].map(
@@ -110,64 +108,92 @@ export const SearchControls: FC<SearchControlsProps> = ({
             : fieldCriterionItem,
       );
 
-      onPatchSearchCriteria({
+      setInternalSearchCriteria((previousSearchCriteria) => ({
+        ...previousSearchCriteria,
         fieldCriteria: newFieldCriteria,
-      });
+      }));
     },
-    [fieldCriteria, onPatchSearchCriteria],
+    [fieldCriteria, setInternalSearchCriteria],
   );
   const onLogicalOperatorChange = useCallback(
     (event: ReactChangeEvent<HTMLSelectElement>) => {
       const newLogicalOperator = event.target.value as LogicalOperators;
 
-      onPatchSearchCriteria({
+      setInternalSearchCriteria((previousSearchCriteria) => ({
+        ...previousSearchCriteria,
         logicalOperator: newLogicalOperator,
-      });
+      }));
     },
-    [onPatchSearchCriteria],
+    [setInternalSearchCriteria],
   );
   const logicalOperatorOptions = useMemo(
     () => Object.values(LogicalOperators),
     [],
   );
+  const logicalOperatorLabels = useMemo(
+    () => Object.keys(LogicalOperators),
+    [],
+  );
   const onAddCriterion = useCallback(() => {
-    onPatchSearchCriteria({
+    setInternalSearchCriteria((previousSearchCriteria) => ({
+      ...previousSearchCriteria,
       fieldCriteria: [
-        ...fieldCriteria,
+        ...(fieldCriteria ?? []),
         {
           fieldName: "",
           operator: ComparisonOperators.EQUALS,
           value: "",
         },
       ],
-    });
-  }, [fieldCriteria, onPatchSearchCriteria]);
+    }));
+  }, [fieldCriteria, setInternalSearchCriteria]);
   const onRemoveCriterion = useCallback(
     (index: number) => {
       const newFieldCriteria = [...fieldCriteria].filter(
         (_, fieldCriterionIndex) => fieldCriterionIndex !== index,
       );
 
-      onPatchSearchCriteria({
+      setInternalSearchCriteria((previousSearchCriteria) => ({
+        ...previousSearchCriteria,
         fieldCriteria: newFieldCriteria,
-      });
+      }));
     },
-    [fieldCriteria, onPatchSearchCriteria],
+    [fieldCriteria, setInternalSearchCriteria],
   );
   const criteriaValid = useMemo(
     () => validateSearchFields(typeInfoName, typeInfoMap, fieldCriteria, true),
     [typeInfoName, typeInfoMap, fieldCriteria],
   );
+  const onSubmit = useCallback(() => {
+    onPatchListItemsConfig({
+      criteria: internalSearchCriteria,
+    });
+  }, [internalSearchCriteria, onPatchListItemsConfig]);
+  const onReset = useCallback(
+    (event: ReactFormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setInternalSearchCriteria(DEFAULT_SEARCH_CRITERIA);
+    },
+    [searchCriteria],
+  );
+
+  useEffect(() => {
+    setInternalSearchCriteria((previousSearchCriteria) =>
+      searchCriteria === previousSearchCriteria
+        ? previousSearchCriteria
+        : searchCriteria,
+    );
+  }, [searchCriteria]);
 
   return (
-    <BaseSearchControls>
+    <BaseSearchControls onSubmit={onSubmit} onReset={onReset}>
       <select value={logicalOperator} onChange={onLogicalOperatorChange}>
         <option value="" disabled>
           Logical Operator
         </option>
-        {logicalOperatorOptions.map((operator) => (
+        {logicalOperatorOptions.map((operator, opIdx) => (
           <option key={operator} value={operator}>
-            {operator}
+            {logicalOperatorLabels[opIdx]}
           </option>
         ))}
       </select>
@@ -188,7 +214,9 @@ export const SearchControls: FC<SearchControlsProps> = ({
         </FieldCriterionControlItem>
       ))}
       <ControlBar>
-        <button onClick={onAddCriterion}>Add Criterion</button>
+        <button type="button" onClick={onAddCriterion}>
+          Add Criterion
+        </button>
         <button type="reset" disabled={fieldCriteria.length < 1}>
           Clear
         </button>
