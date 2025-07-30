@@ -19,7 +19,7 @@ import { InputComponent, NameOrIndex } from "../../Types";
 const FieldCriterionControlBase = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: stretch;
   align-items: center;
   gap: 1em;
 `;
