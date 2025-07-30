@@ -178,6 +178,7 @@ export const SearchControls: FC<SearchControlsProps> = ({
   const onReset = useCallback(
     (event: ReactFormEvent<HTMLFormElement>) => {
       event.preventDefault();
+      setInternalSearchCriteria(DEFAULT_SEARCH_CRITERIA);
       onPatchListItemsConfig({
         criteria: DEFAULT_SEARCH_CRITERIA,
       });
