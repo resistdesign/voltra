@@ -160,10 +160,16 @@ export const SearchControls: FC<SearchControlsProps> = ({
     },
     [fieldCriteria, setInternalSearchCriteria],
   );
-  const criteriaValid = useMemo(
-    () => validateSearchFields(typeInfoName, typeInfoMap, fieldCriteria, true),
-    [typeInfoName, typeInfoMap, fieldCriteria],
-  );
+  const criteriaValid = useMemo(() => {
+    const { valid = false } = validateSearchFields(
+      typeInfoName,
+      typeInfoMap,
+      fieldCriteria,
+      true,
+    );
+
+    return valid;
+  }, [typeInfoName, typeInfoMap, fieldCriteria]);
   const onSubmit = useCallback(() => {
     onPatchListItemsConfig({
       criteria: internalSearchCriteria,
