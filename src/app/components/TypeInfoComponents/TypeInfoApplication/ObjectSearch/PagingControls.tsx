@@ -332,7 +332,11 @@ export const PagingControls: FC<PagingControlsProps> = ({
         </>
       ) : undefined}
       {currentPageNumberList.map((pageNumber) => (
-        <ValueButton value={pageNumber} onClick={onPageNumber}>
+        <ValueButton
+          key={`Page:${pageNumber}`}
+          value={pageNumber}
+          onClick={onPageNumber}
+        >
           {pageNumber === currentPage ? (
             <strong>{pageNumber}</strong>
           ) : (
