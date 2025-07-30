@@ -138,7 +138,7 @@ export const SearchControls: FC<SearchControlsProps> = ({
   return (
     <BaseSearchControls>
       <select value={logicalOperator} onChange={onLogicalOperatorChange}>
-        <option value="">Logical Operator</option>
+        <option value="" disabled>Logical Operator</option>
         {logicalOperatorOptions.map((operator) => (
           <option key={operator} value={operator}>
             {operator}
