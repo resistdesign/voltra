@@ -105,7 +105,6 @@ export const useTypeInfoORMAPI = (
         ({
           [methodName]: {
             activeRequests: prevActiveRequests = [],
-            loading: prevLoading,
             data: prevData,
             error: prevError,
           } = {},
@@ -114,14 +113,15 @@ export const useTypeInfoORMAPI = (
           const newActiveRequests = loading
             ? [...prevActiveRequests, requestId]
             : prevActiveRequests.filter((id) => id !== requestId);
+          const currentlyLoading = newActiveRequests.length > 0;
 
           return {
             ...prevState,
             [methodName]: {
               activeRequests: newActiveRequests,
-              loading: newActiveRequests.length > 0,
-              data: data ?? prevData,
-              error: error ?? prevError,
+              loading: currentlyLoading,
+              data: currentlyLoading ? undefined : (data ?? prevData),
+              error: currentlyLoading ? undefined : (error ?? prevError),
             },
           };
         },
