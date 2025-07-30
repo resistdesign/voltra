@@ -85,6 +85,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     <BaseObjectSearch>
       {!hideSearchControls ? (
         <SearchControls
+          typeInfoName={typeInfoName}
+          typeInfoMap={typeInfoMap}
           operation={operation}
           typeInfo={typeInfo}
           listItemsConfig={listItemsConfig}

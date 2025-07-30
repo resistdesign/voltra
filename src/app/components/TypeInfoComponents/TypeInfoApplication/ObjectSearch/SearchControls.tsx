@@ -16,11 +16,14 @@ import {
 } from "../../../../../common/SearchTypes";
 import {
   TypeInfo,
+  TypeInfoMap,
   TypeOperation,
 } from "../../../../../common/TypeParsing/TypeInfo";
 import { InputComponent } from "../../Types";
+import { Form } from "../../../Form";
+import { validateSearchFields } from "../../../../../common/SearchValidation";
 
-const BaseSearchControls = styled.div`
+const BaseSearchControls = styled(Form)`
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
@@ -36,8 +39,23 @@ const FieldCriterionControlItem = styled.div`
   align-items: center;
   gap: 1em;
 `;
+const ControlBar = styled.div`
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1em;
+
+  & > button {
+    flex: 0 0 auto;
+    width: unset;
+  }
+`;
 
 export type SearchControlsProps = {
+  typeInfoName: string;
+  typeInfoMap: TypeInfoMap;
   operation: TypeOperation;
   typeInfo: TypeInfo;
   listItemsConfig: ListItemsConfig;
@@ -46,6 +64,8 @@ export type SearchControlsProps = {
 };
 
 export const SearchControls: FC<SearchControlsProps> = ({
+  typeInfoName,
+  typeInfoMap,
   operation,
   typeInfo,
   listItemsConfig,
@@ -134,11 +154,17 @@ export const SearchControls: FC<SearchControlsProps> = ({
     },
     [fieldCriteria, onPatchSearchCriteria],
   );
+  const criteriaValid = useMemo(
+    () => validateSearchFields(typeInfoName, typeInfoMap, fieldCriteria, true),
+    [typeInfoName, typeInfoMap, fieldCriteria],
+  );
 
   return (
     <BaseSearchControls>
       <select value={logicalOperator} onChange={onLogicalOperatorChange}>
-        <option value="" disabled>Logical Operator</option>
+        <option value="" disabled>
+          Logical Operator
+        </option>
         {logicalOperatorOptions.map((operator) => (
           <option key={operator} value={operator}>
             {operator}
@@ -161,7 +187,15 @@ export const SearchControls: FC<SearchControlsProps> = ({
           </IndexButton>
         </FieldCriterionControlItem>
       ))}
-      <button onClick={onAddCriterion}>Add Criterion</button>
+      <ControlBar>
+        <button onClick={onAddCriterion}>Add Criterion</button>
+        <button type="reset" disabled={fieldCriteria.length < 1}>
+          Clear
+        </button>
+        <button type="submit" disabled={!criteriaValid}>
+          Search
+        </button>
+      </ControlBar>
     </BaseSearchControls>
   );
 };
