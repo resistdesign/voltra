@@ -15,6 +15,14 @@ import styled from "styled-components";
 import { ValueButton } from "../../../Basic/ValueButton";
 import { MaterialSymbol } from "../../../MaterialSymbol";
 
+const DEFAULT_CURSOR_CACHE: (string | undefined)[] = [
+  // IMPORTANT: The first index of the cache must always be `undefined`.
+  // This is because the first page does not have a cursor and
+  // the cursor that comes back with the request for the first
+  // page is for the second page and so on.
+  undefined,
+];
+
 export const getStandardExpandedPagingCursor = (
   cursor?: string,
 ): StandardExpandedPagingCursor => {
@@ -51,7 +59,8 @@ export type CursorCacheController = {
 export const useCursorCacheController = (
   nextCursor: string | undefined,
 ): CursorCacheController => {
-  const [cursorCache, setCursorCache] = useState<string[]>([]);
+  const [cursorCache, setCursorCache] =
+    useState<(string | undefined)[]>(DEFAULT_CURSOR_CACHE);
   const [cursorIndex, setCursorIndex] = useState<number>(0);
   const currentCursor = useMemo<string | undefined>(() => {
     return cursorCache[cursorIndex];
@@ -80,7 +89,9 @@ export const useCursorCacheController = (
   }, []);
   const onSpecifyCursorIndex = useCallback(
     (index: number) => {
+      console.log("GOT NEW CURSOR INDEX:", index);
       if (index > -1 && index < cursorCache.length) {
+        console.log("USED NEW CURSOR INDEX:", index);
         setCursorIndex(index);
       }
     },
@@ -95,7 +106,7 @@ export const useCursorCacheController = (
     setCursorIndex(cursorCache.length - 1);
   }, [cursorCache]);
   const onReset = useCallback(() => {
-    setCursorCache([]);
+    setCursorCache(DEFAULT_CURSOR_CACHE);
     setCursorIndex(0);
   }, []);
 
@@ -103,9 +114,17 @@ export const useCursorCacheController = (
   useEffect(() => {
     if (nextCursor !== undefined && !cursorCache.includes(nextCursor)) {
       addCursor(nextCursor);
-      onIncrementCursor();
     }
   }, [nextCursor, cursorCache, addCursor, onIncrementCursor]);
+
+  console.log(
+    "currentCursor:",
+    currentCursor,
+    "cursorIndex:",
+    cursorIndex,
+    "cursorCache:",
+    cursorCache,
+  );
 
   return {
     cursorCache,
@@ -253,6 +272,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
         });
       } else {
         onSpecifyCursorIndex?.(pageNumber - 1);
+        // TODO: Somehow we need to patch the cursor
+        //  with the string cursor at the given index.
       }
     },
     [fullPaging, onPatchCursor, onSpecifyCursorIndex],
@@ -338,6 +359,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
           onClick={onPageNumber}
         >
           {pageNumber === currentPage ? (
+            // TODO: Show which page is selected.
+            //  This only works for full paging.
             <strong>{pageNumber}</strong>
           ) : (
             pageNumber
