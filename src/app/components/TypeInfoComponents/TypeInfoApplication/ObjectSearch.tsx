@@ -26,6 +26,10 @@ const BaseObjectSearch = styled.div`
   justify-content: flex-start;
   align-items: stretch;
   gap: 1em;
+
+  & > * {
+    flex: 0 0 auto;
+  }
 `;
 
 export type ObjectSearchProps = {
