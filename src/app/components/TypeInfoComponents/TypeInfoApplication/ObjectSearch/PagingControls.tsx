@@ -43,7 +43,7 @@ export const getStandardExpandedPagingCursor = (
 };
 
 export type CursorCacheController = {
-  cursorCache: string[];
+  cursorCache: (string | undefined)[];
   currentCursor: string | undefined;
   nextCursor: string | undefined;
   atFirstCursor: boolean;
