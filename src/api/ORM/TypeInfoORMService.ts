@@ -467,7 +467,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): (keyof TypeInfoDataItem)[] | undefined => {
     const typeInfo = this.getTypeInfo(typeName);
-    const cleanSelectedFields =
+    const { primaryField } = typeInfo;
+
+    let cleanSelectedFields =
       removeTypeReferenceFieldsFromSelectedFields<TypeInfoDataItem>(
         typeInfo,
         removeNonexistentFieldsFromSelectedFields<TypeInfoDataItem>(
@@ -475,6 +477,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           selectedFields,
         ),
       );
+
+    if (
+      primaryField &&
+      Array.isArray(cleanSelectedFields) &&
+      !cleanSelectedFields.includes(primaryField)
+    ) {
+      // IMPORTANT: Ensure that the primary field is always included in the selected fields.
+      cleanSelectedFields = [...cleanSelectedFields, primaryField];
+    }
 
     return cleanSelectedFields;
   };
