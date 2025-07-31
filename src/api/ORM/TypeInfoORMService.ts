@@ -1022,7 +1022,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validateReadOperation(typeName, cleanSelectedFields);
 
     const { typeInfoMap, useDAC } = this.config;
-    const { fields: {} = {} } = this.getTypeInfo(typeName);
+    const typeInfo = this.getTypeInfo(typeName);
+    const { fields: {} = {} } = typeInfo;
     const { criteria } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
@@ -1037,6 +1038,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const driver = this.getDriverInternal(typeName);
       const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
       const results = await satisfyItemsPerPage(
+        typeInfo,
         driver,
         config,
         useDAC

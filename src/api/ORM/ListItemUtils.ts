@@ -1,5 +1,5 @@
 import { DataItemDBDriver } from "./drivers";
-import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
+import { TypeInfo, TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
 import { ListItemsConfig, ListItemsResults } from "../../common/SearchTypes";
 
 /**
@@ -9,6 +9,7 @@ import { ListItemsConfig, ListItemsResults } from "../../common/SearchTypes";
  * limitations.
  * */
 export const satisfyItemsPerPage = async (
+  typeInfo: TypeInfo,
   driver: DataItemDBDriver<any, any>,
   config: ListItemsConfig,
   filter?: (item: Partial<TypeInfoDataItem>) => boolean,
@@ -16,6 +17,7 @@ export const satisfyItemsPerPage = async (
   selectedFields?: (keyof TypeInfoDataItem)[],
 ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> => {
   const { itemsPerPage = 1, cursor: initialCursor } = config;
+  const { primaryField } = typeInfo;
 
   const filteredItems: Partial<TypeInfoDataItem>[] = [];
 
@@ -23,7 +25,9 @@ export const satisfyItemsPerPage = async (
   // need to make sure that the request is made at least once.
   let ranOnce: boolean = false,
     nextCursor: string | undefined = initialCursor,
-    itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
+    itemsPerPageSatisfied = filteredItems.length >= itemsPerPage,
+    leftoverItems: boolean = false,
+    lastItem: Partial<TypeInfoDataItem> | undefined = undefined;
 
   while (!ranOnce || (!itemsPerPageSatisfied && nextCursor)) {
     // IMPORTANT: Make sure this gets marked true immediately.
@@ -49,6 +53,9 @@ export const satisfyItemsPerPage = async (
         itemsPerPageSatisfied = filteredItems.length >= itemsPerPage;
 
         if (itemsPerPageSatisfied) {
+          leftoverItems = items.indexOf(itm) < items.length - 1;
+          lastItem = itm;
+
           break;
         }
       }
@@ -57,6 +64,10 @@ export const satisfyItemsPerPage = async (
 
   return {
     items: filteredItems,
-    cursor: itemsPerPageSatisfied ? nextCursor : undefined,
+    cursor: itemsPerPageSatisfied
+      ? leftoverItems && lastItem && primaryField
+        ? await driver.getItemCursor(lastItem[primaryField])
+        : nextCursor
+      : undefined,
   };
 };

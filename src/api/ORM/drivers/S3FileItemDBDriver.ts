@@ -64,9 +64,7 @@ export class S3FileItemDBDriver
     uniqueIdentifier: BaseFileItem["id"],
   ): Promise<string> =>
     // TODO: Uhg, this is broken. Can't really make an S3 continuation token.
-    JSON.stringify({
-      id: uniqueIdentifier,
-    });
+    uniqueIdentifier;
 
   /**
    * Create a new @{@link BaseFileItem}.
