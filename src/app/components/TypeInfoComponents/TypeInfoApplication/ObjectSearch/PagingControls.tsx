@@ -333,16 +333,12 @@ export const PagingControls: FC<PagingControlsProps> = ({
 
   return (
     <BasePagingControls>
-      {hasPrevious ? (
-        <>
-          <button onClick={onFirst}>
-            <MaterialSymbol>skip_previous</MaterialSymbol>
-          </button>
-          <button onClick={onPrevious}>
-            <MaterialSymbol>fast_rewind</MaterialSymbol>
-          </button>
-        </>
-      ) : undefined}
+      <button disabled={!hasPrevious} onClick={onFirst}>
+        <MaterialSymbol>skip_previous</MaterialSymbol>
+      </button>
+      <button disabled={!hasPrevious} onClick={onPrevious}>
+        <MaterialSymbol>fast_rewind</MaterialSymbol>
+      </button>
       {currentPageNumberList.map((pageNumber) => (
         <ValueButton
           key={`Page:${pageNumber}`}
@@ -353,16 +349,12 @@ export const PagingControls: FC<PagingControlsProps> = ({
           {pageNumber}
         </ValueButton>
       ))}
-      {hasNext || !fullPaging ? (
-        <button onClick={onNext}>
-          <MaterialSymbol>fast_forward</MaterialSymbol>
-        </button>
-      ) : undefined}
-      {(fullPaging && hasNext) || (!fullPaging && !atLastCursor) ? (
-        <button onClick={onLast}>
-          <MaterialSymbol>skip_next</MaterialSymbol>
-        </button>
-      ) : undefined}
+      <button disabled={!hasNext} onClick={onNext}>
+        <MaterialSymbol>fast_forward</MaterialSymbol>
+      </button>
+      <button disabled={!hasNext} onClick={onLast}>
+        <MaterialSymbol>skip_next</MaterialSymbol>
+      </button>
       <select value={`${itemsPerPage}`} onChange={onItemsPerPageChangeInternal}>
         <option value="10">10</option>
         <option value="20">20</option>
