@@ -49,7 +49,7 @@ const getItemsPerPageOption = (
   itemsPerPageAmount: number,
   fullPaging: boolean,
 ) => (
-  <option value={itemsPerPageAmount}>
+  <option key={`ItemsPerPage:${itemsPerPageAmount}`} value={itemsPerPageAmount}>
     {!fullPaging ? "~ " : undefined}
     {itemsPerPageAmount} / page
   </option>
