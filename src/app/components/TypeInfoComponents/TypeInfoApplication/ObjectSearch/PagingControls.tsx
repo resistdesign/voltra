@@ -291,11 +291,15 @@ export const PagingControls: FC<PagingControlsProps> = ({
     const cP = fullPaging ? currentPage : currentCursorIndex + 1;
     const tP = fullPaging ? totalPages : (cursorCache?.length ?? 0);
     const rangeSize = 5; // Number of pages to show in the range.
-    const rangeSizeOffset = rangeSize - 1;
-    const rangeStart = Math.max(1, cP - 3);
-    const rangeEnd = Math.min(rangeStart + rangeSizeOffset, tP);
+    const rangeSizeOffset = Math.floor(rangeSize / 2);
+    const anchorPage = Math.min(
+      tP - rangeSizeOffset,
+      Math.max(1 + rangeSizeOffset, cP),
+    );
+    const rangeStart = Math.max(1, anchorPage - rangeSizeOffset);
+    const rangeEnd = Math.min(tP, anchorPage + rangeSizeOffset);
 
-    // IMPORTANT: Limit the number of pages shown to 5.
+    // IMPORTANT: Limit the number of pages.
     for (let i = rangeStart; i <= rangeEnd; i++) {
       const thisPageNumber = i;
 
