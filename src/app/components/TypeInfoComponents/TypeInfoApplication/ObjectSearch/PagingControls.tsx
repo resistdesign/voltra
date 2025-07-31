@@ -341,6 +341,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
     }
   }, [currentCursor, onPatchStringCursor]);
 
+  // TODO: It needs to be conveyed that items per page just means
+  //  "at most" when not doing full paging.
   return (
     <BasePagingControls>
       <button disabled={!hasPrevious} onClick={onFirst}>
