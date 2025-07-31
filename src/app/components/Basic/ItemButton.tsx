@@ -1,10 +1,10 @@
-import { HTMLAttributes, useCallback } from "react";
+import { ButtonHTMLAttributes, useCallback } from "react";
 
 export type ItemButtonItemType = Record<any, any>;
 
 export type ItemButtonProps<
   SpecificItemButtonItemType extends ItemButtonItemType,
-> = Omit<HTMLAttributes<HTMLButtonElement>, "onClick"> & {
+> = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
   item: SpecificItemButtonItemType;
   onClick?: (item: SpecificItemButtonItemType) => void;
 };
