@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -113,16 +114,6 @@ export const useCursorCacheController = (
     }
   }, [nextCursor, cursorCache, addCursor]);
 
-  // TODO: Remove.
-  console.log(
-    "currentCursor:",
-    currentCursor,
-    "cursorIndex:",
-    cursorIndex,
-    "cursorCache:",
-    cursorCache,
-  );
-
   return {
     cursorCache,
     currentCursor,
@@ -171,7 +162,7 @@ export const PagingControls: FC<PagingControlsProps> = ({
 }) => {
   const {
     cursorCache,
-    nextCursor,
+    currentCursor,
     atFirstCursor,
     atLastCursor,
     onFirstCursor,
@@ -181,6 +172,7 @@ export const PagingControls: FC<PagingControlsProps> = ({
     onLastCursor,
     onReset: onResetCursorCache,
   }: Partial<CursorCacheController> = cursorCacheController || {};
+  const lastCursorRef = useRef<string | undefined>(undefined);
   const { cursor, itemsPerPage = 1 } = pagingInfo;
   const pagingCursor = useMemo<StandardExpandedPagingCursor>(() => {
     return getStandardExpandedPagingCursor(cursor);
@@ -211,7 +203,7 @@ export const PagingControls: FC<PagingControlsProps> = ({
     [onPagingInfoChange, pagingInfo],
   );
   const onPatchStringCursor = useCallback(
-    (newCursor: string) => {
+    (newCursor: string | undefined) => {
       onPatchPagingInfo({
         cursor: newCursor,
       });
@@ -250,8 +242,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onFirstCursor?.();
-      // TODO: Need to patch the cursor if we want a
-      //  request for the selected page to happen.
     }
   }, [fullPaging, onPatchCursor, onFirstCursor]);
   const onPrevious = useCallback(() => {
@@ -261,8 +251,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onPreviousCursor?.();
-      // TODO: Need to patch the cursor if we want a
-      //  request for the selected page to happen.
     }
   }, [fullPaging, currentPage, onPatchCursor, onPreviousCursor]);
   const onPageNumber = useCallback(
@@ -273,8 +261,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
         });
       } else {
         onSpecifyCursorIndex?.(pageNumber - 1);
-        // TODO: Somehow we need to patch the cursor
-        //  with the string cursor at the given index.
       }
     },
     [fullPaging, onPatchCursor, onSpecifyCursorIndex],
@@ -286,20 +272,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onNextCursor?.();
-
-      if (nextCursor) {
-        onPatchStringCursor(nextCursor);
-      }
     }
-  }, [
-    fullPaging,
-    currentPage,
-    onPatchCursor,
-    totalPages,
-    onNextCursor,
-    nextCursor,
-    onPatchStringCursor,
-  ]);
+  }, [fullPaging, currentPage, onPatchCursor, totalPages, onNextCursor]);
   const onLast = useCallback(() => {
     if (fullPaging) {
       onPatchCursor({
@@ -307,8 +281,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onLastCursor?.();
-      // TODO: Need to patch the cursor if we want a
-      //  request for the selected page to happen.
     }
   }, [fullPaging, onPatchCursor, totalPages, onLastCursor]);
   const currentPageNumberList = useMemo(() => {
@@ -342,6 +314,14 @@ export const PagingControls: FC<PagingControlsProps> = ({
     },
     [onItemsPerPageChange],
   );
+
+  useEffect(() => {
+    if (currentCursor !== lastCursorRef.current) {
+      lastCursorRef.current = currentCursor;
+
+      onPatchStringCursor(currentCursor);
+    }
+  }, [currentCursor, onPatchStringCursor]);
 
   return (
     <BasePagingControls>
