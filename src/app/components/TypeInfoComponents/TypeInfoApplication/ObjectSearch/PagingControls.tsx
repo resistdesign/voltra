@@ -72,6 +72,8 @@ export type CursorCacheController = {
 
 export const useCursorCacheController = (
   nextCursor: string | undefined,
+  // TODO: Receive list items config and if anything other than the cursor changes,
+  //  reset the cursor cache.
 ): CursorCacheController => {
   // Data
   const [cursorCache, setCursorCache] =
