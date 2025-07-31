@@ -253,6 +253,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onFirstCursor?.();
+      // TODO: Need to patch the cursor if we want a
+      //  request for the selected page to happen.
     }
   }, [fullPaging, onPatchCursor, onFirstCursor]);
   const onPrevious = useCallback(() => {
@@ -262,6 +264,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onPreviousCursor?.();
+      // TODO: Need to patch the cursor if we want a
+      //  request for the selected page to happen.
     }
   }, [fullPaging, currentPage, onPatchCursor, onPreviousCursor]);
   const onPageNumber = useCallback(
@@ -306,6 +310,8 @@ export const PagingControls: FC<PagingControlsProps> = ({
       });
     } else {
       onLastCursor?.();
+      // TODO: Need to patch the cursor if we want a
+      //  request for the selected page to happen.
     }
   }, [fullPaging, onPatchCursor, totalPages, onLastCursor]);
   const currentPageNumberList = useMemo(() => {
