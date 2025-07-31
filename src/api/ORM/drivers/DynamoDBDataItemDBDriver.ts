@@ -197,19 +197,6 @@ export class DynamoDBDataItemDBDriver<
   }
 
   /**
-   * Get the pagination cursor for a specific item in the database.
-   * */
-  public getItemCursor = async (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ): Promise<string> => {
-    const { uniquelyIdentifyingFieldName } = this.config;
-
-    return JSON.stringify({
-      [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-    });
-  };
-
-  /**
    * Create an item in the database.
    */
   public createItem = async (

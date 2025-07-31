@@ -58,15 +58,6 @@ export class S3FileItemDBDriver
   }
 
   /**
-   * Get the pagination cursor for a specific `BaseFileItem`.
-   * */
-  public getItemCursor = async (
-    uniqueIdentifier: BaseFileItem["id"],
-  ): Promise<string> =>
-    // TODO: Uhg, this is broken. Can't really make an S3 continuation token.
-    uniqueIdentifier;
-
-  /**
    * Create a new @{@link BaseFileItem}.
    * */
   public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
