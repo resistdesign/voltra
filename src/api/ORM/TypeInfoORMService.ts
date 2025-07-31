@@ -60,7 +60,7 @@ import {
   getItemRelationshipDACResourcePath,
   mergeDACDataItemResourceAccessResultMaps,
 } from "./DACUtils";
-import { satisfyItemsPerPage } from "./ListItemUtils";
+import { executeDriveListItems } from "./ListItemUtils";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -1037,8 +1037,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (searchFieldsValid) {
       const driver = this.getDriverInternal(typeName);
       const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
-      const results = await satisfyItemsPerPage(
-        typeInfo,
+      const results = await executeDriveListItems(
         driver,
         config,
         useDAC

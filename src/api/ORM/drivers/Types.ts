@@ -39,9 +39,6 @@ export type DataItemDBDriver<
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
-  getItemCursor: (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ) => Promise<string>;
   createItem: (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
