@@ -1,7 +1,7 @@
-import { FC, HTMLAttributes, useCallback } from "react";
+import { ButtonHTMLAttributes, FC, useCallback } from "react";
 
 export type ValueButtonProps = Omit<
-  HTMLAttributes<HTMLButtonElement>,
+  ButtonHTMLAttributes<HTMLButtonElement>,
   "onClick"
 > & {
   value: any;

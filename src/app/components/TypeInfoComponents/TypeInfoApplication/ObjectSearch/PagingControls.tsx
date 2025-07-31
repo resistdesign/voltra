@@ -45,6 +45,7 @@ export const getStandardExpandedPagingCursor = (
 
 export type CursorCacheController = {
   cursorCache: (string | undefined)[];
+  currentCursorIndex: number;
   currentCursor: string | undefined;
   nextCursor: string | undefined;
   atFirstCursor: boolean;
@@ -63,16 +64,16 @@ export const useCursorCacheController = (
   // Data
   const [cursorCache, setCursorCache] =
     useState<(string | undefined)[]>(DEFAULT_CURSOR_CACHE);
-  const [cursorIndex, setCursorIndex] = useState<number>(0);
+  const [currentCursorIndex, setCurrentCursorIndex] = useState<number>(0);
   const currentCursor = useMemo<string | undefined>(() => {
-    return cursorCache[cursorIndex];
-  }, [cursorCache, cursorIndex]);
+    return cursorCache[currentCursorIndex];
+  }, [cursorCache, currentCursorIndex]);
   const atFirstCursor = useMemo(() => {
-    return cursorIndex === 0;
-  }, [cursorIndex]);
+    return currentCursorIndex === 0;
+  }, [currentCursorIndex]);
   const atLastCursor = useMemo(() => {
-    return cursorIndex === cursorCache.length - 1;
-  }, [cursorIndex, cursorCache]);
+    return currentCursorIndex === cursorCache.length - 1;
+  }, [currentCursorIndex, cursorCache]);
 
   // Internal
   const addCursor = useCallback((newCursor: string) => {
@@ -81,30 +82,30 @@ export const useCursorCacheController = (
 
   // API
   const onFirstCursor = useCallback(() => {
-    setCursorIndex(0);
+    setCurrentCursorIndex(0);
   }, []);
   const onPreviousCursor = useCallback(() => {
-    setCursorIndex((prevIndex) => Math.max(0, prevIndex - 1));
+    setCurrentCursorIndex((prevIndex) => Math.max(0, prevIndex - 1));
   }, []);
   const onSpecifyCursorIndex = useCallback(
     (index: number) => {
       if (index > -1 && index < cursorCache.length) {
-        setCursorIndex(index);
+        setCurrentCursorIndex(index);
       }
     },
     [cursorCache],
   );
   const onNextCursor = useCallback(() => {
     if (!atLastCursor) {
-      setCursorIndex((prevIndex) => prevIndex + 1);
+      setCurrentCursorIndex((prevIndex) => prevIndex + 1);
     }
   }, [atLastCursor]);
   const onLastCursor = useCallback(() => {
-    setCursorIndex(cursorCache.length - 1);
+    setCurrentCursorIndex(cursorCache.length - 1);
   }, [cursorCache]);
   const onReset = useCallback(() => {
     setCursorCache(DEFAULT_CURSOR_CACHE);
-    setCursorIndex(0);
+    setCurrentCursorIndex(0);
   }, []);
 
   // Effects
@@ -116,6 +117,7 @@ export const useCursorCacheController = (
 
   return {
     cursorCache,
+    currentCursorIndex,
     currentCursor,
     nextCursor,
     atFirstCursor,
@@ -162,6 +164,7 @@ export const PagingControls: FC<PagingControlsProps> = ({
 }) => {
   const {
     cursorCache,
+    currentCursorIndex = 0,
     currentCursor,
     atFirstCursor,
     atLastCursor,
@@ -285,27 +288,28 @@ export const PagingControls: FC<PagingControlsProps> = ({
   }, [fullPaging, onPatchCursor, totalPages, onLastCursor]);
   const currentPageNumberList = useMemo(() => {
     const pageNumberList = [];
+    const cP = fullPaging ? currentPage : currentCursorIndex + 1;
+    const tP = fullPaging ? totalPages : (cursorCache?.length ?? 0);
+    const rangeSize = 5; // Number of pages to show in the range.
+    const rangeSizeOffset = rangeSize - 1;
+    const rangeStart = Math.max(1, cP - 3);
+    const rangeEnd = Math.min(rangeStart + rangeSizeOffset, tP);
 
-    if (fullPaging) {
-      for (let i = currentPage - 3; i <= totalPages; i++) {
-        const thisPageNumber = i;
+    // IMPORTANT: Limit the number of pages shown to 5.
+    for (let i = rangeStart; i <= rangeEnd; i++) {
+      const thisPageNumber = i;
 
-        if (thisPageNumber > 0) {
-          pageNumberList.push(thisPageNumber);
-        }
-
-        if (thisPageNumber === currentPage + 3) {
-          break;
-        }
-      }
-    } else if (cursorCache) {
-      for (let i = 0; i < cursorCache.length; i++) {
-        pageNumberList.push(i + 1);
+      if (thisPageNumber > 0) {
+        pageNumberList.push(thisPageNumber);
       }
     }
 
     return pageNumberList;
-  }, [fullPaging, cursorCache, currentPage, totalPages]);
+  }, [fullPaging, cursorCache, currentCursorIndex, currentPage, totalPages]);
+  const selectedPageNumber = useMemo<number>(
+    () => (fullPaging ? currentPage : currentCursorIndex + 1),
+    [fullPaging, currentPage, currentCursorIndex],
+  );
   const onItemsPerPageChangeInternal = useCallback(
     (event: ReactChangeEvent<HTMLSelectElement>) => {
       const itemsPerPage = parseInt(event.target.value, 10);
@@ -338,16 +342,11 @@ export const PagingControls: FC<PagingControlsProps> = ({
       {currentPageNumberList.map((pageNumber) => (
         <ValueButton
           key={`Page:${pageNumber}`}
+          disabled={pageNumber === selectedPageNumber}
           value={pageNumber}
           onClick={onPageNumber}
         >
-          {pageNumber === currentPage ? (
-            // TODO: Show which page is selected.
-            //  This only works for full paging.
-            <strong>{pageNumber}</strong>
-          ) : (
-            pageNumber
-          )}
+          {pageNumber}
         </ValueButton>
       ))}
       {hasNext || !fullPaging ? (

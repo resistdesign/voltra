@@ -67,6 +67,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     items: itemResults = [],
   }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
 
+  // TODO: Changing search parameters or page size should reset the cursor cache.
   // Cursor Cache
   const cursorCacheController = useCursorCacheController(nextCursor);
 
