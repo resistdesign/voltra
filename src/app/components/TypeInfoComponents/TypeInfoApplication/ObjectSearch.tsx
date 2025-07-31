@@ -71,7 +71,9 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     items: itemResults = [],
   }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
 
-  // TODO: Changing search parameters or page size should reset the cursor cache.
+  // TODO: Changing listItemsConfig, at all, should reset the selected indices.
+  // TODO: Changing search parameters, sortFields or page size should reset the cursor cache.
+  // TODO: Changing selected fields should reset everything.
   // Cursor Cache
   const cursorCacheController = useCursorCacheController(nextCursor);
 
@@ -86,6 +88,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     [listItemsConfig, onListItemsConfigChange],
   );
 
+  // TODO: Add an interface for selecting exact/specific fields.
+  //  Selected Fields are, essentially, a search parameter.
   return (
     <BaseObjectSearch>
       {!hideSearchControls ? (
