@@ -135,9 +135,19 @@ const BasePagingControls = styled.div`
   flex: 1 0 auto;
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: stretch;
   align-items: center;
   gap: 1em;
+  flex-wrap: wrap;
+
+  & > * {
+    flex: 1 0 auto;
+    width: unset;
+  }
+
+  & > select {
+    flex: 100 0 auto;
+  }
 `;
 
 export type PagingControlsProps = (
