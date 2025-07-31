@@ -59,6 +59,7 @@ export type CursorCacheController = {
 export const useCursorCacheController = (
   nextCursor: string | undefined,
 ): CursorCacheController => {
+  // Data
   const [cursorCache, setCursorCache] =
     useState<(string | undefined)[]>(DEFAULT_CURSOR_CACHE);
   const [cursorIndex, setCursorIndex] = useState<number>(0);
@@ -76,9 +77,6 @@ export const useCursorCacheController = (
   const addCursor = useCallback((newCursor: string) => {
     setCursorCache((prevCache) => [...prevCache, newCursor]);
   }, []);
-  const onIncrementCursor = useCallback(() => {
-    setCursorIndex((prevIndex) => prevIndex + 1);
-  }, [cursorCache]);
 
   // API
   const onFirstCursor = useCallback(() => {
@@ -89,9 +87,7 @@ export const useCursorCacheController = (
   }, []);
   const onSpecifyCursorIndex = useCallback(
     (index: number) => {
-      console.log("GOT NEW CURSOR INDEX:", index);
       if (index > -1 && index < cursorCache.length) {
-        console.log("USED NEW CURSOR INDEX:", index);
         setCursorIndex(index);
       }
     },
@@ -99,9 +95,9 @@ export const useCursorCacheController = (
   );
   const onNextCursor = useCallback(() => {
     if (!atLastCursor) {
-      onIncrementCursor();
+      setCursorIndex((prevIndex) => prevIndex + 1);
     }
-  }, [atLastCursor, onIncrementCursor]);
+  }, [atLastCursor]);
   const onLastCursor = useCallback(() => {
     setCursorIndex(cursorCache.length - 1);
   }, [cursorCache]);
@@ -115,8 +111,9 @@ export const useCursorCacheController = (
     if (nextCursor !== undefined && !cursorCache.includes(nextCursor)) {
       addCursor(nextCursor);
     }
-  }, [nextCursor, cursorCache, addCursor, onIncrementCursor]);
+  }, [nextCursor, cursorCache, addCursor]);
 
+  // TODO: Remove.
   console.log(
     "currentCursor:",
     currentCursor,
