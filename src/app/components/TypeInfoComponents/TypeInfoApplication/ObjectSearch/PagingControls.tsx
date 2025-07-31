@@ -43,6 +43,18 @@ export const getStandardExpandedPagingCursor = (
   }
 };
 
+const ITEMS_PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
+const getItemsPerPageOption = (
+  itemsPerPageAmount: number,
+  fullPaging: boolean,
+) => (
+  <option value={itemsPerPageAmount}>
+    {!fullPaging ? "~ " : undefined}
+    {itemsPerPageAmount} / page
+  </option>
+);
+
 export type CursorCacheController = {
   cursorCache: (string | undefined)[];
   currentCursorIndex: number;
@@ -341,8 +353,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
     }
   }, [currentCursor, onPatchStringCursor]);
 
-  // TODO: It needs to be conveyed that items per page just means
-  //  "at most" when not doing full paging.
   return (
     <BasePagingControls>
       <button disabled={!hasPrevious} onClick={onFirst}>
@@ -368,10 +378,9 @@ export const PagingControls: FC<PagingControlsProps> = ({
         <MaterialSymbol>skip_next</MaterialSymbol>
       </button>
       <select value={`${itemsPerPage}`} onChange={onItemsPerPageChangeInternal}>
-        <option value="10">10</option>
-        <option value="20">20</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
+        {ITEMS_PER_PAGE_OPTIONS.map((itemsPerPageAmount) =>
+          getItemsPerPageOption(itemsPerPageAmount, fullPaging),
+        )}
       </select>
     </BasePagingControls>
   );
