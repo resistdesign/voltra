@@ -32,7 +32,9 @@ export const useIndexSelectionController = (
     [maximumIndex],
   );
   const allIndicesAreSelected = useMemo<boolean>(
-    () => allIndices.every((index) => selectedIndices.includes(index)),
+    () =>
+      allIndices.length > 0 &&
+      allIndices.every((index) => selectedIndices.includes(index)),
     [allIndices, selectedIndices],
   );
   const someIndicesAreSelected = useMemo<boolean>(
