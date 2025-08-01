@@ -74,7 +74,11 @@ export const useCursorCacheController = (
   nextCursor: string | undefined,
   // TODO: Receive list items config and if anything other than the cursor changes,
   //  reset the cursor cache.
+  listItemsConfig: ListItemsConfig,
 ): CursorCacheController => {
+  // Config
+  const { criteria, itemsPerPage, sortFields } = listItemsConfig;
+
   // Data
   const [cursorCache, setCursorCache] =
     useState<(string | undefined)[]>(DEFAULT_CURSOR_CACHE);
@@ -128,6 +132,10 @@ export const useCursorCacheController = (
       addCursor(nextCursor);
     }
   }, [nextCursor, cursorCache, addCursor]);
+
+  useEffect(() => {
+    onReset();
+  }, [criteria, itemsPerPage, sortFields, onReset]);
 
   return {
     cursorCache,

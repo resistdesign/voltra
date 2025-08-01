@@ -1,4 +1,4 @@
-import { FC, useCallback } from "react";
+import { FC, useCallback, useEffect } from "react";
 import {
   ListItemsConfig,
   ListItemsResults,
@@ -71,11 +71,13 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     items: itemResults = [],
   }: ListItemsResults<TypeInfoDataItem> = listItemsResults;
 
-  // TODO: Changing listItemsConfig, at all, should reset the selected indices.
-  // TODO: Changing search parameters, sortFields or page size should reset the cursor cache.
   // TODO: Changing selected fields should reset everything.
   // Cursor Cache
-  const cursorCacheController = useCursorCacheController(nextCursor);
+  const cursorCacheController = useCursorCacheController(
+    nextCursor,
+    listItemsConfig,
+    // TODO: Need selected fields.
+  );
 
   // Sort Fields
   const onSortFieldsChange = useCallback(
@@ -87,6 +89,11 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
     },
     [listItemsConfig, onListItemsConfigChange],
   );
+
+  // Effects
+  useEffect(() => {
+    onSelectedIndicesChange?.([]);
+  }, [listItemsConfig, onSelectedIndicesChange]);
 
   // TODO: Add an interface for selecting exact/specific fields.
   //  Selected Fields are, essentially, a search parameter.
