@@ -143,12 +143,12 @@ export const useCursorCacheController = (
 
   useEffect(() => {
     if (
-      currentCursor !== listItemsConfigRef.current.cursor &&
+      currentCursor !== listItemsConfigRef.current?.cursor &&
       currentCursor !== lastCursorRef.current
     ) {
       lastCursorRef.current = currentCursor;
 
-      onListItemsConfigChangeRef.current({
+      onListItemsConfigChangeRef?.current({
         ...listItemsConfigRef.current,
         cursor: currentCursor,
       });
