@@ -368,10 +368,6 @@ export class DynamoDBDataItemDBDriver<
           }
         : {}),
     };
-    console.log(
-      "DynamoDBDataItemDBDriver.listItems params: ",
-      JSON.stringify(params, null, 2),
-    );
     let structuredCursor: ScanCommandInput["ExclusiveStartKey"] = undefined;
 
     if (typeof cursor === "string") {
