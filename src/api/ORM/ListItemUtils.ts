@@ -18,6 +18,8 @@ export const executeDriveListItems = async (
     filter ? undefined : selectedFields,
   )) as ListItemsResults<Partial<TypeInfoDataItem>>;
 
+  console.log("ORIGINAL_ITEMS", items);
+
   for (const itm of items) {
     const includeItem = filter ? filter(itm) : true;
 
