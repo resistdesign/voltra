@@ -76,6 +76,7 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   const cursorCacheController = useCursorCacheController(
     nextCursor,
     listItemsConfig,
+    onListItemsConfigChange,
     // TODO: Need selected fields.
   );
 
