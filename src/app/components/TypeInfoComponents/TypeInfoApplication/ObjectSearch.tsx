@@ -18,6 +18,7 @@ import {
   useCursorCacheController,
 } from "./ObjectSearch/PagingControls";
 import { SearchControls } from "./ObjectSearch/SearchControls";
+import { useListItemsConfigCursorReset } from "./ObjectSearch/ListItemsConfigUtils";
 
 const BaseObjectSearch = styled.div`
   flex: 1 0 auto;
@@ -94,6 +95,8 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   useEffect(() => {
     onSelectedIndicesChange?.([]);
   }, [listItemsConfig, onSelectedIndicesChange]);
+
+  useListItemsConfigCursorReset(listItemsConfig, onListItemsConfigChange);
 
   // TODO: Add an interface for selecting exact/specific fields.
   //  Selected Fields are, essentially, a search parameter.
