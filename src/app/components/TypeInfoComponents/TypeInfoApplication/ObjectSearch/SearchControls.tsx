@@ -92,9 +92,9 @@ export const SearchControls: FC<SearchControlsProps> = ({
   const onPatchListItemsConfig = useCallback(
     (patch: Partial<ListItemsConfig>) => {
       onListItemsConfigChange({
-        cursor: undefined,
         ...listItemsConfig,
         ...patch,
+        cursor: undefined,
       });
     },
     [listItemsConfig, onListItemsConfigChange],
