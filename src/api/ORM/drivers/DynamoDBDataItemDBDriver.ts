@@ -386,16 +386,14 @@ export class DynamoDBDataItemDBDriver<
       ExclusiveStartKey: structuredCursor,
       Limit: itemsPerPage,
     });
-    const { Items = [], LastEvaluatedKey }: ScanCommandOutput =
-      await this.dynamoDBClient.send(command);
+    const {
+      Items = [],
+      LastEvaluatedKey,
+      ...more
+    }: ScanCommandOutput = await this.dynamoDBClient.send(command);
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
 
-    console.log(
-      "COMMAND:",
-      JSON.stringify(command.input, null, 2),
-      "RAW_ITEMS:",
-      JSON.stringify(Items, null, 2),
-    );
+    console.log("MORE:", more);
 
     // Sort the items.
     const sortedItems = getSortedItems(sortFields, unmarshalledItems);
