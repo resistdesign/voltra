@@ -390,6 +390,13 @@ export class DynamoDBDataItemDBDriver<
       await this.dynamoDBClient.send(command);
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
 
+    console.log(
+      "COMMAND:",
+      JSON.stringify(structuredCursor, null, 2),
+      "RAW_ITEMS:",
+      JSON.stringify(Items, null, 2),
+    );
+
     // Sort the items.
     const sortedItems = getSortedItems(sortFields, unmarshalledItems);
 
