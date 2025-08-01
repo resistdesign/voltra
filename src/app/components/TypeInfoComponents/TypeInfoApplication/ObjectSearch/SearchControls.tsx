@@ -187,11 +187,7 @@ export const SearchControls: FC<SearchControlsProps> = ({
   );
 
   useEffect(() => {
-    setInternalSearchCriteria((previousSearchCriteria) =>
-      searchCriteria === previousSearchCriteria
-        ? previousSearchCriteria
-        : searchCriteria,
-    );
+    setInternalSearchCriteria(searchCriteria);
   }, [searchCriteria]);
 
   return (
