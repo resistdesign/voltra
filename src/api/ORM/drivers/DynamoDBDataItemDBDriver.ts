@@ -392,7 +392,7 @@ export class DynamoDBDataItemDBDriver<
 
     console.log(
       "COMMAND:",
-      JSON.stringify(structuredCursor, null, 2),
+      JSON.stringify(command, null, 2),
       "RAW_ITEMS:",
       JSON.stringify(Items, null, 2),
     );
