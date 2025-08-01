@@ -73,9 +73,15 @@ export type CursorCacheController = {
 export const useCursorCacheController = (
   nextCursor: string | undefined,
   listItemsConfig: ListItemsConfig,
+  onListItemsConfigChange: (listItemsConfig: ListItemsConfig) => void,
 ): CursorCacheController => {
   // Config
   const { criteria, itemsPerPage, sortFields } = listItemsConfig;
+  const lastCursorRef = useRef<string | undefined>(undefined);
+  const listItemsConfigRef = useRef(listItemsConfig);
+  listItemsConfigRef.current = listItemsConfig;
+  const onListItemsConfigChangeRef = useRef(onListItemsConfigChange);
+  onListItemsConfigChangeRef.current = onListItemsConfigChange;
 
   // Data
   const [cursorCache, setCursorCache] =
@@ -134,6 +140,20 @@ export const useCursorCacheController = (
   useEffect(() => {
     onReset();
   }, [criteria, itemsPerPage, sortFields, onReset]);
+
+  useEffect(() => {
+    if (
+      currentCursor !== listItemsConfigRef.current.cursor &&
+      currentCursor !== lastCursorRef.current
+    ) {
+      lastCursorRef.current = currentCursor;
+
+      onListItemsConfigChangeRef.current({
+        ...listItemsConfigRef.current,
+        cursor: currentCursor,
+      });
+    }
+  }, [currentCursor]);
 
   return {
     cursorCache,
@@ -195,7 +215,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
   const {
     cursorCache,
     currentCursorIndex = 0,
-    currentCursor,
     atFirstCursor,
     atLastCursor,
     onFirstCursor,
@@ -205,7 +224,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
     onLastCursor,
     onReset: onResetCursorCache,
   }: Partial<CursorCacheController> = cursorCacheController || {};
-  const lastCursorRef = useRef<string | undefined>(undefined);
   const { cursor, itemsPerPage = 1 } = pagingInfo;
   const pagingCursor = useMemo<StandardExpandedPagingCursor>(() => {
     return getStandardExpandedPagingCursor(cursor);
@@ -352,14 +370,6 @@ export const PagingControls: FC<PagingControlsProps> = ({
     },
     [onItemsPerPageChange],
   );
-
-  useEffect(() => {
-    if (currentCursor !== lastCursorRef.current) {
-      lastCursorRef.current = currentCursor;
-
-      onPatchStringCursor(currentCursor);
-    }
-  }, [currentCursor, onPatchStringCursor]);
 
   return (
     <BasePagingControls>
