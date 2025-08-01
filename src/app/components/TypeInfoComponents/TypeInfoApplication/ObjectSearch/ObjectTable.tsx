@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo } from "react";
+import { FC, useEffect, useMemo, useRef } from "react";
 import {
   TypeInfo,
   TypeInfoDataItem,
@@ -72,12 +72,22 @@ export const ObjectTable: FC<ObjectTableProps> = ({
   const { sortFields, sortFieldMap, onToggleSortField } =
     useSortFieldController(originalSortFields);
 
+  // Selected indices refs.
+  const selectedIndicesRef = useRef(selectedIndices);
+
   useEffect(() => {
-    if (
-      onSelectedIndicesChange &&
-      !selectedIndexArraysAreEqual(originalSelectedIndices, selectedIndices)
-    ) {
-      onSelectedIndicesChange(selectedIndices);
+    const selectedIndicesChanged =
+      selectedIndices !== selectedIndicesRef.current;
+
+    if (selectedIndicesChanged) {
+      selectedIndicesRef.current = selectedIndices;
+
+      if (
+        onSelectedIndicesChange &&
+        !selectedIndexArraysAreEqual(originalSelectedIndices, selectedIndices)
+      ) {
+        onSelectedIndicesChange(selectedIndices);
+      }
     }
   }, [originalSelectedIndices, selectedIndices, onSelectedIndicesChange]);
 
