@@ -5,7 +5,7 @@ import { ListItemsConfig, ListItemsResults } from "../../common/SearchTypes";
 /**
  * Execute a list items request against a data item driver.
  * */
-export const executeDriveListItems = async (
+export const executeDriverListItems = async (
   driver: DataItemDBDriver<any, any>,
   config: ListItemsConfig,
   filter?: (item: Partial<TypeInfoDataItem>) => boolean,
