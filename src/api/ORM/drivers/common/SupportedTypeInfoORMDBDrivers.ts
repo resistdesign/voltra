@@ -1,6 +1,6 @@
 import { SupportedDataItemDBDriverEntry } from "./Types";
-import { DynamoDBSupportedDataItemDBDriverEntry } from "./DynamoDBDataItemDBDriver";
-import { S3SupportedFileItemDBDriverEntry } from "./S3FileItemDBDriver";
+import { DynamoDBSupportedDataItemDBDriverEntry } from "../DynamoDBDataItemDBDriver";
+import { S3SupportedFileItemDBDriverEntry } from "../S3FileItemDBDriver";
 
 /**
  * The supported Type Info ORM DB driver names.
