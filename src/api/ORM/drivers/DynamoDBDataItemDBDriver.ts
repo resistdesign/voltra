@@ -393,8 +393,6 @@ export class DynamoDBDataItemDBDriver<
     }: ScanCommandOutput = await this.dynamoDBClient.send(command);
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
 
-    console.log("MORE:", more);
-
     // Sort the items.
     const sortedItems = getSortedItems(sortFields, unmarshalledItems);
 
