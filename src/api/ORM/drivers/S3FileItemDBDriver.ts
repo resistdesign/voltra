@@ -22,7 +22,7 @@ import {
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "./Types";
+} from "./common/Types";
 import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
