@@ -3,7 +3,7 @@ import {
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "./common/Types";
+} from "./common";
 import {
   AttributeValue,
   DeleteItemCommand,
