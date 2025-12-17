@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import styled, { keyframes } from "styled-components";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -18,10 +19,50 @@ import {
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
-import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
+import {
+  TypeInfoORMAPI,
+  TypeInfoORMServiceError,
+} from "../../../common/TypeInfoORM";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
 import { ItemRelationshipInfoKeys } from "../../../common/ItemRelationshipInfoTypes";
+
+const spinAnimation = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const ModeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+`;
+
+const LoadingIndicator = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: #4b5563;
+  font-size: 0.95em;
+`;
+
+const Spinner = styled.span`
+  width: 1em;
+  height: 1em;
+  border: 2px solid #d1d1d1;
+  border-top-color: #5c6ac4;
+  border-radius: 50%;
+  display: inline-block;
+  animation: ${spinAnimation} 0.8s linear infinite;
+`;
+
+const ErrorBanner = styled.div`
+  padding: 0.75em 1em;
+  border-radius: 4px;
+  border: 1px solid #e5b3b0;
+  background-color: #fff1f0;
+  color: #8a1c1c;
+`;
 
 export type TypeOperationConfig =
   | {
@@ -185,57 +226,116 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   }, [toMode, targetTypeName, listItemsConfig, typeInfoORMAPIService]);
 
   // TODO: Request a new list when the list relationships config changes.
-
-  // TODO: HOW TO RENDER AND DISMISS ERRORS?
-  // TODO: How to handle loading states?
   // TODO: Delete selected items in search items mode.
   // TODO: Delete selected items in related items mode.
-  return toMode === TypeNavigationMode.FORM ? (
-    <TypeInfoForm
-      typeInfoName={targetTypeName as string}
-      primaryFieldValue={targetPrimaryFieldValue as string}
-      typeInfo={targetTypeInfo as TypeInfo}
-      customInputTypeMap={customInputTypeMap}
-      value={typeInfoDataItem}
-      operation={toOperation}
-      onCancel={onCloseCurrentNavHistoryItem}
-      onSubmit={onSubmit}
-      onNavigateToType={onNavigateToType}
-    />
-  ) : toMode === TypeNavigationMode.SEARCH_ITEMS ? (
-    targetTypeName && targetTypeInfo ? (
-      <ObjectSearch
-        operation={toOperation}
-        typeInfoMap={typeInfoMap}
-        typeInfoName={targetTypeName}
-        typeInfo={targetTypeInfo}
-        listItemsConfig={listItemsConfig}
-        onListItemsConfigChange={setListItemsConfig}
-        listItemsResults={searchItemsResults}
-        onNavigateToType={onNavigateToType}
-        customInputTypeMap={customInputTypeMap}
-        selectable={selectable}
-        selectedIndices={selectedIndices}
-        onSelectedIndicesChange={setSelectedIndices}
-      />
-    ) : undefined
-  ) : toMode === TypeNavigationMode.RELATED_ITEMS ? (
-    targetTypeName && targetTypeInfo ? (
-      <ObjectSearch
-        operation={toOperation}
-        typeInfoMap={typeInfoMap}
-        typeInfoName={targetTypeName}
-        typeInfo={targetTypeInfo}
-        listItemsConfig={listRelationshipsConfig}
-        onListItemsConfigChange={onListRelationshipsConfigChange}
-        listItemsResults={relatedItemsResults}
-        onNavigateToType={onNavigateToType}
-        customInputTypeMap={customInputTypeMap}
-        selectable={relatedSelectable}
-        selectedIndices={relatedSelectedIndices}
-        onSelectedIndicesChange={setRelatedSelectedIndices}
-        hideSearchControls
-      />
-    ) : undefined
-  ) : undefined;
+  const renderModeContent = (
+    content: JSX.Element | undefined,
+    loading: boolean,
+    loadingLabel: string,
+    error?: TypeInfoORMServiceError,
+  ): JSX.Element | undefined => {
+    if (!content && !loading && !error) {
+      return undefined;
+    }
+
+    return (
+      <ModeContainer>
+        {loading ? (
+          <LoadingIndicator role="status" aria-live="polite">
+            <Spinner aria-hidden="true" />
+            <span>{loadingLabel}</span>
+          </LoadingIndicator>
+        ) : undefined}
+        {error ? (
+          <ErrorBanner role="alert">
+            {typeof error === "string"
+              ? error
+              : "An unexpected error occurred."}
+          </ErrorBanner>
+        ) : undefined}
+        {content}
+      </ModeContainer>
+    );
+  };
+
+  if (toMode === TypeNavigationMode.FORM) {
+    const formContent =
+      targetTypeName && targetTypeInfo ? (
+        <TypeInfoForm
+          typeInfoName={targetTypeName as string}
+          primaryFieldValue={targetPrimaryFieldValue as string}
+          typeInfo={targetTypeInfo as TypeInfo}
+          customInputTypeMap={customInputTypeMap}
+          value={typeInfoDataItem}
+          operation={toOperation}
+          onCancel={onCloseCurrentNavHistoryItem}
+          onSubmit={onSubmit}
+          onNavigateToType={onNavigateToType}
+        />
+      ) : undefined;
+
+    return renderModeContent(
+      formContent,
+      formLoading,
+      "Loading form data…",
+      formError,
+    );
+  }
+
+  if (toMode === TypeNavigationMode.SEARCH_ITEMS) {
+    const searchContent =
+      targetTypeName && targetTypeInfo ? (
+        <ObjectSearch
+          operation={toOperation}
+          typeInfoMap={typeInfoMap}
+          typeInfoName={targetTypeName}
+          typeInfo={targetTypeInfo}
+          listItemsConfig={listItemsConfig}
+          onListItemsConfigChange={setListItemsConfig}
+          listItemsResults={searchItemsResults}
+          onNavigateToType={onNavigateToType}
+          customInputTypeMap={customInputTypeMap}
+          selectable={selectable}
+          selectedIndices={selectedIndices}
+          onSelectedIndicesChange={setSelectedIndices}
+        />
+      ) : undefined;
+
+    return renderModeContent(
+      searchContent,
+      searchItemsLoading,
+      "Loading search results…",
+      searchItemsError,
+    );
+  }
+
+  if (toMode === TypeNavigationMode.RELATED_ITEMS) {
+    const relatedContent =
+      targetTypeName && targetTypeInfo ? (
+        <ObjectSearch
+          operation={toOperation}
+          typeInfoMap={typeInfoMap}
+          typeInfoName={targetTypeName}
+          typeInfo={targetTypeInfo}
+          listItemsConfig={listRelationshipsConfig}
+          onListItemsConfigChange={onListRelationshipsConfigChange}
+          listItemsResults={relatedItemsResults}
+          onNavigateToType={onNavigateToType}
+          customInputTypeMap={customInputTypeMap}
+          selectable={relatedSelectable}
+          selectedIndices={relatedSelectedIndices}
+          onSelectedIndicesChange={setRelatedSelectedIndices}
+          hideSearchControls
+        />
+      ) : undefined;
+
+    return renderModeContent(
+      relatedContent,
+      relatedItemsLoading,
+      "Loading related items…",
+      relatedItemsError,
+    );
+  }
+
+  return undefined;
 };
