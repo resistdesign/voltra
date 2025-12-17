@@ -92,6 +92,8 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
 
           if (hasDefaultValue) {
             newItem[fld] = defaultValue;
+          } else if (tIF.array) {
+            newItem[fld] = [];
           }
         }
       }
@@ -104,10 +106,12 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   const hasChanged = internalValue !== initialValue;
   const onFieldChange = useCallback(
     (nameOrIndex: NameOrIndex, newFieldValue: any) => {
-      setInternalValue((prev) => ({
-        ...prev,
-        [nameOrIndex]: newFieldValue,
-      }));
+      if (typeof nameOrIndex === "string") {
+        setInternalValue((prev) => ({
+          ...prev,
+          [nameOrIndex]: newFieldValue,
+        }));
+      }
     },
     [],
   );

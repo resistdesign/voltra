@@ -1,3 +1,4 @@
+import { ArrayInput } from "./Inputs/ArrayInput";
 import { CustomInputComponentMap, InputComponent, InputProps } from "./Types";
 import { StringInput } from "./Inputs/Primitives/StringInput";
 import { NumberInput } from "./Inputs/Primitives/NumberInput";
@@ -97,7 +98,6 @@ export const getCustomInputType = (
 
 export const getInputType = (
   typeName: string,
-  // TODO: Add support for arrays.
   array?: boolean,
   isSelect?: boolean,
   allowCustomSelection?: boolean,
@@ -105,6 +105,10 @@ export const getInputType = (
   customInputTypeMap?: CustomInputComponentMap,
 ): InputComponent<any> | undefined => {
   let inputType: InputComponent<any> | undefined = undefined;
+
+  if (array) {
+    return ArrayInput;
+  }
 
   if (customInputType && customInputTypeMap) {
     inputType = getCustomInputType(customInputType, customInputTypeMap);
