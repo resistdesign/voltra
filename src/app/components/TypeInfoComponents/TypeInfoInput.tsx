@@ -48,19 +48,33 @@ export const TypeInfoInput: FC<TypeInfoInputProps> = ({
     tags = {},
   } = typeInfoField;
   const { label = "", allowCustomSelection, customType, hidden } = tags;
+  const normalizedValue = useMemo(
+    () => (array ? (Array.isArray(fieldValue) ? fieldValue : []) : fieldValue),
+    [array, fieldValue],
+  );
   const InputComponent = useMemo(() => {
     if (!hidden && !(ignoreTypeReferences && typeReference)) {
       const isSelect = possibleValues.length > 0;
-      return typeReference
-        ? ObjectSelector
-        : getInputType(
+
+      return array
+        ? getInputType(
             fieldType,
             array,
             isSelect,
             allowCustomSelection,
             customType,
             customInputTypeMap,
-          );
+          )
+        : typeReference
+          ? ObjectSelector
+          : getInputType(
+              fieldType,
+              array,
+              isSelect,
+              allowCustomSelection,
+              customType,
+              customInputTypeMap,
+            );
     }
   }, [
     fieldType,
@@ -81,10 +95,11 @@ export const TypeInfoInput: FC<TypeInfoInputProps> = ({
         operation={operation}
         nameOrIndex={nameOrIndex}
         typeInfoField={typeInfoField}
-        value={fieldValue}
+        value={normalizedValue}
         onChange={onChange}
         options={tags}
         onNavigateToType={onNavigateToType}
+        customInputTypeMap={customInputTypeMap}
       />
       <LabelText>&nbsp;{label}</LabelText>
     </label>

@@ -66,6 +66,7 @@ export type InputProps<ElementPropsType, ValueType = any> = Omit<
   onChange: (nameOrIndex: NameOrIndex, value: any) => void;
   options?: SupportedFieldTags;
   onNavigateToType?: (nameOrIndex: NameOrIndex) => void;
+  customInputTypeMap?: CustomInputComponentMap;
 };
 
 export type InputComponent<ElementPropsType> = FC<
