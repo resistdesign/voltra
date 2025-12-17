@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import styled, { keyframes } from "styled-components";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
@@ -22,6 +23,45 @@ import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
 import { ItemRelationshipInfoKeys } from "../../../common/ItemRelationshipInfoTypes";
+
+const ModeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+`;
+
+const spin = keyframes`
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const Spinner = styled.span`
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  border: 0.15em solid currentColor;
+  border-top-color: transparent;
+  display: inline-block;
+  animation: ${spin} 1s linear infinite;
+`;
+
+const LoadingNotice = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--muted-color, #666);
+  font-size: 0.9em;
+`;
+
+const ErrorBanner = styled.div`
+  padding: 0.75em 1em;
+  border-radius: 8px;
+  border: 1px solid #f6cacc;
+  background-color: #fff5f5;
+  color: #6f1d1f;
+  font-size: 0.95em;
+`;
 
 export type TypeOperationConfig =
   | {
@@ -251,52 +291,94 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   // TODO: How to handle loading states?
   // TODO: Delete selected items in search items mode.
   // TODO: Delete selected items in related items mode.
-  return toMode === TypeNavigationMode.FORM ? (
-    <TypeInfoForm
-      typeInfoName={targetTypeName as string}
-      primaryFieldValue={targetPrimaryFieldValue as string}
-      typeInfo={targetTypeInfo as TypeInfo}
-      customInputTypeMap={customInputTypeMap}
-      value={typeInfoDataItem}
-      operation={toOperation}
-      onCancel={onCloseCurrentNavHistoryItem}
-      onSubmit={onSubmit}
-      onNavigateToType={onNavigateToType}
-    />
-  ) : toMode === TypeNavigationMode.SEARCH_ITEMS ? (
-    targetTypeName && targetTypeInfo ? (
-      <ObjectSearch
-        operation={toOperation}
-        typeInfoMap={typeInfoMap}
-        typeInfoName={targetTypeName}
-        typeInfo={targetTypeInfo}
-        listItemsConfig={listItemsConfig}
-        onListItemsConfigChange={setListItemsConfig}
-        listItemsResults={searchItemsResults}
-        onNavigateToType={onNavigateToType}
-        customInputTypeMap={customInputTypeMap}
-        selectable={selectable}
-        selectedIndices={selectedIndices}
-        onSelectedIndicesChange={setSelectedIndices}
-      />
-    ) : undefined
-  ) : toMode === TypeNavigationMode.RELATED_ITEMS ? (
-    targetTypeName && targetTypeInfo ? (
-      <ObjectSearch
-        operation={toOperation}
-        typeInfoMap={typeInfoMap}
-        typeInfoName={targetTypeName}
-        typeInfo={targetTypeInfo}
-        listItemsConfig={listRelationshipsConfig}
-        onListItemsConfigChange={onListRelationshipsConfigChange}
-        listItemsResults={relatedItemsResults}
-        onNavigateToType={onNavigateToType}
-        customInputTypeMap={customInputTypeMap}
-        selectable={relatedSelectable}
-        selectedIndices={relatedSelectedIndices}
-        onSelectedIndicesChange={setRelatedSelectedIndices}
-        hideSearchControls
-      />
-    ) : undefined
-  ) : undefined;
+  const renderWithFeedback = (
+    content: JSX.Element | undefined,
+    { loading, error }: { loading?: boolean; error?: unknown },
+  ) => {
+    if (!content) {
+      return undefined;
+    }
+
+    const errorMessage =
+      typeof error === "string"
+        ? error
+        : error instanceof Error
+          ? error.message
+          : error
+            ? String(error)
+            : undefined;
+
+    return (
+      <ModeContainer>
+        {loading ? (
+          <LoadingNotice aria-live="polite">
+            <Spinner aria-hidden="true" />
+            <span>Loading...</span>
+          </LoadingNotice>
+        ) : undefined}
+        {errorMessage ? (
+          <ErrorBanner role="alert">{errorMessage}</ErrorBanner>
+        ) : undefined}
+        {content}
+      </ModeContainer>
+    );
+  };
+
+  return toMode === TypeNavigationMode.FORM
+    ? renderWithFeedback(
+        <TypeInfoForm
+          typeInfoName={targetTypeName as string}
+          primaryFieldValue={targetPrimaryFieldValue as string}
+          typeInfo={targetTypeInfo as TypeInfo}
+          customInputTypeMap={customInputTypeMap}
+          value={typeInfoDataItem}
+          operation={toOperation}
+          onCancel={onCloseCurrentNavHistoryItem}
+          onSubmit={onSubmit}
+          onNavigateToType={onNavigateToType}
+        />,
+        { loading: formLoading, error: formError },
+      )
+    : toMode === TypeNavigationMode.SEARCH_ITEMS
+      ? renderWithFeedback(
+          targetTypeName && targetTypeInfo ? (
+            <ObjectSearch
+              operation={toOperation}
+              typeInfoMap={typeInfoMap}
+              typeInfoName={targetTypeName}
+              typeInfo={targetTypeInfo}
+              listItemsConfig={listItemsConfig}
+              onListItemsConfigChange={setListItemsConfig}
+              listItemsResults={searchItemsResults}
+              onNavigateToType={onNavigateToType}
+              customInputTypeMap={customInputTypeMap}
+              selectable={selectable}
+              selectedIndices={selectedIndices}
+              onSelectedIndicesChange={setSelectedIndices}
+            />
+          ) : undefined,
+          { loading: searchItemsLoading, error: searchItemsError },
+        )
+      : toMode === TypeNavigationMode.RELATED_ITEMS
+        ? renderWithFeedback(
+            targetTypeName && targetTypeInfo ? (
+              <ObjectSearch
+                operation={toOperation}
+                typeInfoMap={typeInfoMap}
+                typeInfoName={targetTypeName}
+                typeInfo={targetTypeInfo}
+                listItemsConfig={listRelationshipsConfig}
+                onListItemsConfigChange={onListRelationshipsConfigChange}
+                listItemsResults={relatedItemsResults}
+                onNavigateToType={onNavigateToType}
+                customInputTypeMap={customInputTypeMap}
+                selectable={relatedSelectable}
+                selectedIndices={relatedSelectedIndices}
+                onSelectedIndicesChange={setRelatedSelectedIndices}
+                hideSearchControls
+              />
+            ) : undefined,
+            { loading: relatedItemsLoading, error: relatedItemsError },
+          )
+        : undefined;
 };
