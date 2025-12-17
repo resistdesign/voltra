@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { FC, JSX, useCallback, useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
@@ -22,7 +22,10 @@ import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
 import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
-import { ItemRelationshipInfoKeys } from "../../../common/ItemRelationshipInfoTypes";
+import {
+  ItemRelationshipInfoKeys,
+  ItemRelationshipOriginItemInfo,
+} from "../../../common/ItemRelationshipInfoTypes";
 
 const ModeContainer = styled.div`
   display: flex;
@@ -50,7 +53,7 @@ const LoadingNotice = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
-  color: var(--muted-color, #666);
+  color: #666666;
   font-size: 0.9em;
 `;
 
@@ -227,9 +230,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const selectedFields = useMemo<(keyof TypeInfoDataItem)[] | undefined>(
     () =>
-      (targetTypeInfo as
-        | (TypeInfo & { selectedFields?: (keyof TypeInfoDataItem)[] })
-        | undefined)?.selectedFields,
+      (
+        targetTypeInfo as
+          | (TypeInfo & { selectedFields?: (keyof TypeInfoDataItem)[] })
+          | undefined
+      )?.selectedFields,
     [targetTypeInfo],
   );
 
@@ -242,22 +247,27 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return;
     }
 
-    const relationshipItemOrigin = {
+    const relationshipItemOrigin: ItemRelationshipOriginItemInfo = {
       [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
       [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
       [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]:
         targetPrimaryFieldValue ?? fromTypePrimaryFieldValue,
     };
 
-    if (!relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]) {
+    if (
+      !relationshipItemOrigin[
+        ItemRelationshipInfoKeys.fromTypePrimaryFieldValue
+      ]
+    ) {
       return;
     }
 
     setListRelationshipsConfig((prevConfig) => {
       const originsMatch = Object.entries(relationshipItemOrigin).every(
         ([key, value]) =>
-          prevConfig.relationshipItemOrigin[key as ItemRelationshipInfoKeys] ===
-          value,
+          prevConfig.relationshipItemOrigin[
+            key as keyof ItemRelationshipOriginItemInfo
+          ] === value,
       );
       const nextConfig = {
         ...prevConfig,
