@@ -107,6 +107,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     fromTypeName,
     fromTypeFieldName,
+    fromTypePrimaryFieldValue,
     toOperation = baseOperation,
     toMode,
     toTypePrimaryFieldValue,
@@ -184,7 +185,67 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     }
   }, [toMode, targetTypeName, listItemsConfig, typeInfoORMAPIService]);
 
-  // TODO: Request a new list when the list relationships config changes.
+  const selectedFields = useMemo<(keyof TypeInfoDataItem)[] | undefined>(
+    () =>
+      (targetTypeInfo as
+        | (TypeInfo & { selectedFields?: (keyof TypeInfoDataItem)[] })
+        | undefined)?.selectedFields,
+    [targetTypeInfo],
+  );
+
+  useEffect(() => {
+    if (
+      toMode !== TypeNavigationMode.RELATED_ITEMS ||
+      !fromTypeName ||
+      !fromTypeFieldName
+    ) {
+      return;
+    }
+
+    const relationshipItemOrigin = {
+      [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
+      [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
+      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]:
+        targetPrimaryFieldValue ?? fromTypePrimaryFieldValue,
+    };
+
+    if (!relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]) {
+      return;
+    }
+
+    setListRelationshipsConfig((prevConfig) => {
+      const originsMatch = Object.entries(relationshipItemOrigin).every(
+        ([key, value]) =>
+          prevConfig.relationshipItemOrigin[key as ItemRelationshipInfoKeys] ===
+          value,
+      );
+      const nextConfig = {
+        ...prevConfig,
+        relationshipItemOrigin,
+      };
+
+      return originsMatch ? prevConfig : nextConfig;
+    });
+
+    const listRelatedItemsConfig: ListRelationshipsConfig = {
+      ...listRelationshipsConfig,
+      relationshipItemOrigin,
+    };
+
+    typeInfoORMAPIService.listRelatedItems(
+      listRelatedItemsConfig,
+      selectedFields,
+    );
+  }, [
+    toMode,
+    fromTypeName,
+    fromTypeFieldName,
+    fromTypePrimaryFieldValue,
+    targetPrimaryFieldValue,
+    listRelationshipsConfig,
+    typeInfoORMAPIService,
+    selectedFields,
+  ]);
 
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
   // TODO: How to handle loading states?
