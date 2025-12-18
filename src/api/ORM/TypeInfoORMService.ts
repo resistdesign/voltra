@@ -635,11 +635,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         await driver.createItem(cleanedItem);
       } else {
         // VALIDATION: Need to update when the field is not an array.
-        const {
-          items: [
-            { [ItemRelationshipInfoIdentifyingKeys.id]: existingIdentifier },
-          ] = [{} as ItemRelationshipInfo],
-        } = (await driver.listItems(
+        const listItemsResult = (await driver.listItems(
           {
             criteria: {
               logicalOperator: LogicalOperators.AND,
@@ -659,7 +655,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             itemsPerPage: 1,
           },
           [ItemRelationshipInfoIdentifyingKeys.id],
-        )) as ListItemsResults<ItemRelationshipInfo>;
+        )) as ListItemsResults<ItemRelationshipInfo> | null;
+
+        if (!listItemsResult) {
+          throw {
+            message: TypeInfoORMServiceError.INVALID_RELATIONSHIP_DRIVER,
+            typeName: fromTypeName,
+            fromTypeFieldName,
+          };
+        }
+
+        const listResult: ListItemsResults<ItemRelationshipInfo> =
+          listItemsResult || { items: [] };
+        const [{ id: existingIdentifier } = {} as ItemRelationshipInfo] =
+          listResult.items || [];
 
         if (existingIdentifier) {
           await driver.updateItem(existingIdentifier, cleanedItem);
