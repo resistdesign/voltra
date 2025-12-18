@@ -543,7 +543,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     fromTypeFieldName: string,
     relationshipItem?: BaseItemRelationshipInfo,
   ): { typeInfo: TypeInfo; field: TypeInfoField } => {
-    const typeInfo = this.config.typeInfoMap[fromTypeName];
+    const { typeInfoMap } = this.config;
+    if (!typeInfoMap) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName: fromTypeName,
+        fromTypeFieldName,
+        relationshipItem,
+      };
+    }
+
+    const typeInfo = typeInfoMap[fromTypeName];
 
     if (!typeInfo) {
       throw {
