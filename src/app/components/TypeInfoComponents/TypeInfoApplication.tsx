@@ -32,6 +32,7 @@ import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
 import {
+  BaseItemRelationshipInfo,
   ItemRelationshipInfoKeys,
   ItemRelationshipOriginItemInfo,
 } from "../../../common/ItemRelationshipInfoTypes";
@@ -196,6 +197,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const relationshipAllowsMultiple = useMemo<boolean>(
     () => relationshipFieldInfo?.array ?? false,
     [relationshipFieldInfo],
+  );
+  const selectingRelatedItems = useMemo(
+    () =>
+      relationshipMode &&
+      toMode === TypeNavigationMode.SEARCH_ITEMS &&
+      !!fromTypeFieldName,
+    [relationshipMode, toMode, fromTypeFieldName],
   );
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
@@ -419,10 +427,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     [relationshipAllowsMultiple],
   );
   const { items: searchItemsList = [] } = searchItemsResults;
-  const selectedSearchItems = useMemo<Partial<TypeInfoDataItem>[]>(
-    () => selectedIndices.map((index) => searchItemsList[index]).filter(Boolean),
-    [selectedIndices, searchItemsList],
-  );
   const { items: relatedItemsList = [] } = relatedItemsResults;
   const selectedRelatedItems = useMemo<Partial<TypeInfoDataItem>[]>(
     () =>
@@ -431,15 +435,66 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         .filter(Boolean),
     [relatedSelectedIndices, relatedItemsList],
   );
-  const selectedSearchPrimaryFieldValues = useMemo<string[]>(
-    () =>
-      relationshipMode && targetTypePrimaryFieldName
-        ? selectedSearchItems
-            .map((item) => item[targetTypePrimaryFieldName])
-            .filter((value) => typeof value !== "undefined" && value !== null)
-            .map((value) => `${value}`)
-        : [],
-    [relationshipMode, targetTypePrimaryFieldName, selectedSearchItems],
+  const selectedSearchRelationships = useMemo<BaseItemRelationshipInfo[]>(
+    () => {
+      if (
+        !selectingRelatedItems ||
+        !fromTypeFieldName ||
+        !targetTypePrimaryFieldName ||
+        !relationshipItemOrigin
+      ) {
+        return [];
+      }
+
+      const originTypeName =
+        relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypeName];
+      const originFieldName =
+        relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypeFieldName];
+      const originPrimaryFieldValue =
+        relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue];
+
+      if (!originTypeName || !originFieldName || !originPrimaryFieldValue) {
+        return [];
+      }
+
+      const getRelationshipItem = (
+        primaryFieldValue: Partial<TypeInfoDataItem>[keyof TypeInfoDataItem],
+      ): BaseItemRelationshipInfo | undefined => {
+        if (typeof primaryFieldValue === "undefined" || primaryFieldValue === null) {
+          return undefined;
+        }
+
+        return {
+          [ItemRelationshipInfoKeys.fromTypeName]: originTypeName,
+          [ItemRelationshipInfoKeys.fromTypeFieldName]: originFieldName,
+          [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: `${originPrimaryFieldValue}`,
+          [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: `${primaryFieldValue}`,
+        };
+      };
+
+      const relationships = selectedIndices
+        .map((index) => searchItemsList[index])
+        .map((item) => item?.[targetTypePrimaryFieldName])
+        .map(getRelationshipItem)
+        .filter(Boolean) as BaseItemRelationshipInfo[];
+
+      return relationshipAllowsMultiple
+        ? relationships
+        : relationships.slice(0, 1);
+    },
+    [
+      selectingRelatedItems,
+      fromTypeFieldName,
+      targetTypePrimaryFieldName,
+      relationshipItemOrigin,
+      selectedIndices,
+      searchItemsList,
+      relationshipAllowsMultiple,
+    ],
+  );
+  const canAddRelatedItems = useMemo<boolean>(
+    () => selectingRelatedItems && selectedSearchRelationships.length > 0,
+    [selectingRelatedItems, selectedSearchRelationships],
   );
   const selectedRelatedPrimaryFieldValues = useMemo<string[]>(
     () =>
@@ -450,19 +505,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
             .map((value) => `${value}`)
         : [],
     [relationshipMode, targetTypePrimaryFieldName, selectedRelatedItems],
-  );
-  const canCreateRelationships = useMemo<boolean>(
-    () =>
-      relationshipMode &&
-      !!relationshipItemOrigin?.[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue] &&
-      !!targetTypePrimaryFieldName &&
-      selectedSearchPrimaryFieldValues.length > 0,
-    [
-      relationshipMode,
-      relationshipItemOrigin,
-      selectedSearchPrimaryFieldValues,
-      targetTypePrimaryFieldName,
-    ],
   );
   const canDeleteRelationships = useMemo<boolean>(
     () =>
@@ -477,29 +519,22 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       targetTypePrimaryFieldName,
     ],
   );
-  const onCreateRelationships = useCallback(() => {
-    if (!relationshipItemOrigin || !canCreateRelationships) {
+  const onAddRelatedRelationships = useCallback(() => {
+    if (!canAddRelatedItems || selectedSearchRelationships.length === 0) {
       return;
     }
 
-    const relatedPrimaryValues = relationshipAllowsMultiple
-      ? selectedSearchPrimaryFieldValues
-      : selectedSearchPrimaryFieldValues.slice(0, 1);
-
-    relatedPrimaryValues.forEach((relatedPrimaryValue) => {
-      typeInfoORMAPIService.createRelationship({
-        ...relationshipItemOrigin,
-        [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: relatedPrimaryValue,
-      });
+    selectedSearchRelationships.forEach((relationshipItem) => {
+      typeInfoORMAPIService.createRelationship(relationshipItem);
     });
 
+    listRelatedItemsWithOrigin();
     setSelectedIndices([]);
   }, [
-    relationshipItemOrigin,
-    canCreateRelationships,
-    relationshipAllowsMultiple,
-    selectedSearchPrimaryFieldValues,
+    canAddRelatedItems,
+    selectedSearchRelationships,
     typeInfoORMAPIService,
+    listRelatedItemsWithOrigin,
   ]);
   const onDeleteRelationships = useCallback(() => {
     if (!relationshipItemOrigin || !canDeleteRelationships) {
@@ -590,14 +625,14 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       ? renderWithFeedback(
           targetTypeName && targetTypeInfo ? (
             <>
-              {relationshipMode ? (
+              {selectingRelatedItems ? (
                 <ActionsBar>
                   <IndexButton
                     type="button"
-                    disabled={!canCreateRelationships}
-                    onClick={onCreateRelationships}
+                    disabled={!canAddRelatedItems}
+                    onClick={onAddRelatedRelationships}
                   >
-                    Relate selected
+                    Add related
                   </IndexButton>
                   <IndexButton
                     type="button"
