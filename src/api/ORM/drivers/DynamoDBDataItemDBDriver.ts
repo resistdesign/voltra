@@ -1,9 +1,10 @@
+// noinspection ES6PreferShortImport
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "./common";
+} from "./common/Types";
 import {
   AttributeValue,
   DeleteItemCommand,
