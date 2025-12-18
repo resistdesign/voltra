@@ -1,9 +1,18 @@
-import { FC, JSX, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FC,
+  JSX,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styled, { keyframes } from "styled-components";
 import { TypeInfoForm } from "./TypeInfoApplication/TypeInfoForm";
 import {
   TypeInfo,
   TypeInfoDataItem,
+  TypeInfoField,
   TypeInfoMap,
   TypeOperation,
 } from "../../../common/TypeParsing/TypeInfo";
@@ -26,6 +35,7 @@ import {
   ItemRelationshipInfoKeys,
   ItemRelationshipOriginItemInfo,
 } from "../../../common/ItemRelationshipInfoTypes";
+import { IndexButton } from "../Basic/IndexButton";
 
 const ModeContainer = styled.div`
   display: flex;
@@ -64,6 +74,13 @@ const ErrorBanner = styled.div`
   background-color: #fff5f5;
   color: #6f1d1f;
   font-size: 0.95em;
+`;
+
+const ActionsBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  align-items: center;
 `;
 
 export type TypeOperationConfig =
@@ -167,28 +184,66 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => toTypePrimaryFieldValue ?? basePrimaryFieldValue,
     [toTypePrimaryFieldValue, basePrimaryFieldValue],
   );
+  const relationshipFieldInfo = useMemo<TypeInfoField | undefined>(() => {
+    if (!relationshipMode || !fromTypeFieldName) {
+      return undefined;
+    }
+
+    const { fields = {} } = typeInfoMap[fromTypeName] ?? {};
+
+    return fields[fromTypeFieldName];
+  }, [relationshipMode, fromTypeFieldName, fromTypeName, typeInfoMap]);
+  const relationshipAllowsMultiple = useMemo<boolean>(
+    () => relationshipFieldInfo?.array ?? false,
+    [relationshipFieldInfo],
+  );
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,
     relationshipMode,
     fromTypeName,
     fromTypeFieldName,
   });
+  const targetTypePrimaryFieldName = useMemo<string | undefined>(
+    () => targetTypeInfo?.primaryField,
+    [targetTypeInfo],
+  );
+  const relationshipItemOrigin = useMemo<
+    ItemRelationshipOriginItemInfo | undefined
+  >(() => {
+    if (!relationshipMode || !fromTypeFieldName) {
+      return undefined;
+    }
+
+    const primaryFieldValue =
+      targetPrimaryFieldValue ?? fromTypePrimaryFieldValue;
+
+    if (!primaryFieldValue) {
+      return undefined;
+    }
+
+    return {
+      [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
+      [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
+      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: primaryFieldValue,
+    };
+  }, [
+    relationshipMode,
+    fromTypeFieldName,
+    fromTypeName,
+    targetPrimaryFieldValue,
+    fromTypePrimaryFieldValue,
+  ]);
   const onListRelationshipsConfigChange = useCallback(
     ({ cursor, itemsPerPage }: ListItemsConfig) => {
-      if (targetPrimaryFieldValue) {
+      if (relationshipItemOrigin) {
         setListRelationshipsConfig({
           cursor,
           itemsPerPage,
-          relationshipItemOrigin: {
-            [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
-            [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
-            [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]:
-              targetPrimaryFieldValue,
-          },
+          relationshipItemOrigin,
         });
       }
     },
-    [fromTypeName, fromTypeFieldName, targetPrimaryFieldValue],
+    [relationshipItemOrigin],
   );
   const onSubmit = useCallback(
     (newItem: TypeInfoDataItem) => {
@@ -237,28 +292,33 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       )?.selectedFields,
     [targetTypeInfo],
   );
+  useEffect(() => {
+    if (relationshipMode) {
+      const selectionEnabled = !!relationshipFieldInfo;
+
+      setSelectable(selectionEnabled);
+      setRelatedSelectable(selectionEnabled);
+
+      if (!relationshipAllowsMultiple) {
+        setSelectedIndices((prevSelectedIndices) =>
+          prevSelectedIndices.length > 0
+            ? prevSelectedIndices.slice(-1)
+            : prevSelectedIndices,
+        );
+        setRelatedSelectedIndices((prevSelectedIndices) =>
+          prevSelectedIndices.length > 0
+            ? prevSelectedIndices.slice(-1)
+            : prevSelectedIndices,
+        );
+      }
+    } else {
+      setSelectable(true);
+      setRelatedSelectable(true);
+    }
+  }, [relationshipMode, relationshipFieldInfo, relationshipAllowsMultiple]);
 
   useEffect(() => {
-    if (
-      toMode !== TypeNavigationMode.RELATED_ITEMS ||
-      !fromTypeName ||
-      !fromTypeFieldName
-    ) {
-      return;
-    }
-
-    const relationshipItemOrigin: ItemRelationshipOriginItemInfo = {
-      [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
-      [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
-      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]:
-        targetPrimaryFieldValue ?? fromTypePrimaryFieldValue,
-    };
-
-    if (
-      !relationshipItemOrigin[
-        ItemRelationshipInfoKeys.fromTypePrimaryFieldValue
-      ]
-    ) {
+    if (!relationshipItemOrigin) {
       return;
     }
 
@@ -276,6 +336,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
       return originsMatch ? prevConfig : nextConfig;
     });
+  }, [relationshipItemOrigin]);
+
+  const listRelatedItemsWithOrigin = useCallback(() => {
+    if (!relationshipItemOrigin) {
+      return;
+    }
 
     const listRelatedItemsConfig: ListRelationshipsConfig = {
       ...listRelationshipsConfig,
@@ -287,20 +353,22 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       selectedFields,
     );
   }, [
-    toMode,
-    fromTypeName,
-    fromTypeFieldName,
-    fromTypePrimaryFieldValue,
-    targetPrimaryFieldValue,
     listRelationshipsConfig,
-    typeInfoORMAPIService,
+    relationshipItemOrigin,
     selectedFields,
+    typeInfoORMAPIService,
   ]);
+
+  useEffect(() => {
+    if (toMode !== TypeNavigationMode.RELATED_ITEMS) {
+      return;
+    }
+
+    listRelatedItemsWithOrigin();
+  }, [toMode, listRelatedItemsWithOrigin]);
 
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
   // TODO: How to handle loading states?
-  // TODO: Delete selected items in search items mode.
-  // TODO: Delete selected items in related items mode.
   const renderWithFeedback = (
     content: JSX.Element | undefined,
     { loading, error }: { loading?: boolean; error?: unknown },
@@ -334,6 +402,175 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     );
   };
 
+  const onSelectedIndicesChange = useCallback(
+    (indices: number[]) => {
+      setSelectedIndices(
+        relationshipAllowsMultiple ? indices : indices.slice(-1),
+      );
+    },
+    [relationshipAllowsMultiple],
+  );
+  const onRelatedSelectedIndicesChange = useCallback(
+    (indices: number[]) => {
+      setRelatedSelectedIndices(
+        relationshipAllowsMultiple ? indices : indices.slice(-1),
+      );
+    },
+    [relationshipAllowsMultiple],
+  );
+  const { items: searchItemsList = [] } = searchItemsResults;
+  const selectedSearchItems = useMemo<Partial<TypeInfoDataItem>[]>(
+    () => selectedIndices.map((index) => searchItemsList[index]).filter(Boolean),
+    [selectedIndices, searchItemsList],
+  );
+  const { items: relatedItemsList = [] } = relatedItemsResults;
+  const selectedRelatedItems = useMemo<Partial<TypeInfoDataItem>[]>(
+    () =>
+      relatedSelectedIndices
+        .map((index) => relatedItemsList[index])
+        .filter(Boolean),
+    [relatedSelectedIndices, relatedItemsList],
+  );
+  const selectedSearchPrimaryFieldValues = useMemo<string[]>(
+    () =>
+      relationshipMode && targetTypePrimaryFieldName
+        ? selectedSearchItems
+            .map((item) => item[targetTypePrimaryFieldName])
+            .filter((value) => typeof value !== "undefined" && value !== null)
+            .map((value) => `${value}`)
+        : [],
+    [relationshipMode, targetTypePrimaryFieldName, selectedSearchItems],
+  );
+  const selectedRelatedPrimaryFieldValues = useMemo<string[]>(
+    () =>
+      relationshipMode && targetTypePrimaryFieldName
+        ? selectedRelatedItems
+            .map((item) => item[targetTypePrimaryFieldName])
+            .filter((value) => typeof value !== "undefined" && value !== null)
+            .map((value) => `${value}`)
+        : [],
+    [relationshipMode, targetTypePrimaryFieldName, selectedRelatedItems],
+  );
+  const canCreateRelationships = useMemo<boolean>(
+    () =>
+      relationshipMode &&
+      !!relationshipItemOrigin?.[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue] &&
+      !!targetTypePrimaryFieldName &&
+      selectedSearchPrimaryFieldValues.length > 0,
+    [
+      relationshipMode,
+      relationshipItemOrigin,
+      selectedSearchPrimaryFieldValues,
+      targetTypePrimaryFieldName,
+    ],
+  );
+  const canDeleteRelationships = useMemo<boolean>(
+    () =>
+      relationshipMode &&
+      !!relationshipItemOrigin?.[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue] &&
+      !!targetTypePrimaryFieldName &&
+      selectedRelatedPrimaryFieldValues.length > 0,
+    [
+      relationshipMode,
+      relationshipItemOrigin,
+      selectedRelatedPrimaryFieldValues,
+      targetTypePrimaryFieldName,
+    ],
+  );
+  const onCreateRelationships = useCallback(() => {
+    if (!relationshipItemOrigin || !canCreateRelationships) {
+      return;
+    }
+
+    const relatedPrimaryValues = relationshipAllowsMultiple
+      ? selectedSearchPrimaryFieldValues
+      : selectedSearchPrimaryFieldValues.slice(0, 1);
+
+    relatedPrimaryValues.forEach((relatedPrimaryValue) => {
+      typeInfoORMAPIService.createRelationship({
+        ...relationshipItemOrigin,
+        [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: relatedPrimaryValue,
+      });
+    });
+
+    setSelectedIndices([]);
+  }, [
+    relationshipItemOrigin,
+    canCreateRelationships,
+    relationshipAllowsMultiple,
+    selectedSearchPrimaryFieldValues,
+    typeInfoORMAPIService,
+  ]);
+  const onDeleteRelationships = useCallback(() => {
+    if (!relationshipItemOrigin || !canDeleteRelationships) {
+      return;
+    }
+
+    const relatedPrimaryValues = relationshipAllowsMultiple
+      ? selectedRelatedPrimaryFieldValues
+      : selectedRelatedPrimaryFieldValues.slice(0, 1);
+
+    relatedPrimaryValues.forEach((relatedPrimaryValue) => {
+      typeInfoORMAPIService.deleteRelationship({
+        ...relationshipItemOrigin,
+        [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: relatedPrimaryValue,
+      });
+    });
+
+    setRelatedSelectedIndices([]);
+  }, [
+    relationshipItemOrigin,
+    canDeleteRelationships,
+    relationshipAllowsMultiple,
+    selectedRelatedPrimaryFieldValues,
+    typeInfoORMAPIService,
+  ]);
+  const onNavigateToSearchMode = useCallback(() => {
+    if (!relationshipItemOrigin || !relationshipMode || !fromTypeFieldName) {
+      return;
+    }
+
+    onNavigateToType({
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue:
+        relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue],
+      toOperation,
+      toMode: TypeNavigationMode.SEARCH_ITEMS,
+    });
+  }, [
+    relationshipItemOrigin,
+    relationshipMode,
+    fromTypeFieldName,
+    fromTypeName,
+    onNavigateToType,
+    toOperation,
+  ]);
+  const createRelationshipLoadingRef = useRef<boolean>();
+  const deleteRelationshipLoadingRef = useRef<boolean>();
+  const createRelationshipLoading = typeInfoORMAPIState.createRelationship?.loading;
+  const deleteRelationshipLoading = typeInfoORMAPIState.deleteRelationship?.loading;
+
+  useEffect(() => {
+    const createFinished =
+      createRelationshipLoadingRef.current && !createRelationshipLoading;
+    const deleteFinished =
+      deleteRelationshipLoadingRef.current && !deleteRelationshipLoading;
+
+    if (relationshipMode && (createFinished || deleteFinished)) {
+      listRelatedItemsWithOrigin();
+      setRelatedSelectedIndices([]);
+    }
+
+    createRelationshipLoadingRef.current = !!createRelationshipLoading;
+    deleteRelationshipLoadingRef.current = !!deleteRelationshipLoading;
+  }, [
+    relationshipMode,
+    createRelationshipLoading,
+    deleteRelationshipLoading,
+    listRelatedItemsWithOrigin,
+  ]);
+
   return toMode === TypeNavigationMode.FORM
     ? renderWithFeedback(
         <TypeInfoForm
@@ -352,41 +589,76 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     : toMode === TypeNavigationMode.SEARCH_ITEMS
       ? renderWithFeedback(
           targetTypeName && targetTypeInfo ? (
-            <ObjectSearch
-              operation={toOperation}
-              typeInfoMap={typeInfoMap}
-              typeInfoName={targetTypeName}
-              typeInfo={targetTypeInfo}
-              listItemsConfig={listItemsConfig}
-              onListItemsConfigChange={setListItemsConfig}
-              listItemsResults={searchItemsResults}
-              onNavigateToType={onNavigateToType}
-              customInputTypeMap={customInputTypeMap}
-              selectable={selectable}
-              selectedIndices={selectedIndices}
-              onSelectedIndicesChange={setSelectedIndices}
-            />
+            <>
+              {relationshipMode ? (
+                <ActionsBar>
+                  <IndexButton
+                    type="button"
+                    disabled={!canCreateRelationships}
+                    onClick={onCreateRelationships}
+                  >
+                    Relate selected
+                  </IndexButton>
+                  <IndexButton
+                    type="button"
+                    onClick={onCloseCurrentNavHistoryItem}
+                  >
+                    Back
+                  </IndexButton>
+                </ActionsBar>
+              ) : undefined}
+              <ObjectSearch
+                operation={toOperation}
+                typeInfoMap={typeInfoMap}
+                typeInfoName={targetTypeName}
+                typeInfo={targetTypeInfo}
+                listItemsConfig={listItemsConfig}
+                onListItemsConfigChange={setListItemsConfig}
+                listItemsResults={searchItemsResults}
+                onNavigateToType={onNavigateToType}
+                customInputTypeMap={customInputTypeMap}
+                selectable={selectable}
+                selectedIndices={selectedIndices}
+                onSelectedIndicesChange={onSelectedIndicesChange}
+              />
+            </>
           ) : undefined,
           { loading: searchItemsLoading, error: searchItemsError },
         )
       : toMode === TypeNavigationMode.RELATED_ITEMS
         ? renderWithFeedback(
             targetTypeName && targetTypeInfo ? (
-              <ObjectSearch
-                operation={toOperation}
-                typeInfoMap={typeInfoMap}
-                typeInfoName={targetTypeName}
-                typeInfo={targetTypeInfo}
-                listItemsConfig={listRelationshipsConfig}
-                onListItemsConfigChange={onListRelationshipsConfigChange}
-                listItemsResults={relatedItemsResults}
-                onNavigateToType={onNavigateToType}
-                customInputTypeMap={customInputTypeMap}
-                selectable={relatedSelectable}
-                selectedIndices={relatedSelectedIndices}
-                onSelectedIndicesChange={setRelatedSelectedIndices}
-                hideSearchControls
-              />
+              <>
+                {relationshipMode ? (
+                  <ActionsBar>
+                    <IndexButton type="button" onClick={onNavigateToSearchMode}>
+                      Add related
+                    </IndexButton>
+                    <IndexButton
+                      type="button"
+                      disabled={!canDeleteRelationships}
+                      onClick={onDeleteRelationships}
+                    >
+                      Remove selected
+                    </IndexButton>
+                  </ActionsBar>
+                ) : undefined}
+                <ObjectSearch
+                  operation={toOperation}
+                  typeInfoMap={typeInfoMap}
+                  typeInfoName={targetTypeName}
+                  typeInfo={targetTypeInfo}
+                  listItemsConfig={listRelationshipsConfig}
+                  onListItemsConfigChange={onListRelationshipsConfigChange}
+                  listItemsResults={relatedItemsResults}
+                  onNavigateToType={onNavigateToType}
+                  customInputTypeMap={customInputTypeMap}
+                  selectable={relatedSelectable}
+                  selectedIndices={relatedSelectedIndices}
+                  onSelectedIndicesChange={onRelatedSelectedIndicesChange}
+                  hideSearchControls={!relationshipMode}
+                />
+              </>
             ) : undefined,
             { loading: relatedItemsLoading, error: relatedItemsError },
           )
