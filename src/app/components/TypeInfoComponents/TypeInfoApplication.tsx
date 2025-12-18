@@ -201,9 +201,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const selectingRelatedItems = useMemo(
     () =>
       relationshipMode &&
-      toMode === TypeNavigationMode.SEARCH_ITEMS &&
-      !!fromTypeFieldName,
-    [relationshipMode, toMode, fromTypeFieldName],
+      !!fromTypeName &&
+      !!fromTypeFieldName &&
+      toMode === TypeNavigationMode.SEARCH_ITEMS,
+    [relationshipMode, fromTypeName, fromTypeFieldName, toMode],
   );
   const { targetTypeName, targetTypeInfo } = useTypeInfoState({
     typeInfoMap,

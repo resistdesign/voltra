@@ -16,12 +16,19 @@ export const TypeInfoDemo: FC = () => {
   });
 
   return (
-    <TypeInfoApplication
-      typeInfoMap={CLIENT_SIDE_DEMO_TYPE_INFO_MAP}
-      baseTypeInfoName="Person"
-      baseOperation={TypeOperation.CREATE}
-      baseMode={TypeNavigationMode.SEARCH_ITEMS}
-      typeInfoORMAPI={typeInfoORMClient}
-    />
+    <>
+      <p>
+        Navigate to a related field (for example, click the add icon next to a
+        relationship column) to open the related search view. The Add related
+        control only appears in that relationship context.
+      </p>
+      <TypeInfoApplication
+        typeInfoMap={CLIENT_SIDE_DEMO_TYPE_INFO_MAP}
+        baseTypeInfoName="Person"
+        baseOperation={TypeOperation.CREATE}
+        baseMode={TypeNavigationMode.SEARCH_ITEMS}
+        typeInfoORMAPI={typeInfoORMClient}
+      />
+    </>
   );
 };
