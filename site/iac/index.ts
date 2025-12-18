@@ -15,6 +15,7 @@ import FS from "fs";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../common/ClientSideTypeConstants";
+import { ItemRelationshipInfoIdentifyingKeys } from "../../src/common/ItemRelationshipInfoTypes";
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
@@ -46,8 +47,10 @@ const IDS = {
     GATEWAY: "APIGateway",
     FUNCTION: "APIFunction",
     BUILD_PIPELINE: "APIBuildPipeline",
+    RELATIONSHIP_TABLE: "RelationshipTable",
   },
 };
+const RELATIONSHIP_TABLE_NAME = "__RELATIONSHIPS__";
 const REPO_CREDENTIALS = {
   OWNER: ENV_VARS.REPO_OWNER,
   NAME: ENV_VARS.REPO_NAME,
@@ -99,6 +102,16 @@ const IaC = new SimpleCFT({
       ],
     },
   })
+  .applyPack(addDatabase, {
+    tableId: IDS.API.RELATIONSHIP_TABLE,
+    tableName: RELATIONSHIP_TABLE_NAME,
+    attributes: {
+      [ItemRelationshipInfoIdentifyingKeys.id]: "S",
+    },
+    keys: {
+      [ItemRelationshipInfoIdentifyingKeys.id]: "HASH",
+    },
+  })
   .modify((cft) => {
     for (const typeName in CLIENT_SIDE_DEMO_TYPE_INFO_MAP) {
       const { primaryField, tags: { persisted = false } = {} } =
@@ -126,6 +139,9 @@ const IaC = new SimpleCFT({
         DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:1234`,
         S3_API_BUCKET_NAME: {
           Ref: IDS.API.FILE_STORAGE,
+        },
+        RELATIONSHIP_TABLE_NAME: {
+          Ref: IDS.API.RELATIONSHIP_TABLE,
         },
         ...Object.keys(CLIENT_SIDE_DEMO_TYPE_INFO_MAP).reduce<
           Record<string, any>
