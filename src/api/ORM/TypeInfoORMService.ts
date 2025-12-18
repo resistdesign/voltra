@@ -688,7 +688,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<ListItemsResults<ItemRelationshipInfo>> => {
     const { useDAC } = this.config;
     const { relationshipItemOrigin, ...remainingConfig } = config;
-    this.validateRelationshipItem(relationshipItemOrigin);
+    this.validateRelationshipItem(relationshipItemOrigin, [
+      ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+    ]);
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
       relationshipItemOrigin;
@@ -755,6 +757,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const {
       relationshipItemOrigin: { fromTypeName, fromTypeFieldName },
     } = config;
+    this.validateRelationshipItem(config.relationshipItemOrigin, [
+      ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+    ]);
     const {
       fields: {
         [fromTypeFieldName]: {
