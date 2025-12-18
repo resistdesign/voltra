@@ -155,6 +155,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
 
   constructor(protected config: TypeInfoORMServiceConfig) {
+    if (!config.typeInfoMap || Object.keys(config.typeInfoMap).length === 0) {
+      console.error("TypeInfoORMService initialized without a typeInfoMap.");
+
+      throw new Error(TypeInfoORMServiceError.MISSING_TYPE_INFO_MAP);
+    }
+
     if (!config.getDriver) {
       throw new Error(TypeInfoORMServiceError.NO_DRIVERS_SUPPLIED);
     }

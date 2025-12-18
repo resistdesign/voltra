@@ -13,7 +13,10 @@ import {
   RouteMap,
 } from "../Router/Types";
 import { addRouteToRouteMap } from "../Router";
-import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
+import {
+  TypeInfoORMAPI,
+  TypeInfoORMServiceError,
+} from "../../common/TypeInfoORM";
 import { DACRole } from "../DataAccessControl";
 
 /**
@@ -81,6 +84,15 @@ export const getTypeInfoORMRouteMap = (
           : {
               useDAC: false,
             };
+
+        if (!config?.typeInfoMap || Object.keys(config.typeInfoMap).length === 0) {
+          console.error(
+            "TypeInfoORMRouteMap attempted to initialize without a typeInfoMap.",
+            { providedConfigKeys: Object.keys(config || {}) },
+          );
+
+          throw new Error(TypeInfoORMServiceError.MISSING_TYPE_INFO_MAP);
+        }
         // TODO: Maybe don't instantiate a new ORM service for each method.
         const orm = new TypeInfoORMService({
           ...config,

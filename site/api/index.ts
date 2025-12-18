@@ -29,14 +29,23 @@ const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
     },
   },
 ]);
+
+const demoTypeInfoMap = DEMO_TYPE_INFO_MAP;
+
+if (!demoTypeInfoMap || Object.keys(demoTypeInfoMap).length === 0) {
+  console.error("TypeInfoORM route map initialized without a demo typeInfoMap.");
+
+  throw new Error(TypeInfoORMServiceError.MISSING_TYPE_INFO_MAP);
+}
+
 const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
   ROUTE_MAP,
   getTypeInfoORMRouteMap(
     {
-      typeInfoMap: DEMO_TYPE_INFO_MAP,
+      typeInfoMap: demoTypeInfoMap,
       getDriver: (typeName: string) => {
         const { primaryField }: Partial<TypeInfo> =
-          DEMO_TYPE_INFO_MAP[typeName] || {};
+          demoTypeInfoMap[typeName] || {};
 
         if (primaryField) {
           return new DynamoDBDataItemDBDriver({
