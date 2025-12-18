@@ -87,7 +87,7 @@ export const getTypeInfoORMRouteMap = (
           ...dacOptions,
         });
 
-        return orm[methodName];
+        return orm[methodName].bind(orm);
       }
     };
     const getRoute = (
