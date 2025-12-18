@@ -503,13 +503,26 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw validationResults;
     } else {
       const { fromTypeName, fromTypeFieldName } = relationshipItem;
-      const {
-        fields: {
-          [fromTypeFieldName]: { typeReference = undefined } = {},
-        } = {},
-      } = this.getTypeInfo(fromTypeName);
+      const { field: fromTypeField } = this.getFromTypeInfoAndField(
+        fromTypeName,
+        fromTypeFieldName,
+        relationshipItem,
+      );
+      const { typeReference = undefined } = fromTypeField;
       const relatedTypeInfo = typeReference
-        ? this.getTypeInfo(typeReference)
+        ? (() => {
+            try {
+              return this.getTypeInfo(typeReference);
+            } catch (error) {
+              throw {
+                ...(error as Record<any, any>),
+                fromTypeName,
+                fromTypeFieldName,
+                typeReference,
+                relationshipItem,
+              };
+            }
+          })()
         : undefined;
 
       if (!relatedTypeInfo) {
@@ -523,6 +536,39 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         throw relationshipValidationResults;
       }
     }
+  };
+
+  protected getFromTypeInfoAndField = (
+    fromTypeName: string,
+    fromTypeFieldName: string,
+    relationshipItem?: BaseItemRelationshipInfo,
+  ): { typeInfo: TypeInfo; field: TypeInfoField } => {
+    const typeInfo = this.config.typeInfoMap[fromTypeName];
+
+    if (!typeInfo) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName: fromTypeName,
+        fromTypeFieldName,
+        relationshipItem,
+      };
+    }
+
+    const { fields = {} } = typeInfo;
+    const fromTypeField = fields[
+      fromTypeFieldName as keyof typeof fields
+    ] as TypeInfoField | undefined;
+
+    if (!fromTypeField) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_RELATIONSHIP,
+        typeName: fromTypeName,
+        fromTypeFieldName,
+        relationshipItem,
+      };
+    }
+
+    return { typeInfo, field: fromTypeField };
   };
 
   protected cleanupRelationships = async (
@@ -543,6 +589,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     this.validateRelationshipItem(relationshipItem);
 
+    const cleanedItem = cleanRelationshipItem(relationshipItem);
+    const { fromTypeName, fromTypeFieldName } = cleanedItem;
+    const { field: fromTypeField } = this.getFromTypeInfoAndField(
+      fromTypeName,
+      fromTypeFieldName,
+      cleanedItem,
+    );
+    const relationshipIsMultiple = !!fromTypeField.array;
+
     const { allowed: createAllowed, denied: createDenied } =
       this.getRelationshipDACValidation(
         relationshipItem,
@@ -555,13 +610,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         relationshipItem,
       };
     } else {
-      const cleanedItem = cleanRelationshipItem(relationshipItem);
-      const { fromTypeName, fromTypeFieldName } = cleanedItem;
-      const {
-        fields: {
-          [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
-        } = {},
-      } = this.getTypeInfo(fromTypeName);
       const driver = this.getRelationshipDriverInternal(
         fromTypeName,
         fromTypeFieldName,
