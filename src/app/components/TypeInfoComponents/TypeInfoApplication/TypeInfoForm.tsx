@@ -120,6 +120,17 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   }, [internalValue, onSubmit]);
   const onNavigateToTypeForField = useCallback(
     (nameOrIndex: NameOrIndex) => {
+      const fieldName = `${nameOrIndex}`;
+      const fieldInfo = fields[fieldName];
+      const fieldValue = internalValue[fieldName];
+      const hasValue =
+        fieldInfo?.array && Array.isArray(fieldValue)
+          ? fieldValue.length > 0
+          : typeof fieldValue !== "undefined" && fieldValue !== null;
+      const toMode = hasValue
+        ? TypeNavigationMode.RELATED_ITEMS
+        : TypeNavigationMode.SEARCH_ITEMS;
+
       // TODO: Should never happen on array fields.
       // NOTE: Never open related items on `CREATE` because the item doesn't yet exist to have relationships.
       // TODO: Somthing to work out is what if the related field is required, then what!?
@@ -127,14 +138,21 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
         onNavigateToType({
           fromTypeName: typeInfoName,
           fromTypePrimaryFieldValue: primaryFieldValue,
-          fromTypeFieldName: `${nameOrIndex}`,
+          fromTypeFieldName: fieldName,
           // TODO: How does `toOperation` work for the various "from" operations?
           toOperation: TypeOperation.UPDATE,
-          toMode: TypeNavigationMode.RELATED_ITEMS,
+          toMode,
         });
       }
     },
-    [onNavigateToType, typeInfoName, primaryFieldValue, operation],
+    [
+      onNavigateToType,
+      typeInfoName,
+      primaryFieldValue,
+      operation,
+      fields,
+      internalValue,
+    ],
   );
 
   useEffect(() => {

@@ -33,10 +33,20 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
   const { type, typeReference, tags = {}, array: fieldIsArray } = typeInfoField;
   const {
     hidden,
-    customType,
-    deniedOperations = {},
-  } = tags as SupportedFieldTags;
+  customType,
+  deniedOperations = {},
+} = tags as SupportedFieldTags;
   const { READ: readDenied = false } = deniedOperations;
+  const hasValue = useMemo<boolean>(
+    () =>
+      (fieldIsArray &&
+        Array.isArray(fieldValue) &&
+        (fieldValue as any[]).length > 0) ||
+      (!fieldIsArray &&
+        typeof fieldValue !== "undefined" &&
+        fieldValue !== null),
+    [fieldIsArray, fieldValue],
+  );
   const typeNavigation = useMemo<TypeNavigation | undefined>(() => {
     // IMPORTANT: Do not allow navigation to types if they are tagged to deny the current operation.
     const {
@@ -57,7 +67,9 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
             fromTypePrimaryFieldValue: itemPrimaryFieldValue,
             fromTypeFieldName: fieldName,
             toOperation: TypeOperation.READ,
-            toMode: TypeNavigationMode.RELATED_ITEMS,
+            toMode: hasValue
+              ? TypeNavigationMode.RELATED_ITEMS
+              : TypeNavigationMode.SEARCH_ITEMS,
           }
         : undefined;
 
@@ -66,19 +78,10 @@ export const ItemFieldCell: FC<ItemFieldCellProps> = ({
     typeReference,
     typeInfoMap,
     itemPrimaryFieldValue,
-    typeInfoName,
     fieldName,
+    hasValue,
+    typeInfoName,
   ]);
-  const hasValue = useMemo<boolean>(
-    () =>
-      (fieldIsArray &&
-        Array.isArray(fieldValue) &&
-        (fieldValue as any[]).length > 0) ||
-      (!fieldIsArray &&
-        typeof fieldValue !== "undefined" &&
-        fieldValue !== null),
-    [fieldIsArray],
-  );
 
   return !readDenied && !hidden ? (
     <td>
