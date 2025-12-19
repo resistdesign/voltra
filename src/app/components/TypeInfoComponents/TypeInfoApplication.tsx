@@ -388,6 +388,20 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const { items: relatedRelationshipsList = [] } =
     listRelationshipsResults ?? { items: [] };
+  const relatedRelationshipPrimaryFieldValues = useMemo(() => {
+    if (!targetTypePrimaryFieldName) {
+      return new Set<string>();
+    }
+
+    return new Set(
+      relatedRelationshipsList
+        .map((relationship) =>
+          relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+        )
+        .filter(Boolean)
+        .map((value) => `${value}`),
+    );
+  }, [relatedRelationshipsList, targetTypePrimaryFieldName]);
   const existingRelatedPrimaryFieldValues = useMemo(
     () =>
       new Set(
@@ -588,6 +602,33 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const { items: searchItemsList = [] } = searchItemsResults;
   const { items: relatedItemsList = [] } = relatedItemsResults;
+  const relatedItemsPrimaryFieldValues = useMemo(
+    () =>
+      targetTypePrimaryFieldName
+        ? relatedItemsList.map((item) => {
+            const primaryFieldValue = item?.[targetTypePrimaryFieldName];
+
+            return typeof primaryFieldValue === "undefined" ||
+              primaryFieldValue === null
+              ? null
+              : `${primaryFieldValue}`;
+          })
+        : [],
+    [relatedItemsList, targetTypePrimaryFieldName],
+  );
+  const relatedRelationshipsKey = useMemo(() => {
+    const values = Array.from(relatedRelationshipPrimaryFieldValues).sort();
+
+    return JSON.stringify(values);
+  }, [relatedRelationshipPrimaryFieldValues]);
+  const relatedItemsPageKey = useMemo(
+    () => JSON.stringify(relatedItemsPrimaryFieldValues),
+    [relatedItemsPrimaryFieldValues],
+  );
+  const relatedSelectionKeysRef = useRef({
+    relationships: "",
+    itemsPage: "",
+  });
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
       const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
@@ -719,13 +760,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return;
     }
 
-    const relatedPrimaryFieldValues = new Set(
-      relatedRelationshipsList
-        .map((relationship) =>
-          relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
-        )
-        .filter(Boolean),
-    );
+    const selectionKeysUnchanged =
+      relatedSelectionKeysRef.current.relationships ===
+        relatedRelationshipsKey &&
+      relatedSelectionKeysRef.current.itemsPage === relatedItemsPageKey;
+
+    if (selectionKeysUnchanged) {
+      return;
+    }
+
+    relatedSelectionKeysRef.current = {
+      relationships: relatedRelationshipsKey,
+      itemsPage: relatedItemsPageKey,
+    };
     const selectedIndices = relatedItemsList.reduce<number[]>(
       (accumulator, item, index) => {
         const primaryFieldValue = item?.[targetTypePrimaryFieldName];
@@ -733,7 +780,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         if (
           typeof primaryFieldValue !== "undefined" &&
           primaryFieldValue !== null &&
-          relatedPrimaryFieldValues.has(`${primaryFieldValue}`)
+          relatedRelationshipPrimaryFieldValues.has(`${primaryFieldValue}`)
         ) {
           accumulator.push(index);
         }
@@ -759,9 +806,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     toMode,
     targetTypePrimaryFieldName,
-    relatedRelationshipsList,
+    relatedRelationshipPrimaryFieldValues,
     relatedItemsList,
     relationshipAllowsMultiple,
+    relatedRelationshipsKey,
+    relatedItemsPageKey,
   ]);
   const selectedRelatedItems = useMemo<Partial<TypeInfoDataItem>[]>(
     () =>
