@@ -924,7 +924,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       targetTypePrimaryFieldName,
     ],
   );
-  const onAddRelatedRelationships = useCallback(() => {
+  const onAddRelatedRelationships = useCallback((_index: number) => {
     if (!canAddRelatedItems || selectedSearchRelationships.length === 0) {
       return;
     }
@@ -949,7 +949,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     queueRelationshipMutation,
     flushPendingRelationshipMutations,
   ]);
-  const onDeleteRelationships = useCallback(() => {
+  const onDeleteRelationships = useCallback((_index: number) => {
     if (!relationshipItemOrigin || !canDeleteRelationships) {
       return;
     }
@@ -976,7 +976,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     flushPendingRelationshipMutations();
     onCloseCurrentNavHistoryItem();
   }, [flushPendingRelationshipMutations, onCloseCurrentNavHistoryItem]);
-  const onNavigateToSearchMode = useCallback(() => {
+  const onCloseWithFlushIndex = useCallback(
+    (_index: number) => {
+      onCloseWithFlush();
+    },
+    [onCloseWithFlush],
+  );
+  const onNavigateToSearchMode = useCallback((_index: number) => {
     if (!relationshipItemOrigin || !relationshipMode || !fromTypeFieldName) {
       return;
     }
@@ -997,8 +1003,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     onNavigateToType,
     toOperation,
   ]);
-  const createRelationshipLoadingRef = useRef<boolean>();
-  const deleteRelationshipLoadingRef = useRef<boolean>();
+  const createRelationshipLoadingRef = useRef<boolean | undefined>(undefined);
+  const deleteRelationshipLoadingRef = useRef<boolean | undefined>(undefined);
   const createRelationshipLoading = typeInfoORMAPIState.createRelationship?.loading;
   const deleteRelationshipLoading = typeInfoORMAPIState.deleteRelationship?.loading;
 
@@ -1045,6 +1051,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
                 <ActionsBar>
                   <IndexButton
                     type="button"
+                    index={0}
                     disabled={!canAddRelatedItems}
                     onClick={onAddRelatedRelationships}
                   >
@@ -1052,7 +1059,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
                   </IndexButton>
                   <IndexButton
                     type="button"
-                    onClick={onCloseWithFlush}
+                    index={0}
+                    onClick={onCloseWithFlushIndex}
                   >
                     Back
                   </IndexButton>
@@ -1082,11 +1090,16 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
               <>
                 {relationshipMode ? (
                   <ActionsBar>
-                    <IndexButton type="button" onClick={onNavigateToSearchMode}>
+                    <IndexButton
+                      type="button"
+                      index={0}
+                      onClick={onNavigateToSearchMode}
+                    >
                       Add related
                     </IndexButton>
                     <IndexButton
                       type="button"
+                      index={0}
                       disabled={!canDeleteRelationships}
                       onClick={onDeleteRelationships}
                     >
