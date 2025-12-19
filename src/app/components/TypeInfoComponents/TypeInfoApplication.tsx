@@ -263,6 +263,24 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     targetPrimaryFieldValue,
     fromTypePrimaryFieldValue,
   ]);
+  const searchRelationshipOrigin = useMemo<
+    ItemRelationshipOriginItemInfo | undefined
+  >(() => {
+    if (
+      !relationshipMode ||
+      !fromTypeName ||
+      !fromTypeFieldName ||
+      !fromTypePrimaryFieldValue
+    ) {
+      return undefined;
+    }
+
+    return {
+      [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
+      [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
+      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: fromTypePrimaryFieldValue,
+    };
+  }, [relationshipMode, fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue]);
   const onListRelationshipsConfigChange = useCallback(
     ({ cursor, itemsPerPage }: ListItemsConfig) => {
       if (relationshipItemOrigin) {
@@ -541,6 +559,28 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     listRelationshipsWithOrigin();
   }, [selectingRelatedItems, relationshipItemOrigin, listRelationshipsWithOrigin]);
+  useEffect(() => {
+    if (
+      toMode !== TypeNavigationMode.SEARCH_ITEMS ||
+      !relationshipMode ||
+      !searchRelationshipOrigin
+    ) {
+      return;
+    }
+
+    const listRelatedItemsConfig: ListRelationshipsConfig = {
+      ...listRelationshipsConfig,
+      relationshipItemOrigin: searchRelationshipOrigin,
+    };
+
+    typeInfoORMAPIService.listRelationships(listRelatedItemsConfig);
+  }, [
+    toMode,
+    relationshipMode,
+    searchRelationshipOrigin,
+    listRelationshipsConfig,
+    typeInfoORMAPIService,
+  ]);
 
   const onSubmit = useCallback(
     (newItem: TypeInfoDataItem) => {
@@ -608,6 +648,58 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       left.every((value, index) => value === right[index]),
     [],
   );
+  useEffect(() => {
+    if (
+      toMode !== TypeNavigationMode.SEARCH_ITEMS ||
+      !relationshipMode ||
+      !targetTypePrimaryFieldName
+    ) {
+      return;
+    }
+
+    const relatedPrimaryFieldValues = new Set(
+      (listRelationshipsResults?.items ?? [])
+        .map(
+          (relationship) =>
+            relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+        )
+        .filter(Boolean)
+        .map((value) => `${value}`),
+    );
+    const nextSelectedIndices = searchItemsList.reduce<number[]>(
+      (accumulator, item, index) => {
+        const primaryFieldValue = item?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null &&
+          relatedPrimaryFieldValues.has(`${primaryFieldValue}`)
+        ) {
+          accumulator.push(index);
+        }
+
+        return accumulator;
+      },
+      [],
+    );
+    const normalizedIndices = relationshipAllowsMultiple
+      ? nextSelectedIndices
+      : nextSelectedIndices.slice(0, 1);
+
+    if (!areIndicesEqual(selectedIndices, normalizedIndices)) {
+      previousSearchSelectedIndicesRef.current = normalizedIndices;
+      setSelectedIndices(normalizedIndices);
+    }
+  }, [
+    toMode,
+    relationshipMode,
+    targetTypePrimaryFieldName,
+    listRelationshipsResults,
+    searchItemsList,
+    relationshipAllowsMultiple,
+    areIndicesEqual,
+    selectedIndices,
+  ]);
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
       const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
