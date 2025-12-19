@@ -602,33 +602,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const { items: searchItemsList = [] } = searchItemsResults;
   const { items: relatedItemsList = [] } = relatedItemsResults;
-  const relatedItemsPrimaryFieldValues = useMemo(
-    () =>
-      targetTypePrimaryFieldName
-        ? relatedItemsList.map((item) => {
-            const primaryFieldValue = item?.[targetTypePrimaryFieldName];
-
-            return typeof primaryFieldValue === "undefined" ||
-              primaryFieldValue === null
-              ? null
-              : `${primaryFieldValue}`;
-          })
-        : [],
-    [relatedItemsList, targetTypePrimaryFieldName],
+  const areIndicesEqual = useCallback(
+    (left: number[], right: number[]) =>
+      left.length === right.length &&
+      left.every((value, index) => value === right[index]),
+    [],
   );
-  const relatedRelationshipsKey = useMemo(() => {
-    const values = Array.from(relatedRelationshipPrimaryFieldValues).sort();
-
-    return JSON.stringify(values);
-  }, [relatedRelationshipPrimaryFieldValues]);
-  const relatedItemsPageKey = useMemo(
-    () => JSON.stringify(relatedItemsPrimaryFieldValues),
-    [relatedItemsPrimaryFieldValues],
-  );
-  const relatedSelectionKeysRef = useRef({
-    relationships: "",
-    itemsPage: "",
-  });
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
       const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
@@ -751,28 +730,18 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       queueRelationshipMutation,
     ],
   );
-  useEffect(() => {
-    if (
-      !relationshipMode ||
-      toMode !== TypeNavigationMode.RELATED_ITEMS ||
-      !targetTypePrimaryFieldName
-    ) {
-      return;
+  const shouldSyncRelatedSelection = useMemo(
+    () =>
+      relationshipMode &&
+      (toMode === TypeNavigationMode.RELATED_ITEMS || selectingRelatedItems) &&
+      !!targetTypePrimaryFieldName,
+    [relationshipMode, toMode, selectingRelatedItems, targetTypePrimaryFieldName],
+  );
+  const derivedRelatedSelectedIndices = useMemo<number[] | null>(() => {
+    if (!shouldSyncRelatedSelection || !targetTypePrimaryFieldName) {
+      return null;
     }
 
-    const selectionKeysUnchanged =
-      relatedSelectionKeysRef.current.relationships ===
-        relatedRelationshipsKey &&
-      relatedSelectionKeysRef.current.itemsPage === relatedItemsPageKey;
-
-    if (selectionKeysUnchanged) {
-      return;
-    }
-
-    relatedSelectionKeysRef.current = {
-      relationships: relatedRelationshipsKey,
-      itemsPage: relatedItemsPageKey,
-    };
     const selectedIndices = relatedItemsList.reduce<number[]>(
       (accumulator, item, index) => {
         const primaryFieldValue = item?.[targetTypePrimaryFieldName];
@@ -789,29 +758,28 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       },
       [],
     );
-    const nextSelectedIndices = relationshipAllowsMultiple
+
+    return relationshipAllowsMultiple
       ? selectedIndices
       : selectedIndices.slice(0, 1);
+  }, [
+    shouldSyncRelatedSelection,
+    targetTypePrimaryFieldName,
+    relatedItemsList,
+    relatedRelationshipPrimaryFieldValues,
+    relationshipAllowsMultiple,
+  ]);
+  useEffect(() => {
+    if (!derivedRelatedSelectedIndices) {
+      return;
+    }
 
     setRelatedSelectedIndices((prevSelectedIndices) => {
-      const matches =
-        prevSelectedIndices.length === nextSelectedIndices.length &&
-        prevSelectedIndices.every(
-          (value, index) => value === nextSelectedIndices[index],
-        );
-
-      return matches ? prevSelectedIndices : nextSelectedIndices;
+      return areIndicesEqual(prevSelectedIndices, derivedRelatedSelectedIndices)
+        ? prevSelectedIndices
+        : derivedRelatedSelectedIndices;
     });
-  }, [
-    relationshipMode,
-    toMode,
-    targetTypePrimaryFieldName,
-    relatedRelationshipPrimaryFieldValues,
-    relatedItemsList,
-    relationshipAllowsMultiple,
-    relatedRelationshipsKey,
-    relatedItemsPageKey,
-  ]);
+  }, [areIndicesEqual, derivedRelatedSelectedIndices]);
   const selectedRelatedItems = useMemo<Partial<TypeInfoDataItem>[]>(
     () =>
       relatedSelectedIndices
