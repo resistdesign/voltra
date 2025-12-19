@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect } from "react";
+import { FC, useCallback, useEffect, useRef } from "react";
 import {
   ListItemsConfig,
   ListItemsResults,
@@ -65,7 +65,11 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   hideSearchControls = false,
 }) => {
   const { tags: { fullPaging = false } = {} } = typeInfo;
-  const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
+  const {
+    sortFields,
+    cursor: currentCursor,
+    criteria: currentCriteria,
+  }: Partial<ListItemsConfig> = listItemsConfig || {};
   const {
     cursor: nextCursor,
     items: itemResults = [],
@@ -92,9 +96,30 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   );
 
   // Effects
+  const previousSearchRef = useRef({
+    cursor: currentCursor,
+    criteria: currentCriteria,
+  });
   useEffect(() => {
-    onSelectedIndicesChange?.([]);
-  }, [listItemsConfig, onSelectedIndicesChange]);
+    const { cursor: previousCursor, criteria: previousCriteria } =
+      previousSearchRef.current;
+    const cursorChanged = previousCursor !== currentCursor;
+    const criteriaChanged = previousCriteria !== currentCriteria;
+
+    if ((cursorChanged || criteriaChanged) && selectedIndices.length > 0) {
+      onSelectedIndicesChange?.([]);
+    }
+
+    previousSearchRef.current = {
+      cursor: currentCursor,
+      criteria: currentCriteria,
+    };
+  }, [
+    currentCursor,
+    currentCriteria,
+    onSelectedIndicesChange,
+    selectedIndices.length,
+  ]);
 
   // TODO: Add an interface for selecting exact/specific fields.
   //  Selected Fields are, essentially, a search parameter.
