@@ -662,6 +662,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                   operator: ComparisonOperators.EQUALS,
                   value: fromTypeFieldName,
                 },
+                {
+                  fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
+                  operator: ComparisonOperators.EQUALS,
+                  value: cleanedItem.fromTypePrimaryFieldValue,
+                },
               ],
             },
             itemsPerPage: 1,
