@@ -509,10 +509,22 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw validationResults;
     } else {
       const { fromTypeName, fromTypeFieldName } = relationshipItem;
+      const relationshipInfoForLookup: BaseItemRelationshipInfo = {
+        fromTypeName,
+        fromTypeFieldName,
+        fromTypePrimaryFieldValue:
+          ItemRelationshipInfoKeys.fromTypePrimaryFieldValue in relationshipItem
+            ? relationshipItem.fromTypePrimaryFieldValue
+            : "",
+        toTypePrimaryFieldValue:
+          ItemRelationshipInfoKeys.toTypePrimaryFieldValue in relationshipItem
+            ? relationshipItem.toTypePrimaryFieldValue
+            : "",
+      };
       const { field: fromTypeField } = this.getFromTypeInfoAndField(
         fromTypeName,
         fromTypeFieldName,
-        relationshipItem,
+        relationshipInfoForLookup,
       );
       const { typeReference = undefined } = fromTypeField;
       const relatedTypeInfo = typeReference
