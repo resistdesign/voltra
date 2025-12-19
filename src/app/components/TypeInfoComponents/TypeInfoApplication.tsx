@@ -737,6 +737,45 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       !!targetTypePrimaryFieldName,
     [relationshipMode, toMode, selectingRelatedItems, targetTypePrimaryFieldName],
   );
+  const shouldSyncSearchSelection = useMemo(
+    () =>
+      selectingRelatedItems &&
+      !!relationshipItemOrigin &&
+      !!targetTypePrimaryFieldName,
+    [selectingRelatedItems, relationshipItemOrigin, targetTypePrimaryFieldName],
+  );
+  const derivedSearchSelectedIndices = useMemo<number[] | null>(() => {
+    if (!shouldSyncSearchSelection || !targetTypePrimaryFieldName) {
+      return null;
+    }
+
+    const selectedIndices = searchItemsList.reduce<number[]>(
+      (accumulator, item, index) => {
+        const primaryFieldValue = item?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null &&
+          relatedRelationshipPrimaryFieldValues.has(`${primaryFieldValue}`)
+        ) {
+          accumulator.push(index);
+        }
+
+        return accumulator;
+      },
+      [],
+    );
+
+    return relationshipAllowsMultiple
+      ? selectedIndices
+      : selectedIndices.slice(0, 1);
+  }, [
+    shouldSyncSearchSelection,
+    targetTypePrimaryFieldName,
+    searchItemsList,
+    relatedRelationshipPrimaryFieldValues,
+    relationshipAllowsMultiple,
+  ]);
   const derivedRelatedSelectedIndices = useMemo<number[] | null>(() => {
     if (!shouldSyncRelatedSelection || !targetTypePrimaryFieldName) {
       return null;
@@ -769,6 +808,20 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relatedRelationshipPrimaryFieldValues,
     relationshipAllowsMultiple,
   ]);
+  useEffect(() => {
+    if (!derivedSearchSelectedIndices) {
+      return;
+    }
+
+    setSelectedIndices((prevSelectedIndices) => {
+      if (areIndicesEqual(prevSelectedIndices, derivedSearchSelectedIndices)) {
+        return prevSelectedIndices;
+      }
+
+      previousSearchSelectedIndicesRef.current = derivedSearchSelectedIndices;
+      return derivedSearchSelectedIndices;
+    });
+  }, [areIndicesEqual, derivedSearchSelectedIndices]);
   useEffect(() => {
     if (!derivedRelatedSelectedIndices) {
       return;
