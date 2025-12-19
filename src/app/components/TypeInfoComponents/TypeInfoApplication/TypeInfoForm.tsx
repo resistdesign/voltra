@@ -74,7 +74,7 @@ export const TypeInfoForm: FC<TypeInfoFormProps> = ({
   onSubmit,
   onNavigateToType,
 }) => {
-  const { fields } = useMemo<TypeInfo>(
+  const { fields = {} } = useMemo<TypeInfo>(
     () => typeInfo ?? { fields: {} },
     [typeInfo],
   );
