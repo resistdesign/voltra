@@ -163,6 +163,21 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: "",
       },
     });
+  const pendingRelationshipMutationsRef = useRef<
+    Map<string, "create" | "delete">
+  >(new Map());
+  const flushPendingRelationshipTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+  const previousSearchSelectedIndicesRef = useRef<number[]>([]);
+  const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
+  const suppressSearchSelectionQueueRef = useRef<boolean>(false);
+  const suppressRelatedSelectionQueueRef = useRef<boolean>(false);
+  useEffect(() => {
+    suppressSearchSelectionQueueRef.current = true;
+  }, [listItemsConfig]);
+  useEffect(() => {
+    suppressRelatedSelectionQueueRef.current = true;
+  }, [listRelationshipsConfig]);
   // TODO: WHEN is something selectable?
   const [selectable, setSelectable] = useState<boolean>(true);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
@@ -260,27 +275,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     },
     [relationshipItemOrigin],
   );
-  const onSubmit = useCallback(
-    (newItem: TypeInfoDataItem) => {
-      if (targetTypeName) {
-        if (toOperation === TypeOperation.CREATE) {
-          typeInfoORMAPIService.create(targetTypeName, newItem);
-        } else if (toOperation === TypeOperation.UPDATE) {
-          typeInfoORMAPIService.update(targetTypeName, newItem);
-        }
-      }
-
-      // TODO: What to do when closing the top-level history item?
-      onCloseCurrentNavHistoryItem();
-    },
-    [
-      targetTypeName,
-      toOperation,
-      typeInfoORMAPIService,
-      onCloseCurrentNavHistoryItem,
-    ],
-  );
-
   useEffect(() => {
     if (targetTypeName && targetPrimaryFieldValue) {
       // TODO: Handle selected fields.
@@ -392,6 +386,133 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     listRelationshipsWithOrigin();
   }, [listRelatedItemsWithOrigin, listRelationshipsWithOrigin]);
 
+  const { items: relatedRelationshipsList = [] } =
+    listRelationshipsResults ?? { items: [] };
+  const existingRelatedPrimaryFieldValues = useMemo(
+    () =>
+      new Set(
+        relatedRelationshipsList
+          .map((relationship) =>
+            relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+          )
+          .filter(Boolean)
+          .map((value) => `${value}`),
+      ),
+    [relatedRelationshipsList],
+  );
+  const flushPendingRelationshipMutations = useCallback(() => {
+    if (flushPendingRelationshipTimeoutRef.current) {
+      clearTimeout(flushPendingRelationshipTimeoutRef.current);
+      flushPendingRelationshipTimeoutRef.current = null;
+    }
+
+    if (!relationshipItemOrigin) {
+      pendingRelationshipMutationsRef.current.clear();
+      return;
+    }
+
+    const pendingMutations = Array.from(
+      pendingRelationshipMutationsRef.current.entries(),
+    );
+
+    if (pendingMutations.length === 0) {
+      return;
+    }
+
+    pendingRelationshipMutationsRef.current.clear();
+
+    pendingMutations.forEach(([primaryFieldValue, action]) => {
+      const relationship = {
+        ...relationshipItemOrigin,
+        [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: primaryFieldValue,
+      };
+
+      if (action === "create") {
+        typeInfoORMAPIService.createRelationship(relationship);
+      } else {
+        typeInfoORMAPIService.deleteRelationship(relationship);
+      }
+    });
+
+    listRelatedDataWithOrigin();
+  }, [
+    relationshipItemOrigin,
+    listRelatedDataWithOrigin,
+    typeInfoORMAPIService,
+  ]);
+  const scheduleRelationshipMutationFlush = useCallback(() => {
+    if (flushPendingRelationshipTimeoutRef.current) {
+      clearTimeout(flushPendingRelationshipTimeoutRef.current);
+    }
+
+    flushPendingRelationshipTimeoutRef.current = setTimeout(
+      () => {
+        flushPendingRelationshipMutations();
+      },
+      250,
+    );
+  }, [flushPendingRelationshipMutations]);
+  const queueRelationshipMutation = useCallback(
+    (primaryFieldValue: string, action: "create" | "delete") => {
+      if (!relationshipItemOrigin) {
+        return;
+      }
+
+      const normalizedValue = `${primaryFieldValue}`;
+      const pendingMutations = pendingRelationshipMutationsRef.current;
+
+      if (
+        action === "delete" &&
+        !existingRelatedPrimaryFieldValues.has(normalizedValue) &&
+        pendingMutations.get(normalizedValue) !== "create"
+      ) {
+        return;
+      }
+
+      if (!relationshipAllowsMultiple && action === "create") {
+        const valuesToClear = new Set<string>([
+          ...existingRelatedPrimaryFieldValues,
+          ...pendingMutations.keys(),
+        ]);
+
+        valuesToClear.forEach((value) => {
+          if (value !== normalizedValue) {
+            pendingMutations.set(value, "delete");
+          }
+        });
+      }
+
+      pendingMutations.set(normalizedValue, action);
+      scheduleRelationshipMutationFlush();
+    },
+    [
+      relationshipItemOrigin,
+      existingRelatedPrimaryFieldValues,
+      relationshipAllowsMultiple,
+      scheduleRelationshipMutationFlush,
+    ],
+  );
+
+  useEffect(() => {
+    const handleBlur = () => {
+      flushPendingRelationshipMutations();
+    };
+
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [flushPendingRelationshipMutations]);
+
+  useEffect(() => {
+    return () => {
+      if (flushPendingRelationshipTimeoutRef.current) {
+        clearTimeout(flushPendingRelationshipTimeoutRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (toMode !== TypeNavigationMode.RELATED_ITEMS) {
       return;
@@ -399,6 +520,36 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     listRelatedDataWithOrigin();
   }, [toMode, listRelatedDataWithOrigin]);
+  useEffect(() => {
+    if (!selectingRelatedItems || !relationshipItemOrigin) {
+      return;
+    }
+
+    listRelationshipsWithOrigin();
+  }, [selectingRelatedItems, relationshipItemOrigin, listRelationshipsWithOrigin]);
+
+  const onSubmit = useCallback(
+    (newItem: TypeInfoDataItem) => {
+      flushPendingRelationshipMutations();
+      if (targetTypeName) {
+        if (toOperation === TypeOperation.CREATE) {
+          typeInfoORMAPIService.create(targetTypeName, newItem);
+        } else if (toOperation === TypeOperation.UPDATE) {
+          typeInfoORMAPIService.update(targetTypeName, newItem);
+        }
+      }
+
+      // TODO: What to do when closing the top-level history item?
+      onCloseCurrentNavHistoryItem();
+    },
+    [
+      flushPendingRelationshipMutations,
+      targetTypeName,
+      toOperation,
+      typeInfoORMAPIService,
+      onCloseCurrentNavHistoryItem,
+    ],
+  );
 
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
   // TODO: How to handle loading states?
@@ -435,26 +586,130 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     );
   };
 
+  const { items: searchItemsList = [] } = searchItemsResults;
+  const { items: relatedItemsList = [] } = relatedItemsResults;
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
-      setSelectedIndices(
-        relationshipAllowsMultiple ? indices : indices.slice(-1),
+      const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
+      const previousIndices = previousSearchSelectedIndicesRef.current;
+
+      previousSearchSelectedIndicesRef.current = nextIndices;
+      setSelectedIndices(nextIndices);
+
+      if (!selectingRelatedItems) {
+        return;
+      }
+
+      if (suppressSearchSelectionQueueRef.current) {
+        suppressSearchSelectionQueueRef.current = false;
+        return;
+      }
+
+      if (!relationshipItemOrigin || !targetTypePrimaryFieldName) {
+        return;
+      }
+
+      const addedIndices = nextIndices.filter(
+        (index) => !previousIndices.includes(index),
       );
+      const removedIndices = previousIndices.filter(
+        (index) => !nextIndices.includes(index),
+      );
+
+      addedIndices.forEach((index) => {
+        const primaryFieldValue =
+          searchItemsList[index]?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null
+        ) {
+          queueRelationshipMutation(`${primaryFieldValue}`, "create");
+        }
+      });
+
+      removedIndices.forEach((index) => {
+        const primaryFieldValue =
+          searchItemsList[index]?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null
+        ) {
+          queueRelationshipMutation(`${primaryFieldValue}`, "delete");
+        }
+      });
     },
-    [relationshipAllowsMultiple],
+    [
+      relationshipAllowsMultiple,
+      selectingRelatedItems,
+      relationshipItemOrigin,
+      targetTypePrimaryFieldName,
+      searchItemsList,
+      queueRelationshipMutation,
+    ],
   );
   const onRelatedSelectedIndicesChange = useCallback(
     (indices: number[]) => {
-      setRelatedSelectedIndices(
-        relationshipAllowsMultiple ? indices : indices.slice(-1),
+      const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
+      const previousIndices = previousRelatedSelectedIndicesRef.current;
+
+      previousRelatedSelectedIndicesRef.current = nextIndices;
+      setRelatedSelectedIndices(nextIndices);
+
+      if (!relationshipMode) {
+        return;
+      }
+
+      if (suppressRelatedSelectionQueueRef.current) {
+        suppressRelatedSelectionQueueRef.current = false;
+        return;
+      }
+
+      if (!relationshipItemOrigin || !targetTypePrimaryFieldName) {
+        return;
+      }
+
+      const addedIndices = nextIndices.filter(
+        (index) => !previousIndices.includes(index),
       );
+      const removedIndices = previousIndices.filter(
+        (index) => !nextIndices.includes(index),
+      );
+
+      addedIndices.forEach((index) => {
+        const primaryFieldValue =
+          relatedItemsList[index]?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null
+        ) {
+          queueRelationshipMutation(`${primaryFieldValue}`, "create");
+        }
+      });
+
+      removedIndices.forEach((index) => {
+        const primaryFieldValue =
+          relatedItemsList[index]?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null
+        ) {
+          queueRelationshipMutation(`${primaryFieldValue}`, "delete");
+        }
+      });
     },
-    [relationshipAllowsMultiple],
+    [
+      relationshipAllowsMultiple,
+      relationshipMode,
+      relationshipItemOrigin,
+      targetTypePrimaryFieldName,
+      relatedItemsList,
+      queueRelationshipMutation,
+    ],
   );
-  const { items: searchItemsList = [] } = searchItemsResults;
-  const { items: relatedItemsList = [] } = relatedItemsResults;
-  const { items: relatedRelationshipsList = [] } =
-    listRelationshipsResults ?? { items: [] };
   useEffect(() => {
     if (
       !relationshipMode ||
@@ -605,16 +860,24 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     }
 
     selectedSearchRelationships.forEach((relationshipItem) => {
-      typeInfoORMAPIService.createRelationship(relationshipItem);
+      const primaryFieldValue =
+        relationshipItem[ItemRelationshipInfoKeys.toTypePrimaryFieldValue];
+
+      if (
+        typeof primaryFieldValue !== "undefined" &&
+        primaryFieldValue !== null
+      ) {
+        queueRelationshipMutation(`${primaryFieldValue}`, "create");
+      }
     });
 
-    listRelatedDataWithOrigin();
+    flushPendingRelationshipMutations();
     setSelectedIndices([]);
   }, [
     canAddRelatedItems,
     selectedSearchRelationships,
-    typeInfoORMAPIService,
-    listRelatedDataWithOrigin,
+    queueRelationshipMutation,
+    flushPendingRelationshipMutations,
   ]);
   const onDeleteRelationships = useCallback(() => {
     if (!relationshipItemOrigin || !canDeleteRelationships) {
@@ -626,20 +889,23 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       : selectedRelatedPrimaryFieldValues.slice(0, 1);
 
     relatedPrimaryValues.forEach((relatedPrimaryValue) => {
-      typeInfoORMAPIService.deleteRelationship({
-        ...relationshipItemOrigin,
-        [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: relatedPrimaryValue,
-      });
+      queueRelationshipMutation(`${relatedPrimaryValue}`, "delete");
     });
 
+    flushPendingRelationshipMutations();
     setRelatedSelectedIndices([]);
   }, [
     relationshipItemOrigin,
     canDeleteRelationships,
     relationshipAllowsMultiple,
     selectedRelatedPrimaryFieldValues,
-    typeInfoORMAPIService,
+    queueRelationshipMutation,
+    flushPendingRelationshipMutations,
   ]);
+  const onCloseWithFlush = useCallback(() => {
+    flushPendingRelationshipMutations();
+    onCloseCurrentNavHistoryItem();
+  }, [flushPendingRelationshipMutations, onCloseCurrentNavHistoryItem]);
   const onNavigateToSearchMode = useCallback(() => {
     if (!relationshipItemOrigin || !relationshipMode || !fromTypeFieldName) {
       return;
@@ -695,7 +961,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
           customInputTypeMap={customInputTypeMap}
           value={typeInfoDataItem}
           operation={toOperation}
-          onCancel={onCloseCurrentNavHistoryItem}
+          onCancel={onCloseWithFlush}
           onSubmit={onSubmit}
           onNavigateToType={onNavigateToType}
         />,
@@ -716,7 +982,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
                   </IndexButton>
                   <IndexButton
                     type="button"
-                    onClick={onCloseCurrentNavHistoryItem}
+                    onClick={onCloseWithFlush}
                   >
                     Back
                   </IndexButton>
