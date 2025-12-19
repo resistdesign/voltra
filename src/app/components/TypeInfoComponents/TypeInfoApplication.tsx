@@ -24,6 +24,7 @@ import {
 import { useTypeInfoState } from "./TypeInfoApplication/TypeInfoStateUtils";
 import {
   ListItemsConfig,
+  ListItemsResults,
   ListRelationshipsConfig,
   LogicalOperators,
 } from "../../../common/SearchTypes";
@@ -33,6 +34,7 @@ import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
 import {
   BaseItemRelationshipInfo,
+  ItemRelationshipInfo,
   ItemRelationshipInfoKeys,
   ItemRelationshipOriginItemInfo,
 } from "../../../common/ItemRelationshipInfoTypes";
@@ -138,6 +140,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       error: relatedItemsError,
     } = {},
   } = useTypeInfoApplicationState(typeInfoORMAPIState);
+  const listRelationshipsResults =
+    typeInfoORMAPIState.listRelationships?.data as
+      | ListItemsResults<ItemRelationshipInfo>
+      | undefined;
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
     itemsPerPage: 10,
@@ -368,13 +374,31 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     typeInfoORMAPIService,
   ]);
 
+  const listRelationshipsWithOrigin = useCallback(() => {
+    if (!relationshipItemOrigin) {
+      return;
+    }
+
+    const listRelatedItemsConfig: ListRelationshipsConfig = {
+      ...listRelationshipsConfig,
+      relationshipItemOrigin,
+    };
+
+    typeInfoORMAPIService.listRelationships(listRelatedItemsConfig);
+  }, [listRelationshipsConfig, relationshipItemOrigin, typeInfoORMAPIService]);
+
+  const listRelatedDataWithOrigin = useCallback(() => {
+    listRelatedItemsWithOrigin();
+    listRelationshipsWithOrigin();
+  }, [listRelatedItemsWithOrigin, listRelationshipsWithOrigin]);
+
   useEffect(() => {
     if (toMode !== TypeNavigationMode.RELATED_ITEMS) {
       return;
     }
 
-    listRelatedItemsWithOrigin();
-  }, [toMode, listRelatedItemsWithOrigin]);
+    listRelatedDataWithOrigin();
+  }, [toMode, listRelatedDataWithOrigin]);
 
   // TODO: HOW TO RENDER AND DISMISS ERRORS?
   // TODO: How to handle loading states?
@@ -429,6 +453,61 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   );
   const { items: searchItemsList = [] } = searchItemsResults;
   const { items: relatedItemsList = [] } = relatedItemsResults;
+  const { items: relatedRelationshipsList = [] } =
+    listRelationshipsResults ?? { items: [] };
+  useEffect(() => {
+    if (
+      !relationshipMode ||
+      toMode !== TypeNavigationMode.RELATED_ITEMS ||
+      !targetTypePrimaryFieldName
+    ) {
+      return;
+    }
+
+    const relatedPrimaryFieldValues = new Set(
+      relatedRelationshipsList
+        .map((relationship) =>
+          relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+        )
+        .filter(Boolean),
+    );
+    const selectedIndices = relatedItemsList.reduce<number[]>(
+      (accumulator, item, index) => {
+        const primaryFieldValue = item?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null &&
+          relatedPrimaryFieldValues.has(`${primaryFieldValue}`)
+        ) {
+          accumulator.push(index);
+        }
+
+        return accumulator;
+      },
+      [],
+    );
+    const nextSelectedIndices = relationshipAllowsMultiple
+      ? selectedIndices
+      : selectedIndices.slice(0, 1);
+
+    setRelatedSelectedIndices((prevSelectedIndices) => {
+      const matches =
+        prevSelectedIndices.length === nextSelectedIndices.length &&
+        prevSelectedIndices.every(
+          (value, index) => value === nextSelectedIndices[index],
+        );
+
+      return matches ? prevSelectedIndices : nextSelectedIndices;
+    });
+  }, [
+    relationshipMode,
+    toMode,
+    targetTypePrimaryFieldName,
+    relatedRelationshipsList,
+    relatedItemsList,
+    relationshipAllowsMultiple,
+  ]);
   const selectedRelatedItems = useMemo<Partial<TypeInfoDataItem>[]>(
     () =>
       relatedSelectedIndices
@@ -529,13 +608,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       typeInfoORMAPIService.createRelationship(relationshipItem);
     });
 
-    listRelatedItemsWithOrigin();
+    listRelatedDataWithOrigin();
     setSelectedIndices([]);
   }, [
     canAddRelatedItems,
     selectedSearchRelationships,
     typeInfoORMAPIService,
-    listRelatedItemsWithOrigin,
+    listRelatedDataWithOrigin,
   ]);
   const onDeleteRelationships = useCallback(() => {
     if (!relationshipItemOrigin || !canDeleteRelationships) {
@@ -594,7 +673,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       deleteRelationshipLoadingRef.current && !deleteRelationshipLoading;
 
     if (relationshipMode && (createFinished || deleteFinished)) {
-      listRelatedItemsWithOrigin();
+      listRelatedDataWithOrigin();
       setRelatedSelectedIndices([]);
     }
 
@@ -604,7 +683,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipMode,
     createRelationshipLoading,
     deleteRelationshipLoading,
-    listRelatedItemsWithOrigin,
+    listRelatedDataWithOrigin,
   ]);
 
   return toMode === TypeNavigationMode.FORM

@@ -35,6 +35,7 @@ export const useTypeInfoApplicationState = (
       list,
       createRelationship,
       deleteRelationship,
+      listRelationships,
       listRelatedItems,
     } = typeInfoORMAPIState;
 
@@ -52,12 +53,14 @@ export const useTypeInfoApplicationState = (
       [TypeNavigationMode.RELATED_ITEMS]: {
         loading:
           listRelatedItems?.loading ||
+          listRelationships?.loading ||
           createRelationship?.loading ||
           deleteRelationship?.loading,
         listItemsResults:
           listRelatedItems?.data as ListItemsResults<TypeInfoDataItem>,
         error:
           listRelatedItems?.error ??
+          listRelationships?.error ??
           createRelationship?.error ??
           deleteRelationship?.error,
       },
