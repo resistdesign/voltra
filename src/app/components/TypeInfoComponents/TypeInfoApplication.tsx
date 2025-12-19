@@ -170,6 +170,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
+  const lastSearchRelationshipSnapshotRef = useRef<string | null>(null);
+  const lastRelatedRelationshipSnapshotRef = useRef<string | null>(null);
+  const searchSelectionDirtyRef = useRef<boolean>(false);
+  const relatedSelectionDirtyRef = useRef<boolean>(false);
   const suppressSearchSelectionQueueRef = useRef<boolean>(false);
   const suppressRelatedSelectionQueueRef = useRef<boolean>(false);
   useEffect(() => {
@@ -420,6 +424,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         .map((value) => `${value}`),
     );
   }, [relatedRelationshipsList, targetTypePrimaryFieldName]);
+  const relationshipSnapshot = useMemo(
+    () =>
+      relatedRelationshipsList
+        .map(
+          (relationship) =>
+            relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+        )
+        .filter(Boolean)
+        .map((value) => `${value}`)
+        .sort()
+        .join("|"),
+    [relatedRelationshipsList],
+  );
   const existingRelatedPrimaryFieldValues = useMemo(
     () =>
       new Set(
@@ -648,58 +665,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       left.every((value, index) => value === right[index]),
     [],
   );
-  useEffect(() => {
-    if (
-      toMode !== TypeNavigationMode.SEARCH_ITEMS ||
-      !relationshipMode ||
-      !targetTypePrimaryFieldName
-    ) {
-      return;
-    }
-
-    const relatedPrimaryFieldValues = new Set(
-      (listRelationshipsResults?.items ?? [])
-        .map(
-          (relationship) =>
-            relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
-        )
-        .filter(Boolean)
-        .map((value) => `${value}`),
-    );
-    const nextSelectedIndices = searchItemsList.reduce<number[]>(
-      (accumulator, item, index) => {
-        const primaryFieldValue = item?.[targetTypePrimaryFieldName];
-
-        if (
-          typeof primaryFieldValue !== "undefined" &&
-          primaryFieldValue !== null &&
-          relatedPrimaryFieldValues.has(`${primaryFieldValue}`)
-        ) {
-          accumulator.push(index);
-        }
-
-        return accumulator;
-      },
-      [],
-    );
-    const normalizedIndices = relationshipAllowsMultiple
-      ? nextSelectedIndices
-      : nextSelectedIndices.slice(0, 1);
-
-    if (!areIndicesEqual(selectedIndices, normalizedIndices)) {
-      previousSearchSelectedIndicesRef.current = normalizedIndices;
-      setSelectedIndices(normalizedIndices);
-    }
-  }, [
-    toMode,
-    relationshipMode,
-    targetTypePrimaryFieldName,
-    listRelationshipsResults,
-    searchItemsList,
-    relationshipAllowsMultiple,
-    areIndicesEqual,
-    selectedIndices,
-  ]);
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
       const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
@@ -707,6 +672,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
       previousSearchSelectedIndicesRef.current = nextIndices;
       setSelectedIndices(nextIndices);
+      searchSelectionDirtyRef.current = true;
 
       if (!selectingRelatedItems) {
         return;
@@ -768,6 +734,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
       previousRelatedSelectedIndicesRef.current = nextIndices;
       setRelatedSelectedIndices(nextIndices);
+      relatedSelectionDirtyRef.current = true;
 
       if (!relationshipMode) {
         return;
@@ -905,6 +872,17 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return;
     }
 
+    if (relationshipSnapshot !== lastSearchRelationshipSnapshotRef.current) {
+      searchSelectionDirtyRef.current = false;
+    }
+
+    if (
+      relationshipSnapshot === lastSearchRelationshipSnapshotRef.current ||
+      searchSelectionDirtyRef.current
+    ) {
+      return;
+    }
+
     setSelectedIndices((prevSelectedIndices) => {
       if (areIndicesEqual(prevSelectedIndices, derivedSearchSelectedIndices)) {
         return prevSelectedIndices;
@@ -913,9 +891,22 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       previousSearchSelectedIndicesRef.current = derivedSearchSelectedIndices;
       return derivedSearchSelectedIndices;
     });
-  }, [areIndicesEqual, derivedSearchSelectedIndices]);
+    lastSearchRelationshipSnapshotRef.current = relationshipSnapshot;
+    searchSelectionDirtyRef.current = false;
+  }, [areIndicesEqual, derivedSearchSelectedIndices, relationshipSnapshot]);
   useEffect(() => {
     if (!derivedRelatedSelectedIndices) {
+      return;
+    }
+
+    if (relationshipSnapshot !== lastRelatedRelationshipSnapshotRef.current) {
+      relatedSelectionDirtyRef.current = false;
+    }
+
+    if (
+      relationshipSnapshot === lastRelatedRelationshipSnapshotRef.current ||
+      relatedSelectionDirtyRef.current
+    ) {
       return;
     }
 
@@ -924,7 +915,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         ? prevSelectedIndices
         : derivedRelatedSelectedIndices;
     });
-  }, [areIndicesEqual, derivedRelatedSelectedIndices]);
+    lastRelatedRelationshipSnapshotRef.current = relationshipSnapshot;
+    relatedSelectionDirtyRef.current = false;
+  }, [areIndicesEqual, derivedRelatedSelectedIndices, relationshipSnapshot]);
   const selectedRelatedItems = useMemo<Partial<TypeInfoDataItem>[]>(
     () =>
       relatedSelectedIndices
