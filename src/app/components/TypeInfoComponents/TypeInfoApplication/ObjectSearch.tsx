@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ListItemsConfig,
   ListItemsResults,
@@ -96,27 +96,35 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   );
 
   // Effects
+  const criteriaSnapshot = useMemo(
+    () => JSON.stringify(currentCriteria ?? null),
+    [currentCriteria],
+  );
+  const cursorSnapshot = useMemo(
+    () => JSON.stringify(currentCursor ?? null),
+    [currentCursor],
+  );
   const previousSearchRef = useRef({
-    cursor: currentCursor,
-    criteria: currentCriteria,
+    cursorSnapshot,
+    criteriaSnapshot,
   });
   useEffect(() => {
-    const { cursor: previousCursor, criteria: previousCriteria } =
+    const { cursorSnapshot: previousCursor, criteriaSnapshot: previousCriteria } =
       previousSearchRef.current;
-    const cursorChanged = previousCursor !== currentCursor;
-    const criteriaChanged = previousCriteria !== currentCriteria;
+    const cursorChanged = previousCursor !== cursorSnapshot;
+    const criteriaChanged = previousCriteria !== criteriaSnapshot;
 
     if ((cursorChanged || criteriaChanged) && selectedIndices.length > 0) {
       onSelectedIndicesChange?.([]);
     }
 
     previousSearchRef.current = {
-      cursor: currentCursor,
-      criteria: currentCriteria,
+      cursorSnapshot,
+      criteriaSnapshot,
     };
   }, [
-    currentCursor,
-    currentCriteria,
+    cursorSnapshot,
+    criteriaSnapshot,
     onSelectedIndicesChange,
     selectedIndices.length,
   ]);

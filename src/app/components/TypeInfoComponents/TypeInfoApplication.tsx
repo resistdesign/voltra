@@ -168,6 +168,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   >(new Map());
   const flushPendingRelationshipTimeoutRef =
     useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRelationshipRequestIdsRef = useRef<Set<string>>(new Set());
+  const pendingRelationshipRefreshRef = useRef<boolean>(false);
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
   const lastSearchRelationshipSnapshotRef = useRef<string | null>(null);
@@ -469,6 +471,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     }
 
     pendingRelationshipMutationsRef.current.clear();
+    pendingRelationshipRefreshRef.current = true;
 
     pendingMutations.forEach(([primaryFieldValue, action]) => {
       const relationship = {
@@ -477,18 +480,20 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       };
 
       if (action === "create") {
-        typeInfoORMAPIService.createRelationship(relationship);
+        const requestId = typeInfoORMAPIService.createRelationship(relationship);
+
+        if (requestId) {
+          pendingRelationshipRequestIdsRef.current.add(requestId);
+        }
       } else {
-        typeInfoORMAPIService.deleteRelationship(relationship);
+        const requestId = typeInfoORMAPIService.deleteRelationship(relationship);
+
+        if (requestId) {
+          pendingRelationshipRequestIdsRef.current.add(requestId);
+        }
       }
     });
-
-    listRelatedDataWithOrigin();
-  }, [
-    relationshipItemOrigin,
-    listRelatedDataWithOrigin,
-    typeInfoORMAPIService,
-  ]);
+  }, [relationshipItemOrigin, typeInfoORMAPIService]);
   const scheduleRelationshipMutationFlush = useCallback(() => {
     if (flushPendingRelationshipTimeoutRef.current) {
       clearTimeout(flushPendingRelationshipTimeoutRef.current);
@@ -597,6 +602,37 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     searchRelationshipOrigin,
     listRelationshipsConfig,
     typeInfoORMAPIService,
+  ]);
+  const createRelationshipRequests =
+    typeInfoORMAPIState.createRelationship?.activeRequests ?? [];
+  const deleteRelationshipRequests =
+    typeInfoORMAPIState.deleteRelationship?.activeRequests ?? [];
+  useEffect(() => {
+    if (!pendingRelationshipRefreshRef.current || !relationshipMode) {
+      return;
+    }
+
+    const activeRequestIds = new Set([
+      ...createRelationshipRequests,
+      ...deleteRelationshipRequests,
+    ]);
+    const pendingRequestIds = pendingRelationshipRequestIdsRef.current;
+    const hasPendingRequests = Array.from(pendingRequestIds).some((requestId) =>
+      activeRequestIds.has(requestId),
+    );
+
+    if (hasPendingRequests) {
+      return;
+    }
+
+    pendingRelationshipRequestIdsRef.current.clear();
+    pendingRelationshipRefreshRef.current = false;
+    listRelatedDataWithOrigin();
+  }, [
+    createRelationshipRequests,
+    deleteRelationshipRequests,
+    listRelatedDataWithOrigin,
+    relationshipMode,
   ]);
 
   const onSubmit = useCallback(
@@ -1088,31 +1124,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     onNavigateToType,
     toOperation,
   ]);
-  const createRelationshipLoadingRef = useRef<boolean | undefined>(undefined);
-  const deleteRelationshipLoadingRef = useRef<boolean | undefined>(undefined);
-  const createRelationshipLoading = typeInfoORMAPIState.createRelationship?.loading;
-  const deleteRelationshipLoading = typeInfoORMAPIState.deleteRelationship?.loading;
-
-  useEffect(() => {
-    const createFinished =
-      createRelationshipLoadingRef.current && !createRelationshipLoading;
-    const deleteFinished =
-      deleteRelationshipLoadingRef.current && !deleteRelationshipLoading;
-
-    if (relationshipMode && (createFinished || deleteFinished)) {
-      listRelatedDataWithOrigin();
-      setRelatedSelectedIndices([]);
-    }
-
-    createRelationshipLoadingRef.current = !!createRelationshipLoading;
-    deleteRelationshipLoadingRef.current = !!deleteRelationshipLoading;
-  }, [
-    relationshipMode,
-    createRelationshipLoading,
-    deleteRelationshipLoading,
-    listRelatedDataWithOrigin,
-  ]);
-
   return toMode === TypeNavigationMode.FORM
     ? renderWithFeedback(
         <TypeInfoForm
