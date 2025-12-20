@@ -147,6 +147,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     typeInfoORMAPIState.listRelationships?.data as
       | ListItemsResults<ItemRelationshipInfo>
       | undefined;
+  const { items: searchItemsList = [] } = searchItemsResults;
+  const { items: relatedItemsList = [] } = relatedItemsResults;
   const [checkRelationshipsResults, setCheckRelationshipsResults] =
     useState<CheckRelationshipsResults | null>(null);
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
@@ -743,8 +745,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     );
   };
 
-  const { items: searchItemsList = [] } = searchItemsResults;
-  const { items: relatedItemsList = [] } = relatedItemsResults;
   const searchCandidatePrimaryFieldValues = useMemo<string[]>(() => {
     if (!targetTypePrimaryFieldName) {
       return [];
