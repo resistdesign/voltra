@@ -179,6 +179,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const pendingRelationshipRequestIdsRef = useRef<Set<string>>(new Set());
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
   const checkRelationshipsRequestIdRef = useRef<string | null>(null);
+  const checkRelationshipsRequestKeyRef = useRef<string | null>(null);
   const checkRelationshipsKeyRef = useRef<string | null>(null);
   const checkRelationshipsOriginKeyRef = useRef<string | null>(null);
   const checkRelationshipsCandidateKeyRef = useRef<string | null>(null);
@@ -272,6 +273,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     checkRelationshipsOriginKeyRef.current = null;
     checkRelationshipsCandidateKeyRef.current = null;
     checkRelationshipsRequestIdRef.current = null;
+    checkRelationshipsRequestKeyRef.current = null;
     checkRelationshipsLatestRequestRef.current = null;
     checkRelationshipsRequestMetaRef.current.clear();
     setCheckRelationshipsResults(null);
@@ -390,6 +392,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     checkRelationshipsOriginKeyRef.current = null;
     checkRelationshipsCandidateKeyRef.current = null;
     checkRelationshipsRequestIdRef.current = null;
+    checkRelationshipsRequestKeyRef.current = null;
     checkRelationshipsLatestRequestRef.current = null;
     checkRelationshipsRequestMetaRef.current.clear();
     setCheckRelationshipsResults(null);
@@ -867,6 +870,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     checkRelationshipsKeyRef.current = stableCandidateKey;
     checkRelationshipsOriginKeyRef.current = originKey;
     checkRelationshipsCandidateKeyRef.current = stableCandidateKey;
+    checkRelationshipsRequestKeyRef.current = `${originKey}|${stableCandidateKey}`;
     checkRelationshipsLatestRequestRef.current = {
       key: stableCandidateKey,
       token: requestToken,
@@ -918,10 +922,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     const latestRequest = checkRelationshipsLatestRequestRef.current;
     const latestOriginKey = checkRelationshipsOriginKeyRef.current;
     const latestCandidateKey = checkRelationshipsCandidateKeyRef.current;
+    const latestRequestKey = checkRelationshipsRequestKeyRef.current;
+    const currentRequestKey = `${originKey}|${candidateKey}`;
 
     if (
       !requestMeta ||
       !latestRequest ||
+      latestRequestKey !== currentRequestKey ||
       latestRequest.key !== requestMeta.key ||
       latestRequest.token !== requestMeta.token ||
       requestMeta.originKey !== originKey ||
@@ -988,6 +995,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipAllowsMultiple,
     areIndicesEqual,
     originKey,
+    candidateKey,
   ]);
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
