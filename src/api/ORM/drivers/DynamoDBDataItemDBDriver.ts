@@ -50,7 +50,6 @@ const DynamoDBOperatorMappings: Partial<
     `#${fieldName} < :${fieldName}`,
   [ComparisonOperators.LESS_THAN_OR_EQUAL]: (fieldName) =>
     `#${fieldName} <= :${fieldName}`,
-  [ComparisonOperators.IN]: (fieldName) => `#${fieldName} IN (:${fieldName})`,
   [ComparisonOperators.LIKE]: (fieldName) =>
     `contains(#${fieldName}, :${fieldName})`,
   [ComparisonOperators.EXISTS]: (fieldName) =>
@@ -90,22 +89,49 @@ const createFilterExpression = (
     const attributeValues: Record<string, any> = {};
 
     for (const criterion of fieldCriteria) {
-      const { fieldName, operator, value } = criterion;
+      const { fieldName, operator, value, valueOptions } = criterion;
       const createExpression =
         DynamoDBOperatorMappings[operator as ComparisonOperators];
 
-      if (!createExpression) {
-        throw {
-          message:
-            DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
-          operator,
-          fieldName,
-        };
-      }
+      if (
+        operator === ComparisonOperators.IN ||
+        operator === ComparisonOperators.NOT_IN
+      ) {
+        const candidates = Array.isArray(valueOptions)
+          ? valueOptions
+          : Array.isArray(value)
+            ? value
+            : [value];
+        const valuePlaceholders = candidates.map(
+          (_, index) => `:${fieldName}_${index}`,
+        );
+        const inExpression = `#${fieldName} IN (${valuePlaceholders.join(
+          ", ",
+        )})`;
 
-      expressions.push(createExpression(fieldName));
-      attributeNames[`#${fieldName}`] = fieldName;
-      attributeValues[`:${fieldName}`] = value;
+        expressions.push(
+          operator === ComparisonOperators.NOT_IN
+            ? `NOT (${inExpression})`
+            : inExpression,
+        );
+        attributeNames[`#${fieldName}`] = fieldName;
+        candidates.forEach((candidate, index) => {
+          attributeValues[`:${fieldName}_${index}`] = candidate;
+        });
+      } else {
+        if (!createExpression) {
+          throw {
+            message:
+              DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED,
+            operator,
+            fieldName,
+          };
+        }
+
+        expressions.push(createExpression(fieldName));
+        attributeNames[`#${fieldName}`] = fieldName;
+        attributeValues[`:${fieldName}`] = value;
+      }
     }
 
     output = {

@@ -55,5 +55,6 @@ jobs:
           name: ${{ secrets.AWS_STACK_NAME }}
           template: site-dist/iac/index.yml
           capabilities: CAPABILITY_NAMED_IAM
+          no-fail-on-empty-changeset: "1"
           parameter-overrides: >-
             HostedZoneId=${{ secrets.HOSTEDZONEID }}
