@@ -178,6 +178,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const pendingRelationshipRequestIdsRef = useRef<Set<string>>(new Set());
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
   const checkRelationshipsRequestIdRef = useRef<string | null>(null);
+  const checkRelationshipsKeyRef = useRef<string | null>(null);
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
   const lastSearchRelationshipSnapshotRef = useRef<string | null>(null);
@@ -780,19 +781,41 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relatedItemsList,
     searchItemsList,
   ]);
-  const candidatePrimaryFieldValuesSnapshot = useMemo(
-    () => candidatePrimaryFieldValues.join("|"),
-    [candidatePrimaryFieldValues],
-  );
+  const candidateKey = useMemo(() => {
+    if (!relationshipItemOrigin || candidatePrimaryFieldValues.length === 0) {
+      return "";
+    }
+
+    const sortedCandidatePrimaryFieldValues = [...candidatePrimaryFieldValues]
+      .filter(Boolean)
+      .sort();
+
+    return [
+      relationshipItemOriginKey,
+      targetTypeName ?? "",
+      sortedCandidatePrimaryFieldValues.join("|"),
+    ].join(":");
+  }, [
+    candidatePrimaryFieldValues,
+    relationshipItemOrigin,
+    relationshipItemOriginKey,
+    targetTypeName,
+  ]);
   useEffect(() => {
     if (
       !selectingRelatedItems ||
       !relationshipItemOrigin ||
       candidatePrimaryFieldValues.length === 0
     ) {
+      checkRelationshipsKeyRef.current = null;
       return;
     }
 
+    if (checkRelationshipsKeyRef.current === candidateKey) {
+      return;
+    }
+
+    checkRelationshipsKeyRef.current = candidateKey;
     setCheckRelationshipsResults(null);
     checkRelationshipsRequestIdRef.current =
       typeInfoORMAPIService.checkRelationships(
@@ -801,8 +824,9 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       );
   }, [
     selectingRelatedItems,
-    relationshipItemOriginKey,
-    candidatePrimaryFieldValuesSnapshot,
+    relationshipItemOrigin,
+    candidatePrimaryFieldValues,
+    candidateKey,
     typeInfoORMAPIService,
   ]);
   useEffect(() => {
