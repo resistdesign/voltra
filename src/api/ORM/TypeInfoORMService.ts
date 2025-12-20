@@ -26,7 +26,6 @@ import {
 import { validateSearchFields } from "../../common/SearchValidation";
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
-  CheckRelationshipsConfig,
   CheckRelationshipsResults,
   DeleteRelationshipResults,
   OperationGroup,
@@ -52,6 +51,7 @@ import {
   ItemRelationshipInfoIdentifyingKeys,
   ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
+  ItemRelationshipOriginItemInfo,
   ItemRelationshipOriginatingItemInfo,
 } from "../../common/ItemRelationshipInfoTypes";
 import {
@@ -869,10 +869,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * Check which relationships exist for a list of candidate items.
    * */
   checkRelationships = async (
-    config: CheckRelationshipsConfig,
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo,
+    candidateToPrimaryFieldValues: string[],
   ): Promise<CheckRelationshipsResults> => {
     const { useDAC } = this.config;
-    const { relationshipItemOrigin, candidateToTypePrimaryFieldValues } = config;
     this.validateRelationshipItem(relationshipItemOrigin, [
       ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
     ]);
@@ -885,7 +885,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     );
     const uniqueCandidates = Array.from(
       new Set(
-        (candidateToTypePrimaryFieldValues ?? [])
+        (candidateToPrimaryFieldValues ?? [])
           .filter((value) => typeof value !== "undefined" && value !== null)
           .map((value) => `${value}`),
       ),

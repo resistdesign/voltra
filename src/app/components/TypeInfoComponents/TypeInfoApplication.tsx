@@ -773,10 +773,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     setCheckRelationshipsResults(null);
 
     typeInfoORMAPIService
-      .checkRelationships({
+      .checkRelationships(
         relationshipItemOrigin,
-        candidateToTypePrimaryFieldValues: searchCandidatePrimaryFieldValues,
-      })
+        searchCandidatePrimaryFieldValues,
+      )
       .then((results) => {
         if (checkRelationshipsRequestTokenRef.current !== requestToken) {
           return;

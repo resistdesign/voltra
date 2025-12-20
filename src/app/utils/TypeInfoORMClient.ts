@@ -1,5 +1,4 @@
 import {
-  CheckRelationshipsConfig,
   CheckRelationshipsResults,
   DeleteRelationshipResults,
   TypeInfoORMAPI,
@@ -15,6 +14,7 @@ import {
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
+  ItemRelationshipOriginItemInfo,
 } from "../../common/ItemRelationshipInfoTypes";
 
 /**
@@ -120,10 +120,12 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   };
 
   checkRelationships = async (
-    config: CheckRelationshipsConfig,
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo,
+    candidateToPrimaryFieldValues: string[],
   ): Promise<CheckRelationshipsResults> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.CHECK_RELATIONSHIPS, [
-      config,
+      relationshipItemOrigin,
+      candidateToPrimaryFieldValues,
     ]);
   };
 }
