@@ -808,6 +808,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         : searchItemsResults.items ?? [],
     [toMode, relatedItemsResults.items, searchItemsResults.items],
   );
+  const activeListItemsConfig = useMemo(
+    () =>
+      toMode === TypeNavigationMode.RELATED_ITEMS
+        ? listRelationshipsConfig
+        : listItemsConfig,
+    [toMode, listRelationshipsConfig, listItemsConfig],
+  );
   const candidateValues = useMemo(
     () =>
       targetTypePrimaryFieldName
@@ -822,25 +829,50 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     () => [...candidateValues].sort().join("|"),
     [candidateValues],
   );
+  const candidateStabilityKey = useMemo(
+    () =>
+      `${activeListItemsConfig?.cursor ?? ""}:${relationshipCandidateItems.length}`,
+    [
+      activeListItemsConfig?.cursor,
+      relationshipCandidateItems.length,
+    ],
+  );
+  const [stableCandidateKey, setStableCandidateKey] = useState<string>("");
+  useEffect(() => {
+    if (!selectingRelatedItems) {
+      setStableCandidateKey("");
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setStableCandidateKey(candidateKey);
+    }, 75);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [candidateKey, candidateStabilityKey, selectingRelatedItems]);
   useEffect(() => {
     if (
       !selectingRelatedItems ||
       !relationshipItemOrigin ||
-      candidateValues.length === 0
+      candidateValues.length === 0 ||
+      stableCandidateKey.length === 0 ||
+      stableCandidateKey !== candidateKey
     ) {
       return;
     }
 
-    if (checkRelationshipsKeyRef.current === candidateKey) {
+    if (checkRelationshipsKeyRef.current === stableCandidateKey) {
       return;
     }
 
     const requestToken = getSimpleId();
-    checkRelationshipsKeyRef.current = candidateKey;
+    checkRelationshipsKeyRef.current = stableCandidateKey;
     checkRelationshipsOriginKeyRef.current = originKey;
-    checkRelationshipsCandidateKeyRef.current = candidateKey;
+    checkRelationshipsCandidateKeyRef.current = stableCandidateKey;
     checkRelationshipsLatestRequestRef.current = {
-      key: candidateKey,
+      key: stableCandidateKey,
       token: requestToken,
     };
     setCheckRelationshipsResults(null);
@@ -851,7 +883,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     checkRelationshipsRequestIdRef.current = requestId;
     if (requestId) {
       checkRelationshipsRequestMetaRef.current.set(requestId, {
-        key: candidateKey,
+        key: stableCandidateKey,
         token: requestToken,
         originKey,
       });
@@ -861,6 +893,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     relationshipItemOrigin,
     candidateValues,
     candidateKey,
+    stableCandidateKey,
     originKey,
     typeInfoORMAPIService,
   ]);
