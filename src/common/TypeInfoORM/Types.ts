@@ -83,14 +83,6 @@ export type DeleteRelationshipResults = {
 };
 
 /**
- * The configuration for checking relationships against a list of candidates.
- * */
-export type CheckRelationshipsConfig = {
-  relationshipItemOrigin: ItemRelationshipOriginItemInfo;
-  candidateToTypePrimaryFieldValues: string[];
-};
-
-/**
  * The results of checking relationships against a list of candidates.
  * */
 export type CheckRelationshipsResults = {
@@ -115,7 +107,8 @@ export type TypeInfoORMAPI = {
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
   checkRelationships: (
-    config: CheckRelationshipsConfig,
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo,
+    candidateToPrimaryFieldValues: string[],
   ) => Promise<CheckRelationshipsResults>;
   create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
   read: (
