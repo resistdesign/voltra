@@ -33,6 +33,7 @@ import {
   CheckRelationshipsResults,
   TypeInfoORMAPI,
 } from "../../../common/TypeInfoORM";
+import { getSimpleId } from "../../../common/IdGeneration";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
 import {
@@ -179,6 +180,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
   const checkRelationshipsRequestIdRef = useRef<string | null>(null);
   const checkRelationshipsKeyRef = useRef<string | null>(null);
+  const checkRelationshipsRequestTokenRef = useRef<Map<string, string>>(
+    new Map(),
+  );
+  const checkRelationshipsRequestMetaRef = useRef<
+    Map<string, { candidateKey: string; token: string }>
+  >(new Map());
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
   const lastSearchRelationshipSnapshotRef = useRef<string | null>(null);
@@ -808,6 +815,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       candidatePrimaryFieldValues.length === 0
     ) {
       checkRelationshipsKeyRef.current = null;
+      checkRelationshipsRequestIdRef.current = null;
       return;
     }
 
@@ -815,13 +823,19 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return;
     }
 
+    const requestToken = getSimpleId();
     checkRelationshipsKeyRef.current = candidateKey;
+    checkRelationshipsRequestTokenRef.current.set(candidateKey, requestToken);
     setCheckRelationshipsResults(null);
-    checkRelationshipsRequestIdRef.current =
-      typeInfoORMAPIService.checkRelationships(
-        relationshipItemOrigin,
-        candidatePrimaryFieldValues,
-      );
+    const requestId = typeInfoORMAPIService.checkRelationships(
+      relationshipItemOrigin,
+      candidatePrimaryFieldValues,
+    );
+    checkRelationshipsRequestIdRef.current = requestId;
+    checkRelationshipsRequestMetaRef.current.set(requestId, {
+      candidateKey,
+      token: requestToken,
+    });
   }, [
     selectingRelatedItems,
     relationshipItemOrigin,
@@ -829,6 +843,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     candidateKey,
     typeInfoORMAPIService,
   ]);
+  const areIndicesEqual = useCallback(
+    (left: number[], right: number[]) =>
+      left.length === right.length &&
+      left.every((value, index) => value === right[index]),
+    [],
+  );
   useEffect(() => {
     const { data, error, activeRequests = [] } =
       typeInfoORMAPIState.checkRelationships ?? {};
@@ -840,19 +860,81 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     if (error) {
       setCheckRelationshipsResults(null);
+      checkRelationshipsRequestMetaRef.current.delete(requestId);
       return;
     }
 
-    setCheckRelationshipsResults(
-      data ? (data as CheckRelationshipsResults) : null,
+    const requestMeta = checkRelationshipsRequestMetaRef.current.get(requestId);
+    const expectedToken = requestMeta
+      ? checkRelationshipsRequestTokenRef.current.get(requestMeta.candidateKey)
+      : null;
+
+    if (
+      !requestMeta ||
+      expectedToken !== requestMeta.token ||
+      requestMeta.candidateKey !== candidateKey
+    ) {
+      checkRelationshipsRequestMetaRef.current.delete(requestId);
+      return;
+    }
+
+    const nextResults = data ? (data as CheckRelationshipsResults) : null;
+    setCheckRelationshipsResults(nextResults);
+
+    if (!nextResults || !selectingRelatedItems || !targetTypePrimaryFieldName) {
+      return;
+    }
+
+    const existingPrimaryFieldValues = new Set(
+      (nextResults.existingToTypePrimaryFieldValues ?? [])
+        .filter(Boolean)
+        .map((value) => `${value}`),
     );
-  }, [typeInfoORMAPIState.checkRelationships]);
-  const areIndicesEqual = useCallback(
-    (left: number[], right: number[]) =>
-      left.length === right.length &&
-      left.every((value, index) => value === right[index]),
-    [],
-  );
+    const currentItems =
+      toMode === TypeNavigationMode.RELATED_ITEMS
+        ? relatedItemsList
+        : searchItemsList;
+    const nextSelectedIndices = currentItems.reduce<number[]>(
+      (accumulator, item, index) => {
+        const primaryFieldValue = item?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null &&
+          existingPrimaryFieldValues.has(`${primaryFieldValue}`)
+        ) {
+          accumulator.push(index);
+        }
+
+        return accumulator;
+      },
+      [],
+    );
+    const normalizedSelectedIndices = relationshipAllowsMultiple
+      ? nextSelectedIndices
+      : nextSelectedIndices.slice(0, 1);
+
+    setSelectedIndices((prevSelectedIndices) => {
+      if (areIndicesEqual(prevSelectedIndices, normalizedSelectedIndices)) {
+        return prevSelectedIndices;
+      }
+
+      previousSearchSelectedIndicesRef.current = normalizedSelectedIndices;
+      searchSelectionDirtyRef.current = false;
+      return normalizedSelectedIndices;
+    });
+    checkRelationshipsRequestMetaRef.current.delete(requestId);
+  }, [
+    typeInfoORMAPIState.checkRelationships,
+    candidateKey,
+    selectingRelatedItems,
+    targetTypePrimaryFieldName,
+    toMode,
+    relatedItemsList,
+    searchItemsList,
+    relationshipAllowsMultiple,
+    areIndicesEqual,
+  ]);
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
       const nextIndices = relationshipAllowsMultiple ? indices : indices.slice(-1);
