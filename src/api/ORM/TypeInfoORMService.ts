@@ -951,6 +951,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         value: normalizedFromTypePrimaryFieldValue,
       },
     ];
+    const buildCriteria = (
+      fieldCriteria: SearchCriteria["fieldCriteria"],
+    ): SearchCriteria => ({
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria,
+    });
 
     const collectAllowedValues = (
       items: Partial<ItemRelationshipInfo>[],
@@ -1036,21 +1042,22 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         fromTypePrimaryFieldValue: normalizedFromTypePrimaryFieldValue,
         candidateToTypePrimaryFieldValues: uniqueCandidates,
       });
+      const criteria = buildCriteria([
+        ...baseCriteria,
+        {
+          fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+          operator: ComparisonOperators.IN,
+          value: uniqueCandidates,
+          valueOptions: uniqueCandidates,
+        },
+      ]);
+      console.info("checkRelationships query criteria.", {
+        criteria,
+      });
       const results = await driver.listItems(
         {
           itemsPerPage: uniqueCandidates.length,
-          criteria: {
-            logicalOperator: LogicalOperators.AND,
-            fieldCriteria: [
-              ...baseCriteria,
-              {
-                fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
-                operator: ComparisonOperators.IN,
-                value: uniqueCandidates,
-                valueOptions: uniqueCandidates,
-              },
-            ],
-          },
+          criteria,
         },
         useDAC ? undefined : [ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
       );
@@ -1077,26 +1084,26 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         const existingCandidates = new Set<string>();
 
         for (const candidate of uniqueCandidates) {
+          const criteria = buildCriteria([
+            ...baseCriteria,
+            {
+              fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+              operator: ComparisonOperators.EQUALS,
+              value: candidate,
+            },
+          ]);
+
           console.info("checkRelationships querying relationship driver.", {
             fromTypeName: normalizedFromTypeName,
             fromTypeFieldName: normalizedFromTypeFieldName,
             fromTypePrimaryFieldValue: normalizedFromTypePrimaryFieldValue,
             candidateToTypePrimaryFieldValue: candidate,
+            criteria,
           });
           const results = await driver.listItems(
             {
               itemsPerPage: 1,
-              criteria: {
-                logicalOperator: LogicalOperators.AND,
-                fieldCriteria: [
-                  ...baseCriteria,
-                  {
-                    fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
-                    operator: ComparisonOperators.EQUALS,
-                    value: candidate,
-                  },
-                ],
-              },
+              criteria,
             },
             useDAC
               ? undefined
