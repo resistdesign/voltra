@@ -180,6 +180,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
   const checkRelationshipsRequestIdRef = useRef<string | null>(null);
   const checkRelationshipsKeyRef = useRef<string | null>(null);
+  const checkRelationshipsOriginKeyRef = useRef<string | null>(null);
+  const checkRelationshipsCandidateKeyRef = useRef<string | null>(null);
   const checkRelationshipsLatestRequestRef = useRef<{
     key: string;
     token: string;
@@ -267,6 +269,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     lastSearchRelationshipSnapshotRef.current = null;
     lastRelatedRelationshipSnapshotRef.current = null;
     checkRelationshipsKeyRef.current = null;
+    checkRelationshipsOriginKeyRef.current = null;
+    checkRelationshipsCandidateKeyRef.current = null;
     checkRelationshipsRequestIdRef.current = null;
     checkRelationshipsLatestRequestRef.current = null;
     checkRelationshipsRequestMetaRef.current.clear();
@@ -383,6 +387,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   );
   useEffect(() => {
     checkRelationshipsKeyRef.current = null;
+    checkRelationshipsOriginKeyRef.current = null;
+    checkRelationshipsCandidateKeyRef.current = null;
     checkRelationshipsRequestIdRef.current = null;
     checkRelationshipsLatestRequestRef.current = null;
     checkRelationshipsRequestMetaRef.current.clear();
@@ -831,6 +837,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     const requestToken = getSimpleId();
     checkRelationshipsKeyRef.current = candidateKey;
+    checkRelationshipsOriginKeyRef.current = originKey;
+    checkRelationshipsCandidateKeyRef.current = candidateKey;
     checkRelationshipsLatestRequestRef.current = {
       key: candidateKey,
       token: requestToken,
@@ -879,13 +887,17 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     const requestMeta = checkRelationshipsRequestMetaRef.current.get(requestId);
     const latestRequest = checkRelationshipsLatestRequestRef.current;
+    const latestOriginKey = checkRelationshipsOriginKeyRef.current;
+    const latestCandidateKey = checkRelationshipsCandidateKeyRef.current;
 
     if (
       !requestMeta ||
       !latestRequest ||
       latestRequest.key !== requestMeta.key ||
       latestRequest.token !== requestMeta.token ||
-      requestMeta.originKey !== originKey
+      requestMeta.originKey !== originKey ||
+      latestOriginKey !== requestMeta.originKey ||
+      latestCandidateKey !== requestMeta.key
     ) {
       checkRelationshipsRequestMetaRef.current.delete(requestId);
       return;
