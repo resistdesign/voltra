@@ -795,83 +795,55 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     );
   };
 
-  const candidatePrimaryFieldValues = useMemo<string[]>(() => {
-    if (!targetTypePrimaryFieldName) {
-      return [];
-    }
-
-    const originPrimaryFieldValue =
-      relationshipItemOrigin?.[
-        ItemRelationshipInfoKeys.fromTypePrimaryFieldValue
-      ];
-    const originPrimaryFieldValueString =
-      typeof originPrimaryFieldValue === "undefined" ||
-      originPrimaryFieldValue === null
-        ? null
-        : `${originPrimaryFieldValue}`;
-    const candidateItems =
-      toMode === TypeNavigationMode.RELATED_ITEMS
-        ? relatedItemsList
-        : searchItemsList;
-
-    return candidateItems
-      .map((item) => item?.[targetTypePrimaryFieldName])
-      .filter((value) => typeof value !== "undefined" && value !== null)
-      .map((value) => `${value}`)
-      .filter(
-        (value) =>
-          originPrimaryFieldValueString === null ||
-          value !== originPrimaryFieldValueString,
-      );
-  }, [
-    targetTypePrimaryFieldName,
-    relationshipItemOrigin,
-    toMode,
-    relatedItemsList,
-    searchItemsList,
-  ]);
-  const candidateKey = useMemo(() => {
-    if (candidatePrimaryFieldValues.length === 0) {
-      return "";
-    }
-
-    return [...candidatePrimaryFieldValues].filter(Boolean).sort().join("|");
-  }, [candidatePrimaryFieldValues]);
-  const checkRelationshipsPageKey = useMemo(
+  const relationshipCandidateItems = useMemo(
     () =>
-      `${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}:${toMode ?? ""}:${candidateKey}`,
-    [
-      candidateKey,
-      fromTypeName,
-      fromTypeFieldName,
-      fromTypePrimaryFieldValue,
-      toMode,
-    ],
+      toMode === TypeNavigationMode.RELATED_ITEMS
+        ? relatedItemsResults.items ?? []
+        : searchItemsResults.items ?? [],
+    [toMode, relatedItemsResults.items, searchItemsResults.items],
+  );
+  const candidateValues = useMemo(
+    () =>
+      targetTypePrimaryFieldName
+        ? relationshipCandidateItems
+            .map((item) => item?.[targetTypePrimaryFieldName])
+            .filter(Boolean)
+            .map(String)
+        : [],
+    [relationshipCandidateItems, targetTypePrimaryFieldName],
+  );
+  const candidateKey = useMemo(
+    () => [...candidateValues].sort().join("|"),
+    [candidateValues],
   );
   useEffect(() => {
-    if (!selectingRelatedItems || !relationshipItemOrigin || !candidateKey) {
+    if (
+      !selectingRelatedItems ||
+      !relationshipItemOrigin ||
+      candidateValues.length === 0
+    ) {
       return;
     }
 
-    if (checkRelationshipsKeyRef.current === checkRelationshipsPageKey) {
+    if (checkRelationshipsKeyRef.current === candidateKey) {
       return;
     }
 
     const requestToken = getSimpleId();
-    checkRelationshipsKeyRef.current = checkRelationshipsPageKey;
+    checkRelationshipsKeyRef.current = candidateKey;
     checkRelationshipsLatestRequestRef.current = {
-      key: checkRelationshipsPageKey,
+      key: candidateKey,
       token: requestToken,
     };
     setCheckRelationshipsResults(null);
     const requestId = typeInfoORMAPIService.checkRelationships(
       relationshipItemOrigin,
-      candidatePrimaryFieldValues,
+      candidateValues,
     );
     checkRelationshipsRequestIdRef.current = requestId;
     if (requestId) {
       checkRelationshipsRequestMetaRef.current.set(requestId, {
-        key: checkRelationshipsPageKey,
+        key: candidateKey,
         token: requestToken,
         originKey,
       });
@@ -879,9 +851,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   }, [
     selectingRelatedItems,
     relationshipItemOrigin,
-    candidatePrimaryFieldValues,
+    candidateValues,
     candidateKey,
-    checkRelationshipsPageKey,
     originKey,
     typeInfoORMAPIService,
   ]);
