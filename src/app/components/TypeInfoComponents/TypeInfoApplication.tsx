@@ -312,10 +312,24 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       `${targetTypeName ?? ""}:${TypeNavigationMode.RELATED_ITEMS}:${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}`,
     [targetTypeName, fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue],
   );
-  const targetTypePrimaryFieldName = useMemo<string | undefined>(
-    () => targetTypeInfo?.primaryField,
-    [targetTypeInfo],
-  );
+  const relatedTypeInfo = useMemo<TypeInfo | undefined>(() => {
+    if (!relationshipMode) {
+      return undefined;
+    }
+
+    const typeReference = relationshipFieldInfo?.typeReference;
+
+    return typeof typeReference === "string"
+      ? typeInfoMap[typeReference]
+      : undefined;
+  }, [relationshipMode, relationshipFieldInfo, typeInfoMap]);
+  const targetTypePrimaryFieldName = useMemo<string | undefined>(() => {
+    if (relationshipMode) {
+      return relatedTypeInfo?.primaryField;
+    }
+
+    return targetTypeInfo?.primaryField;
+  }, [relationshipMode, relatedTypeInfo, targetTypeInfo]);
   const relationshipItemOrigin = useMemo<
     ItemRelationshipOriginItemInfo | undefined
   >(() => {
