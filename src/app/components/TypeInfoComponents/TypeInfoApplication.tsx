@@ -807,12 +807,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const isRelationshipSelection =
     selectingRelatedItems && toMode === TypeNavigationMode.SEARCH_ITEMS;
   const relationshipCandidateItems = useMemo(
-    () => (isRelationshipSelection ? searchItemsResults.items ?? [] : []),
-    [isRelationshipSelection, searchItemsResults.items],
-  );
-  const activeListItemsConfig = useMemo(
-    () => (isRelationshipSelection ? listItemsConfig : undefined),
-    [isRelationshipSelection, listItemsConfig],
+    () => (isRelationshipSelection ? relatedItemsResults.items ?? [] : []),
+    [isRelationshipSelection, relatedItemsResults.items],
   );
   const candidateValues = useMemo(
     () =>
@@ -830,15 +826,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   );
   const candidateStabilityKey = useMemo(
     () =>
-      `${activeListItemsConfig?.cursor ?? ""}:${relationshipCandidateItems.length}`,
-    [
-      activeListItemsConfig?.cursor,
-      relationshipCandidateItems.length,
-    ],
+      `${listRelationshipsConfig.cursor ?? ""}:${relationshipCandidateItems.length}`,
+    [listRelationshipsConfig.cursor, relationshipCandidateItems.length],
   );
   const [stableCandidateKey, setStableCandidateKey] = useState<string>("");
   useEffect(() => {
-    if (!selectingRelatedItems) {
+    if (!isRelationshipSelection) {
       setStableCandidateKey("");
       return;
     }
