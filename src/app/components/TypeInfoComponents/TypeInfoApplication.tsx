@@ -147,10 +147,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     typeInfoORMAPIState.listRelationships?.data as
       | ListItemsResults<ItemRelationshipInfo>
       | undefined;
-  const checkRelationshipsResults =
-    typeInfoORMAPIState.checkRelationships?.data as
-      | CheckRelationshipsResults
-      | undefined;
+  const [checkRelationshipsResults, setCheckRelationshipsResults] =
+    useState<CheckRelationshipsResults | null>(null);
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
     itemsPerPage: 10,
@@ -177,6 +175,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRelationshipRequestIdsRef = useRef<Set<string>>(new Set());
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
+  const checkRelationshipsRequestTokenRef = useRef<number>(0);
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
   const lastSearchRelationshipSnapshotRef = useRef<string | null>(null);
@@ -462,6 +461,47 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const { items: relatedRelationshipsList = [] } =
     listRelationshipsResults ?? { items: [] };
+  const checkRelationshipsSelectedIndices = useMemo<number[] | null>(() => {
+    if (
+      !selectingRelatedItems ||
+      !targetTypePrimaryFieldName ||
+      !checkRelationshipsResults
+    ) {
+      return null;
+    }
+
+    const existingPrimaryFieldValues = new Set(
+      (checkRelationshipsResults.existingToTypePrimaryFieldValues ?? [])
+        .filter(Boolean)
+        .map((value) => `${value}`),
+    );
+    const selectedIndices = searchItemsList.reduce<number[]>(
+      (accumulator, item, index) => {
+        const primaryFieldValue = item?.[targetTypePrimaryFieldName];
+
+        if (
+          typeof primaryFieldValue !== "undefined" &&
+          primaryFieldValue !== null &&
+          existingPrimaryFieldValues.has(`${primaryFieldValue}`)
+        ) {
+          accumulator.push(index);
+        }
+
+        return accumulator;
+      },
+      [],
+    );
+
+    return relationshipAllowsMultiple
+      ? selectedIndices
+      : selectedIndices.slice(0, 1);
+  }, [
+    selectingRelatedItems,
+    targetTypePrimaryFieldName,
+    checkRelationshipsResults,
+    searchItemsList,
+    relationshipAllowsMultiple,
+  ]);
   const relationshipPrimaryFieldValues = useMemo<string[]>(() => {
     if (selectingRelatedItems) {
       return (checkRelationshipsResults?.existingToTypePrimaryFieldValues ?? [])
@@ -728,10 +768,29 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return;
     }
 
-    typeInfoORMAPIService.checkRelationships({
-      relationshipItemOrigin,
-      candidateToTypePrimaryFieldValues: searchCandidatePrimaryFieldValues,
-    });
+    const requestToken = checkRelationshipsRequestTokenRef.current + 1;
+    checkRelationshipsRequestTokenRef.current = requestToken;
+    setCheckRelationshipsResults(null);
+
+    typeInfoORMAPIService
+      .checkRelationships({
+        relationshipItemOrigin,
+        candidateToTypePrimaryFieldValues: searchCandidatePrimaryFieldValues,
+      })
+      .then((results) => {
+        if (checkRelationshipsRequestTokenRef.current !== requestToken) {
+          return;
+        }
+
+        setCheckRelationshipsResults(results);
+      })
+      .catch(() => {
+        if (checkRelationshipsRequestTokenRef.current !== requestToken) {
+          return;
+        }
+
+        setCheckRelationshipsResults(null);
+      });
   }, [
     selectingRelatedItems,
     relationshipItemOriginKey,
@@ -887,6 +946,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return null;
     }
 
+    if (checkRelationshipsSelectedIndices !== null) {
+      return checkRelationshipsSelectedIndices;
+    }
+
     const selectedIndices = searchItemsList.reduce<number[]>(
       (accumulator, item, index) => {
         const primaryFieldValue = item?.[targetTypePrimaryFieldName];
@@ -910,6 +973,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   }, [
     shouldSyncSearchSelection,
     targetTypePrimaryFieldName,
+    checkRelationshipsSelectedIndices,
     searchItemsList,
     relatedRelationshipPrimaryFieldValues,
     relationshipAllowsMultiple,
