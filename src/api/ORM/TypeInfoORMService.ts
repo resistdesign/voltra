@@ -26,13 +26,19 @@ import {
 import { validateSearchFields } from "../../common/SearchValidation";
 import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
+  CheckRelationshipsConfig,
+  CheckRelationshipsResults,
   DeleteRelationshipResults,
   OperationGroup,
   RelationshipOperation,
   TypeInfoORMAPI,
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
-import { DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
+import {
+  DATA_ITEM_DB_DRIVER_ERRORS,
+  DataItemDBDriver,
+  ItemRelationshipDBDriver,
+} from "./drivers";
 import {
   removeNonexistentFieldsFromDataItem,
   removeNonexistentFieldsFromSelectedFields,
@@ -856,6 +862,170 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       };
     } else {
       return results as ListItemsResults<ItemRelationshipInfo>;
+    }
+  };
+
+  /**
+   * Check which relationships exist for a list of candidate items.
+   * */
+  checkRelationships = async (
+    config: CheckRelationshipsConfig,
+  ): Promise<CheckRelationshipsResults> => {
+    const { useDAC } = this.config;
+    const { relationshipItemOrigin, candidateToTypePrimaryFieldValues } = config;
+    this.validateRelationshipItem(relationshipItemOrigin, [
+      ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+    ]);
+
+    const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
+      relationshipItemOrigin;
+    const driver = this.getRelationshipDriverInternal(
+      fromTypeName,
+      fromTypeFieldName,
+    );
+    const uniqueCandidates = Array.from(
+      new Set(
+        (candidateToTypePrimaryFieldValues ?? [])
+          .filter((value) => typeof value !== "undefined" && value !== null)
+          .map((value) => `${value}`),
+      ),
+    );
+
+    if (uniqueCandidates.length === 0) {
+      return {
+        existingToTypePrimaryFieldValues: [],
+      };
+    }
+
+    const baseCriteria = [
+      {
+        fieldName: ItemRelationshipInfoKeys.fromTypeName,
+        operator: ComparisonOperators.EQUALS,
+        value: fromTypeName,
+      },
+      {
+        fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
+        operator: ComparisonOperators.EQUALS,
+        value: fromTypeFieldName,
+      },
+      {
+        fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
+        operator: ComparisonOperators.EQUALS,
+        value: fromTypePrimaryFieldValue,
+      },
+    ];
+
+    const collectAllowedValues = (
+      items: Partial<ItemRelationshipInfo>[],
+    ): string[] => {
+      const values: string[] = [];
+
+      for (const item of items) {
+        const toTypePrimaryFieldValue =
+          item[ItemRelationshipInfoKeys.toTypePrimaryFieldValue];
+
+        if (!toTypePrimaryFieldValue) {
+          continue;
+        }
+
+        if (useDAC) {
+          const { allowed: readAllowed, denied: readDenied } =
+            this.getRelationshipDACValidation(
+              item as ItemRelationshipInfo,
+              RelationshipOperation.GET,
+            );
+          const listDenied = readDenied || !readAllowed;
+
+          if (listDenied) {
+            continue;
+          }
+        }
+
+        values.push(`${toTypePrimaryFieldValue}`);
+      }
+
+      return values;
+    };
+
+    try {
+      const results = await driver.listItems(
+        {
+          itemsPerPage: uniqueCandidates.length,
+          criteria: {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              ...baseCriteria,
+              {
+                fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+                operator: ComparisonOperators.IN,
+                value: uniqueCandidates,
+                valueOptions: uniqueCandidates,
+              },
+            ],
+          },
+        },
+        useDAC ? undefined : [ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+      );
+      const existingValues = new Set(
+        collectAllowedValues(
+          (results as ListItemsResults<Partial<ItemRelationshipInfo>>).items ??
+            [],
+        ),
+      );
+
+      return {
+        existingToTypePrimaryFieldValues: uniqueCandidates.filter((candidate) =>
+          existingValues.has(candidate),
+        ),
+      };
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        error.message ===
+          DATA_ITEM_DB_DRIVER_ERRORS.SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED
+      ) {
+        const existingCandidates = new Set<string>();
+
+        for (const candidate of uniqueCandidates) {
+          const results = await driver.listItems(
+            {
+              itemsPerPage: 1,
+              criteria: {
+                logicalOperator: LogicalOperators.AND,
+                fieldCriteria: [
+                  ...baseCriteria,
+                  {
+                    fieldName: ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+                    operator: ComparisonOperators.EQUALS,
+                    value: candidate,
+                  },
+                ],
+              },
+            },
+            useDAC
+              ? undefined
+              : [ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
+          );
+          const allowedValues = collectAllowedValues(
+            (results as ListItemsResults<Partial<ItemRelationshipInfo>>).items ??
+              [],
+          );
+
+          if (allowedValues.includes(candidate)) {
+            existingCandidates.add(candidate);
+          }
+        }
+
+        return {
+          existingToTypePrimaryFieldValues: uniqueCandidates.filter((candidate) =>
+            existingCandidates.has(candidate),
+          ),
+        };
+      }
+
+      throw error;
     }
   };
 

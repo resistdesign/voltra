@@ -29,7 +29,10 @@ import {
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { ObjectSearch } from "./TypeInfoApplication/ObjectSearch";
-import { TypeInfoORMAPI } from "../../../common/TypeInfoORM";
+import {
+  CheckRelationshipsResults,
+  TypeInfoORMAPI,
+} from "../../../common/TypeInfoORM";
 import { useTypeInfoORMAPI } from "../../utils/TypeInfoORMAPIUtils";
 import { useTypeInfoApplicationState } from "./TypeInfoApplication/TypeInfoApplicationStateUtils";
 import {
@@ -143,6 +146,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const listRelationshipsResults =
     typeInfoORMAPIState.listRelationships?.data as
       | ListItemsResults<ItemRelationshipInfo>
+      | undefined;
+  const checkRelationshipsResults =
+    typeInfoORMAPIState.checkRelationships?.data as
+      | CheckRelationshipsResults
       | undefined;
   const [listItemsConfig, setListItemsConfig] = useState<ListItemsConfig>({
     cursor: undefined,
@@ -323,24 +330,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypePrimaryFieldValue,
   ]);
-  const searchRelationshipOrigin = useMemo<
-    ItemRelationshipOriginItemInfo | undefined
-  >(() => {
-    if (
-      !relationshipMode ||
-      !fromTypeName ||
-      !fromTypeFieldName ||
-      !fromTypePrimaryFieldValue
-    ) {
-      return undefined;
-    }
-
-    return {
-      [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
-      [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
-      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: fromTypePrimaryFieldValue,
-    };
-  }, [relationshipMode, fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue]);
   const onListRelationshipsConfigChange = useCallback(
     ({ cursor, itemsPerPage }: ListItemsConfig) => {
       if (relationshipItemOrigin) {
@@ -466,44 +455,33 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const { items: relatedRelationshipsList = [] } =
     listRelationshipsResults ?? { items: [] };
-  const relatedRelationshipPrimaryFieldValues = useMemo(() => {
-    if (!targetTypePrimaryFieldName) {
-      return new Set<string>();
+  const relationshipPrimaryFieldValues = useMemo<string[]>(() => {
+    if (selectingRelatedItems) {
+      return (checkRelationshipsResults?.existingToTypePrimaryFieldValues ?? [])
+        .filter(Boolean)
+        .map((value) => `${value}`);
     }
 
-    return new Set(
-      relatedRelationshipsList
-        .map((relationship) =>
+    return relatedRelationshipsList
+      .map(
+        (relationship) =>
           relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
-        )
-        .filter(Boolean)
-        .map((value) => `${value}`),
-    );
-  }, [relatedRelationshipsList, targetTypePrimaryFieldName]);
+      )
+      .filter(Boolean)
+      .map((value) => `${value}`);
+  }, [selectingRelatedItems, checkRelationshipsResults, relatedRelationshipsList]);
+  const relatedRelationshipPrimaryFieldValues = useMemo(
+    () => new Set(relationshipPrimaryFieldValues),
+    [relationshipPrimaryFieldValues],
+  );
   const relationshipSnapshot = useMemo(
     () =>
-      relatedRelationshipsList
-        .map(
-          (relationship) =>
-            relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
-        )
-        .filter(Boolean)
-        .map((value) => `${value}`)
-        .sort()
-        .join("|"),
-    [relatedRelationshipsList],
+      [...relationshipPrimaryFieldValues].sort().join("|"),
+    [relationshipPrimaryFieldValues],
   );
   const existingRelatedPrimaryFieldValues = useMemo(
-    () =>
-      new Set(
-        relatedRelationshipsList
-          .map((relationship) =>
-            relationship[ItemRelationshipInfoKeys.toTypePrimaryFieldValue],
-          )
-          .filter(Boolean)
-          .map((value) => `${value}`),
-      ),
-    [relatedRelationshipsList],
+    () => new Set(relationshipPrimaryFieldValues),
+    [relationshipPrimaryFieldValues],
   );
   const flushPendingRelationshipMutations = useCallback(() => {
     if (flushPendingRelationshipTimeoutRef.current) {
@@ -628,35 +606,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
     listRelatedDataWithOrigin();
   }, [toMode, listRelatedDataWithOrigin]);
-  useEffect(() => {
-    if (!selectingRelatedItems || !relationshipItemOrigin) {
-      return;
-    }
-
-    listRelationshipsWithOrigin();
-  }, [selectingRelatedItems, relationshipItemOrigin, listRelationshipsWithOrigin]);
-  useEffect(() => {
-    if (
-      toMode !== TypeNavigationMode.SEARCH_ITEMS ||
-      !relationshipMode ||
-      !searchRelationshipOrigin
-    ) {
-      return;
-    }
-
-    const listRelatedItemsConfig: ListRelationshipsConfig = {
-      ...listRelationshipsConfig,
-      relationshipItemOrigin: searchRelationshipOrigin,
-    };
-
-    typeInfoORMAPIService.listRelationships(listRelatedItemsConfig);
-  }, [
-    toMode,
-    relationshipMode,
-    searchRelationshipOrigin,
-    listRelationshipsConfig,
-    typeInfoORMAPIService,
-  ]);
   const createRelationshipRequests =
     typeInfoORMAPIState.createRelationship?.activeRequests ?? [];
   const deleteRelationshipRequests =
@@ -749,6 +698,31 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
 
   const { items: searchItemsList = [] } = searchItemsResults;
   const { items: relatedItemsList = [] } = relatedItemsResults;
+  const searchCandidatePrimaryFieldValues = useMemo<string[]>(() => {
+    if (!selectingRelatedItems || !targetTypePrimaryFieldName) {
+      return [];
+    }
+
+    return searchItemsList
+      .map((item) => item?.[targetTypePrimaryFieldName])
+      .filter((value) => typeof value !== "undefined" && value !== null)
+      .map((value) => `${value}`);
+  }, [selectingRelatedItems, targetTypePrimaryFieldName, searchItemsList]);
+  useEffect(() => {
+    if (!selectingRelatedItems || !relationshipItemOrigin) {
+      return;
+    }
+
+    typeInfoORMAPIService.checkRelationships({
+      relationshipItemOrigin,
+      candidateToTypePrimaryFieldValues: searchCandidatePrimaryFieldValues,
+    });
+  }, [
+    selectingRelatedItems,
+    relationshipItemOrigin,
+    searchCandidatePrimaryFieldValues,
+    typeInfoORMAPIService,
+  ]);
   const areIndicesEqual = useCallback(
     (left: number[], right: number[]) =>
       left.length === right.length &&

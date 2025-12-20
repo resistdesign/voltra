@@ -1,4 +1,6 @@
 import {
+  CheckRelationshipsConfig,
+  CheckRelationshipsResults,
   DeleteRelationshipResults,
   TypeInfoORMAPI,
   TypeInfoORMAPIRoutePaths,
@@ -114,6 +116,14 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST_RELATED_ITEMS, [
       config,
       selectedFields,
+    ]);
+  };
+
+  checkRelationships = async (
+    config: CheckRelationshipsConfig,
+  ): Promise<CheckRelationshipsResults> => {
+    return await this.makeRequest(TypeInfoORMAPIRoutePaths.CHECK_RELATIONSHIPS, [
+      config,
     ]);
   };
 }
