@@ -72,6 +72,7 @@ export enum TypeInfoORMAPIRoutePaths {
   LIST_RELATIONSHIPS = "list-relationships",
   LIST_RELATED_ITEMS = "list-related-items",
   CHECK_RELATIONSHIPS = "check-relationships",
+  DIAGNOSE_RELATIONSHIPS = "diagnose-relationships",
 }
 
 /**
@@ -87,6 +88,17 @@ export type DeleteRelationshipResults = {
  * */
 export type CheckRelationshipsResults = {
   existingToTypePrimaryFieldValues: string[];
+};
+
+/**
+ * The results of diagnosing relationship records for a given origin.
+ * */
+export type DiagnoseRelationshipsResults = {
+  relationshipItems: ItemRelationshipInfo[];
+  relationshipToTypePrimaryFieldValues: string[];
+  normalizedCandidateToTypePrimaryFieldValues: string[];
+  missingFromStorage: string[];
+  extraStoredToTypePrimaryFieldValues: string[];
 };
 
 /**
@@ -110,6 +122,10 @@ export type TypeInfoORMAPI = {
     relationshipItemOrigin: ItemRelationshipOriginItemInfo,
     candidateToPrimaryFieldValues: string[],
   ) => Promise<CheckRelationshipsResults>;
+  diagnoseRelationships: (
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo,
+    candidateToPrimaryFieldValues?: string[],
+  ) => Promise<DiagnoseRelationshipsResults>;
   create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
   read: (
     typeName: string,

@@ -1,6 +1,7 @@
 import {
   CheckRelationshipsResults,
   DeleteRelationshipResults,
+  DiagnoseRelationshipsResults,
   TypeInfoORMAPI,
   TypeInfoORMAPIRoutePaths,
 } from "../../common/TypeInfoORM";
@@ -127,5 +128,15 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
       relationshipItemOrigin,
       candidateToPrimaryFieldValues,
     ]);
+  };
+
+  diagnoseRelationships = async (
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo,
+    candidateToPrimaryFieldValues: string[] = [],
+  ): Promise<DiagnoseRelationshipsResults> => {
+    return await this.makeRequest(
+      TypeInfoORMAPIRoutePaths.DIAGNOSE_RELATIONSHIPS,
+      [relationshipItemOrigin, candidateToPrimaryFieldValues],
+    );
   };
 }
