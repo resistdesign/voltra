@@ -276,23 +276,20 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return undefined;
     }
 
-    const primaryFieldValue =
-      targetPrimaryFieldValue ?? fromTypePrimaryFieldValue;
-
-    if (!primaryFieldValue) {
+    if (!fromTypePrimaryFieldValue) {
       return undefined;
     }
 
     return {
       [ItemRelationshipInfoKeys.fromTypeName]: fromTypeName,
       [ItemRelationshipInfoKeys.fromTypeFieldName]: fromTypeFieldName,
-      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]: primaryFieldValue,
+      [ItemRelationshipInfoKeys.fromTypePrimaryFieldValue]:
+        fromTypePrimaryFieldValue,
     };
   }, [
     relationshipMode,
     fromTypeFieldName,
     fromTypeName,
-    targetPrimaryFieldValue,
     fromTypePrimaryFieldValue,
   ]);
   const searchRelationshipOrigin = useMemo<
