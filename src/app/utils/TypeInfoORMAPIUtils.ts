@@ -3,7 +3,7 @@ import {
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
 import { ExpandComplexType } from "../../common/HelperTypes";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { getSimpleId } from "../../common/IdGeneration";
 
 type RequestMethod = (...args: any[]) => Promise<any>;
@@ -99,8 +99,15 @@ export const useTypeInfoORMAPI = (
   typeInfoORMAPI: TypeInfoORMAPI,
 ): TypeInfoORMAPIController => {
   const [state, setState] = useState<TypeInfoORMAPIState>({});
+  const latestRequestIdsRef = useRef<
+    Partial<Record<keyof TypeInfoORMAPI, string>>
+  >({});
   const onRequestStateChange = useCallback<RequestStateChangeHandler>(
     (methodName, requestId, { loading, data, error }) => {
+      if (loading) {
+        latestRequestIdsRef.current[methodName] = requestId;
+      }
+
       setState(
         ({
           [methodName]: {
@@ -114,14 +121,16 @@ export const useTypeInfoORMAPI = (
             ? [...prevActiveRequests, requestId]
             : prevActiveRequests.filter((id) => id !== requestId);
           const currentlyLoading = newActiveRequests.length > 0;
+          const shouldApplyResponse =
+            latestRequestIdsRef.current[methodName] === requestId;
 
           return {
             ...prevState,
             [methodName]: {
               activeRequests: newActiveRequests,
               loading: currentlyLoading,
-              data: currentlyLoading ? undefined : (data ?? prevData),
-              error: currentlyLoading ? undefined : (error ?? prevError),
+              data: shouldApplyResponse ? (data ?? prevData) : prevData,
+              error: shouldApplyResponse ? (error ?? prevError) : prevError,
             },
           };
         },

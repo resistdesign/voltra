@@ -330,6 +330,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypePrimaryFieldValue,
   ]);
+  const relationshipItemOriginKey = useMemo(
+    () =>
+      relationshipItemOrigin
+        ? `${relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypeName] ?? ""}:${relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypeFieldName] ?? ""}:${relationshipItemOrigin[ItemRelationshipInfoKeys.fromTypePrimaryFieldValue] ?? ""}`
+        : "",
+    [relationshipItemOrigin],
+  );
   const onListRelationshipsConfigChange = useCallback(
     ({ cursor, itemsPerPage }: ListItemsConfig) => {
       if (relationshipItemOrigin) {
@@ -699,7 +706,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const { items: searchItemsList = [] } = searchItemsResults;
   const { items: relatedItemsList = [] } = relatedItemsResults;
   const searchCandidatePrimaryFieldValues = useMemo<string[]>(() => {
-    if (!selectingRelatedItems || !targetTypePrimaryFieldName) {
+    if (!targetTypePrimaryFieldName) {
       return [];
     }
 
@@ -707,9 +714,17 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       .map((item) => item?.[targetTypePrimaryFieldName])
       .filter((value) => typeof value !== "undefined" && value !== null)
       .map((value) => `${value}`);
-  }, [selectingRelatedItems, targetTypePrimaryFieldName, searchItemsList]);
+  }, [targetTypePrimaryFieldName, searchItemsList]);
+  const searchCandidatePrimaryFieldValuesSnapshot = useMemo(
+    () => searchCandidatePrimaryFieldValues.join("|"),
+    [searchCandidatePrimaryFieldValues],
+  );
   useEffect(() => {
-    if (!selectingRelatedItems || !relationshipItemOrigin) {
+    if (
+      !selectingRelatedItems ||
+      !relationshipItemOrigin ||
+      searchCandidatePrimaryFieldValues.length === 0
+    ) {
       return;
     }
 
@@ -719,8 +734,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     });
   }, [
     selectingRelatedItems,
-    relationshipItemOrigin,
-    searchCandidatePrimaryFieldValues,
+    relationshipItemOriginKey,
+    searchCandidatePrimaryFieldValuesSnapshot,
     typeInfoORMAPIService,
   ]);
   const areIndicesEqual = useCallback(
