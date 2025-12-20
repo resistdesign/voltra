@@ -6,6 +6,7 @@ import {
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
+  ItemRelationshipOriginItemInfo,
 } from "../ItemRelationshipInfoTypes";
 import { TypeInfoDataItem, TypeOperation } from "../TypeParsing/TypeInfo";
 
@@ -70,6 +71,7 @@ export enum TypeInfoORMAPIRoutePaths {
   DELETE_RELATIONSHIP = "delete-relationship",
   LIST_RELATIONSHIPS = "list-relationships",
   LIST_RELATED_ITEMS = "list-related-items",
+  CHECK_RELATIONSHIPS = "check-relationships",
 }
 
 /**
@@ -78,6 +80,21 @@ export enum TypeInfoORMAPIRoutePaths {
 export type DeleteRelationshipResults = {
   success: boolean;
   remainingItemsExist: boolean;
+};
+
+/**
+ * The configuration for checking relationships against a list of candidates.
+ * */
+export type CheckRelationshipsConfig = {
+  relationshipItemOrigin: ItemRelationshipOriginItemInfo;
+  candidateToTypePrimaryFieldValues: string[];
+};
+
+/**
+ * The results of checking relationships against a list of candidates.
+ * */
+export type CheckRelationshipsResults = {
+  existingToTypePrimaryFieldValues: string[];
 };
 
 /**
@@ -97,6 +114,9 @@ export type TypeInfoORMAPI = {
     config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
+  checkRelationships: (
+    config: CheckRelationshipsConfig,
+  ) => Promise<CheckRelationshipsResults>;
   create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
   read: (
     typeName: string,

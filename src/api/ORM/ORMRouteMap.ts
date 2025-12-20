@@ -36,6 +36,7 @@ export const TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP: Record<
 > = {
   "create-relationship": "createRelationship",
   "delete-relationship": "deleteRelationship",
+  "check-relationships": "checkRelationships",
   "list-relationships": "listRelationships",
   "list-related-items": "listRelatedItems",
   create: "create",
