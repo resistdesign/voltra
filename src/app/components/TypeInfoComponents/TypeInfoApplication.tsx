@@ -185,7 +185,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     token: string;
   } | null>(null);
   const checkRelationshipsRequestMetaRef = useRef<
-    Map<string, { key: string; token: string }>
+    Map<string, { key: string; token: string; originKey: string }>
   >(new Map());
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
@@ -227,6 +227,11 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseOperation,
     basePrimaryFieldValue,
   });
+  const originKey = useMemo(
+    () =>
+      `${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}`,
+    [fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue],
+  );
   const relationshipContextKey = useMemo(
     () =>
       `${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}:${toMode ?? ""}`,
@@ -252,6 +257,21 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     lastSearchRelationshipSnapshotRef.current = null;
     lastRelatedRelationshipSnapshotRef.current = null;
   }, [relationshipContextKey]);
+  useEffect(() => {
+    setSelectedIndices([]);
+    setRelatedSelectedIndices([]);
+    previousSearchSelectedIndicesRef.current = [];
+    previousRelatedSelectedIndicesRef.current = [];
+    searchSelectionDirtyRef.current = false;
+    relatedSelectionDirtyRef.current = false;
+    lastSearchRelationshipSnapshotRef.current = null;
+    lastRelatedRelationshipSnapshotRef.current = null;
+    checkRelationshipsKeyRef.current = null;
+    checkRelationshipsRequestIdRef.current = null;
+    checkRelationshipsLatestRequestRef.current = null;
+    checkRelationshipsRequestMetaRef.current.clear();
+    setCheckRelationshipsResults(null);
+  }, [originKey]);
   useEffect(() => {
     if (previousRelationshipModeRef.current && !relationshipMode) {
       setSelectedIndices([]);
@@ -853,6 +873,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       checkRelationshipsRequestMetaRef.current.set(requestId, {
         key: checkRelationshipsPageKey,
         token: requestToken,
+        originKey,
       });
     }
   }, [
@@ -861,6 +882,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     candidatePrimaryFieldValues,
     candidateKey,
     checkRelationshipsPageKey,
+    originKey,
     typeInfoORMAPIService,
   ]);
   const areIndicesEqual = useCallback(
@@ -891,7 +913,8 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       !requestMeta ||
       !latestRequest ||
       latestRequest.key !== requestMeta.key ||
-      latestRequest.token !== requestMeta.token
+      latestRequest.token !== requestMeta.token ||
+      requestMeta.originKey !== originKey
     ) {
       checkRelationshipsRequestMetaRef.current.delete(requestId);
       return;
@@ -952,6 +975,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     searchItemsList,
     relationshipAllowsMultiple,
     areIndicesEqual,
+    originKey,
   ]);
   const onSelectedIndicesChange = useCallback(
     (indices: number[]) => {
