@@ -28,6 +28,7 @@ import { validateRelationshipItem } from "../../common/ItemRelationships";
 import {
   CheckRelationshipsResults,
   DeleteRelationshipResults,
+  DiagnoseRelationshipsResults,
   OperationGroup,
   RelationshipOperation,
   TypeInfoORMAPI,
@@ -1062,6 +1063,67 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       throw error;
     }
+  };
+
+  diagnoseRelationships = async (
+    relationshipItemOrigin: ItemRelationshipOriginItemInfo,
+    candidateToPrimaryFieldValues: string[] = [],
+  ): Promise<DiagnoseRelationshipsResults> => {
+    this.validateRelationshipItem(relationshipItemOrigin, [
+      ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+    ]);
+
+    const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
+      relationshipItemOrigin;
+    const normalizedCandidates = candidateToPrimaryFieldValues
+      .filter((value) => typeof value !== "undefined" && value !== null)
+      .map((value) => `${value}`.trim())
+      .filter((value) => value.length > 0);
+    const uniqueCandidates = Array.from(new Set(normalizedCandidates));
+    const relationshipItems: ItemRelationshipInfo[] = [];
+    let cursor: string | undefined = undefined;
+
+    do {
+      const { items = [], cursor: nextCursor } = await this.listRelationships({
+        relationshipItemOrigin,
+        itemsPerPage: 250,
+        cursor,
+      });
+
+      relationshipItems.push(...items);
+      cursor = nextCursor;
+    } while (cursor);
+
+    const relationshipToTypePrimaryFieldValues = relationshipItems
+      .map((item) => item.toTypePrimaryFieldValue)
+      .filter((value): value is string => typeof value !== "undefined")
+      .map((value) => `${value}`);
+    const storedValuesSet = new Set(relationshipToTypePrimaryFieldValues);
+    const candidateValuesSet = new Set(uniqueCandidates);
+    const missingFromStorage = uniqueCandidates.filter(
+      (candidate) => !storedValuesSet.has(candidate),
+    );
+    const extraStoredToTypePrimaryFieldValues = relationshipToTypePrimaryFieldValues.filter(
+      (value) => !candidateValuesSet.has(value),
+    );
+
+    console.info("diagnoseRelationships completed.", {
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue,
+      storedCount: relationshipItems.length,
+      candidateCount: uniqueCandidates.length,
+      missingFromStorageCount: missingFromStorage.length,
+      extraStoredCount: extraStoredToTypePrimaryFieldValues.length,
+    });
+
+    return {
+      relationshipItems,
+      relationshipToTypePrimaryFieldValues,
+      normalizedCandidateToTypePrimaryFieldValues: uniqueCandidates,
+      missingFromStorage,
+      extraStoredToTypePrimaryFieldValues,
+    };
   };
 
   listRelatedItems = async (
