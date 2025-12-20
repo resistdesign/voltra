@@ -131,6 +131,7 @@ export type BaseTypeInfoORMServiceConfig = {
     typeName: string,
     fieldName: string,
   ) => ItemRelationshipDBDriver;
+  enableRelationshipDiagnostics?: boolean;
   createRelationshipCleanupItem?: (
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
@@ -874,6 +875,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     candidateToPrimaryFieldValues: string[],
   ): Promise<CheckRelationshipsResults> => {
     const { useDAC } = this.config;
+    const normalizeValue = (value: any): string =>
+      typeof value === "string" ? value.trim() : `${value}`.trim();
     const originValidation = validateRelationshipItem(relationshipItemOrigin, [
       ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
     ]);
@@ -893,23 +896,33 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
       relationshipItemOrigin;
+    const normalizedFromTypeName = normalizeValue(fromTypeName);
+    const normalizedFromTypeFieldName = normalizeValue(fromTypeFieldName);
+    const normalizedFromTypePrimaryFieldValue = normalizeValue(
+      fromTypePrimaryFieldValue,
+    );
+    const originNormalizationChanged =
+      normalizedFromTypeName !== fromTypeName ||
+      normalizedFromTypeFieldName !== fromTypeFieldName ||
+      normalizedFromTypePrimaryFieldValue !== fromTypePrimaryFieldValue;
     const rawCandidates = candidateToPrimaryFieldValues ?? [];
     const driver = this.getRelationshipDriverInternal(
-      fromTypeName,
-      fromTypeFieldName,
+      normalizedFromTypeName,
+      normalizedFromTypeFieldName,
     );
     const normalizedCandidates = rawCandidates
       .filter((value) => typeof value !== "undefined" && value !== null)
-      .map((value) => `${value}`.trim())
+      .map((value) => normalizeValue(value))
       .filter((value) => value.length > 0);
     const uniqueCandidates = Array.from(
       new Set(normalizedCandidates),
     );
 
     console.info("checkRelationships input validation passed.", {
-      fromTypeName,
-      fromTypeFieldName,
-      fromTypePrimaryFieldValue,
+      fromTypeName: normalizedFromTypeName,
+      fromTypeFieldName: normalizedFromTypeFieldName,
+      fromTypePrimaryFieldValue: normalizedFromTypePrimaryFieldValue,
+      originNormalizationChanged,
       rawCandidateCount: rawCandidates.length,
       normalizedCandidateCount: normalizedCandidates.length,
       uniqueCandidateCount: uniqueCandidates.length,
@@ -925,17 +938,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       {
         fieldName: ItemRelationshipInfoKeys.fromTypeName,
         operator: ComparisonOperators.EQUALS,
-        value: fromTypeName,
+        value: normalizedFromTypeName,
       },
       {
         fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
         operator: ComparisonOperators.EQUALS,
-        value: fromTypeFieldName,
+        value: normalizedFromTypeFieldName,
       },
       {
         fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
         operator: ComparisonOperators.EQUALS,
-        value: fromTypePrimaryFieldValue,
+        value: normalizedFromTypePrimaryFieldValue,
       },
     ];
 
@@ -972,10 +985,55 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     };
 
     try {
+      if (this.config.enableRelationshipDiagnostics) {
+        const diagnosticItems: ItemRelationshipInfo[] = [];
+        let cursor: string | undefined = undefined;
+
+        do {
+          const { items = [], cursor: nextCursor } = await driver.listItems({
+            itemsPerPage: 250,
+            criteria: {
+              logicalOperator: LogicalOperators.AND,
+              fieldCriteria: baseCriteria,
+            },
+          });
+
+          diagnosticItems.push(...(items as ItemRelationshipInfo[]));
+          cursor = nextCursor;
+        } while (cursor);
+
+        const storedValues = diagnosticItems
+          .map((item) => item.toTypePrimaryFieldValue)
+          .filter((value) => typeof value !== "undefined" && value !== null)
+          .map((value) => normalizeValue(value));
+        const uniqueStoredValues = Array.from(new Set(storedValues));
+        const storedValueSet = new Set(uniqueStoredValues);
+        const candidateValueSet = new Set(uniqueCandidates);
+        const missingFromStorage = uniqueCandidates.filter(
+          (candidate) => !storedValueSet.has(candidate),
+        );
+        const extraStoredToTypePrimaryFieldValues = uniqueStoredValues.filter(
+          (value) => !candidateValueSet.has(value),
+        );
+
+        console.info("checkRelationships diagnostics.", {
+          fromTypeName: normalizedFromTypeName,
+          fromTypeFieldName: normalizedFromTypeFieldName,
+          fromTypePrimaryFieldValue: normalizedFromTypePrimaryFieldValue,
+          originNormalizationChanged,
+          storedCount: diagnosticItems.length,
+          storedValues: uniqueStoredValues,
+          candidateValues: uniqueCandidates,
+          missingFromStorage,
+          extraStoredToTypePrimaryFieldValues,
+          rawRelationshipItems: diagnosticItems,
+        });
+      }
+
       console.info("checkRelationships querying relationship driver.", {
-        fromTypeName,
-        fromTypeFieldName,
-        fromTypePrimaryFieldValue,
+        fromTypeName: normalizedFromTypeName,
+        fromTypeFieldName: normalizedFromTypeFieldName,
+        fromTypePrimaryFieldValue: normalizedFromTypePrimaryFieldValue,
         candidateToTypePrimaryFieldValues: uniqueCandidates,
       });
       const results = await driver.listItems(
@@ -1020,9 +1078,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
         for (const candidate of uniqueCandidates) {
           console.info("checkRelationships querying relationship driver.", {
-            fromTypeName,
-            fromTypeFieldName,
-            fromTypePrimaryFieldValue,
+            fromTypeName: normalizedFromTypeName,
+            fromTypeFieldName: normalizedFromTypeFieldName,
+            fromTypePrimaryFieldValue: normalizedFromTypePrimaryFieldValue,
             candidateToTypePrimaryFieldValue: candidate,
           });
           const results = await driver.listItems(
