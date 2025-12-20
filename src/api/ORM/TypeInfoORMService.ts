@@ -873,23 +873,46 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     candidateToPrimaryFieldValues: string[],
   ): Promise<CheckRelationshipsResults> => {
     const { useDAC } = this.config;
+    const originValidation = validateRelationshipItem(relationshipItemOrigin, [
+      ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+    ]);
+
+    if (!originValidation.valid) {
+      console.error("Invalid relationship origin for checkRelationships.", {
+        relationshipItemOrigin,
+        originValidation,
+      });
+
+      throw originValidation;
+    }
+
     this.validateRelationshipItem(relationshipItemOrigin, [
       ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
     ]);
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
       relationshipItemOrigin;
+    const rawCandidates = candidateToPrimaryFieldValues ?? [];
     const driver = this.getRelationshipDriverInternal(
       fromTypeName,
       fromTypeFieldName,
     );
+    const normalizedCandidates = rawCandidates
+      .filter((value) => typeof value !== "undefined" && value !== null)
+      .map((value) => `${value}`.trim())
+      .filter((value) => value.length > 0);
     const uniqueCandidates = Array.from(
-      new Set(
-        (candidateToPrimaryFieldValues ?? [])
-          .filter((value) => typeof value !== "undefined" && value !== null)
-          .map((value) => `${value}`),
-      ),
+      new Set(normalizedCandidates),
     );
+
+    console.info("checkRelationships input validation passed.", {
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue,
+      rawCandidateCount: rawCandidates.length,
+      normalizedCandidateCount: normalizedCandidates.length,
+      uniqueCandidateCount: uniqueCandidates.length,
+    });
 
     if (uniqueCandidates.length === 0) {
       return {
@@ -948,6 +971,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     };
 
     try {
+      console.info("checkRelationships querying relationship driver.", {
+        fromTypeName,
+        fromTypeFieldName,
+        fromTypePrimaryFieldValue,
+        candidateToTypePrimaryFieldValues: uniqueCandidates,
+      });
       const results = await driver.listItems(
         {
           itemsPerPage: uniqueCandidates.length,
@@ -989,6 +1018,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         const existingCandidates = new Set<string>();
 
         for (const candidate of uniqueCandidates) {
+          console.info("checkRelationships querying relationship driver.", {
+            fromTypeName,
+            fromTypeFieldName,
+            fromTypePrimaryFieldValue,
+            candidateToTypePrimaryFieldValue: candidate,
+          });
           const results = await driver.listItems(
             {
               itemsPerPage: 1,
