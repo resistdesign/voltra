@@ -46,6 +46,7 @@ export type ObjectSearchProps = {
   selectedIndices?: number[];
   onSelectedIndicesChange?: (selectedIndices: number[]) => void;
   hideSearchControls?: boolean;
+  selectionContextKey?: string;
 };
 
 // TODO: Add item editing UI/buttons to item rows???
@@ -63,13 +64,10 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   selectedIndices = [],
   onSelectedIndicesChange,
   hideSearchControls = false,
+  selectionContextKey,
 }) => {
   const { tags: { fullPaging = false } = {} } = typeInfo;
-  const {
-    sortFields,
-    cursor: currentCursor,
-    criteria: currentCriteria,
-  }: Partial<ListItemsConfig> = listItemsConfig || {};
+  const { sortFields }: Partial<ListItemsConfig> = listItemsConfig || {};
   const {
     cursor: nextCursor,
     items: itemResults = [],
@@ -96,35 +94,26 @@ export const ObjectSearch: FC<ObjectSearchProps> = ({
   );
 
   // Effects
-  const criteriaSnapshot = useMemo(
-    () => JSON.stringify(currentCriteria ?? null),
-    [currentCriteria],
-  );
-  const cursorSnapshot = useMemo(
-    () => JSON.stringify(currentCursor ?? null),
-    [currentCursor],
+  const contextSnapshot = useMemo(
+    () => selectionContextKey ?? "",
+    [selectionContextKey],
   );
   const previousSearchRef = useRef({
-    cursorSnapshot,
-    criteriaSnapshot,
+    contextSnapshot,
   });
   useEffect(() => {
-    const { cursorSnapshot: previousCursor, criteriaSnapshot: previousCriteria } =
-      previousSearchRef.current;
-    const cursorChanged = previousCursor !== cursorSnapshot;
-    const criteriaChanged = previousCriteria !== criteriaSnapshot;
+    const { contextSnapshot: previousContext } = previousSearchRef.current;
+    const contextChanged = previousContext !== contextSnapshot;
 
-    if ((cursorChanged || criteriaChanged) && selectedIndices.length > 0) {
+    if (contextChanged && selectedIndices.length > 0) {
       onSelectedIndicesChange?.([]);
     }
 
     previousSearchRef.current = {
-      cursorSnapshot,
-      criteriaSnapshot,
+      contextSnapshot,
     };
   }, [
-    cursorSnapshot,
-    criteriaSnapshot,
+    contextSnapshot,
     onSelectedIndicesChange,
     selectedIndices.length,
   ]);

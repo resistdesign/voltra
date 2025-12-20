@@ -178,6 +178,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const relatedSelectionDirtyRef = useRef<boolean>(false);
   const suppressSearchSelectionQueueRef = useRef<boolean>(false);
   const suppressRelatedSelectionQueueRef = useRef<boolean>(false);
+  const previousRelationshipModeRef = useRef<boolean>(false);
   useEffect(() => {
     suppressSearchSelectionQueueRef.current = true;
   }, [listItemsConfig]);
@@ -234,6 +235,20 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     lastSearchRelationshipSnapshotRef.current = null;
     lastRelatedRelationshipSnapshotRef.current = null;
   }, [relationshipContextKey]);
+  useEffect(() => {
+    if (previousRelationshipModeRef.current && !relationshipMode) {
+      setSelectedIndices([]);
+      setRelatedSelectedIndices([]);
+      previousSearchSelectedIndicesRef.current = [];
+      previousRelatedSelectedIndicesRef.current = [];
+      searchSelectionDirtyRef.current = false;
+      relatedSelectionDirtyRef.current = false;
+      lastSearchRelationshipSnapshotRef.current = null;
+      lastRelatedRelationshipSnapshotRef.current = null;
+    }
+
+    previousRelationshipModeRef.current = relationshipMode;
+  }, [relationshipMode]);
   const targetPrimaryFieldValue = useMemo<string | undefined>(
     () => toTypePrimaryFieldValue ?? basePrimaryFieldValue,
     [toTypePrimaryFieldValue, basePrimaryFieldValue],
@@ -265,6 +280,22 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     fromTypeName,
     fromTypeFieldName,
   });
+  const searchSelectionContextKey = useMemo(
+    () =>
+      `${targetTypeName ?? ""}:${toMode ?? ""}:${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}`,
+    [
+      targetTypeName,
+      toMode,
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue,
+    ],
+  );
+  const relatedSelectionContextKey = useMemo(
+    () =>
+      `${targetTypeName ?? ""}:${TypeNavigationMode.RELATED_ITEMS}:${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}`,
+    [targetTypeName, fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue],
+  );
   const targetTypePrimaryFieldName = useMemo<string | undefined>(
     () => targetTypeInfo?.primaryField,
     [targetTypeInfo],
@@ -1198,6 +1229,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
                 selectable={selectable}
                 selectedIndices={selectedIndices}
                 onSelectedIndicesChange={onSelectedIndicesChange}
+                selectionContextKey={searchSelectionContextKey}
               />
             </>
           ) : undefined,
@@ -1240,6 +1272,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
                   selectedIndices={relatedSelectedIndices}
                   onSelectedIndicesChange={onRelatedSelectedIndicesChange}
                   hideSearchControls={!relationshipMode}
+                  selectionContextKey={relatedSelectionContextKey}
                 />
               </>
             ) : undefined,
