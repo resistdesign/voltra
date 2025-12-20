@@ -745,25 +745,50 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     );
   };
 
-  const searchCandidatePrimaryFieldValues = useMemo<string[]>(() => {
+  const candidatePrimaryFieldValues = useMemo<string[]>(() => {
     if (!targetTypePrimaryFieldName) {
       return [];
     }
 
-    return searchItemsList
+    const originPrimaryFieldValue =
+      relationshipItemOrigin?.[
+        ItemRelationshipInfoKeys.fromTypePrimaryFieldValue
+      ];
+    const originPrimaryFieldValueString =
+      typeof originPrimaryFieldValue === "undefined" ||
+      originPrimaryFieldValue === null
+        ? null
+        : `${originPrimaryFieldValue}`;
+    const candidateItems =
+      toMode === TypeNavigationMode.RELATED_ITEMS
+        ? relatedItemsList
+        : searchItemsList;
+
+    return candidateItems
       .map((item) => item?.[targetTypePrimaryFieldName])
       .filter((value) => typeof value !== "undefined" && value !== null)
-      .map((value) => `${value}`);
-  }, [targetTypePrimaryFieldName, searchItemsList]);
-  const searchCandidatePrimaryFieldValuesSnapshot = useMemo(
-    () => searchCandidatePrimaryFieldValues.join("|"),
-    [searchCandidatePrimaryFieldValues],
+      .map((value) => `${value}`)
+      .filter(
+        (value) =>
+          originPrimaryFieldValueString === null ||
+          value !== originPrimaryFieldValueString,
+      );
+  }, [
+    targetTypePrimaryFieldName,
+    relationshipItemOrigin,
+    toMode,
+    relatedItemsList,
+    searchItemsList,
+  ]);
+  const candidatePrimaryFieldValuesSnapshot = useMemo(
+    () => candidatePrimaryFieldValues.join("|"),
+    [candidatePrimaryFieldValues],
   );
   useEffect(() => {
     if (
       !selectingRelatedItems ||
       !relationshipItemOrigin ||
-      searchCandidatePrimaryFieldValues.length === 0
+      candidatePrimaryFieldValues.length === 0
     ) {
       return;
     }
@@ -772,12 +797,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     checkRelationshipsRequestIdRef.current =
       typeInfoORMAPIService.checkRelationships(
         relationshipItemOrigin,
-        searchCandidatePrimaryFieldValues,
+        candidatePrimaryFieldValues,
       );
   }, [
     selectingRelatedItems,
     relationshipItemOriginKey,
-    searchCandidatePrimaryFieldValuesSnapshot,
+    candidatePrimaryFieldValuesSnapshot,
     typeInfoORMAPIService,
   ]);
   useEffect(() => {
