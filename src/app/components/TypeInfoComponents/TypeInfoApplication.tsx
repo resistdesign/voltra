@@ -191,6 +191,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const [relatedSelectedIndices, setRelatedSelectedIndices] = useState<
     number[]
   >([]);
+  const relationshipContextKeyRef = useRef<string | null>(null);
   const {
     relationshipMode,
     fromTypeName,
@@ -208,6 +209,31 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     baseOperation,
     basePrimaryFieldValue,
   });
+  const relationshipContextKey = useMemo(
+    () =>
+      `${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}:${toMode ?? ""}`,
+    [fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue, toMode],
+  );
+  useEffect(() => {
+    if (relationshipContextKeyRef.current === null) {
+      relationshipContextKeyRef.current = relationshipContextKey;
+      return;
+    }
+
+    if (relationshipContextKeyRef.current === relationshipContextKey) {
+      return;
+    }
+
+    relationshipContextKeyRef.current = relationshipContextKey;
+    setSelectedIndices([]);
+    setRelatedSelectedIndices([]);
+    previousSearchSelectedIndicesRef.current = [];
+    previousRelatedSelectedIndicesRef.current = [];
+    searchSelectionDirtyRef.current = false;
+    relatedSelectionDirtyRef.current = false;
+    lastSearchRelationshipSnapshotRef.current = null;
+    lastRelatedRelationshipSnapshotRef.current = null;
+  }, [relationshipContextKey]);
   const targetPrimaryFieldValue = useMemo<string | undefined>(
     () => toTypePrimaryFieldValue ?? basePrimaryFieldValue,
     [toTypePrimaryFieldValue, basePrimaryFieldValue],
