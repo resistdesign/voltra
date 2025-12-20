@@ -180,11 +180,12 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
   const checkRelationshipsRequestIdRef = useRef<string | null>(null);
   const checkRelationshipsKeyRef = useRef<string | null>(null);
-  const checkRelationshipsRequestTokenRef = useRef<Map<string, string>>(
-    new Map(),
-  );
+  const checkRelationshipsLatestRequestRef = useRef<{
+    key: string;
+    token: string;
+  } | null>(null);
   const checkRelationshipsRequestMetaRef = useRef<
-    Map<string, { candidateKey: string; token: string }>
+    Map<string, { key: string; token: string }>
   >(new Map());
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
@@ -360,6 +361,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
         : "",
     [relationshipItemOrigin],
   );
+  useEffect(() => {
+    checkRelationshipsKeyRef.current = null;
+    checkRelationshipsRequestIdRef.current = null;
+    checkRelationshipsLatestRequestRef.current = null;
+    checkRelationshipsRequestMetaRef.current.clear();
+    setCheckRelationshipsResults(null);
+  }, [relationshipItemOriginKey]);
   const onListRelationshipsConfigChange = useCallback(
     ({ cursor, itemsPerPage }: ListItemsConfig) => {
       if (relationshipItemOrigin) {
@@ -803,58 +811,56 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     searchItemsList,
   ]);
   const candidateKey = useMemo(() => {
-    if (!relationshipItemOrigin || candidatePrimaryFieldValues.length === 0) {
+    if (candidatePrimaryFieldValues.length === 0) {
       return "";
     }
 
-    const sortedCandidatePrimaryFieldValues = [...candidatePrimaryFieldValues]
-      .filter(Boolean)
-      .sort();
-
-    return [
-      relationshipItemOriginKey,
-      targetTypeName ?? "",
-      sortedCandidatePrimaryFieldValues.join("|"),
-    ].join(":");
-  }, [
-    candidatePrimaryFieldValues,
-    relationshipItemOrigin,
-    relationshipItemOriginKey,
-    targetTypeName,
-  ]);
+    return [...candidatePrimaryFieldValues].filter(Boolean).sort().join("|");
+  }, [candidatePrimaryFieldValues]);
+  const checkRelationshipsPageKey = useMemo(
+    () =>
+      `${fromTypeName ?? ""}:${fromTypeFieldName ?? ""}:${fromTypePrimaryFieldValue ?? ""}:${toMode ?? ""}:${candidateKey}`,
+    [
+      candidateKey,
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue,
+      toMode,
+    ],
+  );
   useEffect(() => {
-    if (
-      !selectingRelatedItems ||
-      !relationshipItemOrigin ||
-      candidatePrimaryFieldValues.length === 0
-    ) {
-      checkRelationshipsKeyRef.current = null;
-      checkRelationshipsRequestIdRef.current = null;
+    if (!selectingRelatedItems || !relationshipItemOrigin || !candidateKey) {
       return;
     }
 
-    if (checkRelationshipsKeyRef.current === candidateKey) {
+    if (checkRelationshipsKeyRef.current === checkRelationshipsPageKey) {
       return;
     }
 
     const requestToken = getSimpleId();
-    checkRelationshipsKeyRef.current = candidateKey;
-    checkRelationshipsRequestTokenRef.current.set(candidateKey, requestToken);
+    checkRelationshipsKeyRef.current = checkRelationshipsPageKey;
+    checkRelationshipsLatestRequestRef.current = {
+      key: checkRelationshipsPageKey,
+      token: requestToken,
+    };
     setCheckRelationshipsResults(null);
     const requestId = typeInfoORMAPIService.checkRelationships(
       relationshipItemOrigin,
       candidatePrimaryFieldValues,
     );
     checkRelationshipsRequestIdRef.current = requestId;
-    checkRelationshipsRequestMetaRef.current.set(requestId, {
-      candidateKey,
-      token: requestToken,
-    });
+    if (requestId) {
+      checkRelationshipsRequestMetaRef.current.set(requestId, {
+        key: checkRelationshipsPageKey,
+        token: requestToken,
+      });
+    }
   }, [
     selectingRelatedItems,
     relationshipItemOrigin,
     candidatePrimaryFieldValues,
     candidateKey,
+    checkRelationshipsPageKey,
     typeInfoORMAPIService,
   ]);
   const areIndicesEqual = useCallback(
@@ -879,14 +885,13 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     }
 
     const requestMeta = checkRelationshipsRequestMetaRef.current.get(requestId);
-    const expectedToken = requestMeta
-      ? checkRelationshipsRequestTokenRef.current.get(requestMeta.candidateKey)
-      : null;
+    const latestRequest = checkRelationshipsLatestRequestRef.current;
 
     if (
       !requestMeta ||
-      expectedToken !== requestMeta.token ||
-      requestMeta.candidateKey !== candidateKey
+      !latestRequest ||
+      latestRequest.key !== requestMeta.key ||
+      latestRequest.token !== requestMeta.token
     ) {
       checkRelationshipsRequestMetaRef.current.delete(requestId);
       return;
@@ -940,7 +945,6 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     checkRelationshipsRequestMetaRef.current.delete(requestId);
   }, [
     typeInfoORMAPIState.checkRelationships,
-    candidateKey,
     selectingRelatedItems,
     targetTypePrimaryFieldName,
     toMode,
