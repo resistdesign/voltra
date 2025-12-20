@@ -801,19 +801,15 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     );
   };
 
+  const isRelationshipSelection =
+    selectingRelatedItems && toMode === TypeNavigationMode.SEARCH_ITEMS;
   const relationshipCandidateItems = useMemo(
-    () =>
-      toMode === TypeNavigationMode.RELATED_ITEMS
-        ? relatedItemsResults.items ?? []
-        : searchItemsResults.items ?? [],
-    [toMode, relatedItemsResults.items, searchItemsResults.items],
+    () => (isRelationshipSelection ? searchItemsResults.items ?? [] : []),
+    [isRelationshipSelection, searchItemsResults.items],
   );
   const activeListItemsConfig = useMemo(
-    () =>
-      toMode === TypeNavigationMode.RELATED_ITEMS
-        ? listRelationshipsConfig
-        : listItemsConfig,
-    [toMode, listRelationshipsConfig, listItemsConfig],
+    () => (isRelationshipSelection ? listItemsConfig : undefined),
+    [isRelationshipSelection, listItemsConfig],
   );
   const candidateValues = useMemo(
     () =>
@@ -851,10 +847,10 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [candidateKey, candidateStabilityKey, selectingRelatedItems]);
+  }, [candidateKey, candidateStabilityKey, isRelationshipSelection]);
   useEffect(() => {
     if (
-      !selectingRelatedItems ||
+      !isRelationshipSelection ||
       !relationshipItemOrigin ||
       candidateValues.length === 0 ||
       stableCandidateKey.length === 0 ||
@@ -889,7 +885,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       });
     }
   }, [
-    selectingRelatedItems,
+    isRelationshipSelection,
     relationshipItemOrigin,
     candidateValues,
     candidateKey,
