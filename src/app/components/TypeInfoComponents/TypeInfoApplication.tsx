@@ -177,7 +177,7 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
     useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRelationshipRequestIdsRef = useRef<Set<string>>(new Set());
   const pendingRelationshipRefreshRef = useRef<boolean>(false);
-  const checkRelationshipsRequestTokenRef = useRef<number>(0);
+  const checkRelationshipsRequestIdRef = useRef<string | null>(null);
   const previousSearchSelectedIndicesRef = useRef<number[]>([]);
   const previousRelatedSelectedIndicesRef = useRef<number[]>([]);
   const lastSearchRelationshipSnapshotRef = useRef<string | null>(null);
@@ -768,35 +768,36 @@ export const TypeInfoApplication: FC<TypeInfoApplicationProps> = ({
       return;
     }
 
-    const requestToken = checkRelationshipsRequestTokenRef.current + 1;
-    checkRelationshipsRequestTokenRef.current = requestToken;
     setCheckRelationshipsResults(null);
-
-    typeInfoORMAPIService
-      .checkRelationships(
+    checkRelationshipsRequestIdRef.current =
+      typeInfoORMAPIService.checkRelationships(
         relationshipItemOrigin,
         searchCandidatePrimaryFieldValues,
-      )
-      .then((results) => {
-        if (checkRelationshipsRequestTokenRef.current !== requestToken) {
-          return;
-        }
-
-        setCheckRelationshipsResults(results);
-      })
-      .catch(() => {
-        if (checkRelationshipsRequestTokenRef.current !== requestToken) {
-          return;
-        }
-
-        setCheckRelationshipsResults(null);
-      });
+      );
   }, [
     selectingRelatedItems,
     relationshipItemOriginKey,
     searchCandidatePrimaryFieldValuesSnapshot,
     typeInfoORMAPIService,
   ]);
+  useEffect(() => {
+    const { data, error, activeRequests = [] } =
+      typeInfoORMAPIState.checkRelationships ?? {};
+    const requestId = checkRelationshipsRequestIdRef.current;
+
+    if (!requestId || activeRequests.includes(requestId)) {
+      return;
+    }
+
+    if (error) {
+      setCheckRelationshipsResults(null);
+      return;
+    }
+
+    setCheckRelationshipsResults(
+      data ? (data as CheckRelationshipsResults) : null,
+    );
+  }, [typeInfoORMAPIState.checkRelationships]);
   const areIndicesEqual = useCallback(
     (left: number[], right: number[]) =>
       left.length === right.length &&
