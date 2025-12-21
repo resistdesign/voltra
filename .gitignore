@@ -1,5 +1,10 @@
 .DS_Store
 .idea/
+.astro
+dist
+docs
+site-dist
+
 logs
 *.log
 npm-debug.log*
@@ -38,9 +43,6 @@ web_modules/
 .next
 out
 .nuxt
-dist
-docs
-site-dist
 .cache/
 .vuepress/dist
 .serverless/
