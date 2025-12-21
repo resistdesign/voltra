@@ -4,6 +4,6 @@ import react from "@astrojs/react";
 export default defineConfig({
   integrations: [react()],
   srcDir: "./site/app/src",
-  publicDir: "./site/app/public",
+  publicDir: "./public",
   outDir: "./site-dist/app",
 });
