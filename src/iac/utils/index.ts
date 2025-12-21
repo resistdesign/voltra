@@ -1,7 +1,7 @@
 import {
   CloudFormationParameter,
   CloudFormationTemplate,
-} from "../types/StandardIncludes";
+} from "../types/IaCTypes";
 import { getValuePathString, mergeValues } from "./patch-utils";
 
 export * from "./patch-utils";

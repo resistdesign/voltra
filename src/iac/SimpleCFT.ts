@@ -1,4 +1,4 @@
-import { CloudFormationTemplate } from "./types/StandardIncludes";
+import { CloudFormationTemplate } from "./types/IaCTypes";
 import {
   addParameter,
   addParameters,
