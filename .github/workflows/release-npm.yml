@@ -12,6 +12,7 @@ jobs:
   publish:
     environment: npm-publish
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,11 +25,11 @@ jobs:
           cache: yarn
 
       - name: Set VERSION env
-        run: echo "VERSION=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
+        run: echo "VERSION=${{ github.event.release.tag_name }}" | sed 's/^VERSION=v/VERSION=/' >> "$GITHUB_ENV"
 
       - name: Set npm dist-tag for prerelease
         if: ${{ github.event.release.prerelease }}
-        run: echo "NPM_TAG=next" >> "$GITHUB_ENV"
+        run: echo "NPM_TAG=alpha" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: yarn install
