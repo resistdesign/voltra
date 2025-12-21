@@ -10,7 +10,7 @@
     "vest": "src/common/Testing/CLI.ts"
   },
   "scripts": {
-    "build": "tsc && yarn prep-dist",
+    "build": "tsc && yarn prep-dist && rm -rf dist/site",
     "test": "ts-node src/common/Testing/CLI.ts ./src/**/*.spec.json",
     "test:gen": "ts-node src/common/Testing/CLI.ts --generate ./src/**/*.spec.json",
     "doc": "typedoc",
