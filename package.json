@@ -50,11 +50,6 @@
   },
   "devDependencies": {
     "@astrojs/react": "^4.3.1",
-    "@parcel/packager-raw-url": "2.16.3",
-    "@parcel/packager-ts": "2.16.3",
-    "@parcel/transformer-inline-string": "2.16.3",
-    "@parcel/transformer-typescript-types": "2.16.0",
-    "@parcel/transformer-webmanifest": "2.16.3",
     "@types/cfn-response": "^1.0.8",
     "@types/node": "^20.11.6",
     "@types/react-dom": "^18.3.0",
@@ -65,42 +60,11 @@
     "buffer": "^5.5.0||^6.0.0",
     "cfn-response": "^1.0.1",
     "esbuild": "^0.25.9",
-    "parcel": "^2.16.3",
     "prettier": "^3.6.2",
     "process": "^0.11.10",
     "svgo": "^3",
     "ts-morph": "^24.0.0",
     "typedoc": "^0.25.8",
     "typedoc-material-theme": "^1.0.2"
-  },
-  "targets": {
-    "app": {
-      "context": "browser",
-      "engines": {
-        "browsers": [
-          "last 2 version",
-          "not dead",
-          "> 0.2%"
-        ]
-      },
-      "includeNodeModules": true,
-      "outputFormat": "commonjs",
-      "isLibrary": false,
-      "scopeHoist": false
-    },
-    "api": {
-      "context": "node",
-      "engines": {
-        "node": ">=20"
-      },
-      "outputFormat": "commonjs",
-      "includeNodeModules": true,
-      "isLibrary": false,
-      "scopeHoist": false
-    }
-  },
-  "@parcel/transformer-js": {
-    "inlineFS": true,
-    "inlineEnvironment": true
   }
 }
