@@ -49,55 +49,8 @@ front-end apps.</td>
 
 | API                                                                         | App                                           | IaC                                                           |
 |-----------------------------------------------------------------------------|-----------------------------------------------|---------------------------------------------------------------|
-| RPC                                                                         | Form Generation: TypeScript Type Driven       | Chainable Stacks                                              |
-| CORS                                                                        | Easy Layout                                   | Full Parameter Support: Groups/Labels/Types/etc...            |
+| RPC                                                                         | Easy Layout                                   | Full Parameter Support: Groups/Labels/Types/etc...            |
 | Auth: Public/Secured/Role Based                                             | State Management                              | Packs: Easy to add Database/Storage/Auth/Functions/etc...     |
 | Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships |                                               | Typed Build Spec Creation                                     |
 |                                                                             |                                               | Typed Resource Parameters                                     |
-
-## App TODO:
-
-### Input types:
-
-- [x] string
-- [ ] specific string types (e.g. email, phone number, long text, etc.)
-- [x] number
-- [x] boolean
-- Primitive options selection:
-- [x] option selector
-- [x] option selector w/ custom value
-- [x] option selector w/search
-- [x] option selector w/search w/ custom value
-
-- ---
-
-- Advanced input types:
-
-- ---
-
-- [x] custom (i.e. date picker)
-- [ ] default/JSON editor
-- Designate primary field for object selection:
-- Object search form???
-- [ ] existing object selector
-- [ ] existing object selector multiple
-- [ ] existing object selector w/ search
-- [ ] existing object selector w/ advanced search (Advanced object field query)
-
-- ---
-
-- [ ] new object forms and sub-forms
-
-- ---
-
-- [ ] array of all of the above
-
-### TypeInfoForm:
-
-- [x] labels
-- [ ] arrays
-- [ ] navigation to sub-types
-- [ ] advanced input types, including custom
-- [ ] universal field change handler*
-- [ ] validation
