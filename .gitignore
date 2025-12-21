@@ -35,7 +35,6 @@ web_modules/
 .env
 .env.test
 .cache
-.parcel-cache
 .next
 out
 .nuxt
