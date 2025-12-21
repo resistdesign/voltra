@@ -1,7 +1,6 @@
 import { FC } from "react";
 import { createGlobalStyle } from "styled-components";
 import { ApplicationStateProvider, Route } from "../../src/app/utils";
-import { TypeInfoDemo } from "./App/Demos/TypeInfoDemo";
 
 const GlobalStyle = createGlobalStyle`
     html,
@@ -37,9 +36,7 @@ export const App: FC = () => {
           <a href="type-info">Type Info</a>
           <br />
         </Route>
-        <Route path="type-info">
-          <TypeInfoDemo />
-        </Route>
+        <Route path="type-info">Coming Soon.</Route>
       </Route>
     </ApplicationStateProvider>
   );
