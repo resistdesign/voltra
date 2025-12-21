@@ -26,7 +26,7 @@ features like chainable stacks and comprehensive parameter support. Its intuitiv
 databases, storage, authentication, and functions through easy-to-use packs. Furthermore, Voltra enhances development
 workflows with advanced state management, and a smart, lightweight routing system for React
 front-end apps.</td>
-<td><img src="https://docs.voltra.app/images/Voltra%20Robot%20Coming%20Together.png" style="width: 200em;" /></td>
+<td><img src="images/Voltra%20Incarnate.png" style="width: 200em;" /></td>
 </tr>
 </tbody>
 </table>
