@@ -2,7 +2,11 @@ name: Release NPM Package
 
 on:
   release:
-    types: [published]
+    types: [ published ]
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -36,6 +40,4 @@ jobs:
 
       - name: Publish
         working-directory: dist
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish ${{ env.NPM_TAG && format('--tag {0}', env.NPM_TAG) || '' }}
