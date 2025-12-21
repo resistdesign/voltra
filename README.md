@@ -54,3 +54,33 @@ front-end apps.</td>
 | Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships |                                               | Typed Build Spec Creation                                     |
 |                                                                             |                                               | Typed Resource Parameters                                     |
+
+## Releasing
+
+Voltra publishes npm packages from GitHub Releases. The release tag is used verbatim
+as the npm package version, so it must be valid SemVer without a leading `v`.
+
+### Stable releases
+
+Use tags like:
+
+```
+3.0.0
+```
+
+### Pre-releases (alpha, beta, rc)
+
+Use tags like:
+
+```
+3.0.0-alpha.0
+3.0.0-beta.1
+3.0.0-rc.1
+```
+
+When the GitHub Release is marked as a prerelease, the npm publish step uses the
+`next` dist-tag instead of `latest`. Consumers can install prereleases with:
+
+```bash
+npm install @resistdesign/voltra@next
+```

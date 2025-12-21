@@ -1,0 +1,41 @@
+name: Release NPM Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org
+          cache: yarn
+
+      - name: Set VERSION env
+        run: echo "VERSION=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
+
+      - name: Set npm dist-tag for prerelease
+        if: ${{ github.event.release.prerelease }}
+        run: echo "NPM_TAG=next" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build
+        run: yarn build
+
+      - name: Update dist package.json version
+        run: node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('dist/package.json','utf8'));pkg.version=process.env.VERSION;fs.writeFileSync('dist/package.json',JSON.stringify(pkg,null,2)+'\n');"
+
+      - name: Publish
+        working-directory: dist
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ${{ env.NPM_TAG && format('--tag {0}', env.NPM_TAG) || '' }}
