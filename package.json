@@ -27,7 +27,7 @@
     "site:build:api": "node ./site/build-api.mjs",
     "site:build:iac": "ts-node ./site/iac/index.ts",
     "start": "astro dev --host docs-local.demo.voltra.app",
-    "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/ && cp -r ./images site-dist/app/",
+    "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/",
     "iac:types:gen": "ts-node ./src/iac/types/generate.ts"
   },
   "dependencies": {
