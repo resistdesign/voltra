@@ -1,0 +1,2 @@
+src/iac/types/CloudFormationResourceSpecification.js
+src/iac/types/CloudFormationResourceSpecification.d.ts

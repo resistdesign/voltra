@@ -7,7 +7,7 @@ import { getNamespaceStructure } from "./Utils";
 import { renderNamespaceStructure } from "./Renderers";
 
 const STANDARD_INCLUDES = FS.readFileSync(
-  Path.join(__dirname, "StandardIncludes.d.ts"),
+  Path.join(__dirname, "StandardIncludes.d.ts.tmpl"),
   { encoding: "utf8" },
 )
   // IMPORTANT: Remove the first line which is a placeholder for the `AllResourceTypes` type.
@@ -37,7 +37,7 @@ const generate = async () => {
 
   FS.mkdirSync(Path.join(__dirname, "..", "dist"), { recursive: true });
   FS.writeFileSync(
-    Path.join(__dirname, "..", "dist", "index.d.ts"),
+    Path.join(__dirname, "..", "dist", "IaCTypes.ts"),
     TypesContentString,
     { encoding: "utf8" },
   );

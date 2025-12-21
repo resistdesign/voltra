@@ -9,14 +9,20 @@
   "bin": {
     "vest": "src/common/Testing/CLI.ts"
   },
+  "files": [
+    "src/**/*",
+    "README.md",
+    "package.json",
+    "!src/iac/types/CloudFormationResourceSpecification.js"
+  ],
   "scripts": {
-    "build": "tsc && yarn prep-dist && rm -rf dist/site",
+    "build": "tsc && yarn prep-dist",
     "test": "ts-node src/common/Testing/CLI.ts ./src/**/*.spec.json",
     "test:gen": "ts-node src/common/Testing/CLI.ts --generate ./src/**/*.spec.json",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",
-    "prep-dist": "cp package.json dist/ && cp README.md dist/",
+    "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .npmignore dist/",
     "site:build:app": "parcel build site/app/index.html --dist-dir site-dist --target app && yarn finalize-site",
     "site:build:api": "parcel build site/api/index.ts --target api --dist-dir site-dist --no-source-maps --no-optimize --no-scope-hoist",
     "site:build:iac": "ts-node ./site/iac/index.ts",

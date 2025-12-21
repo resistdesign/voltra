@@ -2,23 +2,9 @@
 
 ![Voltra Logo Inverse 2025.svg](https://docs.voltra.app/images/Voltra%20Logo%20Inverse%202025.svg "Voltra")
 
-<style>
-
-.nav-button {
-  background: linear-gradient(145deg, #b285c9, #5e3a76); color: white; border: none; border-radius: 50px; padding:
-15px 30px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0
-8px 15px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; cursor: pointer; text-decoration: none; display: inline-block;"
-onmouseover="this.style.background='linear-gradient(145deg, #a374b9, #4d2d61)'; this.style.boxShadow='0 6px 8px rgba(0,
-0, 0, 0.2), 0 12px 20px rgba(0, 0, 0, 0.2)'; this.style.transform='translateY(-2px)';" onmouseout="
-this.style.background='linear-gradient(145deg, #b285c9, #5e3a76)'; this.style.boxShadow='0 4px 6px rgba(0, 0, 0, 0.1), 0
-8px 15px rgba(0, 0, 0, 0.1)'; this.style.transform='translateY(0)';
-}
-
-</style>
-
 ------------
 
-<a class="nav-button" href="https://docs.voltra.app">See The Demos</a>
+[See The Demos](https://docs.voltra.app)
 
 ## Usage
 
