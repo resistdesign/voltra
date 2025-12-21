@@ -6,37 +6,58 @@ export const PLACEHOLDER_FUNCTION_CODE: AWS.Lambda.Function.Code = {
     "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n",
 };
 
+export type CloudFunctionRuntime =
+  // Node.js
+  | "nodejs14.x"
+  | "nodejs16.x"
+  | "nodejs18.x"
+  | "nodejs20.x"
+  | "nodejs22.x"
+  | "nodejs24.x"
+  | "nodejs26.x"
+
+  // Python
+  | "python3.8"
+  | "python3.9"
+  | "python3.10"
+  | "python3.11"
+  | "python3.12"
+  | "python3.13"
+  | "python3.14"
+  | "python3.15"
+
+  // Java
+  | "java11"
+  | "java17"
+  | "java21"
+  | "java25"
+
+  // .NET
+  | "dotnet6"
+  | "dotnet8"
+  | "dotnet10"
+
+  // Go
+  | "go1.x"
+
+  // Ruby
+  | "ruby2.7"
+  | "ruby3.2"
+  | "ruby3.3"
+  | "ruby3.4"
+  | "ruby3.5"
+
+  // Custom runtimes
+  | "provided"
+  | "provided.al2"
+  | "provided.al2023";
+
 export type AddCloudFunctionConfig = {
   id: string;
   code?: AWS.Lambda.Function.Code;
   environment?: AWS.Lambda.Function.Environment;
   handler?: any;
-  runtime?:
-    | "dotnetcore1.0"
-    | "dotnetcore2.0"
-    | "dotnetcore2.1"
-    | "dotnetcore3.1"
-    | "go1.x"
-    | "java11"
-    | "java8"
-    | "java8.al2"
-    | "nodejs"
-    | "nodejs10.x"
-    | "nodejs12.x"
-    | "nodejs14.x"
-    | "nodejs4.3"
-    | "nodejs4.3-edge"
-    | "nodejs6.10"
-    | "nodejs8.10"
-    | "provided"
-    | "provided.al2"
-    | "python2.7"
-    | "python3.6"
-    | "python3.7"
-    | "python3.8"
-    | "python3.9"
-    | "ruby2.5"
-    | "ruby2.7";
+  runtime?: CloudFunctionRuntime;
   timeout?: any;
   policies?: AWS.IAM.Role.Policy[];
 };
@@ -55,7 +76,7 @@ export const addCloudFunction = createResourcePack(
       },
     },
     handler = "index.handler",
-    runtime = "nodejs12.x",
+    runtime = "nodejs26.x",
     timeout = 30,
     policies = [
       {
