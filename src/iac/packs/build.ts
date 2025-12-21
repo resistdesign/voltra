@@ -11,24 +11,36 @@ export type BuildPipelineRepoConfig = {
   oauthToken: any;
 };
 
+export type CustomCodeBuildString<T extends string> = T & { __custom?: never };
+
+export type CodeBuildEnvironmentType =
+  | "ARM_CONTAINER"
+  | "LINUX_CONTAINER"
+  | "LINUX_GPU_CONTAINER"
+  | "WINDOWS_SERVER_2019_CONTAINER"
+  | "WINDOWS_SERVER_2022_CONTAINER"
+  | "LINUX_EC2"
+  | "ARM_EC2"
+  | "WINDOWS_EC2"
+  | "MAC_ARM"
+  | CustomCodeBuildString<string>;
+
+export type CodeBuildComputeType =
+  | "BUILD_GENERAL1_SMALL"
+  | "BUILD_GENERAL1_MEDIUM"
+  | "BUILD_GENERAL1_LARGE"
+  | "BUILD_GENERAL1_2XLARGE"
+  | "BUILD_GENERAL1_XLARGE"
+  | CustomCodeBuildString<string>;
+
 export type AddBuildPipelineConfig = {
   id: string;
   buildSpec: any;
   dependsOn?: string | string[];
   environmentVariables?: AWS.CodeBuild.Project.EnvironmentVariable[];
   timeoutInMinutes?: number;
-  environmentType?:
-    | "ARM_CONTAINER"
-    | "LINUX_CONTAINER"
-    | "LINUX_GPU_CONTAINER"
-    | "WINDOWS_SERVER_2019_CONTAINER"
-    | string;
-  environmentComputeType?:
-    | "BUILD_GENERAL1_LARGE"
-    | "BUILD_GENERAL1_SMALL"
-    | "BUILD_GENERAL1_MEDIUM"
-    | "BUILD_GENERAL1_2XLARGE"
-    | string;
+  environmentType?: CodeBuildEnvironmentType;
+  environmentComputeType?: CodeBuildComputeType;
   environmentImage?: string;
   repoConfig: BuildPipelineRepoConfig;
 };
