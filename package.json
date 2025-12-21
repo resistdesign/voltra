@@ -5,10 +5,7 @@
   "homepage": "https://voltra.app",
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
-  "license": "UNLICENSED",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "license": "MIT",
   "bin": {
     "vest": "src/common/Testing/CLI.ts"
   },
