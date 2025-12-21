@@ -1,5 +1,3 @@
-import FS from "fs";
-import Path from "path";
 import { createResourcePack } from "../../utils";
 
 export type AddUserManagementConfig = {
@@ -222,91 +220,6 @@ export const addUserManagement = createResourcePack(
             },
           },
         },
-        [`${id}UserPoolAliasTargetLambdaExecutionRole`]: {
-          Type: "AWS::IAM::Role",
-          Properties: {
-            AssumeRolePolicyDocument: {
-              Version: "2012-10-17",
-              Statement: [
-                {
-                  Effect: "Allow",
-                  Principal: {
-                    Service: ["lambda.amazonaws.com"],
-                  },
-                  Action: ["sts:AssumeRole"],
-                },
-              ],
-            },
-            Path: "/",
-            Policies: [
-              {
-                PolicyName: "root",
-                PolicyDocument: {
-                  Version: "2012-10-17",
-                  Statement: [
-                    {
-                      Effect: "Allow",
-                      Action: [
-                        "logs:CreateLogGroup",
-                        "logs:CreateLogStream",
-                        "logs:PutLogEvents",
-                      ],
-                      Resource: "arn:aws:logs:*:*:*",
-                    },
-                    {
-                      Effect: "Allow",
-                      Action: ["cognito-idp:DescribeUserPoolDomain"],
-                      Resource: "*",
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-        [`${id}GetUserPoolClientCFDistribution`]: {
-          Type: "AWS::Lambda::Function",
-          Properties: {
-            Description: `Look up CloudFrontDistribution of ${id}UserPoolDomain`,
-            Handler: "index.handler",
-            MemorySize: 128,
-            Role: {
-              "Fn::GetAtt": [
-                `${id}UserPoolAliasTargetLambdaExecutionRole`,
-                "Arn",
-              ],
-            },
-            Runtime: "nodejs16.x",
-            Timeout: 30,
-            Code: {
-              ZipFile: FS.readFileSync(
-                Path.join(
-                  __dirname,
-                  "user-management",
-                  "UserPoolAliasTargetCustomResourceCode.js",
-                ),
-                { encoding: "utf8" },
-              ),
-            },
-          },
-        },
-        [`${id}UPDomain`]: {
-          Type: `Custom::${id}UserPoolCloudFrontDistribution` as any,
-          DependsOn: `${id}UserPoolDomain`,
-          Properties: {
-            ServiceToken: {
-              "Fn::GetAtt": [`${id}GetUserPoolClientCFDistribution`, "Arn"],
-            },
-            UserPoolDomain: {
-              "Fn::Sub": [
-                "auth.${BaseDomainName}",
-                {
-                  BaseDomainName: domainName,
-                },
-              ],
-            },
-          },
-        },
         [`${id}BaseDomainRecord`]: !!baseDomainRecordAliasTargetDNSName
           ? {
               Type: "AWS::Route53::RecordSet",
@@ -339,7 +252,7 @@ export const addUserManagement = createResourcePack(
             AliasTarget: {
               HostedZoneId: "Z2FDTNDATAQYW2",
               DNSName: {
-                "Fn::GetAtt": [`${id}UPDomain`, "AliasTarget"],
+                "Fn::GetAtt": [`${id}UserPoolDomain`, "CloudFrontDistribution"],
               },
             },
           },

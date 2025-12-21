@@ -1,4 +1,4 @@
-import { addUserManagement } from "./abstract/user-management";
+import { addUserManagement } from "./auth/user-management";
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 
