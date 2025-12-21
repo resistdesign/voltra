@@ -17,7 +17,19 @@ await build({
       setup(build) {
         build.onResolve({ filter: /^source:/ }, (args) => {
           const strippedPath = args.path.replace(/^source:/, "");
-          const absolutePath = path.resolve(args.resolveDir, strippedPath);
+          let absolutePath = path.resolve(args.resolveDir, strippedPath);
+
+          if (!path.extname(absolutePath)) {
+            const extensions = [".ts", ".tsx", ".txt", ".md"];
+            const matchedPath = extensions
+              .map((ext) => `${absolutePath}${ext}`)
+              .find((candidate) => fs.existsSync(candidate));
+
+            if (matchedPath) {
+              absolutePath = matchedPath;
+            }
+          }
+
           return {
             path: absolutePath,
             namespace: "source-text",
