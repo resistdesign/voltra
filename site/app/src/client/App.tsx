@@ -3,7 +3,8 @@ import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
 const NavBar = styled.nav`
-  background: url("/images/digital-drip-tile.png") repeat-x;
+  background: var(--pico-primary-background);
+  mix-blend-mode: hard-light;
 
   padding: 0 1em;
 
