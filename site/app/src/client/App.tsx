@@ -21,7 +21,7 @@ const Content = styled.div`
   padding: 2em;
 `;
 
-const ContentBody = styled.div`
+const ContentCardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2em;
@@ -49,18 +49,14 @@ export const App: FC = () => {
   return (
     <ApplicationStateProvider>
       <Route>
-        <Route exact>
-          <NavBar>
-            <a href="https://docs.voltra.app/docs">
-              <button>Docs</button>
-            </a>
-            <a href="type-info">
-              <button>Type Info Demo</button>
-            </a>
-          </NavBar>
-          <Content>
-            <h3>Features</h3>
-            <ContentBody>
+        <NavBar>
+          <a href="https://docs.voltra.app/docs">Docs</a>
+          <a href="type-info">Type Info Demo</a>
+        </NavBar>
+        <Content>
+          <h3>Features</h3>
+          <Route exact>
+            <ContentCardGrid>
               <article>
                 <img src="/images/features/api.png" alt="API Features" />
                 <table>
@@ -144,10 +140,10 @@ export const App: FC = () => {
                   </tbody>
                 </table>
               </article>
-            </ContentBody>
-          </Content>
-        </Route>
-        <Route path="type-info">Coming Soon.</Route>
+            </ContentCardGrid>
+          </Route>
+          <Route path="type-info">Coming Soon.</Route>
+        </Content>
       </Route>
     </ApplicationStateProvider>
   );

@@ -1086,6 +1086,11 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.25.12.tgz#9bdad8176be7811ad148d1f8772359041f46c6c5"
   integrity sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA==
 
+"@fontsource/montserrat-subrayada@^5.2.5":
+  version "5.2.5"
+  resolved "https://registry.yarnpkg.com/@fontsource/montserrat-subrayada/-/montserrat-subrayada-5.2.5.tgz#737316db1d772f138f17437bec8038f0bd60b4d3"
+  integrity sha512-9xN5SjeDLFJqE3Td/+MSqGJ14/PifzkrreJgkN/AIUhujCjtVxfi0LrfAi55mYk3pQNl5PTs/LgmjjqPuausjA==
+
 "@img/colour@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@img/colour/-/colour-1.0.0.tgz#d2fabb223455a793bf3bf9c70de3d28526aa8311"

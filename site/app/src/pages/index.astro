@@ -3,33 +3,7 @@ import { App } from "../client/App";
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<style>
-  header {
-    background: black url('/images/Voltra Incarnate.png') no-repeat center 15%;
-    background-size: cover;
-
-    aspect-ratio: 16 / 4;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-
-    margin: 0;
-    padding: 1em;
-
-    & > img.logo {
-      width: 40em;
-      max-width: 80%;
-      filter: drop-shadow(0 0 30px rgba(128, 0, 255, 1)) drop-shadow(0 0 60px rgba(128, 0, 255, 0.8)) drop-shadow(0 0 90px rgba(128, 0, 255, 0.5));
-    }
-  }
-</style>
-
 <BaseLayout>
-  <header>
-    <img class="logo" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
-  </header>
   <section>
     <App client:only="react" />
   </section>
