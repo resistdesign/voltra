@@ -16,10 +16,10 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     justify-content: flex-end;
 
     margin: 0;
-    padding: 0;
+    padding: 1em;
 
     & > img.logo {
-      width: 20em;
+      width: 40em;
       max-width: 80%;
       filter: drop-shadow(0 0 30px rgba(128, 0, 255, 1)) drop-shadow(0 0 60px rgba(128, 0, 255, 0.8)) drop-shadow(0 0 90px rgba(128, 0, 255, 0.5));
     }
@@ -30,7 +30,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <header>
     <img class="logo" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
   </header>
-  <div id="app-root">
+  <section>
     <App client:only="react" />
-  </div>
+  </section>
 </BaseLayout>

@@ -1,4 +1,6 @@
 ---
+import '@picocss/pico';
+
 interface Props {
   title?: string;
 }
@@ -25,7 +27,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
     <!-- Web Manifest -->
     <link rel="manifest" href="/site.webmanifest" />
 
-    <style>
+    <style is:global>
       /* Voltra theme colors for light mode */
       [data-theme="light"],
       :root:not([data-theme="dark"]) {
