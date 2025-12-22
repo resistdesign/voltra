@@ -1,5 +1,5 @@
 import { FC } from "react";
-import styled, { createGlobalStyle } from "styled-components";
+import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
 const NavBar = styled.div`
@@ -8,32 +8,32 @@ const NavBar = styled.div`
   align-items: center;
   justify-content: center;
   gap: 1em;
+
+  padding: 1em;
 `;
 
-const GlobalStyle = createGlobalStyle`
-    html,
-    body,
-    #app-root {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-        width: 100vw;
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
+const Content = styled.div`
+  padding: 2em;
 
-    #app-root {
-        overflow: auto;
-    }
+  column-count: 4;
+  column-gap: 2em;
+
+  @media screen and (max-width: 1440px) {
+    column-count: 3;
+  }
+
+  @media screen and (max-width: 1024px) {
+    column-count: 2;
+  }
+
+  @media screen and (max-width: 768px) {
+    column-count: 1;
+  }
 `;
 
 export const App: FC = () => {
   return (
     <ApplicationStateProvider>
-      <GlobalStyle />
       <Route>
         <Route exact>
           <NavBar>
@@ -44,7 +44,7 @@ export const App: FC = () => {
               <button>Type Info Demo</button>
             </a>
           </NavBar>
-          <div>
+          <Content>
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
               eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
@@ -69,7 +69,7 @@ export const App: FC = () => {
               voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem
               ipsum quia dolor sit amet, consectetur, adipisci velit.
             </p>
-          </div>
+          </Content>
         </Route>
         <Route path="type-info">Coming Soon.</Route>
       </Route>
