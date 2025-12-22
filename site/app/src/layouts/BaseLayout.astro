@@ -92,6 +92,18 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Montserrat Subrayada', sans-serif;
       }
+
+      html {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+      }
+
+      body {
+        max-width: 1200px;
+      }
     </style>
   </head>
   <body>
