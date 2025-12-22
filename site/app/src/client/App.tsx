@@ -1,6 +1,7 @@
+import "@picocss/pico";
 import { FC } from "react";
 import { createGlobalStyle } from "styled-components";
-import { ApplicationStateProvider, Route } from "../../src/app/utils";
+import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
 const GlobalStyle = createGlobalStyle`
     html,
