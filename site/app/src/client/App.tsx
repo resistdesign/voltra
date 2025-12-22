@@ -24,7 +24,7 @@ const NavBar = styled.nav`
     opacity: 0.5;
 
     pointer-events: none;
-    
+
     z-index: -1;
   }
 `;
@@ -42,6 +42,20 @@ const ContentCardGrid = styled.div`
   columns: 3;
   gap: 2em;
 
+  @media screen and (max-width: 1280px) {
+    columns: 2;
+  }
+
+  @media screen and (max-width: 800px) {
+    columns: 1;
+  }
+`;
+
+const GridCard = styled.div`
+  break-inside: avoid-column;
+  -webkit-column-break-inside: avoid; /* For older Chrome, Safari, Opera */
+  page-break-inside: avoid; /* For older Firefox */
+
   & > article {
     flex: 1 1 auto;
 
@@ -53,12 +67,7 @@ const ContentCardGrid = styled.div`
     }
   }
 
-  @media screen and (max-width: 1280px) {
-    columns: 2;
-  }
-
-  @media screen and (max-width: 800px) {
-    columns: 1;
+  & > img.fall-off-fx {
   }
 `;
 
@@ -83,89 +92,110 @@ export const App: FC = () => {
           <h3>Features</h3>
           <Route exact>
             <ContentCardGrid>
-              <article>
+              <GridCard>
                 <img src="/images/features/api.png" alt="API Features" />
-                <table>
-                  <thead>
-                    <tr>
-                      <th>API</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>RPC</td>
-                    </tr>
-                    <tr>
-                      <td>Auth: Public/Secured/Role Based</td>
-                    </tr>
-                    <tr>
-                      <td>Routing: Nesting/Handlers/Injected Handlers</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        ORM: TypeScript Type Driven Auto-generated Data Contexts
-                        with Relationships
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </article>
-              <article>
-                <img src="/images/features/app.png" alt="API Features" />
-                <table>
-                  <thead>
-                    <tr>
-                      <th>App</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Easy Layout</td>
-                    </tr>
-                    <tr>
-                      <td>State Management</td>
-                    </tr>
-                    <tr>
-                      <td>Routing: Param Handlers/Parallel Routes/Hooks</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </article>
-              <article>
-                <img src="/images/features/iac.png" alt="API Features" />
-                <table>
-                  <thead>
-                    <tr>
-                      <th>IaC</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        Full Parameter Support: Groups/Labels/Types/etc...
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        Packs: Easy to add
-                        Database/Storage/Auth/Functions/etc...
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        Utilities: Patching Stacks/Constants/Standard
-                        Includes/etc...
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Typed Build Spec Creation</td>
-                    </tr>
-                    <tr>
-                      <td>Typed Resource Parameters</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </article>
+                <article>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>API</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>RPC</td>
+                      </tr>
+                      <tr>
+                        <td>Auth: Public/Secured/Role Based</td>
+                      </tr>
+                      <tr>
+                        <td>Routing: Nesting/Handlers/Injected Handlers</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          ORM: TypeScript Type Driven Auto-generated Data
+                          Contexts with Relationships
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </article>
+                <img
+                  className="fall-off-fx"
+                  src="/images/fall-off-fx/fall-off-1.png"
+                  alt="Digital Drip Fall Off FX"
+                />
+              </GridCard>
+              <GridCard>
+                <article>
+                  <img src="/images/features/app.png" alt="App Features" />
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>App</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Easy Layout</td>
+                      </tr>
+                      <tr>
+                        <td>State Management</td>
+                      </tr>
+                      <tr>
+                        <td>Routing: Param Handlers/Parallel Routes/Hooks</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </article>
+                <img
+                  className="fall-off-fx"
+                  src="/images/fall-off-fx/fall-off-2.png"
+                  alt="Digital Drip Fall Off FX"
+                />
+              </GridCard>
+              <GridCard>
+                <article>
+                  <img src="/images/features/iac.png" alt="IaC Features" />
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>IaC</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          Full Parameter Support: Groups/Labels/Types/etc...
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          Packs: Easy to add
+                          Database/Storage/Auth/Functions/etc...
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          Utilities: Patching Stacks/Constants/Standard
+                          Includes/etc...
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Typed Build Spec Creation</td>
+                      </tr>
+                      <tr>
+                        <td>Typed Resource Parameters</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </article>
+                <img
+                  className="fall-off-fx"
+                  src="/images/fall-off-fx/fall-off-3.png"
+                  alt="Digital Drip Fall Off FX"
+                />
+              </GridCard>
             </ContentCardGrid>
           </Route>
           <Route path="type-info">Coming Soon.</Route>
