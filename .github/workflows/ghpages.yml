@@ -7,6 +7,7 @@ on:
     paths:
       - 'site/**'
       - 'src/**'
+      - 'README.md'
 permissions:
   contents: write
 jobs:
