@@ -3,23 +3,23 @@ import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
 const NavBar = styled.nav`
-  background: linear-gradient(to top, #FFFFFF11 0%, transparent 100%);
-  background: -webkit-linear-gradient(
-    to top,
-    #FFFFFF11 0%,
-    transparent 100%
-  );
-  background: -moz-linear-gradient(to top, #FFFFFF11 0%, transparent 100%);
-
-  padding: 0 1em;
-
-  border-bottom: 0.15em solid transparent;
-  border-image: url("/images/Voltra Incarnate.png") 1 round stretch;
-
   & > ul {
+    gap: 1em;
+
+    &:last-of-type {
+      margin-right: 0;
+    }
+
     & > li {
       & > a {
+        background: rgba(255, 255, 255, 0.1);
         color: var(--pico-primary-inverse);
+
+        transition: background 0.2s ease-in-out;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
       }
     }
   }
@@ -53,7 +53,7 @@ const GridCard = styled.div`
   align-items: stretch;
   justify-content: flex-start;
   gap: 0;
-  
+
   break-inside: avoid-column;
   -webkit-column-break-inside: avoid; /* For older Chrome, Safari, Opera */
   page-break-inside: avoid; /* For older Firefox */
@@ -61,7 +61,6 @@ const GridCard = styled.div`
   & > article {
     flex: 1 1 auto;
     margin-bottom: 0;
-    border-radius: 0;
 
     & > table > tbody > tr > td {
       word-wrap: break-word;
