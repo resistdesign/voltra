@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
 const NavBar = styled.nav`
-  position: relative;
+  background: url("/images/digital-drip-tile.png") repeat-x;
 
   padding: 0 1em;
 
@@ -13,19 +13,6 @@ const NavBar = styled.nav`
         color: var(--pico-primary-inverse);
       }
     }
-  }
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-
-    background: url("/images/digital-drip-tile.png") repeat-x;
-    opacity: 0.5;
-
-    pointer-events: none;
-
-    z-index: -1;
   }
 `;
 
@@ -52,12 +39,20 @@ const ContentCardGrid = styled.div`
 `;
 
 const GridCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  
   break-inside: avoid-column;
   -webkit-column-break-inside: avoid; /* For older Chrome, Safari, Opera */
   page-break-inside: avoid; /* For older Firefox */
 
   & > article {
     flex: 1 1 auto;
+    margin-bottom: 0;
+    border-radius: 0;
 
     & > table > tbody > tr > td {
       word-wrap: break-word;
@@ -127,8 +122,8 @@ export const App: FC = () => {
                 />
               </GridCard>
               <GridCard>
+                <img src="/images/features/app.png" alt="App Features" />
                 <article>
-                  <img src="/images/features/app.png" alt="App Features" />
                   <table>
                     <thead>
                       <tr>
@@ -155,8 +150,8 @@ export const App: FC = () => {
                 />
               </GridCard>
               <GridCard>
+                <img src="/images/features/iac.png" alt="IaC Features" />
                 <article>
-                  <img src="/images/features/iac.png" alt="IaC Features" />
                   <table>
                     <thead>
                       <tr>
