@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { App } from "../../index";
+---
+
+<BaseLayout>
+  <div id="app-root">
+    <div class="loading-text">
+      <h3>Loading...</h3>
+    </div>
+    <App client:only="react" />
+  </div>
+</BaseLayout>
