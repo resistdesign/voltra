@@ -1,4 +1,8 @@
 ---
+import '@picocss/pico';
+import '@fontsource/montserrat-subrayada';
+import { App } from "../client/App";
+
 interface Props {
   title?: string;
 }
@@ -9,6 +13,8 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
 <html lang="en">
   <head>
     <title>{title}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -25,7 +31,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
     <!-- Web Manifest -->
     <link rel="manifest" href="/site.webmanifest" />
 
-    <style>
+    <style is:global>
       /* Voltra theme colors for light mode */
       [data-theme="light"],
       :root:not([data-theme="dark"]) {
@@ -35,39 +41,41 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
           140,
           0.25
         ); /* soft pink glow */
-        --pico-primary: #e6418c; /* electric pink */
-        --pico-primary-background: #9b38b7; /* rich violet */
+        --pico-primary: rgba(230, 65, 140, 1); /* electric pink */
+        --pico-primary-background: rgba(155, 56, 183, 1); /* rich violet */
         --pico-primary-underline: rgba(230, 65, 140, 0.5);
-        --pico-primary-hover: #7e2ea4; /* deeper violet for hover */
-        --pico-primary-hover-background: #7e2ea4;
+        --pico-primary-hover: rgba(126, 46, 164, 1); /* deeper violet for hover */
+        --pico-primary-hover-background: rgba(126, 46, 164, 1);
         --pico-primary-focus: rgba(230, 65, 140, 0.25);
-        --pico-primary-inverse: #fff;
+        --pico-primary-inverse: rgba(255, 255, 255, 1);
+
+        --pico-border-radius: 0;
       }
 
       /* Voltra theme colors for dark mode (auto) */
       @media only screen and (prefers-color-scheme: dark) {
         :root:not([data-theme]) {
           --pico-text-selection-color: rgba(230, 65, 140, 0.2);
-          --pico-primary: #f58bbd; /* light coral pink */
-          --pico-primary-background: #612978;
+          --pico-primary: rgba(245, 139, 189, 1); /* light coral pink */
+          --pico-primary-background: rgba(97, 41, 120, 1);
           --pico-primary-underline: rgba(245, 139, 189, 0.5);
-          --pico-primary-hover: #e6418c;
-          --pico-primary-hover-background: #7e2ea4;
+          --pico-primary-hover: rgba(230, 65, 140, 1);
+          --pico-primary-hover-background: rgba(126, 46, 164, 1);
           --pico-primary-focus: rgba(245, 139, 189, 0.25);
-          --pico-primary-inverse: #fff;
+          --pico-primary-inverse: rgba(255, 255, 255, 1);
         }
       }
 
       /* Voltra theme colors for forced dark mode */
       [data-theme="dark"] {
         --pico-text-selection-color: rgba(230, 65, 140, 0.2);
-        --pico-primary: #f58bbd;
-        --pico-primary-background: #612978;
+        --pico-primary: rgba(245, 139, 189, 1);
+        --pico-primary-background: rgba(97, 41, 120, 1);
         --pico-primary-underline: rgba(245, 139, 189, 0.5);
-        --pico-primary-hover: #e6418c;
-        --pico-primary-hover-background: #7e2ea4;
+        --pico-primary-hover: rgba(230, 65, 140, 1);
+        --pico-primary-hover-background: rgba(126, 46, 164, 1);
         --pico-primary-focus: rgba(245, 139, 189, 0.25);
-        --pico-primary-inverse: #fff;
+        --pico-primary-inverse: rgba(255, 255, 255, 1);
       }
 
       button,
@@ -79,12 +87,54 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
         margin-bottom: 0;
       }
 
-      #app-root .loading-text {
-        display: none;
+      * {
+        box-sizing: border-box;
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Montserrat Subrayada', sans-serif;
+      }
+
+      html {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+      }
+
+      body {
+        max-width: 1280px;
       }
     </style>
   </head>
   <body>
+  <style>
+    body {
+      background: url('/images/header-bg.png') no-repeat center top;
+      background-size: contain;
+    }
+
+    header {
+      aspect-ratio: 16 / 6;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+
+      margin: 0;
+      padding: 1em;
+
+      & > img.logo {
+        max-width: 60%;
+        filter: drop-shadow(0 0 30px rgba(128, 0, 255, 1)) drop-shadow(0 0 60px rgba(128, 0, 255, 0.8)) drop-shadow(0 0 90px rgba(128, 0, 255, 0.5));
+      }
+    }
+  </style>
+  <header>
+    <img class="logo" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
+  </header>
     <slot />
   </body>
 </html>
