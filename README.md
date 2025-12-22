@@ -68,5 +68,5 @@ When the GitHub Release is marked as a prerelease, the npm publish step uses the
 `next` dist-tag instead of `latest`. Consumers can install prereleases with:
 
 ```bash
-npm install @resistdesign/voltra@next
+yarn add @resistdesign/voltra@next
 ```
