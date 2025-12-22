@@ -1,6 +1,6 @@
 # Voltra
 
-![Voltra Logo Inverse 2025.svg](https://docs.voltra.app/images/Voltra%20Logo%20Inverse%202025.svg "Voltra")
+![Voltra Logo 2025.svg](https://docs.voltra.app/images/Voltra%20Logo%202025.svg "Voltra")
 
 ------------
 
