@@ -106,7 +106,7 @@ export const App: FC = () => {
                 </table>
               </article>
               <article>
-                <img src="/images/features/api.png" alt="API Features" />
+                <img src="/images/features/iac.png" alt="API Features" />
                 <table>
                   <thead>
                     <tr>
