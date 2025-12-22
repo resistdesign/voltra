@@ -13,21 +13,31 @@ const NavBar = styled.div`
 `;
 
 const Content = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 2em;
   padding: 2em;
+`;
 
-  column-count: 4;
-  column-gap: 2em;
+const ContentBody = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2em;
 
-  @media screen and (max-width: 1440px) {
-    column-count: 3;
+  & > article {
+    flex: 1 1 auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   @media screen and (max-width: 1024px) {
-    column-count: 2;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   @media screen and (max-width: 768px) {
-    column-count: 1;
+    grid-template-columns: repeat(1, 1fr);
   }
 `;
 
@@ -45,30 +55,92 @@ export const App: FC = () => {
             </a>
           </NavBar>
           <Content>
-            <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat.
-            </p>
-            <p>
-              Duis aute irure dolor in reprehenderit in voluptate velit esse
-              cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-              cupidatat non proident, sunt in culpa qui officia deserunt mollit
-              anim id est laborum.
-            </p>
-            <p>
-              Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-              accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-              quae ab illo inventore veritatis et quasi architecto beatae vitae
-              dicta sunt explicabo.
-            </p>
-            <p>
-              Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit
-              aut fugit, sed quia consequuntur magni dolores eos qui ratione
-              voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem
-              ipsum quia dolor sit amet, consectetur, adipisci velit.
-            </p>
+            <h3>Features</h3>
+            <ContentBody>
+              <article>
+                <img src="/images/features/api.png" alt="API Features" />
+                <table>
+                  <thead>
+                    <tr>
+                      <th>API</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>RPC</td>
+                    </tr>
+                    <tr>
+                      <td>Auth: Public/Secured/Role Based</td>
+                    </tr>
+                    <tr>
+                      <td>Routing: Nesting/Handlers/Injected Handlers</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        ORM: TypeScript Type Driven Auto-generated Data Contexts
+                        with Relationships
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </article>
+              <article>
+                <img src="/images/features/app.png" alt="API Features" />
+                <table>
+                  <thead>
+                    <tr>
+                      <th>App</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Easy Layout</td>
+                    </tr>
+                    <tr>
+                      <td>State Management</td>
+                    </tr>
+                    <tr>
+                      <td>Routing: Param Handlers/Parallel Routes/Hooks</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </article>
+              <article>
+                <img src="/images/features/api.png" alt="API Features" />
+                <table>
+                  <thead>
+                    <tr>
+                      <th>IaC</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        Full Parameter Support: Groups/Labels/Types/etc...
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        Packs: Easy to add
+                        Database/Storage/Auth/Functions/etc...
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        Utilities: Patching Stacks/Constants/Standard
+                        Includes/etc...
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Typed Build Spec Creation</td>
+                    </tr>
+                    <tr>
+                      <td>Typed Resource Parameters</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </article>
+            </ContentBody>
           </Content>
         </Route>
         <Route path="type-info">Coming Soon.</Route>
