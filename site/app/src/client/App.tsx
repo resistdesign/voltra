@@ -3,10 +3,18 @@ import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
 const NavBar = styled.nav`
-  background: var(--pico-primary-background);
-  mix-blend-mode: hard-light;
+  background: linear-gradient(to top, #FFFFFF11 0%, transparent 100%);
+  background: -webkit-linear-gradient(
+    to top,
+    #FFFFFF11 0%,
+    transparent 100%
+  );
+  background: -moz-linear-gradient(to top, #FFFFFF11 0%, transparent 100%);
 
   padding: 0 1em;
+
+  border-bottom: 0.15em solid transparent;
+  border-image: url("/images/Voltra Incarnate.png") 1 round stretch;
 
   & > ul {
     & > li {
@@ -23,7 +31,7 @@ const Content = styled.div`
   align-items: stretch;
   justify-content: flex-start;
   gap: 2em;
-  padding: 2em;
+  padding: 0 2em 2em 2em;
 `;
 
 const ContentCardGrid = styled.div`
