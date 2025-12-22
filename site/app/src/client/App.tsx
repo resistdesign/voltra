@@ -28,15 +28,19 @@ const ContentBody = styled.div`
 
   & > article {
     flex: 1 1 auto;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+
+    & > table > tbody > tr > td {
+      word-wrap: break-word;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
   }
 
-  @media screen and (max-width: 1024px) {
+  @media screen and (max-width: 1280px) {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 800px) {
     grid-template-columns: repeat(1, 1fr);
   }
 `;
