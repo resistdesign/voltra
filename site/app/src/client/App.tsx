@@ -5,9 +5,6 @@ import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 const NavBar = styled.nav`
   position: relative;
 
-  border-radius: 0.5em;
-  overflow: hidden;
-
   padding: 0 1em;
 
   & > ul {
@@ -18,15 +15,17 @@ const NavBar = styled.nav`
     }
   }
 
-  &::after {
+  &::before {
     content: "";
     position: absolute;
     inset: 0;
 
-    background-color: var(--pico-primary-background);
+    background: url("/images/digital-drip-tile.png") repeat-x;
     opacity: 0.5;
 
     pointer-events: none;
+    
+    z-index: -1;
   }
 `;
 
@@ -40,8 +39,7 @@ const Content = styled.div`
 `;
 
 const ContentCardGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  columns: 3;
   gap: 2em;
 
   & > article {
@@ -56,11 +54,11 @@ const ContentCardGrid = styled.div`
   }
 
   @media screen and (max-width: 1280px) {
-    grid-template-columns: repeat(2, 1fr);
+    columns: 2;
   }
 
   @media screen and (max-width: 800px) {
-    grid-template-columns: repeat(1, 1fr);
+    columns: 1;
   }
 `;
 
