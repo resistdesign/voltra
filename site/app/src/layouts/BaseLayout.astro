@@ -41,39 +41,39 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
           140,
           0.25
         ); /* soft pink glow */
-        --pico-primary: #e6418c; /* electric pink */
-        --pico-primary-background: #9b38b7; /* rich violet */
+        --pico-primary: rgba(230, 65, 140, 1); /* electric pink */
+        --pico-primary-background: rgba(155, 56, 183, 1); /* rich violet */
         --pico-primary-underline: rgba(230, 65, 140, 0.5);
-        --pico-primary-hover: #7e2ea4; /* deeper violet for hover */
-        --pico-primary-hover-background: #7e2ea4;
+        --pico-primary-hover: rgba(126, 46, 164, 1); /* deeper violet for hover */
+        --pico-primary-hover-background: rgba(126, 46, 164, 1);
         --pico-primary-focus: rgba(230, 65, 140, 0.25);
-        --pico-primary-inverse: #fff;
+        --pico-primary-inverse: rgba(255, 255, 255, 1);
       }
 
       /* Voltra theme colors for dark mode (auto) */
       @media only screen and (prefers-color-scheme: dark) {
         :root:not([data-theme]) {
           --pico-text-selection-color: rgba(230, 65, 140, 0.2);
-          --pico-primary: #f58bbd; /* light coral pink */
-          --pico-primary-background: #612978;
+          --pico-primary: rgba(245, 139, 189, 1); /* light coral pink */
+          --pico-primary-background: rgba(97, 41, 120, 1);
           --pico-primary-underline: rgba(245, 139, 189, 0.5);
-          --pico-primary-hover: #e6418c;
-          --pico-primary-hover-background: #7e2ea4;
+          --pico-primary-hover: rgba(230, 65, 140, 1);
+          --pico-primary-hover-background: rgba(126, 46, 164, 1);
           --pico-primary-focus: rgba(245, 139, 189, 0.25);
-          --pico-primary-inverse: #fff;
+          --pico-primary-inverse: rgba(255, 255, 255, 1);
         }
       }
 
       /* Voltra theme colors for forced dark mode */
       [data-theme="dark"] {
         --pico-text-selection-color: rgba(230, 65, 140, 0.2);
-        --pico-primary: #f58bbd;
-        --pico-primary-background: #612978;
+        --pico-primary: rgba(245, 139, 189, 1);
+        --pico-primary-background: rgba(97, 41, 120, 1);
         --pico-primary-underline: rgba(245, 139, 189, 0.5);
-        --pico-primary-hover: #e6418c;
-        --pico-primary-hover-background: #7e2ea4;
+        --pico-primary-hover: rgba(230, 65, 140, 1);
+        --pico-primary-hover-background: rgba(126, 46, 164, 1);
         --pico-primary-focus: rgba(245, 139, 189, 0.25);
-        --pico-primary-inverse: #fff;
+        --pico-primary-inverse: rgba(255, 255, 255, 1);
       }
 
       button,

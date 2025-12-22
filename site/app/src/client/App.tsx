@@ -2,14 +2,32 @@ import { FC } from "react";
 import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 
-const NavBar = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 1em;
+const NavBar = styled.nav`
+  position: relative;
 
-  padding: 1em;
+  border-radius: 0.5em;
+  overflow: hidden;
+
+  padding: 0 1em;
+
+  & > ul {
+    & > li {
+      & > a {
+        color: var(--pico-primary-inverse);
+      }
+    }
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background-color: var(--pico-primary-background);
+    opacity: 0.5;
+
+    pointer-events: none;
+  }
 `;
 
 const Content = styled.div`
@@ -49,11 +67,20 @@ export const App: FC = () => {
   return (
     <ApplicationStateProvider>
       <Route>
-        <NavBar>
-          <a href="https://docs.voltra.app/docs">Docs</a>
-          <a href="type-info">Type Info Demo</a>
-        </NavBar>
         <Content>
+          <NavBar>
+            <ul>
+              <li></li>
+            </ul>
+            <ul>
+              <li>
+                <a href="https://docs.voltra.app/docs">Docs</a>
+              </li>
+              <li>
+                <a href="type-info">Type Info Demo</a>
+              </li>
+            </ul>
+          </NavBar>
           <h3>Features</h3>
           <Route exact>
             <ContentCardGrid>
