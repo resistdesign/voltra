@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Digital Drip Tile Generator</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg: #0b0b12;
+      --panel: #121226;
+      --muted: #9aa3b2;
+      --line: rgba(255,255,255,0.08);
+      --bad: #ff5a7a;
+      --ok: #7dffb1;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 50% 0%, rgba(185,124,255,0.14), transparent 60%), var(--bg);
+      color: #e9ecf3;
+    }
+
+    header{
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      gap: 12px;
+    }
+
+    header h1{
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+
+    header .hint{ color: var(--muted); font-size: 12px; margin-left: auto; }
+
+    main{
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 28%), var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+    }
+
+    .stack{ display:flex; flex-direction:column; gap: 10px; }
+
+    label{ font-size: 12px; color: var(--muted); }
+
+    input[type="range"]{ width: 100%; }
+
+    input[type="number"], input[type="text"], input[type="color"], input[type="file"], select{
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.25);
+      color: #e9ecf3;
+      outline: none;
+    }
+
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btns{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    button{
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.25);
+      color: #e9ecf3;
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 12px;
+    }
+
+    button.primary{
+      border-color: rgba(185,124,255,0.5);
+      background: linear-gradient(180deg, rgba(185,124,255,0.25), rgba(0,0,0,0.25));
+    }
+
+    button:active{ transform: translateY(1px); }
+
+    .canvases{
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: 14px;
+      align-items:start;
+    }
+
+    .canvasWrap{
+      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .canvasWrap h2{
+      font-size: 12px;
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-weight: 650;
+    }
+
+    canvas{
+      width: 100%;
+      height: auto;
+      display:block;
+      border-radius: 10px;
+      background: transparent;
+      image-rendering: pixelated;
+    }
+
+    #exportImg{
+      width: 100%;
+      height: auto;
+      display:block;
+      border-radius: 10px;
+      background: transparent;
+      image-rendering: pixelated;
+      border: 1px solid var(--line);
+      margin-top: 10px;
+    }
+
+    .note{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .status{
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--muted);
+      border: 1px dashed rgba(255,255,255,0.12);
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.14);
+    }
+
+    .status.ok{ border-color: rgba(125,255,177,0.30); }
+    .status.bad{ border-color: rgba(255,90,122,0.35); }
+
+    .check{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 6px 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .check input{ width: 16px; height: 16px; }
+
+    @media (max-width: 980px){
+      main{ grid-template-columns: 1fr; }
+      .canvases{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Digital Drip Tile Generator</h1>
+    <div class="hint">Transparent tile PNG + tiled preview</div>
+  </header>
+
+  <main>
+    <section class="panel stack" aria-label="controls">
+      <div class="two">
+        <div>
+          <label>Tile size (px)</label>
+          <input id="tilePx" type="number" min="64" max="2048" step="1" value="256" />
+        </div>
+        <div>
+          <label>Block size (px)</label>
+          <input id="blockPx" type="number" min="4" max="64" step="1" value="12" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Top fill (0–1)</label>
+          <input id="topFill" type="range" min="0" max="1" step="0.01" value="0.68" />
+        </div>
+        <div>
+          <label>Bottom fill (0–1)</label>
+          <input id="bottomFill" type="range" min="0" max="1" step="0.01" value="0.10" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Decay curve</label>
+          <input id="decay" type="range" min="0.2" max="4" step="0.05" value="1.10" />
+        </div>
+        <div>
+          <label>Cluster</label>
+          <input id="cluster" type="range" min="0" max="1" step="0.01" value="0.55" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Noise (0–1)</label>
+          <input id="noise" type="range" min="0" max="1" step="0.01" value="0.35" />
+        </div>
+        <div>
+          <label>Accent chance (0–1)</label>
+          <input id="accentChance" type="range" min="0" max="1" step="0.01" value="0.22" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Alpha min (blocks)</label>
+          <input id="alphaMin" type="range" min="0" max="1" step="0.01" value="0.05" />
+        </div>
+        <div>
+          <label>Alpha max (blocks)</label>
+          <input id="alphaMax" type="range" min="0" max="1" step="0.01" value="0.95" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Block color</label>
+          <input id="block" type="color" value="#b97cff" />
+        </div>
+        <div>
+          <label>Preview background</label>
+          <input id="previewBg" type="color" value="#0b0b12" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Accent A</label>
+          <input id="accentA" type="color" value="#b97cff" />
+        </div>
+        <div>
+          <label>Accent B</label>
+          <input id="accentB" type="color" value="#6b2bff" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Mode</label>
+          <select id="mode">
+            <option value="drip">Drip (top → bottom dissolve)</option>
+            <option value="skyline">Skyline (heavier top band)</option>
+            <option value="spray" selected>Spray (more random)</option>
+          </select>
+        </div>
+        <div>
+          <label>Color source</label>
+          <select id="colorSource">
+            <option value="procedural">Procedural colors</option>
+            <option value="image" selected>Sample from image</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Image (optional)</label>
+          <input id="imgFile" type="file" accept="image/*" />
+        </div>
+        <div>
+          <label>Sample mode</label>
+          <select id="sampleMode">
+            <option value="random" selected>Random patches</option>
+            <option value="mapped">Mapped (same cell)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Sample jitter (0–1)</label>
+          <input id="sampleJitter" type="range" min="0" max="1" step="0.01" value="0.25" />
+        </div>
+        <div>
+          <label>Seed</label>
+          <input id="seed" type="text" value="s68qfprib2" />
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <label>Preview scale</label>
+          <select id="previewScale">
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+            <option value="3">3×</option>
+          </select>
+        </div>
+        <div class="check">
+          <input id="extraHoles" type="checkbox" checked />
+          <label for="extraHoles" style="margin:0; cursor:pointer">Extra hole punch</label>
+        </div>
+      </div>
+
+      <div id="imgStatus" class="status">Image: none loaded</div>
+
+      <div class="btns">
+        <button class="primary" id="regen">Regenerate</button>
+        <button id="randomSeed">Randomize Seed</button>
+        <button id="download">Download PNG</button>
+      </div>
+
+      <div class="note">
+        Exported PNG is <b>only blocks</b> + <b>transparency</b> (no base fill). Flat squares; no strokes.
+      </div>
+    </section>
+
+    <section class="panel" aria-label="output">
+      <div class="canvases">
+        <div class="canvasWrap">
+          <h2>Tile</h2>
+          <canvas id="tile" width="256" height="256"></canvas>
+        </div>
+
+        <div class="canvasWrap">
+          <h2>Preview (tiled)</h2>
+          <canvas id="preview" width="900" height="420"></canvas>
+        </div>
+
+        <div class="canvasWrap">
+          <h2>Export (right-click or use link)</h2>
+          <div class="note" style="margin:0 0 8px">This is the exact tile PNG (transparent background).</div>
+          <a id="exportLink" href="#" download style="font-size:12px; color:#e9ecf3; text-decoration:underline;">Open / download</a>
+          <img id="exportImg" alt="Exported tile" />
+        </div>
+      </div>
+
+      <div class="note" style="margin-top:12px">
+        Use the exported PNG as a repeating background-image.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const tileCanvas = $("tile");
+    const tileCtx = tileCanvas.getContext("2d", { alpha: true });
+
+    const previewCanvas = $("preview");
+    const previewCtx = previewCanvas.getContext("2d", { alpha: true });
+
+    const imgCanvas = document.createElement("canvas");
+    const imgCtx = imgCanvas.getContext("2d", { willReadFrequently: true });
+
+    let loadedImageBitmap = null;
+    let loadedImageEl = null;
+
+    function setImageStatus(text, kind){
+      const el = $("imgStatus");
+      el.textContent = text;
+      el.classList.remove("ok");
+      el.classList.remove("bad");
+
+      if (kind === "ok") el.classList.add("ok");
+      if (kind === "bad") el.classList.add("bad");
+    }
+
+    function clamp01(v){
+      return v < 0 ? 0 : (v > 1 ? 1 : v);
+    }
+
+    function xfnv1a(str){
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++){
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function mulberry32(seed){
+      let a = seed >>> 0;
+      return function(){
+        a |= 0;
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function hexToRgb(hex){
+      const s = (hex || "").replace("#", "").trim();
+      const v = s.length === 3
+        ? s.split("").map(ch => ch + ch).join("")
+        : s;
+      const n = parseInt(v, 16);
+
+      if (Number.isNaN(n)){
+        return { r: 255, g: 255, b: 255 };
+      }
+
+      return {
+        r: (n >> 16) & 255,
+        g: (n >> 8) & 255,
+        b: n & 255
+      };
+    }
+
+    function rgbaFromHex(hex, a){
+      const { r, g, b } = hexToRgb(hex);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+
+    function buildField(cols, rows, rand, cluster){
+      const field = Array.from({ length: rows }, () => new Float32Array(cols));
+
+      for (let y = 0; y < rows; y++){
+        for (let x = 0; x < cols; x++){
+          const n = rand();
+
+          const left = x > 0 ? field[y][x - 1] : 0.5;
+          const up = y > 0 ? field[y - 1][x] : 0.5;
+
+          const bias = (left + up) * 0.5;
+          const v = (1 - cluster) * n + cluster * bias;
+
+          field[y][x] = v;
+        }
+      }
+
+      return field;
+    }
+
+    function probAtY(yNorm, topFill, bottomFill, decay, mode){
+      const t = clamp01(yNorm);
+      const curve = Math.pow(t, decay);
+      let p = topFill + (bottomFill - topFill) * curve;
+
+      if (mode === "skyline") p = p + (1 - t) * 0.12;
+      if (mode === "spray") p = topFill + (bottomFill - topFill) * t;
+
+      return clamp01(p);
+    }
+
+    function prepareImageSamplingSurface(w, h){
+      if (!loadedImageBitmap && !loadedImageEl) return;
+
+      imgCanvas.width = w;
+      imgCanvas.height = h;
+
+      imgCtx.imageSmoothingEnabled = false;
+      imgCtx.clearRect(0, 0, w, h);
+
+      if (loadedImageBitmap){
+        imgCtx.drawImage(loadedImageBitmap, 0, 0, w, h);
+      } else if (loadedImageEl){
+        imgCtx.drawImage(loadedImageEl, 0, 0, w, h);
+      }
+    }
+
+    function drawTile(){
+      tileCtx.imageSmoothingEnabled = false;
+      previewCtx.imageSmoothingEnabled = false;
+
+      const tilePx = Math.max(64, Math.min(2048, Number($("tilePx").value) || 256));
+      const blockPx = Math.max(4, Math.min(64, Number($("blockPx").value) || 24));
+
+      const topFill = Number($("topFill").value);
+      const bottomFill = Number($("bottomFill").value);
+      const decay = Number($("decay").value);
+      const cluster = Number($("cluster").value);
+      const noise = Number($("noise").value);
+
+      const alphaMin = Number($("alphaMin").value);
+      const alphaMax = Number($("alphaMax").value);
+
+      const accentChance = Number($("accentChance").value);
+      const mode = $("mode").value;
+
+      const colorSource = $("colorSource").value;
+      const sampleMode = $("sampleMode").value;
+      const sampleJitter = Number($("sampleJitter").value);
+      const extraHoles = $("extraHoles").checked;
+
+      const blockHex = $("block").value;
+      const accentA = $("accentA").value;
+      const accentB = $("accentB").value;
+
+      const seedStr = $("seed").value || "voltra";
+      const rand = mulberry32(xfnv1a(seedStr));
+
+      const cols = Math.max(2, Math.floor(tilePx / blockPx));
+      const rows = Math.max(2, Math.floor(tilePx / blockPx));
+
+      const w = cols * blockPx;
+      const h = rows * blockPx;
+
+      tileCanvas.width = w;
+      tileCanvas.height = h;
+
+      if (colorSource === "image"){
+        prepareImageSamplingSurface(w, h);
+      }
+
+      tileCtx.clearRect(0, 0, w, h);
+
+      const field = buildField(cols, rows, rand, cluster);
+
+      const lo = Math.min(alphaMin, alphaMax);
+      const hi = Math.max(alphaMin, alphaMax);
+
+      for (let y = 0; y < rows; y++){
+        const yNorm = y / (rows - 1);
+        const pRow = probAtY(yNorm, topFill, bottomFill, decay, mode);
+
+        for (let x = 0; x < cols; x++){
+          const f = field[y][x];
+          const n = (rand() - 0.5) * 2;
+
+          const local = clamp01(
+            pRow * (0.55 + 0.9 * f) + noise * 0.18 * n
+          );
+
+          if (rand() < local){
+            const a = clamp01(lo + (hi - lo) * rand());
+
+            if (colorSource === "image" && (loadedImageBitmap || loadedImageEl)){
+              const maxSX = Math.max(0, w - blockPx);
+              const maxSY = Math.max(0, h - blockPx);
+
+              const mappedSX = x * blockPx;
+              const mappedSY = y * blockPx;
+
+              const randSX = Math.floor(rand() * (maxSX + 1));
+              const randSY = Math.floor(rand() * (maxSY + 1));
+
+              const targetJitter = sampleMode === "mapped" ? (1 - sampleJitter) : sampleJitter;
+
+              const sx = Math.max(0, Math.min(maxSX, Math.floor((1 - targetJitter) * mappedSX + targetJitter * randSX)));
+              const sy = Math.max(0, Math.min(maxSY, Math.floor((1 - targetJitter) * mappedSY + targetJitter * randSY)));
+
+              const px = x * blockPx;
+              const py = y * blockPx;
+
+              tileCtx.save();
+              tileCtx.globalAlpha = a;
+              tileCtx.drawImage(imgCanvas, sx, sy, blockPx, blockPx, px, py, blockPx, blockPx);
+              tileCtx.restore();
+            } else {
+              let fillStyle = rgbaFromHex(blockHex, a);
+
+              const r = rand();
+              if (r < accentChance){
+                fillStyle = rgbaFromHex(r < accentChance * 0.55 ? accentA : accentB, a);
+              }
+
+              const px = x * blockPx;
+              const py = y * blockPx;
+
+              tileCtx.fillStyle = fillStyle;
+              tileCtx.fillRect(px, py, blockPx, blockPx);
+            }
+          }
+        }
+      }
+
+      if (extraHoles){
+        tileCtx.globalCompositeOperation = "destination-out";
+
+        for (let y = 0; y < rows; y++){
+          const yNorm = y / (rows - 1);
+          const holeP = clamp01(0.06 + 0.42 * Math.pow(yNorm, 1.35));
+
+          for (let x = 0; x < cols; x++){
+            if (rand() < holeP * (0.4 + 0.9 * (1 - field[y][x]))){
+              tileCtx.fillStyle = "rgba(0,0,0,1)";
+              tileCtx.fillRect(x * blockPx, y * blockPx, blockPx, blockPx);
+            }
+          }
+        }
+
+        tileCtx.globalCompositeOperation = "source-over";
+      }
+
+      drawPreview();
+      updateExport();
+    }
+
+    function drawPreview(){
+      previewCtx.imageSmoothingEnabled = false;
+
+      const scale = Number($("previewScale").value) || 2;
+      const previewBg = $("previewBg").value;
+
+      const w = Math.max(600, Math.floor(450 * scale));
+      const h = Math.max(260, Math.floor(210 * scale));
+
+      previewCanvas.width = w;
+      previewCanvas.height = h;
+
+      previewCtx.clearRect(0, 0, w, h);
+      previewCtx.fillStyle = previewBg;
+      previewCtx.fillRect(0, 0, w, h);
+
+      const pattern = previewCtx.createPattern(tileCanvas, "repeat");
+      previewCtx.fillStyle = pattern;
+      previewCtx.fillRect(0, 0, w, h);
+
+      previewCtx.fillStyle = "rgba(0,0,0,0.28)";
+      previewCtx.fillRect(0, h - Math.round(32 * scale), w, Math.round(32 * scale));
+
+      previewCtx.fillStyle = "rgba(233,236,243,0.7)";
+      previewCtx.font = `${Math.round(12 * scale)}px ui-sans-serif, system-ui`;
+      previewCtx.fillText("Preview (tiled)", Math.round(12 * scale), h - Math.round(12 * scale));
+    }
+
+    function randomizeSeed(){
+      const pool = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let s = "";
+      for (let i = 0; i < 10; i++) s += pool[Math.floor(Math.random() * pool.length)];
+      $("seed").value = s;
+    }
+
+    function updateExport(){
+      const dataUrl = tileCanvas.toDataURL("image/png");
+
+      const filename = `digital-drip-tile_${tileCanvas.width}x${tileCanvas.height}.png`;
+
+      const img = $("exportImg");
+      img.src = dataUrl;
+
+      const link = $("exportLink");
+      link.href = dataUrl;
+      link.download = filename;
+    }
+
+    function downloadPng(){
+      // Some environments block programmatic downloads; we always update the export image/link.
+      updateExport();
+
+      const a = document.createElement("a");
+      a.download = $("exportLink").download;
+      a.href = $("exportLink").href;
+      a.rel = "noopener";
+
+      // Try click; if blocked, the export link still works.
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    async function loadImageFromFile(file){
+      loadedImageBitmap = null;
+      loadedImageEl = null;
+
+      if (!file){
+        setImageStatus("Image: none loaded");
+        return;
+      }
+
+      if ("createImageBitmap" in window){
+        try{
+          loadedImageBitmap = await createImageBitmap(file);
+          setImageStatus(`Image: ${file.name} (${file.type || "unknown"})`, "ok");
+          return;
+        } catch {
+          // fall through
+        }
+      }
+
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.decoding = "async";
+
+      try{
+        await new Promise((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("Image failed to load"));
+          img.src = url;
+        });
+
+        loadedImageEl = img;
+        setImageStatus(`Image: ${file.name} (${file.type || "unknown"})`, "ok");
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function wire(){
+      const controls = [
+        "tilePx","blockPx","topFill","bottomFill","decay","cluster","noise",
+        "accentChance","alphaMin","alphaMax",
+        "block","accentA","accentB",
+        "mode","colorSource","sampleMode","sampleJitter",
+        "seed","previewBg","previewScale","extraHoles"
+      ];
+
+      for (const id of controls){
+        $(id).addEventListener("input", () => drawTile());
+        $(id).addEventListener("change", () => drawTile());
+      }
+
+      $("regen").addEventListener("click", () => drawTile());
+      $("randomSeed").addEventListener("click", () => { randomizeSeed(); drawTile(); });
+      $("download").addEventListener("click", () => downloadPng());
+
+      $("imgFile").addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+
+        try{
+          await loadImageFromFile(file);
+          drawTile();
+        } catch {
+          loadedImageBitmap = null;
+          loadedImageEl = null;
+
+          const type = file ? (file.type || "unknown") : "unknown";
+          const name = file ? file.name : "(none)";
+
+          setImageStatus(
+            `Image load failed: ${name} (${type}). Try PNG/JPEG/WebP.`,
+            "bad"
+          );
+
+          drawTile();
+        }
+      });
+
+      drawTile();
+    }
+
+    // tiny sanity tests (run once)
+    (function(){
+      console.assert(clamp01(-1) === 0);
+      console.assert(clamp01(2) === 1);
+
+      const r = mulberry32(xfnv1a("test"));
+      const a = r();
+      const b = r();
+      console.assert(a >= 0 && a < 1);
+      console.assert(b >= 0 && b < 1);
+
+      const { r: rr, g: gg, b: bb } = hexToRgb("#0f0");
+      console.assert(rr === 0 && gg === 255 && bb === 0);
+
+      const s = rgbaFromHex("#ffffff", 0.5);
+      console.assert(s.startsWith("rgba("));
+
+      const maxSX = Math.max(0, 256 - 24);
+      const maxSY = Math.max(0, 256 - 24);
+      console.assert(maxSX >= 0 && maxSY >= 0);
+
+      console.assert(typeof prepareImageSamplingSurface === "function");
+      console.assert(typeof loadImageFromFile === "function");
+
+      // new: stable bounds behavior
+      console.assert(probAtY(0, 1, 0, 1, "drip") <= 1);
+      console.assert(probAtY(1, 1, 0, 1, "drip") >= 0);
+    })();
+
+    wire();
+  </script>
+</body>
+</html>
