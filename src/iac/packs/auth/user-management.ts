@@ -169,11 +169,11 @@ export const addUserManagement = createResourcePack(
 
     return {
       Resources: {
-        [`${id}UserPool`]: {
+        [id]: {
           Type: "AWS::Cognito::UserPool",
           Properties: {
             UserPoolName: {
-              "Fn::Sub": [`$\{AWS::StackName\}${id}UserPool`, {}],
+              "Fn::Sub": [`$\{AWS::StackName\}${id}`, {}],
             },
             AccountRecoverySetting: {
               RecoveryMechanisms: [
@@ -235,7 +235,7 @@ export const addUserManagement = createResourcePack(
               },
             }
           : (undefined as any),
-        [`${id}UserPoolDomainRecord`]: {
+        [`${id}DomainRecord`]: {
           Type: "AWS::Route53::RecordSet",
           DeletionPolicy: "Delete",
           Properties: {
@@ -252,12 +252,12 @@ export const addUserManagement = createResourcePack(
             AliasTarget: {
               HostedZoneId: "Z2FDTNDATAQYW2",
               DNSName: {
-                "Fn::GetAtt": [`${id}UserPoolDomain`, "CloudFrontDistribution"],
+                "Fn::GetAtt": [`${id}Domain`, "CloudFrontDistribution"],
               },
             },
           },
         },
-        [`${id}UserPoolDomain`]: {
+        [`${id}Domain`]: {
           Type: "AWS::Cognito::UserPoolDomain",
           DependsOn: !!baseDomainRecordAliasTargetDNSName
             ? `${id}BaseDomainRecord`
@@ -272,21 +272,21 @@ export const addUserManagement = createResourcePack(
               ],
             },
             UserPoolId: {
-              Ref: `${id}UserPool`,
+              Ref: id,
             },
             CustomDomainConfig: {
               CertificateArn: sslCertificateArn,
             },
           },
         },
-        [`${id}UserPoolClient`]: {
+        [`${id}Client`]: {
           Type: "AWS::Cognito::UserPoolClient",
           Properties: {
             ClientName: {
-              "Fn::Sub": [`$\{AWS::StackName\}${id}UserPoolClient`, {}],
+              "Fn::Sub": [`$\{AWS::StackName\}${id}Client`, {}],
             },
             UserPoolId: {
-              Ref: `${id}UserPool`,
+              Ref: id,
             },
             AllowedOAuthFlowsUserPoolClient: true,
             AllowedOAuthFlows: ["code", "implicit"],
@@ -314,10 +314,10 @@ export const addUserManagement = createResourcePack(
             CognitoIdentityProviders: [
               {
                 ClientId: {
-                  Ref: `${id}UserPoolClient`,
+                  Ref: `${id}Client`,
                 },
                 ProviderName: {
-                  "Fn::GetAtt": [`${id}UserPool`, "ProviderName"],
+                  "Fn::GetAtt": [id, "ProviderName"],
                 },
                 ServerSideTokenCheck: true,
               },
