@@ -22,7 +22,7 @@ export const addCDN = createResourcePack(
   }: AddCDNConfig) => {
     return {
       Resources: {
-        [`${id}CloudFront`]: {
+        [id]: {
           Type: "AWS::CloudFront::Distribution",
           DependsOn: fileStorageId,
           Properties: {
@@ -94,7 +94,7 @@ export const addCDN = createResourcePack(
         },
         [`${id}Route53Record`]: {
           Type: "AWS::Route53::RecordSet",
-          DependsOn: [`${id}CloudFront`],
+          DependsOn: [id],
           Properties: {
             HostedZoneId: hostedZoneId,
             Type: "A",
@@ -113,7 +113,7 @@ export const addCDN = createResourcePack(
                   "${DomainName}.",
                   {
                     DomainName: {
-                      "Fn::GetAtt": [`${id}CloudFront`, "DomainName"],
+                      "Fn::GetAtt": [id, "DomainName"],
                     },
                   },
                 ],
