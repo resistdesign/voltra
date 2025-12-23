@@ -68,7 +68,7 @@ export const addAuth = createResourcePack(
             Properties: {
               GroupName: userManagementAdminGroupName,
               UserPoolId: {
-                Ref: `${userManagementId}UserPool`,
+                Ref: userManagementId,
               },
               Description: "Application admin group.",
             },
