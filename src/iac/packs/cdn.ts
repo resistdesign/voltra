@@ -20,8 +20,21 @@ export const addCDN = createResourcePack(
     certificateArn,
     fileStorageId,
   }: AddCDNConfig) => {
+    const oacId = `${id}OriginAccessControl`;
+
     return {
       Resources: {
+        [oacId]: {
+          Type: "AWS::CloudFront::OriginAccessControl",
+          Properties: {
+            OriginAccessControlConfig: {
+              Name: oacId,
+              OriginAccessControlOriginType: "s3",
+              SigningBehavior: "always",
+              SigningProtocol: "sigv4",
+            },
+          },
+        },
         [id]: {
           Type: "AWS::CloudFront::Distribution",
           DependsOn: fileStorageId,
@@ -69,6 +82,7 @@ export const addCDN = createResourcePack(
                       },
                     ],
                   },
+                  OriginAccessControlId: { Ref: oacId },
                   S3OriginConfig: {
                     OriginAccessIdentity: "",
                   },
