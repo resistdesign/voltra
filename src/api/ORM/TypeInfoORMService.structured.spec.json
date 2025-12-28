@@ -1,0 +1,37 @@
+{
+  "file": "./TypeInfoORMService.structured.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoORMStructuredScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": [
+          "1",
+          "2",
+          "3"
+        ],
+        "newsIds": [
+          "1",
+          "2"
+        ],
+        "tagsBIds": [
+          "1",
+          "2"
+        ],
+        "scoreBetweenIds": [
+          "1"
+        ],
+        "page1Ids": [
+          "1"
+        ],
+        "page2Ids": [
+          "2"
+        ],
+        "afterUpdateIds": [
+          "2"
+        ]
+      }
+    }
+  ]
+}

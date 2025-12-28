@@ -61,17 +61,11 @@ import {
   mergeDACDataItemResourceAccessResultMaps,
 } from "./DACUtils";
 import { executeDriverListItems } from "./ListItemUtils";
-import {
-  indexDocument,
-  removeDocument,
-  searchExact,
-  searchLossy,
-  searchStructured,
-  type IndexBackend,
-  type ResolvedSearchLimits,
-  type StructuredSearchDependencies,
-  type StructuredWriter,
-} from "../Indexing";
+import { indexDocument, removeDocument, searchExact, searchLossy } from "../Indexing/api";
+import type { IndexBackend } from "../Indexing/types";
+import { searchStructured, type StructuredSearchDependencies } from "../Indexing/structured/searchStructured";
+import type { StructuredWriter } from "../Indexing/structured/handlers";
+import type { ResolvedSearchLimits } from "../Indexing/handler/config";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/structuredDdb";
 import type { Where, WhereValue } from "../Indexing/structured/types";
@@ -559,7 +553,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     const { primaryField } = this.getTypeInfo(typeName);
-    const docId = normalizeDocId(item[primaryField], String(primaryField));
+    const primaryFieldName = String(primaryField);
+    const docId = normalizeDocId(
+      item[primaryFieldName as keyof TypeInfoDataItem],
+      primaryFieldName,
+    );
     const fields = this.buildStructuredFields(typeName, item);
 
     await structured.writer.write(docId, fields);
@@ -584,7 +582,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     const { primaryField } = this.getTypeInfo(typeName);
-    const docId = normalizeDocId(item[primaryField], String(primaryField));
+    const primaryFieldName = String(primaryField);
+    const docId = normalizeDocId(
+      item[primaryFieldName as keyof TypeInfoDataItem],
+      primaryFieldName,
+    );
 
     await structured.writer.write(docId, {});
   }

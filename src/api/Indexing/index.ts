@@ -39,3 +39,4 @@ export * from './structured/index.js';
 export * from './tokenize.js';
 export * from './types.js';
 export * from './trace.js';
+export type { ResolvedSearchLimits } from './handler/config.js';
