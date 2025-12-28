@@ -8,19 +8,19 @@ import { TestResults } from "./Types";
 export const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
   const generateMode = args.includes("--generate");
-  const testPath = args.filter((arg) => arg !== "--generate")[0];
+  const testPaths = args.filter((arg) => arg !== "--generate");
 
   console.log(`${picocolors.bgMagenta(picocolors.whiteBright(" VEST "))}\n`);
 
-  if (!testPath) {
+  if (testPaths.length === 0) {
     console.error("Usage: vest [--generate] <test-directory-path>");
     process.exit(1);
   }
 
-  const testFiles = await fastGlob(testPath);
+  const testFiles = await fastGlob(testPaths);
 
   if (testFiles.length === 0) {
-    console.warn(`No test files found in ${testPath}`);
+    console.warn(`No test files found in ${testPaths.join(", ")}`);
 
     process.exit(0);
   }
