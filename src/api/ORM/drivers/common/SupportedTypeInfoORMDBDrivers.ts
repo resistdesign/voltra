@@ -1,6 +1,7 @@
 import { SupportedDataItemDBDriverEntry } from "./Types";
 import { DynamoDBSupportedDataItemDBDriverEntry } from "../DynamoDBDataItemDBDriver";
 import { InMemorySupportedDataItemDBDriverEntry } from "../InMemoryDataItemDBDriver";
+import { InMemoryFileSupportedDataItemDBDriverEntry } from "../InMemoryFileItemDBDriver";
 import { S3SupportedFileItemDBDriverEntry } from "../S3FileItemDBDriver";
 
 /**
@@ -9,6 +10,7 @@ import { S3SupportedFileItemDBDriverEntry } from "../S3FileItemDBDriver";
 export enum SupportedTypeInfoORMDBDriverNames {
   DYNAMO_DB_DATA_ITEM = "DYNAMO_DB_DATA_ITEM",
   IN_MEMORY_DATA_ITEM = "IN_MEMORY_DATA_ITEM",
+  IN_MEMORY_FILE_ITEM = "IN_MEMORY_FILE_ITEM",
   S3_FILE_ITEM = "S3_FILE_ITEM",
 }
 
@@ -23,6 +25,8 @@ export const SUPPORTED_TYPE_INFO_ORM_DB_DRIVERS: Record<
     DynamoDBSupportedDataItemDBDriverEntry,
   [SupportedTypeInfoORMDBDriverNames.IN_MEMORY_DATA_ITEM]:
     InMemorySupportedDataItemDBDriverEntry,
+  [SupportedTypeInfoORMDBDriverNames.IN_MEMORY_FILE_ITEM]:
+    InMemoryFileSupportedDataItemDBDriverEntry,
   [SupportedTypeInfoORMDBDriverNames.S3_FILE_ITEM]:
     S3SupportedFileItemDBDriverEntry,
 };
