@@ -79,3 +79,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - Specs live alongside code as `src/**/*.spec.json`.
 - Keep tests close to modules; use `yarn test:gen` only for fixture regen.
 - Avoid editing generated IaC types directly; test their public behavior or wrappers.
+
+## In-memory driver gaps (for testing + optional runtime use)
+- [ ] ORM: InMemoryDataItemDBDriver to satisfy `TypeInfoORMService.getDriver` and `ListItemUtils` without DynamoDB. Only `DynamoDBDataItemDBDriver` exists today.
+- [ ] ORM: InMemoryItemRelationshipDBDriver for `TypeInfoORMService.getRelationshipDriver` when relations are not routed through `IndexingRelationshipDriver` (currently only DynamoDB-backed driver patterns exist).
+- [ ] ORM: InMemoryCloudFileServiceDriver (or a standalone InMemoryFileItemDBDriver) to test `S3FileItemDBDriver` semantics without S3. `S3FileItemDBDriver` internally constructs `S3FileDriver`, so an injectable/memory counterpart is missing.
+- [ ] Indexing structured: In-memory adapter implementing `StructuredSearchDependencies` + `StructuredWriter` for `TypeInfoORMService.indexing.structured`. `StructuredInMemoryIndex` exists but does not expose those interfaces.
+- [ ] Indexing storage: `exactS3.ts` and `lossyS3.ts` are unimplemented stubs; if tests need persistence coverage here, add in-memory storage/backing or complete the S3 implementations.
