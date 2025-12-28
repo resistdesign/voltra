@@ -1,4 +1,4 @@
-import type { DocId } from '../types.js';
+import type { DocId } from "../types";
 
 export type LossyS3Pointer = {
   bucket: string;
@@ -9,10 +9,14 @@ export function buildLossyS3Key(token: string, indexField: string): string {
   return `lossy/${encodeURIComponent(indexField)}/${encodeURIComponent(token)}.json`;
 }
 
-export async function storeLossyIndex(_pointer: LossyS3Pointer, _docIds: DocId[]): Promise<void> {
-  throw new Error('Lossy S3 storage not implemented yet.');
+const lossyStore = new Map<string, DocId[]>();
+
+const buildStoreKey = (pointer: LossyS3Pointer): string => `${pointer.bucket}/${pointer.key}`;
+
+export async function storeLossyIndex(pointer: LossyS3Pointer, docIds: DocId[]): Promise<void> {
+  lossyStore.set(buildStoreKey(pointer), [...docIds]);
 }
 
-export async function loadLossyIndex(_pointer: LossyS3Pointer): Promise<DocId[]> {
-  throw new Error('Lossy S3 load not implemented yet.');
+export async function loadLossyIndex(pointer: LossyS3Pointer): Promise<DocId[]> {
+  return [...(lossyStore.get(buildStoreKey(pointer)) ?? [])];
 }

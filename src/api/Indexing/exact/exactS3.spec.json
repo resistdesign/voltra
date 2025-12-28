@@ -1,0 +1,19 @@
+{
+  "file": "./exactS3.test-utils.ts",
+  "tests": [
+    {
+      "export": "runExactS3MemoryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "key": "exact/text/hello%20world/doc-1.json",
+        "loaded": [
+          1,
+          3,
+          5
+        ],
+        "missing": []
+      }
+    }
+  ]
+}
