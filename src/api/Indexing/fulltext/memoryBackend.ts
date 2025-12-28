@@ -1,5 +1,5 @@
-import { ExactIndex } from '../exact/exactIndex.js';
-import { LossyIndex } from '../lossy/lossyIndex.js';
+import { ExactIndex } from "../exact/exactIndex";
+import { LossyIndex } from "../lossy/lossyIndex";
 import type {
   DocId,
   DocTokenBatchReader,
@@ -10,7 +10,7 @@ import type {
   LossyPostingsPage,
   LossyPostingsPageOptions,
   TokenStats,
-} from '../types.js';
+} from "../types";
 
 export class FullTextMemoryBackend
   implements IndexReader, IndexWriter, LossyPagingReader, DocTokenBatchReader

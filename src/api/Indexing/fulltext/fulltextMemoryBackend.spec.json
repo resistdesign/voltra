@@ -1,0 +1,59 @@
+{
+  "file": "./fulltextMemoryBackend.test-utils.ts",
+  "tests": [
+    {
+      "export": "runFullTextMemoryBackendScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "lossyAll": [
+          "doc-1",
+          "doc-2"
+        ],
+        "lossyPage": {
+          "docIds": [
+            "doc-1"
+          ],
+          "lastEvaluatedDocId": "doc-1"
+        },
+        "exactDoc1": [
+          0,
+          2
+        ],
+        "exactBatch": [
+          [
+            0,
+            2
+          ],
+          [
+            1
+          ]
+        ],
+        "tokenStats": {
+          "df": 2,
+          "version": 1
+        },
+        "tokenStatsMissing": null,
+        "hasDocToken": true,
+        "hasDocTokenMissing": false,
+        "batchHas": [
+          true,
+          true,
+          false
+        ],
+        "lossyAfterRemove": [
+          "doc-1"
+        ],
+        "exactAfterRemove": null,
+        "schema": {
+          "tokenKey": "f#text#t#hello",
+          "docKey": "d#doc-1",
+          "docMirrorKey": "d#doc-1#f#text",
+          "tokenDocSortKey": "d#doc-1",
+          "docTokenSortKey": "f#text#t#hello",
+          "docTokenPositionSortKey": "f#text#t#hello#p#2"
+        }
+      }
+    }
+  ]
+}
