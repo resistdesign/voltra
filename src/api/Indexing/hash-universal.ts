@@ -1,10 +1,10 @@
-import {sha256} from "@noble/hashes/sha2.js";
-import {utf8ToBytes} from "@noble/hashes/utils.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 
 type HashEncoding = "hex";
 
 const toHex = (bytes: Uint8Array): string =>
-  Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+  Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
 export function createHash(alg: "sha256") {
   if (alg !== "sha256") {
@@ -48,3 +48,4 @@ export function createHash(alg: "sha256") {
     },
   };
 }
+

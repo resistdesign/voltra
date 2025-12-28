@@ -1,6 +1,6 @@
-import type {ExactCursorState, PlannerMetadata} from './cursor.js';
-import {decodeExactCursor, decodeLossyCursor, encodeExactCursor, encodeLossyCursor} from './cursor.js';
-import {tokenize, tokenizeLossyTrigrams} from './tokenize.js';
+import type { ExactCursorState, PlannerMetadata } from "./cursor";
+import { decodeExactCursor, decodeLossyCursor, encodeExactCursor, encodeLossyCursor } from "./cursor";
+import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
 import type {
   DocId,
   DocTokenBatchReader,
@@ -12,11 +12,11 @@ import type {
   LossyPagingReader,
   LossyPostingsPageOptions,
   TokenStats,
-} from './types.js';
-import {type ResolvedSearchLimits, SEARCH_DEFAULTS} from './handler/config.js';
-import type {SearchTrace} from './trace.js';
-import {createHash} from './hash-universal';
-import {compareDocId, normalizeDocId} from './docId.js';
+} from "./types";
+import { type ResolvedSearchLimits, SEARCH_DEFAULTS } from "./handler/config";
+import type { SearchTrace } from "./trace";
+import { createHash } from "./hash-universal";
+import { compareDocId, normalizeDocId } from "./docId";
 
 type TraceableIndexBackend = IndexBackend & { setActiveTrace(trace?: SearchTrace): void };
 

@@ -36,6 +36,7 @@
     "@aws-sdk/s3-request-presigner": "^3.490.0",
     "@aws-sdk/util-dynamodb": "^3.490.0",
     "@fontsource/montserrat-subrayada": "^5.2.5",
+    "@noble/hashes": "^2.0.1",
     "@picocss/pico": "^2.1.1",
     "ace-builds": "^1.32.3",
     "fast-glob": "^3.3.3",
