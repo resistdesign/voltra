@@ -3,5 +3,6 @@ export * from './handlers.js';
 export * from './inMemory.js';
 export * from './searchStructured.js';
 export * from './structuredDdb.js';
+export * from './structuredDdbBackend.js';
 export * from './structuredWriter.js';
 export * from './types.js';

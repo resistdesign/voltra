@@ -117,6 +117,51 @@ const IaC = new SimpleCFT({
         });
       }
     }
+
+    const addIndexingTable = (
+      tableId: string,
+      tableName: string,
+      attributes: Record<string, "S">,
+      keys: Record<string, "HASH" | "RANGE">,
+    ) => {
+      cft.applyPack(addDatabase, {
+        tableId,
+        tableName,
+        attributes,
+        keys,
+      });
+    };
+
+    addIndexingTable("LossyPostingsTable", "LossyPostings", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
+    addIndexingTable("ExactPostingsTable", "ExactPostings", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
+    addIndexingTable("FullTextDocMirrorTable", "FullTextDocMirror", { pk: "S" }, { pk: "HASH" });
+    addIndexingTable("FullTextTokenStatsTable", "FullTextTokenStats", { pk: "S" }, { pk: "HASH" });
+    addIndexingTable("DocTokensTable", "DocTokens", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
+    addIndexingTable("DocTokenPositionsTable", "DocTokenPositions", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
+    addIndexingTable(
+      "StructuredTermIndexTable",
+      "StructuredTermIndex",
+      { termKey: "S", docId: "S" },
+      { termKey: "HASH", docId: "RANGE" },
+    );
+    addIndexingTable(
+      "StructuredRangeIndexTable",
+      "StructuredRangeIndex",
+      { field: "S", rangeKey: "S" },
+      { field: "HASH", rangeKey: "RANGE" },
+    );
+    addIndexingTable(
+      "StructuredDocFieldsTable",
+      "StructuredDocFields",
+      { docId: "S" },
+      { docId: "HASH" },
+    );
+    addIndexingTable(
+      "RelationEdgesTable",
+      "RelationEdges",
+      { edgeKey: "S", otherId: "S" },
+      { edgeKey: "HASH", otherId: "RANGE" },
+    );
   })
   .applyPack(addCloudFunction, {
     id: IDS.API.FUNCTION,

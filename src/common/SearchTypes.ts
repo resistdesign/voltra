@@ -91,12 +91,19 @@ export type PagingInfo = {
   cursor?: string;
 };
 
+export type TextSearchConfig = {
+  query: string;
+  mode?: "lossy" | "exact";
+  indexField?: string;
+};
+
 /**
  * The configuration for listing and searching for items.
  * */
 export type ListItemsConfig = PagingInfo & {
   criteria?: SearchCriteria;
   sortFields?: SortField[];
+  text?: TextSearchConfig;
 };
 
 /**

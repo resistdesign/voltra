@@ -8,7 +8,6 @@ import { CloudFunctionResponse, RouteMap } from "../../src/api/Router/Types";
 import { getTypeInfoORMRouteMap } from "../../src/api/ORM";
 import { TypeInfo } from "../../src/common/TypeParsing/TypeInfo";
 import { DynamoDBDataItemDBDriver } from "../../src/api/ORM/drivers";
-import { ItemRelationshipInfoIdentifyingKeys } from "../../src/common/ItemRelationshipInfoTypes";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DEMO_TYPE_INFO_MAP } from "../common/TypeConstants";
 import {
@@ -17,6 +16,22 @@ import {
 } from "../../src/common/TypeParsing/Validation";
 import { TypeInfoORMServiceError } from "../../src/common/TypeInfoORM";
 import normalizeCloudFunctionEvent = AWS.normalizeCloudFunctionEvent;
+import {
+  FullTextDdbBackend,
+  RelationalDdbBackend,
+  StructuredDdbBackend,
+  relationEdgesSchema,
+  type RelationEdgesDdbItem,
+  type RelationEdgesDdbKey,
+} from "../../src/api/Indexing";
+import {
+  BatchGetItemCommand,
+  BatchWriteItemCommand,
+  DynamoDBClient,
+  GetItemCommand,
+  QueryCommand,
+} from "@aws-sdk/client-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
   {
@@ -29,6 +44,85 @@ const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
     },
   },
 ]);
+const ddbClient = new DynamoDBClient({});
+const fullTextBackend = new FullTextDdbBackend({
+  client: {
+    batchWriteItem: (input) => ddbClient.send(new BatchWriteItemCommand(input)),
+    batchGetItem: (input) => ddbClient.send(new BatchGetItemCommand(input)),
+    getItem: (input) => ddbClient.send(new GetItemCommand(input)),
+    query: (input) => ddbClient.send(new QueryCommand(input)),
+  },
+});
+const structuredBackend = new StructuredDdbBackend({ client: ddbClient });
+const batchWriteWithRetry = async (
+  requestItems: Record<string, { PutRequest?: { Item: Record<string, unknown> }; DeleteRequest?: { Key: Record<string, unknown> } }[]>,
+): Promise<void> => {
+  let pending = requestItems;
+
+  while (Object.keys(pending).length > 0) {
+    const response = await ddbClient.send(
+      new BatchWriteItemCommand({
+        RequestItems: pending,
+      }),
+    );
+    pending = response.UnprocessedItems ?? {};
+  }
+};
+const relationalBackend = new RelationalDdbBackend({
+  putEdges: async (items: RelationEdgesDdbItem[]) => {
+    const chunks: RelationEdgesDdbItem[][] = [];
+    for (let index = 0; index < items.length; index += 25) {
+      chunks.push(items.slice(index, index + 25));
+    }
+
+    for (const chunk of chunks) {
+      await batchWriteWithRetry({
+        [relationEdgesSchema.tableName]: chunk.map((item) => ({
+          PutRequest: { Item: marshall(item) },
+        })),
+      });
+    }
+  },
+  deleteEdges: async (keys: RelationEdgesDdbKey[]) => {
+    const chunks: RelationEdgesDdbKey[][] = [];
+    for (let index = 0; index < keys.length; index += 25) {
+      chunks.push(keys.slice(index, index + 25));
+    }
+
+    for (const chunk of chunks) {
+      await batchWriteWithRetry({
+        [relationEdgesSchema.tableName]: chunk.map((key) => ({
+          DeleteRequest: { Key: marshall(key) },
+        })),
+      });
+    }
+  },
+  queryEdges: async ({ edgeKey, limit, exclusiveStartKey }) => {
+    const response = await ddbClient.send(
+      new QueryCommand({
+        TableName: relationEdgesSchema.tableName,
+        KeyConditionExpression: "#edgeKey = :edgeKey",
+        ExpressionAttributeNames: {
+          "#edgeKey": relationEdgesSchema.partitionKey,
+        },
+        ExpressionAttributeValues: marshall({
+          ":edgeKey": edgeKey,
+        }),
+        ExclusiveStartKey: exclusiveStartKey ? marshall(exclusiveStartKey) : undefined,
+        Limit: limit,
+      }),
+    );
+
+    return {
+      items: (response.Items ?? []).map(
+        (item) => unmarshall(item) as RelationEdgesDdbItem,
+      ),
+      lastEvaluatedKey: response.LastEvaluatedKey
+        ? (unmarshall(response.LastEvaluatedKey) as RelationEdgesDdbKey)
+        : undefined,
+    };
+  },
+});
 const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
   ROUTE_MAP,
   getTypeInfoORMRouteMap(
@@ -47,11 +141,23 @@ const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
           throw new Error("Invalid type.");
         }
       },
-      getRelationshipDriver: (_typeName: string, _fieldName: string) => {
-        return new DynamoDBDataItemDBDriver({
-          tableName: `__RELATIONSHIPS__`,
-          uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
-        });
+      indexing: {
+        fullText: {
+          backend: fullTextBackend,
+          defaultIndexFieldByType: {
+            Person: "lastName",
+            Car: "model",
+          },
+        },
+        structured: {
+          reader: structuredBackend.reader,
+          writer: structuredBackend.writer,
+        },
+        relations: {
+          backend: relationalBackend,
+          relationNameFor: (fromTypeName, fromTypeFieldName) =>
+            `${fromTypeName}.${fromTypeFieldName}`,
+        },
       },
     },
     undefined,
