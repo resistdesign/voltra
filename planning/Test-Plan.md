@@ -8,7 +8,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] DataAccessControl
 - [ ] Indexing
   - [x] cursor/docId/tokenize/trace
-  - [ ] exact
+  - [x] exact
   - [ ] fulltext
   - [ ] lossy
   - [ ] rel (inMemory/relationalDdb/handlers/types)
