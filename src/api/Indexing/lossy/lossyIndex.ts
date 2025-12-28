@@ -1,5 +1,5 @@
-import type { DocId } from '../types.js';
-import { compareDocId } from '../docId.js';
+import type { DocId } from "../types";
+import { compareDocId } from "../docId";
 
 export type LossyQueryOptions = {
   limit?: number;

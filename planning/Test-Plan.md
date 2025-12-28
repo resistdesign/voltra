@@ -9,7 +9,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [ ] Indexing
   - [x] cursor/docId/tokenize/trace
   - [x] exact
-  - [ ] fulltext
+  - [x] fulltext
   - [ ] lossy
   - [ ] rel (inMemory/relationalDdb/handlers/types)
   - [x] structured
