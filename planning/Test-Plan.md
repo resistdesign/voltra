@@ -5,7 +5,7 @@ Top-level coverage map and progress tracker for `src/`.
 Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
-- [ ] DataAccessControl
+- [x] DataAccessControl
 - [ ] Indexing
   - [ ] cursor/docId/tokenize/trace
   - [ ] exact

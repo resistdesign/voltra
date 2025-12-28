@@ -1,0 +1,43 @@
+{
+  "file": "./DataAccessControl.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDataAccessControlScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "wildcardMatch": true,
+        "wildcardMismatch": false,
+        "exactMatch": {
+          "prefixMatch": true,
+          "exactMatch": true
+        },
+        "prefixWildcardMatch": {
+          "prefixMatch": true,
+          "exactMatch": true
+        },
+        "noMatch": {
+          "prefixMatch": false,
+          "exactMatch": false
+        },
+        "flattenedCount": 3,
+        "cacheKeys": [
+          "child-1",
+          "child-2"
+        ],
+        "accessSpecificity": {
+          "allowed": false,
+          "denied": true
+        },
+        "accessExactOverrides": {
+          "allowed": true,
+          "denied": true
+        },
+        "merged": {
+          "allowed": true,
+          "denied": true
+        }
+      }
+    }
+  ]
+}
