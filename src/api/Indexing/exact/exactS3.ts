@@ -1,4 +1,4 @@
-import type { DocId } from '../types.js';
+import type { DocId } from "../types";
 
 export type ExactS3Pointer = {
   bucket: string;
@@ -9,13 +9,17 @@ export function buildExactS3Key(token: string, indexField: string, docId: DocId)
   return `exact/${encodeURIComponent(indexField)}/${encodeURIComponent(token)}/${docId}.json`;
 }
 
+const exactStore = new Map<string, number[]>();
+
+const buildStoreKey = (pointer: ExactS3Pointer): string => `${pointer.bucket}/${pointer.key}`;
+
 export async function storeExactPositions(
-  _pointer: ExactS3Pointer,
-  _positions: number[],
+  pointer: ExactS3Pointer,
+  positions: number[],
 ): Promise<void> {
-  throw new Error('Exact S3 storage not implemented yet.');
+  exactStore.set(buildStoreKey(pointer), [...positions]);
 }
 
-export async function loadExactPositions(_pointer: ExactS3Pointer): Promise<number[]> {
-  throw new Error('Exact S3 load not implemented yet.');
+export async function loadExactPositions(pointer: ExactS3Pointer): Promise<number[]> {
+  return [...(exactStore.get(buildStoreKey(pointer)) ?? [])];
 }
