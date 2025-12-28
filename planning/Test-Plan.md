@@ -81,8 +81,8 @@ Legend: [ ] todo, [~] in progress, [x] done
 - Avoid editing generated IaC types directly; test their public behavior or wrappers.
 
 ## In-memory driver gaps (for testing + optional runtime use)
-- [ ] ORM: InMemoryDataItemDBDriver to satisfy `TypeInfoORMService.getDriver` and `ListItemUtils` without DynamoDB. Only `DynamoDBDataItemDBDriver` exists today.
-- [ ] ORM: InMemoryItemRelationshipDBDriver for `TypeInfoORMService.getRelationshipDriver` when relations are not routed through `IndexingRelationshipDriver` (currently only DynamoDB-backed driver patterns exist).
-- [ ] ORM: InMemoryCloudFileServiceDriver (or a standalone InMemoryFileItemDBDriver) to test `S3FileItemDBDriver` semantics without S3. `S3FileItemDBDriver` internally constructs `S3FileDriver`, so an injectable/memory counterpart is missing.
-- [ ] Indexing structured: In-memory adapter implementing `StructuredSearchDependencies` + `StructuredWriter` for `TypeInfoORMService.indexing.structured`. `StructuredInMemoryIndex` exists but does not expose those interfaces.
-- [ ] Indexing storage: `exactS3.ts` and `lossyS3.ts` are unimplemented stubs; if tests need persistence coverage here, add in-memory storage/backing or complete the S3 implementations.
+- [ ] ORM data items: InMemory `DataItemDBDriver` implementation to satisfy `TypeInfoORMService.getDriver` (`src/api/ORM/TypeInfoORMService.ts`) and `executeDriverListItems` (`src/api/ORM/ListItemUtils.ts`). Current concrete implementation is Dynamo-only (`src/api/ORM/drivers/DynamoDBDataItemDBDriver.ts`).
+- [ ] ORM relationships (non-indexing path): InMemory `ItemRelationshipDBDriver` for `TypeInfoORMService.getRelationshipDriver` branches in create/delete/list (`src/api/ORM/TypeInfoORMService.ts`). No concrete relationship driver exists today beyond indexing-backed flow.
+- [ ] ORM files: InMemory `CloudFileServiceDriver` or `DataItemDBDriver` variant to cover `S3FileItemDBDriver` behavior without S3 (`src/api/ORM/drivers/S3FileItemDBDriver.ts` + `src/api/ORM/drivers/S3FileItemDBDriver/S3FileDriver.ts`).
+- [ ] Indexing structured: InMemory adapter that implements `StructuredSearchDependencies` and `StructuredWriter` for `TypeInfoORMService.indexing.structured` (`src/api/ORM/TypeInfoORMService.ts`). `StructuredInMemoryIndex` exists but does not expose these interfaces (`src/api/Indexing/structured/inMemory.ts`).
+- [ ] Indexing storage stubs: `src/api/Indexing/exact/exactS3.ts` and `src/api/Indexing/lossy/lossyS3.ts` are throw-only placeholders; add memory backing or complete S3 implementations if persistence coverage is required.

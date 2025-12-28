@@ -1,7 +1,7 @@
-import {decodeStructuredCursor, encodeStructuredCursor} from './cursor.js';
-import type {DocId} from '../types.js';
-import {compareDocId} from '../docId.js';
-import type {CandidatePage, StructuredQueryOptions, WhereValue} from './types.js';
+import { decodeStructuredCursor, encodeStructuredCursor } from "./cursor";
+import type { DocId } from "../types";
+import { compareDocId } from "../docId";
+import type { CandidatePage, StructuredQueryOptions, WhereValue } from "./types";
 
 type RangeEntry = {
   value: WhereValue;

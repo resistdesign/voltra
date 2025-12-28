@@ -1,6 +1,7 @@
 export * from './cursor.js';
 export * from './handlers.js';
 export * from './inMemory.js';
+export * from './inMemoryBackend.js';
 export * from './searchStructured.js';
 export * from './structuredDdb.js';
 export * from './structuredDdbBackend.js';
