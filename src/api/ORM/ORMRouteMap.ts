@@ -55,10 +55,20 @@ export const getTypeInfoORMRouteMap = (
       message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER,
     };
   } else {
+    const ormWithoutDAC = !dacConfig
+      ? new TypeInfoORMService({
+          ...config,
+          useDAC: false,
+        })
+      : undefined;
     const ormMethodFactory = (
       methodName: keyof TypeInfoORMAPI,
       eventData: NormalizedCloudFunctionEventData,
     ): RouteHandler => {
+      if (ormWithoutDAC) {
+        return ormWithoutDAC[methodName];
+      }
+
       const { authInfo } = eventData;
       const accessingRole = getAccessingRole
         ? getAccessingRole(authInfo)
@@ -80,7 +90,6 @@ export const getTypeInfoORMRouteMap = (
           : {
               useDAC: false,
             };
-        // TODO: Maybe don't instantiate a new ORM service for each method.
         const orm = new TypeInfoORMService({
           ...config,
           ...dacOptions,

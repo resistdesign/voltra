@@ -1,5 +1,5 @@
-import { decodeRelationalCursor, encodeRelationalCursor } from './cursor.js';
-import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from './types.js';
+import { decodeRelationalCursor, encodeRelationalCursor } from "./cursor";
+import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
 
 type EdgeMetadata = Record<string, unknown>;
 

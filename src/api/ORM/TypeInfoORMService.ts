@@ -32,7 +32,7 @@ import {
   TypeInfoORMAPI,
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
-import { DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
+import { IndexingRelationshipDriver, DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
 import {
   removeNonexistentFieldsFromDataItem,
   removeNonexistentFieldsFromSelectedFields,
@@ -61,6 +61,24 @@ import {
   mergeDACDataItemResourceAccessResultMaps,
 } from "./DACUtils";
 import { executeDriverListItems } from "./ListItemUtils";
+import {
+  indexDocument,
+  removeDocument,
+  searchExact,
+  searchLossy,
+  searchStructured,
+  type IndexBackend,
+  type ResolvedSearchLimits,
+  type StructuredSearchDependencies,
+  type StructuredWriter,
+} from "../Indexing";
+import { normalizeDocId } from "../Indexing/docId";
+import type { StructuredDocFieldsRecord } from "../Indexing/structured/structuredDdb";
+import type { Where, WhereValue } from "../Indexing/structured/types";
+import { getSortedItems } from "../../common/SearchUtils";
+import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
+import { criteriaToStructuredWhere } from "./indexing/criteriaToStructuredWhere";
+import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
 
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
@@ -114,16 +132,36 @@ export type TypeInfoORMDACConfig = {
   getDACRoleById: (id: string) => DACRole;
 };
 
+export type TypeInfoORMIndexingConfig = {
+  fullText?: {
+    backend: IndexBackend;
+    defaultIndexFieldByType?: Record<string, string>;
+  };
+  structured?: {
+    reader: StructuredSearchDependencies;
+    writer?: StructuredWriter;
+    fieldMapByType?: Record<string, Record<string, string>>;
+  };
+  relations?: {
+    backend: RelationalBackend;
+    relationNameFor: (fromTypeName: string, fromTypeFieldName: string) => string;
+    encodeEntityId?: (typeName: string, primaryFieldValue: string) => string;
+    decodeEntityId?: (typeName: string, entityId: string) => string;
+  };
+  limits?: ResolvedSearchLimits;
+};
+
 /**
  * The basis for the configuration for the TypeInfoORMService.
  * */
 export type BaseTypeInfoORMServiceConfig = {
   typeInfoMap: TypeInfoMap;
   getDriver: (typeName: string) => DataItemDBDriver<any, any>;
-  getRelationshipDriver: (
+  getRelationshipDriver?: (
     typeName: string,
     fieldName: string,
   ) => ItemRelationshipDBDriver;
+  indexing?: TypeInfoORMIndexingConfig;
   createRelationshipCleanupItem?: (
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
@@ -153,13 +191,14 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
  * */
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
+  protected indexingRelationshipDriver?: IndexingRelationshipDriver;
 
   constructor(protected config: TypeInfoORMServiceConfig) {
     if (!config.getDriver) {
       throw new Error(TypeInfoORMServiceError.NO_DRIVERS_SUPPLIED);
     }
 
-    if (!config.getRelationshipDriver) {
+    if (!config.getRelationshipDriver && !config.indexing?.relations) {
       throw new Error(TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED);
     }
   }
@@ -315,6 +354,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     fieldName: string,
   ): ItemRelationshipDBDriver => {
+    if (!this.config.getRelationshipDriver) {
+      throw new Error(TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED);
+    }
+
     const driver = this.config.getRelationshipDriver(typeName, fieldName);
 
     if (!driver) {
@@ -325,6 +368,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       typeName,
       fieldName,
     });
+  };
+
+  protected getIndexingRelationshipDriverInternal = (): IndexingRelationshipDriver => {
+    if (!this.config.indexing?.relations) {
+      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP_DRIVER);
+    }
+
+    if (!this.indexingRelationshipDriver) {
+      this.indexingRelationshipDriver = new IndexingRelationshipDriver(
+        this.config.indexing.relations,
+      );
+    }
+
+    return this.indexingRelationshipDriver;
   };
 
   protected getTypeInfo = (typeName: string): TypeInfo => {
@@ -348,6 +405,189 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     return typeInfo;
   };
+
+  protected resolveFullTextIndexField = (
+    typeName: string,
+    override?: string,
+  ): string | undefined => {
+    if (override) {
+      return override;
+    }
+
+    return this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
+  };
+
+  protected isStructuredValue = (value: unknown): value is WhereValue =>
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean";
+
+  protected buildStructuredFields = (
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+  ): StructuredDocFieldsRecord => {
+    const typeInfo = this.getTypeInfo(typeName);
+    const fieldMap = this.config.indexing?.structured?.fieldMapByType?.[typeName];
+    const withoutRefs = removeTypeReferenceFieldsFromDataItem(typeInfo, item);
+    const fields: StructuredDocFieldsRecord = {};
+
+    for (const [fieldName, value] of Object.entries(withoutRefs)) {
+      if (typeof value === "undefined") {
+        continue;
+      }
+
+      const mappedField = fieldMap?.[fieldName] ?? fieldName;
+
+      if (Array.isArray(value)) {
+        const filtered = value.filter((entry) => this.isStructuredValue(entry));
+        if (filtered.length > 0) {
+          fields[mappedField] = filtered as WhereValue[];
+        }
+        continue;
+      }
+
+      if (this.isStructuredValue(value)) {
+        fields[mappedField] = value;
+      }
+    }
+
+    return fields;
+  };
+
+  protected applyStructuredFieldMap = (
+    where: Where,
+    fieldMap?: Record<string, string>,
+  ): Where => {
+    if (!fieldMap || Object.keys(fieldMap).length === 0) {
+      return where;
+    }
+
+    if ("and" in where) {
+      return { and: where.and.map((child) => this.applyStructuredFieldMap(child, fieldMap)) };
+    }
+
+    if ("or" in where) {
+      return { or: where.or.map((child) => this.applyStructuredFieldMap(child, fieldMap)) };
+    }
+
+    const mappedField = fieldMap[where.field] ?? where.field;
+
+    if (where.type === "term") {
+      return { ...where, field: mappedField };
+    }
+
+    return { ...where, field: mappedField };
+  };
+
+  protected async indexFullTextDocument(
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+    indexFieldOverride?: string,
+  ): Promise<void> {
+    const { fullText } = this.config.indexing ?? {};
+    const indexField = this.resolveFullTextIndexField(typeName, indexFieldOverride);
+
+    if (!fullText || !indexField) {
+      return;
+    }
+
+    const { primaryField } = this.getTypeInfo(typeName);
+
+    if (!(indexField in item)) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+        typeName,
+        indexField,
+      };
+    }
+
+    await indexDocument({
+      backend: fullText.backend,
+      document: item,
+      primaryField: String(primaryField),
+      indexField,
+    });
+  }
+
+  protected async removeFullTextDocument(
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+    indexFieldOverride?: string,
+  ): Promise<void> {
+    const { fullText } = this.config.indexing ?? {};
+    const indexField = this.resolveFullTextIndexField(typeName, indexFieldOverride);
+
+    if (!fullText || !indexField) {
+      return;
+    }
+
+    const { primaryField } = this.getTypeInfo(typeName);
+
+    if (!(indexField in item)) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+        typeName,
+        indexField,
+      };
+    }
+
+    await removeDocument({
+      backend: fullText.backend,
+      document: item,
+      primaryField: String(primaryField),
+      indexField,
+    });
+  }
+
+  protected async indexStructuredDocument(
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+  ): Promise<void> {
+    const { structured } = this.config.indexing ?? {};
+
+    if (!structured) {
+      return;
+    }
+
+    if (!structured.writer) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
+        typeName,
+        backend: "structured.writer",
+      };
+    }
+
+    const { primaryField } = this.getTypeInfo(typeName);
+    const docId = normalizeDocId(item[primaryField], String(primaryField));
+    const fields = this.buildStructuredFields(typeName, item);
+
+    await structured.writer.write(docId, fields);
+  }
+
+  protected async removeStructuredDocument(
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+  ): Promise<void> {
+    const { structured } = this.config.indexing ?? {};
+
+    if (!structured) {
+      return;
+    }
+
+    if (!structured.writer) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
+        typeName,
+        backend: "structured.writer",
+      };
+    }
+
+    const { primaryField } = this.getTypeInfo(typeName);
+    const docId = normalizeDocId(item[primaryField], String(primaryField));
+
+    await structured.writer.write(docId, {});
+  }
 
   protected validateReadOperation = (
     typeName: string,
@@ -562,6 +802,30 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
         } = {},
       } = this.getTypeInfo(fromTypeName);
+      const {
+        fields: {
+          [fromTypeFieldName]: { typeReference = undefined } = {},
+        } = {},
+      } = this.getTypeInfo(fromTypeName);
+      const relatedTypeName =
+        typeof typeReference === "string" ? typeReference : undefined;
+
+      if (!relatedTypeName) {
+        throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
+      }
+
+      if (this.config.indexing?.relations) {
+        const driver = this.getIndexingRelationshipDriverInternal();
+
+        await driver.createRelationship(
+          cleanedItem,
+          relatedTypeName,
+          !relationshipIsMultiple,
+        );
+
+        return true;
+      }
+
       const driver = this.getRelationshipDriverInternal(
         fromTypeName,
         fromTypeFieldName,
@@ -635,6 +899,29 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         fromTypePrimaryFieldValue,
         toTypePrimaryFieldValue,
       } = cleanedItem;
+
+      if (this.config.indexing?.relations) {
+        const {
+          fields: {
+            [fromTypeFieldName]: { typeReference = undefined } = {},
+          } = {},
+        } = this.getTypeInfo(fromTypeName);
+        const relatedTypeName =
+          typeof typeReference === "string" ? typeReference : undefined;
+
+        if (!relatedTypeName) {
+          throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
+        }
+
+        const driver = this.getIndexingRelationshipDriverInternal();
+        await driver.deleteRelationship(cleanedItem, relatedTypeName);
+
+        return {
+          success: true,
+          remainingItemsExist: false,
+        };
+      }
+
       const driver = this.getRelationshipDriverInternal(
         fromTypeName,
         fromTypeFieldName,
@@ -692,33 +979,56 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
       relationshipItemOrigin;
-    const driver = this.getRelationshipDriverInternal(
-      fromTypeName,
-      fromTypeFieldName,
-    );
-    const results = await driver.listItems({
-      ...remainingConfig,
-      criteria: {
-        logicalOperator: LogicalOperators.AND,
-        fieldCriteria: [
+    const {
+      fields: {
+        [fromTypeFieldName]: { typeReference = undefined } = {},
+      } = {},
+    } = this.getTypeInfo(fromTypeName);
+    const relatedTypeName =
+      typeof typeReference === "string" ? typeReference : undefined;
+
+    if (!relatedTypeName) {
+      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
+    }
+
+    const results = this.config.indexing?.relations
+      ? await this.getIndexingRelationshipDriverInternal().listRelationships(
           {
-            fieldName: ItemRelationshipInfoKeys.fromTypeName,
-            operator: ComparisonOperators.EQUALS,
-            value: fromTypeName,
+            relationshipItemOrigin: {
+              fromTypeName,
+              fromTypeFieldName,
+              fromTypePrimaryFieldValue,
+            },
+            ...remainingConfig,
           },
-          {
-            fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
-            operator: ComparisonOperators.EQUALS,
-            value: fromTypeFieldName,
+          relatedTypeName,
+        )
+      : await this.getRelationshipDriverInternal(
+          fromTypeName,
+          fromTypeFieldName,
+        ).listItems({
+          ...remainingConfig,
+          criteria: {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              {
+                fieldName: ItemRelationshipInfoKeys.fromTypeName,
+                operator: ComparisonOperators.EQUALS,
+                value: fromTypeName,
+              },
+              {
+                fieldName: ItemRelationshipInfoKeys.fromTypeFieldName,
+                operator: ComparisonOperators.EQUALS,
+                value: fromTypeFieldName,
+              },
+              {
+                fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
+                operator: ComparisonOperators.EQUALS,
+                value: fromTypePrimaryFieldValue,
+              },
+            ],
           },
-          {
-            fieldName: ItemRelationshipInfoKeys.fromTypePrimaryFieldValue,
-            operator: ComparisonOperators.EQUALS,
-            value: fromTypePrimaryFieldValue,
-          },
-        ],
-      },
-    });
+        });
 
     if (useDAC) {
       const { items = [], cursor: nextCursor } = results as ListItemsResults<
@@ -817,6 +1127,14 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const driver = this.getDriverInternal(typeName);
       const cleanItem = this.getCleanItem(typeName, item, fieldsResources);
       const newIdentifier = await driver.createItem(cleanItem);
+      const { primaryField } = this.getTypeInfo(typeName);
+      const indexedItem = {
+        ...cleanItem,
+        [primaryField as keyof TypeInfoDataItem]: newIdentifier,
+      };
+
+      await this.indexFullTextDocument(typeName, indexedItem);
+      await this.indexStructuredDocument(typeName, indexedItem);
 
       return newIdentifier;
     }
@@ -960,6 +1278,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           mergedFieldsResources,
         );
         const result = await driver.updateItem(primaryFieldValue, cleanItem);
+        const updatedItem = await driver.readItem(primaryFieldValue);
+
+        await this.indexFullTextDocument(typeName, updatedItem);
+        await this.indexStructuredDocument(typeName, updatedItem);
 
         return result;
       }
@@ -973,18 +1295,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     typeName: string,
     primaryFieldValue: any,
   ): Promise<boolean> => {
-    const { useDAC } = this.config;
     const { primaryField } = this.getTypeInfo(typeName);
     const itemWithPrimaryFieldOnly: TypeInfoDataItem = {
       [primaryField as keyof TypeInfoDataItem]: primaryFieldValue,
     };
     this.validate(typeName, itemWithPrimaryFieldOnly, TypeOperation.DELETE);
     const driver = this.getDriverInternal(typeName);
-    const existingItem =
-      // SECURITY: Dac validation could fail when `item` is missing unselected fields.
-      useDAC
-        ? await driver.readItem(primaryFieldValue)
-        : itemWithPrimaryFieldOnly;
+    const existingItem = await driver.readItem(primaryFieldValue);
     const { allowed: deleteAllowed, denied: deleteDenied } =
       this.getItemDACValidation(existingItem, typeName, TypeOperation.DELETE);
 
@@ -1001,6 +1318,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         fromTypeName: typeName,
         fromTypePrimaryFieldValue: primaryFieldValue,
       });
+      await this.removeFullTextDocument(typeName, existingItem);
+      await this.removeStructuredDocument(typeName, existingItem);
 
       return result;
     }
@@ -1021,10 +1340,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     this.validateReadOperation(typeName, cleanSelectedFields);
 
-    const { typeInfoMap, useDAC } = this.config;
+    const { typeInfoMap, useDAC, indexing } = this.config;
     const typeInfo = this.getTypeInfo(typeName);
     const { fields: {} = {} } = typeInfo;
-    const { criteria } = config;
+    const { criteria, text, itemsPerPage, cursor, sortFields } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
       typeName,
@@ -1035,6 +1354,166 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { valid: searchFieldsValid } = searchFieldValidationResults;
 
     if (searchFieldsValid) {
+      const hasStructured = !!indexing?.structured?.reader;
+      const hasFullText = !!indexing?.fullText?.backend;
+      const hasCriteria = !!criteria && fieldCriteria.length > 0;
+      const hasText = !!text;
+
+      if (hasStructured || hasFullText) {
+        if (!hasCriteria && !hasText) {
+          throw {
+            message: TypeInfoORMServiceError.INDEXING_REQUIRES_CRITERIA,
+            typeName,
+          };
+        }
+
+        if (hasCriteria && hasText) {
+          throw {
+            message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
+            typeName,
+          };
+        }
+
+        if (hasCriteria && !hasStructured) {
+          throw {
+            message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
+            typeName,
+            backend: "structured.reader",
+          };
+        }
+
+        if (hasText && !hasFullText) {
+          throw {
+            message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
+            typeName,
+            backend: "fullText",
+          };
+        }
+
+        let docIds: Array<string | number> = [];
+        let nextCursor: string | undefined = undefined;
+
+        if (hasText) {
+          const indexField = this.resolveFullTextIndexField(
+            typeName,
+            text?.indexField,
+          );
+
+          if (!indexField) {
+            throw {
+              message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+              typeName,
+            };
+          }
+
+          const fullTextBackend = indexing?.fullText?.backend;
+          const searchResult =
+            text?.mode === "exact"
+              ? await searchExact({
+                  backend: fullTextBackend,
+                  query: text.query,
+                  indexField,
+                  limit: itemsPerPage,
+                  cursor,
+                  limits: indexing?.limits,
+                })
+              : await searchLossy({
+                  backend: fullTextBackend,
+                  query: text?.query ?? "",
+                  indexField,
+                  limit: itemsPerPage,
+                  cursor,
+                  limits: indexing?.limits,
+                });
+
+          docIds = searchResult.docIds;
+          nextCursor = searchResult.nextCursor;
+        } else {
+          const where = criteriaToStructuredWhere(criteria);
+
+          if (!where) {
+            throw {
+              message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+              typeName,
+            };
+          }
+
+          const mappedWhere = this.applyStructuredFieldMap(
+            where,
+            indexing?.structured?.fieldMapByType?.[typeName],
+          );
+          const structuredReader = indexing?.structured?.reader;
+          const page = await searchStructured(
+            structuredReader as StructuredSearchDependencies,
+            mappedWhere,
+            {
+              limit: itemsPerPage,
+              cursor,
+            },
+          );
+
+          docIds = page.candidateIds;
+          nextCursor = page.cursor;
+        }
+
+        const driver = this.getDriverInternal(typeName);
+        const items: Partial<TypeInfoDataItem>[] = [];
+        const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
+
+        for (const docId of docIds) {
+          try {
+            const item = await driver.readItem(
+              docId as any,
+              useDAC ? undefined : cleanSelectedFields,
+            );
+
+            if (useDAC) {
+              const {
+                allowed: readAllowed,
+                denied: readDenied,
+                fieldsResources = {},
+              } = this.getItemDACValidation(item, typeName, TypeOperation.READ);
+              const listDenied = readDenied || !readAllowed;
+
+              if (listDenied) {
+                continue;
+              }
+
+              fieldsResourcesCache.push(fieldsResources);
+            }
+
+            items.push(item);
+          } catch (error: any) {
+            if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+              continue;
+            }
+            throw error;
+          }
+        }
+
+        const cleanedItems = items.map((item, index) => {
+          const fieldsResources = useDAC
+            ? fieldsResourcesCache[index]
+            : undefined;
+
+          return this.getCleanItem(
+            typeName,
+            item,
+            fieldsResources,
+            cleanSelectedFields,
+          );
+        });
+        const sortedItems = getSortedItems(
+          sortFields,
+          cleanedItems as TypeInfoDataItem[],
+        );
+
+        return {
+          items: sortedItems as Partial<TypeInfoDataItem>[],
+          cursor: nextCursor,
+        };
+      }
+
       const driver = this.getDriverInternal(typeName);
       const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
       const results = await executeDriverListItems(
