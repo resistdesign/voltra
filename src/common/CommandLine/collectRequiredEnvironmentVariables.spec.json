@@ -1,0 +1,18 @@
+{
+  "file": "./collectRequiredEnvironmentVariables.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCollectRequiredEnvironmentVariablesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "collected": {
+          "VOLTRA_A": "alpha",
+          "VOLTRA_B": "bravo"
+        },
+        "missingThrown": true,
+        "missingMessage": "Missing required environment variable: VOLTRA_B"
+      }
+    }
+  ]
+}
