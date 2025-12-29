@@ -1,0 +1,48 @@
+{
+  "file": "./Utils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTestingUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "equalsResult": true,
+        "notEqualsResult": true,
+        "inResult": true,
+        "betweenResult": true,
+        "containsResult": true,
+        "regexResult": true,
+        "extRegexResult": true,
+        "deepEqualsResult": true,
+        "arrayContainsResult": true,
+        "arrayEqualsResult": true,
+        "merged": {
+          "messages": [
+            "m1",
+            "m2"
+          ],
+          "generated": [],
+          "passes": [
+            "p1"
+          ],
+          "failures": [
+            "f1"
+          ],
+          "errors": []
+        },
+        "operationKeys": [
+          "!==",
+          "===",
+          "ARRAY_CONTAINS",
+          "ARRAY_EQUALS",
+          "BETWEEN",
+          "CONTAINS",
+          "DEEP_EQUALS",
+          "EXT_REGEX",
+          "IN",
+          "REGEX"
+        ]
+      }
+    }
+  ]
+}
