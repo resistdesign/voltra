@@ -70,7 +70,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] dns
   - [x] file-storage
   - [x] gateway
-  - [ ] repo
+  - [x] repo
   - [ ] ssl-certificate
 - [ ] types (generated; add tests around behavior, avoid editing generated files)
 - [ ] utils (patch-utils, index)
