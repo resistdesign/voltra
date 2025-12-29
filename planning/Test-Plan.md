@@ -69,7 +69,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] database
   - [x] dns
   - [x] file-storage
-  - [ ] gateway
+  - [x] gateway
   - [ ] repo
   - [ ] ssl-certificate
 - [ ] types (generated; add tests around behavior, avoid editing generated files)
