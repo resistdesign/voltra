@@ -41,7 +41,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] CommandLine
 - [x] HelperTypes
 - [x] IdGeneration
-- [ ] ItemRelationshipInfoTypes
+- [x] ItemRelationshipInfoTypes
 - [ ] ItemRelationships
 - [ ] Logging
 - [ ] Routing
