@@ -39,7 +39,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] Service abstraction + DI approach
   - [x] TypeInfoORMAPIUtils usage
   - [x] TypeInfoORMClient usage
-- [ ] app index exports + import patterns
+- [x] app index exports + import patterns
 
 ## common
 - [ ] CommandLine (collectRequiredEnvironmentVariables)
