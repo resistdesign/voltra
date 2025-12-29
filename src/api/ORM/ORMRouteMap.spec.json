@@ -1,0 +1,45 @@
+{
+  "file": "./ORMRouteMap.test-utils.ts",
+  "tests": [
+    {
+      "export": "runORMRouteMapScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "routePaths": [
+          "\"create\"",
+          "\"create-relationship\"",
+          "\"delete\"",
+          "\"delete-relationship\"",
+          "\"list\"",
+          "\"list-relationships\"",
+          "\"read\"",
+          "\"update\""
+        ],
+        "expectedRoutePaths": [
+          "\"create\"",
+          "\"create-relationship\"",
+          "\"delete\"",
+          "\"delete-relationship\"",
+          "\"list\"",
+          "\"list-relationships\"",
+          "\"read\"",
+          "\"update\""
+        ],
+        "defaultAuthConfig": {
+          "anyAuthorized": true
+        },
+        "customAuthConfig": {
+          "public": true
+        },
+        "handlerIsFunction": true,
+        "handlerStableWithoutDac": true,
+        "missingGetterError": "MISSING_ACCESSING_ROLE_GETTER",
+        "missingRoleError": "MISSING_ACCESSING_ROLE",
+        "missingRoleErrorExpected": "MISSING_ACCESSING_ROLE",
+        "missingGetterErrorExpected": "MISSING_ACCESSING_ROLE_GETTER",
+        "handlerWithRoleIsFunction": true
+      }
+    }
+  ]
+}
