@@ -38,7 +38,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] app index exports
 
 ## common
-- [ ] CommandLine
+- [x] CommandLine
 - [ ] HelperTypes
 - [ ] IdGeneration
 - [ ] ItemRelationshipInfoTypes
