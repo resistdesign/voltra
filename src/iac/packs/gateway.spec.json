@@ -1,0 +1,46 @@
+{
+  "file": "./gateway.test-utils.ts",
+  "tests": [
+    {
+      "export": "runGatewayPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "ApiGateway",
+          "ApiGatewayCloudFunctionANYResourcePermission",
+          "ApiGatewayCloudWatch",
+          "ApiGatewayCloudWatchAccount",
+          "ApiGatewayCloudWatchRole",
+          "ApiGatewayDomainName",
+          "ApiGatewayDomainNameBasePathMapping",
+          "ApiGatewayGatewayRESTAPIDeployment",
+          "ApiGatewayGatewayRESTAPIEnvironment",
+          "ApiGatewayGatewayRESTAPIMethod",
+          "ApiGatewayGatewayRESTAPIOPTIONSMethod",
+          "ApiGatewayGatewayRESTAPIResource",
+          "ApiGatewayGatewayRESTAPIRootMethod",
+          "ApiGatewayGatewayRESTAPIRootOPTIONSMethod",
+          "ApiGatewayGatewayResponseDefault4XX",
+          "ApiGatewayRoute53Record"
+        ],
+        "defaultAuthType": "NONE",
+        "defaultStageName": "production",
+        "defaultDeploymentId": "ApiGatewayGatewayRESTAPIDeployment",
+        "defaultIntegrationUri": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations",
+        "defaultRoute53RecordType": "A",
+        "customAuthType": "CUSTOM",
+        "customAuthScopes": [
+          "email"
+        ],
+        "customAuthorizerRef": "ApiGatewayCustomAuthorizer",
+        "customAuthorizerIdentitySource": "method.request.header.Authorization",
+        "customAuthorizerProviderARNs": [
+          "arn:aws:cognito:us-east-1:123:userpool/1"
+        ],
+        "customStageName": "prod",
+        "customDeploymentId": "ApiGatewayGatewayRESTAPIDeploymentV2"
+      }
+    }
+  ]
+}
