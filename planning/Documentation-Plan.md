@@ -10,9 +10,9 @@ Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
 - [x] Add/expand JSDoc in `src/api/**` (TypeDoc output is generated; no manual API pages)
-- [ ] DataAccessControl overview + example policies
+- [x] DataAccessControl overview + example policies
 - [ ] Indexing
-  - [ ] cursor/docId/tokenize/trace concepts + usage
+  - [x] cursor/docId/tokenize/trace concepts + usage
   - [ ] exact index (S3/Dynamo backends)
   - [ ] fulltext index (memory/Dynamo backends)
   - [ ] lossy index (S3/Dynamo backends)
@@ -21,13 +21,13 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [ ] handler + api facade examples
 - [ ] ORM
   - [ ] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
-  - [ ] drivers/common (Supported drivers + selection rules)
+  - [x] drivers/common (Supported drivers + selection rules)
   - [ ] indexing (criteriaToStructuredWhere)
-  - [ ] ListItemUtils patterns
-  - [ ] ORMRouteMap usage
+  - [x] ListItemUtils patterns
+  - [x] ORMRouteMap usage
   - [ ] TypeInfoORMService configuration + lifecycle
-  - [ ] DACUtils reference
-- [ ] Router (Auth/AWS/CORS/Types) overview + wiring examples
+  - [x] DACUtils reference
+- [x] Router (Auth/AWS/CORS/Types) overview + wiring examples
 
 ## app
 - [ ] utils
