@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Hook utilities that wrap a {@link TypeInfoORMAPI} with request state tracking.
+ * Each method returns a request id and updates loading/data/error state per method.
+ */
 import {
   TypeInfoORMAPI,
   TypeInfoORMServiceError,
