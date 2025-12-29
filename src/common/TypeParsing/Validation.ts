@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Validation helpers for TypeInfo values, including relationship rules and
+ * custom type validators.
+ */
 import {
   TypeInfo,
   TypeInfoField,

@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Parse TypeScript sources into a {@link TypeInfoMap}. Parsing utilities in
+ * `ParsingUtils` extract fields, tags, and type details from AST nodes.
+ */
 import { createSourceFile, Node, ScriptTarget, SyntaxKind } from "typescript";
 import { convertASTToMap, TypeMap } from "./TypeMapping";
 import { TypeInfoMap } from "./TypeInfo";

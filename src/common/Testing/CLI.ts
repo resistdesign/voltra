@@ -1,5 +1,10 @@
 #!/usr/bin/env ts-node
 
+/**
+ * @packageDocumentation
+ *
+ * CLI entry helpers for the JSON spec test runner.
+ */
 import { executeTestingCommand, mergeTestResults } from "./Utils";
 import fastGlob from "fast-glob";
 import picocolors from "picocolors";

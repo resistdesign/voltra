@@ -1,3 +1,6 @@
+/**
+ * Field-selection helpers for shaping TypeInfo data items.
+ */
 import { TypeInfo, TypeInfoDataItem } from "./TypeInfo";
 
 /**

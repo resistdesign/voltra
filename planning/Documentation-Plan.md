@@ -52,13 +52,13 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] SearchTypes + SearchUtils patterns
 - [x] SearchValidation rules + examples
 - [x] StringTransformers (built-ins + custom)
-- [ ] Testing (Vest helpers + authoring specs)
-- [ ] TypeInfoDataItemUtils usage
-- [ ] TypeInfoORM types + helpers
-- [ ] TypeParsing
-  - [ ] ParsingUtils guide
-  - [ ] Validation rules + examples
-  - [ ] TypeInfo/TypeMapping/TypeParsing/Utils reference
+- [x] Testing (Vest helpers + authoring specs)
+- [x] TypeInfoDataItemUtils usage
+- [x] TypeInfoORM types + helpers
+- [x] TypeParsing
+  - [x] ParsingUtils guide
+  - [x] Validation rules + examples
+  - [x] TypeInfo/TypeMapping/TypeParsing/Utils reference
 
 ## iac
 - [ ] SimpleCFT usage + examples
