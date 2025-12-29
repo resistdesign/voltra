@@ -68,11 +68,11 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] build
   - [x] build/utils
   - [x] cdn
-  - [ ] cloud-function
-  - [ ] database
-  - [ ] dns
-  - [ ] file-storage
-  - [ ] gateway
+  - [x] cloud-function
+  - [x] database
+  - [x] dns
+  - [x] file-storage
+  - [x] gateway
   - [ ] repo
   - [ ] ssl-certificate
 - [ ] types (generated; document behavior, avoid editing generated files)
