@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Shared TypeInfoORM API types, route paths, and error enums used by services
+ * and clients.
+ */
 import {
   ListItemsConfig,
   ListItemsResults,

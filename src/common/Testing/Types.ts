@@ -1,6 +1,6 @@
 /**
- * Operations used for comparison of during tests.
- * */
+ * Operations used for comparison during tests.
+ */
 export enum TestComparisonOperation {
   EQUALS = "===",
   NOT_EQUALS = "!==",
@@ -115,8 +115,8 @@ export type Test = BaseTest &
   );
 
 /**
- * A configuration for a test. Designed to be used in JSON for declarative test files.
- * */
+ * A configuration for a test. Designed to be used in JSON spec files.
+ */
 export type TestConfig = {
   file: string;
   tests: Test[];
