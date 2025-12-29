@@ -3,7 +3,7 @@ import { renderToString } from "react-dom/server";
 
 type WindowListenerMap = Record<string, (event: any) => void>;
 
-const buildWindowMock = (pathname: string) => {
+export const buildWindowMock = (pathname: string) => {
   const listeners: WindowListenerMap = {};
   const documentListeners: WindowListenerMap = {};
   const historyCalls: any[] = [];

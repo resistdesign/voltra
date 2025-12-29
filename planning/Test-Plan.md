@@ -25,7 +25,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] Router (Auth/AWS/CORS/Types)
 
 ## app
-- [ ] utils
+- [x] utils
   - [x] ApplicationState
   - [x] ApplicationStateLoader
   - [x] Controller
@@ -35,7 +35,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] Service
   - [x] TypeInfoORMAPIUtils
   - [x] TypeInfoORMClient
-- [ ] app index exports
+- [x] app index exports
 
 ## common
 - [ ] CommandLine
