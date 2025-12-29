@@ -16,7 +16,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] handler + api facade
 - [ ] ORM
   - [x] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
-  - [ ] drivers/common
+  - [x] drivers/common
   - [x] indexing (criteriaToStructuredWhere)
   - [ ] ListItemUtils
   - [ ] ORMRouteMap

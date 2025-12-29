@@ -262,7 +262,7 @@ export const S3SupportedFileItemDBDriverEntry: SupportedDataItemDBDriverEntry =
     getDBSpecificConfigTypeInfo: () => {
       const configTypesPath = Path.join(
         __dirname,
-        "S3DataItemDBDriver",
+        "S3FileItemDBDriver",
         "ConfigTypes.ts",
       );
       const configTypesTS = FS.readFileSync(configTypesPath, "utf8");

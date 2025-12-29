@@ -1,0 +1,65 @@
+{
+  "file": "./SupportedTypeInfoORMDBDrivers.test-utils.ts",
+  "tests": [
+    {
+      "export": "runSupportedTypeInfoOrmDriversScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "driverNames": [
+          "DYNAMO_DB_DATA_ITEM",
+          "IN_MEMORY_DATA_ITEM",
+          "IN_MEMORY_FILE_ITEM",
+          "S3_FILE_ITEM"
+        ],
+        "supportedKeys": [
+          "DYNAMO_DB_DATA_ITEM",
+          "IN_MEMORY_DATA_ITEM",
+          "IN_MEMORY_FILE_ITEM",
+          "S3_FILE_ITEM"
+        ],
+        "entryTypeNames": {
+          "dynamo": "DynamoDBSpecificConfig",
+          "inMemory": "InMemorySpecificConfig",
+          "inMemoryFile": "InMemoryFileSpecificConfig",
+          "s3": "S3SpecificConfig"
+        },
+        "dynamoDriverShape": {
+          "createItem": true,
+          "readItem": true,
+          "updateItem": true,
+          "deleteItem": true,
+          "listItems": true
+        },
+        "inMemoryDriverShape": {
+          "createItem": true,
+          "readItem": true,
+          "updateItem": true,
+          "deleteItem": true,
+          "listItems": true
+        },
+        "inMemoryFileDriverShape": {
+          "createItem": true,
+          "readItem": true,
+          "updateItem": true,
+          "deleteItem": true,
+          "listItems": true
+        },
+        "s3DriverShape": {
+          "createItem": true,
+          "readItem": true,
+          "updateItem": true,
+          "deleteItem": true,
+          "listItems": true
+        },
+        "dataItemErrors": {
+          "MISSING_ID": "MISSING_ID",
+          "INVALID_CURSOR": "INVALID_CURSOR",
+          "ITEM_NOT_FOUND": "ITEM_NOT_FOUND",
+          "MISSING_UNIQUE_IDENTIFIER": "MISSING_UNIQUE_IDENTIFIER",
+          "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED": "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED"
+        }
+      }
+    }
+  ]
+}

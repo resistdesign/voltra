@@ -3,7 +3,7 @@ import {
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "./common";
+} from "./common/Types";
 import { v4 as UUIDV4 } from "uuid";
 import type { TypeInfoDataItem, TypeInfoPack } from "../../../common/TypeParsing/TypeInfo";
 import type { ListItemsConfig, ListItemsResults } from "../../../common/SearchTypes";
