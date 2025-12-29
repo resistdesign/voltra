@@ -62,7 +62,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 
 ## iac
 - [x] SimpleCFT usage + examples
-- [ ] packs
+- [x] packs
   - [x] auth
   - [x] auth/user-management
   - [x] build
@@ -73,8 +73,8 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] dns
   - [x] file-storage
   - [x] gateway
-  - [ ] repo
-  - [ ] ssl-certificate
+  - [x] repo
+  - [x] ssl-certificate
 - [ ] types (generated; document behavior, avoid editing generated files)
 - [ ] utils (patch-utils, index)
 - [ ] iac index exports
