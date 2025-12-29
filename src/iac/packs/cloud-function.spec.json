@@ -1,0 +1,68 @@
+{
+  "file": "./cloud-function.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCloudFunctionPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "defaultRuntime": "nodejs26.x",
+        "defaultHandler": "index.handler",
+        "defaultTimeout": 30,
+        "defaultCode": {
+          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n"
+        },
+        "defaultEnv": {
+          "Variables": {
+            "NODE_ENV": "production"
+          }
+        },
+        "defaultPolicies": [
+          {
+            "PolicyName": "lambda-parameter-store",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ],
+        "placeholderCode": {
+          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n"
+        },
+        "customRuntime": "nodejs20.x",
+        "customHandler": "main.handler",
+        "customTimeout": 10,
+        "customEnv": {
+          "Variables": {
+            "NODE_ENV": "test"
+          }
+        },
+        "customPolicies": [
+          {
+            "PolicyName": "custom-policy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
