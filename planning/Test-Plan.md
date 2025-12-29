@@ -59,7 +59,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 
 ## iac
 - [x] SimpleCFT
-- [ ] packs
+- [x] packs
   - [x] auth
   - [x] auth/user-management
   - [x] build
@@ -74,7 +74,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] ssl-certificate
 - [x] types (generated; add tests around behavior, avoid editing generated files)
 - [x] utils (patch-utils, index)
-- [ ] iac index exports
+- [x] iac index exports
 
 ## Notes
 - Specs live alongside code as `src/**/*.spec.json`.
