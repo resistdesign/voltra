@@ -20,7 +20,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] indexing (criteriaToStructuredWhere)
   - [x] ListItemUtils
   - [x] ORMRouteMap
-  - [~] TypeInfoORMService
+  - [x] TypeInfoORMService
   - [ ] DACUtils
 - [ ] Router (Auth/AWS/CORS/Types)
 
