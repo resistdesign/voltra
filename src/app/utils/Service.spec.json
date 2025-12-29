@@ -1,0 +1,29 @@
+{
+  "file": "./Service.test-utils.ts",
+  "tests": [
+    {
+      "export": "runServiceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "url": "https://example.com:443api/v1",
+        "requestInfo": {
+          "input": "https://example.com:443api/v1",
+          "method": "POST",
+          "headers": {
+            "Authorization": "Bearer token-1"
+          },
+          "body": "[\"a\",1]"
+        },
+        "successResponse": {
+          "ok": true,
+          "args": [
+            "a",
+            1
+          ]
+        },
+        "errorMessage": "nope"
+      }
+    }
+  ]
+}
