@@ -19,7 +19,7 @@ export type LayoutComponents = {
   areas: ComponentMap;
 };
 
-const getPascalCaseAreaName = (area: string): string => {
+export const getPascalCaseAreaName = (area: string): string => {
   return area
     .split("-")
     .map((a) => a[0].toUpperCase() + a.slice(1))
@@ -88,6 +88,13 @@ const convertLayoutToCSS = (
     css,
   };
 };
+
+export const getEasyLayoutTemplateDetails = (
+  layout: string = "",
+): {
+  areasList: string[];
+  css: string;
+} => convertLayoutToCSS(layout);
 
 /**
  * Quickly express advanced, extensible grid layouts with styled-components.

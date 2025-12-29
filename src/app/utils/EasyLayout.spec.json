@@ -1,0 +1,20 @@
+{
+  "file": "./EasyLayout.test-utils.ts",
+  "tests": [
+    {
+      "export": "runEasyLayoutScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "areasList": [
+          "header",
+          "side",
+          "main"
+        ],
+        "css": "grid-template-columns: 100px 1fr;\ngrid-template-areas:\n  \"header header\"\n  \"side main\";\ngrid-template-rows: 1fr 2fr;",
+        "pascalCaseHeader": "Header",
+        "pascalCaseMainContent": "MainContent"
+      }
+    }
+  ]
+}
