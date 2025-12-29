@@ -43,7 +43,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] IdGeneration
 - [x] ItemRelationshipInfoTypes
 - [x] ItemRelationships
-- [ ] Logging
+- [x] Logging
 - [ ] Routing
 - [ ] SearchTypes
 - [ ] SearchUtils
