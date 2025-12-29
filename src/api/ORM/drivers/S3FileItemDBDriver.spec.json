@@ -1,0 +1,40 @@
+{
+  "file": "./S3FileItemDBDriver.test-utils.ts",
+  "tests": [
+    {
+      "export": "runS3FileItemDriverScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": [
+          "alpha.txt",
+          "beta.txt"
+        ],
+        "readWithUrls": {
+          "id": "alpha.txt",
+          "mimeType": "application/octet-stream",
+          "sizeInBytes": 0,
+          "uploadUrl": "upload://Files/alpha.txt",
+          "downloadUrl": "download://Files/alpha.txt"
+        },
+        "listPage1Ids": [
+          "alpha.txt"
+        ],
+        "listPage2Ids": [
+          "beta.txt"
+        ],
+        "listWithUrlsIds": [
+          "alpha.txt",
+          "beta.txt"
+        ],
+        "listWithUrlsDownloadUrls": [
+          "download://Files/alpha.txt",
+          "download://Files/beta.txt"
+        ],
+        "deleteResult": true,
+        "missingIdError": "MISSING_ID",
+        "missingIdErrorExpected": "MISSING_ID"
+      }
+    }
+  ]
+}
