@@ -49,7 +49,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] SearchUtils
 - [x] SearchValidation
 - [x] StringTransformers
-- [ ] Testing (Vest helpers)
+- [x] Testing (Vest helpers)
 - [ ] TypeInfoDataItemUtils
 - [ ] TypeInfoORM
 - [ ] TypeParsing
