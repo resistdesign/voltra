@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Lightweight client-side routing helpers with nested Route contexts.
+ * Uses the History API and intercepts anchor clicks for SPA navigation.
+ */
 import React, {
   createContext,
   PropsWithChildren,

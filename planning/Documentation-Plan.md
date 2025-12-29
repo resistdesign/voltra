@@ -30,15 +30,15 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] Router (Auth/AWS/CORS/Types) overview + wiring examples
 
 ## app
-- [ ] utils
+- [x] utils
   - [x] ApplicationState + loader lifecycle
   - [x] Controller (events, hooks, patterns)
   - [x] Debug helpers
   - [x] EasyLayout usage + examples
-  - [ ] Route + router patterns
-  - [ ] Service abstraction + DI approach
-  - [ ] TypeInfoORMAPIUtils usage
-  - [ ] TypeInfoORMClient usage
+  - [x] Route + router patterns
+  - [x] Service abstraction + DI approach
+  - [x] TypeInfoORMAPIUtils usage
+  - [x] TypeInfoORMClient usage
 - [ ] app index exports + import patterns
 
 ## common

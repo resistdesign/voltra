@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Client wrapper around the TypeInfoORM API RouteMap. Uses ServiceConfig to
+ * route requests to the server-side TypeInfoORM routes.
+ */
 import {
   DeleteRelationshipResults,
   TypeInfoORMAPI,
