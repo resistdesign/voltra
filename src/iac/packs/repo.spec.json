@@ -1,0 +1,30 @@
+{
+  "file": "./repo.test-utils.ts",
+  "tests": [
+    {
+      "export": "runRepoPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "parameterKeys": [
+          "RepoBranch",
+          "RepoName",
+          "RepoOwner",
+          "RepoToken"
+        ],
+        "groupLabel": "Repository",
+        "groupParameters": [
+          "RepoOwner",
+          "RepoName",
+          "RepoBranch",
+          "RepoToken"
+        ],
+        "ownerParamLabel": "RepoOwner",
+        "ownerParamType": "String",
+        "nameParamLabel": "RepoName",
+        "branchParamLabel": "RepoBranch",
+        "tokenParamNoEcho": true
+      }
+    }
+  ]
+}
