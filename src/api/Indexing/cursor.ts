@@ -1,18 +1,30 @@
 import type { DocId } from './types.js';
 
+/**
+ * The supported ordering strategy for cursors.
+ * */
 export type SortingStrategy = 'docIdAsc';
 
+/**
+ * Cursor planner metadata used to resume searches efficiently.
+ * */
 export type PlannerMetadata = {
   primaryToken: string;
   statsVersion?: number;
   sorting?: SortingStrategy;
 };
 
+/**
+ * Cursor state for lossy search pagination.
+ * */
 export type LossyCursorState = {
   lastDocId?: DocId;
   plan?: PlannerMetadata;
 };
 
+/**
+ * Cursor state for exact search pagination, including lossy and verification phases.
+ * */
 export type ExactCursorState = {
   lossy?: LossyCursorState;
   verification?: {
@@ -149,6 +161,9 @@ function normalizeDocIdList(values?: Array<string | number>): DocId[] | undefine
   return values.map((value) => String(value));
 }
 
+/**
+ * Encode a lossy cursor state into a URL-safe string.
+ * */
 export function encodeLossyCursor(state?: LossyCursorState): string | undefined {
   if (!state || (state.lastDocId === undefined && !state.plan)) {
     return undefined;
@@ -168,6 +183,9 @@ export function encodeLossyCursor(state?: LossyCursorState): string | undefined 
   });
 }
 
+/**
+ * Decode a lossy cursor string back into state.
+ * */
 export function decodeLossyCursor(cursor?: string): LossyCursorState | undefined {
   if (!cursor) {
     return undefined;
@@ -185,6 +203,9 @@ export function decodeLossyCursor(cursor?: string): LossyCursorState | undefined
   };
 }
 
+/**
+ * Encode an exact cursor state into a URL-safe string.
+ * */
 export function encodeExactCursor(state?: ExactCursorState): string | undefined {
   if (!state) {
     return undefined;
@@ -222,6 +243,9 @@ export function encodeExactCursor(state?: ExactCursorState): string | undefined 
   });
 }
 
+/**
+ * Decode an exact cursor string back into state.
+ * */
 export function decodeExactCursor(cursor?: string): ExactCursorState | undefined {
   if (!cursor) {
     return undefined;

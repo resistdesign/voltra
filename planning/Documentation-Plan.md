@@ -5,6 +5,7 @@ Curated checklist of docs to write or improve, based on `src/` coverage.
 Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
+- [x] Add/expand JSDoc in `src/api/**` (TypeDoc output is generated; no manual API pages)
 - [ ] DataAccessControl overview + example policies
 - [ ] Indexing
   - [ ] cursor/docId/tokenize/trace concepts + usage

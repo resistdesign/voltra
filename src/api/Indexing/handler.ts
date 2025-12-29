@@ -3,6 +3,9 @@ import { resolveSearchLimits, type SearchLimits } from "./handler/config";
 import type { DocumentRecord, IndexBackend } from "./types";
 import { createSearchTrace } from "./trace";
 
+/**
+ * Event payload to index a document.
+ * */
 export type IndexDocumentEvent = {
   action: 'indexDocument';
   document: DocumentRecord;
@@ -10,6 +13,9 @@ export type IndexDocumentEvent = {
   indexField?: string;
 };
 
+/**
+ * Event payload to remove a document from the index.
+ * */
 export type RemoveDocumentEvent = {
   action: 'removeDocument';
   document: DocumentRecord;
@@ -17,6 +23,9 @@ export type RemoveDocumentEvent = {
   indexField?: string;
 };
 
+/**
+ * Event payload to run a lossy search.
+ * */
 export type SearchLossyEvent = {
   action: 'searchLossy';
   query: string;
@@ -26,6 +35,9 @@ export type SearchLossyEvent = {
   limits?: SearchLimits;
 };
 
+/**
+ * Event payload to run an exact search.
+ * */
 export type SearchExactEvent = {
   action: 'searchExact';
   query: string;
@@ -35,16 +47,25 @@ export type SearchExactEvent = {
   limits?: SearchLimits;
 };
 
+/**
+ * Union of supported handler events.
+ * */
 export type HandlerEvent =
   | IndexDocumentEvent
   | RemoveDocumentEvent
   | SearchLossyEvent
   | SearchExactEvent;
 
+/**
+ * Dependencies required by the handler.
+ * */
 export type HandlerDependencies = {
   backend: IndexBackend;
 };
 
+/**
+ * Basic lambda response shape.
+ * */
 export type LambdaResponse = {
   statusCode: number;
   body: string;
@@ -71,6 +92,9 @@ export function setHandlerDependencies(value: HandlerDependencies): void {
   dependencies = value;
 }
 
+/**
+ * Handle index and search actions for a backend.
+ * */
 export async function handler(event: HandlerEvent): Promise<LambdaResponse> {
   if (!dependencies) {
     throw new Error("Handler dependencies are not configured. Call setHandlerDependencies().");

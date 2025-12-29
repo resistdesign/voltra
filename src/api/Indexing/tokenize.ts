@@ -1,8 +1,14 @@
+/**
+ * Tokenization output with a normalized string and its tokens.
+ * */
 export type TokenizationResult = {
   normalized: string;
   tokens: string[];
 };
 
+/**
+ * Normalize text and split into word tokens for exact/fulltext indexing.
+ * */
 export function tokenize(input: string): TokenizationResult {
   const normalized = input
     .normalize('NFKD')
@@ -16,6 +22,9 @@ export function tokenize(input: string): TokenizationResult {
   return {normalized, tokens};
 }
 
+/**
+ * Normalize text and emit lossy trigrams with a prefix marker for recall-heavy search.
+ * */
 export function tokenizeLossyTrigrams(input: string): TokenizationResult {
   const normalized = input
     .normalize("NFKD")

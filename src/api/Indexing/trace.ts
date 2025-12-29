@@ -1,3 +1,6 @@
+/**
+ * Runtime counters and metadata collected during a search.
+ * */
 export type SearchTrace = {
   startTimeMs: number;
   tokenCount?: number;
@@ -12,6 +15,9 @@ export type SearchTrace = {
   ddbItemReadCalls: number;
 };
 
+/**
+ * Initialize a search trace with counters set to zero.
+ * */
 export function createSearchTrace(): SearchTrace {
   return {
     startTimeMs: Date.now(),

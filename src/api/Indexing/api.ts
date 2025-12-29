@@ -20,6 +20,9 @@ import { compareDocId, normalizeDocId } from "./docId";
 
 type TraceableIndexBackend = IndexBackend & { setActiveTrace(trace?: SearchTrace): void };
 
+/**
+ * Input for indexing a document.
+ * */
 export type IndexDocumentInput = {
   document: DocumentRecord;
   primaryField: string;
@@ -27,6 +30,9 @@ export type IndexDocumentInput = {
   backend?: IndexBackend;
 };
 
+/**
+ * Input for removing a document from the index.
+ * */
 export type RemoveDocumentInput = {
   document: DocumentRecord;
   primaryField: string;
@@ -34,6 +40,9 @@ export type RemoveDocumentInput = {
   backend?: IndexBackend;
 };
 
+/**
+ * Input for lossy search with paging support.
+ * */
 export type SearchLossyInput = {
   query: string;
   indexField: string;
@@ -44,6 +53,9 @@ export type SearchLossyInput = {
   trace?: SearchTrace;
 };
 
+/**
+ * Input for exact search with verification/paging support.
+ * */
 export type SearchExactInput = {
   query: string;
   indexField: string;
@@ -54,6 +66,9 @@ export type SearchExactInput = {
   trace?: SearchTrace;
 };
 
+/**
+ * Search results with normalized tokens and an optional cursor.
+ * */
 export type SearchResult = {
   normalized: string;
   tokens: string[];
@@ -63,6 +78,9 @@ export type SearchResult = {
 
 let configuredBackend: IndexBackend | undefined;
 
+/**
+ * Set the default backend used by search and mutation calls.
+ * */
 export function setIndexBackend(backend: IndexBackend): void {
   configuredBackend = backend;
 }
@@ -439,6 +457,9 @@ function resolveIndexText(document: DocumentRecord, indexField: string): string 
   return String(value);
 }
 
+/**
+ * Index a document using exact and lossy backends.
+ * */
 export async function indexDocument({
                                       document,
                                       primaryField,
@@ -469,6 +490,9 @@ export async function indexDocument({
   );
 }
 
+/**
+ * Remove a document from exact and lossy backends.
+ * */
 export async function removeDocument({
                                        document,
                                        primaryField,
@@ -497,6 +521,9 @@ export async function removeDocument({
   );
 }
 
+/**
+ * Perform a lossy search and return matching document ids.
+ * */
 export async function searchLossy({
                                     query,
                                     indexField,
@@ -702,6 +729,9 @@ async function hasExactPhrase(
   );
 }
 
+/**
+ * Perform an exact search, optionally using a lossy pre-pass for candidates.
+ * */
 export async function searchExact({
                                     query,
                                     indexField,
