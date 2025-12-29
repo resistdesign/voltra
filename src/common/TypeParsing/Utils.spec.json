@@ -1,0 +1,37 @@
+{
+  "file": "./Utils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeParsingUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "cleanedSelected": [
+          "id",
+          "author"
+        ],
+        "nonReferenceSelected": [
+          "id"
+        ],
+        "cleanedDataItem": {
+          "id": "book-1",
+          "title": "Guide",
+          "author": "person-1"
+        },
+        "nonReferenceDataItem": {
+          "id": "book-1",
+          "title": "Guide"
+        },
+        "unselected": {
+          "title": "Guide"
+        },
+        "noSelected": {
+          "id": "book-1",
+          "title": "Guide",
+          "author": "person-1",
+          "missing": "ignored"
+        }
+      }
+    }
+  ]
+}

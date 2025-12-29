@@ -52,10 +52,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] Testing (Vest helpers)
 - [x] TypeInfoDataItemUtils
 - [x] TypeInfoORM
-- [ ] TypeParsing
-  - [ ] ParsingUtils
-  - [ ] Validation
-  - [ ] TypeInfo/TypeMapping/TypeParsing/Utils
+- [x] TypeParsing
+  - [x] ParsingUtils
+  - [x] Validation
+  - [x] TypeInfo/TypeMapping/TypeParsing/Utils
 
 ## iac
 - [ ] SimpleCFT
