@@ -14,7 +14,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] rel (inMemory/relationalDdb/handlers/types)
   - [x] structured
   - [x] handler + api facade
-- [ ] ORM
+- [x] ORM
   - [x] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
   - [x] drivers/common
   - [x] indexing (criteriaToStructuredWhere)
