@@ -1,0 +1,41 @@
+{
+  "file": "./database.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDatabasePackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "BooksTable"
+        ],
+        "tableName": "books",
+        "billingMode": "PAY_PER_REQUEST",
+        "attributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "sort",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "rating",
+            "AttributeType": "N"
+          }
+        ],
+        "keySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "sort",
+            "KeyType": "RANGE"
+          }
+        ]
+      }
+    }
+  ]
+}
