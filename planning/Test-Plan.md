@@ -40,7 +40,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 ## common
 - [x] CommandLine
 - [x] HelperTypes
-- [ ] IdGeneration
+- [x] IdGeneration
 - [ ] ItemRelationshipInfoTypes
 - [ ] ItemRelationships
 - [ ] Logging
