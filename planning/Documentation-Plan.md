@@ -80,11 +80,11 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] iac index exports
 
 ## docs site
-- [ ] Astro site structure + build pipeline overview
-- [ ] API docs generation flow (TypeDoc -> docs -> site-dist)
-- [ ] IaC demo build output (site-dist/iac)
+- [x] Astro site structure + build pipeline overview
+- [x] API docs generation flow (TypeDoc -> docs -> site-dist)
+- [x] IaC demo build output (site-dist/iac)
 
 ## project
-- [ ] Build and test commands
-- [ ] Release/checklist notes (if any)
-- [ ] Contribution guidelines + PR expectations
+- [x] Build and test commands
+- [x] Release/checklist notes (if any)
+- [x] Contribution guidelines + PR expectations
