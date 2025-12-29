@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Relationship driver that maps ORM relationship operations to the indexing
+ * relational backends (in-memory or DynamoDB).
+ */
 import {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
@@ -43,6 +49,9 @@ const defaultDecodeEntityId = (typeName: string, entityId: string): string => {
 const buildRelationshipId = (edgeKey: EdgeKey): string =>
   `${edgeKey.from}|${edgeKey.relation}|${edgeKey.to}`;
 
+/**
+ * Adapter that stores relationships as directional edges via a relational backend.
+ */
 export class IndexingRelationshipDriver {
   private readonly encodeEntityId: (typeName: string, primaryFieldValue: string) => string;
   private readonly decodeEntityId: (typeName: string, entityId: string) => string;

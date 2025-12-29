@@ -19,13 +19,13 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] rel indexing (inMemory/relationalDdb/handlers/types)
   - [x] structured indexing (inMemory/structuredDdb/handlers)
   - [x] handler + api facade examples
-- [ ] ORM
-  - [ ] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
+- [x] ORM
+  - [x] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
   - [x] drivers/common (Supported drivers + selection rules)
-  - [ ] indexing (criteriaToStructuredWhere)
+  - [x] indexing (criteriaToStructuredWhere)
   - [x] ListItemUtils patterns
   - [x] ORMRouteMap usage
-  - [ ] TypeInfoORMService configuration + lifecycle
+  - [x] TypeInfoORMService configuration + lifecycle
   - [x] DACUtils reference
 - [x] Router (Auth/AWS/CORS/Types) overview + wiring examples
 

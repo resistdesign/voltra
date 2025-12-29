@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Map {@link SearchCriteria} to structured-index {@link Where} clauses.
+ * Unsupported operators throw {@link TypeInfoORMServiceError}.
+ */
 import {
   ComparisonOperators,
   FieldCriterion,
@@ -80,6 +86,9 @@ const buildWhereForCriterion = (criterion: FieldCriterion): Where => {
   }
 };
 
+/**
+ * Translate {@link SearchCriteria.fieldCriteria} into a structured WHERE tree.
+ */
 export const criteriaToStructuredWhere = (
   criteria?: SearchCriteria,
 ): Where | undefined => {

@@ -1,3 +1,10 @@
+/**
+ * @packageDocumentation
+ *
+ * TypeInfo-driven ORM service. Configure with a type map and a driver resolver,
+ * and optionally provide DAC and indexing integrations. The constructor validates
+ * configuration once, and each call resolves drivers as needed.
+ */
 import {
   LiteralValue,
   TypeInfo,
@@ -187,11 +194,8 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
   TypeInfoORMServiceDACOptions;
 
 /**
- * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
- * */
-/**
  * TypeInfo-driven ORM service with optional DAC and indexing integrations.
- * */
+ */
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
   protected indexingRelationshipDriver?: IndexingRelationshipDriver;
