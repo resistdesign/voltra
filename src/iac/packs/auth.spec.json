@@ -1,0 +1,29 @@
+{
+  "file": "./auth.test-utils.ts",
+  "tests": [
+    {
+      "export": "runAuthPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "AdminGroup",
+          "UserPool",
+          "UserPoolAuthRole",
+          "UserPoolBaseDomainRecord",
+          "UserPoolClient",
+          "UserPoolDomain",
+          "UserPoolDomainRecord",
+          "UserPoolIdentityPool",
+          "UserPoolIdentityPoolRoles",
+          "UserPoolUnauthRole"
+        ],
+        "adminGroupName": "admins",
+        "authRoleName": "AuthRole",
+        "unauthRoleName": "UnauthRole",
+        "hasBaseDomainRecord": true,
+        "hasIdentityPoolRoles": true
+      }
+    }
+  ]
+}

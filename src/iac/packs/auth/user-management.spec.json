@@ -1,0 +1,30 @@
+{
+  "file": "./user-management.test-utils.ts",
+  "tests": [
+    {
+      "export": "runUserManagementPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "minimalSummary": {
+          "resourceKeys": [
+            "UserPool",
+            "UserPoolBaseDomainRecord",
+            "UserPoolClient",
+            "UserPoolDomain",
+            "UserPoolDomainRecord",
+            "UserPoolIdentityPool"
+          ],
+          "hasBaseDomainRecord": true,
+          "hasIdentityPoolRoles": false
+        },
+        "apiSummary": {
+          "hasBaseDomainRecord": true,
+          "hasIdentityPoolRoles": true,
+          "authRoleName": "AuthRole",
+          "unauthRoleName": "UnauthRole"
+        }
+      }
+    }
+  ]
+}

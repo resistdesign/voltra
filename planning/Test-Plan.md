@@ -60,7 +60,8 @@ Legend: [ ] todo, [~] in progress, [x] done
 ## iac
 - [x] SimpleCFT
 - [ ] packs
-  - [ ] auth/user-management
+  - [x] auth
+  - [x] auth/user-management
   - [ ] build/utils
   - [ ] cdn
   - [ ] cloud-function
