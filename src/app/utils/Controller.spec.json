@@ -1,0 +1,36 @@
+{
+  "file": "./Controller.test-utils.ts",
+  "tests": [
+    {
+      "export": "runControllerScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "objectValue": "updated",
+        "objectParent": {
+          "name": "updated"
+        },
+        "objectChanges": [
+          {
+            "name": "updated"
+          }
+        ],
+        "arrayValue": "next",
+        "arrayParent": [
+          "zero",
+          "next"
+        ],
+        "arrayChanges": [
+          [
+            "zero",
+            "next"
+          ]
+        ],
+        "missingValue": "updated",
+        "missingParent": {
+          "name": "updated"
+        }
+      }
+    }
+  ]
+}
