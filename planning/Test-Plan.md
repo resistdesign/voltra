@@ -13,7 +13,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] lossy
   - [x] rel (inMemory/relationalDdb/handlers/types)
   - [x] structured
-  - [ ] handler + api facade
+  - [x] handler + api facade
 - [ ] ORM
   - [ ] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
   - [ ] drivers/common
