@@ -1,18 +1,39 @@
-import { AttributeType, IDocumentable, NamespaceStructure, PropertyDescriptor, PropertyType, ResourceType } from './Types';
-import { CONTAINER_TYPES, NAMESPACE_DELIMITERS, NEVER_TYPE, PRIMITIVE_TYPE_MAP, TAG_TYPE } from './Constants';
+/**
+ * Render helpers that convert CloudFormation spec nodes into TypeScript types.
+ */
+import {
+  AttributeType,
+  IDocumentable,
+  NamespaceStructure,
+  PropertyDescriptor,
+  PropertyType,
+  ResourceType,
+} from "./Types";
+import {
+  CONTAINER_TYPES,
+  NAMESPACE_DELIMITERS,
+  NEVER_TYPE,
+  PRIMITIVE_TYPE_MAP,
+  TAG_TYPE,
+} from "./Constants";
 
 export const renderPrimitiveType = (primitiveType: string) =>
-  primitiveType in PRIMITIVE_TYPE_MAP ? `CloudFormationPrimitiveValue<${PRIMITIVE_TYPE_MAP[primitiveType]}>` : primitiveType;
+  primitiveType in PRIMITIVE_TYPE_MAP
+    ? `CloudFormationPrimitiveValue<${PRIMITIVE_TYPE_MAP[primitiveType]}>`
+    : primitiveType;
 
-export const renderPropertyType = (path: string[], { PrimitiveType, Type, PrimitiveItemType, ItemType }: AttributeType) => {
+export const renderPropertyType = (
+  path: string[],
+  { PrimitiveType, Type, PrimitiveItemType, ItemType }: AttributeType,
+) => {
   if (PrimitiveType) {
     return renderPrimitiveType(PrimitiveType);
   } else if (Type && CONTAINER_TYPES.indexOf(Type) !== -1) {
     const resolvedItemType = PrimitiveItemType
       ? renderPrimitiveType(PrimitiveItemType)
       : ItemType === TAG_TYPE
-      ? TAG_TYPE
-      : [...path, ItemType].join(NAMESPACE_DELIMITERS.OUTPUT);
+        ? TAG_TYPE
+        : [...path, ItemType].join(NAMESPACE_DELIMITERS.OUTPUT);
 
     return Type === 'List' ? `${resolvedItemType}[]` : `Record<string, ${resolvedItemType}>`;
   } else if (Type === TAG_TYPE) {
@@ -24,8 +45,14 @@ export const renderPropertyType = (path: string[], { PrimitiveType, Type, Primit
   }
 };
 
-export const renderPropertyName = (propertyName: string, descriptor: PropertyDescriptor | AttributeType) => {
-  const cleanPropertyName = propertyName && propertyName.indexOf('.') !== -1 ? `'${propertyName}'` : propertyName;
+export const renderPropertyName = (
+  propertyName: string,
+  descriptor: PropertyDescriptor | AttributeType,
+) => {
+  const cleanPropertyName =
+    propertyName && propertyName.indexOf(".") !== -1
+      ? `'${propertyName}'`
+      : propertyName;
 
   if ('Required' in descriptor) {
     const { Required } = descriptor;
@@ -36,7 +63,11 @@ export const renderPropertyName = (propertyName: string, descriptor: PropertyDes
   }
 };
 
-export const renderCommentBlock = ({ UpdateType, DuplicatesAllowed = false, Documentation }: IDocumentable) =>
+export const renderCommentBlock = ({
+  UpdateType,
+  DuplicatesAllowed = false,
+  Documentation,
+}: IDocumentable) =>
   UpdateType || DuplicatesAllowed || Documentation
     ? `/**${
         UpdateType
@@ -58,16 +89,26 @@ export const renderCommentBlock = ({ UpdateType, DuplicatesAllowed = false, Docu
 `
     : '';
 
-export const renderProperty = (path: string[], propertyName: string, propertyDescriptor: PropertyDescriptor | AttributeType) =>
-  `${renderCommentBlock(propertyDescriptor)}${renderPropertyName(propertyName, propertyDescriptor)}: ${renderPropertyType(
-    path,
-    propertyDescriptor
-  )};`;
+export const renderProperty = (
+  path: string[],
+  propertyName: string,
+  propertyDescriptor: PropertyDescriptor | AttributeType,
+) =>
+  `${renderCommentBlock(propertyDescriptor)}${renderPropertyName(
+    propertyName,
+    propertyDescriptor,
+  )}: ${renderPropertyType(path, propertyDescriptor)};`;
 
-export const renderTypeWithFullBody = (commentBlock: string, typeName: string, fullBody: string) =>
-  `${commentBlock}export type ${typeName} = ${fullBody};`;
+export const renderTypeWithFullBody = (
+  commentBlock: string,
+  typeName: string,
+  fullBody: string,
+) => `${commentBlock}export type ${typeName} = ${fullBody};`;
 
-export const renderTypePropertiesBody = (path: string[], properties: Record<string, PropertyDescriptor | AttributeType>) => {
+export const renderTypePropertiesBody = (
+  path: string[],
+  properties: Record<string, PropertyDescriptor | AttributeType>,
+) => {
   const propertyKeys = Object.keys(properties);
 
   return `{
@@ -75,11 +116,20 @@ ${propertyKeys.map((pK) => renderProperty(path, pK, properties[pK])).join('\n')}
 }`;
 };
 
-export const renderTypeWithProperties = (path: string[], typeName: string, properties: Record<string, AttributeType>, commentBlock: string = '') => {
+export const renderTypeWithProperties = (
+  path: string[],
+  typeName: string,
+  properties: Record<string, AttributeType>,
+  commentBlock: string = "",
+) => {
   return renderTypeWithFullBody(commentBlock, typeName, renderTypePropertiesBody(path, properties));
 };
 
-export const renderTypeFromPropertyType = (path: string[], typeName: string, propertyType: PropertyType) => {
+export const renderTypeFromPropertyType = (
+  path: string[],
+  typeName: string,
+  propertyType: PropertyType,
+) => {
   const { Properties } = propertyType;
   const commentBlock = renderCommentBlock(propertyType);
 
@@ -90,7 +140,11 @@ export const renderTypeFromPropertyType = (path: string[], typeName: string, pro
   }
 };
 
-export const renderTypeFromResourceType = (path: string[], typeName: string, resourceType: ResourceType) => {
+export const renderTypeFromResourceType = (
+  path: string[],
+  typeName: string,
+  resourceType: ResourceType,
+) => {
   const { Type, Properties, Attributes } = resourceType;
   const commentBlock = renderCommentBlock(resourceType);
   const subPath = [...path, typeName];
@@ -105,8 +159,14 @@ export const renderTypeFromResourceType = (path: string[], typeName: string, res
 };
 
 export const renderNamespaceStructure = (
-  { path = [], includes = [], propertyTypes = {}, resourceTypes = {}, namespaces = {} }: NamespaceStructure,
-  namespaceName?: string
+  {
+    path = [],
+    includes = [],
+    propertyTypes = {},
+    resourceTypes = {},
+    namespaces = {},
+  }: NamespaceStructure,
+  namespaceName?: string,
 ) => {
   const namespaceBody: string = `${includes?.join('\n')}
 

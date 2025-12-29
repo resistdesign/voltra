@@ -41,6 +41,20 @@ front-end apps.</td>
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships |                                               | Typed Build Spec Creation                                     |
 |                                                                             |                                               | Typed Resource Parameters                                     |
 
+## IaC Type Generation
+
+IaC types are generated from the AWS CloudFormation resource specification.
+When updating, follow this flow:
+
+1) Download the latest CloudFormation resource specification JSON from AWS (region: `us-east-1`).
+2) Replace the contents of `src/iac/types/CloudFormationResourceSpecification.ts` with the JSON payload (as the exported data).
+3) Run `yarn iac:types:gen` to regenerate `dist/IaCTypes.ts`.
+4) Verify `dist/IaCTypes.ts` looks correct, then commit both files.
+
+Notes:
+- `src/iac/types/IaCTypes.ts` and `src/iac/types/CloudFormationResourceSpecification.ts` are generated artifacts; do not edit by hand.
+- The generator entrypoint is `src/iac/types/generate.ts` and uses `src/iac/types/Renderers.ts` for output.
+
 ## Releasing
 
 Voltra publishes npm packages from GitHub Releases. The release tag is used verbatim
