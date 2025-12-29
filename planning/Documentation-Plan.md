@@ -42,11 +42,11 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] app index exports + import patterns
 
 ## common
-- [ ] CommandLine (collectRequiredEnvironmentVariables)
-- [ ] HelperTypes reference
-- [ ] IdGeneration (getSimpleId)
-- [ ] ItemRelationshipInfoTypes + relationships model
-- [ ] ItemRelationships validation rules
+- [x] CommandLine (collectRequiredEnvironmentVariables)
+- [x] HelperTypes reference
+- [x] IdGeneration (getSimpleId)
+- [x] ItemRelationshipInfoTypes + relationships model
+- [x] ItemRelationships validation rules
 - [ ] Logging utilities
 - [ ] Routing helpers
 - [ ] SearchTypes + SearchUtils patterns
