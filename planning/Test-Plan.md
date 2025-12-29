@@ -73,7 +73,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] repo
   - [x] ssl-certificate
 - [x] types (generated; add tests around behavior, avoid editing generated files)
-- [ ] utils (patch-utils, index)
+- [x] utils (patch-utils, index)
 - [ ] iac index exports
 
 ## Notes
