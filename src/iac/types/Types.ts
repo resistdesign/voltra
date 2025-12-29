@@ -1,3 +1,10 @@
+/**
+ * @packageDocumentation
+ *
+ * Core types used by the IaC type generator. The generated outputs live in
+ * `src/iac/types/IaCTypes.ts` and `src/iac/types/CloudFormationResourceSpecification.ts`
+ * and should not be edited by hand. Regenerate them via `yarn iac:types:gen`.
+ */
 export interface IDocumentable {
   UpdateType?: string;
   DuplicatesAllowed?: boolean;
