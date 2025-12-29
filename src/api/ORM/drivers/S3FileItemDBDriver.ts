@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * S3-backed file item driver that exposes files as ORM items with upload/download URLs.
+ */
 import {
   CopyObjectCommand,
   HeadObjectCommand,

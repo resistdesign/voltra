@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB-backed data item driver for TypeInfo ORM. Supports CRUD and scan-based
+ * list operations with SearchCriteria filters.
+ */
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
   DataItemDBDriver,
