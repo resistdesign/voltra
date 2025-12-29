@@ -62,7 +62,8 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [ ] packs
   - [x] auth
   - [x] auth/user-management
-  - [ ] build/utils
+  - [x] build
+  - [x] build/utils
   - [ ] cdn
   - [ ] cloud-function
   - [ ] database
