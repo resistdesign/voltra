@@ -1,0 +1,63 @@
+{
+  "file": "./ListItemUtils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runListItemUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": [
+          "item-1",
+          "item-2",
+          "item-3"
+        ],
+        "noFilterIds": [
+          "item-1",
+          "item-2",
+          "item-3"
+        ],
+        "filteredIds": [
+          "item-1",
+          "item-3"
+        ],
+        "transformedItems": [
+          {
+            "id": "item-1",
+            "status": "active"
+          },
+          {
+            "id": "item-2",
+            "status": "archived"
+          },
+          {
+            "id": "item-3",
+            "status": "active"
+          }
+        ],
+        "selectedFieldKeys": [
+          [
+            "id"
+          ],
+          [
+            "id"
+          ],
+          [
+            "id"
+          ]
+        ],
+        "filteredWithSelect": [
+          {
+            "name": "Alpha",
+            "status": "active",
+            "id": "item-1"
+          },
+          {
+            "name": "Gamma",
+            "status": "active",
+            "id": "item-3"
+          }
+        ]
+      }
+    }
+  ]
+}
