@@ -77,7 +77,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] ssl-certificate
 - [x] types (generated; document behavior, avoid editing generated files)
 - [x] utils (patch-utils, index)
-- [ ] iac index exports
+- [x] iac index exports
 
 ## docs site
 - [ ] Astro site structure + build pipeline overview
