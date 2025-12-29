@@ -1,6 +1,4 @@
-import {
-  DataItemDBDriverConfig,
-} from "./common";
+import { DataItemDBDriverConfig } from "./common/Types";
 import type {
   ItemRelationshipInfo,
   ItemRelationshipInfoIdentifyingKeys,

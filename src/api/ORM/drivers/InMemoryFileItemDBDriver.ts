@@ -3,7 +3,7 @@ import {
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
-} from "./common";
+} from "./common/Types";
 import type { TypeInfoPack } from "../../../common/TypeParsing/TypeInfo";
 import type { ListItemsConfig, ListItemsResults } from "../../../common/SearchTypes";
 import { getFilterTypeInfoDataItemsBySearchCriteria, getSortedItems } from "../../../common/SearchUtils";
