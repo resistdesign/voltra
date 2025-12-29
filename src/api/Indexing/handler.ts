@@ -1,7 +1,7 @@
-import { indexDocument, removeDocument, searchExact, searchLossy } from './api.js';
-import { resolveSearchLimits, type SearchLimits } from './handler/config.js';
-import type { DocumentRecord, IndexBackend } from './types.js';
-import { createSearchTrace } from './trace.js';
+import { indexDocument, removeDocument, searchExact, searchLossy } from "./api";
+import { resolveSearchLimits, type SearchLimits } from "./handler/config";
+import type { DocumentRecord, IndexBackend } from "./types";
+import { createSearchTrace } from "./trace";
 
 export type IndexDocumentEvent = {
   action: 'indexDocument';
@@ -73,32 +73,32 @@ export function setHandlerDependencies(value: HandlerDependencies): void {
 
 export async function handler(event: HandlerEvent): Promise<LambdaResponse> {
   if (!dependencies) {
-    throw new Error('Handler dependencies are not configured. Call setHandlerDependencies().');
+    throw new Error("Handler dependencies are not configured. Call setHandlerDependencies().");
   }
 
   switch (event.action) {
-    case 'indexDocument':
+    case "indexDocument":
       await indexDocument({
         document: event.document,
-        primaryField: event.primaryField ?? 'id',
-        indexField: event.indexField ?? 'text',
+        primaryField: event.primaryField ?? "id",
+        indexField: event.indexField ?? "text",
         backend: dependencies.backend,
       });
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-    case 'removeDocument':
+    case "removeDocument":
       await removeDocument({
         document: event.document,
-        primaryField: event.primaryField ?? 'id',
-        indexField: event.indexField ?? 'text',
+        primaryField: event.primaryField ?? "id",
+        indexField: event.indexField ?? "text",
         backend: dependencies.backend,
       });
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-    case 'searchLossy': {
+    case "searchLossy": {
       const trace = createSearchTrace();
       const limits = resolveSearchLimits(event.limits);
       const result = await searchLossy({
         query: event.query,
-        indexField: event.indexField ?? 'text',
+        indexField: event.indexField ?? "text",
         limit: event.limit,
         cursor: event.cursor,
         backend: dependencies.backend,
@@ -112,12 +112,12 @@ export async function handler(event: HandlerEvent): Promise<LambdaResponse> {
       );
       return { statusCode: 200, body: JSON.stringify(result) };
     }
-    case 'searchExact': {
+    case "searchExact": {
       const trace = createSearchTrace();
       const limits = resolveSearchLimits(event.limits);
       const result = await searchExact({
         query: event.query,
-        indexField: event.indexField ?? 'text',
+        indexField: event.indexField ?? "text",
         limit: event.limit,
         cursor: event.cursor,
         backend: dependencies.backend,
@@ -132,6 +132,6 @@ export async function handler(event: HandlerEvent): Promise<LambdaResponse> {
       return { statusCode: 200, body: JSON.stringify(result) };
     }
     default:
-      return { statusCode: 400, body: JSON.stringify({ error: 'Unsupported action.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: "Unsupported action." }) };
   }
 }
