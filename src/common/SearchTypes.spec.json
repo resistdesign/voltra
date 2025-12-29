@@ -1,0 +1,95 @@
+{
+  "file": "./SearchTypes.test-utils.ts",
+  "tests": [
+    {
+      "export": "runSearchTypesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "criteria": {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "title",
+              "operator": "LIKE",
+              "value": "Guide"
+            },
+            {
+              "fieldName": "publishedAt",
+              "operator": "GREATER_THAN",
+              "value": "2024-01-01"
+            }
+          ]
+        },
+        "listConfig": {
+          "itemsPerPage": 10,
+          "cursor": "cursor-1",
+          "criteria": {
+            "logicalOperator": "AND",
+            "fieldCriteria": [
+              {
+                "fieldName": "title",
+                "operator": "LIKE",
+                "value": "Guide"
+              },
+              {
+                "fieldName": "publishedAt",
+                "operator": "GREATER_THAN",
+                "value": "2024-01-01"
+              }
+            ]
+          },
+          "sortFields": [
+            {
+              "field": "publishedAt",
+              "reverse": true
+            }
+          ],
+          "text": {
+            "query": "Voltra",
+            "mode": "exact",
+            "indexField": "title"
+          }
+        },
+        "relationshipConfig": {
+          "itemsPerPage": 5,
+          "relationshipItemOrigin": {
+            "fromTypeName": "Book",
+            "fromTypeFieldName": "author",
+            "fromTypePrimaryFieldValue": "book-1"
+          }
+        },
+        "operators": {
+          "logical": [
+            "AND",
+            "OR"
+          ],
+          "comparison": [
+            "EQUALS",
+            "NOT_EQUALS",
+            "GREATER_THAN",
+            "GREATER_THAN_OR_EQUAL",
+            "LESS_THAN",
+            "LESS_THAN_OR_EQUAL",
+            "IN",
+            "NOT_IN",
+            "LIKE",
+            "NOT_LIKE",
+            "EXISTS",
+            "NOT_EXISTS",
+            "IS_NOT_EMPTY",
+            "IS_EMPTY",
+            "BETWEEN",
+            "NOT_BETWEEN",
+            "CONTAINS",
+            "NOT_CONTAINS",
+            "STARTS_WITH",
+            "ENDS_WITH",
+            "DOES_NOT_START_WITH",
+            "DOES_NOT_END_WITH"
+          ]
+        }
+      }
+    }
+  ]
+}

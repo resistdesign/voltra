@@ -45,7 +45,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] ItemRelationships
 - [x] Logging
 - [x] Routing
-- [ ] SearchTypes
+- [x] SearchTypes
 - [ ] SearchUtils
 - [ ] SearchValidation
 - [ ] Storyboarding
