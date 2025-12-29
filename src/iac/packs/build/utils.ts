@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Build spec helpers and CLI command templates for build pipelines.
+ */
 import YAML from "yaml";
 
 export type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> &
@@ -124,8 +129,8 @@ export interface BuildSpec {
 }
 
 /**
- * Create a build spec for a build pipeline (CI/CD).
- * */
+ * Create a build spec YAML string for a build pipeline (CI/CD).
+ */
 export const createBuildSpec = ({ version = 0.2, phases }: BuildSpec): string =>
   YAML.stringify(
     // TRICKY: Removed all keys with a value of `undefined`.
