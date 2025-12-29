@@ -21,7 +21,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] ListItemUtils
   - [x] ORMRouteMap
   - [x] TypeInfoORMService
-  - [ ] DACUtils
+  - [x] DACUtils
 - [ ] Router (Auth/AWS/CORS/Types)
 
 ## app
