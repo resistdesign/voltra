@@ -34,7 +34,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] Route
   - [x] Service
   - [x] TypeInfoORMAPIUtils
-  - [ ] TypeInfoORMClient
+  - [x] TypeInfoORMClient
 - [ ] app index exports
 
 ## common
