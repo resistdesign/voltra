@@ -27,7 +27,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 ## app
 - [ ] utils
   - [x] ApplicationState
-  - [ ] ApplicationStateLoader
+  - [x] ApplicationStateLoader
   - [ ] Controller
   - [ ] Debug
   - [ ] EasyLayout
