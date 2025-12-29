@@ -47,7 +47,7 @@ export type TypeInfoORMAPIController = {
   api: TypeInfoORMServiceAPI;
 };
 
-const handleRequest = async (
+export const handleRequest = async (
   requestId: string,
   args: any[],
   typeInfoORMAPI: TypeInfoORMAPI,
@@ -75,7 +75,7 @@ const handleRequest = async (
   }
 };
 
-const requestHandlerFactory =
+export const requestHandlerFactory =
   (
     typeInfoORMAPI: TypeInfoORMAPI,
     methodName: keyof TypeInfoORMAPI,

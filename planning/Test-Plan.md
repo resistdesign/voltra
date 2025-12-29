@@ -33,7 +33,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] EasyLayout
   - [x] Route
   - [x] Service
-  - [ ] TypeInfoORMAPIUtils
+  - [x] TypeInfoORMAPIUtils
   - [ ] TypeInfoORMClient
 - [ ] app index exports
 
