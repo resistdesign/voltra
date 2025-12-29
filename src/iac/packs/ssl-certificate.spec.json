@@ -1,0 +1,29 @@
+{
+  "file": "./ssl-certificate.test-utils.ts",
+  "tests": [
+    {
+      "export": "runSSLCertificatePackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "Certificate"
+        ],
+        "defaultDomainName": "example.com",
+        "defaultHostedZoneId": "HZ123",
+        "defaultSANs": [
+          {
+            "Fn::Sub": [
+              "*.${BaseDomainName}",
+              {
+                "BaseDomainName": "example.com"
+              }
+            ]
+          }
+        ],
+        "customHostedZoneId": "HZ456",
+        "customSANs": null
+      }
+    }
+  ]
+}
