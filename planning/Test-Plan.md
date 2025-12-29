@@ -30,7 +30,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] ApplicationStateLoader
   - [x] Controller
   - [x] Debug
-  - [ ] EasyLayout
+  - [x] EasyLayout
   - [ ] Route
   - [ ] Service
   - [ ] TypeInfoORMAPIUtils
