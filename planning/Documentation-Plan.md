@@ -11,7 +11,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 ## api
 - [x] Add/expand JSDoc in `src/api/**` (TypeDoc output is generated; no manual API pages)
 - [x] DataAccessControl overview + example policies
-- [ ] Indexing
+- [x] Indexing
   - [x] cursor/docId/tokenize/trace concepts + usage
   - [x] exact index (S3/Dynamo backends)
   - [x] fulltext index (memory/Dynamo backends)
