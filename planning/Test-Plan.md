@@ -18,7 +18,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
   - [x] drivers/common
   - [x] indexing (criteriaToStructuredWhere)
-  - [ ] ListItemUtils
+  - [x] ListItemUtils
   - [ ] ORMRouteMap
   - [~] TypeInfoORMService
   - [ ] DACUtils
