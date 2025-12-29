@@ -1,0 +1,86 @@
+{
+  "file": "./Router.test-utils.ts",
+  "tests": [
+    {
+      "export": "runRouterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "routeKeys": [
+          "\"alpha\"",
+          "\"beta\"",
+          "\"gamma\"",
+          "\"status\""
+        ],
+        "normalized": {
+          "authInfo": {
+            "userId": "user-1",
+            "roles": [
+              "admin"
+            ]
+          },
+          "headers": {
+            "origin": [
+              "https://example.com"
+            ]
+          },
+          "method": "POST",
+          "path": "status",
+          "body": [
+            "payload"
+          ]
+        },
+        "handlerResponse": {
+          "statusCode": 200,
+          "headers": {
+            "Access-Control-Allow-Origin": "https://example.com",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+          },
+          "body": "\"ok\""
+        },
+        "optionsResponse": {
+          "statusCode": 200,
+          "headers": {
+            "Access-Control-Allow-Origin": "https://example.com",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+          },
+          "body": "OK"
+        },
+        "notFoundResponse": {
+          "statusCode": 404,
+          "headers": {
+            "Access-Control-Allow-Origin": "https://example.com",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+          },
+          "body": "Not Found"
+        },
+        "unauthorizedResponse": {
+          "statusCode": 401,
+          "headers": {
+            "Access-Control-Allow-Origin": "https://example.com",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+          },
+          "body": "Unauthorized"
+        },
+        "errorResponse": {
+          "statusCode": 500,
+          "headers": {
+            "Access-Control-Allow-Origin": "https://example.com",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+          },
+          "body": "{\n  \"status\": \"Internal Server Error\",\n  \"message\": \"boom\",\n  \"error\": {}\n}"
+        }
+      }
+    }
+  ]
+}

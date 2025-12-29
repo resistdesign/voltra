@@ -22,7 +22,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] ORMRouteMap
   - [x] TypeInfoORMService
   - [x] DACUtils
-- [ ] Router (Auth/AWS/CORS/Types)
+- [x] Router (Auth/AWS/CORS/Types)
 
 ## app
 - [ ] utils
