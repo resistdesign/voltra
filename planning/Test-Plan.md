@@ -48,7 +48,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] SearchTypes
 - [x] SearchUtils
 - [x] SearchValidation
-- [ ] StringTransformers
+- [x] StringTransformers
 - [ ] Testing (Vest helpers)
 - [ ] TypeInfoDataItemUtils
 - [ ] TypeInfoORM
