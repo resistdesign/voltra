@@ -10,7 +10,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] cursor/docId/tokenize/trace
   - [x] exact
   - [x] fulltext
-  - [ ] lossy
+  - [x] lossy
   - [ ] rel (inMemory/relationalDdb/handlers/types)
   - [x] structured
   - [ ] handler + api facade
