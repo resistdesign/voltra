@@ -1,0 +1,33 @@
+{
+  "file": "./StringTransformers.test-utils.ts",
+  "tests": [
+    {
+      "export": "runStringTransformersScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringValue": "hello",
+        "numberValue": "42",
+        "booleanTrue": "true",
+        "booleanFalse": "false",
+        "nullValue": "",
+        "customDate": "2020-01-01T00:00:00.000Z",
+        "customUnknown": "123",
+        "customFallback": "",
+        "keywords": [
+          "boolean",
+          "number",
+          "string"
+        ],
+        "customKeys": [
+          "date",
+          "datetime",
+          "duration",
+          "reference",
+          "time",
+          "unknown"
+        ]
+      }
+    }
+  ]
+}
