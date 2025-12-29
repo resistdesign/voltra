@@ -1,3 +1,6 @@
+/**
+ * Search-related types used by list/search APIs.
+ */
 import {
   ItemRelationshipInfo,
   ItemRelationshipOriginItemInfo,

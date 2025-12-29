@@ -47,11 +47,11 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] IdGeneration (getSimpleId)
 - [x] ItemRelationshipInfoTypes + relationships model
 - [x] ItemRelationships validation rules
-- [ ] Logging utilities
-- [ ] Routing helpers
-- [ ] SearchTypes + SearchUtils patterns
-- [ ] SearchValidation rules + examples
-- [ ] StringTransformers (built-ins + custom)
+- [x] Logging utilities
+- [x] Routing helpers
+- [x] SearchTypes + SearchUtils patterns
+- [x] SearchValidation rules + examples
+- [x] StringTransformers (built-ins + custom)
 - [ ] Testing (Vest helpers + authoring specs)
 - [ ] TypeInfoDataItemUtils usage
 - [ ] TypeInfoORM types + helpers

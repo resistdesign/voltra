@@ -1,3 +1,6 @@
+/**
+ * Logging tags used by {@link logFunctionCall}.
+ */
 export enum LOGGING_MESSAGES {
   LOGGING_FUNCTION_CALL = "LOGGING_FUNCTION_CALL",
   INPUT = "INPUT",
@@ -6,8 +9,8 @@ export enum LOGGING_MESSAGES {
 }
 
 /**
- * Make a function call and automatically log the input, output and errors, asynchronously.
- * */
+ * Make a function call and log input/output/errors when enabled.
+ */
 export const logFunctionCall = async (
   label: string,
   args: any[],
