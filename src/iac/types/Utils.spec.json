@@ -1,0 +1,37 @@
+{
+  "file": "./Utils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIaCTypesUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "includes": [
+          "export type AllResourceTypes = AWS.S3.Bucket;",
+          "export type Existing = string;"
+        ],
+        "bucketResourceType": "AWS::S3::Bucket",
+        "propertyTypeKeys": [
+          "CorsConfiguration",
+          "CorsRule"
+        ],
+        "corsRulesType": "List"
+      }
+    },
+    {
+      "export": "runIaCTypesRenderersScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "primitiveType": "CloudFormationPrimitiveValue<string>",
+        "listPrimitiveType": "CloudFormationPrimitiveValue<string>[]",
+        "listItemType": "AWS.S3.Bucket.CorsRule[]",
+        "tagItemType": "Tag[]",
+        "propertyName": "'x-amz-meta.custom'?",
+        "commentBlock": "/**\n * Update Type: Immutable\n * Duplicates Allowed: Yes\n * @see https://docs.example.com\n * */\n",
+        "propertyType": "export type CorsRule = {\nAllowedOrigins: CloudFormationPrimitiveValue<string>[];\n};",
+        "resourceType": "export type Bucket = CloudFormationResource<'AWS::S3::Bucket', {\nArn: CloudFormationPrimitiveValue<string>;\n}, {\nBucketName?: CloudFormationPrimitiveValue<string>;\n}>;"
+      }
+    }
+  ]
+}
