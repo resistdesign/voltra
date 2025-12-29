@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB table pack with configurable keys, attributes, and billing mode.
+ */
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 

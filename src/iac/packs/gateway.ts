@@ -1,6 +1,12 @@
+/**
+ * @packageDocumentation
+ *
+ * API Gateway pack that connects a Lambda function, optional Cognito authorizer,
+ * and DNS domain mapping.
+ */
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
-import {CloudFormationPrimitiveValue} from "../types/IaCTypes";
+import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
 export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 
