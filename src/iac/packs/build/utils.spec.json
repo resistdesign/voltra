@@ -1,0 +1,17 @@
+{
+  "file": "./utils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runBuildUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "updateCmd": "aws lambda update-function-code --function-name \"arn:aws:lambda:us-east-1:123:function:demo\" --zip-file \"fileb://dist/code.zip\"",
+        "copyCmd": "aws s3 cp --recursive --acl public-read dist s3://my-bucket/",
+        "invalidateCmd": "aws cloudfront create-invalidation --distribution-id \"DIST123\" --paths \"/\" \"/assets/*\"",
+        "npmCmd": "echo '//registry.npmjs.org/:_authToken=token-123' > .npmrc",
+        "buildSpec": "version: 0.2\nphases:\n  install:\n    commands:\n      - npm ci\n  build:\n    commands:\n      - npm run build\n"
+      }
+    }
+  ]
+}
