@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Cognito user management pack with optional custom domain, DNS records, and
+ * API Gateway permissions for authenticated users.
+ */
 import { createResourcePack } from "../../utils";
 
 export type AddUserManagementConfig = {

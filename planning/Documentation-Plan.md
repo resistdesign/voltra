@@ -63,11 +63,11 @@ Legend: [ ] todo, [~] in progress, [x] done
 ## iac
 - [x] SimpleCFT usage + examples
 - [ ] packs
-  - [ ] auth
-  - [ ] auth/user-management
-  - [ ] build
-  - [ ] build/utils
-  - [ ] cdn
+  - [x] auth
+  - [x] auth/user-management
+  - [x] build
+  - [x] build/utils
+  - [x] cdn
   - [ ] cloud-function
   - [ ] database
   - [ ] dns
