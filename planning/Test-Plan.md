@@ -6,7 +6,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
 - [x] DataAccessControl
-- [ ] Indexing
+- [x] Indexing
   - [x] cursor/docId/tokenize/trace
   - [x] exact
   - [x] fulltext
