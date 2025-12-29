@@ -2,6 +2,10 @@
 
 Curated checklist of docs to write or improve, based on `src/` coverage.
 
+Notes
+- Documentation is JSDoc in `src/**` and is rendered via TypeDoc (`yarn doc`). No manual API pages are authored.
+- Checklist items under `api` mean "add or expand JSDoc on the referenced modules and concepts."
+
 Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
