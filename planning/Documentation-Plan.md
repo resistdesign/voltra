@@ -31,10 +31,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 
 ## app
 - [ ] utils
-  - [ ] ApplicationState + loader lifecycle
-  - [ ] Controller (events, hooks, patterns)
-  - [ ] Debug helpers
-  - [ ] EasyLayout usage + examples
+  - [x] ApplicationState + loader lifecycle
+  - [x] Controller (events, hooks, patterns)
+  - [x] Debug helpers
+  - [x] EasyLayout usage + examples
   - [ ] Route + router patterns
   - [ ] Service abstraction + DI approach
   - [ ] TypeInfoORMAPIUtils usage

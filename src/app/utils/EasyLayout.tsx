@@ -1,3 +1,10 @@
+/**
+ * @packageDocumentation
+ *
+ * Helper to define grid layouts with a concise template string and generated
+ * area components. Use {@link getEasyLayout} to produce a layout container and
+ * area components for each named grid area.
+ */
 import { FC, PropsWithChildren } from "react";
 import styled from "styled-components";
 

@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Hook for controlled edits of nested object/array values. Returns a local value
+ * plus an updater that writes changes back to the parent container.
+ */
 import { useCallback, useEffect, useState } from "react";
 
 const getKeyValueWithoutError = (obj: any, key: string | number) => {

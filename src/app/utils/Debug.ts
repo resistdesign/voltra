@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Debugging utilities for React hooks. Log which dependency indexes changed
+ * between renders to diagnose unexpected re-renders.
+ */
 import { useEffect, useRef } from "react";
 
 export const getChangedDependencyIndexes = (

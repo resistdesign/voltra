@@ -1,3 +1,10 @@
+/**
+ * @packageDocumentation
+ *
+ * Application-level state container built on React context and maps. Use
+ * {@link ApplicationStateProvider} to host state, then access values with
+ * {@link useApplicationStateValue} or {@link useApplicationStateValueStructure}.
+ */
 import {
   createContext,
   FC,
