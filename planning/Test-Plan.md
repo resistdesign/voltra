@@ -31,7 +31,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] Controller
   - [x] Debug
   - [x] EasyLayout
-  - [ ] Route
+  - [x] Route
   - [ ] Service
   - [ ] TypeInfoORMAPIUtils
   - [ ] TypeInfoORMClient
