@@ -1,4 +1,10 @@
-import type { DocId } from '../types.js';
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB schema helpers for the exact (position-aware) postings table.
+ * The exact index stores token positions per document to support phrase queries.
+ */
+import type { DocId } from "../types.js";
 
 export type ExactDdbKey = {
   token: string;

@@ -1,4 +1,10 @@
-import { searchStructured } from './searchStructured.js';
+/**
+ * @packageDocumentation
+ *
+ * Lambda-style handler for structured indexing (index/search). Configure it
+ * with {@link setStructuredHandlerDependencies}.
+ */
+import { searchStructured } from "./searchStructured.js";
 import type { DocId } from '../types.js';
 import { normalizeDocId } from '../docId.js';
 import type { StructuredSearchDependencies } from './searchStructured.js';

@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB-backed structured indexing reader/writer implementations.
+ */
 import {
   BatchWriteItemCommand,
   DynamoDBClient,
@@ -61,6 +66,9 @@ const buildRangeLowerKey = (value: WhereValue): string =>
 const buildRangeUpperKey = (value: WhereValue): string =>
   `${serializeStructuredValue(value)}#\uffff`;
 
+/**
+ * Read-only structured queries against DynamoDB term/range indexes.
+ */
 export class StructuredDdbReader implements StructuredSearchDependencies {
   private readonly client: DynamoDBClient;
   private readonly termTableName: string;
@@ -312,6 +320,9 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   }
 }
 
+/**
+ * Convenience wrapper that exposes both the reader and writer.
+ */
 export class StructuredDdbBackend {
   readonly reader: StructuredSearchDependencies;
   readonly writer: StructuredDdbWriter;

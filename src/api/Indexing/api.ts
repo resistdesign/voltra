@@ -1,3 +1,18 @@
+/**
+ * @packageDocumentation
+ *
+ * Facade functions for indexing documents and running lossy/exact search with
+ * cursor support. Configure a default backend via {@link setIndexBackend}, or
+ * pass a backend per call.
+ *
+ * Example:
+ * ```ts
+ * import { indexDocument, searchExact } from "./api";
+ *
+ * await indexDocument({ document: { id: "1", text: "hello world" }, primaryField: "id", indexField: "text", backend });
+ * const results = await searchExact({ query: "\"hello world\"", indexField: "text", backend, limit: 10 });
+ * ```
+ */
 import type { ExactCursorState, PlannerMetadata } from "./cursor";
 import { decodeExactCursor, decodeLossyCursor, encodeExactCursor, encodeLossyCursor } from "./cursor";
 import { tokenize, tokenizeLossyTrigrams } from "./tokenize";

@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * S3 key helpers for the exact (position-aware) index. The S3 layout stores
+ * token postings with positions encoded in JSON for batch retrieval.
+ */
 import type { DocId } from "../types";
 
 export type ExactS3Pointer = {

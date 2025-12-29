@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * In-memory lossy index for recall-heavy search. It stores token postings and
+ * supports paging with cursor-style doc IDs.
+ */
 import type { DocId } from "../types";
 import { compareDocId } from "../docId";
 

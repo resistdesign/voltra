@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * In-memory relational edge store with directional queries and cursor paging.
+ */
 import { decodeRelationalCursor, encodeRelationalCursor } from "./cursor";
 import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
 
@@ -55,6 +60,9 @@ function paginateIds<TMetadata extends EdgeMetadata>(
   return { edges };
 }
 
+/**
+ * In-memory relational backend for tests and local runs.
+ */
 export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMetadata> {
   private forward: EdgeLookup<TMetadata> = new Map();
   private reverse: EdgeLookup<TMetadata> = new Map();

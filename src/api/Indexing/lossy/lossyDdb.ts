@@ -1,4 +1,10 @@
-import type { DocId } from '../types.js';
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB schema helpers for the lossy postings table. The lossy index stores
+ * token -> docId mappings for recall-oriented search.
+ */
+import type { DocId } from "../types.js";
 
 export type LossyDdbKey = {
   token: string;

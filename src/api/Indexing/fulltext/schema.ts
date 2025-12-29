@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB schema constants and key encoders for fulltext tables.
+ */
 export const fullTextKeyPrefixes = {
   field: 'f#',
   token: 't#',

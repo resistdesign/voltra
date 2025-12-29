@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * In-memory fulltext backend that combines lossy and exact indexes plus
+ * doc-token membership checks. Useful for tests and local development.
+ */
 import { ExactIndex } from "../exact/exactIndex";
 import { LossyIndex } from "../lossy/lossyIndex";
 import type {
