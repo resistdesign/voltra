@@ -1,0 +1,25 @@
+{
+  "file": "./cdn.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCDNPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "SiteCDN",
+          "SiteCDNOriginAccessControl",
+          "SiteCDNRoute53Record"
+        ],
+        "oacName": "SiteCDNOriginAccessControl",
+        "distributionDependsOn": "BucketResource",
+        "viewerCertificateArn": "arn:aws:acm:us-east-1:123:cert/1",
+        "defaultRootObject": "index.html",
+        "route53HostedZoneId": "HZ123",
+        "route53DependsOn": [
+          "SiteCDN"
+        ]
+      }
+    }
+  ]
+}
