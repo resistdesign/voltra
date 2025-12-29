@@ -46,7 +46,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] Logging
 - [x] Routing
 - [x] SearchTypes
-- [ ] SearchUtils
+- [x] SearchUtils
 - [ ] SearchValidation
 - [ ] Storyboarding
 - [ ] StringTransformers
