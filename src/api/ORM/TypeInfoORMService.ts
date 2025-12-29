@@ -74,6 +74,9 @@ import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
 import { criteriaToStructuredWhere } from "./indexing/criteriaToStructuredWhere";
 import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
 
+/**
+ * Strip a relationship item down to its identifying keys.
+ * */
 export const cleanRelationshipItem = (
   relationshipItem: BaseItemRelationshipInfo,
 ): BaseItemRelationshipInfo => {
@@ -87,6 +90,9 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
+/**
+ * Wrap a driver method to attach extra fields to thrown errors.
+ * */
 export const getDriverMethodWithModifiedError = <
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
@@ -182,6 +188,9 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
 
 /**
  * A service using TypeInfo to perform ORM operations with one or many `DBServiceItemDriver` instances.
+ * */
+/**
+ * TypeInfo-driven ORM service with optional DAC and indexing integrations.
  * */
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};

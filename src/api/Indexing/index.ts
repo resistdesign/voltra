@@ -1,3 +1,6 @@
+/**
+ * Indexing utilities and backends for exact, lossy, fulltext, relational, and structured search.
+ * */
 export * from './api.js';
 export * from './cursor.js';
 export * from './exact/exactDdb.js';
