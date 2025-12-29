@@ -1,9 +1,18 @@
-import {TypeInfo, TypeInfoDataItem, TypeInfoField, TypeInfoMap} from "./TypeParsing/TypeInfo";
+/**
+ * Filtering and sorting utilities for search criteria.
+ */
+import {
+  TypeInfo,
+  TypeInfoDataItem,
+  TypeInfoField,
+  TypeInfoMap,
+} from "./TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
   FieldCriterion,
   LogicalOperators,
-  SearchCriteria, SortField,
+  SearchCriteria,
+  SortField,
 } from "./SearchTypes";
 
 /**

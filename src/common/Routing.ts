@@ -1,6 +1,9 @@
 /**
+ * Helpers for parsing and composing path strings used by the Router utilities.
+ */
+/**
  * The delimiter used to separate paths.
- * */
+ */
 export const PATH_DELIMITER = "/";
 
 export const getPotentialJSONValue = (value: string): any => {

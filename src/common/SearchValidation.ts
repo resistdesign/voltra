@@ -1,3 +1,6 @@
+/**
+ * Validation rules for search criteria against TypeInfo definitions.
+ */
 import { ComparisonOperators, FieldCriterion } from "./SearchTypes";
 import {
   CustomTypeInfoFieldValidatorMap,
