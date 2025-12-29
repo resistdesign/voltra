@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * In-memory structured index for term/contains/range queries with cursor paging.
+ */
 import { decodeStructuredCursor, encodeStructuredCursor } from "./cursor";
 import type { DocId } from "../types";
 import { compareDocId } from "../docId";
@@ -162,6 +167,9 @@ function addPosting(
   index.set(field, fieldIndex);
 }
 
+/**
+ * In-memory structured index that builds term/contains/range postings.
+ */
 export class StructuredInMemoryIndex {
   private eqIndex = new Map<string, Map<WhereValue, DocId[]>>();
   private containsIndex = new Map<string, Map<WhereValue, DocId[]>>();

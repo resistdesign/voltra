@@ -1,3 +1,10 @@
+/**
+ * @packageDocumentation
+ *
+ * Lambda-friendly handler that wraps indexing and search operations for a
+ * configured {@link IndexBackend}. Use this when you want a single entry point
+ * for indexDocument/removeDocument/searchLossy/searchExact.
+ */
 import { indexDocument, removeDocument, searchExact, searchLossy } from "./api";
 import { resolveSearchLimits, type SearchLimits } from "./handler/config";
 import type { DocumentRecord, IndexBackend } from "./types";

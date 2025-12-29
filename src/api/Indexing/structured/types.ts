@@ -1,4 +1,9 @@
-import type { DocId } from '../types.js';
+/**
+ * @packageDocumentation
+ *
+ * Types for structured query expressions and paging options.
+ */
+import type { DocId } from "../types.js";
 
 export type WhereValue = string | number | boolean | null;
 

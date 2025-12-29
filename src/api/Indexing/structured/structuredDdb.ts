@@ -1,5 +1,10 @@
-import type { DocId } from '../types.js';
-import type { WhereValue } from './types.js';
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB schema helpers for structured indexing (term, range, and doc fields).
+ */
+import type { DocId } from "../types.js";
+import type { WhereValue } from "./types.js";
 
 export type StructuredDocFieldsRecord = Record<string, WhereValue | WhereValue[]>;
 

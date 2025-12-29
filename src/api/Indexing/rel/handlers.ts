@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Lambda-style handler for relational edge operations (put/remove/query).
+ * Use {@link setRelationalHandlerDependencies} to supply a backend implementation.
+ */
 import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
 
 type EdgeMetadata = Record<string, unknown>;

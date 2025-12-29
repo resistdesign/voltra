@@ -1,4 +1,9 @@
-export type Direction = 'out' | 'in';
+/**
+ * @packageDocumentation
+ *
+ * Shared types for relational indexing and handler interfaces.
+ */
+export type Direction = "out" | "in";
 
 export type EdgeKey = {
   from: string;

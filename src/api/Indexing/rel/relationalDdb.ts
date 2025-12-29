@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB backend for relational edges. Stores each edge twice (out/in) to
+ * support directional traversal with cursor-based paging.
+ */
 import { decodeRelationalCursor, encodeRelationalCursor } from "./cursor";
 import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
 
@@ -96,6 +102,9 @@ function decodeRelationEdgesToken(token?: string): RelationEdgesCursorToken | un
   return { edgeKey: parsed.edgeKey, otherId: parsed.otherId };
 }
 
+/**
+ * DynamoDB-backed relational edge store with directional queries.
+ */
 export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata> {
   constructor(private readonly dependencies: RelationEdgesDdbDependencies<TMetadata>) {}
 

@@ -13,12 +13,12 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] DataAccessControl overview + example policies
 - [ ] Indexing
   - [x] cursor/docId/tokenize/trace concepts + usage
-  - [ ] exact index (S3/Dynamo backends)
-  - [ ] fulltext index (memory/Dynamo backends)
-  - [ ] lossy index (S3/Dynamo backends)
-  - [ ] rel indexing (inMemory/relationalDdb/handlers/types)
-  - [ ] structured indexing (inMemory/structuredDdb/handlers)
-  - [ ] handler + api facade examples
+  - [x] exact index (S3/Dynamo backends)
+  - [x] fulltext index (memory/Dynamo backends)
+  - [x] lossy index (S3/Dynamo backends)
+  - [x] rel indexing (inMemory/relationalDdb/handlers/types)
+  - [x] structured indexing (inMemory/structuredDdb/handlers)
+  - [x] handler + api facade examples
 - [ ] ORM
   - [ ] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
   - [x] drivers/common (Supported drivers + selection rules)

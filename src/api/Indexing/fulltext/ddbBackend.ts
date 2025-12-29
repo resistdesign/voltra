@@ -1,4 +1,11 @@
-import {tokenize, tokenizeLossyTrigrams} from '../tokenize.js';
+/**
+ * @packageDocumentation
+ *
+ * DynamoDB-backed fulltext indexing. Uses lossy and exact postings tables,
+ * optional document mirrors, and token stats to support fast search with
+ * cursor-based paging.
+ */
+import {tokenize, tokenizeLossyTrigrams} from "../tokenize.js";
 import type {DocId, DocTokenKey, DocumentRecord, TokenStats} from '../types.js';
 import type {SearchTrace} from '../trace.js';
 import {normalizeDocId} from '../docId.js';
@@ -176,6 +183,9 @@ function buildDocTokenItemKey(partitionKey: string, sortKey: string): string {
   return `${partitionKey}|${sortKey}`;
 }
 
+/**
+ * Write-only DynamoDB helper for indexing documents and token stats.
+ */
 export class FullTextDdbWriter {
   protected client: DynamoBatchWriter;
   protected lossyTableName: string;
@@ -472,6 +482,9 @@ export type LossyPostingsPageOptions = {
   limit?: number;
 };
 
+/**
+ * Read/write DynamoDB backend that adds query helpers to {@link FullTextDdbWriter}.
+ */
 export class FullTextDdbBackend extends FullTextDdbWriter {
   private readonly queryClient: DynamoQueryClient;
   private activeTrace: SearchTrace | undefined;

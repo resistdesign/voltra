@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * S3 helpers for storing lossy postings. Each token is stored as a JSON list
+ * of doc IDs under a deterministic key.
+ */
 import type { DocId } from "../types";
 
 export type LossyS3Pointer = {

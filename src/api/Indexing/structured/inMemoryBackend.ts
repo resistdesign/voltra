@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * In-memory backend that wires {@link StructuredInMemoryIndex} to the structured
+ * search interfaces and write contract.
+ */
 import type { DocId } from "../types";
 import type { StructuredSearchDependencies } from "./searchStructured";
 import type { StructuredWriter } from "./handlers";
@@ -21,6 +27,9 @@ const normalizeFields = (fields: StructuredDocFieldsRecord): StructuredDocFields
   return normalized;
 };
 
+/**
+ * In-memory structured backend for tests and local usage.
+ */
 export class StructuredInMemoryBackend implements StructuredSearchDependencies, StructuredWriter {
   private docFields = new Map<DocId, StructuredDocFieldsRecord>();
   private index = new StructuredInMemoryIndex();
