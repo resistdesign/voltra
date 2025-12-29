@@ -1,4 +1,4 @@
-import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from './types.js';
+import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
 
 type EdgeMetadata = Record<string, unknown>;
 

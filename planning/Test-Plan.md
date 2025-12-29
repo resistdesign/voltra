@@ -11,7 +11,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] exact
   - [x] fulltext
   - [x] lossy
-  - [ ] rel (inMemory/relationalDdb/handlers/types)
+  - [x] rel (inMemory/relationalDdb/handlers/types)
   - [x] structured
   - [ ] handler + api facade
 - [ ] ORM
