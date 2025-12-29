@@ -29,7 +29,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] ApplicationState
   - [x] ApplicationStateLoader
   - [x] Controller
-  - [ ] Debug
+  - [x] Debug
   - [ ] EasyLayout
   - [ ] Route
   - [ ] Service
