@@ -58,7 +58,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] TypeInfo/TypeMapping/TypeParsing/Utils
 
 ## iac
-- [ ] SimpleCFT
+- [x] SimpleCFT
 - [ ] packs
   - [ ] auth/user-management
   - [ ] build/utils
