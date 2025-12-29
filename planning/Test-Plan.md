@@ -42,7 +42,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] HelperTypes
 - [x] IdGeneration
 - [x] ItemRelationshipInfoTypes
-- [ ] ItemRelationships
+- [x] ItemRelationships
 - [ ] Logging
 - [ ] Routing
 - [ ] SearchTypes
