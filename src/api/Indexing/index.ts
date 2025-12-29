@@ -1,6 +1,24 @@
 /**
- * Indexing utilities and backends for exact, lossy, fulltext, relational, and structured search.
- * */
+ * @packageDocumentation
+ *
+ * Indexing utilities and backends for exact, lossy, fulltext, relational, and
+ * structured search.
+ *
+ * Concepts:
+ * - Doc IDs can be strings or numbers; they are normalized for cursor and key
+ *   encoding when persisted or paginated.
+ * - Cursors are URL-safe tokens that encode paging state (lossy/exact/structured/rel).
+ * - Tokenization helpers normalize text for exact tokens or lossy trigrams.
+ * - Search traces capture metrics (token counts, batch calls, etc.) for observability.
+ *
+ * Quick usage:
+ * ```ts
+ * import { indexDocument, searchLossy } from "./Indexing";
+ *
+ * await indexDocument({ backend, indexField: "title", docId: "doc-1", text: "Hello world" });
+ * const page = await searchLossy({ backend, indexField: "title", query: "Hello", limit: 10 });
+ * ```
+ */
 export * from './api.js';
 export * from './cursor.js';
 export * from './exact/exactDdb.js';

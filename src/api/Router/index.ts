@@ -1,3 +1,29 @@
+/**
+ * @packageDocumentation
+ *
+ * Minimal Cloud Function routing helpers. Compose a {@link RouteMap}, wire in
+ * auth via {@link getRouteIsAuthorized}, apply CORS helpers, and dispatch with
+ * {@link handleCloudFunctionEvent}. AWS event normalization is available under
+ * {@link AWS}.
+ *
+ * Example wiring:
+ * ```ts
+ * import { AWS, addRoutesToRouteMap, handleCloudFunctionEvent } from "./Router";
+ * import type { RouteMap } from "./Router/Types";
+ *
+ * const routes: RouteMap = addRoutesToRouteMap({}, [
+ *   { path: "status", authConfig: { public: true }, handler: () => "ok" },
+ * ]);
+ *
+ * export const handler = (event: unknown) =>
+ *   handleCloudFunctionEvent(
+ *     event,
+ *     AWS.normalizeCloudFunctionEvent,
+ *     routes,
+ *     ["https://example.com"],
+ *   );
+ * ```
+ */
 import {
   CloudFunctionEventRouter,
   CloudFunctionEventTransformer,

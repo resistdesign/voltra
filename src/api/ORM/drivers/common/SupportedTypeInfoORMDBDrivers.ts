@@ -1,3 +1,13 @@
+/**
+ * @packageDocumentation
+ *
+ * Registry of supported Type Info ORM drivers and their selection guidance.
+ *
+ * Selection notes:
+ * - DynamoDB is the default for production item storage with predictable scale.
+ * - In-memory drivers are best for tests and ephemeral local workflows.
+ * - S3 file drivers are intended for blob/file persistence with key-based access.
+ */
 import { SupportedDataItemDBDriverEntry } from "./Types";
 import { DynamoDBSupportedDataItemDBDriverEntry } from "../DynamoDBDataItemDBDriver";
 import { InMemorySupportedDataItemDBDriverEntry } from "../InMemoryDataItemDBDriver";

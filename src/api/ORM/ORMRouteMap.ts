@@ -1,3 +1,19 @@
+/**
+ * @packageDocumentation
+ *
+ * Route map helpers that expose Type Info ORM operations over the Router layer.
+ * Use {@link getTypeInfoORMRouteMap} to bind ORM methods to route paths, with
+ * optional DAC enforcement and shared auth configuration.
+ *
+ * Example wiring:
+ * ```ts
+ * import { getTypeInfoORMRouteMap } from "./ORMRouteMap";
+ * import { addRouteMapToRouteMap } from "../Router";
+ *
+ * const ormRoutes = getTypeInfoORMRouteMap({ typeInfoMap, getDriver });
+ * const routeMap = addRouteMapToRouteMap({}, ormRoutes, "orm");
+ * ```
+ */
 import {
   BaseTypeInfoORMServiceConfig,
   TypeInfoORMDACConfig,
@@ -43,7 +59,11 @@ export const TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP: Record<
 
 /**
  * Get a route map for a Type Info ORM service.
- * */
+ *
+ * When DAC is enabled, `getAccessingRole` is required so each request can
+ * resolve the accessing {@link DACRole}. If omitted, the route map throws
+ * {@link TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER}.
+ */
 export const getTypeInfoORMRouteMap = (
   config: BaseTypeInfoORMServiceConfig,
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
