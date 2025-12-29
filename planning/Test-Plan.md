@@ -51,7 +51,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] StringTransformers
 - [x] Testing (Vest helpers)
 - [x] TypeInfoDataItemUtils
-- [ ] TypeInfoORM
+- [x] TypeInfoORM
 - [ ] TypeParsing
   - [ ] ParsingUtils
   - [ ] Validation
