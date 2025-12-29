@@ -1,0 +1,66 @@
+{
+  "file": "./TypeParsing.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeParsingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "mapKeys": [
+          "Book",
+          "ExcludedBook",
+          "Mixed",
+          "OmittedBook",
+          "Person",
+          "PickedBook"
+        ],
+        "bookPrimaryField": "id",
+        "bookFields": [
+          "id",
+          "title",
+          "rating",
+          "tags",
+          "author"
+        ],
+        "bookTags": {
+          "label": "Book",
+          "persisted": true
+        },
+        "bookRatingOptions": [
+          1,
+          2
+        ],
+        "pickedFields": [
+          "id",
+          "rating"
+        ],
+        "omittedFields": [
+          "id",
+          "title",
+          "rating",
+          "author"
+        ],
+        "mixedUnionFieldSets": [
+          [
+            "id",
+            "title",
+            "rating",
+            "tags",
+            "author"
+          ],
+          [
+            "name"
+          ]
+        ],
+        "mixedFields": [
+          "author",
+          "id",
+          "name",
+          "rating",
+          "tags",
+          "title"
+        ]
+      }
+    }
+  ]
+}
