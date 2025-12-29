@@ -66,6 +66,7 @@ Legend: [ ] todo, [~] in progress, [x] done
   - [x] build/utils
   - [x] cdn
   - [ ] cloud-function
+  - [x] cloud-function
   - [ ] database
   - [ ] dns
   - [ ] file-storage
