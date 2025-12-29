@@ -1,3 +1,10 @@
+/**
+ * @packageDocumentation
+ *
+ * Fluent builder for CloudFormation templates. Use {@link SimpleCFT} to apply
+ * packs, patches, and parameters, then read the resulting `template` or render
+ * it as JSON/YAML.
+ */
 import { CloudFormationTemplate } from "./types/IaCTypes";
 import {
   addParameter,
@@ -18,7 +25,23 @@ export type SimpleCFTModification = (simpleCFT: SimpleCFT) => void;
  * The basis for your stack template.
  * Apply packs, patches, parameters and parameter groups.
  * Access the `template` property for the resulting CloudFormation template.
- * */
+ *
+ * Example:
+ * ```ts
+ * import { SimpleCFT } from "./SimpleCFT";
+ *
+ * const template = new SimpleCFT()
+ *   .addParameter({
+ *     Group: "App",
+ *     ParameterId: "AppName",
+ *     Label: "App Name",
+ *     Parameter: { Type: "String", Default: "voltra" },
+ *   })
+ *   .patch({ Description: "My stack" });
+ *
+ * console.log(template.toString());
+ * ```
+ */
 export class SimpleCFT {
   constructor(
     public template: CloudFormationTemplate = {
