@@ -18,6 +18,8 @@ import YAML from "yaml";
 
 /**
  * A function used to apply a modification to a SimpleCFT instance.
+ *
+ * @param simpleCFT - SimpleCFT instance to modify.
  * */
 export type SimpleCFTModification = (simpleCFT: SimpleCFT) => void;
 
@@ -43,6 +45,11 @@ export type SimpleCFTModification = (simpleCFT: SimpleCFT) => void;
  * ```
  */
 export class SimpleCFT {
+  /**
+   * Create a SimpleCFT template wrapper.
+   *
+   * @param template - Initial CloudFormation template.
+   */
   constructor(
     public template: CloudFormationTemplate = {
       AWSTemplateFormatVersion: "2010-09-09",
@@ -64,6 +71,8 @@ export class SimpleCFT {
 
   /**
    * Apply a patch to the stack template.
+   *
+   * @param patch - Template patch to merge.
    * */
   public patch = (patch: Partial<CloudFormationTemplate>) => {
     this.template = patchTemplate(patch, this.template);
@@ -73,6 +82,8 @@ export class SimpleCFT {
 
   /**
    * Add a stack parameter including its descriptive info and an optional parameter group.
+   *
+   * @param parameter - Parameter definition and metadata.
    * */
   public addParameter = (parameter: ParameterInfo) => {
     this.template = addParameter(parameter, this.template);
@@ -82,6 +93,8 @@ export class SimpleCFT {
 
   /**
    * Add a group of stack parameters including their descriptive info and an optional parameter group.
+   *
+   * @param group - Parameter group definition.
    * */
   public addParameterGroup = ({ Label: Group, Parameters }: ParameterGroup) => {
     const parameterIds = Object.keys(Parameters);
@@ -103,6 +116,8 @@ export class SimpleCFT {
 
   /**
    * Use a modification to dynamically apply various changes at once.
+   *
+   * @param modification - Modification callback to apply.
    * */
   public modify = (modification: SimpleCFTModification) => {
     modification(this);
@@ -112,16 +127,22 @@ export class SimpleCFT {
 
   /**
    * Convert the stack template to a string.
+   *
+   * @returns JSON string representation of the template.
    * */
   public toString = () => JSON.stringify(this.template, null, 2);
 
   /**
    * Convert the stack template to a JSON object.
+   *
+   * @returns Template JSON object.
    * */
   public toJSON = () => this.template;
 
   /**
    * Convert the stack template to a YAML string.
+   *
+   * @returns YAML string representation of the template.
    * */
   public toYAML = () =>
     YAML.stringify(this.template, {
