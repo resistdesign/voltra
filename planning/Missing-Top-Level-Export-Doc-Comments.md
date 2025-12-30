@@ -57,19 +57,19 @@ Legend: [ ] todo, [x] done
 - [x] type `RelationalCursorState` (line 1)
 
 ## src/api/Indexing/rel/handlers.ts
-- [ ] type `EdgePutEvent` (line 50)
-- [ ] type `EdgeRemoveEvent` (line 61)
-- [ ] type `EdgeQueryEvent` (line 72)
-- [ ] type `RelationalHandlerEvent` (line 99)
-- [ ] type `RelationalHandlerDependencies` (line 104)
-- [ ] type `LambdaResponse` (line 111)
+- [x] type `EdgePutEvent` (line 50)
+- [x] type `EdgeRemoveEvent` (line 61)
+- [x] type `EdgeQueryEvent` (line 72)
+- [x] type `RelationalHandlerEvent` (line 99)
+- [x] type `RelationalHandlerDependencies` (line 104)
+- [x] type `LambdaResponse` (line 111)
 
 ## src/api/Indexing/rel/relationalDdb.ts
-- [ ] type `RelationEdgesDdbKey` (line 12)
-- [ ] type `RelationEdgesDdbItem` (line 23)
-- [ ] type `RelationEdgesQueryRequest` (line 97)
-- [ ] type `RelationEdgesQueryResult` (line 112)
-- [ ] type `RelationEdgesDdbDependencies` (line 123)
+- [x] type `RelationEdgesDdbKey` (line 12)
+- [x] type `RelationEdgesDdbItem` (line 23)
+- [x] type `RelationEdgesQueryRequest` (line 97)
+- [x] type `RelationEdgesQueryResult` (line 112)
+- [x] type `RelationEdgesDdbDependencies` (line 123)
 
 ## src/api/Indexing/rel/types.ts
 - [ ] type `EdgeKey` (line 11)
