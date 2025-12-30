@@ -15,9 +15,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
  * Access and track the loading of an application state value.
  * */
 export type ApplicationStateLoader = {
+  /**
+   * Whether the current request is in flight.
+   * */
   loading: boolean;
+  /**
+   * The most recent error, if any.
+   * */
   latestError: any;
+  /**
+   * Force a reload by invalidating the internal cache key.
+   * */
   invalidate: () => void;
+  /**
+   * Trigger a remote procedure call with the provided args.
+   *
+   * @param args - Arguments to send with the request.
+   * */
   makeRemoteProcedureCall: (...args: any[]) => Promise<void>;
 };
 
@@ -25,8 +39,17 @@ export type ApplicationStateLoader = {
  * The service, path and arguments to use for a remote procedure call.
  * */
 export type RemoteProcedureCall = {
+  /**
+   * Configuration for the target service endpoint.
+   * */
   serviceConfig: ServiceConfig;
+  /**
+   * Path to the RPC handler.
+   * */
   path: string;
+  /**
+   * Default args to send when the call auto-runs.
+   * */
   args?: any[];
 };
 
@@ -34,7 +57,13 @@ export type RemoteProcedureCall = {
  * The configuration for an application state loader.
  * */
 export type ApplicationStateLoaderConfig = {
+  /**
+   * Identifier for the value to update in application state.
+   * */
   identifier: ApplicationStateIdentifier;
+  /**
+   * RPC target configuration and arguments.
+   * */
   remoteProcedureCall: RemoteProcedureCall;
   /**
    * Clear the application state value on error.
@@ -44,6 +73,8 @@ export type ApplicationStateLoaderConfig = {
   resetOnError?: boolean;
   /**
    * Called each time the application state value has been loaded.
+   *
+   * @param success - Whether the request completed successfully.
    * */
   onLoadComplete?: (success: boolean) => void;
   /**
@@ -56,6 +87,9 @@ export type ApplicationStateLoaderConfig = {
 
 /**
  * Load, track and access an application state value.
+ *
+ * @param config - Loader configuration for state identifier and RPC details.
+ * @returns Loader controls and request state.
  * */
 export const useApplicationStateLoader = (
   config: ApplicationStateLoaderConfig,

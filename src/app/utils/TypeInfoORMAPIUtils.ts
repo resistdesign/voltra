@@ -14,10 +14,19 @@ import { getSimpleId } from "../../common/IdGeneration";
 
 type RequestMethod = (...args: any[]) => Promise<any>;
 
+/**
+ * Sync request handler that returns a request id.
+ *
+ * @param args - Arguments for the API method.
+ * @returns Request id for tracking.
+ * */
 export type SyncRequestHandler<ArgsType extends any[]> = (
   ...args: ArgsType
 ) => string;
 
+/**
+ * Synchronous wrapper API that returns a request id for each method.
+ * */
 export type TypeInfoORMServiceAPI = ExpandComplexType<{
   [K in keyof TypeInfoORMAPI]: TypeInfoORMAPI[K] extends (
     ...args: infer A
@@ -26,14 +35,32 @@ export type TypeInfoORMServiceAPI = ExpandComplexType<{
     : TypeInfoORMAPI[K];
 }>;
 
+/**
+ * Request state for a single TypeInfoORM API method.
+ * */
 export type BaseTypeInfoORMAPIRequestState = {
+  /**
+   * Whether the request is currently loading.
+   * */
   loading?: boolean;
+  /**
+   * Latest successful response data.
+   * */
   data?: any;
+  /**
+   * Latest request error.
+   * */
   error?: TypeInfoORMServiceError;
 };
 
+/**
+ * Request state plus tracking of active request ids.
+ * */
 export type TypeInfoORMAPIRequestState = ExpandComplexType<
   BaseTypeInfoORMAPIRequestState & {
+    /**
+     * Active request ids for this method.
+     * */
     activeRequests?: string[];
   }
 >;
@@ -48,11 +75,30 @@ export type TypeInfoORMAPIState = Partial<
   Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRequestState>
 >;
 
+/**
+ * Hook return shape for request state and wrapped API.
+ * */
 export type TypeInfoORMAPIController = {
+  /**
+   * Request state keyed by method name.
+   * */
   state: TypeInfoORMAPIState;
+  /**
+   * Wrapped API that returns request ids.
+   * */
   api: TypeInfoORMServiceAPI;
 };
 
+/**
+ * Execute a request and emit request state changes.
+ *
+ * @param requestId - Unique id for this request.
+ * @param args - Arguments to pass to the API method.
+ * @param typeInfoORMAPI - API instance to call.
+ * @param methodName - Method name to invoke.
+ * @param onRequestStateChange - Handler for request state updates.
+ * @returns Promise resolved when request state is updated.
+ * */
 export const handleRequest = async (
   requestId: string,
   args: any[],
@@ -81,6 +127,14 @@ export const handleRequest = async (
   }
 };
 
+/**
+ * Create a sync handler that dispatches async requests.
+ *
+ * @param typeInfoORMAPI - API instance to call.
+ * @param methodName - Method name to invoke.
+ * @param onRequestStateChange - Handler for request state updates.
+ * @returns Sync handler that returns a request id.
+ * */
 export const requestHandlerFactory =
   (
     typeInfoORMAPI: TypeInfoORMAPI,
@@ -101,6 +155,12 @@ export const requestHandlerFactory =
     return requestId;
   };
 
+/**
+ * Wrap a TypeInfoORM API instance with request tracking state.
+ *
+ * @param typeInfoORMAPI - API instance to wrap.
+ * @returns Controller with request state and wrapped API methods.
+ * */
 export const useTypeInfoORMAPI = (
   typeInfoORMAPI: TypeInfoORMAPI,
 ): TypeInfoORMAPIController => {

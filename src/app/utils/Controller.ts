@@ -16,6 +16,12 @@ const getKeyValueWithoutError = (obj: any, key: string | number) => {
 
 /**
  * Safely access and update a value in a parent object by its key.
+ *
+ * @param parentValue - Parent object or array that owns the value.
+ * @param key - Object key or array index to access.
+ * @param onParentValueChange - Callback invoked with the updated parent value.
+ * @param isArrayIndex - Whether the key refers to an array index.
+ * @returns Tuple of current value and change handler.
  * */
 export const useController = (
   parentValue: any,
