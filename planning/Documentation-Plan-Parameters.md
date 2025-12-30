@@ -131,7 +131,7 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/TypeParsing/ParsingUtils/getTypeKeyword.ts`
 - [x] `src/common/TypeParsing/ParsingUtils/getUnionOrIntersectionTypeInfo.ts`
 - [x] `src/common/TypeParsing/ParsingUtils/getUnionOrLiteralStringValues.ts`
-- [ ] `src/common/index.ts`
+- [x] `src/common/index.ts`
 
 ## iac
 - [ ] `src/iac/SimpleCFT.ts`
