@@ -1,8 +1,10 @@
 import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
+const loadRouteModule = async () => {
+  const moduleUrl = new URL("./Route.tsx", import.meta.url);
+  moduleUrl.search = `?t=${Date.now()}`;
+  return import(moduleUrl.href);
+};
 
 type WindowListenerMap = Record<string, (event: any) => void>;
 
@@ -65,9 +67,7 @@ export const runRouteScenario = async () => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const routeModule = require("./Route");
-  const { Route, useRouteContext } = routeModule;
+  const { Route, useRouteContext } = await loadRouteModule();
 
   const ContextProbe = () => {
     const context = useRouteContext();

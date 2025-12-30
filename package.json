@@ -47,8 +47,8 @@
   ],
   "scripts": {
     "build": "tsup && yarn prep-dist",
-    "test": "ts-node src/common/Testing/CLI.ts \"./src/**/*.spec.json\"",
-    "test:gen": "ts-node src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\"",
+    "test": "tsx src/common/Testing/CLI.ts \"./src/**/*.spec.json\"",
+    "test:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\"",
     "test:consumer": "node ./scripts/consumer-smoke.mjs",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
@@ -56,10 +56,10 @@
     "prep-dist": "node ./scripts/prep-dist.mjs",
     "site:build:app": "astro build && yarn finalize-site",
     "site:build:api": "node ./site/build-api.mjs",
-    "site:build:iac": "ts-node ./site/iac/index.ts",
+    "site:build:iac": "tsx ./site/iac/index.ts",
     "start": "astro dev --host docs-local.demo.voltra.app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/",
-    "iac:types:gen": "ts-node ./src/iac/types/generate.ts"
+    "iac:types:gen": "tsx ./src/iac/types/generate.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.490.0",
@@ -76,13 +76,9 @@
     "react-ace": "^10.1.0",
     "react-dom": "^18.3.1",
     "styled-components": "^6.1.8",
-    "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "uuid": "^11.0.3",
     "yaml": "^2.3.4"
-  },
-  "ts-node": {
-    "esm": true
   },
   "devDependencies": {
     "@astrojs/react": "^4.3.1",
@@ -100,6 +96,7 @@
     "prettier": "^3.6.2",
     "process": "^0.11.10",
     "svgo": "^3",
+    "tsx": "^4.20.5",
     "tsup": "^8.5.0",
     "ts-morph": "^24.0.0",
     "typedoc": "^0.25.8",
