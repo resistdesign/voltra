@@ -39,6 +39,7 @@
 - Maintain a live checklist while working; update it as each item is completed so progress is visible and verifiable.
 - Only mark an item `[x]` when it is fully complete (all required edits done and, when applicable, tests or verification steps run).
 - When all sub-items in a parent checklist section are marked `[x]`, mark the parent item `[x]` as well to reflect completion of the whole area.
+- For checklist-driven tasks, always update the relevant planning document(s) in the same response before declaring completion.
 - Keep repo-wide rules in this file, and put effort-specific guidance in the relevant planning document.
 - If a task cannot be completed in one pass, mark it `[~]` and explicitly list what remains.
 - Provide concrete evidence of progress when asked (e.g., `git diff --stat`, specific files edited, or test outputs).
