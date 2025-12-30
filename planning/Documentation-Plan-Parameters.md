@@ -98,10 +98,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/Logging/Utils.ts`
 - [x] `src/common/Logging/index.ts`
 - [x] `src/common/Routing.ts`
-- [ ] `src/common/SearchTypes.ts`
-- [ ] `src/common/SearchUtils.ts`
-- [ ] `src/common/SearchValidation.ts`
-- [ ] `src/common/StringTransformers.ts`
+- [x] `src/common/SearchTypes.ts`
+- [x] `src/common/SearchUtils.ts`
+- [x] `src/common/SearchValidation.ts`
+- [x] `src/common/StringTransformers.ts`
 - [ ] `src/common/Testing/CLI.ts`
 - [ ] `src/common/Testing/Types.ts`
 - [ ] `src/common/Testing/Utils.ts`

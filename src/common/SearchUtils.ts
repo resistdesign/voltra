@@ -21,8 +21,17 @@ import {
 export const COMPARATORS: Record<
   ComparisonOperators,
   (
+    /**
+     * Criterion value to compare against.
+     * */
     criterionValue: any,
+    /**
+     * Criterion options for operators like IN/BETWEEN.
+     * */
     criterionValueOptions: any[] | undefined,
+    /**
+     * Field value from the item.
+     * */
     fieldValue: any,
   ) => boolean
 > = {
@@ -150,6 +159,10 @@ export const COMPARATORS: Record<
 
 /**
  * Compare a field criterion to a field value.
+ *
+ * @param fieldCriterion - Criterion to compare.
+ * @param fieldValue - Field value to test.
+ * @returns Whether the criterion matches the field value.
  * */
 export const compare = (
   fieldCriterion: FieldCriterion,
@@ -171,6 +184,10 @@ export const compare = (
 
 /**
  * Compare a field criterion to an array of field values.
+ *
+ * @param fieldCriterion - Criterion to compare.
+ * @param fieldValue - Array field value to test.
+ * @returns Whether the criterion matches the field value array.
  * */
 export const compareArray = (
   fieldCriterion: FieldCriterion,
@@ -192,6 +209,12 @@ export const compareArray = (
 
 /**
  * Get the filtered data items based on the search criteria.
+ *
+ * @param searchCriteria - Criteria to apply.
+ * @param items - Items to filter.
+ * @param typeInfoName - Optional type name for field metadata.
+ * @param typeInfoMap - Optional type info map for field metadata.
+ * @returns Filtered items that match the criteria.
  * */
 export const getFilterTypeInfoDataItemsBySearchCriteria = (
   searchCriteria: SearchCriteria,
@@ -250,6 +273,10 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
 
 /**
  * Get the sorted data items based on the given sort fields.
+ *
+ * @param sortFields - Sort field configuration.
+ * @param items - Items to sort.
+ * @returns Sorted items array.
  * */
 export const getSortedItems = (
   sortFields: SortField[] = [],
