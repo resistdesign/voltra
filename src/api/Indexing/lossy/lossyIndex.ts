@@ -7,6 +7,9 @@
 import type { DocId } from "../types";
 import { compareDocId } from "../docId";
 
+/**
+ * Paging options for lossy postings queries.
+ */
 export type LossyQueryOptions = {
   /**
    * Maximum number of postings to return.
@@ -18,6 +21,9 @@ export type LossyQueryOptions = {
   lastDocId?: DocId;
 };
 
+/**
+ * Results for lossy postings queries.
+ */
 export type LossyQueryResult = {
   /**
    * Document ids for the token postings.
@@ -90,6 +96,9 @@ function findStartIndex(values: DocId[], lastDocId?: DocId): number {
   return low;
 }
 
+/**
+ * In-memory lossy index for token postings.
+ */
 export class LossyIndex {
   private postings = new Map<string, DocId[]>();
 

@@ -18,6 +18,9 @@ import type {
   TokenStats,
 } from "../types";
 
+/**
+ * In-memory backend combining lossy and exact indexes.
+ */
 export class FullTextMemoryBackend
   implements IndexReader, IndexWriter, LossyPagingReader, DocTokenBatchReader
 {
