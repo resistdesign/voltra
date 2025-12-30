@@ -75,17 +75,17 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/ORM/drivers/index.ts`
 
 ## app
-- [ ] `src/app/index.ts`
-- [ ] `src/app/utils/ApplicationState.tsx`
-- [ ] `src/app/utils/ApplicationStateLoader.tsx`
-- [ ] `src/app/utils/Controller.ts`
-- [ ] `src/app/utils/Debug.ts`
-- [ ] `src/app/utils/EasyLayout.tsx`
-- [ ] `src/app/utils/Route.tsx`
-- [ ] `src/app/utils/Service.ts`
-- [ ] `src/app/utils/TypeInfoORMAPIUtils.ts`
-- [ ] `src/app/utils/TypeInfoORMClient.ts`
-- [ ] `src/app/utils/index.ts`
+- [x] `src/app/index.ts`
+- [x] `src/app/utils/ApplicationState.tsx`
+- [x] `src/app/utils/ApplicationStateLoader.tsx`
+- [x] `src/app/utils/Controller.ts`
+- [x] `src/app/utils/Debug.ts`
+- [x] `src/app/utils/EasyLayout.tsx`
+- [x] `src/app/utils/Route.tsx`
+- [x] `src/app/utils/Service.ts`
+- [x] `src/app/utils/TypeInfoORMAPIUtils.ts`
+- [x] `src/app/utils/TypeInfoORMClient.ts`
+- [x] `src/app/utils/index.ts`
 
 ## common
 - [ ] `src/common/CommandLine/collectRequiredEnvironmentVariables.ts`
