@@ -7,9 +7,21 @@ import { ExpandComplexType } from "./HelperTypes";
  * The keys for item relationship info.
  * */
 export enum ItemRelationshipInfoKeys {
+  /**
+   * Relationship origin type name.
+   * */
   fromTypeName = "fromTypeName",
+  /**
+   * Relationship origin field name.
+   * */
   fromTypeFieldName = "fromTypeFieldName",
+  /**
+   * Relationship origin primary field value.
+   * */
   fromTypePrimaryFieldValue = "fromTypePrimaryFieldValue",
+  /**
+   * Relationship destination primary field value.
+   * */
   toTypePrimaryFieldValue = "toTypePrimaryFieldValue",
 }
 
@@ -17,6 +29,9 @@ export enum ItemRelationshipInfoKeys {
  * The identifying keys for item relationship info.
  * */
 export enum ItemRelationshipInfoIdentifyingKeys {
+  /**
+   * Identifier value for a relationship item.
+   * */
   id = "id",
 }
 

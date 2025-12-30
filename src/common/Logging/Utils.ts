@@ -10,6 +10,12 @@ export enum LOGGING_MESSAGES {
 
 /**
  * Make a function call and log input/output/errors when enabled.
+ *
+ * @param label - Label to include in logs.
+ * @param args - Arguments passed to the function.
+ * @param functionRef - Function to execute.
+ * @param enabled - Whether to emit logs.
+ * @returns The function result.
  */
 export const logFunctionCall = async (
   label: string,
