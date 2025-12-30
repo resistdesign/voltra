@@ -5,18 +5,19 @@ Goal: Add JSDoc that documents every parameter of every export (functions, class
 Notes
 - Documentation is JSDoc in `src/**` and is rendered via TypeDoc (`yarn doc`). No manual API pages are authored.
 - Cover constructor params, method params, callbacks, option objects, exported types, and all fields in those types.
+- Document return values for all exported functions and methods.
 - Generated IaC types should be updated via their generator scripts, not by hand.
 
 Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
 - [x] `src/api/DataAccessControl.ts`
-- [ ] `src/api/index.ts`
-- [ ] `src/api/Router/AWS.ts`
-- [ ] `src/api/Router/Auth.ts`
-- [ ] `src/api/Router/CORS.ts`
-- [ ] `src/api/Router/Types.ts`
-- [ ] `src/api/Router/index.ts`
+- [x] `src/api/index.ts`
+- [x] `src/api/Router/AWS.ts`
+- [x] `src/api/Router/Auth.ts`
+- [x] `src/api/Router/CORS.ts`
+- [x] `src/api/Router/Types.ts`
+- [x] `src/api/Router/index.ts`
 - [ ] `src/api/Indexing/api.ts`
 - [ ] `src/api/Indexing/cursor.ts`
 - [ ] `src/api/Indexing/docId.ts`

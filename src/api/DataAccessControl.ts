@@ -130,6 +130,7 @@ export const WILDCARD_SIGNIFIER_PROTOTYPE: Record<string, string> = {
 
 /**
  * Check if a given DAC path part value is a DAC wildcard signifier.
+ * @returns True when the value matches the wildcard signifier prototype.
  * */
 export const getValueIsWildcardSignifier = (
   /**
@@ -156,6 +157,7 @@ export const getValueIsWildcardSignifier = (
  * The DAC path can include wildcard signifier objects at
  * various indices in order to facilitate dynamic matches
  * and grouping by common resource aspects.
+ * @returns Prefix and exact match flags for the comparison.
  * */
 export const getDACPathsMatch = (
   /**
@@ -203,6 +205,7 @@ export const getDACPathsMatch = (
 
 /**
  * Get the flattened constraints of a DAC role.
+ * @returns Flattened constraint list including child roles.
  * */
 export const getFlattenedDACConstraints = (
   /**
@@ -246,6 +249,7 @@ export const getFlattenedDACConstraints = (
 
 /**
  * Get the access to a given resource for a given DAC role.
+ * @returns Allow/deny summary for the resource path.
  * */
 export const getResourceAccessByDACRole = (
   /**
@@ -322,6 +326,7 @@ export const getResourceAccessByDACRole = (
 
 /**
  * Merge multiple DAC access results.
+ * @returns Combined allow/deny result.
  * */
 export const mergeDACAccessResults = (
   /**
