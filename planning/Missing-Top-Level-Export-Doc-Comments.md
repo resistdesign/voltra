@@ -72,23 +72,23 @@ Legend: [ ] todo, [x] done
 - [x] type `RelationEdgesDdbDependencies` (line 123)
 
 ## src/api/Indexing/rel/types.ts
-- [ ] type `EdgeKey` (line 11)
-- [ ] type `Edge` (line 30)
-- [ ] type `EdgePage` (line 41)
-- [ ] type `RelationalQueryOptions` (line 52)
+- [x] type `EdgeKey` (line 11)
+- [x] type `Edge` (line 30)
+- [x] type `EdgePage` (line 41)
+- [x] type `RelationalQueryOptions` (line 52)
 
 ## src/api/Indexing/structured/cursor.ts
-- [ ] type `StructuredCursorState` (line 3)
+- [x] type `StructuredCursorState` (line 3)
 
 ## src/api/Indexing/structured/handlers.ts
-- [ ] type `StructuredDocumentRecord` (line 14)
-- [ ] type `StructuredIndexDocumentEvent` (line 25)
-- [ ] type `StructuredSearchEvent` (line 36)
-- [ ] type `StructuredHandlerEvent` (line 55)
-- [ ] type `StructuredWriter` (line 57)
-- [ ] type `StructuredReader` (line 67)
-- [ ] type `StructuredHandlerDependencies` (line 69)
-- [ ] type `LambdaResponse` (line 80)
+- [x] type `StructuredDocumentRecord` (line 14)
+- [x] type `StructuredIndexDocumentEvent` (line 25)
+- [x] type `StructuredSearchEvent` (line 36)
+- [x] type `StructuredHandlerEvent` (line 55)
+- [x] type `StructuredWriter` (line 57)
+- [x] type `StructuredReader` (line 67)
+- [x] type `StructuredHandlerDependencies` (line 69)
+- [x] type `LambdaResponse` (line 80)
 
 ## src/api/Indexing/structured/searchStructured.ts
 - [ ] type `StructuredSearchDependencies` (line 41)
