@@ -91,26 +91,26 @@ Legend: [ ] todo, [x] done
 - [x] type `LambdaResponse` (line 80)
 
 ## src/api/Indexing/structured/searchStructured.ts
-- [ ] type `StructuredSearchDependencies` (line 41)
+- [x] type `StructuredSearchDependencies` (line 41)
 
 ## src/api/Indexing/structured/structuredDdb.ts
-- [ ] type `StructuredTermIndexKey` (line 19)
-- [ ] type `StructuredTermIndexItem` (line 30)
-- [ ] type `StructuredRangeIndexKey` (line 45)
-- [ ] type `StructuredRangeIndexItem` (line 56)
-- [ ] type `StructuredDocFieldsKey` (line 67)
-- [ ] type `StructuredDocFieldsItem` (line 74)
+- [x] type `StructuredTermIndexKey` (line 19)
+- [x] type `StructuredTermIndexItem` (line 30)
+- [x] type `StructuredRangeIndexKey` (line 45)
+- [x] type `StructuredRangeIndexItem` (line 56)
+- [x] type `StructuredDocFieldsKey` (line 67)
+- [x] type `StructuredDocFieldsItem` (line 74)
 
 ## src/api/Indexing/structured/structuredWriter.ts
-- [ ] type `StructuredWriterDependencies` (line 15)
-- [ ] class `StructuredDdbWriter` (line 147)
+- [x] type `StructuredWriterDependencies` (line 15)
+- [x] class `StructuredDdbWriter` (line 147)
 
 ## src/api/Indexing/structured/types.ts
-- [ ] type `StructuredTermWhere` (line 13)
-- [ ] type `StructuredRangeWhere` (line 32)
-- [ ] type `Where` (line 100)
-- [ ] type `StructuredQueryOptions` (line 102)
-- [ ] type `CandidatePage` (line 113)
+- [x] type `StructuredTermWhere` (line 13)
+- [x] type `StructuredRangeWhere` (line 32)
+- [x] type `Where` (line 100)
+- [x] type `StructuredQueryOptions` (line 102)
+- [x] type `CandidatePage` (line 113)
 
 ## src/api/ORM/TypeInfoORMService.ts
 - [ ] type `TypeInfoORMIndexingConfig` (line 168)
