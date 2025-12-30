@@ -113,9 +113,9 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/TypeParsing/TypeInfo.ts`
 - [x] `src/common/TypeParsing/TypeMapping.ts`
 - [x] `src/common/TypeParsing/TypeParsing.ts`
-- [ ] `src/common/TypeParsing/Utils.ts`
-- [ ] `src/common/TypeParsing/Validation.ts`
-- [ ] `src/common/TypeParsing/index.ts`
+- [x] `src/common/TypeParsing/Utils.ts`
+- [x] `src/common/TypeParsing/Validation.ts`
+- [x] `src/common/TypeParsing/index.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/Constants.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/checkType.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/checkUnionType.ts`

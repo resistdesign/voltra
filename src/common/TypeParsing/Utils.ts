@@ -5,6 +5,11 @@ import { TypeInfo, TypeInfoDataItem } from "./TypeInfo";
 
 /**
  * Remove all fields, from a list of selected fields, that are not in the type info.
+ *
+ * @typeParam ItemType - Data item shape for field selection.
+ * @param typeInfo - Type info describing available fields.
+ * @param selectedFields - Fields to filter.
+ * @returns Filtered list of selected fields.
  * */
 export const removeNonexistentFieldsFromSelectedFields = <
   ItemType extends TypeInfoDataItem,
@@ -30,6 +35,11 @@ export const removeNonexistentFieldsFromSelectedFields = <
 
 /**
  * Remove all fields, from a list of selected fields, that are a type reference.
+ *
+ * @typeParam ItemType - Data item shape for field selection.
+ * @param typeInfo - Type info describing available fields.
+ * @param selectedFields - Fields to filter.
+ * @returns Filtered list of selected fields.
  * */
 export const removeTypeReferenceFieldsFromSelectedFields = <ItemType>(
   typeInfo: TypeInfo = {},
@@ -58,6 +68,10 @@ export const removeTypeReferenceFieldsFromSelectedFields = <ItemType>(
 
 /**
  * Remove all fields, from a data item, that are a type reference.
+ *
+ * @param typeInfo - Type info describing available fields.
+ * @param dataItem - Data item to filter.
+ * @returns Filtered data item.
  * */
 export const removeTypeReferenceFieldsFromDataItem = (
   typeInfo: TypeInfo = {},
@@ -82,6 +96,10 @@ export const removeTypeReferenceFieldsFromDataItem = (
 
 /**
  * Remove all fields, from a data item, that are not in the type info.
+ *
+ * @param typeInfo - Type info describing available fields.
+ * @param dataItem - Data item to filter.
+ * @returns Filtered data item.
  * */
 export const removeNonexistentFieldsFromDataItem = (
   typeInfo: TypeInfo = {},
@@ -101,6 +119,11 @@ export const removeNonexistentFieldsFromDataItem = (
 
 /**
  * Remove all fields, from a data item, that are not selected.
+ *
+ * @typeParam ItemType - Data item shape for field selection.
+ * @param dataItem - Data item to filter.
+ * @param selectedFields - Fields to include.
+ * @returns Filtered data item.
  * */
 export const removeUnselectedFieldsFromDataItem = <
   ItemType extends TypeInfoDataItem,
