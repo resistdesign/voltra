@@ -47,6 +47,9 @@ type RelationalBackend<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
 };
 
+/**
+ * Event payload for inserting or updating an edge.
+ */
 export type EdgePutEvent<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   /**
    * Action discriminator for edge inserts.
@@ -58,6 +61,9 @@ export type EdgePutEvent<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   edge: Edge<TMetadata>;
 };
 
+/**
+ * Event payload for removing an edge.
+ */
 export type EdgeRemoveEvent = {
   /**
    * Action discriminator for edge removals.
@@ -69,6 +75,9 @@ export type EdgeRemoveEvent = {
   key: EdgeKey;
 };
 
+/**
+ * Event payload for querying edges.
+ */
 export type EdgeQueryEvent = {
   /**
    * Action discriminator for edge queries.
@@ -96,11 +105,17 @@ export type EdgeQueryEvent = {
   cursor?: string;
 };
 
+/**
+ * Union of relational handler event payloads.
+ */
 export type RelationalHandlerEvent<TMetadata extends EdgeMetadata = EdgeMetadata> =
   | EdgePutEvent<TMetadata>
   | EdgeRemoveEvent
   | EdgeQueryEvent;
 
+/**
+ * Dependencies for the relational handler.
+ */
 export type RelationalHandlerDependencies<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   /**
    * Relational backend implementation to execute operations.
@@ -108,6 +123,9 @@ export type RelationalHandlerDependencies<TMetadata extends EdgeMetadata = EdgeM
   backend: RelationalBackend<TMetadata>;
 };
 
+/**
+ * Lambda-style response payload.
+ */
 export type LambdaResponse = {
   /**
    * HTTP status code for the response.

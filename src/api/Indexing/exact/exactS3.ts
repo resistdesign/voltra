@@ -6,6 +6,9 @@
  */
 import type { DocId } from "../types";
 
+/**
+ * Location of an exact postings object in S3.
+ */
 export type ExactS3Pointer = {
   /**
    * Bucket name containing the exact postings object.

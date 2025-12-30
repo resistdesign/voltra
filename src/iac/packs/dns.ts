@@ -7,6 +7,9 @@ import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
+/**
+ * Configuration for the DNS record pack.
+ */
 export type AddDNSConfig = {
   /**
    * Resource id for the DNS record.

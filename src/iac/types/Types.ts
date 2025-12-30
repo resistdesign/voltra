@@ -20,6 +20,9 @@ export interface IDocumentable {
   Documentation?: string;
 }
 
+/**
+ * Attribute type descriptor from the CloudFormation spec.
+ */
 export type AttributeType = {
   /**
    * Primitive type name, when applicable.
@@ -43,6 +46,9 @@ export type AttributeType = {
   DuplicatesAllowed?: boolean;
 };
 
+/**
+ * Property descriptor including documentation and attribute details.
+ */
 export type PropertyDescriptor = IDocumentable &
   AttributeType & {
     /**
@@ -51,6 +57,9 @@ export type PropertyDescriptor = IDocumentable &
     Required?: boolean;
   };
 
+/**
+ * Property type with nested properties.
+ */
 export type PropertyType = PropertyDescriptor & {
   /**
    * Child properties for object types.
@@ -58,6 +67,9 @@ export type PropertyType = PropertyDescriptor & {
   Properties?: Record<string, PropertyDescriptor>;
 };
 
+/**
+ * Resource type descriptor from the CloudFormation spec.
+ */
 export type ResourceType = {
   /**
    * CloudFormation resource type name.
@@ -81,6 +93,9 @@ export type ResourceType = {
   Attributes?: Record<string, AttributeType>;
 };
 
+/**
+ * Full CloudFormation resource specification payload.
+ */
 export type CloudFormationResourceSpecification = {
   /**
    * Map of property types keyed by name.
@@ -96,6 +111,9 @@ export type CloudFormationResourceSpecification = {
   ResourceSpecificationVersion: `${number}.${number}.${number}`;
 };
 
+/**
+ * Namespace structure produced by the type generator.
+ */
 export type NamespaceStructure = {
   /**
    * Namespace path segments.

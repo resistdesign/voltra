@@ -5,6 +5,9 @@
  */
 import { createResourcePack } from "../utils";
 
+/**
+ * Configuration for the SSL certificate pack.
+ */
 export type AddSSLCertificateConfig = {
   /**
    * Certificate resource id.

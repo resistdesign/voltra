@@ -165,6 +165,9 @@ export type TypeInfoORMDACConfig = {
   getDACRoleById: (id: string) => DACRole;
 };
 
+/**
+ * Configuration for TypeInfoORM indexing integrations.
+ */
 export type TypeInfoORMIndexingConfig = {
   /**
    * Full text indexing configuration.

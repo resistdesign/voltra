@@ -11,6 +11,9 @@ import { AWS } from "../types/IaCTypes";
  */
 export const DEFAULT_BUILD_PIPELINE_REPO_PROVIDER = "GitHub";
 
+/**
+ * Source repository configuration for the build pipeline.
+ */
 export type BuildPipelineRepoConfig = {
   /**
    * CodePipeline provider (e.g., GitHub).
@@ -65,6 +68,9 @@ export type CodeBuildComputeType =
   | "BUILD_GENERAL1_XLARGE"
   | CustomCodeBuildString<string>;
 
+/**
+ * Configuration for the build pipeline pack.
+ */
 export type AddBuildPipelineConfig = {
   /**
    * Base id for created resources.

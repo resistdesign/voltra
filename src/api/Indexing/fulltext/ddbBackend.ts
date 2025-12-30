@@ -26,6 +26,9 @@ import {
 
 type AttributeMap = Record<string, unknown>;
 
+/**
+ * Input payload for DynamoDB batch write operations.
+ */
 export type BatchWriteItemInput = {
   /**
    * DynamoDB batch write request items by table name.
@@ -33,6 +36,9 @@ export type BatchWriteItemInput = {
   RequestItems: Record<string, WriteRequest[]>;
 };
 
+/**
+ * Output payload from DynamoDB batch write operations.
+ */
 export type BatchWriteItemOutput = {
   /**
    * Unprocessed write requests to retry.
@@ -40,6 +46,9 @@ export type BatchWriteItemOutput = {
   UnprocessedItems?: Record<string, WriteRequest[]>;
 };
 
+/**
+ * DynamoDB batch get keys and projection configuration.
+ */
 export type KeysAndAttributes = {
   /**
    * Keys to read in a batch get request.
@@ -51,6 +60,9 @@ export type KeysAndAttributes = {
   ProjectionExpression?: string;
 };
 
+/**
+ * Input payload for DynamoDB batch get operations.
+ */
 export type BatchGetItemInput = {
   /**
    * DynamoDB batch get request items by table name.
@@ -58,6 +70,9 @@ export type BatchGetItemInput = {
   RequestItems: Record<string, KeysAndAttributes>;
 };
 
+/**
+ * Output payload from DynamoDB batch get operations.
+ */
 export type BatchGetItemOutput = {
   /**
    * Response items keyed by table name.
@@ -69,6 +84,9 @@ export type BatchGetItemOutput = {
   UnprocessedKeys?: Record<string, KeysAndAttributes>;
 };
 
+/**
+ * Input payload for DynamoDB get item operations.
+ */
 export type GetItemInput = {
   /**
    * DynamoDB table name.
@@ -80,6 +98,9 @@ export type GetItemInput = {
   Key: AttributeMap;
 };
 
+/**
+ * Output payload from DynamoDB get item operations.
+ */
 export type GetItemOutput = {
   /**
    * Returned item attributes.
@@ -87,6 +108,9 @@ export type GetItemOutput = {
   Item?: AttributeMap;
 };
 
+/**
+ * DynamoDB batch write request entry.
+ */
 export type WriteRequest = {
   /**
    * Put request for an item.
@@ -98,6 +122,9 @@ export type WriteRequest = {
   DeleteRequest?: { Key: AttributeMap };
 };
 
+/**
+ * DynamoDB client interface for batch writes/reads and get operations.
+ */
 export type DynamoBatchWriter = {
   /**
    * Execute a DynamoDB batch write operation.
@@ -119,6 +146,9 @@ export type DynamoBatchWriter = {
   getItem(input: GetItemInput): Promise<GetItemOutput>;
 };
 
+/**
+ * Input payload for DynamoDB query operations.
+ */
 export type QueryInput = {
   /**
    * DynamoDB table name.
@@ -146,6 +176,9 @@ export type QueryInput = {
   Limit?: number;
 };
 
+/**
+ * Output payload from DynamoDB query operations.
+ */
 export type QueryOutput = {
   /**
    * Items returned by the query.
@@ -157,6 +190,9 @@ export type QueryOutput = {
   LastEvaluatedKey?: AttributeMap;
 };
 
+/**
+ * DynamoDB client interface with query support.
+ */
 export type DynamoQueryClient = DynamoBatchWriter & {
   /**
    * Execute a DynamoDB query operation.
@@ -166,6 +202,9 @@ export type DynamoQueryClient = DynamoBatchWriter & {
   query(input: QueryInput): Promise<QueryOutput>;
 };
 
+/**
+ * Configuration for the DynamoDB fulltext writer.
+ */
 export type FullTextDdbWriterConfig = {
   /**
    * DynamoDB client used for batch writes and gets.
@@ -586,6 +625,9 @@ export class FullTextDdbWriter {
   }
 }
 
+/**
+ * Configuration for the DynamoDB fulltext backend.
+ */
 export type FullTextDdbBackendConfig = FullTextDdbWriterConfig & {
   /**
    * DynamoDB client with query support.
@@ -593,6 +635,9 @@ export type FullTextDdbBackendConfig = FullTextDdbWriterConfig & {
   client: DynamoQueryClient;
 };
 
+/**
+ * Page of lossy postings results.
+ */
 export type LossyPostingsPage = {
   /**
    * Document ids in the page.
@@ -604,6 +649,9 @@ export type LossyPostingsPage = {
   lastEvaluatedDocId?: DocId;
 };
 
+/**
+ * Paging options for lossy postings queries.
+ */
 export type LossyPostingsPageOptions = {
   /**
    * Exclusive starting doc id for paging.

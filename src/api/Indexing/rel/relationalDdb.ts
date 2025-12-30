@@ -9,6 +9,9 @@ import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from 
 
 type EdgeMetadata = Record<string, unknown>;
 
+/**
+ * DynamoDB key shape for relation edges.
+ */
 export type RelationEdgesDdbKey = {
   /**
    * Partition key encoding entity/relation/direction.
@@ -20,6 +23,9 @@ export type RelationEdgesDdbKey = {
   otherId: string;
 };
 
+/**
+ * DynamoDB item shape for relation edges.
+ */
 export type RelationEdgesDdbItem<TMetadata extends EdgeMetadata = EdgeMetadata> = RelationEdgesDdbKey & {
   /**
    * Optional metadata stored with the edge.
@@ -94,6 +100,9 @@ export function buildRelationEdgeDdbItem<TMetadata extends EdgeMetadata>(
   };
 }
 
+/**
+ * Query request for relation edges.
+ */
 export type RelationEdgesQueryRequest = {
   /**
    * Partition key for the relation edge query.
@@ -109,6 +118,9 @@ export type RelationEdgesQueryRequest = {
   exclusiveStartKey?: RelationEdgesDdbKey;
 };
 
+/**
+ * Query results for relation edges.
+ */
 export type RelationEdgesQueryResult<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   /**
    * Returned items for the query.
@@ -120,6 +132,9 @@ export type RelationEdgesQueryResult<TMetadata extends EdgeMetadata = EdgeMetada
   lastEvaluatedKey?: RelationEdgesDdbKey;
 };
 
+/**
+ * DynamoDB dependencies required for relation edge storage.
+ */
 export type RelationEdgesDdbDependencies<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   /**
    * Batch put relation edge items.

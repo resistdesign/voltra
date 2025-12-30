@@ -6,6 +6,9 @@
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 
+/**
+ * Configuration for repository parameter pack.
+ */
 export type AddRepoConfig = {
   /**
    * Parameter name for repository owner.

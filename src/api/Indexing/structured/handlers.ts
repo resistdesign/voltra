@@ -11,6 +11,9 @@ import type { StructuredSearchDependencies } from './searchStructured.js';
 import type { StructuredDocFieldsRecord } from './structuredDdb.js';
 import type { StructuredQueryOptions, Where } from './types.js';
 
+/**
+ * Document payload for structured indexing.
+ */
 export type StructuredDocumentRecord = {
   /**
    * Document id for the structured record.
@@ -22,6 +25,9 @@ export type StructuredDocumentRecord = {
   fields: StructuredDocFieldsRecord;
 };
 
+/**
+ * Event payload for structured document indexing.
+ */
 export type StructuredIndexDocumentEvent = {
   /**
    * Action discriminator for indexing.
@@ -33,6 +39,9 @@ export type StructuredIndexDocumentEvent = {
   document: StructuredDocumentRecord;
 };
 
+/**
+ * Event payload for structured searches.
+ */
 export type StructuredSearchEvent = {
   /**
    * Action discriminator for structured search.
@@ -52,8 +61,14 @@ export type StructuredSearchEvent = {
   cursor?: string;
 };
 
+/**
+ * Union of structured handler events.
+ */
 export type StructuredHandlerEvent = StructuredIndexDocumentEvent | StructuredSearchEvent;
 
+/**
+ * Writer interface for structured indexing.
+ */
 export type StructuredWriter = {
   /**
    * Write structured fields for a document.
@@ -64,8 +79,14 @@ export type StructuredWriter = {
   write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void>;
 };
 
+/**
+ * Reader interface for structured searching.
+ */
 export type StructuredReader = StructuredSearchDependencies;
 
+/**
+ * Reader/writer dependencies for the structured handler.
+ */
 export type StructuredHandlerDependencies = {
   /**
    * Reader dependencies used for search.
@@ -77,6 +98,9 @@ export type StructuredHandlerDependencies = {
   writer: StructuredWriter;
 };
 
+/**
+ * Lambda-style response payload.
+ */
 export type LambdaResponse = {
   /**
    * HTTP status code for the response.

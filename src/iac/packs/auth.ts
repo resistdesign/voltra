@@ -8,6 +8,9 @@ import { addUserManagement } from "./auth/user-management";
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 
+/**
+ * Configuration for the auth pack.
+ */
 export type AddAuthConfig = {
   /**
    * Cognito user pool resource id.
@@ -68,6 +71,9 @@ export type AddAuthConfig = {
  *
  * @param config - Auth pack configuration.
  * */
+/**
+ * Add auth resources including user management and an admin group.
+ */
 export const addAuth = createResourcePack(
   ({
     userManagementId,
