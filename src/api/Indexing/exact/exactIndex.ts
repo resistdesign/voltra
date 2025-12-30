@@ -7,6 +7,9 @@
 import type { DocId } from "../types";
 import { compareDocId } from "../docId";
 
+/**
+ * Paging options for exact phrase verification.
+ */
 export type ExactQueryOptions = {
   /**
    * Maximum number of verified results to return.
@@ -18,6 +21,9 @@ export type ExactQueryOptions = {
   lastDocId?: DocId;
 };
 
+/**
+ * Results for exact phrase verification.
+ */
 export type ExactQueryResult = {
   /**
    * Verified document ids matching the phrase.
@@ -53,6 +59,9 @@ function findStartIndex(values: DocId[], lastDocId?: DocId): number {
   return low;
 }
 
+/**
+ * In-memory exact index for token positions and phrase checks.
+ */
 export class ExactIndex {
   private postings: TokenPostings = new Map();
 

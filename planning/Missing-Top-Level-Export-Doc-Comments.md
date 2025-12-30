@@ -9,34 +9,34 @@ Scope and exclusions:
 Legend: [ ] todo, [x] done
 
 ## src/api/Indexing/exact/exactDdb.ts
-- [ ] type `ExactDdbKey` (line 9)
-- [ ] type `ExactDdbItem` (line 24)
+- [x] type `ExactDdbKey` (line 9)
+- [x] type `ExactDdbItem` (line 24)
 
 ## src/api/Indexing/exact/exactIndex.ts
-- [ ] type `ExactQueryOptions` (line 10)
-- [ ] type `ExactQueryResult` (line 21)
-- [ ] class `ExactIndex` (line 56)
+- [x] type `ExactQueryOptions` (line 10)
+- [x] type `ExactQueryResult` (line 21)
+- [x] class `ExactIndex` (line 56)
 
 ## src/api/Indexing/exact/exactS3.ts
-- [ ] type `ExactS3Pointer` (line 9)
+- [x] type `ExactS3Pointer` (line 9)
 
 ## src/api/Indexing/fulltext/ddbBackend.ts
-- [ ] type `BatchWriteItemInput` (line 29)
-- [ ] type `BatchWriteItemOutput` (line 36)
-- [ ] type `KeysAndAttributes` (line 43)
-- [ ] type `BatchGetItemInput` (line 54)
-- [ ] type `BatchGetItemOutput` (line 61)
-- [ ] type `GetItemInput` (line 72)
-- [ ] type `GetItemOutput` (line 83)
-- [ ] type `WriteRequest` (line 90)
-- [ ] type `DynamoBatchWriter` (line 101)
-- [ ] type `QueryInput` (line 122)
-- [ ] type `QueryOutput` (line 149)
-- [ ] type `DynamoQueryClient` (line 160)
-- [ ] type `FullTextDdbWriterConfig` (line 169)
-- [ ] type `FullTextDdbBackendConfig` (line 589)
-- [ ] type `LossyPostingsPage` (line 596)
-- [ ] type `LossyPostingsPageOptions` (line 607)
+- [x] type `BatchWriteItemInput` (line 29)
+- [x] type `BatchWriteItemOutput` (line 36)
+- [x] type `KeysAndAttributes` (line 43)
+- [x] type `BatchGetItemInput` (line 54)
+- [x] type `BatchGetItemOutput` (line 61)
+- [x] type `GetItemInput` (line 72)
+- [x] type `GetItemOutput` (line 83)
+- [x] type `WriteRequest` (line 90)
+- [x] type `DynamoBatchWriter` (line 101)
+- [x] type `QueryInput` (line 122)
+- [x] type `QueryOutput` (line 149)
+- [x] type `DynamoQueryClient` (line 160)
+- [x] type `FullTextDdbWriterConfig` (line 169)
+- [x] type `FullTextDdbBackendConfig` (line 589)
+- [x] type `LossyPostingsPage` (line 596)
+- [x] type `LossyPostingsPageOptions` (line 607)
 
 ## src/api/Indexing/fulltext/memoryBackend.ts
 - [ ] class `FullTextMemoryBackend` (line 21)
@@ -208,4 +208,3 @@ Legend: [ ] todo, [x] done
 ## src/iac/utils/index.ts
 - [ ] type `ParameterInfo` (line 15)
 - [ ] type `ParameterGroup` (line 180)
-
