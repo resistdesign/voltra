@@ -1,3 +1,8 @@
+/**
+ * In-memory driver config (intentionally empty).
+ */
 export type InMemorySpecificConfig = {
-  // Intentionally empty: in-memory driver has no DB-specific configuration.
+  /**
+   * In-memory driver has no DB-specific configuration.
+   */
 };

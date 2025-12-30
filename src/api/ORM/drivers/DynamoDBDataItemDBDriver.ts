@@ -78,8 +78,17 @@ const DynamoDBLogicalOperatorMappings: Record<LogicalOperators, string> = {
 };
 
 type FilterExpressionOutput = {
+  /**
+   * Filter expression string for DynamoDB scans.
+   */
   FilterExpression?: string;
+  /**
+   * Attribute name mappings used in expressions.
+   */
   ExpressionAttributeNames?: Record<string, string>;
+  /**
+   * Attribute value mappings used in expressions.
+   */
   ExpressionAttributeValues?: Record<string, AttributeValue>;
 };
 
@@ -189,7 +198,13 @@ export class DynamoDBDataItemDBDriver<
 {
   protected dynamoDBClient: DynamoDBClient;
 
+  /**
+   * @param config Driver configuration including DynamoDB client settings.
+   */
   constructor(
+    /**
+     * Driver configuration including table name and DynamoDB config.
+     */
     protected config: DataItemDBDriverConfig<
       ItemType,
       UniquelyIdentifyingFieldName
@@ -204,8 +219,12 @@ export class DynamoDBDataItemDBDriver<
 
   /**
    * Create an item in the database.
+   * @returns Generated identifier for the created item.
    */
   public createItem = async (
+    /**
+     * New item payload without the identifying field.
+     */
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
     const {
@@ -230,9 +249,16 @@ export class DynamoDBDataItemDBDriver<
 
   /**
    * Read an item from the database.
+   * @returns Item payload (partial when selected fields are used).
    */
   public readItem = async (
+    /**
+     * Unique identifier value for the item.
+     */
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    /**
+     * Optional fields to select from the item.
+     */
     selectedFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
@@ -257,9 +283,16 @@ export class DynamoDBDataItemDBDriver<
 
   /**
    * Update an item in the database.
+   * @returns True when an item was updated.
    */
   public updateItem = async (
+    /**
+     * Unique identifier value for the item.
+     */
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    /**
+     * Partial update payload for the item.
+     */
     updatedItem: Partial<ItemType>,
   ): Promise<boolean> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
@@ -293,8 +326,12 @@ export class DynamoDBDataItemDBDriver<
 
   /**
    * Delete an item from the database.
+   * @returns True when an item was deleted.
    */
   public deleteItem = async (
+    /**
+     * Unique identifier value for the item.
+     */
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ): Promise<boolean> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
@@ -312,9 +349,16 @@ export class DynamoDBDataItemDBDriver<
 
   /**
    * List items from the database.
+   * @returns List results with items and cursor.
    */
   public listItems = async (
+    /**
+     * List configuration and criteria.
+     */
     config: ListItemsConfig,
+    /**
+     * Optional fields to select from each item.
+     */
     selectedFields?: (keyof ItemType)[],
   ): Promise<ListItemsResults<ItemType>> => {
     const { tableName } = this.config;
@@ -413,6 +457,10 @@ export class DynamoDBDataItemDBDriver<
  * */
 export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
   {
+    /**
+     * @param config Driver configuration.
+     * @returns DynamoDB-backed driver instance.
+     */
     factory: <
       ItemType extends Record<any, any>,
       UniquelyIdentifyingFieldName extends keyof ItemType,
@@ -421,6 +469,9 @@ export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
     ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
       return new DynamoDBDataItemDBDriver(config);
     },
+    /**
+     * @returns Type info pack for the DynamoDB-specific config.
+     */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
       const configTypesPath = Path.join(
         __dirname,

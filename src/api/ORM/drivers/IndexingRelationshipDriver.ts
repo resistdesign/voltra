@@ -17,13 +17,37 @@ import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "../../Inde
 type EdgeMetadata = Record<string, unknown>;
 
 export type RelationalBackend<TMetadata extends EdgeMetadata = EdgeMetadata> = {
+  /**
+   * Insert or update an edge.
+   * @param edge Edge to store.
+   * @returns Promise resolved once stored.
+   */
   putEdge(edge: Edge<TMetadata>): Promise<void> | void;
+  /**
+   * Remove an edge by key.
+   * @param key Edge key to remove.
+   * @returns Promise resolved once removed.
+   */
   removeEdge(key: EdgeKey): Promise<void> | void;
+  /**
+   * Query outgoing edges for an entity and relation.
+   * @param fromId Source entity id.
+   * @param relation Relation name.
+   * @param options Optional paging options.
+   * @returns Page of outgoing edges.
+   */
   getOutgoing(
     fromId: string,
     relation: string,
     options?: RelationalQueryOptions,
   ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
+  /**
+   * Query incoming edges for an entity and relation.
+   * @param toId Target entity id.
+   * @param relation Relation name.
+   * @param options Optional paging options.
+   * @returns Page of incoming edges.
+   */
   getIncoming(
     toId: string,
     relation: string,
@@ -32,9 +56,21 @@ export type RelationalBackend<TMetadata extends EdgeMetadata = EdgeMetadata> = {
 };
 
 export type IndexingRelationshipDriverConfig = {
+  /**
+   * Relational backend used for edge operations.
+   */
   backend: RelationalBackend;
+  /**
+   * Resolver for relation name from type/field.
+   */
   relationNameFor: (fromTypeName: string, fromTypeFieldName: string) => string;
+  /**
+   * Optional encoder for entity ids.
+   */
   encodeEntityId?: (typeName: string, primaryFieldValue: string) => string;
+  /**
+   * Optional decoder for entity ids.
+   */
   decodeEntityId?: (typeName: string, entityId: string) => string;
 };
 
@@ -56,6 +92,9 @@ export class IndexingRelationshipDriver {
   private readonly encodeEntityId: (typeName: string, primaryFieldValue: string) => string;
   private readonly decodeEntityId: (typeName: string, entityId: string) => string;
 
+  /**
+   * @param config Driver configuration for relation indexing.
+   */
   constructor(private readonly config: IndexingRelationshipDriverConfig) {
     this.encodeEntityId = config.encodeEntityId ?? defaultEncodeEntityId;
     this.decodeEntityId = config.decodeEntityId ?? defaultDecodeEntityId;
@@ -107,9 +146,22 @@ export class IndexingRelationshipDriver {
     } while (cursor);
   }
 
+  /**
+   * Create a relationship via the relational backend.
+   * @returns Promise resolved once the relationship is stored.
+   */
   async createRelationship(
+    /**
+     * Relationship info to create.
+     */
     relationship: BaseItemRelationshipInfo,
+    /**
+     * Target type name for the relationship.
+     */
     toTypeName: string,
+    /**
+     * When true, remove existing outgoing edges before inserting.
+     */
     ensureSingle: boolean,
   ): Promise<void> {
     const edgeKey = this.buildEdgeKey(relationship, toTypeName);
@@ -121,16 +173,36 @@ export class IndexingRelationshipDriver {
     await this.config.backend.putEdge({ key: edgeKey });
   }
 
+  /**
+   * Delete a relationship via the relational backend.
+   * @returns Promise resolved once the relationship is removed.
+   */
   async deleteRelationship(
+    /**
+     * Relationship info to delete.
+     */
     relationship: BaseItemRelationshipInfo,
+    /**
+     * Target type name for the relationship.
+     */
     toTypeName: string,
   ): Promise<void> {
     const edgeKey = this.buildEdgeKey(relationship, toTypeName);
     await this.config.backend.removeEdge(edgeKey);
   }
 
+  /**
+   * List relationships via the relational backend.
+   * @returns List results with items and cursor.
+   */
   async listRelationships(
+    /**
+     * Relationship list configuration and origin.
+     */
     config: ListRelationshipsConfig,
+    /**
+     * Target type name for the relationship.
+     */
     toTypeName: string,
   ): Promise<ListItemsResults<ItemRelationshipInfo>> {
     const { relationshipItemOrigin, itemsPerPage, cursor } = config;

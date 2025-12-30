@@ -18,8 +18,17 @@ type CursorState = {
 };
 
 export type InMemoryFileSpecificConfig = {
+  /**
+   * Optional time source for updatedOn timestamps.
+   */
   now?: () => number;
+  /**
+   * Prefix used when generating upload URLs.
+   */
   uploadUrlPrefix?: string;
+  /**
+   * Prefix used when generating download URLs.
+   */
   downloadUrlPrefix?: string;
 };
 
@@ -71,6 +80,9 @@ export class InMemoryFileItemDBDriver
   private readonly downloadUrlPrefix: string;
 
   constructor(
+    /**
+     * Driver configuration including table name and config overrides.
+     */
     protected config: DataItemDBDriverConfig<BaseFileItem, "id">,
   ) {
     const specific = (config.dbSpecificConfig ?? {}) as InMemoryFileSpecificConfig;
@@ -88,7 +100,14 @@ export class InMemoryFileItemDBDriver
     return `${prefix}${tableName}/${id}`;
   }
 
+  /**
+   * Create a new file item in memory.
+   * @returns Generated file id.
+   */
   public createItem = async (
+    /**
+     * New file item payload without the id field.
+     */
     item: Partial<Omit<BaseFileItem, "id">>,
   ): Promise<string> => {
     const {
@@ -121,8 +140,18 @@ export class InMemoryFileItemDBDriver
     return id;
   };
 
+  /**
+   * Read a file item from memory.
+   * @returns File item payload (partial when selected fields are used).
+   */
   public readItem = async (
+    /**
+     * Unique identifier value for the file.
+     */
     uniqueIdentifier: string,
+    /**
+     * Optional fields to select from the file item.
+     */
     selectFields?: (keyof BaseFileItem)[],
   ): Promise<Partial<BaseFileItem>> => {
     if (typeof uniqueIdentifier === "undefined") {
@@ -149,8 +178,18 @@ export class InMemoryFileItemDBDriver
     return selected;
   };
 
+  /**
+   * Update a file item in memory.
+   * @returns True when the item was updated.
+   */
   public updateItem = async (
+    /**
+     * Unique identifier value for the file.
+     */
     uniqueIdentifier: string,
+    /**
+     * Partial update payload for the file.
+     */
     item: Partial<BaseFileItem>,
   ): Promise<boolean> => {
     if (typeof uniqueIdentifier === "undefined") {
@@ -197,6 +236,10 @@ export class InMemoryFileItemDBDriver
     return true;
   };
 
+  /**
+   * Delete a file item from memory.
+   * @returns True when the item was deleted.
+   */
   public deleteItem = async (id: string): Promise<boolean> => {
     if (typeof id === "undefined") {
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -212,8 +255,18 @@ export class InMemoryFileItemDBDriver
     return true;
   };
 
+  /**
+   * List file items from memory.
+   * @returns List results with items and cursor.
+   */
   public listItems = async (
+    /**
+     * List configuration and criteria.
+     */
     config: ListItemsConfig,
+    /**
+     * Optional fields to select from each file item.
+     */
     selectFields?: (keyof BaseFileItem)[],
   ): Promise<ListItemsResults<Partial<BaseFileItem>>> => {
     const {
@@ -260,6 +313,10 @@ export class InMemoryFileItemDBDriver
  * */
 export const InMemoryFileSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
   {
+    /**
+     * @param config Driver configuration.
+     * @returns In-memory file driver instance.
+     */
     factory: <
       ItemType extends Record<any, any>,
       UniquelyIdentifyingFieldName extends keyof ItemType,
@@ -268,6 +325,9 @@ export const InMemoryFileSupportedDataItemDBDriverEntry: SupportedDataItemDBDriv
     ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
       return new InMemoryFileItemDBDriver(config as any) as any;
     },
+    /**
+     * @returns Type info pack for the in-memory file config.
+     */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
       const configTypesPath = Path.join(
         __dirname,

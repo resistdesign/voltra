@@ -65,12 +65,20 @@ export class InMemoryDataItemDBDriver<
   private items = new Map<ItemType[UniquelyIdentifyingFieldName], ItemType>();
 
   constructor(
+    /**
+     * Driver configuration including table name and identifier settings.
+     */
     protected config: DataItemDBDriverConfig<
       ItemType,
       UniquelyIdentifyingFieldName
     >,
   ) {}
 
+  /**
+   * Create a new item in memory.
+   * @param newItem New item payload without the identifying field.
+   * @returns Generated identifier for the created item.
+   */
   public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
@@ -89,6 +97,12 @@ export class InMemoryDataItemDBDriver<
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
+  /**
+   * Read an item from memory.
+   * @param uniqueIdentifier Unique identifier value for the item.
+   * @param selectedFields Optional fields to select from the item.
+   * @returns Item payload (partial when selected fields are used).
+   */
   public readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
@@ -105,6 +119,12 @@ export class InMemoryDataItemDBDriver<
     return selectFieldsFromItem(item, selectedFields);
   };
 
+  /**
+   * Update an item in memory.
+   * @param uniqueIdentifier Unique identifier value for the item.
+   * @param updatedItem Partial update payload for the item.
+   * @returns True when the item was updated.
+   */
   public updateItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
@@ -139,6 +159,11 @@ export class InMemoryDataItemDBDriver<
     return true;
   };
 
+  /**
+   * Delete an item from memory.
+   * @param uniqueIdentifier Unique identifier value for the item.
+   * @returns True when the item was deleted.
+   */
   public deleteItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
   ): Promise<boolean> => {
@@ -149,6 +174,12 @@ export class InMemoryDataItemDBDriver<
     return this.items.delete(uniqueIdentifier);
   };
 
+  /**
+   * List items from memory.
+   * @param config List configuration and criteria.
+   * @param selectedFields Optional fields to select from each item.
+   * @returns List results with items and cursor.
+   */
   public listItems = async (
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
@@ -187,6 +218,10 @@ export class InMemoryDataItemDBDriver<
  * */
 export const InMemorySupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEntry =
   {
+    /**
+     * @param config Driver configuration.
+     * @returns In-memory driver instance.
+     */
     factory: <
       ItemType extends Record<any, any>,
       UniquelyIdentifyingFieldName extends keyof ItemType,
@@ -195,6 +230,9 @@ export const InMemorySupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
     ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
       return new InMemoryDataItemDBDriver(config);
     },
+    /**
+     * @returns Type info pack for the in-memory config.
+     */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
       const configTypesPath = Path.join(
         __dirname,
