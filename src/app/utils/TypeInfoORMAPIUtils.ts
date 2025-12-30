@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Hook utilities that wrap a {@link TypeInfoORMAPI} with request state tracking.
+ * Each method returns a request id and updates loading/data/error state per method.
+ */
 import {
   TypeInfoORMAPI,
   TypeInfoORMServiceError,
@@ -47,7 +53,7 @@ export type TypeInfoORMAPIController = {
   api: TypeInfoORMServiceAPI;
 };
 
-const handleRequest = async (
+export const handleRequest = async (
   requestId: string,
   args: any[],
   typeInfoORMAPI: TypeInfoORMAPI,
@@ -75,7 +81,7 @@ const handleRequest = async (
   }
 };
 
-const requestHandlerFactory =
+export const requestHandlerFactory =
   (
     typeInfoORMAPI: TypeInfoORMAPI,
     methodName: keyof TypeInfoORMAPI,

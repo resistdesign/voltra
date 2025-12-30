@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Service request helpers for making RPC-style calls with a shared configuration.
+ */
 import { mergeStringPaths, PATH_DELIMITER } from "../../common/Routing";
 
 /**
@@ -11,6 +16,9 @@ export type ServiceConfig = {
   authorization?: string;
 };
 
+/**
+ * Build the full URL for a service call from config pieces.
+ */
 export const getFullUrl = (
   protocol: string,
   domain: string,
@@ -31,6 +39,9 @@ export const getFullUrl = (
   return `${protocol}://${domain}${portString}${fullPath}`;
 };
 
+/**
+ * Send a POST request to a service endpoint with JSON arguments.
+ */
 export const sendServiceRequest = async (
   config: ServiceConfig,
   path: string = "",

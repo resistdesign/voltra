@@ -1,0 +1,40 @@
+{
+  "file": "./Routing.test-utils.ts",
+  "tests": [
+    {
+      "export": "runRoutingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "pathArray": [
+          "books",
+          42,
+          {
+            "a": 1
+          }
+        ],
+        "pathArrayRaw": [
+          "books",
+          "42"
+        ],
+        "pathArrayKeepEmpty": [
+          "books",
+          42
+        ],
+        "pathString": "\"books\"/42/{\"a\":1}",
+        "pathStringEncoded": "%22books%22/42/%7B%22a%22%3A1%7D",
+        "mergedPath": "\"books\"/42/\"chapters\"/3",
+        "resolvedRelative": "/books/authors/7",
+        "resolvedAbsolute": "/authors/7",
+        "params": {
+          "id": 42
+        },
+        "exactParams": {
+          "id": 42
+        },
+        "exactMismatch": false,
+        "mismatch": false
+      }
+    }
+  ]
+}

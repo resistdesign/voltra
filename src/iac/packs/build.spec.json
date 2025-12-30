@@ -1,0 +1,26 @@
+{
+  "file": "./build.test-utils.ts",
+  "tests": [
+    {
+      "export": "runBuildPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "BuildCodeBuildAndDeploy",
+          "BuildCodeBuildRole",
+          "BuildCodePipelineRole",
+          "BuildPipeline",
+          "BuildPipelineBucket"
+        ],
+        "provider": "GitHub",
+        "defaultProvider": "GitHub",
+        "environmentType": "LINUX_CONTAINER",
+        "environmentComputeType": "BUILD_GENERAL1_SMALL",
+        "environmentImage": "aws/codebuild/nodejs:10.14.1",
+        "sourceOwner": "voltra",
+        "buildProjectRef": "BuildCodeBuildAndDeploy"
+      }
+    }
+  ]
+}

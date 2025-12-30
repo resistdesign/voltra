@@ -1,0 +1,75 @@
+{
+  "file": "./indexingCore.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexingCoreScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "lossyEmpty": null,
+        "lossyWithPlan": {
+          "lastDocId": "5",
+          "plan": {
+            "primaryToken": "token",
+            "statsVersion": 2,
+            "sorting": "docIdAsc"
+          }
+        },
+        "exactWithPending": {
+          "lossy": {
+            "lastDocId": "a"
+          },
+          "verification": {
+            "lastDocId": "2",
+            "pendingCandidates": [
+              "1",
+              "2"
+            ],
+            "pendingOffset": 3
+          },
+          "plan": {
+            "primaryToken": "primary",
+            "sorting": "docIdAsc"
+          }
+        },
+        "lossyWrongTypeError": "Expected lossy cursor payload.",
+        "exactWrongTypeError": "Expected exact cursor payload.",
+        "invalidEncodingError": "Invalid cursor payload.",
+        "invalidPayloadError": "Invalid cursor payload.",
+        "unsupportedPayloadError": "Unsupported cursor payload.",
+        "docIdCompare": [
+          0,
+          -1,
+          1
+        ],
+        "normalizedDocId": "0",
+        "normalizeError": "Document is missing a non-empty primary field \"id\".",
+        "tokenized": {
+          "normalized": "creme brulee",
+          "tokens": [
+            "creme",
+            "brulee"
+          ]
+        },
+        "lossyTokens": [
+          "ell",
+          "hel",
+          "hell*",
+          "llo"
+        ],
+        "lossyShortTokens": [
+          "hi*"
+        ],
+        "traceSnapshot": {
+          "postingsPages": 0,
+          "candidatesVerified": 0,
+          "batchGetCalls": 0,
+          "batchGetKeys": 0,
+          "ddbQueryCalls": 0,
+          "ddbBatchGetCalls": 0,
+          "ddbItemReadCalls": 0
+        }
+      }
+    }
+  ]
+}

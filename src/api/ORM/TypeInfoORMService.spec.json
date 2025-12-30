@@ -1,0 +1,53 @@
+{
+  "file": "./TypeInfoORMService.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoORMServiceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "missingDriverError": "NO_DRIVERS_SUPPLIED",
+        "missingRelationshipDriverError": "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
+        "missingDriverErrorExpected": "NO_DRIVERS_SUPPLIED",
+        "missingRelationshipDriverErrorExpected": "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
+        "createdIds": {
+          "bookId1": "book-1",
+          "bookId2": "book-2",
+          "authorId": "author-1"
+        },
+        "readAuthorSelected": {
+          "id": "author-1",
+          "name": "Alice"
+        },
+        "updatedAuthorName": "Alice Cooper",
+        "listBookIds": [
+          "book-1",
+          "book-2"
+        ],
+        "listBookTitles": [
+          "Alpha",
+          "Beta"
+        ],
+        "relationshipTargets": [
+          "book-1",
+          "book-2"
+        ],
+        "relatedItemTitles": [
+          "Alpha",
+          "Beta"
+        ],
+        "relatedItemIds": [
+          "book-1",
+          "book-2"
+        ],
+        "deleteRelationshipResult": {
+          "success": true,
+          "remainingItemsExist": false
+        },
+        "relationshipsAfterDelete": [
+          "book-2"
+        ]
+      }
+    }
+  ]
+}

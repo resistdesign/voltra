@@ -1,0 +1,19 @@
+{
+  "file": "./lossyS3.test-utils.ts",
+  "tests": [
+    {
+      "export": "runLossyS3MemoryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "key": "lossy/text/hello%20world.json",
+        "loaded": [
+          1,
+          "2",
+          3
+        ],
+        "missing": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIaCIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasPacks": true,
+        "hasUtils": true,
+        "hasSimpleCFT": true,
+        "simpleCFTInstance": true,
+        "packFunctionMatches": true
+      }
+    }
+  ]
+}

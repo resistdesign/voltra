@@ -1,3 +1,6 @@
+/**
+ * Relationship info types used by ORM and relationship utilities.
+ */
 import { ExpandComplexType } from "./HelperTypes";
 
 /**

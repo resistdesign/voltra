@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * ACM certificate pack with optional wildcard SAN.
+ */
 import { createResourcePack } from "../utils";
 
 export type AddSSLCertificateConfig = {

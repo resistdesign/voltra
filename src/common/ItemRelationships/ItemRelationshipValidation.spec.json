@@ -1,0 +1,38 @@
+{
+  "file": "./ItemRelationshipValidation.test-utils.ts",
+  "tests": [
+    {
+      "export": "runItemRelationshipValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validResult": {
+          "typeName": "Book",
+          "valid": true,
+          "error": "",
+          "errorMap": {}
+        },
+        "missingFieldResult": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "INVALID_RELATIONSHIP_ITEM",
+          "errorMap": {
+            "toTypePrimaryFieldValue": [
+              "INVALID_RELATIONSHIP_ITEM_FIELD"
+            ]
+          }
+        },
+        "omittedFieldResult": {
+          "typeName": "Book",
+          "valid": true,
+          "error": "",
+          "errorMap": {}
+        },
+        "expectedErrors": {
+          "INVALID_RELATIONSHIP_ITEM": "INVALID_RELATIONSHIP_ITEM",
+          "INVALID_RELATIONSHIP_ITEM_FIELD": "INVALID_RELATIONSHIP_ITEM_FIELD"
+        }
+      }
+    }
+  ]
+}

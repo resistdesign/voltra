@@ -1,0 +1,68 @@
+{
+  "file": "./Utils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runPatchUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "mergedArr": [
+          1,
+          2,
+          3
+        ],
+        "mergedUnique": [
+          1,
+          2,
+          3
+        ],
+        "mergedById": [
+          {
+            "id": "a",
+            "value": 1
+          },
+          {
+            "id": "b",
+            "value": 3
+          },
+          {
+            "id": "c",
+            "value": 4
+          }
+        ],
+        "mergedNested": {
+          "value": "old",
+          "extra": true
+        },
+        "replacedValue": 2
+      }
+    },
+    {
+      "export": "runIaCUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "parameterKeys": [
+          "Env",
+          "Owner",
+          "Region"
+        ],
+        "groupLabels": [
+          "Main",
+          "Extra"
+        ],
+        "groupParameters": [
+          [
+            "Env",
+            "Region"
+          ],
+          [
+            "Owner"
+          ]
+        ],
+        "envLabel": "Environment",
+        "ownerLabel": "Owner"
+      }
+    }
+  ]
+}

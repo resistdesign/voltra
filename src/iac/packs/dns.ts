@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Route53 DNS record pack for simple A/other record creation.
+ */
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 import { CloudFormationPrimitiveValue } from "../types/IaCTypes";

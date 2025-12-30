@@ -1,0 +1,37 @@
+{
+  "file": "./inMemoryBackend.test-utils.ts",
+  "tests": [
+    {
+      "export": "runStructuredInMemoryBackendScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "newsIds": [
+          "1",
+          "2"
+        ],
+        "tagsBIds": [
+          "1",
+          "2"
+        ],
+        "scoreGte10Ids": [
+          "1",
+          "2"
+        ],
+        "scoreBetweenIds": [
+          "1"
+        ],
+        "page1Ids": [
+          "1"
+        ],
+        "page2Ids": [
+          "2"
+        ],
+        "afterUpdateIds": [
+          "2"
+        ],
+        "afterRemoveIds": []
+      }
+    }
+  ]
+}

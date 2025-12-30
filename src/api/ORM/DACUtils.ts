@@ -1,3 +1,24 @@
+/**
+ * @packageDocumentation
+ *
+ * DAC path and constraint helpers for ORM resources. These helpers build
+ * resource paths for types, items, and relationships so DAC rules can be
+ * defined consistently across CRUD and relationship operations.
+ *
+ * Example: allow reads on a type.
+ * ```ts
+ * import { DACConstraintType } from "../DataAccessControl";
+ * import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+ * import { getItemTypeDACConstraint } from "./DACUtils";
+ *
+ * const allowBooks = getItemTypeDACConstraint(
+ *   ["orm"],
+ *   TypeOperation.READ,
+ *   "Book",
+ *   DACConstraintType.ALLOW,
+ * );
+ * ```
+ */
 import {
   LiteralValue,
   TypeInfo,

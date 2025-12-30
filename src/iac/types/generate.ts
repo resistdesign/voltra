@@ -1,3 +1,10 @@
+/**
+ * Generate IaC TypeScript types from the CloudFormation resource specification.
+ *
+ * Workflow:
+ * - Update `CloudFormationResourceSpecification.ts` with the latest AWS JSON.
+ * - Run `yarn iac:types:gen` to produce `dist/IaCTypes.ts`.
+ */
 import Path from "path";
 import FS from "fs";
 import { format } from "prettier";

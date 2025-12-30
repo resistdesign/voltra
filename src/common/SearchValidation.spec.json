@@ -1,0 +1,70 @@
+{
+  "file": "./SearchValidation.test-utils.ts",
+  "tests": [
+    {
+      "export": "runSearchValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "invalidType": {
+          "typeName": "Missing",
+          "valid": false,
+          "error": "INVALID_TYPE_INFO",
+          "errorMap": {}
+        },
+        "invalidOperator": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "",
+          "errorMap": {
+            "title": [
+              "INVALID_OPERATOR"
+            ]
+          }
+        },
+        "invalidField": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "",
+          "errorMap": {
+            "missing": [
+              "INVALID_FIELD"
+            ]
+          }
+        },
+        "relationalDenied": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "",
+          "errorMap": {
+            "author": [
+              "INVALID_FIELD"
+            ]
+          }
+        },
+        "relationalDisallowed": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "",
+          "errorMap": {
+            "author": [
+              "INVALID_FIELD"
+            ]
+          }
+        },
+        "invalidValueOption": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "",
+          "errorMap": {}
+        },
+        "validSearch": {
+          "typeName": "Book",
+          "valid": true,
+          "error": "",
+          "errorMap": {}
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * CloudFront CDN pack with an S3 origin and Route53 alias record.
+ */
 import { createResourcePack } from "../utils";
 
 export type AddCDNConfig = {

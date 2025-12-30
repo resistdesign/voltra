@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Lambda pack that provisions a basic function with an IAM role and optional
+ * environment settings.
+ */
 import { AWS } from "../types/IaCTypes";
 import { createResourcePack } from "../utils";
 

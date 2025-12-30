@@ -1,0 +1,20 @@
+{
+  "file": "./getSimpleId.test-utils.ts",
+  "tests": [
+    {
+      "export": "runGetSimpleIdScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstId": "0-MjAyMC0wMS0wMVQwMDowMDowMC4wMDBa-4fzzzxjylrx-4fzzzxjylrx",
+        "secondId": "1-MjAyMC0wMS0wMVQwMDowMDowMC4wMDBa-4fzzzxjylrx-4fzzzxjylrx",
+        "firstCounter": "0",
+        "secondCounter": "1",
+        "decodedTimestamp": "2020-01-01T00:00:00.000Z",
+        "rand1": "4fzzzxjylrx",
+        "rand2": "4fzzzxjylrx",
+        "expectedRand": "4fzzzxjylrx"
+      }
+    }
+  ]
+}

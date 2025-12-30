@@ -1,0 +1,38 @@
+{
+  "file": "./ItemRelationshipInfoTypes.test-utils.ts",
+  "tests": [
+    {
+      "export": "runItemRelationshipInfoTypesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "infoKeys": [
+          "fromTypeName",
+          "fromTypeFieldName",
+          "fromTypePrimaryFieldValue",
+          "toTypePrimaryFieldValue"
+        ],
+        "identifyingKeys": [
+          "id"
+        ],
+        "baseInfo": {
+          "fromTypeName": "Book",
+          "fromTypeFieldName": "author",
+          "fromTypePrimaryFieldValue": "book-1",
+          "toTypePrimaryFieldValue": "person-1"
+        },
+        "infoWithId": {
+          "fromTypeName": "Book",
+          "fromTypeFieldName": "author",
+          "fromTypePrimaryFieldValue": "book-1",
+          "toTypePrimaryFieldValue": "person-1",
+          "id": "rel-1"
+        },
+        "originInfo": {
+          "fromTypeName": "Book",
+          "fromTypeFieldName": "author"
+        }
+      }
+    }
+  ]
+}

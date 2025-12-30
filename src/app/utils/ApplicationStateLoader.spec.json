@@ -1,0 +1,31 @@
+{
+  "file": "./ApplicationStateLoader.test-utils.ts",
+  "tests": [
+    {
+      "export": "runApplicationStateLoaderScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialLoading": false,
+        "initialLatestError": null,
+        "successHasValue": true,
+        "successValue": {
+          "result": "ok",
+          "args": [
+            "direct"
+          ]
+        },
+        "successModified": false,
+        "successOnLoadCalls": [
+          true
+        ],
+        "errorHasValue": true,
+        "errorValue": null,
+        "errorModified": false,
+        "errorOnLoadCalls": [
+          false
+        ]
+      }
+    }
+  ]
+}

@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * CodePipeline/CodeBuild pack for a simple build-and-deploy pipeline.
+ */
 import { createResourcePack } from "../utils";
 import { AWS } from "../types/IaCTypes";
 

@@ -1,0 +1,19 @@
+{
+  "file": "./IndexingRelationshipDriver.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexingRelationshipScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "afterFirst": [
+          "post-1"
+        ],
+        "afterSecond": [
+          "post-2"
+        ],
+        "afterDelete": []
+      }
+    }
+  ]
+}

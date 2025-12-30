@@ -1,0 +1,61 @@
+{
+  "file": "./Utils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runLoggingUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "result": "1-two",
+        "disabledResult": "A",
+        "thrownMessage": "boom",
+        "logMessages": [
+          [
+            "LOGGING_FUNCTION_CALL",
+            "INPUT",
+            "doThing",
+            ":"
+          ],
+          [
+            "LOGGING_FUNCTION_CALL",
+            "OUTPUT",
+            "doThing",
+            ":"
+          ],
+          [
+            "LOGGING_FUNCTION_CALL",
+            "INPUT",
+            "failThing",
+            ":"
+          ]
+        ],
+        "errorMessages": [
+          [
+            "LOGGING_FUNCTION_CALL",
+            "ERROR",
+            "failThing",
+            ":"
+          ]
+        ],
+        "expectedLabels": [
+          "LOGGING_FUNCTION_CALL",
+          "INPUT",
+          "doThing",
+          ":"
+        ],
+        "expectedOutputLabels": [
+          "LOGGING_FUNCTION_CALL",
+          "OUTPUT",
+          "doThing",
+          ":"
+        ],
+        "expectedErrorLabels": [
+          "LOGGING_FUNCTION_CALL",
+          "ERROR",
+          "failThing",
+          ":"
+        ]
+      }
+    }
+  ]
+}

@@ -1,3 +1,6 @@
+/**
+ * Built-in and custom string transformers for type keywords.
+ */
 import { TypeKeyword } from "./TypeParsing/TypeInfo";
 
 /**

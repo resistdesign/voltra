@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Helpers for executing JSON spec tests, including expectation generation.
+ */
 import {
   ConditionConfig,
   EXTRegexExpectation,

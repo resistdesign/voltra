@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Secure S3 bucket pack with configurable CORS and public access controls.
+ */
 import { AWS } from "../types/IaCTypes";
 import { createResourcePack } from "../utils";
 

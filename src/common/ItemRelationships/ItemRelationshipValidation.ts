@@ -1,3 +1,6 @@
+/**
+ * Validation helpers for relationship items.
+ */
 import { TypeInfoValidationResults } from "../TypeParsing/Validation";
 import {
   ItemRelationshipInfoKeys,

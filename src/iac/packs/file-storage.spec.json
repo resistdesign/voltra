@@ -1,0 +1,66 @@
+{
+  "file": "./file-storage.test-utils.ts",
+  "tests": [
+    {
+      "export": "runFileStoragePackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "FileStorage"
+        ],
+        "defaultDeletionPolicy": "Delete",
+        "defaultPublicAccess": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "defaultCors": null,
+        "defaultOwnershipControls": null,
+        "defaultEncryption": [
+          {
+            "ServerSideEncryptionByDefault": {
+              "SSEAlgorithm": "AES256"
+            }
+          }
+        ],
+        "customDeletionPolicy": "Retain",
+        "customBucketName": "files.example.com",
+        "customAccessControl": "Private",
+        "customPublicAccess": {
+          "BlockPublicAcls": false,
+          "BlockPublicPolicy": false,
+          "IgnorePublicAcls": false,
+          "RestrictPublicBuckets": false
+        },
+        "customCors": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "*"
+              ],
+              "AllowedMethods": [
+                "GET",
+                "PUT",
+                "POST",
+                "DELETE",
+                "HEAD"
+              ],
+              "AllowedOrigins": [
+                "*"
+              ]
+            }
+          ]
+        },
+        "customOwnershipControls": {
+          "Rules": [
+            {
+              "ObjectOwnership": "ObjectWriter"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

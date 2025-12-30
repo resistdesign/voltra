@@ -1,0 +1,22 @@
+{
+  "file": "./Debug.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDebugScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "unchanged": [],
+        "changed": [
+          1,
+          2
+        ],
+        "added": [
+          1,
+          2
+        ],
+        "removed": []
+      }
+    }
+  ]
+}

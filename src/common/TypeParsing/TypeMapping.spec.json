@@ -1,0 +1,17 @@
+{
+  "file": "./TypeMapping.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeMappingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "keys": [
+          "C",
+          "Outer.A",
+          "Outer.Inner.B"
+        ]
+      }
+    }
+  ]
+}

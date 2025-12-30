@@ -1,3 +1,6 @@
+/**
+ * Collect required environment variables or throw with a missing-name error.
+ */
 export const collectRequiredEnvironmentVariables = <VarName extends string>(
   varNames: VarName[],
 ): Record<VarName, string> => {

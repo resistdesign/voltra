@@ -1,0 +1,61 @@
+{
+  "file": "./DynamoDBDataItemDBDriver.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDynamoDBDataItemDriverScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": [
+          "item-1",
+          "item-2",
+          "item-3"
+        ],
+        "readSelected": {
+          "id": "item-1",
+          "name": "Alpha"
+        },
+        "afterUpdate": {
+          "name": "Alpha+",
+          "age": 35
+        },
+        "filteredIds": [
+          "item-1",
+          "item-3"
+        ],
+        "page1Ids": [
+          "item-1",
+          "item-2"
+        ],
+        "page2Ids": [
+          "item-3"
+        ],
+        "listSelectedKeys": [
+          [
+            "id"
+          ],
+          [
+            "id"
+          ],
+          [
+            "id"
+          ]
+        ],
+        "deleteResult": true,
+        "missingReadError": "ITEM_NOT_FOUND",
+        "invalidCursorError": "INVALID_CURSOR",
+        "listFilterExpression": "#age >= :age AND #status = :status",
+        "listFilterAttributeNames": {
+          "#age": "age",
+          "#status": "status"
+        },
+        "listFilterAttributeValues": {
+          ":age": 30,
+          ":status": "active"
+        },
+        "missingReadErrorExpected": "ITEM_NOT_FOUND",
+        "invalidCursorErrorExpected": "INVALID_CURSOR"
+      }
+    }
+  ]
+}
