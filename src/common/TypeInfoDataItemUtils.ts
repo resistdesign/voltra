@@ -9,6 +9,9 @@ import {
   TypeKeyword,
 } from "./TypeParsing/TypeInfo";
 
+/**
+ * Supported default value types for a TypeInfo field.
+ * */
 export type FieldValueType = LiteralValue | LiteralValue[];
 
 type DefaultValueConverter = (value: string) => string | number | boolean;
@@ -48,16 +51,37 @@ const ARRAY_CONVERTER = (
   return arr;
 };
 
+/**
+ * Result describing whether a field has a default value.
+ * */
 export type DefaultValueInfo =
   | {
+      /**
+       * Indicates a default value is present.
+       * */
       hasDefaultValue: true;
+      /**
+       * Default value for the field.
+       * */
       defaultValue: FieldValueType;
     }
   | {
+      /**
+       * Indicates no default value is present.
+       * */
       hasDefaultValue: false;
+      /**
+       * Always undefined when no default value is present.
+       * */
       defaultValue: undefined;
     };
 
+/**
+ * Determine the default value for a TypeInfo field.
+ *
+ * @param typeInfoField - TypeInfo field metadata to inspect.
+ * @returns Default value info for the field.
+ */
 export const getDefaultValueInfo = (
   typeInfoField: TypeInfoField,
 ): DefaultValueInfo => {

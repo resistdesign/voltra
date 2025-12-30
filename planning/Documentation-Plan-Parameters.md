@@ -106,9 +106,9 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/Testing/Types.ts`
 - [x] `src/common/Testing/Utils.ts`
 - [x] `src/common/Testing/index.ts`
-- [ ] `src/common/TypeInfoDataItemUtils.ts`
-- [ ] `src/common/TypeInfoORM/Types.ts`
-- [ ] `src/common/TypeInfoORM/index.ts`
+- [x] `src/common/TypeInfoDataItemUtils.ts`
+- [x] `src/common/TypeInfoORM/Types.ts`
+- [x] `src/common/TypeInfoORM/index.ts`
 - [ ] `src/common/TypeParsing/Constants.ts`
 - [ ] `src/common/TypeParsing/TypeInfo.ts`
 - [ ] `src/common/TypeParsing/TypeMapping.ts`
