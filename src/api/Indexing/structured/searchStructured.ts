@@ -38,6 +38,9 @@ type StructuredRangeIndex = {
   ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }>;
 };
 
+/**
+ * Dependencies required to run structured searches.
+ */
 export type StructuredSearchDependencies = {
   /**
    * Term query dependency for equality/contains lookups.
