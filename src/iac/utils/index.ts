@@ -13,14 +13,30 @@ import { getValuePathString, mergeValues } from "./patch-utils";
 export * from "./patch-utils";
 
 export type ParameterInfo = {
+  /**
+   * Parameter id used in the template.
+   */
   ParameterId: string;
+  /**
+   * CloudFormation parameter definition.
+   */
   Parameter: CloudFormationParameter;
+  /**
+   * Display label for the parameter.
+   */
   Label: string;
+  /**
+   * Optional parameter group label.
+   */
   Group?: string;
 };
 
 /**
  * Add a stack parameter including its descriptive info and an optional parameter group.
+ *
+ * @param parameterInfo - Parameter metadata and definition.
+ * @param template - Template to update.
+ * @returns Updated CloudFormation template.
  */
 export const addParameter = (
   parameterInfo: ParameterInfo,
@@ -88,6 +104,10 @@ export const addParameter = (
 
 /**
  * Add multiple stack parameters with info and groups.
+ *
+ * @param parameters - Parameter definitions to add.
+ * @param template - Template to update.
+ * @returns Updated CloudFormation template.
  */
 export const addParameters = (
   parameters: ParameterInfo[],
@@ -96,6 +116,11 @@ export const addParameters = (
 
 /**
  * A function used to apply a pack to a stack template.
+ *
+ * @typeParam ParamsType - Pack parameter type.
+ * @param params - Pack configuration.
+ * @param template - Template to update.
+ * @returns Updated CloudFormation template.
  */
 export type ResourcePackApplier<ParamsType> = (
   params: ParamsType,
@@ -104,6 +129,10 @@ export type ResourcePackApplier<ParamsType> = (
 
 /**
  * Apply a patch to a stack template.
+ *
+ * @param patch - Partial template patch.
+ * @param template - Template to update.
+ * @returns Updated CloudFormation template.
  */
 export const patchTemplate = (
   patch: Partial<CloudFormationTemplate>,
@@ -133,6 +162,10 @@ export const patchTemplate = (
 
 /**
  * Create a custom resource pack that can use configuration input to patch a stack with convenient resources, parameters, etc.
+ *
+ * @typeParam ParamsType - Pack parameter type.
+ * @param creator - Pack creator that returns a template patch.
+ * @returns Resource pack applier.
  */
 export const createResourcePack =
   <ParamsType>(
@@ -145,7 +178,13 @@ export const createResourcePack =
   };
 
 export type ParameterGroup = {
+  /**
+   * Group label.
+   */
   Label: string;
+  /**
+   * Map of parameter ids to parameter definitions.
+   */
   Parameters: {
     [parameterId: string]: { Label: string } & CloudFormationParameter;
   };

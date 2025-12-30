@@ -3,6 +3,9 @@
  *
  * Deep merge helpers used by IaC packs to patch CloudFormation templates.
  */
+/**
+ * Merge strategy for patching values.
+ */
 export type MergeStrategy =
   | "transpose"
   | "accumulate"
@@ -10,6 +13,9 @@ export type MergeStrategy =
   | "accumulate-unique-by"
   | "replace";
 
+/**
+ * Descriptor defining how a value path should be merged.
+ */
 export type MergeStrategyDescriptor =
   | {
       strategy: MergeStrategy;
@@ -19,22 +25,53 @@ export type MergeStrategyDescriptor =
       data: string | ((value: any) => string);
     };
 
+/**
+ * Encoded value path string.
+ */
 export type ValuePathString = string;
 
+/**
+ * Value path segments.
+ */
 export type ValuePathArray = (string | number)[];
 
+/**
+ * Map of value path strings to merge strategy descriptors.
+ */
 export type MergeStrategyMap = Record<ValuePathString, MergeStrategyDescriptor>;
 
+/**
+ * Default merge strategy for patching.
+ */
 export const DEFAULT_MERGE_STRATEGY: MergeStrategy = "transpose";
 
+/**
+ * Convert a value path array into a path string.
+ *
+ * @param valuePathArray - Value path segments.
+ * @returns Encoded value path string.
+ */
 export const getValuePathString = (
   valuePathArray: ValuePathArray = [],
 ): string => valuePathArray.map((p) => encodeURIComponent(p)).join("/");
 
+/**
+ * Convert a value path string into path segments.
+ *
+ * @param valuePathString - Encoded value path string.
+ * @returns Decoded value path segments.
+ */
 export const getValuePathArray = (
   valuePathString: ValuePathString = "",
 ): string[] => valuePathString.split("/").map((p) => decodeURIComponent(p));
 
+/**
+ * Check whether a value is constructed by a specific constructor.
+ *
+ * @param value - Value to inspect.
+ * @param constructorReference - Constructor to compare against.
+ * @returns Whether the value matches the constructor.
+ */
 export const isConstructedFrom = (
   value: any,
   constructorReference: Function,
@@ -44,6 +81,15 @@ export const isConstructedFrom = (
   "constructor" in value &&
   value.constructor === constructorReference;
 
+/**
+ * Merge two values using path-based merge strategies.
+ *
+ * @param valuePathArray - Path to the value being merged.
+ * @param existingValue - Existing value in the template.
+ * @param newValue - New value to merge in.
+ * @param mergeStrategyMap - Merge strategy overrides.
+ * @returns Merged value.
+ */
 export const mergeValues = (
   valuePathArray: ValuePathArray = [],
   existingValue: any,
@@ -73,9 +119,13 @@ export const mergeValues = (
       ? specificKeyMergeStrategyData
       : arrayIndexWildcardMergeStrategyData;
 
-  let mergedValue: any = typeof newValue !== 'undefined' ? newValue : existingValue;
+  let mergedValue: any =
+    typeof newValue !== "undefined" ? newValue : existingValue;
   if (mergeStrategy !== "replace") {
-    if (isConstructedFrom(existingValue, Array) && isConstructedFrom(newValue, Array)) {
+    if (
+      isConstructedFrom(existingValue, Array) &&
+      isConstructedFrom(newValue, Array)
+    ) {
       if (mergeStrategy === "accumulate") {
         mergedValue = [...existingValue, ...newValue];
       } else if (mergeStrategy === "accumulate-unique") {
@@ -138,7 +188,10 @@ export const mergeValues = (
           ),
         );
       }
-    } else if (isConstructedFrom(existingValue, Object) && isConstructedFrom(newValue, Object)) {
+    } else if (
+      isConstructedFrom(existingValue, Object) &&
+      isConstructedFrom(newValue, Object)
+    ) {
       mergedValue = Object.keys({ ...existingValue, ...newValue }).reduce(
         (acc, k) => ({
           ...acc,

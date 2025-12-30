@@ -1,7 +1,22 @@
-import { CloudFormationResourceSpecification, NamespaceStructure, PropertyType, ResourceType } from './Types';
-import { NAMESPACE_DELIMITERS } from './Constants';
+import {
+  CloudFormationResourceSpecification,
+  NamespaceStructure,
+  PropertyType,
+  ResourceType,
+} from "./Types";
+import { NAMESPACE_DELIMITERS } from "./Constants";
 
-export const getNamespaceStructure = (specification: CloudFormationResourceSpecification, baseStructure: NamespaceStructure): NamespaceStructure => {
+/**
+ * Build a namespace structure from the CloudFormation specification.
+ *
+ * @param specification - CloudFormation resource specification.
+ * @param baseStructure - Base namespace structure to extend.
+ * @returns Fully built namespace structure.
+ */
+export const getNamespaceStructure = (
+  specification: CloudFormationResourceSpecification,
+  baseStructure: NamespaceStructure,
+): NamespaceStructure => {
   const newStructure: NamespaceStructure = {
     ...baseStructure,
   };
@@ -12,7 +27,10 @@ export const getNamespaceStructure = (specification: CloudFormationResourceSpeci
 
   for (const pTK of propertyTypesKeys) {
     const fullPropertyTypeNameParts = pTK
-      .replace(NAMESPACE_DELIMITERS.INPUT_REGEX, () => NAMESPACE_DELIMITERS.OUTPUT)
+      .replace(
+        NAMESPACE_DELIMITERS.INPUT_REGEX,
+        () => NAMESPACE_DELIMITERS.OUTPUT,
+      )
       .split(NAMESPACE_DELIMITERS.OUTPUT);
     const propType: PropertyType = PropertyTypes[pTK];
     const currentPath: string[] = [];
@@ -29,7 +47,8 @@ export const getNamespaceStructure = (specification: CloudFormationResourceSpeci
         targetNamespace.propertyTypes[part] = propType;
       } else {
         targetNamespace.namespaces = targetNamespace.namespaces || {};
-        targetNamespace.namespaces[part] = targetNamespace.namespaces[part] || { path: [...currentPath] };
+        targetNamespace.namespaces[part] =
+          targetNamespace.namespaces[part] || { path: [...currentPath] };
         targetNamespace = targetNamespace.namespaces[part];
       }
     }
@@ -57,13 +76,17 @@ export const getNamespaceStructure = (specification: CloudFormationResourceSpeci
         resourceTypeOptions.push(currentPath.join(NAMESPACE_DELIMITERS.OUTPUT));
       } else {
         targetNamespace.namespaces = targetNamespace.namespaces || {};
-        targetNamespace.namespaces[part] = targetNamespace.namespaces[part] || { path: [...currentPath] };
+        targetNamespace.namespaces[part] =
+          targetNamespace.namespaces[part] || { path: [...currentPath] };
         targetNamespace = targetNamespace.namespaces[part];
       }
     }
   }
 
-  newStructure.includes = [`export type AllResourceTypes = ${resourceTypeOptions.join(' | ')};`, ...(newStructure.includes || [])];
+  newStructure.includes = [
+    `export type AllResourceTypes = ${resourceTypeOptions.join(" | ")};`,
+    ...(newStructure.includes || []),
+  ];
 
   return newStructure;
 };
