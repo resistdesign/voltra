@@ -49,6 +49,7 @@
     "build": "tsc -p tsconfig.build.json && yarn prep-dist",
     "test": "ts-node src/common/Testing/CLI.ts \"./src/**/*.spec.json\"",
     "test:gen": "ts-node src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\"",
+    "test:consumer": "node ./scripts/consumer-smoke.mjs",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",
