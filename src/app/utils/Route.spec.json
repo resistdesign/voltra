@@ -1,0 +1,15 @@
+{
+  "file": "./Route.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runRouteScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "defaultContextRender": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;&quot;,&quot;params&quot;:{},&quot;isTopLevel&quot;:true}</span>",
+        "nestedRouteRender": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;\\&quot;app\\&quot;/\\&quot;books\\&quot;/\\&quot;:id\\&quot;&quot;,&quot;params&quot;:{&quot;id&quot;:42},&quot;isTopLevel&quot;:false}</span>",
+        "exactMismatchRender": ""
+      }
+    }
+  ]
+}

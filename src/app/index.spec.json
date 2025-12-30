@@ -1,0 +1,23 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runAppIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "appKeys": [
+          "Utils"
+        ],
+        "hasUtilsNamespace": true,
+        "hasUseController": true,
+        "hasTypeInfoORMClient": true,
+        "hasRoute": true,
+        "hasApplicationState": true,
+        "hasApplicationStateLoader": true,
+        "hasService": true,
+        "hasTypeInfoORMAPI": true
+      }
+    }
+  ]
+}

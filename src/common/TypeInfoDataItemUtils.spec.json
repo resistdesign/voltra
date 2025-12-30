@@ -1,0 +1,42 @@
+{
+  "file": "./TypeInfoDataItemUtils.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoDataItemUtilsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringDefault": {
+          "hasDefaultValue": true,
+          "defaultValue": "hello"
+        },
+        "numberDefault": {
+          "hasDefaultValue": true,
+          "defaultValue": 42
+        },
+        "booleanDefault": {
+          "hasDefaultValue": true,
+          "defaultValue": true
+        },
+        "arrayDefault": {
+          "hasDefaultValue": true,
+          "defaultValue": [
+            1,
+            2,
+            3
+          ]
+        },
+        "rawArrayDefault": {
+          "hasDefaultValue": true,
+          "defaultValue": []
+        },
+        "noDefault": {
+          "hasDefaultValue": false
+        },
+        "referenceDefault": {
+          "hasDefaultValue": false
+        }
+      }
+    }
+  ]
+}

@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * IaC utility helpers for patching templates, creating resource packs, and
+ * defining parameter groups.
+ */
 import {
   CloudFormationParameter,
   CloudFormationTemplate,
@@ -15,7 +21,7 @@ export type ParameterInfo = {
 
 /**
  * Add a stack parameter including its descriptive info and an optional parameter group.
- * */
+ */
 export const addParameter = (
   parameterInfo: ParameterInfo,
   template: CloudFormationTemplate,
@@ -82,7 +88,7 @@ export const addParameter = (
 
 /**
  * Add multiple stack parameters with info and groups.
- * */
+ */
 export const addParameters = (
   parameters: ParameterInfo[],
   template: CloudFormationTemplate,
@@ -90,7 +96,7 @@ export const addParameters = (
 
 /**
  * A function used to apply a pack to a stack template.
- * */
+ */
 export type ResourcePackApplier<ParamsType> = (
   params: ParamsType,
   template: CloudFormationTemplate,
@@ -98,7 +104,7 @@ export type ResourcePackApplier<ParamsType> = (
 
 /**
  * Apply a patch to a stack template.
- * */
+ */
 export const patchTemplate = (
   patch: Partial<CloudFormationTemplate>,
   template: CloudFormationTemplate,
@@ -127,7 +133,7 @@ export const patchTemplate = (
 
 /**
  * Create a custom resource pack that can use configuration input to patch a stack with convenient resources, parameters, etc.
- * */
+ */
 export const createResourcePack =
   <ParamsType>(
     creator: (params: ParamsType) => Partial<CloudFormationTemplate>,

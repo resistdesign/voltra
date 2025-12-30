@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Helpers for deriving default values from TypeInfo field constraints.
+ */
 import {
   LiteralValue,
   TypeInfoField,

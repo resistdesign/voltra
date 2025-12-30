@@ -1,3 +1,36 @@
+/**
+ * @packageDocumentation
+ *
+ * Role-based data access control (DAC) helpers that compare resource paths
+ * against role constraints. Constraints can be exact matches or prefixes, and
+ * can include wildcard signifiers for flexible path matching.
+ *
+ * Example role policy:
+ * ```ts
+ * import {
+ *   DACConstraintType,
+ *   DACRole,
+ *   WILDCARD_SIGNIFIER_PROTOTYPE,
+ * } from "./DataAccessControl";
+ *
+ * const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE;
+ * const readerRole: DACRole = {
+ *   id: "reader",
+ *   constraints: [
+ *     {
+ *       type: DACConstraintType.ALLOW,
+ *       resourcePath: ["books", wildcard],
+ *       pathIsPrefix: true,
+ *     },
+ *     {
+ *       type: DACConstraintType.DENY,
+ *       resourcePath: ["books", "restricted"],
+ *       pathIsPrefix: true,
+ *     },
+ *   ],
+ * };
+ * ```
+ */
 import { LiteralValue } from "../common/TypeParsing/TypeInfo";
 
 /**

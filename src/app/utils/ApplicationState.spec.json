@@ -1,0 +1,22 @@
+{
+  "file": "./ApplicationState.test-utils.ts",
+  "tests": [
+    {
+      "export": "runApplicationStateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "identifierCIsEmpty": true,
+        "identifierDSameRef": true,
+        "valueA": "alpha",
+        "valueB": "beta",
+        "modifiedA": true,
+        "modifiedB": false,
+        "structure": {
+          "first": "alpha",
+          "second": "beta"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "file": "./HelperTypes.test-utils.ts",
+  "tests": [
+    {
+      "export": "runHelperTypesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "example": {
+          "a": "alpha",
+          "b": 42
+        },
+        "keys": [
+          "a",
+          "b"
+        ]
+      }
+    }
+  ]
+}

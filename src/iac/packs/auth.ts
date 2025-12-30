@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Auth pack that composes Cognito user management and adds an admin group.
+ * Wraps {@link addUserManagement} and appends a group resource to the template.
+ */
 import { addUserManagement } from "./auth/user-management";
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";

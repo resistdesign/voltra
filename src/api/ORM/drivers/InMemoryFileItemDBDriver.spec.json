@@ -1,0 +1,42 @@
+{
+  "file": "./InMemoryFileItemDBDriver.test-utils.ts",
+  "tests": [
+    {
+      "export": "runInMemoryFileItemDriverScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": [
+          "docs/alpha.txt",
+          "docs/beta.txt",
+          "logs/gamma.log"
+        ],
+        "readWithUrls": {
+          "id": "docs/alpha.txt",
+          "uploadUrl": "memory://upload/Files/docs/alpha.txt",
+          "downloadUrl": "memory://download/Files/docs/alpha.txt"
+        },
+        "afterUpdate": {
+          "sizeInBytes": 18,
+          "updatedOn": 1700000000000
+        },
+        "filteredIds": [
+          "docs/alpha.txt",
+          "docs/beta.txt"
+        ],
+        "filteredDownloadUrls": [
+          "memory://download/Files/docs/alpha.txt",
+          "memory://download/Files/docs/beta.txt"
+        ],
+        "page1Ids": [
+          "docs/alpha.txt"
+        ],
+        "page2Ids": [
+          "docs/beta.txt"
+        ],
+        "deleteResult": true,
+        "missingReadError": "ITEM_NOT_FOUND"
+      }
+    }
+  ]
+}

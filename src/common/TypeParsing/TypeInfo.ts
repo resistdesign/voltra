@@ -1,6 +1,9 @@
 /**
+ * TypeInfo definitions and tags used across parsing and validation.
+ */
+/**
  * A set of possible operations for a type or field value.
- * */
+ */
 export enum TypeOperation {
   CREATE = "CREATE",
   READ = "READ",

@@ -1,0 +1,77 @@
+{
+  "file": "./criteriaToStructuredWhere.ts",
+  "tests": [
+    {
+      "export": "criteriaToStructuredWhere",
+      "conditions": [
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "status",
+              "operator": "EQUALS",
+              "value": "open"
+            },
+            {
+              "fieldName": "tags",
+              "operator": "CONTAINS",
+              "value": "urgent"
+            }
+          ]
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "and": [
+          {
+            "type": "term",
+            "field": "status",
+            "mode": "eq",
+            "value": "open"
+          },
+          {
+            "type": "term",
+            "field": "tags",
+            "mode": "contains",
+            "value": "urgent"
+          }
+        ]
+      }
+    },
+    {
+      "export": "criteriaToStructuredWhere",
+      "conditions": [
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "category",
+              "operator": "IN",
+              "valueOptions": [
+                "a",
+                "b"
+              ]
+            }
+          ]
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "or": [
+          {
+            "type": "term",
+            "field": "category",
+            "mode": "eq",
+            "value": "a"
+          },
+          {
+            "type": "term",
+            "field": "category",
+            "mode": "eq",
+            "value": "b"
+          }
+        ]
+      }
+    }
+  ]
+}

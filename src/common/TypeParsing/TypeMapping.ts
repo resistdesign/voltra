@@ -1,4 +1,12 @@
-import {ModuleDeclaration, Node, SyntaxKind, TypeAliasDeclaration,} from "typescript";
+/**
+ * AST mapping helpers for extracting type aliases from TypeScript sources.
+ */
+import {
+  ModuleDeclaration,
+  Node,
+  SyntaxKind,
+  TypeAliasDeclaration,
+} from "typescript";
 
 /**
  * A map of type aliases in the TypeScript AST.

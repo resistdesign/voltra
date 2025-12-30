@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Repository parameter pack for build pipelines (owner/name/branch/token).
+ */
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 

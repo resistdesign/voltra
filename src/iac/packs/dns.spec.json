@@ -1,0 +1,27 @@
+{
+  "file": "./dns.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDNSPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "AppDNS"
+        ],
+        "defaultRecordType": "A",
+        "defaultTTL": "300",
+        "defaultHostedZoneId": "HZ123",
+        "defaultDomainName": "app.example.com",
+        "defaultResourceRecords": [
+          "203.0.113.10"
+        ],
+        "customRecordType": "CNAME",
+        "customTTL": "300",
+        "customResourceRecords": [
+          "alias.example.com"
+        ]
+      }
+    }
+  ]
+}

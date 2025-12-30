@@ -1,0 +1,53 @@
+{
+  "file": "./InMemoryDataItemDBDriver.test-utils.ts",
+  "tests": [
+    {
+      "export": "runInMemoryDataItemDriverScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": [
+          "item-1",
+          "item-2",
+          "item-3"
+        ],
+        "readSelected": {
+          "id": "item-1",
+          "name": "Alpha"
+        },
+        "afterUpdate": {
+          "name": "Alpha+",
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "filteredIds": [
+          "item-1",
+          "item-3"
+        ],
+        "page1Ids": [
+          "item-2",
+          "item-1"
+        ],
+        "page2Ids": [
+          "item-3"
+        ],
+        "listSelectedKeys": [
+          [
+            "id"
+          ],
+          [
+            "id"
+          ],
+          [
+            "id"
+          ]
+        ],
+        "deleteResult": true,
+        "missingReadError": "ITEM_NOT_FOUND",
+        "invalidCursorError": "INVALID_CURSOR"
+      }
+    }
+  ]
+}

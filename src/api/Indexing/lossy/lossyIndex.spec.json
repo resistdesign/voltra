@@ -1,0 +1,44 @@
+{
+  "file": "./lossyIndex.test-utils.ts",
+  "tests": [
+    {
+      "export": "runLossyIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "postingsAll": {
+          "docIds": [
+            "doc-1",
+            "doc-2"
+          ]
+        },
+        "postingsPage": {
+          "docIds": [
+            "doc-1"
+          ],
+          "nextCursor": "doc-1"
+        },
+        "postingsPage2": {
+          "docIds": [
+            "doc-2"
+          ]
+        },
+        "postingsAfterRemove": {
+          "docIds": [
+            "doc-1"
+          ]
+        },
+        "postingsAlpha": {
+          "docIds": [
+            "doc-4"
+          ]
+        },
+        "ddbKey": {
+          "token": "token",
+          "indexField": "text",
+          "docId": "doc-1"
+        }
+      }
+    }
+  ]
+}

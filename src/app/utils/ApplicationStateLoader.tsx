@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Loader hook for remote application state values. Calls a service endpoint,
+ * tracks loading/error state, and populates ApplicationState via identifiers.
+ */
 import {
   ApplicationStateIdentifier,
   useApplicationStateValue,

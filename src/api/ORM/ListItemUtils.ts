@@ -1,10 +1,22 @@
+/**
+ * @packageDocumentation
+ *
+ * Utilities for list operations that wrap a driver with optional filtering and
+ * transformation. This is useful when you want client-side filtering but still
+ * reuse the driver paging contract.
+ */
 import { DataItemDBDriver } from "./drivers";
 import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
 import { ListItemsConfig, ListItemsResults } from "../../common/SearchTypes";
 
 /**
  * Execute a list items request against a data item driver.
- * */
+ *
+ * Notes:
+ * - If a filter is supplied, selected fields are not forwarded to the driver
+ *   to ensure the filter sees full items.
+ * - Transform runs after filter and before the response is returned.
+ */
 export const executeDriverListItems = async (
   driver: DataItemDBDriver<any, any>,
   config: ListItemsConfig,
