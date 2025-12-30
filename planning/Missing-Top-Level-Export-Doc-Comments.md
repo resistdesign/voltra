@@ -1,6 +1,6 @@
 # Missing Top Level Export Doc Comments
 
-Goal: identify exported declarations missing a direct JSDoc block (e.g., `AddDNSConfig`).
+Goal: identify exported declarations missing a direct JSDoc block (e.g., `AddDNSConfig`) and add the missing doc comments.
 
 Scope and exclusions:
 - Scanned `src/**/*.ts` and `src/**/*.tsx`.
@@ -39,22 +39,22 @@ Legend: [ ] todo, [x] done
 - [x] type `LossyPostingsPageOptions` (line 607)
 
 ## src/api/Indexing/fulltext/memoryBackend.ts
-- [ ] class `FullTextMemoryBackend` (line 21)
+- [x] class `FullTextMemoryBackend` (line 21)
 
 ## src/api/Indexing/lossy/lossyDdb.ts
-- [ ] type `LossyDdbKey` (line 9)
-- [ ] type `LossyDdbItem` (line 24)
+- [x] type `LossyDdbKey` (line 9)
+- [x] type `LossyDdbItem` (line 24)
 
 ## src/api/Indexing/lossy/lossyIndex.ts
-- [ ] type `LossyQueryOptions` (line 10)
-- [ ] type `LossyQueryResult` (line 21)
-- [ ] class `LossyIndex` (line 93)
+- [x] type `LossyQueryOptions` (line 10)
+- [x] type `LossyQueryResult` (line 21)
+- [x] class `LossyIndex` (line 93)
 
 ## src/api/Indexing/lossy/lossyS3.ts
-- [ ] type `LossyS3Pointer` (line 9)
+- [x] type `LossyS3Pointer` (line 9)
 
 ## src/api/Indexing/rel/cursor.ts
-- [ ] type `RelationalCursorState` (line 1)
+- [x] type `RelationalCursorState` (line 1)
 
 ## src/api/Indexing/rel/handlers.ts
 - [ ] type `EdgePutEvent` (line 50)

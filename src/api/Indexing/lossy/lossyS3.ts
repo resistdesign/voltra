@@ -6,6 +6,9 @@
  */
 import type { DocId } from "../types";
 
+/**
+ * Location of a lossy postings object in S3.
+ */
 export type LossyS3Pointer = {
   /**
    * Bucket name containing the lossy postings object.
