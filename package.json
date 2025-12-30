@@ -53,7 +53,7 @@
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",
-    "prep-dist": "cp package.json dist/ && cp README.md dist/ && cp .npmignore dist/",
+    "prep-dist": "node ./scripts/prep-dist.mjs",
     "site:build:app": "astro build && yarn finalize-site",
     "site:build:api": "node ./site/build-api.mjs",
     "site:build:iac": "ts-node ./site/iac/index.ts",

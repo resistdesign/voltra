@@ -5,10 +5,10 @@
 - [x] Phase 0 — Inventory & constraints
 - [x] Phase 1 — Switch dev/typecheck resolution to Bundler
 - [x] Phase 2 — Add bundler build for publish artifacts
-- [ ] Phase 3 — Fix published `package.json` (exports + types)
-- [ ] Phase 4 — Fix CLI `bin`
-- [ ] Phase 5 — Add consumer smoke tests
-- [ ] Phase 6 — Docs updates
+- [x] Phase 3 — Fix published `package.json` (exports + types)
+- [x] Phase 4 — Fix CLI `bin`
+- [x] Phase 5 — Add consumer smoke tests
+- [x] Phase 6 — Docs updates
 
 ## Problem
 
