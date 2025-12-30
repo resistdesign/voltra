@@ -7,14 +7,28 @@ import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 
 export type AddRepoConfig = {
+  /**
+   * Parameter name for repository owner.
+   */
   repoOwnerParameterName: string;
+  /**
+   * Parameter name for repository name.
+   */
   repoNameParameterName: string;
+  /**
+   * Parameter name for repository branch.
+   */
   repoBranchParameterName: string;
+  /**
+   * Parameter name for repository access token.
+   */
   repoTokenParameterName: string;
 };
 
 /**
  * Add repository related parameters for reference in other resources like a build pipeline (CI/CD).
+ *
+ * @param config - Repository parameter configuration.
  * */
 export const addRepo = createResourcePack(
   ({

@@ -146,9 +146,9 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/iac/packs/dns.ts`
 - [x] `src/iac/packs/file-storage.ts`
 - [x] `src/iac/packs/gateway.ts`
-- [ ] `src/iac/packs/index.ts`
-- [ ] `src/iac/packs/repo.ts`
-- [ ] `src/iac/packs/ssl-certificate.ts`
+- [x] `src/iac/packs/index.ts`
+- [x] `src/iac/packs/repo.ts`
+- [x] `src/iac/packs/ssl-certificate.ts`
 - [ ] `src/iac/types/CloudFormationResourceSpecification.ts` (Acquired from AWS documentation as JSON)
 - [ ] `src/iac/types/Constants.ts`
 - [ ] `src/iac/types/IaCTypes.ts` (generated)

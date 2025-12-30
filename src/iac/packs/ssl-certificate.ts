@@ -6,14 +6,28 @@
 import { createResourcePack } from "../utils";
 
 export type AddSSLCertificateConfig = {
+  /**
+   * Certificate resource id.
+   */
   id: string;
+  /**
+   * Base domain name for the certificate.
+   */
   domainName: any;
+  /**
+   * Hosted zone id for DNS validation.
+   */
   hostedZoneId: any;
+  /**
+   * Whether to include a wildcard SAN entry.
+   */
   includeWildCard?: boolean;
 };
 
 /**
  * Add an automatic SSL Certificate for a domain and all of it's subdomains.
+ *
+ * @param config - SSL certificate configuration.
  * */
 export const addSSLCertificate = createResourcePack(
   ({
