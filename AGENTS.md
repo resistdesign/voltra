@@ -33,7 +33,7 @@
 
 ## Agent Workflow & Progress Tracking
 - Treat user requests as the authoritative scope; do not down-scope without explicit user approval.
-- Start every task by confirming whether the full scope can be completed in a single uninterrupted attempt; if not, communicate that immediately and agree on phased delivery.
+- Start every task you are assigned by examining everything necessary, in the project, to confirming whether it can be completed in a single, uninterrupted attempt. If not, communicate that immediately and agree on a portion that you have already determined you can complete in one attempt.
 - When the user says "start the next task," proceed immediately using the current plan order; keep communication brief while remaining thorough.
 - Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete.
 - Maintain a live checklist while working; update it as each item is completed so progress is visible and verifiable.
