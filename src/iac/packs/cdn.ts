@@ -6,16 +6,33 @@
 import { createResourcePack } from "../utils";
 
 export type AddCDNConfig = {
+  /**
+   * CloudFront distribution id.
+   */
   id: string;
+  /**
+   * Route53 hosted zone id for the domain.
+   */
   hostedZoneId: any;
+  /**
+   * Domain name to serve.
+   */
   domainName: any;
+  /**
+   * ACM certificate ARN for the domain.
+   */
   certificateArn: any;
+  /**
+   * S3 file storage resource id.
+   */
   fileStorageId: string;
 };
 
 /**
  * Add a global cache of static files (a CDN) for things like your front-end, website, etc.
  * Includes a DNS record for the domain.
+ *
+ * @param config - CDN configuration.
  * */
 export const addCDN = createResourcePack(
   ({
