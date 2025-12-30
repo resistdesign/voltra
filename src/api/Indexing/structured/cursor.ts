@@ -1,7 +1,13 @@
 import type { DocId } from '../types.js';
 
 export type StructuredCursorState = {
+  /**
+   * Last document id processed in the previous page.
+   */
   lastDocId?: DocId;
+  /**
+   * Backend continuation token for paging.
+   */
   backendToken?: string;
 };
 
@@ -42,7 +48,14 @@ function decodePayload(cursor: string): StructuredCursorPayload {
   return parsed;
 }
 
-export function encodeStructuredCursor(state?: StructuredCursorState): string | undefined {
+/**
+ * Encode structured cursor state into a URL-safe string.
+ * @param state Cursor state to encode.
+ * @returns URL-safe cursor string, or undefined when there is no state to encode.
+ */
+export function encodeStructuredCursor(
+  state?: StructuredCursorState,
+): string | undefined {
   if (!state) {
     return undefined;
   }
@@ -56,7 +69,14 @@ export function encodeStructuredCursor(state?: StructuredCursorState): string | 
   return encodePayload({ v: 1, lastDocId, backendToken });
 }
 
-export function decodeStructuredCursor(cursor?: string): StructuredCursorState | undefined {
+/**
+ * Decode a structured cursor string back into state.
+ * @param cursor Cursor string to decode.
+ * @returns Parsed cursor state, or undefined when cursor is missing.
+ */
+export function decodeStructuredCursor(
+  cursor?: string,
+): StructuredCursorState | undefined {
   if (!cursor) {
     return undefined;
   }
