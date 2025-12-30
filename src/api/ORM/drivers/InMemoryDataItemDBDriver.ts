@@ -57,6 +57,9 @@ const selectFieldsFromItem = <ItemType extends TypeInfoDataItem>(
   }, {} as Partial<ItemType>);
 };
 
+/**
+ * In-memory data item driver for testing and local usage.
+ */
 export class InMemoryDataItemDBDriver<
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
