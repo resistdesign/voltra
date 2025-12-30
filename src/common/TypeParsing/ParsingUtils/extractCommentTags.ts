@@ -117,6 +117,12 @@ const getObjectWithValueAppliedToPath = (
   return baseParentObject;
 };
 
+/**
+ * Extract structured comment tags from a TypeScript node's JSDoc.
+ *
+ * @param node - AST node to read JSDoc tags from.
+ * @returns Nested object of tag values keyed by tag name paths.
+ */
 export const extractCommentTags = (node: Node): Record<any, any> => {
   const jsDocComments = (node as TypeAliasDeclaration)[
     "jsDoc" as keyof TypeAliasDeclaration

@@ -116,10 +116,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/TypeParsing/Utils.ts`
 - [x] `src/common/TypeParsing/Validation.ts`
 - [x] `src/common/TypeParsing/index.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/Constants.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/checkType.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/checkUnionType.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/extractCommentTags.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/Constants.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/checkType.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/checkUnionType.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/extractCommentTags.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/extractLiteralValues.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/extractTypeDetails.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo.ts`
