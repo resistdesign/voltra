@@ -1,5 +1,11 @@
 export type RelationalCursorState = {
+  /**
+   * Last entity id processed in the previous page.
+   */
   lastId?: string;
+  /**
+   * Backend continuation token used to resume paging.
+   */
   continuationToken?: string;
 };
 
@@ -41,7 +47,14 @@ function decodePayload(cursor: string): RelationalCursorPayload {
   return parsed;
 }
 
-export function encodeRelationalCursor(state?: RelationalCursorState): string | undefined {
+/**
+ * Encode relational cursor state into a URL-safe string.
+ * @param state Cursor state to encode.
+ * @returns URL-safe cursor string, or undefined when there is no state to encode.
+ */
+export function encodeRelationalCursor(
+  state?: RelationalCursorState,
+): string | undefined {
   if (!state) {
     return undefined;
   }
@@ -55,7 +68,14 @@ export function encodeRelationalCursor(state?: RelationalCursorState): string | 
   return encodePayload({ v: 1, t: 'rel', lastId, continuationToken });
 }
 
-export function decodeRelationalCursor(cursor?: string): RelationalCursorState | undefined {
+/**
+ * Decode a relational cursor string back into state.
+ * @param cursor Cursor string to decode.
+ * @returns Parsed cursor state, or undefined when cursor is missing.
+ */
+export function decodeRelationalCursor(
+  cursor?: string,
+): RelationalCursorState | undefined {
   if (!cursor) {
     return undefined;
   }
