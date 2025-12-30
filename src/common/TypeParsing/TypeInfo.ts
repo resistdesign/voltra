@@ -5,9 +5,21 @@
  * A set of possible operations for a type or field value.
  */
 export enum TypeOperation {
+  /**
+   * Create operation.
+   */
   CREATE = "CREATE",
+  /**
+   * Read operation.
+   */
   READ = "READ",
+  /**
+   * Update operation.
+   */
   UPDATE = "UPDATE",
+  /**
+   * Delete operation.
+   */
   DELETE = "DELETE",
 }
 
@@ -117,12 +129,33 @@ export type TypeKeyword = "string" | "number" | "boolean";
  * Information about a field in a type definition.
  */
 export type TypeInfoField = {
+  /**
+   * Scalar type keyword for the field.
+   */
   type: TypeKeyword;
+  /**
+   * Referenced TypeInfo type name, when relational.
+   */
   typeReference?: string;
+  /**
+   * Whether the field is an array.
+   */
   array: boolean;
+  /**
+   * Whether the field is read-only.
+   */
   readonly: boolean;
+  /**
+   * Whether the field is optional.
+   */
   optional: boolean;
+  /**
+   * Allowed literal values for the field.
+   */
   possibleValues?: LiteralValue[];
+  /**
+   * Optional field tags and constraints.
+   */
   tags?: SupportedFieldTags;
 };
 
@@ -130,9 +163,21 @@ export type TypeInfoField = {
  * Information about a type definition.
  */
 export type TypeInfo = {
+  /**
+   * Primary field name for the type.
+   */
   primaryField?: string;
+  /**
+   * Map of field names to field definitions.
+   */
   fields?: Record<string, TypeInfoField>;
+  /**
+   * Optional type-level tags.
+   */
   tags?: SupportedTags;
+  /**
+   * Field name groupings for union type definitions.
+   */
   unionFieldSets?: string[][];
 };
 
@@ -145,7 +190,13 @@ export type TypeInfoMap = Record<string, TypeInfo>;
  * The necessary information to use a {@link TypeInfo} with the entire {@link TypeInfoMap} containing it.
  * */
 export type TypeInfoPack = {
+  /**
+   * Entry type name to resolve.
+   */
   entryTypeName: string;
+  /**
+   * Type info map containing the entry type.
+   */
   typeInfoMap: TypeInfoMap;
 };
 
