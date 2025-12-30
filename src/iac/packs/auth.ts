@@ -9,23 +9,64 @@ import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 
 export type AddAuthConfig = {
+  /**
+   * Cognito user pool resource id.
+   */
   userManagementId: string;
+  /**
+   * IAM role name for authenticated users.
+   */
   authRoleName: string;
+  /**
+   * IAM role name for unauthenticated users.
+   */
   unauthRoleName: string;
+  /**
+   * Parameter name for Route53 hosted zone id.
+   */
   hostedZoneIdParameterName: string;
+  /**
+   * Parameter name for base domain.
+   */
   domainNameParameterName: string;
+  /**
+   * SSL certificate resource id for the user pool domain.
+   */
   sslCertificateId: string;
+  /**
+   * CloudFront distribution id for the main CDN.
+   */
   mainCDNCloudFrontId: string;
+  /**
+   * API Gateway REST API id for the backend.
+   */
   apiCloudFunctionGatewayId: string;
+  /**
+   * API Gateway stage name for the backend.
+   */
   apiStageName: string;
+  /**
+   * Resource id for the admin group.
+   */
   adminGroupId: string;
+  /**
+   * Cognito group name for admins.
+   */
   userManagementAdminGroupName: string;
+  /**
+   * OAuth callback URLs.
+   */
   callbackUrls: any[];
+  /**
+   * OAuth logout URLs.
+   */
   logoutUrls: any[];
 };
 
 /**
  * Add a user management system.
+ *
+ * @param config - Auth pack configuration.
  * */
 export const addAuth = createResourcePack(
   ({

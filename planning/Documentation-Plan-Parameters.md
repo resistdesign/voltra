@@ -134,10 +134,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/index.ts`
 
 ## iac
-- [ ] `src/iac/SimpleCFT.ts`
-- [ ] `src/iac/index.ts`
-- [ ] `src/iac/packs/auth.ts`
-- [ ] `src/iac/packs/auth/user-management.ts`
+- [x] `src/iac/SimpleCFT.ts`
+- [x] `src/iac/index.ts`
+- [x] `src/iac/packs/auth.ts`
+- [x] `src/iac/packs/auth/user-management.ts`
 - [ ] `src/iac/packs/build.ts`
 - [ ] `src/iac/packs/build/utils.ts`
 - [ ] `src/iac/packs/cdn.ts`
