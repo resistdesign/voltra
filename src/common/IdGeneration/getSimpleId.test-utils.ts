@@ -1,3 +1,6 @@
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 const FIXED_ISO = "2020-01-01T00:00:00.000Z";
 
 export const runGetSimpleIdScenario = () => {
@@ -20,7 +23,6 @@ export const runGetSimpleIdScenario = () => {
 
   const modulePath = require.resolve("./getSimpleId");
   delete require.cache[modulePath];
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { getSimpleId } = require("./getSimpleId");
 
   const firstId: string = getSimpleId();
