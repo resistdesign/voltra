@@ -1,5 +1,15 @@
 # Voltra Build Fix: Avoid `.js` Extensions in TS (Bundled Publish + `exports`)
 
+## Progress
+
+- [x] Phase 0 — Inventory & constraints
+- [x] Phase 1 — Switch dev/typecheck resolution to Bundler
+- [x] Phase 2 — Add bundler build for publish artifacts
+- [ ] Phase 3 — Fix published `package.json` (exports + types)
+- [ ] Phase 4 — Fix CLI `bin`
+- [ ] Phase 5 — Add consumer smoke tests
+- [ ] Phase 6 — Docs updates
+
 ## Problem
 
 Current build uses TS `moduleResolution: NodeNext/Node16` semantics for ESM output. That mode enforces **Node ESM fully‑specified imports**, which requires `.js` extensions in relative imports *in source*.
