@@ -4,8 +4,8 @@
 
 - [x] Phase 1 — Build layout PR
 - [x] Phase 2 — Exports PR
-- [ ] Phase 3 — Tooling guardrails PR (optional)
-- [ ] Phase 4 — Docs PR
+- [x] Phase 3 — Tooling guardrails PR (optional)
+- [x] Phase 4 — Docs PR
 
 ## Goal
 
