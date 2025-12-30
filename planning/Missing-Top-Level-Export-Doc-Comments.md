@@ -1,0 +1,211 @@
+# Missing Top Level Export Doc Comments
+
+Goal: identify exported declarations missing a direct JSDoc block (e.g., `AddDNSConfig`).
+
+Scope and exclusions:
+- Scanned `src/**/*.ts` and `src/**/*.tsx`.
+- Excluded `*.test-utils.*`, `*.spec.*`, and generated IaC files: `src/iac/types/IaCTypes.ts`, `src/iac/types/CloudFormationResourceSpecification.ts`.
+
+Legend: [ ] todo, [x] done
+
+## src/api/Indexing/exact/exactDdb.ts
+- [ ] type `ExactDdbKey` (line 9)
+- [ ] type `ExactDdbItem` (line 24)
+
+## src/api/Indexing/exact/exactIndex.ts
+- [ ] type `ExactQueryOptions` (line 10)
+- [ ] type `ExactQueryResult` (line 21)
+- [ ] class `ExactIndex` (line 56)
+
+## src/api/Indexing/exact/exactS3.ts
+- [ ] type `ExactS3Pointer` (line 9)
+
+## src/api/Indexing/fulltext/ddbBackend.ts
+- [ ] type `BatchWriteItemInput` (line 29)
+- [ ] type `BatchWriteItemOutput` (line 36)
+- [ ] type `KeysAndAttributes` (line 43)
+- [ ] type `BatchGetItemInput` (line 54)
+- [ ] type `BatchGetItemOutput` (line 61)
+- [ ] type `GetItemInput` (line 72)
+- [ ] type `GetItemOutput` (line 83)
+- [ ] type `WriteRequest` (line 90)
+- [ ] type `DynamoBatchWriter` (line 101)
+- [ ] type `QueryInput` (line 122)
+- [ ] type `QueryOutput` (line 149)
+- [ ] type `DynamoQueryClient` (line 160)
+- [ ] type `FullTextDdbWriterConfig` (line 169)
+- [ ] type `FullTextDdbBackendConfig` (line 589)
+- [ ] type `LossyPostingsPage` (line 596)
+- [ ] type `LossyPostingsPageOptions` (line 607)
+
+## src/api/Indexing/fulltext/memoryBackend.ts
+- [ ] class `FullTextMemoryBackend` (line 21)
+
+## src/api/Indexing/lossy/lossyDdb.ts
+- [ ] type `LossyDdbKey` (line 9)
+- [ ] type `LossyDdbItem` (line 24)
+
+## src/api/Indexing/lossy/lossyIndex.ts
+- [ ] type `LossyQueryOptions` (line 10)
+- [ ] type `LossyQueryResult` (line 21)
+- [ ] class `LossyIndex` (line 93)
+
+## src/api/Indexing/lossy/lossyS3.ts
+- [ ] type `LossyS3Pointer` (line 9)
+
+## src/api/Indexing/rel/cursor.ts
+- [ ] type `RelationalCursorState` (line 1)
+
+## src/api/Indexing/rel/handlers.ts
+- [ ] type `EdgePutEvent` (line 50)
+- [ ] type `EdgeRemoveEvent` (line 61)
+- [ ] type `EdgeQueryEvent` (line 72)
+- [ ] type `RelationalHandlerEvent` (line 99)
+- [ ] type `RelationalHandlerDependencies` (line 104)
+- [ ] type `LambdaResponse` (line 111)
+
+## src/api/Indexing/rel/relationalDdb.ts
+- [ ] type `RelationEdgesDdbKey` (line 12)
+- [ ] type `RelationEdgesDdbItem` (line 23)
+- [ ] type `RelationEdgesQueryRequest` (line 97)
+- [ ] type `RelationEdgesQueryResult` (line 112)
+- [ ] type `RelationEdgesDdbDependencies` (line 123)
+
+## src/api/Indexing/rel/types.ts
+- [ ] type `EdgeKey` (line 11)
+- [ ] type `Edge` (line 30)
+- [ ] type `EdgePage` (line 41)
+- [ ] type `RelationalQueryOptions` (line 52)
+
+## src/api/Indexing/structured/cursor.ts
+- [ ] type `StructuredCursorState` (line 3)
+
+## src/api/Indexing/structured/handlers.ts
+- [ ] type `StructuredDocumentRecord` (line 14)
+- [ ] type `StructuredIndexDocumentEvent` (line 25)
+- [ ] type `StructuredSearchEvent` (line 36)
+- [ ] type `StructuredHandlerEvent` (line 55)
+- [ ] type `StructuredWriter` (line 57)
+- [ ] type `StructuredReader` (line 67)
+- [ ] type `StructuredHandlerDependencies` (line 69)
+- [ ] type `LambdaResponse` (line 80)
+
+## src/api/Indexing/structured/searchStructured.ts
+- [ ] type `StructuredSearchDependencies` (line 41)
+
+## src/api/Indexing/structured/structuredDdb.ts
+- [ ] type `StructuredTermIndexKey` (line 19)
+- [ ] type `StructuredTermIndexItem` (line 30)
+- [ ] type `StructuredRangeIndexKey` (line 45)
+- [ ] type `StructuredRangeIndexItem` (line 56)
+- [ ] type `StructuredDocFieldsKey` (line 67)
+- [ ] type `StructuredDocFieldsItem` (line 74)
+
+## src/api/Indexing/structured/structuredWriter.ts
+- [ ] type `StructuredWriterDependencies` (line 15)
+- [ ] class `StructuredDdbWriter` (line 147)
+
+## src/api/Indexing/structured/types.ts
+- [ ] type `StructuredTermWhere` (line 13)
+- [ ] type `StructuredRangeWhere` (line 32)
+- [ ] type `Where` (line 100)
+- [ ] type `StructuredQueryOptions` (line 102)
+- [ ] type `CandidatePage` (line 113)
+
+## src/api/ORM/TypeInfoORMService.ts
+- [ ] type `TypeInfoORMIndexingConfig` (line 168)
+
+## src/api/ORM/drivers/InMemoryDataItemDBDriver.ts
+- [ ] class `InMemoryDataItemDBDriver` (line 60)
+
+## src/api/ORM/drivers/InMemoryFileItemDBDriver.ts
+- [ ] type `InMemoryFileSpecificConfig` (line 20)
+- [ ] class `InMemoryFileItemDBDriver` (line 73)
+
+## src/api/ORM/drivers/InMemoryFileItemDBDriver/ConfigTypes.ts
+- [ ] type `InMemoryFileSpecificConfig` (line 1)
+
+## src/api/ORM/drivers/InMemoryItemRelationshipDBDriver.ts
+- [ ] class `InMemoryItemRelationshipDBDriver` (line 34)
+
+## src/api/ORM/drivers/IndexingRelationshipDriver.ts
+- [ ] type `RelationalBackend` (line 19)
+- [ ] type `IndexingRelationshipDriverConfig` (line 58)
+
+## src/api/ORM/drivers/S3FileItemDBDriver.ts
+- [ ] type `BaseFileItem` (line 37)
+
+## src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts
+- [ ] type `S3SpecificConfig` (line 320)
+
+## src/app/utils/Route.tsx
+- [ ] const `RouteContext` (line 65)
+
+## src/app/utils/TypeInfoORMAPIUtils.ts
+- [ ] type `TypeInfoORMAPIState` (line 74)
+
+## src/common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo.ts
+- [ ] enum `TypeInfoPrimaryFieldErrors` (line 3)
+
+## src/common/TypeParsing/Validation.ts
+- [ ] enum `RelationshipValidationType` (line 16)
+
+## src/iac/packs/auth.ts
+- [ ] type `AddAuthConfig` (line 11)
+
+## src/iac/packs/auth/user-management.ts
+- [ ] type `AddUserManagementConfig` (line 9)
+
+## src/iac/packs/build.ts
+- [ ] type `BuildPipelineRepoConfig` (line 14)
+- [ ] type `AddBuildPipelineConfig` (line 68)
+
+## src/iac/packs/build/utils.ts
+- [ ] interface `Env` (line 59)
+- [ ] interface `Proxy` (line 86)
+- [ ] interface `Batch` (line 97)
+- [ ] interface `Phase` (line 118)
+- [ ] type `PhaseConfig` (line 141)
+- [ ] interface `ReportGroupNameOrArn` (line 148)
+- [ ] interface `Reports` (line 167)
+- [ ] interface `ArtifactIdentifier` (line 174)
+- [ ] interface `SecondaryArtifacts` (line 193)
+- [ ] interface `Artifacts` (line 200)
+- [ ] interface `Cache` (line 235)
+- [ ] interface `BuildSpec` (line 242)
+
+## src/iac/packs/cdn.ts
+- [ ] type `AddCDNConfig` (line 8)
+
+## src/iac/packs/cloud-function.ts
+- [ ] type `CloudFunctionRuntime` (line 18)
+- [ ] type `AddCloudFunctionConfig` (line 64)
+
+## src/iac/packs/dns.ts
+- [ ] type `AddDNSConfig` (line 10)
+
+## src/iac/packs/file-storage.ts
+- [ ] type `AddSecureFileStorageConfig` (line 9)
+
+## src/iac/packs/gateway.ts
+- [ ] type `AddGatewayAuthorizerConfig` (line 16)
+- [ ] type `AddGatewayConfig` (line 35)
+
+## src/iac/packs/repo.ts
+- [ ] type `AddRepoConfig` (line 9)
+
+## src/iac/packs/ssl-certificate.ts
+- [ ] type `AddSSLCertificateConfig` (line 8)
+
+## src/iac/types/Types.ts
+- [ ] type `AttributeType` (line 23)
+- [ ] type `PropertyDescriptor` (line 46)
+- [ ] type `PropertyType` (line 54)
+- [ ] type `ResourceType` (line 61)
+- [ ] type `CloudFormationResourceSpecification` (line 84)
+- [ ] type `NamespaceStructure` (line 99)
+
+## src/iac/utils/index.ts
+- [ ] type `ParameterInfo` (line 15)
+- [ ] type `ParameterGroup` (line 180)
+
