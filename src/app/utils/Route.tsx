@@ -62,6 +62,9 @@ export type RouteContextType = {
   isTopLevel: boolean;
 };
 
+/**
+ * React context for route state and parameters.
+ */
 export const RouteContext = createContext<RouteContextType>({
   currentWindowPath: CURRENT_PATH,
   parentPath: "",

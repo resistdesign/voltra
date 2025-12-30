@@ -13,6 +13,9 @@ import {
 } from "./TypeInfo";
 import { getPathString } from "../Routing";
 
+/**
+ * Relationship validation behavior for TypeInfo checks.
+ */
 export enum RelationshipValidationType {
   /**
    * Include relationship values in validation.
