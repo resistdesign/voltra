@@ -9,7 +9,13 @@ import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
 type EdgeMetadata = Record<string, unknown>;
 
 type EdgeEntry<TMetadata extends EdgeMetadata> = {
+  /**
+   * Opposite entity id for the edge.
+   */
   otherId: string;
+  /**
+   * Optional metadata stored for the edge.
+   */
   metadata?: TMetadata;
 };
 
@@ -67,6 +73,11 @@ export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMeta
   private forward: EdgeLookup<TMetadata> = new Map();
   private reverse: EdgeLookup<TMetadata> = new Map();
 
+  /**
+   * Insert or update an edge.
+   * @param edge Edge to store.
+   * @returns Nothing.
+   */
   putEdge(edge: Edge<TMetadata>): void {
     const { from, to, relation } = edge.key;
     const forwardKey = edgeKey(from, relation);
@@ -81,6 +92,11 @@ export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMeta
     this.reverse.set(reverseKey, reverseMap);
   }
 
+  /**
+   * Remove an edge by key.
+   * @param key Edge key to remove.
+   * @returns Nothing.
+   */
   removeEdge(key: EdgeKey): void {
     const { from, to, relation } = key;
     const forwardKey = edgeKey(from, relation);
@@ -99,6 +115,13 @@ export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMeta
     }
   }
 
+  /**
+   * Query outgoing edges for an entity and relation.
+   * @param fromId Source entity id.
+   * @param relation Relation name.
+   * @param options Optional paging options.
+   * @returns Page of outgoing edges.
+   */
   getOutgoing(
     fromId: string,
     relation: string,
@@ -114,6 +137,13 @@ export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMeta
     }));
   }
 
+  /**
+   * Query incoming edges for an entity and relation.
+   * @param toId Target entity id.
+   * @param relation Relation name.
+   * @param options Optional paging options.
+   * @returns Page of incoming edges.
+   */
   getIncoming(
     toId: string,
     relation: string,
