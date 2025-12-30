@@ -52,12 +52,12 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/Indexing/structured/structuredDdbBackend.ts`
 - [x] `src/api/Indexing/structured/structuredWriter.ts`
 - [x] `src/api/Indexing/structured/types.ts`
-- [ ] `src/api/ORM/DACUtils.ts`
-- [ ] `src/api/ORM/ListItemUtils.ts`
-- [ ] `src/api/ORM/ORMRouteMap.ts`
-- [ ] `src/api/ORM/TypeInfoORMService.ts`
-- [ ] `src/api/ORM/index.ts`
-- [ ] `src/api/ORM/indexing/criteriaToStructuredWhere.ts`
+- [x] `src/api/ORM/DACUtils.ts`
+- [x] `src/api/ORM/ListItemUtils.ts`
+- [x] `src/api/ORM/ORMRouteMap.ts`
+- [x] `src/api/ORM/TypeInfoORMService.ts`
+- [x] `src/api/ORM/index.ts`
+- [x] `src/api/ORM/indexing/criteriaToStructuredWhere.ts`
 - [ ] `src/api/ORM/drivers/DynamoDBDataItemDBDriver.ts`
 - [ ] `src/api/ORM/drivers/DynamoDBDataItemDBDriver/ConfigTypes.ts`
 - [ ] `src/api/ORM/drivers/InMemoryDataItemDBDriver.ts`

@@ -88,8 +88,12 @@ const buildWhereForCriterion = (criterion: FieldCriterion): Where => {
 
 /**
  * Translate {@link SearchCriteria.fieldCriteria} into a structured WHERE tree.
+ * @returns Structured where clause or undefined when no criteria exist.
  */
 export const criteriaToStructuredWhere = (
+  /**
+   * Search criteria to translate.
+   */
   criteria?: SearchCriteria,
 ): Where | undefined => {
   if (!criteria || !Array.isArray(criteria.fieldCriteria)) {
