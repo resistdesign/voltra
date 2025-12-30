@@ -3,6 +3,12 @@ import { SupportedFieldTags, TypeInfoField, TypeKeyword } from "../TypeInfo";
 import { extractTypeDetails } from "./extractTypeDetails";
 import { extractCommentTags } from "./extractCommentTags";
 
+/**
+ * Build TypeInfo field metadata from a property signature.
+ *
+ * @param propertySignature - Property signature node to inspect.
+ * @returns TypeInfo field metadata.
+ */
 export const getTypeInfoField = (
   propertySignature: PropertySignature,
 ): TypeInfoField => {

@@ -124,10 +124,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/TypeParsing/ParsingUtils/extractTypeDetails.ts`
 - [x] `src/common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo.ts`
 - [x] `src/common/TypeParsing/ParsingUtils/getTypeInfo.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoField.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromAliasType.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromFieldFilter.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromTypeAlias.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoField.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromAliasType.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromFieldFilter.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromTypeAlias.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/getTypeKeyword.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/getUnionOrIntersectionTypeInfo.ts`
 - [ ] `src/common/TypeParsing/ParsingUtils/getUnionOrLiteralStringValues.ts`
