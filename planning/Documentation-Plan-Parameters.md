@@ -34,9 +34,9 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/Indexing/fulltext/ddbBackend.ts`
 - [x] `src/api/Indexing/fulltext/memoryBackend.ts`
 - [x] `src/api/Indexing/fulltext/schema.ts`
-- [ ] `src/api/Indexing/lossy/lossyDdb.ts`
-- [ ] `src/api/Indexing/lossy/lossyIndex.ts`
-- [ ] `src/api/Indexing/lossy/lossyS3.ts`
+- [x] `src/api/Indexing/lossy/lossyDdb.ts`
+- [x] `src/api/Indexing/lossy/lossyIndex.ts`
+- [x] `src/api/Indexing/lossy/lossyS3.ts`
 - [ ] `src/api/Indexing/rel/cursor.ts`
 - [ ] `src/api/Indexing/rel/handlers.ts`
 - [ ] `src/api/Indexing/rel/inMemory.ts`
