@@ -6,6 +6,9 @@
  */
 import type { DocId } from "../types.js";
 
+/**
+ * DynamoDB key shape for exact postings items.
+ */
 export type ExactDdbKey = {
   /**
    * Token value stored in the exact index.
@@ -21,6 +24,9 @@ export type ExactDdbKey = {
   docId: DocId;
 };
 
+/**
+ * DynamoDB item shape for exact postings entries.
+ */
 export type ExactDdbItem = ExactDdbKey & {
   /**
    * Token positions within the document.
