@@ -58,21 +58,21 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/ORM/TypeInfoORMService.ts`
 - [x] `src/api/ORM/index.ts`
 - [x] `src/api/ORM/indexing/criteriaToStructuredWhere.ts`
-- [ ] `src/api/ORM/drivers/DynamoDBDataItemDBDriver.ts`
-- [ ] `src/api/ORM/drivers/DynamoDBDataItemDBDriver/ConfigTypes.ts`
-- [ ] `src/api/ORM/drivers/InMemoryDataItemDBDriver.ts`
-- [ ] `src/api/ORM/drivers/InMemoryDataItemDBDriver/ConfigTypes.ts`
-- [ ] `src/api/ORM/drivers/InMemoryFileItemDBDriver.ts`
-- [ ] `src/api/ORM/drivers/InMemoryFileItemDBDriver/ConfigTypes.ts`
-- [ ] `src/api/ORM/drivers/InMemoryItemRelationshipDBDriver.ts`
-- [ ] `src/api/ORM/drivers/IndexingRelationshipDriver.ts`
-- [ ] `src/api/ORM/drivers/S3FileItemDBDriver.ts`
-- [ ] `src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts`
-- [ ] `src/api/ORM/drivers/S3FileItemDBDriver/S3FileDriver.ts`
-- [ ] `src/api/ORM/drivers/common/SupportedTypeInfoORMDBDrivers.ts`
-- [ ] `src/api/ORM/drivers/common/Types.ts`
-- [ ] `src/api/ORM/drivers/common/index.ts`
-- [ ] `src/api/ORM/drivers/index.ts`
+- [x] `src/api/ORM/drivers/DynamoDBDataItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/DynamoDBDataItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/InMemoryDataItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/InMemoryDataItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/InMemoryFileItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/InMemoryFileItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/InMemoryItemRelationshipDBDriver.ts`
+- [x] `src/api/ORM/drivers/IndexingRelationshipDriver.ts`
+- [x] `src/api/ORM/drivers/S3FileItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/S3FileItemDBDriver/S3FileDriver.ts`
+- [x] `src/api/ORM/drivers/common/SupportedTypeInfoORMDBDrivers.ts`
+- [x] `src/api/ORM/drivers/common/Types.ts`
+- [x] `src/api/ORM/drivers/common/index.ts`
+- [x] `src/api/ORM/drivers/index.ts`
 
 ## app
 - [ ] `src/app/index.ts`
