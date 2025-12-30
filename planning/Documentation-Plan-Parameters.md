@@ -149,12 +149,12 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/iac/packs/index.ts`
 - [x] `src/iac/packs/repo.ts`
 - [x] `src/iac/packs/ssl-certificate.ts`
-- [ ] `src/iac/types/CloudFormationResourceSpecification.ts` (Acquired from AWS documentation as JSON)
-- [ ] `src/iac/types/Constants.ts`
-- [ ] `src/iac/types/IaCTypes.ts` (generated)
-- [ ] `src/iac/types/Renderers.ts`
-- [ ] `src/iac/types/Types.ts`
-- [ ] `src/iac/types/Utils.ts`
-- [ ] `src/iac/types/generate.ts`
-- [ ] `src/iac/utils/index.ts`
-- [ ] `src/iac/utils/patch-utils.ts`
+- [x] `src/iac/types/CloudFormationResourceSpecification.ts` (Acquired from AWS documentation as JSON)
+- [x] `src/iac/types/Constants.ts`
+- [x] `src/iac/types/IaCTypes.ts` (generated)
+- [x] `src/iac/types/Renderers.ts`
+- [x] `src/iac/types/Types.ts`
+- [x] `src/iac/types/Utils.ts`
+- [x] `src/iac/types/generate.ts`
+- [x] `src/iac/utils/index.ts`
+- [x] `src/iac/utils/patch-utils.ts`
