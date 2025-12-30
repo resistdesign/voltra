@@ -12,9 +12,14 @@ import {
 } from "../../src/iac/packs";
 import Path from "path";
 import FS from "fs";
+import { fileURLToPath } from "url";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../common/ClientSideTypeConstants";
+
+const moduleDirname = typeof __dirname === "string"
+  ? __dirname
+  : Path.dirname(fileURLToPath(import.meta.url));
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
@@ -23,7 +28,7 @@ const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_TOKEN",
 ]);
 const OUTPUT_PATH = Path.join(
-  __dirname,
+  moduleDirname,
   "..",
   "..",
   "site-dist",

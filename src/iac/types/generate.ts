@@ -8,10 +8,13 @@
 import Path from "path";
 import FS from "fs";
 import { format } from "prettier";
+import { fileURLToPath } from "url";
 import { NamespaceStructure } from "./Types";
 import { CloudFormationResourceSpecificationData } from "./CloudFormationResourceSpecification";
 import { getNamespaceStructure } from "./Utils";
 import { renderNamespaceStructure } from "./Renderers";
+
+const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
 const STANDARD_INCLUDES = FS.readFileSync(
   Path.join(__dirname, "StandardIncludes.d.ts.tmpl"),

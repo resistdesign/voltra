@@ -9,6 +9,7 @@
 - [x] Phase 4 — Fix CLI `bin`
 - [x] Phase 5 — Add consumer smoke tests
 - [x] Phase 6 — Docs updates
+- [x] Phase 7 — Build/pack/test/verify
 
 ## Problem
 
@@ -194,6 +195,19 @@ Update README to show supported patterns:
 * Preferred: subpath entrypoints (`@resistdesign/voltra/iac/packs`)
 * Convenience: namespace (`IaC.Packs.addDNS`)
 * Not supported: deep internal file imports
+
+---
+
+## Phase 7 — Build/Pack/Test/Verify
+
+Run and confirm:
+
+* `yarn build`
+* `yarn test`
+* `yarn test:consumer`
+* `yarn site:build:api`
+* `yarn site:build:iac` (requires `REPO_OWNER`, `REPO_NAME`, `REPO_BRANCH`, `REPO_TOKEN`)
+* `yarn site:build:app`
 
 ---
 

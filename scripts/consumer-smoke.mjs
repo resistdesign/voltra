@@ -11,10 +11,20 @@ const distDir = path.join(repoRoot, "dist");
 const distPackageJson = path.join(distDir, "package.json");
 const tscPath = path.join(repoRoot, "node_modules", "typescript", "bin", "tsc");
 
-const runTsc = (configPath) =>
-  execFileSync(process.execPath, [tscPath, "--pretty", "false", "--project", configPath], {
-    stdio: "pipe",
-  });
+const runTsc = (configPath) => {
+  try {
+    execFileSync(
+      process.execPath,
+      [tscPath, "--pretty", "false", "--project", configPath],
+      { stdio: "pipe" },
+    );
+    return { ok: true };
+  } catch (error) {
+    const stderr = error?.stderr?.toString?.() ?? "";
+    const stdout = error?.stdout?.toString?.() ?? "";
+    return { ok: false, stderr, stdout };
+  }
+};
 
 const run = async () => {
   try {
@@ -49,6 +59,9 @@ const run = async () => {
       dependencies: {
         "@resistdesign/voltra": tarballPath,
       },
+      devDependencies: {
+        "@types/node": "^20.11.6",
+      },
     };
 
     await fs.writeFile(
@@ -80,11 +93,11 @@ const run = async () => {
 
     const baseConfig = {
       compilerOptions: {
-        module: "NodeNext",
-        moduleResolution: "NodeNext",
+        module: "ESNext",
+        moduleResolution: "bundler",
         target: "ES2022",
         noEmit: true,
-        types: [],
+        types: ["node"],
       },
     };
 
@@ -117,14 +130,15 @@ const run = async () => {
       stdio: "inherit",
     });
 
-    runTsc(path.join(consumerDir, "tsconfig.valid.json"));
-
-    let deepImportFailed = false;
-    try {
-      runTsc(path.join(consumerDir, "tsconfig.deep.json"));
-    } catch {
-      deepImportFailed = true;
+    const validResult = runTsc(path.join(consumerDir, "tsconfig.valid.json"));
+    if (!validResult.ok) {
+      throw new Error(
+        `Valid imports failed:\n${validResult.stdout}${validResult.stderr}`,
+      );
     }
+
+    const deepResult = runTsc(path.join(consumerDir, "tsconfig.deep.json"));
+    const deepImportFailed = !deepResult.ok;
 
     if (!deepImportFailed) {
       throw new Error("Deep import unexpectedly resolved. Exports guard failed.");

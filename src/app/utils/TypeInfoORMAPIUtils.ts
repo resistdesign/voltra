@@ -8,7 +8,7 @@ import {
   TypeInfoORMAPI,
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
-import { ExpandComplexType } from "../../common/HelperTypes";
+import type { ExpandComplexType } from "../../common/HelperTypes";
 import { useCallback, useMemo, useState } from "react";
 import { getSimpleId } from "../../common/IdGeneration";
 
