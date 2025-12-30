@@ -6,6 +6,9 @@
  */
 import { createResourcePack } from "../../utils";
 
+/**
+ * Configuration for adding Cognito user management resources.
+ */
 export type AddUserManagementConfig = {
   /**
    * Base id for Cognito resources.

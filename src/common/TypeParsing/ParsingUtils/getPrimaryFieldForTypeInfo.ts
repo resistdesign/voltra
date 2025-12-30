@@ -1,5 +1,8 @@
 import { TypeInfo } from "../TypeInfo";
 
+/**
+ * Errors raised while resolving primary fields.
+ */
 export enum TypeInfoPrimaryFieldErrors {
   /**
    * Primary field cannot be read due to denied operations.

@@ -13,6 +13,9 @@ import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
  */
 export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 
+/**
+ * Configuration for API Gateway authorizers.
+ */
 export type AddGatewayAuthorizerConfig = {
   /**
    * Cognito provider ARNs for authorization.
@@ -32,6 +35,9 @@ export type AddGatewayAuthorizerConfig = {
   identitySource?: string;
 };
 
+/**
+ * Configuration for the API Gateway pack.
+ */
 export type AddGatewayConfig = {
   /**
    * Base id for gateway resources.
@@ -74,6 +80,9 @@ export type AddGatewayConfig = {
  *
  * @param config - Gateway configuration.
  * */
+/**
+ * Add API Gateway resources with optional authorizer and DNS.
+ */
 export const addGateway = createResourcePack(
   ({
     id,

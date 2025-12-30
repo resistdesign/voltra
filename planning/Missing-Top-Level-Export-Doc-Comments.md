@@ -139,72 +139,72 @@ Legend: [ ] todo, [x] done
 - [x] type `S3SpecificConfig` (line 320)
 
 ## src/app/utils/Route.tsx
-- [ ] const `RouteContext` (line 65)
+- [x] const `RouteContext` (line 65)
 
 ## src/app/utils/TypeInfoORMAPIUtils.ts
-- [ ] type `TypeInfoORMAPIState` (line 74)
+- [x] type `TypeInfoORMAPIState` (line 74)
 
 ## src/common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo.ts
-- [ ] enum `TypeInfoPrimaryFieldErrors` (line 3)
+- [x] enum `TypeInfoPrimaryFieldErrors` (line 3)
 
 ## src/common/TypeParsing/Validation.ts
-- [ ] enum `RelationshipValidationType` (line 16)
+- [x] enum `RelationshipValidationType` (line 16)
 
 ## src/iac/packs/auth.ts
-- [ ] type `AddAuthConfig` (line 11)
+- [x] type `AddAuthConfig` (line 11)
 
 ## src/iac/packs/auth/user-management.ts
-- [ ] type `AddUserManagementConfig` (line 9)
+- [x] type `AddUserManagementConfig` (line 9)
 
 ## src/iac/packs/build.ts
-- [ ] type `BuildPipelineRepoConfig` (line 14)
-- [ ] type `AddBuildPipelineConfig` (line 68)
+- [x] type `BuildPipelineRepoConfig` (line 14)
+- [x] type `AddBuildPipelineConfig` (line 68)
 
 ## src/iac/packs/build/utils.ts
-- [ ] interface `Env` (line 59)
-- [ ] interface `Proxy` (line 86)
-- [ ] interface `Batch` (line 97)
-- [ ] interface `Phase` (line 118)
-- [ ] type `PhaseConfig` (line 141)
-- [ ] interface `ReportGroupNameOrArn` (line 148)
-- [ ] interface `Reports` (line 167)
-- [ ] interface `ArtifactIdentifier` (line 174)
-- [ ] interface `SecondaryArtifacts` (line 193)
-- [ ] interface `Artifacts` (line 200)
-- [ ] interface `Cache` (line 235)
-- [ ] interface `BuildSpec` (line 242)
+- [x] interface `Env` (line 59)
+- [x] interface `Proxy` (line 86)
+- [x] interface `Batch` (line 97)
+- [x] interface `Phase` (line 118)
+- [x] type `PhaseConfig` (line 141)
+- [x] interface `ReportGroupNameOrArn` (line 148)
+- [x] interface `Reports` (line 167)
+- [x] interface `ArtifactIdentifier` (line 174)
+- [x] interface `SecondaryArtifacts` (line 193)
+- [x] interface `Artifacts` (line 200)
+- [x] interface `Cache` (line 235)
+- [x] interface `BuildSpec` (line 242)
 
 ## src/iac/packs/cdn.ts
-- [ ] type `AddCDNConfig` (line 8)
+- [x] type `AddCDNConfig` (line 8)
 
 ## src/iac/packs/cloud-function.ts
-- [ ] type `CloudFunctionRuntime` (line 18)
-- [ ] type `AddCloudFunctionConfig` (line 64)
+- [x] type `CloudFunctionRuntime` (line 18)
+- [x] type `AddCloudFunctionConfig` (line 64)
 
 ## src/iac/packs/dns.ts
-- [ ] type `AddDNSConfig` (line 10)
+- [x] type `AddDNSConfig` (line 10)
 
 ## src/iac/packs/file-storage.ts
-- [ ] type `AddSecureFileStorageConfig` (line 9)
+- [x] type `AddSecureFileStorageConfig` (line 9)
 
 ## src/iac/packs/gateway.ts
-- [ ] type `AddGatewayAuthorizerConfig` (line 16)
-- [ ] type `AddGatewayConfig` (line 35)
+- [x] type `AddGatewayAuthorizerConfig` (line 16)
+- [x] type `AddGatewayConfig` (line 35)
 
 ## src/iac/packs/repo.ts
-- [ ] type `AddRepoConfig` (line 9)
+- [x] type `AddRepoConfig` (line 9)
 
 ## src/iac/packs/ssl-certificate.ts
-- [ ] type `AddSSLCertificateConfig` (line 8)
+- [x] type `AddSSLCertificateConfig` (line 8)
 
 ## src/iac/types/Types.ts
-- [ ] type `AttributeType` (line 23)
-- [ ] type `PropertyDescriptor` (line 46)
-- [ ] type `PropertyType` (line 54)
-- [ ] type `ResourceType` (line 61)
-- [ ] type `CloudFormationResourceSpecification` (line 84)
-- [ ] type `NamespaceStructure` (line 99)
+- [x] type `AttributeType` (line 23)
+- [x] type `PropertyDescriptor` (line 46)
+- [x] type `PropertyType` (line 54)
+- [x] type `ResourceType` (line 61)
+- [x] type `CloudFormationResourceSpecification` (line 84)
+- [x] type `NamespaceStructure` (line 99)
 
 ## src/iac/utils/index.ts
-- [ ] type `ParameterInfo` (line 15)
-- [ ] type `ParameterGroup` (line 180)
+- [x] type `ParameterInfo` (line 15)
+- [x] type `ParameterGroup` (line 180)
