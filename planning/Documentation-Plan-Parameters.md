@@ -4,88 +4,156 @@ Goal: Add JSDoc that documents every parameter of every export (functions, class
 
 Notes
 - Documentation is JSDoc in `src/**` and is rendered via TypeDoc (`yarn doc`). No manual API pages are authored.
-- Checklist items under `api` mean "add or expand parameter-level JSDoc on the referenced modules and concepts."
 - Cover constructor params, method params, callbacks, option objects, exported types, and all fields in those types.
+- Generated IaC types should be updated via their generator scripts, not by hand.
 
 Legend: [ ] todo, [~] in progress, [x] done
 
 ## api
-- [ ] Add/expand parameter JSDoc in `src/api/**` (TypeDoc output is generated; no manual API pages)
-- [ ] DataAccessControl overview + example policies
-- [ ] Indexing
-  - [ ] cursor/docId/tokenize/trace concepts + usage
-  - [ ] exact index (S3/Dynamo backends)
-  - [ ] fulltext index (memory/Dynamo backends)
-  - [ ] lossy index (S3/Dynamo backends)
-  - [ ] rel indexing (inMemory/relationalDdb/handlers/types)
-  - [ ] structured indexing (inMemory/structuredDdb/handlers)
-  - [ ] handler + api facade examples
-- [ ] ORM
-  - [ ] drivers (DynamoDBDataItemDBDriver, S3FileItemDBDriver, IndexingRelationshipDriver)
-  - [ ] drivers/common (Supported drivers + selection rules)
-  - [ ] indexing (criteriaToStructuredWhere)
-  - [ ] ListItemUtils patterns
-  - [ ] ORMRouteMap usage
-  - [ ] TypeInfoORMService configuration + lifecycle
-  - [ ] DACUtils reference
-- [ ] Router (Auth/AWS/CORS/Types) overview + wiring examples
+- [x] `src/api/DataAccessControl.ts`
+- [ ] `src/api/index.ts`
+- [ ] `src/api/Router/AWS.ts`
+- [ ] `src/api/Router/Auth.ts`
+- [ ] `src/api/Router/CORS.ts`
+- [ ] `src/api/Router/Types.ts`
+- [ ] `src/api/Router/index.ts`
+- [ ] `src/api/Indexing/api.ts`
+- [ ] `src/api/Indexing/cursor.ts`
+- [ ] `src/api/Indexing/docId.ts`
+- [ ] `src/api/Indexing/handler.ts`
+- [ ] `src/api/Indexing/handler/config.ts`
+- [ ] `src/api/Indexing/hash-universal.ts`
+- [ ] `src/api/Indexing/index.ts`
+- [ ] `src/api/Indexing/tokenize.ts`
+- [ ] `src/api/Indexing/trace.ts`
+- [ ] `src/api/Indexing/types.ts`
+- [ ] `src/api/Indexing/exact/exactDdb.ts`
+- [ ] `src/api/Indexing/exact/exactIndex.ts`
+- [ ] `src/api/Indexing/exact/exactS3.ts`
+- [ ] `src/api/Indexing/fulltext/ddbBackend.ts`
+- [ ] `src/api/Indexing/fulltext/memoryBackend.ts`
+- [ ] `src/api/Indexing/fulltext/schema.ts`
+- [ ] `src/api/Indexing/lossy/lossyDdb.ts`
+- [ ] `src/api/Indexing/lossy/lossyIndex.ts`
+- [ ] `src/api/Indexing/lossy/lossyS3.ts`
+- [ ] `src/api/Indexing/rel/cursor.ts`
+- [ ] `src/api/Indexing/rel/handlers.ts`
+- [ ] `src/api/Indexing/rel/inMemory.ts`
+- [ ] `src/api/Indexing/rel/relationalDdb.ts`
+- [ ] `src/api/Indexing/rel/types.ts`
+- [ ] `src/api/Indexing/structured/cursor.ts`
+- [ ] `src/api/Indexing/structured/handlers.ts`
+- [ ] `src/api/Indexing/structured/inMemory.ts`
+- [ ] `src/api/Indexing/structured/inMemoryBackend.ts`
+- [ ] `src/api/Indexing/structured/index.ts`
+- [ ] `src/api/Indexing/structured/searchStructured.ts`
+- [ ] `src/api/Indexing/structured/structuredDdb.ts`
+- [ ] `src/api/Indexing/structured/structuredDdbBackend.ts`
+- [ ] `src/api/Indexing/structured/structuredWriter.ts`
+- [ ] `src/api/Indexing/structured/types.ts`
+- [ ] `src/api/ORM/DACUtils.ts`
+- [ ] `src/api/ORM/ListItemUtils.ts`
+- [ ] `src/api/ORM/ORMRouteMap.ts`
+- [ ] `src/api/ORM/TypeInfoORMService.ts`
+- [ ] `src/api/ORM/index.ts`
+- [ ] `src/api/ORM/indexing/criteriaToStructuredWhere.ts`
+- [ ] `src/api/ORM/drivers/DynamoDBDataItemDBDriver.ts`
+- [ ] `src/api/ORM/drivers/DynamoDBDataItemDBDriver/ConfigTypes.ts`
+- [ ] `src/api/ORM/drivers/InMemoryDataItemDBDriver.ts`
+- [ ] `src/api/ORM/drivers/InMemoryDataItemDBDriver/ConfigTypes.ts`
+- [ ] `src/api/ORM/drivers/InMemoryFileItemDBDriver.ts`
+- [ ] `src/api/ORM/drivers/InMemoryFileItemDBDriver/ConfigTypes.ts`
+- [ ] `src/api/ORM/drivers/InMemoryItemRelationshipDBDriver.ts`
+- [ ] `src/api/ORM/drivers/IndexingRelationshipDriver.ts`
+- [ ] `src/api/ORM/drivers/S3FileItemDBDriver.ts`
+- [ ] `src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts`
+- [ ] `src/api/ORM/drivers/S3FileItemDBDriver/S3FileDriver.ts`
+- [ ] `src/api/ORM/drivers/common/SupportedTypeInfoORMDBDrivers.ts`
+- [ ] `src/api/ORM/drivers/common/Types.ts`
+- [ ] `src/api/ORM/drivers/common/index.ts`
+- [ ] `src/api/ORM/drivers/index.ts`
 
 ## app
-- [ ] utils
-  - [ ] ApplicationState + loader lifecycle
-  - [ ] Controller (events, hooks, patterns)
-  - [ ] Debug helpers
-  - [ ] EasyLayout usage + examples
-  - [ ] Route + router patterns
-  - [ ] Service abstraction + DI approach
-  - [ ] TypeInfoORMAPIUtils usage
-  - [ ] TypeInfoORMClient usage
-- [ ] app index exports + import patterns
+- [ ] `src/app/index.ts`
+- [ ] `src/app/utils/ApplicationState.tsx`
+- [ ] `src/app/utils/ApplicationStateLoader.tsx`
+- [ ] `src/app/utils/Controller.ts`
+- [ ] `src/app/utils/Debug.ts`
+- [ ] `src/app/utils/EasyLayout.tsx`
+- [ ] `src/app/utils/Route.tsx`
+- [ ] `src/app/utils/Service.ts`
+- [ ] `src/app/utils/TypeInfoORMAPIUtils.ts`
+- [ ] `src/app/utils/TypeInfoORMClient.ts`
+- [ ] `src/app/utils/index.ts`
 
 ## common
-- [ ] CommandLine (collectRequiredEnvironmentVariables)
-- [ ] HelperTypes reference
-- [ ] IdGeneration (getSimpleId)
-- [ ] ItemRelationshipInfoTypes + relationships model
-- [ ] ItemRelationships validation rules
-- [ ] Logging utilities
-- [ ] Routing helpers
-- [ ] SearchTypes + SearchUtils patterns
-- [ ] SearchValidation rules + examples
-- [ ] StringTransformers (built-ins + custom)
-- [ ] Testing (Vest helpers + authoring specs)
-- [ ] TypeInfoDataItemUtils usage
-- [ ] TypeInfoORM types + helpers
-- [ ] TypeParsing
-  - [ ] ParsingUtils guide
-  - [ ] Validation rules + examples
-  - [ ] TypeInfo/TypeMapping/TypeParsing/Utils reference
+- [ ] `src/common/CommandLine/collectRequiredEnvironmentVariables.ts`
+- [ ] `src/common/HelperTypes.ts`
+- [ ] `src/common/IdGeneration/getSimpleId.ts`
+- [ ] `src/common/IdGeneration/index.ts`
+- [ ] `src/common/ItemRelationshipInfoTypes.ts`
+- [ ] `src/common/ItemRelationships/ItemRelationshipValidation.ts`
+- [ ] `src/common/ItemRelationships/index.ts`
+- [ ] `src/common/Logging/Utils.ts`
+- [ ] `src/common/Logging/index.ts`
+- [ ] `src/common/Routing.ts`
+- [ ] `src/common/SearchTypes.ts`
+- [ ] `src/common/SearchUtils.ts`
+- [ ] `src/common/SearchValidation.ts`
+- [ ] `src/common/StringTransformers.ts`
+- [ ] `src/common/Testing/CLI.ts`
+- [ ] `src/common/Testing/Types.ts`
+- [ ] `src/common/Testing/Utils.ts`
+- [ ] `src/common/Testing/index.ts`
+- [ ] `src/common/TypeInfoDataItemUtils.ts`
+- [ ] `src/common/TypeInfoORM/Types.ts`
+- [ ] `src/common/TypeInfoORM/index.ts`
+- [ ] `src/common/TypeParsing/Constants.ts`
+- [ ] `src/common/TypeParsing/TypeInfo.ts`
+- [ ] `src/common/TypeParsing/TypeMapping.ts`
+- [ ] `src/common/TypeParsing/TypeParsing.ts`
+- [ ] `src/common/TypeParsing/Utils.ts`
+- [ ] `src/common/TypeParsing/Validation.ts`
+- [ ] `src/common/TypeParsing/index.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/Constants.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/checkType.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/checkUnionType.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/extractCommentTags.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/extractLiteralValues.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/extractTypeDetails.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfo.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoField.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromAliasType.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromFieldFilter.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromTypeAlias.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getTypeKeyword.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getUnionOrIntersectionTypeInfo.ts`
+- [ ] `src/common/TypeParsing/ParsingUtils/getUnionOrLiteralStringValues.ts`
+- [ ] `src/common/index.ts`
 
 ## iac
-- [ ] SimpleCFT usage + examples
-- [ ] packs
-  - [ ] auth
-  - [ ] auth/user-management
-  - [ ] build
-  - [ ] build/utils
-  - [ ] cdn
-  - [ ] cloud-function
-  - [ ] database
-  - [ ] dns
-  - [ ] file-storage
-  - [ ] gateway
-  - [ ] repo
-  - [ ] ssl-certificate
-- [ ] types (generated; document behavior, avoid editing generated files)
-- [ ] utils (patch-utils, index)
-- [ ] iac index exports
-
-## docs site
-- [ ] Astro site structure + build pipeline overview
-- [ ] API docs generation flow (TypeDoc -> docs -> site-dist)
-- [ ] IaC demo build output (site-dist/iac)
-
-## project
-- [ ] Build and test commands
-- [ ] Release/checklist notes (if any)
-- [ ] Contribution guidelines + PR expectations
+- [ ] `src/iac/SimpleCFT.ts`
+- [ ] `src/iac/index.ts`
+- [ ] `src/iac/packs/auth.ts`
+- [ ] `src/iac/packs/auth/user-management.ts`
+- [ ] `src/iac/packs/build.ts`
+- [ ] `src/iac/packs/build/utils.ts`
+- [ ] `src/iac/packs/cdn.ts`
+- [ ] `src/iac/packs/cloud-function.ts`
+- [ ] `src/iac/packs/database.ts`
+- [ ] `src/iac/packs/dns.ts`
+- [ ] `src/iac/packs/file-storage.ts`
+- [ ] `src/iac/packs/gateway.ts`
+- [ ] `src/iac/packs/index.ts`
+- [ ] `src/iac/packs/repo.ts`
+- [ ] `src/iac/packs/ssl-certificate.ts`
+- [ ] `src/iac/types/CloudFormationResourceSpecification.ts` (generated)
+- [ ] `src/iac/types/Constants.ts` (generated)
+- [ ] `src/iac/types/IaCTypes.ts` (generated)
+- [ ] `src/iac/types/Renderers.ts` (generated)
+- [ ] `src/iac/types/Types.ts` (generated)
+- [ ] `src/iac/types/Utils.ts` (generated)
+- [ ] `src/iac/types/generate.ts` (generator)
+- [ ] `src/iac/utils/index.ts`
+- [ ] `src/iac/utils/patch-utils.ts`
