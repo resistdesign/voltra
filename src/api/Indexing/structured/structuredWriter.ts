@@ -13,11 +13,42 @@ import {
 } from './structuredDdb.js';
 
 export type StructuredWriterDependencies = {
+  /**
+   * Load previously stored fields for a document.
+   * @param docId Document id to load.
+   * @returns Stored fields or undefined when missing.
+   */
   loadDocFields(docId: DocId): Promise<StructuredDocFieldsRecord | undefined>;
+  /**
+   * Store the latest fields for a document.
+   * @param docId Document id to store.
+   * @param fields Structured fields to persist.
+   * @returns Promise resolved once stored.
+   */
   putDocFields(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void>;
+  /**
+   * Store term index entries.
+   * @param entries Term entries to store.
+   * @returns Promise resolved once stored.
+   */
   putTermEntries(entries: StructuredTermIndexItem[]): Promise<void>;
+  /**
+   * Delete term index entries.
+   * @param entries Term entry keys to delete.
+   * @returns Promise resolved once deleted.
+   */
   deleteTermEntries(entries: StructuredTermIndexKey[]): Promise<void>;
+  /**
+   * Store range index entries.
+   * @param entries Range entries to store.
+   * @returns Promise resolved once stored.
+   */
   putRangeEntries(entries: StructuredRangeIndexItem[]): Promise<void>;
+  /**
+   * Delete range index entries.
+   * @param entries Range entry keys to delete.
+   * @returns Promise resolved once deleted.
+   */
   deleteRangeEntries(entries: StructuredRangeIndexKey[]): Promise<void>;
 };
 
@@ -114,8 +145,17 @@ function toRangeKeys(entries: RangeEntry[]): StructuredRangeIndexKey[] {
 }
 
 export class StructuredDdbWriter {
+  /**
+   * @param dependencies Writer dependencies for persistence.
+   */
   constructor(private readonly dependencies: StructuredWriterDependencies) {}
 
+  /**
+   * Write structured fields for a document, diffing term/range entries.
+   * @param docId Document id to write.
+   * @param fields Structured fields to store.
+   * @returns Promise resolved once all writes complete.
+   */
   async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
     const normalized = normalizeFields(fields);
     const previousFields = await this.dependencies.loadDocFields(docId);

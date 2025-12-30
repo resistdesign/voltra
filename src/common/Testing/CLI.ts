@@ -10,6 +10,11 @@ import fastGlob from "fast-glob";
 import picocolors from "picocolors";
 import { TestResults } from "./Types";
 
+/**
+ * CLI entrypoint for the JSON spec test runner.
+ *
+ * @returns Resolves when the CLI finishes and exits the process.
+ */
 export const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
   const generateMode = args.includes("--generate");

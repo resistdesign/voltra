@@ -83,8 +83,12 @@ import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
 
 /**
  * Strip a relationship item down to its identifying keys.
+ * @returns Relationship item containing only identifying fields.
  * */
 export const cleanRelationshipItem = (
+  /**
+   * Relationship item to normalize.
+   */
   relationshipItem: BaseItemRelationshipInfo,
 ): BaseItemRelationshipInfo => {
   const relItemKeys = Object.values(ItemRelationshipInfoKeys);
@@ -99,6 +103,7 @@ export const cleanRelationshipItem = (
 
 /**
  * Wrap a driver method to attach extra fields to thrown errors.
+ * @returns Wrapped driver method with extended error data.
  * */
 export const getDriverMethodWithModifiedError = <
   ItemType extends TypeInfoDataItem,
@@ -112,8 +117,17 @@ export const getDriverMethodWithModifiedError = <
     UniquelyIdentifyingFieldName
   >[DriverMethodNameType],
 >(
+  /**
+   * Extra fields to attach to thrown errors.
+   */
   extendedData: Record<any, any>,
+  /**
+   * Driver instance containing the method.
+   */
   driver: DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>,
+  /**
+   * Driver method name to wrap.
+   */
   driverMethodName: DriverMethodNameType,
 ): MethodType =>
   ((...args: Parameters<MethodType>): Promise<any> => {
@@ -133,28 +147,79 @@ export const getDriverMethodWithModifiedError = <
  * The configuration for the TypeInfoORMService DAC features.
  * */
 export type TypeInfoORMDACConfig = {
+  /**
+   * DAC path prefix for item resources.
+   */
   itemResourcePathPrefix: LiteralValue[];
+  /**
+   * DAC path prefix for relationship resources.
+   */
   relationshipResourcePathPrefix: LiteralValue[];
+  /**
+   * Role used to evaluate access.
+   */
   accessingRole: DACRole;
+  /**
+   * Lookup helper used to resolve roles by id.
+   */
   getDACRoleById: (id: string) => DACRole;
 };
 
 export type TypeInfoORMIndexingConfig = {
+  /**
+   * Full text indexing configuration.
+   */
   fullText?: {
+    /**
+     * Backend used for full text indexing.
+     */
     backend: IndexBackend;
+    /**
+     * Default index field names by type.
+     */
     defaultIndexFieldByType?: Record<string, string>;
   };
+  /**
+   * Structured indexing configuration.
+   */
   structured?: {
+    /**
+     * Reader used for structured queries.
+     */
     reader: StructuredSearchDependencies;
+    /**
+     * Optional writer for structured indexing.
+     */
     writer?: StructuredWriter;
+    /**
+     * Field name mapping per type.
+     */
     fieldMapByType?: Record<string, Record<string, string>>;
   };
+  /**
+   * Relationship indexing configuration.
+   */
   relations?: {
+    /**
+     * Backend used for relationship indexing.
+     */
     backend: RelationalBackend;
+    /**
+     * Resolver for relation name from type/field.
+     */
     relationNameFor: (fromTypeName: string, fromTypeFieldName: string) => string;
+    /**
+     * Optional encoder for entity ids.
+     */
     encodeEntityId?: (typeName: string, primaryFieldValue: string) => string;
+    /**
+     * Optional decoder for entity ids.
+     */
     decodeEntityId?: (typeName: string, entityId: string) => string;
   };
+  /**
+   * Optional search limits for indexing queries.
+   */
   limits?: ResolvedSearchLimits;
 };
 
@@ -162,16 +227,34 @@ export type TypeInfoORMIndexingConfig = {
  * The basis for the configuration for the TypeInfoORMService.
  * */
 export type BaseTypeInfoORMServiceConfig = {
+  /**
+   * Type info map used to validate and shape items.
+   */
   typeInfoMap: TypeInfoMap;
+  /**
+   * Driver resolver for item types.
+   */
   getDriver: (typeName: string) => DataItemDBDriver<any, any>;
+  /**
+   * Optional relationship driver resolver.
+   */
   getRelationshipDriver?: (
     typeName: string,
     fieldName: string,
   ) => ItemRelationshipDBDriver;
+  /**
+   * Optional indexing configuration.
+   */
   indexing?: TypeInfoORMIndexingConfig;
+  /**
+   * Optional relationship cleanup hook on delete.
+   */
   createRelationshipCleanupItem?: (
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ) => Promise<void>;
+  /**
+   * Optional custom validators by type/field.
+   */
   customValidators?: CustomTypeInfoFieldValidatorMap;
 };
 
@@ -200,6 +283,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
   protected indexingRelationshipDriver?: IndexingRelationshipDriver;
 
+  /**
+   * @param config ORM service configuration.
+   */
   constructor(protected config: TypeInfoORMServiceConfig) {
     if (!config.getDriver) {
       throw new Error(TypeInfoORMServiceError.NO_DRIVERS_SUPPLIED);
@@ -211,8 +297,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   }
 
   protected getItemDACValidation = (
+    /**
+     * Item to evaluate for access.
+     */
     item: Partial<TypeInfoDataItem>,
+    /**
+     * Type name for the item.
+     */
     typeName: string,
+    /**
+     * Operation being evaluated.
+     */
     typeOperation: TypeOperation,
   ): DACDataItemResourceAccessResultMap => {
     const { useDAC } = this.config;
@@ -265,7 +360,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   protected getRelationshipDACValidation = (
+    /**
+     * Relationship to evaluate for access.
+     */
     itemRelationship: BaseItemRelationshipInfo,
+    /**
+     * Relationship operation being evaluated.
+     */
     relationshipOperation: RelationshipOperation,
   ): DACAccessResult => {
     const { useDAC } = this.config;
@@ -319,7 +420,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     ItemType extends TypeInfoDataItem,
     UniquelyIdentifyingFieldName extends keyof ItemType,
   >(
+    /**
+     * Driver instance to wrap.
+     */
     driver: DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>,
+    /**
+     * Extra fields to attach to thrown errors.
+     */
     extendedData: Record<any, any>,
   ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
     const driverMethodList: (keyof DataItemDBDriver<any, any>)[] = [
@@ -346,6 +453,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   protected getDriverInternal = (
+    /**
+     * Type name used to resolve the driver.
+     */
     typeName: string,
   ): DataItemDBDriver<any, any> => {
     const driver = this.config.getDriver(typeName);
@@ -358,7 +468,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   protected getRelationshipDriverInternal = (
+    /**
+     * Type name used to resolve the relationship driver.
+     */
     typeName: string,
+    /**
+     * Field name used to resolve the relationship driver.
+     */
     fieldName: string,
   ): ItemRelationshipDBDriver => {
     if (!this.config.getRelationshipDriver) {
@@ -377,6 +493,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     });
   };
 
+  /**
+   * @returns Indexing relationship driver for relation indexing.
+   */
+  /**
+   * @returns Indexing relationship driver for relation indexing.
+   */
   protected getIndexingRelationshipDriverInternal = (): IndexingRelationshipDriver => {
     if (!this.config.indexing?.relations) {
       throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP_DRIVER);
@@ -391,6 +513,14 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return this.indexingRelationshipDriver;
   };
 
+  /**
+   * @param typeName Type name to resolve.
+   * @returns Type info for the requested type.
+   */
+  /**
+   * @param typeName Type name to resolve.
+   * @returns Type info for the requested type.
+   */
   protected getTypeInfo = (typeName: string): TypeInfo => {
     const typeInfo = this.config.typeInfoMap[typeName];
 
@@ -413,8 +543,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return typeInfo;
   };
 
+  /**
+   * @returns Resolved index field name, if available.
+   */
   protected resolveFullTextIndexField = (
+    /**
+     * Type name used to resolve the default index field.
+     */
     typeName: string,
+    /**
+     * Optional override for the index field.
+     */
     override?: string,
   ): string | undefined => {
     if (override) {
@@ -424,14 +563,27 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
   };
 
+  /**
+   * @param value Value to check.
+   * @returns True when the value is a supported structured value.
+   */
   protected isStructuredValue = (value: unknown): value is WhereValue =>
     value === null ||
     typeof value === "string" ||
     typeof value === "number" ||
     typeof value === "boolean";
 
+  /**
+   * @returns Structured fields record for indexing.
+   */
   protected buildStructuredFields = (
+    /**
+     * Type name for field mapping.
+     */
     typeName: string,
+    /**
+     * Item to extract structured fields from.
+     */
     item: Partial<TypeInfoDataItem>,
   ): StructuredDocFieldsRecord => {
     const typeInfo = this.getTypeInfo(typeName);
@@ -462,8 +614,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return fields;
   };
 
+  /**
+   * @returns Mapped structured query.
+   */
   protected applyStructuredFieldMap = (
+    /**
+     * Structured query to map.
+     */
     where: Where,
+    /**
+     * Optional field mapping by type.
+     */
     fieldMap?: Record<string, string>,
   ): Where => {
     if (!fieldMap || Object.keys(fieldMap).length === 0) {
@@ -487,9 +648,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return { ...where, field: mappedField };
   };
 
+  /**
+   * @returns Promise resolved once indexing is complete.
+   */
   protected async indexFullTextDocument(
+    /**
+     * Type name for index field resolution.
+     */
     typeName: string,
+    /**
+     * Item to index.
+     */
     item: Partial<TypeInfoDataItem>,
+    /**
+     * Optional override for the index field.
+     */
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
@@ -517,9 +690,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     });
   }
 
+  /**
+   * @returns Promise resolved once removal is complete.
+   */
   protected async removeFullTextDocument(
+    /**
+     * Type name for index field resolution.
+     */
     typeName: string,
+    /**
+     * Item to remove from the index.
+     */
     item: Partial<TypeInfoDataItem>,
+    /**
+     * Optional override for the index field.
+     */
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
@@ -547,8 +732,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     });
   }
 
+  /**
+   * @returns Promise resolved once indexing is complete.
+   */
   protected async indexStructuredDocument(
+    /**
+     * Type name for field mapping.
+     */
     typeName: string,
+    /**
+     * Item to index.
+     */
     item: Partial<TypeInfoDataItem>,
   ): Promise<void> {
     const { structured } = this.config.indexing ?? {};
@@ -576,8 +770,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     await structured.writer.write(docId, fields);
   }
 
+  /**
+   * @returns Promise resolved once removal is complete.
+   */
   protected async removeStructuredDocument(
+    /**
+     * Type name for field mapping.
+     */
     typeName: string,
+    /**
+     * Item to remove from the structured index.
+     */
     item: Partial<TypeInfoDataItem>,
   ): Promise<void> {
     const { structured } = this.config.indexing ?? {};
@@ -604,8 +807,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     await structured.writer.write(docId, {});
   }
 
+  /**
+   * @returns Nothing (throws on invalid operations).
+   */
   protected validateReadOperation = (
+    /**
+     * Type name to validate for read.
+     */
     typeName: string,
+    /**
+     * Optional selected fields to validate.
+     */
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => {
     const typeInfo = this.getTypeInfo(typeName);
@@ -651,10 +863,25 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  /**
+   * @returns Nothing (throws on invalid items).
+   */
   protected validate = (
+    /**
+     * Type name to validate.
+     */
     typeName: string,
+    /**
+     * Item to validate.
+     */
     item: TypeInfoDataItem,
+    /**
+     * Operation being validated.
+     */
     typeOperation: TypeOperation,
+    /**
+     * Whether the item is a partial update.
+     */
     itemIsPartial?: boolean,
   ) => {
     const validationResults = validateTypeInfoValue(
@@ -673,12 +900,27 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  /**
+   * @returns Cleaned item with selected fields and DAC constraints applied.
+   */
   protected getCleanItem = (
+    /**
+     * Type name used to look up TypeInfo.
+     */
     typeName: string,
+    /**
+     * Item to clean.
+     */
     item: Partial<TypeInfoDataItem>,
+    /**
+     * Optional DAC field resource map.
+     */
     dacFieldResources?: Partial<
       Record<keyof TypeInfoDataItem, DACAccessResult>
     >,
+    /**
+     * Optional selected fields to include.
+     */
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): Partial<TypeInfoDataItem> => {
     const typeInfo = this.getTypeInfo(typeName);
@@ -717,8 +959,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  /**
+   * @returns Sanitized selected fields or undefined for all fields.
+   */
   protected getCleanSelectedFields = (
+    /**
+     * Type name used to look up TypeInfo.
+     */
     typeName: string,
+    /**
+     * Optional selected fields to include.
+     */
     selectedFields?: (keyof TypeInfoDataItem)[],
   ): (keyof TypeInfoDataItem)[] | undefined => {
     const typeInfo = this.getTypeInfo(typeName);
@@ -745,8 +996,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return cleanSelectedFields;
   };
 
+  /**
+   * @returns Nothing (throws on invalid relationships).
+   */
   protected validateRelationshipItem = (
+    /**
+     * Relationship item to validate.
+     */
     relationshipItem: ItemRelationshipInfoType,
+    /**
+     * Relationship fields to omit from validation.
+     */
     omitFields: ItemRelationshipInfoKeys[] = [],
   ) => {
     const validationResults = validateRelationshipItem(
@@ -780,7 +1040,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  /**
+   * @returns Promise resolved once cleanup is complete.
+   */
   protected cleanupRelationships = async (
+    /**
+     * Relationship originating item used for cleanup.
+     */
     relationshipOriginatingItem: ItemRelationshipOriginatingItemInfo,
   ): Promise<void> => {
     if (this.config.createRelationshipCleanupItem) {
@@ -792,6 +1058,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * Create a new relationship between two items.
+   * @param relationshipItem Relationship item to create.
+   * @returns True when the relationship was created.
    * */
   createRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
@@ -889,6 +1157,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * Delete a relationship between two items.
+   * @param relationshipItem Relationship item to delete.
+   * @returns Deletion results including whether items remain.
    * */
   deleteRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
@@ -984,6 +1254,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * List the relationships for a given item.
+   * @param config Relationship list configuration.
+   * @returns Relationship items and paging cursor.
    * */
   listRelationships = async (
     config: ListRelationshipsConfig,
@@ -1073,6 +1345,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  /**
+   * List related items for the relationship origin.
+   * @param config Relationship list configuration.
+   * @param selectedFields Optional fields to select on related items.
+   * @returns Items and cursor for related items.
+   */
   listRelatedItems = async (
     config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
@@ -1122,6 +1400,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * Create a new item of the given type.
+   * @param typeName Type name to create.
+   * @param item Item payload to create.
+   * @returns Primary field value for the created item.
    * */
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
     this.validate(typeName, item, TypeOperation.CREATE);
@@ -1157,6 +1438,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * Read an existing item of the given type.
+   * @param typeName Type name to read.
+   * @param primaryFieldValue Primary field value to fetch.
+   * @param selectedFields Optional fields to select.
+   * @returns Cleaned item data.
    * */
   read = async (
     typeName: string,
@@ -1211,6 +1496,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * Assign values to **all** fields to perform a **replacement**.
    *
    * The `item` **must always** contain its **primary field value**.
+   * @param typeName Type name to update.
+   * @param item Item payload to update.
+   * @returns True when the update succeeded.
    * */
   update = async (
     typeName: string,
@@ -1305,6 +1593,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * Delete an existing item of the given type.
+   * @param typeName Type name to delete.
+   * @param primaryFieldValue Primary field value to delete.
+   * @returns True when the delete succeeded.
    * */
   delete = async (
     typeName: string,
@@ -1342,6 +1633,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
   /**
    * List items of the given type, with the given criteria.
+   * @param typeName Type name to list.
+   * @param config List configuration and criteria.
+   * @param selectedFields Optional fields to select.
+   * @returns List results with items and cursor.
    * */
   list = async (
     typeName: string,

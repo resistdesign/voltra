@@ -5,6 +5,9 @@ import { TypeKeyword } from "./TypeParsing/TypeInfo";
 
 /**
  * A function that transforms a value into a string.
+ *
+ * @param value - Value to transform.
+ * @returns String representation of the value.
  * */
 export type StringTransformer = (value: any) => string;
 
@@ -37,6 +40,11 @@ export const CUSTOM_STRING_TRANSFORMERS: Record<string, StringTransformer> = {
 
 /**
  * Transform a value into a string based on the type keyword or custom type.
+ *
+ * @param value - Value to transform.
+ * @param typeKeyword - Type keyword used to select the transformer.
+ * @param customType - Custom type name, if applicable.
+ * @returns String representation for the value.
  * */
 export const transformValueToString = (
   value: any,

@@ -1,5 +1,11 @@
-import { LiteralTypeNode, Node, SyntaxKind, UnionTypeNode } from 'typescript';
+import { LiteralTypeNode, Node, SyntaxKind, UnionTypeNode } from "typescript";
 
+/**
+ * Extract string literal values from a union or literal type node.
+ *
+ * @param node - Type node to inspect.
+ * @returns List of literal values as strings.
+ */
 export const getUnionOrLiteralStringValues = (node?: Node): string[] => {
   let values: string[] = [];
 
@@ -7,7 +13,10 @@ export const getUnionOrLiteralStringValues = (node?: Node): string[] => {
     if (node.kind === SyntaxKind.LiteralType) {
       const { literal } = node as LiteralTypeNode;
 
-      if (literal.kind === SyntaxKind.StringLiteral || literal.kind === SyntaxKind.NumericLiteral) {
+      if (
+        literal.kind === SyntaxKind.StringLiteral ||
+        literal.kind === SyntaxKind.NumericLiteral
+      ) {
         const { text } = literal;
 
         values = [text];

@@ -8,12 +8,24 @@ import type { DocId } from "../types";
 import { compareDocId } from "../docId";
 
 export type LossyQueryOptions = {
+  /**
+   * Maximum number of postings to return.
+   */
   limit?: number;
+  /**
+   * Resume cursor using the last processed doc id.
+   */
   lastDocId?: DocId;
 };
 
 export type LossyQueryResult = {
+  /**
+   * Document ids for the token postings.
+   */
   docIds: DocId[];
+  /**
+   * Cursor to resume paging through postings.
+   */
   nextCursor?: DocId;
 };
 
@@ -85,6 +97,13 @@ export class LossyIndex {
     return `${indexField}\u0000${token}`;
   }
 
+  /**
+   * Add a posting for a token.
+   * @param token Token value to add.
+   * @param indexField Field name the token was indexed under.
+   * @param docId Document id containing the token.
+   * @returns Nothing.
+   */
   addPosting(token: string, indexField: string, docId: DocId): void {
     const key = this.buildTokenKey(indexField, token);
     const list = this.postings.get(key) ?? [];
@@ -92,6 +111,13 @@ export class LossyIndex {
     this.postings.set(key, list);
   }
 
+  /**
+   * Remove a posting for a token.
+   * @param token Token value to remove.
+   * @param indexField Field name the token was indexed under.
+   * @param docId Document id containing the token.
+   * @returns Nothing.
+   */
   removePosting(token: string, indexField: string, docId: DocId): void {
     const key = this.buildTokenKey(indexField, token);
     const list = this.postings.get(key);
@@ -104,6 +130,13 @@ export class LossyIndex {
     }
   }
 
+  /**
+   * Add a document by inserting postings for each unique token.
+   * @param docId Document id to add.
+   * @param indexField Field name the tokens are indexed under.
+   * @param tokens Token list for the document.
+   * @returns Nothing.
+   */
   addDocument(docId: DocId, indexField: string, tokens: string[]): void {
     const uniqueTokens = new Set(tokens);
     for (const token of uniqueTokens) {
@@ -111,7 +144,18 @@ export class LossyIndex {
     }
   }
 
-  getPostings(token: string, indexField: string, options: LossyQueryOptions = {}): LossyQueryResult {
+  /**
+   * Get postings for a token with optional paging.
+   * @param token Token value to fetch postings for.
+   * @param indexField Field name the token was indexed under.
+   * @param options Paging options for the query.
+   * @returns Postings result with optional next cursor.
+   */
+  getPostings(
+    token: string,
+    indexField: string,
+    options: LossyQueryOptions = {},
+  ): LossyQueryResult {
     const key = this.buildTokenKey(indexField, token);
     const list = this.postings.get(key) ?? [];
     const startIndex = findStartIndex(list, options.lastDocId);

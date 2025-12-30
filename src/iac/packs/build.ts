@@ -6,18 +6,42 @@
 import { createResourcePack } from "../utils";
 import { AWS } from "../types/IaCTypes";
 
+/**
+ * Default repository provider for CodePipeline source actions.
+ */
 export const DEFAULT_BUILD_PIPELINE_REPO_PROVIDER = "GitHub";
 
 export type BuildPipelineRepoConfig = {
+  /**
+   * CodePipeline provider (e.g., GitHub).
+   */
   provider?: any;
+  /**
+   * Repository owner/organization.
+   */
   owner: any;
+  /**
+   * Repository name.
+   */
   repo: any;
+  /**
+   * Repository branch name.
+   */
   branch: any;
+  /**
+   * OAuth token for source access.
+   */
   oauthToken: any;
 };
 
+/**
+ * Helper for custom CodeBuild string literals.
+ */
 export type CustomCodeBuildString<T extends string> = T & { __custom?: never };
 
+/**
+ * Allowed CodeBuild environment types.
+ */
 export type CodeBuildEnvironmentType =
   | "ARM_CONTAINER"
   | "LINUX_CONTAINER"
@@ -30,6 +54,9 @@ export type CodeBuildEnvironmentType =
   | "MAC_ARM"
   | CustomCodeBuildString<string>;
 
+/**
+ * Allowed CodeBuild compute types.
+ */
 export type CodeBuildComputeType =
   | "BUILD_GENERAL1_SMALL"
   | "BUILD_GENERAL1_MEDIUM"
@@ -39,19 +66,48 @@ export type CodeBuildComputeType =
   | CustomCodeBuildString<string>;
 
 export type AddBuildPipelineConfig = {
+  /**
+   * Base id for created resources.
+   */
   id: string;
+  /**
+   * Build spec YAML or JSON.
+   */
   buildSpec: any;
+  /**
+   * Optional resource dependencies.
+   */
   dependsOn?: string | string[];
+  /**
+   * CodeBuild environment variables.
+   */
   environmentVariables?: AWS.CodeBuild.Project.EnvironmentVariable[];
+  /**
+   * Build timeout in minutes.
+   */
   timeoutInMinutes?: number;
+  /**
+   * CodeBuild environment type.
+   */
   environmentType?: CodeBuildEnvironmentType;
+  /**
+   * CodeBuild compute type.
+   */
   environmentComputeType?: CodeBuildComputeType;
+  /**
+   * CodeBuild image to run.
+   */
   environmentImage?: string;
+  /**
+   * Repository configuration for source stage.
+   */
   repoConfig: BuildPipelineRepoConfig;
 };
 
 /**
  * Add a build pipeline with full permissions.
+ *
+ * @param config - Build pipeline configuration.
  */
 export const addBuildPipeline = createResourcePack(
   ({

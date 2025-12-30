@@ -8,23 +8,62 @@ import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
+/**
+ * Default API Gateway authorization type.
+ */
 export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 
 export type AddGatewayAuthorizerConfig = {
+  /**
+   * Cognito provider ARNs for authorization.
+   */
   providerARNs?: string[];
+  /**
+   * Authorization scopes to require.
+   */
   scopes?: string[];
+  /**
+   * Authorizer type to use.
+   */
   type?: "TOKEN" | "COGNITO_USER_POOLS" | "REQUEST";
+  /**
+   * Identity source expression for authorization.
+   */
   identitySource?: string;
 };
 
 export type AddGatewayConfig = {
+  /**
+   * Base id for gateway resources.
+   */
   id: string;
+  /**
+   * Hosted zone id for the API domain.
+   */
   hostedZoneId: any;
+  /**
+   * Domain name for the API.
+   */
   domainName: any;
+  /**
+   * ACM certificate ARN for the API domain.
+   */
   certificateArn: CloudFormationPrimitiveValue<string>;
+  /**
+   * Target Lambda function information.
+   */
   cloudFunction: { id: string; region?: string };
+  /**
+   * Stage name to deploy.
+   */
   stageName?: any;
+  /**
+   * Authorizer config or boolean to enable/disable.
+   */
   authorizer?: AddGatewayAuthorizerConfig | boolean;
+  /**
+   * Suffix to ensure unique deployment ids.
+   */
   deploymentSuffix?: string;
 };
 
@@ -32,6 +71,8 @@ export type AddGatewayConfig = {
  * Add a load-balanced API gateway for your serverless cloud function.
  * Includes authorization config that connects your user management system to your cloud function.
  * Also includes a DNS record for your API/back-end.
+ *
+ * @param config - Gateway configuration.
  * */
 export const addGateway = createResourcePack(
   ({

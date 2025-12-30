@@ -15,6 +15,11 @@ export type TypeMap = Record<string, TypeAliasDeclaration>;
 
 /**
  * Converts a TypeScript AST to a map of type aliases.
+ *
+ * @param node - AST node to traverse.
+ * @param map - Accumulator map of type aliases.
+ * @param parentName - Parent module name for nested namespaces.
+ * @returns Map of type alias declarations keyed by name.
  */
 export const convertASTToMap = (
   node: Node,

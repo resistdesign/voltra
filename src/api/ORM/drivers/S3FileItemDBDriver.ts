@@ -35,6 +35,9 @@ import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
 import { ListItemsConfig } from "../../../common/SearchTypes";
 
 export type BaseFileItem = {
+  /**
+   * File identifier (full key).
+   */
   id: string;
 } & BaseFile;
 
@@ -48,6 +51,9 @@ export class S3FileItemDBDriver
   protected s3: S3;
   protected s3FileDriver: CloudFileServiceDriver;
 
+  /**
+   * @param config Driver configuration including S3 settings.
+   */
   constructor(protected config: DataItemDBDriverConfig<BaseFileItem, "id">) {
     const { dbSpecificConfig } = config;
     const { s3Config, bucketName, urlExpirationInSeconds } =
@@ -64,6 +70,8 @@ export class S3FileItemDBDriver
 
   /**
    * Create a new @{@link BaseFileItem}.
+   * @param item New file item payload without the id field.
+   * @returns Generated file id.
    * */
   public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
     const { tableName } = this.config;
@@ -88,6 +96,9 @@ export class S3FileItemDBDriver
 
   /**
    * Read a @{@link BaseFileItem} by its id.
+   * @param id Unique identifier value for the file.
+   * @param selectFields Optional fields to select from the file item.
+   * @returns File item payload (partial when selected fields are used).
    * */
   public readItem = async (
     id: string,
@@ -137,6 +148,9 @@ export class S3FileItemDBDriver
 
   /**
    * Update a @{@link BaseFileItem}.
+   * @param uniqueIdentifier Unique identifier value for the file.
+   * @param item Partial update payload for the file.
+   * @returns True when the item was updated.
    * */
   public updateItem = async (
     uniqueIdentifier: BaseFileItem["id"],
@@ -177,6 +191,8 @@ export class S3FileItemDBDriver
 
   /**
    * Delete a @{@link BaseFileItem} by its id.
+   * @param id Unique identifier value for the file.
+   * @returns True when the item was deleted.
    */
   public deleteItem = async (id: string) => {
     const { tableName } = this.config;
@@ -196,6 +212,9 @@ export class S3FileItemDBDriver
 
   /**
    * List @{@link BaseFileItem}s by a given criteria.
+   * @param config List configuration and criteria.
+   * @param selectFields Optional fields to select from each file item.
+   * @returns List results with items and cursor.
    */
   public listItems = async (
     config: ListItemsConfig,
@@ -256,6 +275,10 @@ export class S3FileItemDBDriver
  * */
 export const S3SupportedFileItemDBDriverEntry: SupportedDataItemDBDriverEntry =
   {
+    /**
+     * @param config Driver configuration.
+     * @returns S3 file driver instance.
+     */
     factory: <
       ItemType extends Record<any, any>,
       UniquelyIdentifyingFieldName extends keyof ItemType,
@@ -264,6 +287,9 @@ export const S3SupportedFileItemDBDriverEntry: SupportedDataItemDBDriverEntry =
     ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
       return new S3FileItemDBDriver(config as any) as any;
     },
+    /**
+     * @returns Type info pack for the S3 config.
+     */
     getDBSpecificConfigTypeInfo: () => {
       const configTypesPath = Path.join(
         __dirname,

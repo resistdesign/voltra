@@ -175,6 +175,12 @@ export class StructuredInMemoryIndex {
   private containsIndex = new Map<string, Map<WhereValue, DocId[]>>();
   private rangeIndex = new Map<string, RangeEntry[]>();
 
+  /**
+   * Add a document record to the index.
+   * @param docId Document id to index.
+   * @param record Structured field record for the document.
+   * @returns Nothing.
+   */
   addDocument(docId: DocId, record: Record<string, WhereValue | WhereValue[]>): void {
     for (const [field, value] of Object.entries(record)) {
       if (Array.isArray(value)) {
@@ -192,16 +198,38 @@ export class StructuredInMemoryIndex {
     }
   }
 
+  /**
+   * Run an equality query for a field/value pair.
+   * @param field Field name to query.
+   * @param value Value to match.
+   * @param options Optional paging options.
+   * @returns Candidate page of matching document ids.
+   */
   eq(field: string, value: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
     const docIds = this.eqIndex.get(field)?.get(value) ?? [];
     return paginate(docIds, options);
   }
 
+  /**
+   * Run a contains query for a field/value pair.
+   * @param field Field name to query.
+   * @param value Value to match.
+   * @param options Optional paging options.
+   * @returns Candidate page of matching document ids.
+   */
   contains(field: string, value: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
     const docIds = this.containsIndex.get(field)?.get(value) ?? [];
     return paginate(docIds, options);
   }
 
+  /**
+   * Run a between range query for a field.
+   * @param field Field name to query.
+   * @param lower Inclusive lower bound.
+   * @param upper Inclusive upper bound.
+   * @param options Optional paging options.
+   * @returns Candidate page of matching document ids.
+   */
   between(
     field: string,
     lower: WhereValue,
@@ -215,6 +243,13 @@ export class StructuredInMemoryIndex {
     return paginate(docIds, options);
   }
 
+  /**
+   * Run a greater-than-or-equal range query for a field.
+   * @param field Field name to query.
+   * @param lower Inclusive lower bound.
+   * @param options Optional paging options.
+   * @returns Candidate page of matching document ids.
+   */
   gte(field: string, lower: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
     const entries = this.rangeIndex.get(field) ?? [];
     const start = lowerBound(entries, lower);
@@ -222,6 +257,13 @@ export class StructuredInMemoryIndex {
     return paginate(docIds, options);
   }
 
+  /**
+   * Run a less-than-or-equal range query for a field.
+   * @param field Field name to query.
+   * @param upper Inclusive upper bound.
+   * @param options Optional paging options.
+   * @returns Candidate page of matching document ids.
+   */
   lte(field: string, upper: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
     const entries = this.rangeIndex.get(field) ?? [];
     const end = upperBound(entries, upper);

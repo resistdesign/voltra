@@ -14,8 +14,17 @@ import {
 import { getPathString } from "../Routing";
 
 export enum RelationshipValidationType {
+  /**
+   * Include relationship values in validation.
+   */
   INCLUDE = "INCLUDE",
+  /**
+   * Exclude relationship values from validation.
+   */
   EXCLUDE = "EXCLUDE",
+  /**
+   * Disallow relationship values entirely.
+   */
   STRICT_EXCLUDE = "STRICT_EXCLUDE",
 }
 
@@ -43,20 +52,41 @@ export type ErrorMap = {
  * The validation results for type info fields.
  */
 export type TypeInfoValidationResults = {
+  /**
+   * Type name being validated.
+   */
   typeName: string | null;
+  /**
+   * Whether the validation passed.
+   */
   valid: boolean;
+  /**
+   * Primary error code when validation fails.
+   */
   error: string;
+  /**
+   * Field-level error mapping.
+   */
   errorMap: ErrorMap;
 };
 
+/**
+ * Error code for custom type validation failures.
+ */
 export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
 
+/**
+ * Error codes for primitive type validation failures.
+ */
 export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS: Record<TypeKeyword, string> = {
   string: "NOT_A_STRING",
   number: "NOT_A_NUMBER",
   boolean: "NOT_A_BOOLEAN",
 };
 
+/**
+ * Error codes for TypeInfo validation failures.
+ */
 export const ERROR_MESSAGE_CONSTANTS = {
   MISSING: "MISSING",
   INVALID_OPTION: "INVALID_OPTION",
@@ -70,6 +100,9 @@ export const ERROR_MESSAGE_CONSTANTS = {
   VALUE_DOES_NOT_MATCH_PATTERN: "VALUE_DOES_NOT_MATCH_PATTERN",
 };
 
+/**
+ * Error codes for denied type operations.
+ */
 export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
   CREATE: "DENIED_TYPE_OPERATION_CREATE",
   READ: "DENIED_TYPE_OPERATION_READ",
@@ -84,6 +117,11 @@ export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
  * `pattern` must be a string or not supplied.
  *
  * If either are not supplied, the result is valid.
+ *
+ * @param typeName - Type name for the validation context.
+ * @param value - Value to validate.
+ * @param pattern - Regex pattern to validate against.
+ * @returns Validation results for the pattern.
  * */
 export const validateValueMatchesPattern = (
   typeName: string,
@@ -119,6 +157,10 @@ export const validateValueMatchesPattern = (
 
 /**
  * Gets the validity value.
+ *
+ * @param existing - Current validity value.
+ * @param pending - New validity value.
+ * @returns Updated validity value.
  */
 export const getValidityValue = (
   existing: boolean,
@@ -139,11 +181,18 @@ export const TYPE_KEYWORD_VALIDATORS: Record<
 
 /**
  * Checks if a value has a value.
+ *
+ * @param value - Value to check.
+ * @returns Whether the value is present.
  */
 export const hasValue = (value: any): boolean => value ?? false;
 
 /**
  * Validates a primitive value.
+ *
+ * @param value - Value to validate.
+ * @param type - Primitive type keyword.
+ * @returns Whether the value matches the type.
  */
 export const validateKeywordType = (value: any, type: string): boolean => {
   const validator = TYPE_KEYWORD_VALIDATORS[type as TypeKeyword];
@@ -159,6 +208,11 @@ export const validateKeywordType = (value: any, type: string): boolean => {
 
 /**
  * Validates a custom type.
+ *
+ * @param value - Value to validate.
+ * @param customType - Custom type name.
+ * @param customValidators - Custom validators map.
+ * @returns Whether the value passes custom validation.
  */
 export const validateCustomType = (
   value: any,
@@ -184,6 +238,17 @@ export const validateCustomType = (
 
 /**
  * Validates a type info field value.
+ *
+ * @param value - Value to validate.
+ * @param typeInfoField - Field metadata.
+ * @param typeInfoMap - Type info map for referenced types.
+ * @param ignoreArray - Whether to ignore array validation.
+ * @param strict - Whether to validate unknown fields and unions strictly.
+ * @param customValidators - Custom validators map.
+ * @param typeOperation - Operation being validated.
+ * @param relationshipValidationType - Relationship validation behavior.
+ * @param itemIsPartial - Whether the item is partial.
+ * @returns Validation results for the field.
  */
 export const validateTypeInfoFieldValue = (
   value: any,
@@ -310,6 +375,16 @@ export const validateTypeInfoFieldValue = (
 
 /**
  * Validates an array of type info field values.
+ *
+ * @param values - Values to validate.
+ * @param typeInfoField - Field metadata.
+ * @param typeInfoMap - Type info map for referenced types.
+ * @param strict - Whether to validate unknown fields and unions strictly.
+ * @param customValidators - Custom validators map.
+ * @param typeOperation - Operation being validated.
+ * @param relationshipValidationType - Relationship validation behavior.
+ * @param itemIsPartial - Whether the item is partial.
+ * @returns Validation results for the array.
  */
 export const validateArrayOfTypeInfoFieldValues = (
   values: any[] = [],
@@ -360,6 +435,11 @@ export const validateArrayOfTypeInfoFieldValues = (
 
 /**
  * Validates a type info field operation.
+ *
+ * @param fieldName - Field name to validate.
+ * @param fieldOperation - Operation to validate.
+ * @param typeInfoField - Field metadata.
+ * @returns Validation results for the field operation.
  * */
 export const validateTypeInfoFieldOperationAllowed = (
   fieldName: string,
@@ -398,6 +478,12 @@ export const validateTypeInfoFieldOperationAllowed = (
 
 /**
  * Validates a type info operation.
+ *
+ * @param typeName - Type name to validate.
+ * @param valueFields - Fields included in the operation.
+ * @param typeOperation - Operation to validate.
+ * @param typeInfo - Type info metadata.
+ * @returns Validation results for the type operation.
  * */
 export const validateTypeOperationAllowed = (
   typeName: string,
@@ -436,6 +522,16 @@ export const validateTypeOperationAllowed = (
 
 /**
  * Validates a type info value.
+ *
+ * @param value - Value to validate.
+ * @param typeInfoFullName - Fully qualified type name.
+ * @param typeInfoMap - Type info map for referenced types.
+ * @param strict - Whether to validate unknown fields and unions strictly.
+ * @param customValidators - Custom validators map.
+ * @param typeOperation - Operation being validated.
+ * @param relationshipValidationType - Relationship validation behavior.
+ * @param itemIsPartial - Whether the item is partial.
+ * @returns Validation results for the value.
  */
 export const validateTypeInfoValue = (
   value: any,

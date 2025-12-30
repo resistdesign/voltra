@@ -33,11 +33,13 @@
 
 ## Agent Workflow & Progress Tracking
 - Treat user requests as the authoritative scope; do not down-scope without explicit user approval.
-- Start every task by confirming whether the full scope can be completed in a single uninterrupted attempt; if not, communicate that immediately and agree on phased delivery.
+- Start every task you are assigned by examining everything necessary, in the project, to confirming whether it can be completed in a single, uninterrupted attempt. If not, communicate that immediately and agree on a portion that you have already determined you can complete in one attempt.
+- When the user says "start the next task," proceed immediately using the current plan order; keep communication brief while remaining thorough.
 - Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete.
 - Maintain a live checklist while working; update it as each item is completed so progress is visible and verifiable.
 - Only mark an item `[x]` when it is fully complete (all required edits done and, when applicable, tests or verification steps run).
 - When all sub-items in a parent checklist section are marked `[x]`, mark the parent item `[x]` as well to reflect completion of the whole area.
+- For checklist-driven tasks, always update the relevant planning document(s) in the same response before declaring completion.
 - Keep repo-wide rules in this file, and put effort-specific guidance in the relevant planning document.
 - If a task cannot be completed in one pass, mark it `[~]` and explicitly list what remains.
 - Provide concrete evidence of progress when asked (e.g., `git diff --stat`, specific files edited, or test outputs).

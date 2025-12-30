@@ -6,6 +6,13 @@
  */
 import { useEffect, useRef } from "react";
 
+/**
+ * Compute dependency indexes whose values changed between renders.
+ *
+ * @param prevDeps - Dependencies from the previous render.
+ * @param nextDeps - Dependencies from the current render.
+ * @returns Indexes that changed.
+ * */
 export const getChangedDependencyIndexes = (
   prevDeps: any[],
   nextDeps: any[],
@@ -16,6 +23,8 @@ export const getChangedDependencyIndexes = (
 
 /**
  * Examines the changes in the dependencies of a hook.
+ *
+ * @param dependencies - Current dependency array to monitor.
  * */
 export const useDebugDependencies = (dependencies: any[]) => {
   const firstRender = useRef(true);

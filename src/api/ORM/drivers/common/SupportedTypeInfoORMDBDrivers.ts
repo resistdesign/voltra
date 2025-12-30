@@ -18,9 +18,21 @@ import { S3SupportedFileItemDBDriverEntry } from "../S3FileItemDBDriver";
  * The supported Type Info ORM DB driver names.
  * */
 export enum SupportedTypeInfoORMDBDriverNames {
+  /**
+   * DynamoDB-backed data item driver.
+   */
   DYNAMO_DB_DATA_ITEM = "DYNAMO_DB_DATA_ITEM",
+  /**
+   * In-memory data item driver.
+   */
   IN_MEMORY_DATA_ITEM = "IN_MEMORY_DATA_ITEM",
+  /**
+   * In-memory file item driver.
+   */
   IN_MEMORY_FILE_ITEM = "IN_MEMORY_FILE_ITEM",
+  /**
+   * S3-backed file item driver.
+   */
   S3_FILE_ITEM = "S3_FILE_ITEM",
 }
 

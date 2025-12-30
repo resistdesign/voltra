@@ -34,6 +34,9 @@ const NamespaceStructure: NamespaceStructure = getNamespaceStructure(
   BASE_NAMESPACE_STRUCTURE,
 );
 
+/**
+ * Generate the IaC types file in the dist folder.
+ */
 const generate = async () => {
   const TypesContentString = await format(
     renderNamespaceStructure(NamespaceStructure),

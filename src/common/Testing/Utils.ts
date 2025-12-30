@@ -125,6 +125,11 @@ export const OPERATIONS: Record<string, (a: unknown, b: unknown) => boolean> = {
 
 /**
  * Compare a result with an expectation using a specified `TestComparisonOperation`.
+ *
+ * @param result - Actual test result.
+ * @param expectation - Expected value.
+ * @param operation - Comparison operation to use.
+ * @returns Whether the result matches the expectation.
  * */
 export const compare = (
   result: unknown,
@@ -140,6 +145,13 @@ export const compare = (
 
 /**
  * Get the target module for testing from a file being tested.
+ *
+ * @param testFilePath - Path to the test file.
+ * @param targetTestIndex - Index of the test in the test array.
+ * @param targetTestExport - Export name for the test.
+ * @param conditions - Conditions array or config to load.
+ * @param isSetup - Whether the conditions are for setup.
+ * @returns Resolved conditions array.
  * */
 export const getResolvedConditions = (
   testFilePath: string,
@@ -171,6 +183,13 @@ export const getResolvedConditions = (
 
 /**
  * Get the target base instance from a module, for a given test setup.
+ *
+ * @param testFilePath - Path to the test file.
+ * @param targetTestIndex - Index of the test in the test array.
+ * @param targetTestExport - Export name for the test.
+ * @param test - Test definition.
+ * @param module - Required module containing exports.
+ * @returns Instance to use for the test function.
  * */
 export const getSetupInstance = async (
   testFilePath: string,
@@ -202,6 +221,16 @@ export const getSetupInstance = async (
     : await setupFunction(...conditions);
 };
 
+/**
+ * Resolve the test function from the target module or setup instance.
+ *
+ * @param testFilePath - Path to the test file.
+ * @param file - Module file defined in the test config.
+ * @param targetTestIndex - Index of the test in the test array.
+ * @param test - Test definition.
+ * @param targetModule - Required module containing exports.
+ * @returns Test function to execute.
+ */
 export const getTestFunction = async (
   testFilePath: string,
   file: string,
@@ -237,6 +266,9 @@ export const getTestFunction = async (
 
 /**
  * Get the test configuration from a test file.
+ *
+ * @param testFilePath - Path to the test file.
+ * @returns Parsed test config.
  * */
 export const getTestConfig = async (
   testFilePath: string,
@@ -250,6 +282,9 @@ export const getTestConfig = async (
 
 /**
  * Get the target module for testing from a file being tested.
+ *
+ * @param testFilePath - Path to the test file.
+ * @returns Resolved test config with module and tests.
  * */
 export const getResolvedTestConfig = async (
   testFilePath: string,
@@ -272,6 +307,9 @@ export const getResolvedTestConfig = async (
 
 /**
  * Merge multiple test results into a single result.
+ *
+ * @param results - Test result sets to merge.
+ * @returns Combined test results.
  * */
 export const mergeTestResults = (...results: TestResults[]): TestResults =>
   results.reduce(
@@ -302,6 +340,14 @@ export const mergeTestResults = (...results: TestResults[]): TestResults =>
 
 /**
  * Run a test using a test function and a test condition.
+ *
+ * @param testFilePath - Path to the test file.
+ * @param testFunction - Test function to execute.
+ * @param test - Test definition.
+ * @param index - Test index in the list.
+ * @param targetExport - Export name for the test.
+ * @param report - Reporter for test results.
+ * @returns Resolves when the test completes.
  * */
 export const runTest = async (
   testFilePath: string,
@@ -358,6 +404,10 @@ ${err.message}`,
 
 /**
  * Generate tests for a file by running the tests, capturing the current result and storing it as the new expectation.
+ *
+ * @param testFilePath - Path to the test file.
+ * @param report - Reporter for test results.
+ * @returns Resolves when generation completes.
  * */
 export const generateTestsForFile = async (
   testFilePath: string,
@@ -445,6 +495,10 @@ ${stringifyOutput(result)}`,
  * Run the tests for a given test file.
  *
  * The test file content is expected to be a JSON in the structure of a `TestConfig`.
+ *
+ * @param testFilePath - Path to the test file.
+ * @param report - Reporter for test results.
+ * @returns Resolves when tests finish.
  * */
 export const runTestsForFile = async (
   testFilePath: string,
@@ -486,6 +540,11 @@ export const runTestsForFile = async (
 
 /**
  * Run or generate all of the tests in the specified `testPath` glob.
+ *
+ * @param testFiles - Test file paths to execute.
+ * @param generateMode - Whether to generate expectations.
+ * @param report - Reporter for test results.
+ * @returns Resolves when execution completes.
  * */
 export const executeTestingCommand = async (
   testFiles: string[],

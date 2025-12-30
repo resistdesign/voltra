@@ -9,6 +9,12 @@ import { LiteralValue, TypeKeyword } from "../TypeInfo";
 import { checkUnionType } from "./checkUnionType";
 import { getTypeKeyword } from "./getTypeKeyword";
 
+/**
+ * Inspect a TypeScript type node to determine type metadata.
+ *
+ * @param node - AST type node to inspect.
+ * @returns Type metadata including reference, array, keyword, and options.
+ */
 export const checkType = (
   node: TypeNode,
 ): {

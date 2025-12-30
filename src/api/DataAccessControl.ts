@@ -45,8 +45,17 @@ export enum DACConstraintType {
  * A data access control (DAC) constraint.
  * */
 export type DACConstraint = {
+  /**
+   * Whether the constraint explicitly allows or denies access.
+   */
   type: DACConstraintType;
+  /**
+   * The resource path to match against, in order of path segments.
+   */
   resourcePath: LiteralValue[];
+  /**
+   * When true, match the resource path as a prefix instead of an exact match.
+   */
   pathIsPrefix?: boolean;
 };
 
@@ -54,7 +63,13 @@ export type DACConstraint = {
  * The primary properties for a data access control (DAC) role.
  * */
 export type BaseDACRole = {
+  /**
+   * Child role ids whose constraints are included in this role.
+   */
   childRoleIds?: string[];
+  /**
+   * Constraints directly assigned to this role.
+   */
   constraints: DACConstraint[];
 };
 
@@ -62,6 +77,9 @@ export type BaseDACRole = {
  * A data access control (DAC) role which has been stored and can be accessed by an `id`.
  * */
 export type DACRole = {
+  /**
+   * Stable role identifier used for lookups and inheritance.
+   */
   id: string;
 } & BaseDACRole;
 
@@ -69,7 +87,13 @@ export type DACRole = {
  * The result of a data access control (DAC) check.
  * */
 export type DACAccessResult = {
+  /**
+   * True if any matching rule allows access.
+   */
   allowed: boolean;
+  /**
+   * True if any matching rule denies access.
+   */
   denied: boolean;
 };
 
@@ -77,6 +101,9 @@ export type DACAccessResult = {
  * The result of a data access control (DAC) check for a data item.
  * */
 export type DACDataItemResourceAccessResultMap = DACAccessResult & {
+  /**
+   * Per-field access results, keyed by field name.
+   */
   fieldsResources?: Record<string, DACAccessResult>;
 };
 
@@ -84,7 +111,13 @@ export type DACDataItemResourceAccessResultMap = DACAccessResult & {
  * The result of matching a DAC path to a resource path.
  * */
 export type DACPathMatchResults = {
+  /**
+   * True when the DAC path is a prefix of the resource path.
+   */
   prefixMatch: boolean;
+  /**
+   * True when the DAC path matches the resource path exactly.
+   */
   exactMatch: boolean;
 };
 
@@ -97,8 +130,14 @@ export const WILDCARD_SIGNIFIER_PROTOTYPE: Record<string, string> = {
 
 /**
  * Check if a given DAC path part value is a DAC wildcard signifier.
+ * @returns True when the value matches the wildcard signifier prototype.
  * */
-export const getValueIsWildcardSignifier = (value: any): boolean => {
+export const getValueIsWildcardSignifier = (
+  /**
+   * Value to test against the wildcard signifier prototype.
+   */
+  value: any,
+): boolean => {
   if (typeof value === "object" && value !== null) {
     return Object.keys(WILDCARD_SIGNIFIER_PROTOTYPE).every(
       (key) => value[key] === WILDCARD_SIGNIFIER_PROTOTYPE[key],
@@ -118,9 +157,16 @@ export const getValueIsWildcardSignifier = (value: any): boolean => {
  * The DAC path can include wildcard signifier objects at
  * various indices in order to facilitate dynamic matches
  * and grouping by common resource aspects.
+ * @returns Prefix and exact match flags for the comparison.
  * */
 export const getDACPathsMatch = (
+  /**
+   * DAC constraint path to evaluate for prefix/exact matches.
+   */
   dacPath: LiteralValue[],
+  /**
+   * Resource path to compare against the DAC path.
+   */
   resourcePath: LiteralValue[],
 ): DACPathMatchResults => {
   const results: DACPathMatchResults = {
@@ -159,9 +205,16 @@ export const getDACPathsMatch = (
 
 /**
  * Get the flattened constraints of a DAC role.
+ * @returns Flattened constraint list including child roles.
  * */
 export const getFlattenedDACConstraints = (
+  /**
+   * Role whose constraints (and child role constraints) are flattened.
+   */
   role: DACRole,
+  /**
+   * Lookup helper used to resolve child roles by id.
+   */
   getDACRoleById: (id: string) => DACRole,
   /**
    * SECURITY: Don't use this if you want realtime role resolution.
@@ -196,11 +249,24 @@ export const getFlattenedDACConstraints = (
 
 /**
  * Get the access to a given resource for a given DAC role.
+ * @returns Allow/deny summary for the resource path.
  * */
 export const getResourceAccessByDACRole = (
+  /**
+   * Full resource path to test against the role's constraints.
+   */
   fullResourcePath: LiteralValue[],
+  /**
+   * Role to evaluate for access on the given resource path.
+   */
   role: DACRole,
+  /**
+   * Lookup helper used to resolve child roles by id.
+   */
   getDACRoleById: (id: string) => DACRole,
+  /**
+   * Optional cache to reuse resolved roles across calls.
+   */
   dacRoleCache?: Record<string, DACRole>,
 ): DACAccessResult => {
   const flattenedConstraints = getFlattenedDACConstraints(
@@ -260,8 +326,12 @@ export const getResourceAccessByDACRole = (
 
 /**
  * Merge multiple DAC access results.
+ * @returns Combined allow/deny result.
  * */
 export const mergeDACAccessResults = (
+  /**
+   * Access results to merge into a single allow/deny summary.
+   */
   ...results: DACAccessResult[]
 ): DACAccessResult => {
   let newResult: DACAccessResult = {

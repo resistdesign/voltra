@@ -63,11 +63,24 @@ export const TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP: Record<
  * When DAC is enabled, `getAccessingRole` is required so each request can
  * resolve the accessing {@link DACRole}. If omitted, the route map throws
  * {@link TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER}.
+ * @returns Route map binding API paths to ORM handlers.
  */
 export const getTypeInfoORMRouteMap = (
+  /**
+   * Base ORM service configuration for drivers and type info.
+   */
   config: BaseTypeInfoORMServiceConfig,
+  /**
+   * Optional DAC configuration excluding the accessing role.
+   */
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
+  /**
+   * Optional getter to resolve the accessing role from auth info.
+   */
   getAccessingRole?: (authInfo: AuthInfo) => DACRole,
+  /**
+   * Optional route-level auth configuration.
+   */
   authConfig?: RouteAuthConfig,
 ): RouteMap => {
   if (dacConfig && !getAccessingRole) {

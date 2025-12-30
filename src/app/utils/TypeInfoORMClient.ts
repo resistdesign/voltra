@@ -27,8 +27,20 @@ import {
  * @param config - The configuration pointing to the Type Info ORM `RouteMap`.
  * */
 export class TypeInfoORMClient implements TypeInfoORMAPI {
+  /**
+   * Create a client for TypeInfoORM routes.
+   *
+   * @param config - Service configuration for the API routes.
+   */
   constructor(private config: ServiceConfig) {}
 
+  /**
+   * Dispatch a request to the configured service.
+   *
+   * @param path - Route path for the ORM method.
+   * @param args - Arguments to send in the request body.
+   * @returns Parsed response payload.
+   */
   protected makeRequest = async (
     path: TypeInfoORMAPIRoutePaths,
     args: any[],
@@ -38,6 +50,13 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     return result;
   };
 
+  /**
+   * Create an item of the provided type.
+   *
+   * @param typeName - TypeInfo type name.
+   * @param item - Item payload to persist.
+   * @returns The created item result.
+   */
   create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.CREATE, [
       typeName,
@@ -45,6 +64,13 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     ]);
   };
 
+  /**
+   * Read an item by its primary field value.
+   *
+   * @param typeName - TypeInfo type name.
+   * @param primaryFieldValue - Primary field value to lookup.
+   * @returns The retrieved item, if found.
+   */
   read = async (
     typeName: string,
     primaryFieldValue: any,
@@ -55,6 +81,13 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     ]);
   };
 
+  /**
+   * Update an item by replacing it with the provided payload.
+   *
+   * @param typeName - TypeInfo type name.
+   * @param item - Updated item payload.
+   * @returns Whether the update succeeded.
+   */
   update = async (
     typeName: string,
     item: TypeInfoDataItem,
@@ -65,6 +98,13 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     ]);
   };
 
+  /**
+   * Delete an item by its primary field value.
+   *
+   * @param typeName - TypeInfo type name.
+   * @param primaryFieldValue - Primary field value to delete.
+   * @returns Whether the delete succeeded.
+   */
   delete = async (
     typeName: string,
     primaryFieldValue: any,
@@ -75,6 +115,14 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     ]);
   };
 
+  /**
+   * List items for a given type.
+   *
+   * @param typeName - TypeInfo type name.
+   * @param config - List configuration including filters and paging.
+   * @param selectedFields - Optional fields to project.
+   * @returns List results for the query.
+   */
   list = async (
     typeName: string,
     config: ListItemsConfig,
@@ -87,6 +135,12 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     ]);
   };
 
+  /**
+   * Create a relationship between items.
+   *
+   * @param relationshipItem - Relationship payload.
+   * @returns Whether the relationship was created.
+   */
   createRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
   ): Promise<boolean> => {
@@ -96,6 +150,12 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     );
   };
 
+  /**
+   * Delete a relationship between items.
+   *
+   * @param relationshipItem - Relationship payload.
+   * @returns Results describing the deletion.
+   */
   deleteRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
   ): Promise<DeleteRelationshipResults> => {
@@ -105,6 +165,12 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     );
   };
 
+  /**
+   * List relationship records matching the query.
+   *
+   * @param config - Relationship list query configuration.
+   * @returns Relationship list results.
+   */
   listRelationships = async (
     config: ListRelationshipsConfig,
   ): Promise<ListItemsResults<ItemRelationshipInfo>> => {
@@ -113,6 +179,13 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     ]);
   };
 
+  /**
+   * List related items for a relationship query.
+   *
+   * @param config - Relationship list query configuration.
+   * @param selectedFields - Optional fields to project on related items.
+   * @returns Related item list results.
+   */
   listRelatedItems = async (
     config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],

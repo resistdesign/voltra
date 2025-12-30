@@ -23,6 +23,9 @@ const buildDefaultRelationshipId = (item: ItemRelationshipInfo): string => {
     .join("|");
 };
 
+/**
+ * Configuration for the in-memory relationship driver.
+ */
 export type InMemoryItemRelationshipDBDriverConfig = DataItemDBDriverConfig<
   ItemRelationshipInfo,
   ItemRelationshipInfoIdentifyingKeys.id
@@ -32,6 +35,9 @@ export class InMemoryItemRelationshipDBDriver extends InMemoryDataItemDBDriver<
   ItemRelationshipInfo,
   ItemRelationshipInfoIdentifyingKeys.id
 > {
+  /**
+   * @param config Driver configuration for relationship items.
+   */
   constructor(config: InMemoryItemRelationshipDBDriverConfig) {
     const generateUniqueIdentifier =
       config.generateUniqueIdentifier ?? buildDefaultRelationshipId;
