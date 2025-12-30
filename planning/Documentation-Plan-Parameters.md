@@ -142,10 +142,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/iac/packs/build/utils.ts`
 - [x] `src/iac/packs/cdn.ts`
 - [x] `src/iac/packs/cloud-function.ts`
-- [ ] `src/iac/packs/database.ts`
-- [ ] `src/iac/packs/dns.ts`
-- [ ] `src/iac/packs/file-storage.ts`
-- [ ] `src/iac/packs/gateway.ts`
+- [x] `src/iac/packs/database.ts`
+- [x] `src/iac/packs/dns.ts`
+- [x] `src/iac/packs/file-storage.ts`
+- [x] `src/iac/packs/gateway.ts`
 - [ ] `src/iac/packs/index.ts`
 - [ ] `src/iac/packs/repo.ts`
 - [ ] `src/iac/packs/ssl-certificate.ts`
