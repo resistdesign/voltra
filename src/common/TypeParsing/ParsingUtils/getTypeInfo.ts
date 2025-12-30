@@ -3,6 +3,12 @@ import { TypeInfo, TypeInfoField } from "../TypeInfo";
 import { extractCommentTags } from "./extractCommentTags";
 import { getTypeInfoField } from "./getTypeInfoField";
 
+/**
+ * Build a TypeInfo definition from a type literal node.
+ *
+ * @param typeLiteral - Type literal node to inspect.
+ * @returns TypeInfo definition with fields and tags.
+ */
 export const getTypeInfo = (typeLiteral: TypeLiteralNode): TypeInfo => {
   const { members } = typeLiteral;
   const tags = extractCommentTags(typeLiteral);

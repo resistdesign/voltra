@@ -1,9 +1,19 @@
 import { TypeInfo } from "../TypeInfo";
 
 export enum TypeInfoPrimaryFieldErrors {
+  /**
+   * Primary field cannot be read due to denied operations.
+   * */
   READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED = "READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED",
 }
 
+/**
+ * Resolve the primary field name for a TypeInfo definition.
+ *
+ * @param typeInfo - TypeInfo definition to inspect.
+ * @returns Primary field name, if available.
+ * @throws Error when the primary field is read-denied.
+ */
 export const getPrimaryFieldForTypeInfo = (
   typeInfo: TypeInfo,
 ): string | undefined => {
