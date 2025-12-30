@@ -128,9 +128,9 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromAliasType.ts`
 - [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromFieldFilter.ts`
 - [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromTypeAlias.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getTypeKeyword.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getUnionOrIntersectionTypeInfo.ts`
-- [ ] `src/common/TypeParsing/ParsingUtils/getUnionOrLiteralStringValues.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeKeyword.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getUnionOrIntersectionTypeInfo.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getUnionOrLiteralStringValues.ts`
 - [ ] `src/common/index.ts`
 
 ## iac
