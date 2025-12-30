@@ -74,13 +74,26 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
   private readonly termTableName: string;
   private readonly rangeTableName: string;
 
+  /**
+   * @param config DynamoDB config for structured tables.
+   */
   constructor(config: StructuredDdbConfig) {
     this.client = config.client;
     this.termTableName = config.termTableName ?? structuredTermIndexSchema.tableName;
     this.rangeTableName = config.rangeTableName ?? structuredRangeIndexSchema.tableName;
   }
 
+  /**
+   * Term query implementation for structured search.
+   */
   terms = {
+    /**
+     * @param field Field name to query.
+     * @param mode Term match mode.
+     * @param value Value to match.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     query: async (
       field: string,
       mode: "eq" | "contains",
@@ -113,7 +126,17 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     },
   };
 
+  /**
+   * Range query implementation for structured search.
+   */
   ranges = {
+    /**
+     * @param field Field name to query.
+     * @param lower Inclusive lower bound.
+     * @param upper Inclusive upper bound.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     between: async (
       field: string,
       lower: WhereValue,
@@ -146,6 +169,12 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
       };
     },
+    /**
+     * @param field Field name to query.
+     * @param lower Inclusive lower bound.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     gte: async (
       field: string,
       lower: WhereValue,
@@ -176,6 +205,12 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
       };
     },
+    /**
+     * @param field Field name to query.
+     * @param upper Inclusive upper bound.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     lte: async (
       field: string,
       upper: WhereValue,
@@ -324,9 +359,18 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
  * Convenience wrapper that exposes both the reader and writer.
  */
 export class StructuredDdbBackend {
+  /**
+   * Reader implementation for structured queries.
+   */
   readonly reader: StructuredSearchDependencies;
+  /**
+   * Writer implementation for structured indexing.
+   */
   readonly writer: StructuredDdbWriter;
 
+  /**
+   * @param config DynamoDB config for structured tables.
+   */
   constructor(config: StructuredDdbConfig) {
     this.reader = new StructuredDdbReader(config);
     this.writer = new StructuredDdbWriter(new StructuredDdbWriterDependencies(config));

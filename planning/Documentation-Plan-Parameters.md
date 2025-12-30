@@ -1,0 +1,160 @@
+# Voltra Documentation Plan (Parameter Coverage)
+
+Goal: Add JSDoc that documents every parameter of every export (functions, classes, types, and their props/fields) so consumers have complete, precise usage guidance.
+
+Notes
+- Documentation is JSDoc in `src/**` and is rendered via TypeDoc (`yarn doc`). No manual API pages are authored.
+- Cover constructor params, method params, callbacks, option objects, exported types, and all fields in those types.
+- Document return values for all exported functions and methods.
+- Generated IaC types should be updated via their generator scripts, not by hand.
+
+Legend: [ ] todo, [~] in progress, [x] done
+
+## api
+- [x] `src/api/DataAccessControl.ts`
+- [x] `src/api/index.ts`
+- [x] `src/api/Router/AWS.ts`
+- [x] `src/api/Router/Auth.ts`
+- [x] `src/api/Router/CORS.ts`
+- [x] `src/api/Router/Types.ts`
+- [x] `src/api/Router/index.ts`
+- [x] `src/api/Indexing/api.ts`
+- [x] `src/api/Indexing/cursor.ts`
+- [x] `src/api/Indexing/docId.ts`
+- [x] `src/api/Indexing/handler.ts`
+- [x] `src/api/Indexing/handler/config.ts`
+- [x] `src/api/Indexing/hash-universal.ts`
+- [x] `src/api/Indexing/index.ts`
+- [x] `src/api/Indexing/tokenize.ts`
+- [x] `src/api/Indexing/trace.ts`
+- [x] `src/api/Indexing/types.ts`
+- [x] `src/api/Indexing/exact/exactDdb.ts`
+- [x] `src/api/Indexing/exact/exactIndex.ts`
+- [x] `src/api/Indexing/exact/exactS3.ts`
+- [x] `src/api/Indexing/fulltext/ddbBackend.ts`
+- [x] `src/api/Indexing/fulltext/memoryBackend.ts`
+- [x] `src/api/Indexing/fulltext/schema.ts`
+- [x] `src/api/Indexing/lossy/lossyDdb.ts`
+- [x] `src/api/Indexing/lossy/lossyIndex.ts`
+- [x] `src/api/Indexing/lossy/lossyS3.ts`
+- [x] `src/api/Indexing/rel/cursor.ts`
+- [x] `src/api/Indexing/rel/handlers.ts`
+- [x] `src/api/Indexing/rel/inMemory.ts`
+- [x] `src/api/Indexing/rel/relationalDdb.ts`
+- [x] `src/api/Indexing/rel/types.ts`
+- [x] `src/api/Indexing/structured/cursor.ts`
+- [x] `src/api/Indexing/structured/handlers.ts`
+- [x] `src/api/Indexing/structured/inMemory.ts`
+- [x] `src/api/Indexing/structured/inMemoryBackend.ts`
+- [x] `src/api/Indexing/structured/index.ts`
+- [x] `src/api/Indexing/structured/searchStructured.ts`
+- [x] `src/api/Indexing/structured/structuredDdb.ts`
+- [x] `src/api/Indexing/structured/structuredDdbBackend.ts`
+- [x] `src/api/Indexing/structured/structuredWriter.ts`
+- [x] `src/api/Indexing/structured/types.ts`
+- [x] `src/api/ORM/DACUtils.ts`
+- [x] `src/api/ORM/ListItemUtils.ts`
+- [x] `src/api/ORM/ORMRouteMap.ts`
+- [x] `src/api/ORM/TypeInfoORMService.ts`
+- [x] `src/api/ORM/index.ts`
+- [x] `src/api/ORM/indexing/criteriaToStructuredWhere.ts`
+- [x] `src/api/ORM/drivers/DynamoDBDataItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/DynamoDBDataItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/InMemoryDataItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/InMemoryDataItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/InMemoryFileItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/InMemoryFileItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/InMemoryItemRelationshipDBDriver.ts`
+- [x] `src/api/ORM/drivers/IndexingRelationshipDriver.ts`
+- [x] `src/api/ORM/drivers/S3FileItemDBDriver.ts`
+- [x] `src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts`
+- [x] `src/api/ORM/drivers/S3FileItemDBDriver/S3FileDriver.ts`
+- [x] `src/api/ORM/drivers/common/SupportedTypeInfoORMDBDrivers.ts`
+- [x] `src/api/ORM/drivers/common/Types.ts`
+- [x] `src/api/ORM/drivers/common/index.ts`
+- [x] `src/api/ORM/drivers/index.ts`
+
+## app
+- [x] `src/app/index.ts`
+- [x] `src/app/utils/ApplicationState.tsx`
+- [x] `src/app/utils/ApplicationStateLoader.tsx`
+- [x] `src/app/utils/Controller.ts`
+- [x] `src/app/utils/Debug.ts`
+- [x] `src/app/utils/EasyLayout.tsx`
+- [x] `src/app/utils/Route.tsx`
+- [x] `src/app/utils/Service.ts`
+- [x] `src/app/utils/TypeInfoORMAPIUtils.ts`
+- [x] `src/app/utils/TypeInfoORMClient.ts`
+- [x] `src/app/utils/index.ts`
+
+## common
+- [x] `src/common/CommandLine/collectRequiredEnvironmentVariables.ts`
+- [x] `src/common/HelperTypes.ts`
+- [x] `src/common/IdGeneration/getSimpleId.ts`
+- [x] `src/common/IdGeneration/index.ts`
+- [x] `src/common/ItemRelationshipInfoTypes.ts`
+- [x] `src/common/ItemRelationships/ItemRelationshipValidation.ts`
+- [x] `src/common/ItemRelationships/index.ts`
+- [x] `src/common/Logging/Utils.ts`
+- [x] `src/common/Logging/index.ts`
+- [x] `src/common/Routing.ts`
+- [x] `src/common/SearchTypes.ts`
+- [x] `src/common/SearchUtils.ts`
+- [x] `src/common/SearchValidation.ts`
+- [x] `src/common/StringTransformers.ts`
+- [x] `src/common/Testing/CLI.ts`
+- [x] `src/common/Testing/Types.ts`
+- [x] `src/common/Testing/Utils.ts`
+- [x] `src/common/Testing/index.ts`
+- [x] `src/common/TypeInfoDataItemUtils.ts`
+- [x] `src/common/TypeInfoORM/Types.ts`
+- [x] `src/common/TypeInfoORM/index.ts`
+- [x] `src/common/TypeParsing/Constants.ts`
+- [x] `src/common/TypeParsing/TypeInfo.ts`
+- [x] `src/common/TypeParsing/TypeMapping.ts`
+- [x] `src/common/TypeParsing/TypeParsing.ts`
+- [x] `src/common/TypeParsing/Utils.ts`
+- [x] `src/common/TypeParsing/Validation.ts`
+- [x] `src/common/TypeParsing/index.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/Constants.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/checkType.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/checkUnionType.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/extractCommentTags.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/extractLiteralValues.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/extractTypeDetails.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfo.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoField.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromAliasType.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromFieldFilter.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeInfoFromTypeAlias.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getTypeKeyword.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getUnionOrIntersectionTypeInfo.ts`
+- [x] `src/common/TypeParsing/ParsingUtils/getUnionOrLiteralStringValues.ts`
+- [x] `src/common/index.ts`
+
+## iac
+- [x] `src/iac/SimpleCFT.ts`
+- [x] `src/iac/index.ts`
+- [x] `src/iac/packs/auth.ts`
+- [x] `src/iac/packs/auth/user-management.ts`
+- [x] `src/iac/packs/build.ts`
+- [x] `src/iac/packs/build/utils.ts`
+- [x] `src/iac/packs/cdn.ts`
+- [x] `src/iac/packs/cloud-function.ts`
+- [x] `src/iac/packs/database.ts`
+- [x] `src/iac/packs/dns.ts`
+- [x] `src/iac/packs/file-storage.ts`
+- [x] `src/iac/packs/gateway.ts`
+- [x] `src/iac/packs/index.ts`
+- [x] `src/iac/packs/repo.ts`
+- [x] `src/iac/packs/ssl-certificate.ts`
+- [x] `src/iac/types/CloudFormationResourceSpecification.ts` (Acquired from AWS documentation as JSON)
+- [x] `src/iac/types/Constants.ts`
+- [x] `src/iac/types/IaCTypes.ts` (generated)
+- [x] `src/iac/types/Renderers.ts`
+- [x] `src/iac/types/Types.ts`
+- [x] `src/iac/types/Utils.ts`
+- [x] `src/iac/types/generate.ts`
+- [x] `src/iac/utils/index.ts`
+- [x] `src/iac/utils/patch-utils.ts`

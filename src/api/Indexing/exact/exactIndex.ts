@@ -8,12 +8,24 @@ import type { DocId } from "../types";
 import { compareDocId } from "../docId";
 
 export type ExactQueryOptions = {
+  /**
+   * Maximum number of verified results to return.
+   */
   limit?: number;
+  /**
+   * Resume cursor using the last processed doc id.
+   */
   lastDocId?: DocId;
 };
 
 export type ExactQueryResult = {
+  /**
+   * Verified document ids matching the phrase.
+   */
   docIds: DocId[];
+  /**
+   * Cursor to resume verification for remaining candidates.
+   */
   nextCursor?: DocId;
 };
 
@@ -48,6 +60,14 @@ export class ExactIndex {
     return `${indexField}\u0000${token}`;
   }
 
+  /**
+   * Add exact token positions for a document.
+   * @param token Token value to store positions for.
+   * @param indexField Field name the token was indexed under.
+   * @param docId Document id containing the token.
+   * @param positions Token positions within the document.
+   * @returns Nothing.
+   */
   addPositions(token: string, indexField: string, docId: DocId, positions: number[]): void {
     const key = this.buildTokenKey(indexField, token);
     const tokenPostings = this.postings.get(key) ?? new Map();
@@ -55,6 +75,13 @@ export class ExactIndex {
     this.postings.set(key, tokenPostings);
   }
 
+  /**
+   * Remove exact token positions for a document.
+   * @param token Token value to remove positions for.
+   * @param indexField Field name the token was indexed under.
+   * @param docId Document id containing the token.
+   * @returns Nothing.
+   */
   removePositions(token: string, indexField: string, docId: DocId): void {
     const key = this.buildTokenKey(indexField, token);
     const tokenPostings = this.postings.get(key);
@@ -68,6 +95,13 @@ export class ExactIndex {
     }
   }
 
+  /**
+   * Add a document by enumerating positions for each token.
+   * @param docId Document id to add.
+   * @param indexField Field name the tokens are indexed under.
+   * @param tokens Token list for the document.
+   * @returns Nothing.
+   */
   addDocument(docId: DocId, indexField: string, tokens: string[]): void {
     tokens.forEach((token, position) => {
       const key = this.buildTokenKey(indexField, token);
@@ -79,11 +113,25 @@ export class ExactIndex {
     });
   }
 
+  /**
+   * Load exact positions for a token in a document.
+   * @param token Token value to retrieve positions for.
+   * @param indexField Field name the token was indexed under.
+   * @param docId Document id containing the token.
+   * @returns Positions array or undefined if not found.
+   */
   getPositions(token: string, indexField: string, docId: DocId): number[] | undefined {
     const key = this.buildTokenKey(indexField, token);
     return this.postings.get(key)?.get(docId);
   }
 
+  /**
+   * Check if a document contains an exact phrase.
+   * @param docId Document id to verify.
+   * @param indexField Field name the tokens are indexed under.
+   * @param phraseTokens Token sequence representing the phrase.
+   * @returns True when the phrase exists in the document.
+   */
   hasPhrase(docId: DocId, indexField: string, phraseTokens: string[]): boolean {
     if (phraseTokens.length === 0) {
       return false;
@@ -110,6 +158,14 @@ export class ExactIndex {
     );
   }
 
+  /**
+   * Verify candidate documents against a phrase, with optional paging.
+   * @param phraseTokens Token sequence representing the phrase.
+   * @param indexField Field name the tokens are indexed under.
+   * @param candidates Candidate document ids to verify.
+   * @param options Paging options for verification.
+   * @returns Verified results and optional next cursor.
+   */
   verifyCandidates(
     phraseTokens: string[],
     indexField: string,

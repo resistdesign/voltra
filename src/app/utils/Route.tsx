@@ -44,9 +44,21 @@ const CURRENT_PATH: string = window.location.pathname;
  * Access values for the current Route.
  * */
 export type RouteContextType = {
+  /**
+   * Current window pathname (top-level) or inherited path (nested).
+   * */
   currentWindowPath: string;
+  /**
+   * The parent path for this route level.
+   * */
   parentPath: string;
+  /**
+   * Aggregated route params from parent and current routes.
+   * */
   params: Record<string, any>;
+  /**
+   * Whether this route is the top-level router.
+   * */
   isTopLevel: boolean;
 };
 
@@ -70,6 +82,8 @@ export const {
 
 /**
  * Access Route path and parameter information.
+ *
+ * @returns The current route context.
  * */
 export const useRouteContext = () => useContext(RouteContext);
 
@@ -77,13 +91,27 @@ export const useRouteContext = () => useContext(RouteContext);
  * Configure the Route.
  * */
 export type RouteProps<ParamsType extends Record<string, any>> = {
+  /**
+   * Route path pattern, using `:` for params.
+   * */
   path?: string;
+  /**
+   * Callback when params update for this route.
+   *
+   * @param params - Resolved params for this route.
+   * */
   onParamsChange?: (params: ParamsType) => void;
+  /**
+   * Require an exact match for the route path.
+   * */
   exact?: boolean;
 };
 
 /**
  * Organize nested routes with parameters and integrate with the browser history.
+ *
+ * @typeParam ParamsType - Param shape for this route.
+ * @param props - Route props including path, params handler, and children.
  * */
 export const Route = <ParamsType extends Record<string, any>>({
   /**

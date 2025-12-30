@@ -7,8 +7,10 @@ const getBase64EncodedString = (input: string): string =>
  * Get a simple id, unique to the current run session.
  *
  * Includes a counter and timestamp so it stays unique within the same process.
+ *
+ * @returns A process-unique string id.
  */
-export const getSimpleId = () => {
+export const getSimpleId = (): string => {
   const hashId: number = LAST_HAST_ID++;
   const base64Datetime: string = getBase64EncodedString(
     new Date().toISOString(),

@@ -7,6 +7,9 @@
 import { AWS } from "../types/IaCTypes";
 import { createResourcePack } from "../utils";
 
+/**
+ * Default inline function code for placeholder Lambda resources.
+ */
 export const PLACEHOLDER_FUNCTION_CODE: AWS.Lambda.Function.Code = {
   ZipFile:
     "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n",
@@ -59,18 +62,40 @@ export type CloudFunctionRuntime =
   | "provided.al2023";
 
 export type AddCloudFunctionConfig = {
+  /**
+   * Base id for the function resources.
+   */
   id: string;
+  /**
+   * Lambda function code.
+   */
   code?: AWS.Lambda.Function.Code;
+  /**
+   * Lambda environment configuration.
+   */
   environment?: AWS.Lambda.Function.Environment;
+  /**
+   * Function handler entrypoint.
+   */
   handler?: any;
+  /**
+   * Lambda runtime.
+   */
   runtime?: CloudFunctionRuntime;
+  /**
+   * Function timeout in seconds.
+   */
   timeout?: any;
+  /**
+   * IAM policy statements to attach to the role.
+   */
   policies?: AWS.IAM.Role.Policy[];
 };
 
 /**
  * Add a serverless cloud function to run part or all of your API (back-end) without always running servers.
  *
+ * @param config - Cloud function configuration.
  * */
 export const addCloudFunction = createResourcePack(
   ({

@@ -22,10 +22,22 @@ export type ComponentMap = Record<string, FCWithChildren>;
  * Layout Components
  * */
 export type LayoutComponents = {
+  /**
+   * The generated layout container component.
+   * */
   layout: FCWithChildren;
+  /**
+   * Map of PascalCase area components keyed by area name.
+   * */
   areas: ComponentMap;
 };
 
+/**
+ * Convert a kebab-cased area name into PascalCase.
+ *
+ * @param area - Area name from the layout template.
+ * @returns PascalCase version of the area name.
+ * */
 export const getPascalCaseAreaName = (area: string): string => {
   return area
     .split("-")
@@ -96,6 +108,12 @@ const convertLayoutToCSS = (
   };
 };
 
+/**
+ * Parse a layout template string into area names and CSS.
+ *
+ * @param layout - Raw layout template string.
+ * @returns Area names and CSS for the grid template.
+ * */
 export const getEasyLayoutTemplateDetails = (
   layout: string = "",
 ): {
@@ -134,6 +152,10 @@ export const getEasyLayoutTemplateDetails = (
  *   );
  * };
  * ```
+ *
+ * @param extendFrom - Base component to extend for the layout container.
+ * @param areasExtendFrom - Base component to extend for each area component.
+ * @returns Tagged template function that builds layout components.
  * */
 export const getEasyLayout = (
   extendFrom?: FCWithChildren,

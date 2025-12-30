@@ -47,10 +47,20 @@ export * from "./AWS";
 
 /**
  * A utility function to add a route to a route map by path.
+ * @returns New route map with the route appended.
  * */
 export const addRouteToRouteMap = (
+  /**
+   * Existing route map to append to.
+   */
   routeMap: RouteMap,
+  /**
+   * Route definition to add to the map.
+   */
   route: Route,
+  /**
+   * Optional base path prefix to apply to the route path.
+   */
   basePath: string = "",
 ): RouteMap => {
   const { path: routePath } = route;
@@ -64,10 +74,20 @@ export const addRouteToRouteMap = (
 
 /**
  * Add multiple routes to a {@link RouteMap} by path.
+ * @returns New route map with all routes appended.
  * */
 export const addRoutesToRouteMap = (
+  /**
+   * Existing route map to append to.
+   */
   routeMap: RouteMap,
+  /**
+   * Route list to add to the map.
+   */
   routes: Route[],
+  /**
+   * Optional base path prefix applied to all route paths.
+   */
   basePath: string = "",
 ): RouteMap => {
   let newRouteMap = {
@@ -83,10 +103,20 @@ export const addRoutesToRouteMap = (
 
 /**
  * Apply one {@link RouteMap} to another.
+ * @returns New route map with the incoming routes merged.
  * */
 export const addRouteMapToRouteMap = (
+  /**
+   * Existing route map to append to.
+   */
   routeMap: RouteMap,
+  /**
+   * Route map to merge into the existing map.
+   */
   routeMapToAdd: RouteMap,
+  /**
+   * Optional base path prefix applied to all incoming paths.
+   */
   basePath: string = "",
 ): RouteMap => {
   const newRouteMap = {
@@ -104,13 +134,32 @@ export const addRouteMapToRouteMap = (
 
 /**
  * A Cloud Function event router.
+ * @returns Cloud function response for the routed request.
  * */
 export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
+  /**
+   * Raw Cloud Function event object.
+   */
   event: any,
+  /**
+   * Transformer used to normalize the event.
+   */
   eventTransformer: CloudFunctionEventTransformer,
+  /**
+   * Route lookup map keyed by normalized path.
+   */
   routeMap: RouteMap,
+  /**
+   * Allowed origins list used to build CORS headers.
+   */
   allowedOrigins: CORSPatter[],
+  /**
+   * Optional predicate to decide whether error details are exposed.
+   */
   errorShouldBeExposedToClient?: (error: unknown) => boolean,
+  /**
+   * When true, log handler inputs and outputs.
+   */
   debug: boolean = false,
 ): Promise<CloudFunctionResponse> => {
   let transformedEvent: NormalizedCloudFunctionEventData | undefined =

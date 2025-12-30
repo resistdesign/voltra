@@ -12,21 +12,55 @@ export namespace AWS {
    * An AWS specific Cloud Function event.
    * */
   export interface IAWSCloudFunctionEvent {
+    /**
+     * AWS request context containing authorizer info and identity details.
+     */
     requestContext?: Record<any, any>;
+    /**
+     * HTTP method for the incoming request.
+     */
     httpMethod?: string;
+    /**
+     * Single-value HTTP headers.
+     */
     headers?: Record<string, string>;
+    /**
+     * Multi-value HTTP headers keyed by header name.
+     */
     multiValueHeaders?: Record<string, string[]>;
+    /**
+     * Request path string as provided by the AWS event.
+     */
     path?: string;
+    /**
+     * Raw request body string (usually JSON).
+     */
     body?: string;
   }
 
-  export const getPathFromEvent = (event: IAWSCloudFunctionEvent) => {
+  /**
+   * @returns Normalized request path string.
+   */
+  export const getPathFromEvent = (
+    /**
+     * AWS Cloud Function event to read the path from.
+     */
+    event: IAWSCloudFunctionEvent,
+  ) => {
     const { path = "" } = event;
 
     return path;
   };
 
-  export const getBodyFromEvent = (event: IAWSCloudFunctionEvent): any => {
+  /**
+   * @returns Parsed body payload, or undefined if parsing fails.
+   */
+  export const getBodyFromEvent = (
+    /**
+     * AWS Cloud Function event to parse the body from.
+     */
+    event: IAWSCloudFunctionEvent,
+  ): any => {
     const { body = "" } = event;
 
     try {
@@ -38,7 +72,13 @@ export namespace AWS {
     }
   };
 
+  /**
+   * @returns Normalized headers keyed by lowercase header name.
+   */
   export const getHeadersFromEvent = (
+    /**
+     * AWS Cloud Function event to read headers from.
+     */
     event: IAWSCloudFunctionEvent,
   ): Record<string, string[]> => {
     const { headers = {}, multiValueHeaders = {} } = event;
@@ -62,13 +102,29 @@ export namespace AWS {
     return normalizedHeaders;
   };
 
-  export const getMethodFromEvent = (event: IAWSCloudFunctionEvent) => {
+  /**
+   * @returns HTTP method string for the request.
+   */
+  export const getMethodFromEvent = (
+    /**
+     * AWS Cloud Function event to read the method from.
+     */
+    event: IAWSCloudFunctionEvent,
+  ) => {
     const { httpMethod = "" } = event;
 
     return httpMethod;
   };
 
-  export const getAuthInfo = (event: IAWSCloudFunctionEvent): AuthInfo => {
+  /**
+   * @returns Normalized auth info with user id and roles.
+   */
+  export const getAuthInfo = (
+    /**
+     * AWS Cloud Function event to extract auth info from.
+     */
+    event: IAWSCloudFunctionEvent,
+  ): AuthInfo => {
     const {
       requestContext: {
         authorizer: {
@@ -96,8 +152,12 @@ export namespace AWS {
 
   /**
    * Parse out the Auth, CORS, Headers, Method and Body from an AWS Cloud Function event.
+   * @returns Normalized event data for routing.
    * */
   export const normalizeCloudFunctionEvent: CloudFunctionEventTransformer = (
+    /**
+     * AWS Cloud Function event to normalize for routing.
+     */
     event: IAWSCloudFunctionEvent,
   ): NormalizedCloudFunctionEventData => {
     const authInfo = getAuthInfo(event);

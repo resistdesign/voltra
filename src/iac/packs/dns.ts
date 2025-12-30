@@ -8,16 +8,33 @@ import { SimpleCFT } from "../SimpleCFT";
 import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
 export type AddDNSConfig = {
+  /**
+   * Resource id for the DNS record.
+   */
   id: string;
+  /**
+   * Hosted zone id for the domain.
+   */
   hostedZoneId: CloudFormationPrimitiveValue<string>;
+  /**
+   * Fully qualified domain name.
+   */
   domainName: CloudFormationPrimitiveValue<string>;
+  /**
+   * Resource records for the DNS entry.
+   */
   resourceRecords: CloudFormationPrimitiveValue<string>[];
+  /**
+   * DNS record type.
+   */
   recordType?: CloudFormationPrimitiveValue<string>;
 };
 
 /**
  * Add DNS parameters for reference in other resources.
  * Optionally includes a front-end live development subdomain.
+ *
+ * @param config - DNS configuration.
  * */
 export const addDNS = createResourcePack(
   ({

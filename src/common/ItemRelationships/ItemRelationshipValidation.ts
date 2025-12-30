@@ -7,6 +7,9 @@ import {
   ItemRelationshipInfoType,
 } from "../ItemRelationshipInfoTypes";
 
+/**
+ * Error codes for relationship validation.
+ * */
 export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
   INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",
   INVALID_RELATIONSHIP_ITEM_FIELD: "INVALID_RELATIONSHIP_ITEM_FIELD",
@@ -14,6 +17,10 @@ export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
 
 /**
  * Validates a relationship item.
+ *
+ * @param relationshipItem - Relationship item to validate.
+ * @param omitFields - Relationship keys to ignore during validation.
+ * @returns Validation results with errors and errorMap when invalid.
  * */
 export const validateRelationshipItem = (
   relationshipItem: ItemRelationshipInfoType,

@@ -24,6 +24,13 @@ export const SEARCH_VALIDATION_ERRORS = {
 
 /**
  * Validate search fields against type info fields.
+ *
+ * @param typeInfoName - Type name to validate against.
+ * @param typeInfoMap - Type info map containing field definitions.
+ * @param searchFields - Field criteria to validate.
+ * @param disallowRelationalFields - Whether to forbid relational fields.
+ * @param customValidators - Custom field validators by type name.
+ * @returns Validation results with errors and error map.
  * */
 export const validateSearchFields = (
   typeInfoName: string,

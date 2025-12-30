@@ -1,3 +1,8 @@
+/**
+ * @packageDocumentation
+ *
+ * Aggregated exports for IaC resource packs.
+ */
 export * from "./auth";
 export * from "./build";
 export * from "./build/utils";

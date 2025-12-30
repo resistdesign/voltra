@@ -37,6 +37,13 @@ const ALIAS_TYPE_PROCESSORS: Record<
   [SyntaxKind.TypeReference]: getTypeInfoFromTypeReference,
 };
 
+/**
+ * Resolve TypeInfo for a type alias node based on its kind.
+ *
+ * @param type - Alias type node to inspect.
+ * @param typeMap - Map of available type aliases.
+ * @returns Resolved TypeInfo or undefined when unsupported.
+ */
 export const getTypeInfoFromAliasType = (
   type: TypeNode,
   typeMap: TypeMap,

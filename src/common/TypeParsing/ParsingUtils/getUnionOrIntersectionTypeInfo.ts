@@ -10,6 +10,13 @@ import { TypeInfo } from "../TypeInfo";
 import { getTypeInfoFromTypeAlias } from "./getTypeInfoFromTypeAlias";
 import { getTypeInfo } from "./getTypeInfo";
 
+/**
+ * Resolve TypeInfo for union or intersection types.
+ *
+ * @param unionType - Union or intersection type node to inspect.
+ * @param typeMap - Map of available type aliases.
+ * @returns Resolved TypeInfo or undefined when unsupported.
+ */
 export const getUnionOrIntersectionTypeInfo = (
   unionType: UnionTypeNode | IntersectionTypeNode,
   typeMap: TypeMap,

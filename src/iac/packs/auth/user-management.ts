@@ -7,19 +7,58 @@
 import { createResourcePack } from "../../utils";
 
 export type AddUserManagementConfig = {
+  /**
+   * Base id for Cognito resources.
+   */
   id: string;
+  /**
+   * IAM role name for authenticated users.
+   */
   authRoleName: string;
+  /**
+   * IAM role name for unauthenticated users.
+   */
   unauthRoleName: string;
+  /**
+   * Base domain name for the user pool.
+   */
   domainName: any;
+  /**
+   * Hosted zone id for DNS records.
+   */
   hostedZoneId: any;
+  /**
+   * SSL certificate ARN for the user pool domain.
+   */
   sslCertificateArn: any;
+  /**
+   * OAuth callback URLs.
+   */
   callbackUrls?: any[];
+  /**
+   * OAuth logout URLs.
+   */
   logoutUrls?: any[];
+  /**
+   * Alias target DNS name for the base domain record.
+   */
   baseDomainRecordAliasTargetDNSName?: any;
+  /**
+   * API Gateway REST API id for authenticated access.
+   */
   apiGatewayRESTAPIId?: any;
+  /**
+   * API Gateway stage name for authenticated access.
+   */
   apiStageName?: any;
 };
 
+/**
+ * Add Cognito user management resources to a template.
+ *
+ * @param config - User management configuration.
+ * @returns CloudFormation template fragment.
+ */
 export const addUserManagement = createResourcePack(
   ({
     id,

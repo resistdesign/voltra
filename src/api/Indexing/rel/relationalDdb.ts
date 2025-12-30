@@ -10,14 +10,26 @@ import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from 
 type EdgeMetadata = Record<string, unknown>;
 
 export type RelationEdgesDdbKey = {
+  /**
+   * Partition key encoding entity/relation/direction.
+   */
   edgeKey: string;
+  /**
+   * Sort key identifying the opposite entity id.
+   */
   otherId: string;
 };
 
 export type RelationEdgesDdbItem<TMetadata extends EdgeMetadata = EdgeMetadata> = RelationEdgesDdbKey & {
+  /**
+   * Optional metadata stored with the edge.
+   */
   metadata?: TMetadata;
 };
 
+/**
+ * Schema metadata for relational edges stored in DynamoDB.
+ */
 export const relationEdgesSchema = {
   tableName: 'RelationEdges',
   partitionKey: 'edgeKey',
@@ -25,6 +37,13 @@ export const relationEdgesSchema = {
   metadataAttribute: 'metadata',
 } as const;
 
+/**
+ * Encode the partition key for relation edges.
+ * @param entityId Source/target entity id.
+ * @param relation Relation name.
+ * @param direction Traversal direction.
+ * @returns Encoded partition key for the relation edge.
+ */
 export function encodeRelationEdgePartitionKey(
   entityId: string,
   relation: string,
@@ -33,6 +52,14 @@ export function encodeRelationEdgePartitionKey(
   return `${entityId}\u0000${relation}\u0000${direction}`;
 }
 
+/**
+ * Build a DynamoDB key for a relation edge.
+ * @param entityId Source/target entity id.
+ * @param relation Relation name.
+ * @param direction Traversal direction.
+ * @param otherId Opposite entity id for the edge.
+ * @returns Relation edge key for DynamoDB.
+ */
 export function buildRelationEdgeDdbKey(
   entityId: string,
   relation: string,
@@ -45,6 +72,15 @@ export function buildRelationEdgeDdbKey(
   };
 }
 
+/**
+ * Build a DynamoDB item for a relation edge.
+ * @param entityId Source/target entity id.
+ * @param relation Relation name.
+ * @param direction Traversal direction.
+ * @param otherId Opposite entity id for the edge.
+ * @param metadata Optional metadata for the edge.
+ * @returns Relation edge item for DynamoDB.
+ */
 export function buildRelationEdgeDdbItem<TMetadata extends EdgeMetadata>(
   entityId: string,
   relation: string,
@@ -59,19 +95,49 @@ export function buildRelationEdgeDdbItem<TMetadata extends EdgeMetadata>(
 }
 
 export type RelationEdgesQueryRequest = {
+  /**
+   * Partition key for the relation edge query.
+   */
   edgeKey: string;
+  /**
+   * Optional maximum number of items to return.
+   */
   limit?: number;
+  /**
+   * Optional exclusive start key for pagination.
+   */
   exclusiveStartKey?: RelationEdgesDdbKey;
 };
 
 export type RelationEdgesQueryResult<TMetadata extends EdgeMetadata = EdgeMetadata> = {
+  /**
+   * Returned items for the query.
+   */
   items: RelationEdgesDdbItem<TMetadata>[];
+  /**
+   * Last evaluated key for pagination.
+   */
   lastEvaluatedKey?: RelationEdgesDdbKey;
 };
 
 export type RelationEdgesDdbDependencies<TMetadata extends EdgeMetadata = EdgeMetadata> = {
+  /**
+   * Batch put relation edge items.
+   * @param items Edge items to store.
+   * @returns Promise resolved once stored.
+   */
   putEdges(items: RelationEdgesDdbItem<TMetadata>[]): Promise<void>;
+  /**
+   * Batch delete relation edge keys.
+   * @param keys Edge keys to delete.
+   * @returns Promise resolved once deleted.
+   */
   deleteEdges(keys: RelationEdgesDdbKey[]): Promise<void>;
+  /**
+   * Query relation edges by key.
+   * @param request Query request parameters.
+   * @returns Query results and pagination key.
+   */
   queryEdges(request: RelationEdgesQueryRequest): Promise<RelationEdgesQueryResult<TMetadata>>;
 };
 
@@ -106,8 +172,16 @@ function decodeRelationEdgesToken(token?: string): RelationEdgesCursorToken | un
  * DynamoDB-backed relational edge store with directional queries.
  */
 export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata> {
+  /**
+   * @param dependencies DynamoDB query/write dependencies.
+   */
   constructor(private readonly dependencies: RelationEdgesDdbDependencies<TMetadata>) {}
 
+  /**
+   * Insert or update an edge.
+   * @param edge Edge to store.
+   * @returns Promise resolved once stored.
+   */
   async putEdge(edge: Edge<TMetadata>): Promise<void> {
     const { from, to, relation } = edge.key;
     const forwardItem = buildRelationEdgeDdbItem(from, relation, 'out', to, edge.metadata);
@@ -116,6 +190,11 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
     await this.dependencies.putEdges([forwardItem, reverseItem]);
   }
 
+  /**
+   * Remove an edge by key.
+   * @param key Edge key to remove.
+   * @returns Promise resolved once removed.
+   */
   async removeEdge(key: EdgeKey): Promise<void> {
     const { from, to, relation } = key;
     const forwardKey = buildRelationEdgeDdbKey(from, relation, 'out', to);
@@ -124,6 +203,13 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
     await this.dependencies.deleteEdges([forwardKey, reverseKey]);
   }
 
+  /**
+   * Query outgoing edges for an entity and relation.
+   * @param fromId Source entity id.
+   * @param relation Relation name.
+   * @param options Optional paging options.
+   * @returns Page of outgoing edges.
+   */
   async getOutgoing(
     fromId: string,
     relation: string,
@@ -151,6 +237,13 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
     };
   }
 
+  /**
+   * Query incoming edges for an entity and relation.
+   * @param toId Target entity id.
+   * @param relation Relation name.
+   * @param options Optional paging options.
+   * @returns Page of incoming edges.
+   */
   async getIncoming(
     toId: string,
     relation: string,

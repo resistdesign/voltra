@@ -39,9 +39,21 @@ type TraceableIndexBackend = IndexBackend & { setActiveTrace(trace?: SearchTrace
  * Input for indexing a document.
  * */
 export type IndexDocumentInput = {
+  /**
+   * Document record to index.
+   */
   document: DocumentRecord;
+  /**
+   * Field name used as the document id.
+   */
   primaryField: string;
+  /**
+   * Field name containing the text to index.
+   */
   indexField: string;
+  /**
+   * Optional backend override (defaults to configured backend).
+   */
   backend?: IndexBackend;
 };
 
@@ -49,9 +61,21 @@ export type IndexDocumentInput = {
  * Input for removing a document from the index.
  * */
 export type RemoveDocumentInput = {
+  /**
+   * Document record to remove.
+   */
   document: DocumentRecord;
+  /**
+   * Field name used as the document id.
+   */
   primaryField: string;
+  /**
+   * Field name containing the text to remove from the index.
+   */
   indexField: string;
+  /**
+   * Optional backend override (defaults to configured backend).
+   */
   backend?: IndexBackend;
 };
 
@@ -59,12 +83,33 @@ export type RemoveDocumentInput = {
  * Input for lossy search with paging support.
  * */
 export type SearchLossyInput = {
+  /**
+   * Search query string.
+   */
   query: string;
+  /**
+   * Field name containing the indexed text.
+   */
   indexField: string;
+  /**
+   * Optional maximum number of results to return.
+   */
   limit?: number;
+  /**
+   * Optional cursor string for pagination.
+   */
   cursor?: string;
+  /**
+   * Optional backend override (defaults to configured backend).
+   */
   backend?: IndexBackend;
+  /**
+   * Optional limits override for search execution.
+   */
   limits?: ResolvedSearchLimits;
+  /**
+   * Optional trace instance for metrics collection.
+   */
   trace?: SearchTrace;
 };
 
@@ -72,12 +117,33 @@ export type SearchLossyInput = {
  * Input for exact search with verification/paging support.
  * */
 export type SearchExactInput = {
+  /**
+   * Search query string.
+   */
   query: string;
+  /**
+   * Field name containing the indexed text.
+   */
   indexField: string;
+  /**
+   * Optional maximum number of results to return.
+   */
   limit?: number;
+  /**
+   * Optional cursor string for pagination.
+   */
   cursor?: string;
+  /**
+   * Optional backend override (defaults to configured backend).
+   */
   backend?: IndexBackend;
+  /**
+   * Optional limits override for search execution.
+   */
   limits?: ResolvedSearchLimits;
+  /**
+   * Optional trace instance for metrics collection.
+   */
   trace?: SearchTrace;
 };
 
@@ -85,9 +151,21 @@ export type SearchExactInput = {
  * Search results with normalized tokens and an optional cursor.
  * */
 export type SearchResult = {
+  /**
+   * Normalized query string.
+   */
   normalized: string;
+  /**
+   * Tokens derived from the normalized query.
+   */
   tokens: string[];
+  /**
+   * Matching document ids.
+   */
   docIds: DocId[];
+  /**
+   * Cursor string for the next page, if more results exist.
+   */
   nextCursor?: string;
 };
 
@@ -95,8 +173,15 @@ let configuredBackend: IndexBackend | undefined;
 
 /**
  * Set the default backend used by search and mutation calls.
+ * @param backend Backend to use for subsequent operations.
+ * @returns Nothing.
  * */
-export function setIndexBackend(backend: IndexBackend): void {
+export function setIndexBackend(
+  /**
+   * Backend to use for subsequent indexing and search operations.
+   */
+  backend: IndexBackend,
+): void {
   configuredBackend = backend;
 }
 
@@ -474,6 +559,11 @@ function resolveIndexText(document: DocumentRecord, indexField: string): string 
 
 /**
  * Index a document using exact and lossy backends.
+ * @param document Document record to index.
+ * @param primaryField Field name used as the document id.
+ * @param indexField Field name containing the text to index.
+ * @param backend Optional backend override (defaults to configured backend).
+ * @returns Promise resolved once indexing is complete.
  * */
 export async function indexDocument({
                                       document,
@@ -507,6 +597,11 @@ export async function indexDocument({
 
 /**
  * Remove a document from exact and lossy backends.
+ * @param document Document record to remove.
+ * @param primaryField Field name used as the document id.
+ * @param indexField Field name containing the text to remove from the index.
+ * @param backend Optional backend override (defaults to configured backend).
+ * @returns Promise resolved once removal is complete.
  * */
 export async function removeDocument({
                                        document,
@@ -538,6 +633,14 @@ export async function removeDocument({
 
 /**
  * Perform a lossy search and return matching document ids.
+ * @param query Search query string.
+ * @param indexField Field name containing the indexed text.
+ * @param limit Optional maximum number of results to return.
+ * @param cursor Optional cursor string for pagination.
+ * @param backend Optional backend override (defaults to configured backend).
+ * @param limits Optional limits override for search execution.
+ * @param trace Optional trace instance for metrics collection.
+ * @returns Search results with doc ids and optional next cursor.
  * */
 export async function searchLossy({
                                     query,
@@ -746,6 +849,14 @@ async function hasExactPhrase(
 
 /**
  * Perform an exact search, optionally using a lossy pre-pass for candidates.
+ * @param query Search query string.
+ * @param indexField Field name containing the indexed text.
+ * @param limit Optional maximum number of results to return.
+ * @param cursor Optional cursor string for pagination.
+ * @param backend Optional backend override (defaults to configured backend).
+ * @param limits Optional limits override for search execution.
+ * @param trace Optional trace instance for metrics collection.
+ * @returns Search results with doc ids and optional next cursor.
  * */
 export async function searchExact({
                                     query,

@@ -53,7 +53,17 @@ export class StructuredInMemoryBackend implements StructuredSearchDependencies, 
     };
   }
 
+  /**
+   * Term query implementation for structured search.
+   */
   terms: StructuredSearchDependencies["terms"] = {
+    /**
+     * @param field Field name to query.
+     * @param mode Term match mode.
+     * @param value Value to match.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     query: async (
       field: string,
       mode: "eq" | "contains",
@@ -69,7 +79,17 @@ export class StructuredInMemoryBackend implements StructuredSearchDependencies, 
     },
   };
 
+  /**
+   * Range query implementation for structured search.
+   */
   ranges: StructuredSearchDependencies["ranges"] = {
+    /**
+     * @param field Field name to query.
+     * @param lower Inclusive lower bound.
+     * @param upper Inclusive upper bound.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     between: async (
       field: string,
       lower: WhereValue,
@@ -78,6 +98,12 @@ export class StructuredInMemoryBackend implements StructuredSearchDependencies, 
     ): Promise<StructuredPage> => {
       return this.buildPage(this.index.between(field, lower, upper, options));
     },
+    /**
+     * @param field Field name to query.
+     * @param lower Inclusive lower bound.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     gte: async (
       field: string,
       lower: WhereValue,
@@ -85,6 +111,12 @@ export class StructuredInMemoryBackend implements StructuredSearchDependencies, 
     ): Promise<StructuredPage> => {
       return this.buildPage(this.index.gte(field, lower, options));
     },
+    /**
+     * @param field Field name to query.
+     * @param upper Inclusive upper bound.
+     * @param options Optional paging options.
+     * @returns Candidate page with optional cursor token.
+     */
     lte: async (
       field: string,
       upper: WhereValue,
@@ -94,6 +126,12 @@ export class StructuredInMemoryBackend implements StructuredSearchDependencies, 
     },
   };
 
+  /**
+   * Write structured fields for a document.
+   * @param docId Document id to write.
+   * @param fields Structured fields to store.
+   * @returns Promise resolved once stored.
+   */
   async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
     const normalized = normalizeFields(fields);
     this.docFields.set(docId, normalized);
