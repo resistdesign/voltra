@@ -9,8 +9,17 @@ export type SortingStrategy = 'docIdAsc';
  * Cursor planner metadata used to resume searches efficiently.
  * */
 export type PlannerMetadata = {
+  /**
+   * Token selected as the primary postings list for paging.
+   */
   primaryToken: string;
+  /**
+   * Optional token stats version used to validate planner choice.
+   */
   statsVersion?: number;
+  /**
+   * Sorting strategy applied to doc id traversal.
+   */
   sorting?: SortingStrategy;
 };
 
@@ -18,7 +27,13 @@ export type PlannerMetadata = {
  * Cursor state for lossy search pagination.
  * */
 export type LossyCursorState = {
+  /**
+   * Last document id returned in the previous page.
+   */
   lastDocId?: DocId;
+  /**
+   * Planner metadata used to resume efficient paging.
+   */
   plan?: PlannerMetadata;
 };
 
@@ -26,12 +41,30 @@ export type LossyCursorState = {
  * Cursor state for exact search pagination, including lossy and verification phases.
  * */
 export type ExactCursorState = {
+  /**
+   * Lossy phase cursor state for candidate retrieval.
+   */
   lossy?: LossyCursorState;
+  /**
+   * Verification phase cursor state for exact phrase checks.
+   */
   verification?: {
+    /**
+     * Last verified document id in the verification phase.
+     */
     lastDocId?: DocId;
+    /**
+     * Pending candidates to continue verifying.
+     */
     pendingCandidates?: DocId[];
+    /**
+     * Offset into the pending candidates list.
+     */
     pendingOffset?: number;
   };
+  /**
+   * Planner metadata used to resume efficient paging.
+   */
   plan?: PlannerMetadata;
 };
 
@@ -163,8 +196,14 @@ function normalizeDocIdList(values?: Array<string | number>): DocId[] | undefine
 
 /**
  * Encode a lossy cursor state into a URL-safe string.
+ * @returns URL-safe cursor string, or undefined when there is no state to encode.
  * */
-export function encodeLossyCursor(state?: LossyCursorState): string | undefined {
+export function encodeLossyCursor(
+  /**
+   * Lossy cursor state to encode.
+   */
+  state?: LossyCursorState,
+): string | undefined {
   if (!state || (state.lastDocId === undefined && !state.plan)) {
     return undefined;
   }
@@ -185,8 +224,14 @@ export function encodeLossyCursor(state?: LossyCursorState): string | undefined 
 
 /**
  * Decode a lossy cursor string back into state.
+ * @returns Parsed lossy cursor state, or undefined when cursor is missing.
  * */
-export function decodeLossyCursor(cursor?: string): LossyCursorState | undefined {
+export function decodeLossyCursor(
+  /**
+   * Cursor string to decode.
+   */
+  cursor?: string,
+): LossyCursorState | undefined {
   if (!cursor) {
     return undefined;
   }
@@ -205,8 +250,14 @@ export function decodeLossyCursor(cursor?: string): LossyCursorState | undefined
 
 /**
  * Encode an exact cursor state into a URL-safe string.
+ * @returns URL-safe cursor string, or undefined when there is no state to encode.
  * */
-export function encodeExactCursor(state?: ExactCursorState): string | undefined {
+export function encodeExactCursor(
+  /**
+   * Exact cursor state to encode.
+   */
+  state?: ExactCursorState,
+): string | undefined {
   if (!state) {
     return undefined;
   }
@@ -245,8 +296,14 @@ export function encodeExactCursor(state?: ExactCursorState): string | undefined 
 
 /**
  * Decode an exact cursor string back into state.
+ * @returns Parsed exact cursor state, or undefined when cursor is missing.
  * */
-export function decodeExactCursor(cursor?: string): ExactCursorState | undefined {
+export function decodeExactCursor(
+  /**
+   * Cursor string to decode.
+   */
+  cursor?: string,
+): ExactCursorState | undefined {
   if (!cursor) {
     return undefined;
   }

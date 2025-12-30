@@ -18,16 +18,16 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/Router/CORS.ts`
 - [x] `src/api/Router/Types.ts`
 - [x] `src/api/Router/index.ts`
-- [ ] `src/api/Indexing/api.ts`
-- [ ] `src/api/Indexing/cursor.ts`
-- [ ] `src/api/Indexing/docId.ts`
-- [ ] `src/api/Indexing/handler.ts`
-- [ ] `src/api/Indexing/handler/config.ts`
-- [ ] `src/api/Indexing/hash-universal.ts`
-- [ ] `src/api/Indexing/index.ts`
-- [ ] `src/api/Indexing/tokenize.ts`
-- [ ] `src/api/Indexing/trace.ts`
-- [ ] `src/api/Indexing/types.ts`
+- [x] `src/api/Indexing/api.ts`
+- [x] `src/api/Indexing/cursor.ts`
+- [x] `src/api/Indexing/docId.ts`
+- [x] `src/api/Indexing/handler.ts`
+- [x] `src/api/Indexing/handler/config.ts`
+- [x] `src/api/Indexing/hash-universal.ts`
+- [x] `src/api/Indexing/index.ts`
+- [x] `src/api/Indexing/tokenize.ts`
+- [x] `src/api/Indexing/trace.ts`
+- [x] `src/api/Indexing/types.ts`
 - [ ] `src/api/Indexing/exact/exactDdb.ts`
 - [ ] `src/api/Indexing/exact/exactIndex.ts`
 - [ ] `src/api/Indexing/exact/exactS3.ts`

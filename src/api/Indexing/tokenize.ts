@@ -2,14 +2,26 @@
  * Tokenization output with a normalized string and its tokens.
  * */
 export type TokenizationResult = {
+  /**
+   * Normalized input string used to produce tokens.
+   */
   normalized: string;
+  /**
+   * Token list derived from the normalized input.
+   */
   tokens: string[];
 };
 
 /**
  * Normalize text and split into word tokens for exact/fulltext indexing.
+ * @returns Normalized string and token list.
  * */
-export function tokenize(input: string): TokenizationResult {
+export function tokenize(
+  /**
+   * Raw input text to normalize and tokenize.
+   */
+  input: string,
+): TokenizationResult {
   const normalized = input
     .normalize('NFKD')
     .replace(/\p{Diacritic}/gu, '')
@@ -24,8 +36,14 @@ export function tokenize(input: string): TokenizationResult {
 
 /**
  * Normalize text and emit lossy trigrams with a prefix marker for recall-heavy search.
+ * @returns Normalized string and token list.
  * */
-export function tokenizeLossyTrigrams(input: string): TokenizationResult {
+export function tokenizeLossyTrigrams(
+  /**
+   * Raw input text to normalize and tokenize.
+   */
+  input: string,
+): TokenizationResult {
   const normalized = input
     .normalize("NFKD")
     .replace(/\p{Diacritic}/gu, "")
