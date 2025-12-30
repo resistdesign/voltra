@@ -5,6 +5,9 @@
  */
 import { createResourcePack } from "../utils";
 
+/**
+ * Configuration for the CDN pack.
+ */
 export type AddCDNConfig = {
   /**
    * CloudFront distribution id.

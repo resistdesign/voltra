@@ -17,6 +17,9 @@ type CursorState = {
   offset?: number;
 };
 
+/**
+ * Configuration overrides for the in-memory file driver.
+ */
 export type InMemoryFileSpecificConfig = {
   /**
    * Optional time source for updatedOn timestamps.
@@ -70,6 +73,9 @@ const selectFieldsFromItem = (
   }, {} as Partial<BaseFileItem>);
 };
 
+/**
+ * In-memory file driver backed by local state.
+ */
 export class InMemoryFileItemDBDriver
   implements DataItemDBDriver<BaseFileItem, "id">
 {

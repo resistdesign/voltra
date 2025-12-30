@@ -71,6 +71,9 @@ type RequestStateChangeHandler = (
   requestState: BaseTypeInfoORMAPIRequestState,
 ) => void;
 
+/**
+ * Request state keyed by TypeInfoORM API method.
+ */
 export type TypeInfoORMAPIState = Partial<
   Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRequestState>
 >;

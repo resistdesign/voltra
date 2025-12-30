@@ -1,3 +1,6 @@
+/**
+ * Cursor state for relational paging.
+ */
 export type RelationalCursorState = {
   /**
    * Last entity id processed in the previous page.

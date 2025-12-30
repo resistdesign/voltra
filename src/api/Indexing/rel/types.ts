@@ -8,6 +8,9 @@
  */
 export type Direction = "out" | "in";
 
+/**
+ * Key identifying a relation between two entities.
+ */
 export type EdgeKey = {
   /**
    * Source entity id.
@@ -27,6 +30,9 @@ export type EdgeKey = {
   direction?: Direction;
 };
 
+/**
+ * Edge connecting two entities with optional metadata.
+ */
 export type Edge<TMetadata = Record<string, unknown>> = {
   /**
    * Edge key describing the relation.
@@ -38,6 +44,9 @@ export type Edge<TMetadata = Record<string, unknown>> = {
   metadata?: TMetadata;
 };
 
+/**
+ * Page of edges returned from a query.
+ */
 export type EdgePage<TMetadata = Record<string, unknown>> = {
   /**
    * Returned edges for the page.
@@ -49,6 +58,9 @@ export type EdgePage<TMetadata = Record<string, unknown>> = {
   nextCursor?: string;
 };
 
+/**
+ * Paging options for relational queries.
+ */
 export type RelationalQueryOptions = {
   /**
    * Optional maximum number of edges to return.

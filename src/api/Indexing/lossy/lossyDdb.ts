@@ -6,6 +6,9 @@
  */
 import type { DocId } from "../types.js";
 
+/**
+ * DynamoDB key shape for lossy postings items.
+ */
 export type LossyDdbKey = {
   /**
    * Token value stored in the lossy index.
@@ -21,6 +24,9 @@ export type LossyDdbKey = {
   docId: DocId;
 };
 
+/**
+ * DynamoDB item shape for lossy postings entries.
+ */
 export type LossyDdbItem = LossyDdbKey;
 
 /**

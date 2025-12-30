@@ -31,6 +31,9 @@ export type InMemoryItemRelationshipDBDriverConfig = DataItemDBDriverConfig<
   ItemRelationshipInfoIdentifyingKeys.id
 >;
 
+/**
+ * In-memory relationship driver using DataItem storage.
+ */
 export class InMemoryItemRelationshipDBDriver extends InMemoryDataItemDBDriver<
   ItemRelationshipInfo,
   ItemRelationshipInfoIdentifyingKeys.id

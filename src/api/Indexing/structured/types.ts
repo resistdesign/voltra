@@ -10,6 +10,9 @@ import type { DocId } from "../types.js";
  */
 export type WhereValue = string | number | boolean | null;
 
+/**
+ * Term clause for structured queries.
+ */
 export type StructuredTermWhere = {
   /**
    * Clause type discriminator.
@@ -29,6 +32,9 @@ export type StructuredTermWhere = {
   value: WhereValue;
 };
 
+/**
+ * Range clause for structured queries.
+ */
 export type StructuredRangeWhere =
   | {
       /**
@@ -97,8 +103,14 @@ export type WhereOr = {
   or: Where[];
 };
 
+/**
+ * Structured query expression.
+ */
 export type Where = WhereAnd | WhereOr | StructuredTermWhere | StructuredRangeWhere;
 
+/**
+ * Paging options for structured queries.
+ */
 export type StructuredQueryOptions = {
   /**
    * Optional maximum number of candidates to return.
@@ -110,6 +122,9 @@ export type StructuredQueryOptions = {
   cursor?: string;
 };
 
+/**
+ * Candidate ids and cursor for structured searches.
+ */
 export type CandidatePage = {
   /**
    * Candidate document ids for the page.

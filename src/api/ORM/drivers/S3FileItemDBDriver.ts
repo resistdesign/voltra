@@ -34,6 +34,9 @@ import FS from "fs";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
 import { ListItemsConfig } from "../../../common/SearchTypes";
 
+/**
+ * ORM file item with id plus base file fields.
+ */
 export type BaseFileItem = {
   /**
    * File identifier (full key).

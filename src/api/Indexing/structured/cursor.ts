@@ -1,5 +1,8 @@
 import type { DocId } from '../types.js';
 
+/**
+ * Cursor state for structured indexing paging.
+ */
 export type StructuredCursorState = {
   /**
    * Last document id processed in the previous page.

@@ -15,6 +15,9 @@ export const PLACEHOLDER_FUNCTION_CODE: AWS.Lambda.Function.Code = {
     "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n",
 };
 
+/**
+ * Supported Lambda runtimes for cloud functions.
+ */
 export type CloudFunctionRuntime =
   // Node.js
   | "nodejs14.x"
@@ -61,6 +64,9 @@ export type CloudFunctionRuntime =
   | "provided.al2"
   | "provided.al2023";
 
+/**
+ * Configuration for the cloud function pack.
+ */
 export type AddCloudFunctionConfig = {
   /**
    * Base id for the function resources.
@@ -97,6 +103,9 @@ export type AddCloudFunctionConfig = {
  *
  * @param config - Cloud function configuration.
  * */
+/**
+ * Add a cloud function resource with IAM role and configuration.
+ */
 export const addCloudFunction = createResourcePack(
   ({
     id,

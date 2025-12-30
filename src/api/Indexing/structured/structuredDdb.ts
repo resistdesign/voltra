@@ -16,6 +16,9 @@ export type StructuredDocFieldsRecord = Record<string, WhereValue | WhereValue[]
  */
 export type StructuredTermMode = 'eq' | 'contains';
 
+/**
+ * DynamoDB key shape for term index entries.
+ */
 export type StructuredTermIndexKey = {
   /**
    * Partition key for term index entries.
@@ -27,6 +30,9 @@ export type StructuredTermIndexKey = {
   docId: DocId;
 };
 
+/**
+ * DynamoDB item shape for term index entries.
+ */
 export type StructuredTermIndexItem = StructuredTermIndexKey & {
   /**
    * Field name being indexed.
@@ -42,6 +48,9 @@ export type StructuredTermIndexItem = StructuredTermIndexKey & {
   mode: StructuredTermMode;
 };
 
+/**
+ * DynamoDB key shape for range index entries.
+ */
 export type StructuredRangeIndexKey = {
   /**
    * Field name being indexed.
@@ -53,6 +62,9 @@ export type StructuredRangeIndexKey = {
   rangeKey: string;
 };
 
+/**
+ * DynamoDB item shape for range index entries.
+ */
 export type StructuredRangeIndexItem = StructuredRangeIndexKey & {
   /**
    * Stored field value.
@@ -64,6 +76,9 @@ export type StructuredRangeIndexItem = StructuredRangeIndexKey & {
   docId: DocId;
 };
 
+/**
+ * DynamoDB key shape for structured doc fields entries.
+ */
 export type StructuredDocFieldsKey = {
   /**
    * Document id for the record.
@@ -71,6 +86,9 @@ export type StructuredDocFieldsKey = {
   docId: DocId;
 };
 
+/**
+ * DynamoDB item shape for structured doc fields entries.
+ */
 export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
   /**
    * Structured fields stored for the document.

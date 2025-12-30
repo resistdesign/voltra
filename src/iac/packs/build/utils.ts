@@ -56,6 +56,9 @@ export type LinuxUserNameString = string;
  */
 export type YesOrNo = "yes" | "no";
 
+/**
+ * BuildSpec environment configuration.
+ */
 export interface Env {
   /**
    * Shell to use for command execution.
@@ -83,6 +86,9 @@ export interface Env {
   "git-credential-helper"?: YesOrNo;
 }
 
+/**
+ * BuildSpec proxy configuration.
+ */
 export interface Proxy {
   /**
    * Whether to upload build artifacts via proxy.
@@ -94,6 +100,9 @@ export interface Proxy {
   logs?: YesOrNo;
 }
 
+/**
+ * BuildSpec batch build configuration.
+ */
 export interface Batch {
   /**
    * Whether to fail fast for batch builds.
@@ -115,6 +124,9 @@ export interface Batch {
   [key: string]: any;
 }
 
+/**
+ * BuildSpec phase configuration.
+ */
 export interface Phase {
   /**
    * Runtime versions for this phase.
@@ -138,6 +150,9 @@ export interface Phase {
   finally?: string[];
 }
 
+/**
+ * BuildSpec phase collection (at least one phase required).
+ */
 export type PhaseConfig = AtLeastOne<{
   install: Phase;
   pre_build: Phase;
@@ -145,6 +160,9 @@ export type PhaseConfig = AtLeastOne<{
   post_build: Phase;
 }>;
 
+/**
+ * Report group configuration for build reports.
+ */
 export interface ReportGroupNameOrArn {
   /**
    * Report files to include.
@@ -164,6 +182,9 @@ export interface ReportGroupNameOrArn {
   "file-format"?: string;
 }
 
+/**
+ * Reports configuration for BuildSpec.
+ */
 export interface Reports {
   /**
    * Report group name or ARN.
@@ -171,6 +192,9 @@ export interface Reports {
   "report-group-name-or-arn"?: ReportGroupNameOrArn;
 }
 
+/**
+ * Artifact identifier configuration.
+ */
 export interface ArtifactIdentifier {
   /**
    * Artifact file list.
@@ -190,6 +214,9 @@ export interface ArtifactIdentifier {
   "base-directory"?: string;
 }
 
+/**
+ * Secondary artifacts configuration.
+ */
 export interface SecondaryArtifacts {
   /**
    * Artifact identifier for secondary artifacts.
@@ -197,6 +224,9 @@ export interface SecondaryArtifacts {
   artifactIdentifier?: ArtifactIdentifier;
 }
 
+/**
+ * Artifacts configuration for BuildSpec.
+ */
 export interface Artifacts {
   /**
    * Artifact file list.
@@ -232,6 +262,9 @@ export interface Artifacts {
   "secondary-artifacts"?: SecondaryArtifacts;
 }
 
+/**
+ * Cache configuration for BuildSpec.
+ */
 export interface Cache {
   /**
    * Cache paths to persist between builds.
@@ -239,6 +272,9 @@ export interface Cache {
   paths?: string[];
 }
 
+/**
+ * BuildSpec configuration object.
+ */
 export interface BuildSpec {
   /**
    * Build spec version.

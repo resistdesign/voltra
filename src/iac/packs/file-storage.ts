@@ -6,6 +6,9 @@
 import { AWS } from "../types/IaCTypes";
 import { createResourcePack } from "../utils";
 
+/**
+ * Configuration for the secure file storage pack.
+ */
 export type AddSecureFileStorageConfig = {
   /**
    * S3 bucket resource id.

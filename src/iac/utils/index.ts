@@ -12,6 +12,9 @@ import { getValuePathString, mergeValues } from "./patch-utils";
 
 export * from "./patch-utils";
 
+/**
+ * Stack parameter definition with display metadata.
+ */
 export type ParameterInfo = {
   /**
    * Parameter id used in the template.
@@ -177,6 +180,9 @@ export const createResourcePack =
     return patchTemplate(patch, template);
   };
 
+/**
+ * Grouped parameter definitions for CloudFormation interfaces.
+ */
 export type ParameterGroup = {
   /**
    * Group label.

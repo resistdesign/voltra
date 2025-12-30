@@ -12,6 +12,9 @@ import {
   buildStructuredTermItem,
 } from './structuredDdb.js';
 
+/**
+ * Dependencies required to persist structured index entries.
+ */
 export type StructuredWriterDependencies = {
   /**
    * Load previously stored fields for a document.
@@ -144,6 +147,9 @@ function toRangeKeys(entries: RangeEntry[]): StructuredRangeIndexKey[] {
   return entries.map((entry) => ({ field: entry.field, rangeKey: entry.rangeKey }));
 }
 
+/**
+ * Writer that diffs structured fields and persists term/range entries.
+ */
 export class StructuredDdbWriter {
   /**
    * @param dependencies Writer dependencies for persistence.
