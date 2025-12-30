@@ -163,6 +163,14 @@ const FIELD_FILTER_PROCESSORS: Record<
   [FIELD_FILTERS.EXCLUDE]: getTypeInfoFromExcludeFieldFilter,
 };
 
+/**
+ * Resolve TypeInfo for field-filter helper types (Pick/Omit/Exclude).
+ *
+ * @param typeNameStr - Type name or filter identifier.
+ * @param typeRef - Type reference node with type arguments.
+ * @param typeMap - Map of available type aliases.
+ * @returns Filtered TypeInfo or undefined when not resolvable.
+ */
 export const getTypeInfoFromFieldFilter = (
   typeNameStr: string | undefined,
   typeRef: TypeReferenceNode,
