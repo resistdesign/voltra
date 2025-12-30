@@ -16,6 +16,9 @@ import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "../../Inde
 
 type EdgeMetadata = Record<string, unknown>;
 
+/**
+ * Relational backend interface for relationship edge operations.
+ */
 export type RelationalBackend<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   /**
    * Insert or update an edge.
@@ -55,6 +58,9 @@ export type RelationalBackend<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
 };
 
+/**
+ * Configuration for the indexing relationship driver.
+ */
 export type IndexingRelationshipDriverConfig = {
   /**
    * Relational backend used for edge operations.

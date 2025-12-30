@@ -113,30 +113,30 @@ Legend: [ ] todo, [x] done
 - [x] type `CandidatePage` (line 113)
 
 ## src/api/ORM/TypeInfoORMService.ts
-- [ ] type `TypeInfoORMIndexingConfig` (line 168)
+- [x] type `TypeInfoORMIndexingConfig` (line 168)
 
 ## src/api/ORM/drivers/InMemoryDataItemDBDriver.ts
-- [ ] class `InMemoryDataItemDBDriver` (line 60)
+- [x] class `InMemoryDataItemDBDriver` (line 60)
 
 ## src/api/ORM/drivers/InMemoryFileItemDBDriver.ts
-- [ ] type `InMemoryFileSpecificConfig` (line 20)
-- [ ] class `InMemoryFileItemDBDriver` (line 73)
+- [x] type `InMemoryFileSpecificConfig` (line 20)
+- [x] class `InMemoryFileItemDBDriver` (line 73)
 
 ## src/api/ORM/drivers/InMemoryFileItemDBDriver/ConfigTypes.ts
-- [ ] type `InMemoryFileSpecificConfig` (line 1)
+- [x] type `InMemoryFileSpecificConfig` (line 1)
 
 ## src/api/ORM/drivers/InMemoryItemRelationshipDBDriver.ts
-- [ ] class `InMemoryItemRelationshipDBDriver` (line 34)
+- [x] class `InMemoryItemRelationshipDBDriver` (line 34)
 
 ## src/api/ORM/drivers/IndexingRelationshipDriver.ts
-- [ ] type `RelationalBackend` (line 19)
-- [ ] type `IndexingRelationshipDriverConfig` (line 58)
+- [x] type `RelationalBackend` (line 19)
+- [x] type `IndexingRelationshipDriverConfig` (line 58)
 
 ## src/api/ORM/drivers/S3FileItemDBDriver.ts
-- [ ] type `BaseFileItem` (line 37)
+- [x] type `BaseFileItem` (line 37)
 
 ## src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts
-- [ ] type `S3SpecificConfig` (line 320)
+- [x] type `S3SpecificConfig` (line 320)
 
 ## src/app/utils/Route.tsx
 - [ ] const `RouteContext` (line 65)

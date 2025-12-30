@@ -317,6 +317,9 @@ export type AbridgedS3ClientConfig = {
   disableS3ExpressSessionAuth?: string | false | true;
 };
 
+/**
+ * Configuration overrides for the S3 file driver.
+ */
 export type S3SpecificConfig = {
   /**
    * S3 client configuration overrides.
