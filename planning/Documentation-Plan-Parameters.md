@@ -88,16 +88,16 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/app/utils/index.ts`
 
 ## common
-- [ ] `src/common/CommandLine/collectRequiredEnvironmentVariables.ts`
-- [ ] `src/common/HelperTypes.ts`
-- [ ] `src/common/IdGeneration/getSimpleId.ts`
-- [ ] `src/common/IdGeneration/index.ts`
-- [ ] `src/common/ItemRelationshipInfoTypes.ts`
-- [ ] `src/common/ItemRelationships/ItemRelationshipValidation.ts`
-- [ ] `src/common/ItemRelationships/index.ts`
-- [ ] `src/common/Logging/Utils.ts`
-- [ ] `src/common/Logging/index.ts`
-- [ ] `src/common/Routing.ts`
+- [x] `src/common/CommandLine/collectRequiredEnvironmentVariables.ts`
+- [x] `src/common/HelperTypes.ts`
+- [x] `src/common/IdGeneration/getSimpleId.ts`
+- [x] `src/common/IdGeneration/index.ts`
+- [x] `src/common/ItemRelationshipInfoTypes.ts`
+- [x] `src/common/ItemRelationships/ItemRelationshipValidation.ts`
+- [x] `src/common/ItemRelationships/index.ts`
+- [x] `src/common/Logging/Utils.ts`
+- [x] `src/common/Logging/index.ts`
+- [x] `src/common/Routing.ts`
 - [ ] `src/common/SearchTypes.ts`
 - [ ] `src/common/SearchUtils.ts`
 - [ ] `src/common/SearchValidation.ts`

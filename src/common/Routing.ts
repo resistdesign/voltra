@@ -6,6 +6,12 @@
  */
 export const PATH_DELIMITER = "/";
 
+/**
+ * Parse a string into JSON if possible, otherwise return the raw value.
+ *
+ * @param value - Input string to parse.
+ * @returns Parsed JSON or the original string.
+ */
 export const getPotentialJSONValue = (value: string): any => {
   try {
     return JSON.parse(value);
@@ -16,6 +22,14 @@ export const getPotentialJSONValue = (value: string): any => {
 
 /**
  * Get the path segments from a path string.
+ *
+ * @param path - Path string to split.
+ * @param delimiter - Delimiter used to split the path.
+ * @param filterEmptyOutput - Whether to remove empty output segments.
+ * @param filterEmptyInput - Whether to remove empty input segments.
+ * @param useJson - Whether to parse each segment as JSON.
+ * @param uriDecodeParts - Whether to URI-decode each segment.
+ * @returns Array of path segments.
  * */
 export const getPathArray = (
   path: string,
@@ -34,6 +48,13 @@ export const getPathArray = (
 
 /**
  * Get the path string from path segments.
+ *
+ * @param parts - Path segments to join.
+ * @param delimiter - Delimiter used to join the path.
+ * @param filterEmptyInput - Whether to remove empty input segments.
+ * @param useJson - Whether to JSON-stringify each segment.
+ * @param uriEncodeParts - Whether to URI-encode each segment.
+ * @returns Joined path string.
  * */
 export const getPathString = (
   parts: any[] = [],
@@ -50,6 +71,15 @@ export const getPathString = (
 
 /**
  * Merge two path strings.
+ *
+ * @param path1 - First path string.
+ * @param path2 - Second path string.
+ * @param delimiter - Delimiter used to split and join paths.
+ * @param filterEmptyOutput - Whether to remove empty output segments.
+ * @param filterEmptyInput - Whether to remove empty input segments.
+ * @param useJson - Whether to parse/serialize segments as JSON.
+ * @param uriEncodeParts - Whether to URI-encode each segment.
+ * @returns Merged path string.
  * */
 export const mergeStringPaths = (
   path1: string,
@@ -87,6 +117,10 @@ export const mergeStringPaths = (
 
 /**
  * Resolve a path string against another path string.
+ *
+ * @param currentPath - Base path to resolve against.
+ * @param newPath - New path to resolve, absolute or relative.
+ * @returns Resolved path string.
  * */
 export const resolvePath = (currentPath: string, newPath: string): string => {
   const newSegments = getPathArray(newPath, PATH_DELIMITER, true);
@@ -118,6 +152,11 @@ export const resolvePath = (currentPath: string, newPath: string): string => {
 
 /**
  * Get the parameter values from a path string and test the `path` against a `testPath`.
+ *
+ * @param path - Actual path to test.
+ * @param testPath - Route pattern to match against.
+ * @param exact - Whether to require an exact match.
+ * @returns Params object when matched, otherwise false.
  * */
 export const getParamsAndTestPath = (
   path: string,
