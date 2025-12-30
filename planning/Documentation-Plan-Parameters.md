@@ -102,10 +102,10 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/common/SearchUtils.ts`
 - [x] `src/common/SearchValidation.ts`
 - [x] `src/common/StringTransformers.ts`
-- [ ] `src/common/Testing/CLI.ts`
-- [ ] `src/common/Testing/Types.ts`
-- [ ] `src/common/Testing/Utils.ts`
-- [ ] `src/common/Testing/index.ts`
+- [x] `src/common/Testing/CLI.ts`
+- [x] `src/common/Testing/Types.ts`
+- [x] `src/common/Testing/Utils.ts`
+- [x] `src/common/Testing/index.ts`
 - [ ] `src/common/TypeInfoDataItemUtils.ts`
 - [ ] `src/common/TypeInfoORM/Types.ts`
 - [ ] `src/common/TypeInfoORM/index.ts`
