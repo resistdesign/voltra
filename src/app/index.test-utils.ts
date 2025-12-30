@@ -1,4 +1,7 @@
 import { buildWindowMock } from "./utils/Route.test-utils";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 export const runAppIndexScenario = async () => {
   const appKeys: string[] = [];

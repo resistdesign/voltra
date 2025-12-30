@@ -6,8 +6,37 @@
   "repository": "git@github.com:resistdesign/voltra.git",
   "author": "Resist Design",
   "license": "MIT",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "bin": {
     "vest": "common/Testing/CLI.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./api": {
+      "types": "./api/index.d.ts",
+      "import": "./api/index.js"
+    },
+    "./app": {
+      "types": "./app/index.d.ts",
+      "import": "./app/index.js"
+    },
+    "./common": {
+      "types": "./common/index.d.ts",
+      "import": "./common/index.js"
+    },
+    "./iac": {
+      "types": "./iac/index.d.ts",
+      "import": "./iac/index.js"
+    },
+    "./iac/packs": {
+      "types": "./iac/packs/index.d.ts",
+      "import": "./iac/packs/index.js"
+    }
   },
   "files": [
     "**/*",
@@ -50,6 +79,9 @@
     "typescript": "^5.3.3",
     "uuid": "^11.0.3",
     "yaml": "^2.3.4"
+  },
+  "ts-node": {
+    "esm": true
   },
   "devDependencies": {
     "@astrojs/react": "^4.3.1",

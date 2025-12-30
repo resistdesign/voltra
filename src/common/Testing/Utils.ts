@@ -16,6 +16,9 @@ import {
 } from "./Types";
 import { promises as FS } from "fs";
 import Path from "path";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 const stringifyOutput = (value: any): string =>
   JSON.stringify(

@@ -1,5 +1,12 @@
 # Voltra Package Exports + Auto‑Import Plan (for Codex)
 
+## Progress
+
+- [x] Phase 1 — Build layout PR
+- [x] Phase 2 — Exports PR
+- [ ] Phase 3 — Tooling guardrails PR (optional)
+- [ ] Phase 4 — Docs PR
+
 ## Goal
 
 Make IDE/TS auto‑imports prefer **public package entrypoints** (root + curated subpaths) instead of deep file paths.

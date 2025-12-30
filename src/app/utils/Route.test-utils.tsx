@@ -1,5 +1,8 @@
 import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 type WindowListenerMap = Record<string, (event: any) => void>;
 
