@@ -39,7 +39,13 @@ type StructuredRangeIndex = {
 };
 
 export type StructuredSearchDependencies = {
+  /**
+   * Term query dependency for equality/contains lookups.
+   */
   terms: StructuredTermIndex;
+  /**
+   * Range query dependency for between/gte/lte lookups.
+   */
   ranges: StructuredRangeIndex;
 };
 
@@ -244,6 +250,13 @@ function parseCursor(cursor?: string): CursorState | undefined {
   };
 }
 
+/**
+ * Execute a structured query using the provided term/range dependencies.
+ * @param dependencies Query dependencies for term and range lookups.
+ * @param where Structured query expression to evaluate.
+ * @param options Optional paging options.
+ * @returns Candidate page with optional cursor.
+ */
 export async function searchStructured(
   dependencies: StructuredSearchDependencies,
   where: Where,

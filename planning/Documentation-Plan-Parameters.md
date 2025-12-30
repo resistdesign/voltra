@@ -42,16 +42,16 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/Indexing/rel/inMemory.ts`
 - [x] `src/api/Indexing/rel/relationalDdb.ts`
 - [x] `src/api/Indexing/rel/types.ts`
-- [ ] `src/api/Indexing/structured/cursor.ts`
-- [ ] `src/api/Indexing/structured/handlers.ts`
-- [ ] `src/api/Indexing/structured/inMemory.ts`
-- [ ] `src/api/Indexing/structured/inMemoryBackend.ts`
-- [ ] `src/api/Indexing/structured/index.ts`
-- [ ] `src/api/Indexing/structured/searchStructured.ts`
-- [ ] `src/api/Indexing/structured/structuredDdb.ts`
-- [ ] `src/api/Indexing/structured/structuredDdbBackend.ts`
-- [ ] `src/api/Indexing/structured/structuredWriter.ts`
-- [ ] `src/api/Indexing/structured/types.ts`
+- [x] `src/api/Indexing/structured/cursor.ts`
+- [x] `src/api/Indexing/structured/handlers.ts`
+- [x] `src/api/Indexing/structured/inMemory.ts`
+- [x] `src/api/Indexing/structured/inMemoryBackend.ts`
+- [x] `src/api/Indexing/structured/index.ts`
+- [x] `src/api/Indexing/structured/searchStructured.ts`
+- [x] `src/api/Indexing/structured/structuredDdb.ts`
+- [x] `src/api/Indexing/structured/structuredDdbBackend.ts`
+- [x] `src/api/Indexing/structured/structuredWriter.ts`
+- [x] `src/api/Indexing/structured/types.ts`
 - [ ] `src/api/ORM/DACUtils.ts`
 - [ ] `src/api/ORM/ListItemUtils.ts`
 - [ ] `src/api/ORM/ORMRouteMap.ts`

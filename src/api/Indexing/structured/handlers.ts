@@ -12,37 +12,79 @@ import type { StructuredDocFieldsRecord } from './structuredDdb.js';
 import type { StructuredQueryOptions, Where } from './types.js';
 
 export type StructuredDocumentRecord = {
+  /**
+   * Document id for the structured record.
+   */
   id: DocId | number;
+  /**
+   * Structured fields to index.
+   */
   fields: StructuredDocFieldsRecord;
 };
 
 export type StructuredIndexDocumentEvent = {
+  /**
+   * Action discriminator for indexing.
+   */
   action: 'indexDocument';
+  /**
+   * Document payload to index.
+   */
   document: StructuredDocumentRecord;
 };
 
 export type StructuredSearchEvent = {
+  /**
+   * Action discriminator for structured search.
+   */
   action: 'searchStructured';
+  /**
+   * Structured query clause.
+   */
   where: Where;
+  /**
+   * Optional maximum number of results to return.
+   */
   limit?: number;
+  /**
+   * Optional cursor string for pagination.
+   */
   cursor?: string;
 };
 
 export type StructuredHandlerEvent = StructuredIndexDocumentEvent | StructuredSearchEvent;
 
 export type StructuredWriter = {
+  /**
+   * Write structured fields for a document.
+   * @param docId Document id to write.
+   * @param fields Structured fields to store.
+   * @returns Promise resolved once stored.
+   */
   write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void>;
 };
 
 export type StructuredReader = StructuredSearchDependencies;
 
 export type StructuredHandlerDependencies = {
+  /**
+   * Reader dependencies used for search.
+   */
   reader: StructuredReader;
+  /**
+   * Writer dependency used for indexing.
+   */
   writer: StructuredWriter;
 };
 
 export type LambdaResponse = {
+  /**
+   * HTTP status code for the response.
+   */
   statusCode: number;
+  /**
+   * Serialized response body.
+   */
   body: string;
 };
 
@@ -64,8 +106,14 @@ let dependencies: StructuredHandlerDependencies | undefined;
  *   "limit": 10,
  *   "cursor": "eyJ2IjoxLCJsYXN0RG9jSWQiOiJkb2MtNDIifQ"
  * }
+ * @returns Nothing.
  */
-export function setStructuredHandlerDependencies(value: StructuredHandlerDependencies): void {
+export function setStructuredHandlerDependencies(
+  /**
+   * Reader/writer dependencies used by the handler.
+   */
+  value: StructuredHandlerDependencies,
+): void {
   dependencies = value;
 }
 
@@ -112,7 +160,14 @@ function errorResponse(message: string): LambdaResponse {
   return { statusCode: 400, body: JSON.stringify({ error: message }) };
 }
 
-export async function structuredHandler(event: StructuredHandlerEvent): Promise<LambdaResponse> {
+/**
+ * Handle structured indexing and search events.
+ * @param event Handler event describing the operation to execute.
+ * @returns Lambda response with status and body payload.
+ */
+export async function structuredHandler(
+  event: StructuredHandlerEvent,
+): Promise<LambdaResponse> {
   if (!dependencies) {
     throw new Error(
       'Structured handler dependencies are not configured. Call setStructuredHandlerDependencies().',
