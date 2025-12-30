@@ -7,16 +7,17 @@
   "author": "Resist Design",
   "license": "MIT",
   "bin": {
-    "vest": "src/common/Testing/CLI.ts"
+    "vest": "common/Testing/CLI.js"
   },
   "files": [
-    "src/**/*",
+    "**/*",
     "README.md",
     "package.json",
-    "!src/iac/types/CloudFormationResourceSpecification.js"
+    "!iac/types/CloudFormationResourceSpecification.js",
+    "!iac/types/CloudFormationResourceSpecification.d.ts"
   ],
   "scripts": {
-    "build": "tsc && yarn prep-dist",
+    "build": "tsc -p tsconfig.build.json && yarn prep-dist",
     "test": "ts-node src/common/Testing/CLI.ts \"./src/**/*.spec.json\"",
     "test:gen": "ts-node src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\"",
     "doc": "typedoc",
