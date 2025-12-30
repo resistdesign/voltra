@@ -6,6 +6,11 @@ type HashEncoding = "hex";
 const toHex = (bytes: Uint8Array): string =>
   Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
+/**
+ * Create a hashing helper compatible with Node-style update/digest flow.
+ * @param alg Hash algorithm name (only "sha256" is supported).
+ * @returns Hashing helper with update and digest methods.
+ */
 export function createHash(alg: "sha256") {
   if (alg !== "sha256") {
     throw new Error(`Unsupported hash algorithm: ${alg}`);
@@ -48,4 +53,3 @@ export function createHash(alg: "sha256") {
     },
   };
 }
-
