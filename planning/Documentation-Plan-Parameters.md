@@ -28,12 +28,12 @@ Legend: [ ] todo, [~] in progress, [x] done
 - [x] `src/api/Indexing/tokenize.ts`
 - [x] `src/api/Indexing/trace.ts`
 - [x] `src/api/Indexing/types.ts`
-- [ ] `src/api/Indexing/exact/exactDdb.ts`
-- [ ] `src/api/Indexing/exact/exactIndex.ts`
-- [ ] `src/api/Indexing/exact/exactS3.ts`
-- [ ] `src/api/Indexing/fulltext/ddbBackend.ts`
-- [ ] `src/api/Indexing/fulltext/memoryBackend.ts`
-- [ ] `src/api/Indexing/fulltext/schema.ts`
+- [x] `src/api/Indexing/exact/exactDdb.ts`
+- [x] `src/api/Indexing/exact/exactIndex.ts`
+- [x] `src/api/Indexing/exact/exactS3.ts`
+- [x] `src/api/Indexing/fulltext/ddbBackend.ts`
+- [x] `src/api/Indexing/fulltext/memoryBackend.ts`
+- [x] `src/api/Indexing/fulltext/schema.ts`
 - [ ] `src/api/Indexing/lossy/lossyDdb.ts`
 - [ ] `src/api/Indexing/lossy/lossyIndex.ts`
 - [ ] `src/api/Indexing/lossy/lossyS3.ts`

@@ -7,25 +7,59 @@
 import type { DocId } from "../types.js";
 
 export type ExactDdbKey = {
+  /**
+   * Token value stored in the exact index.
+   */
   token: string;
+  /**
+   * Field name the token was indexed under.
+   */
   indexField: string;
+  /**
+   * Document id containing the token.
+   */
   docId: DocId;
 };
 
 export type ExactDdbItem = ExactDdbKey & {
+  /**
+   * Token positions within the document.
+   */
   positions: number[];
 };
 
+/**
+ * Schema metadata for the exact postings table.
+ */
 export const exactDdbSchema = {
   partitionKey: 'token',
   sortKey: 'docId',
   positionsAttribute: 'positions',
 } as const;
 
-export function buildExactDdbKey(token: string, indexField: string, docId: DocId): ExactDdbKey {
+/**
+ * Build the DynamoDB key for an exact postings item.
+ * @param token Token value stored in the exact index.
+ * @param indexField Field name the token was indexed under.
+ * @param docId Document id containing the token.
+ * @returns Exact postings key for DynamoDB.
+ */
+export function buildExactDdbKey(
+  token: string,
+  indexField: string,
+  docId: DocId,
+): ExactDdbKey {
   return { token, indexField, docId };
 }
 
+/**
+ * Build a DynamoDB item for an exact postings entry.
+ * @param token Token value stored in the exact index.
+ * @param indexField Field name the token was indexed under.
+ * @param docId Document id containing the token.
+ * @param positions Token positions within the document.
+ * @returns Exact postings item for DynamoDB.
+ */
 export function buildExactDdbItem(
   token: string,
   indexField: string,
