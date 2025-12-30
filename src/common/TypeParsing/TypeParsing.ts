@@ -12,6 +12,9 @@ import { getPrimaryFieldForTypeInfo } from "./ParsingUtils/getPrimaryFieldForTyp
 
 /**
  * Extracts type information from TypeScript content.
+ *
+ * @param source - TypeScript source text to parse.
+ * @returns Map of exported type info definitions.
  */
 export const getTypeInfoMapFromTypeScript = (source: string): TypeInfoMap => {
   const typeScriptNode: Node = createSourceFile(
