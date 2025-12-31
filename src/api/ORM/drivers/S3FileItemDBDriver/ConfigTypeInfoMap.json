@@ -1,1 +1,573 @@
-{}
+{
+  "Logger": {
+    "fields": {
+      "trace": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "debug": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "typeReference": "Trace",
+        "tags": {}
+      },
+      "info": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "typeReference": "Trace",
+        "tags": {}
+      },
+      "warn": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "typeReference": "Trace",
+        "tags": {}
+      },
+      "error": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "typeReference": "Trace",
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "trace"
+  },
+  "Endpoint": {
+    "fields": {
+      "protocol": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "hostname": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "port": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "path": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "query": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "protocol"
+  },
+  "Properties": {
+    "fields": {
+      "authSchemes": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "authSchemes"
+  },
+  "RetryStrategy": {
+    "fields": {
+      "mode": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "retry": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "mode"
+  },
+  "Credentials": {
+    "fields": {
+      "accessKeyId": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "secretAccessKey": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "sessionToken": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "credentialScope": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "expiration": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "accessKeyId"
+  },
+  "Signer": {
+    "fields": {
+      "sign": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "sign"
+  },
+  "AbridgedS3ClientConfig": {
+    "fields": {
+      "requestHandler": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "apiVersion": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "sha256": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "urlParser": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "bodyLengthChecker": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "streamCollector": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "base64Decoder": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "base64Encoder": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "utf8Decoder": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "utf8Encoder": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "runtime": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "disableHostPrefix": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "serviceId": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "useDualstackEndpoint": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "useFipsEndpoint": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "region": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "credentialDefaultProvider": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "signingEscapePath": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "useArnRegion": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "defaultUserAgentProvider": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "streamHasher": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "md5": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "sha1": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "getAwsChunkedEncodingStream": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "maxAttempts": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "retryMode": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "logger": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "extensions": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "eventStreamSerdeProvider": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "defaultsMode": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [
+          "standard",
+          "in-region",
+          "cross-region",
+          "mobile",
+          "auto",
+          "legacy"
+        ],
+        "tags": {
+          "allowCustomSelection": true
+        }
+      },
+      "sdkStreamMixin": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "endpoint": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "endpointProvider": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "tls": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "retryStrategy": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "credentials": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "signer": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "systemClockOffset": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "signingRegion": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "signerConstructor": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "forcePathStyle": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "useAccelerateEndpoint": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "disableMultiregionAccessPoints": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "followRegionRedirects": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "s3ExpressIdentityProvider": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "customUserAgent": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "useGlobalEndpoint": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      },
+      "disableS3ExpressSessionAuth": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [],
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "requestHandler"
+  },
+  "S3SpecificConfig": {
+    "fields": {
+      "s3Config": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "typeReference": "AbridgedS3ClientConfig",
+        "tags": {}
+      },
+      "bucketName": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "urlExpirationInSeconds": {
+        "type": "number",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "s3Config"
+  }
+}
