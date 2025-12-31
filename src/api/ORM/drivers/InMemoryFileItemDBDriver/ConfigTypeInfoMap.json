@@ -1,1 +1,22 @@
-{}
+{
+  "InMemoryFileSpecificConfig": {
+    "fields": {
+      "uploadUrlPrefix": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "downloadUrlPrefix": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "uploadUrlPrefix"
+  }
+}
