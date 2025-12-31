@@ -226,6 +226,7 @@ const IaC = new SimpleCFT({
       },
     },
     runtime: "nodejs20.x" as any,
+    memorySize: 512,
   })
   .applyPack(addBuildPipeline, {
     id: IDS.API.BUILD_PIPELINE,
