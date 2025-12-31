@@ -63,8 +63,14 @@ export type DACWildcardSignifier = {
  * */
 export type DACResourcePathPart = LiteralValue | DACWildcardSignifier;
 
+/**
+ * An ordered list of resource path segments used in DAC constraints.
+ */
 export type DACResourcePath = DACResourcePathPart[];
 
+/**
+ * A data access control (DAC) constraint that defines an allow or deny rule for a resource path.
+ */
 export type DACConstraint = {
   /**
    * Whether the constraint explicitly allows or denies access.
