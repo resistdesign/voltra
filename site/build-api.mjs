@@ -15,6 +15,7 @@ await build({
   format: "esm",
   outfile: outputFile,
   sourcemap: true,
+  external: ["aws-sdk", "@aws-sdk/*", "@smithy/*", "@aws-crypto/*"],
   conditions: ["node", "import", "default"],
   mainFields: ["module", "main"],
   banner: {
@@ -23,7 +24,6 @@ await build({
       "const require = createRequire(import.meta.url);",
     ].join("\n"),
   },
-  external: ["aws-sdk"],
   plugins: [
     {
       name: "source-prefix",
