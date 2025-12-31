@@ -48,6 +48,44 @@
           "book-2"
         ]
       }
+    },
+    {
+      "export": "runTypeInfoORMServiceDACScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdIds": {
+          "bookId1": "book-1",
+          "bookId2": "book-2",
+          "authorId": "author-1"
+        },
+        "seedResults": {
+          "seedBook1": true,
+          "seedBook2": true,
+          "seedAuthor": true
+        },
+        "readAuthorSelected": {
+          "id": "author-1"
+        },
+        "listBookIds": [
+          "book-1",
+          "book-2"
+        ],
+        "listBookTitles": [
+          "Alpha",
+          "Beta"
+        ],
+        "relationshipTargets": [
+          "book-1",
+          "book-2"
+        ],
+        "relatedItemTitles": [
+          "Alpha",
+          "Beta"
+        ],
+        "deleteRelationshipError": "INVALID_OPERATION",
+        "deleteRelationshipErrorExpected": "INVALID_OPERATION"
+      }
     }
   ]
 }
