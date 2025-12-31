@@ -1,4 +1,4 @@
-import { getTypeInfoMapFromTypeScript } from "../src/common/TypeParsing";
+import { getTypeInfoMapFromTypeScript } from "../src/build";
 import { TypeInfoMap } from "../src/common/TypeParsing/TypeInfo";
 import Path from "path";
 import FS from "fs";
