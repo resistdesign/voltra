@@ -222,12 +222,7 @@ export const runTypeInfoORMServiceDACScenario = async () => {
       {
         type: DACConstraintType.ALLOW,
         pathIsPrefix: true,
-        resourcePath: [
-          "ORM",
-          OperationGroup.ALL_OPERATIONS,
-          "Book",
-          wildcard,
-        ],
+        resourcePath: ["ORM", OperationGroup.ALL_OPERATIONS, "Book", wildcard],
       },
       {
         type: DACConstraintType.DENY,
