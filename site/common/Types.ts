@@ -1,4 +1,4 @@
-export type PersistableItem = {
+type PersistableItem = {
   /**
    * @label ID
    * @primaryField
