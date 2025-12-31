@@ -15,7 +15,7 @@ import FS from "fs";
 import { fileURLToPath } from "url";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
-import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../common/ClientSideTypeConstants";
+import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 
 const moduleDirname =
   typeof __dirname === "string"
@@ -106,9 +106,9 @@ const IaC = new SimpleCFT({
     },
   })
   .modify((cft) => {
-    for (const typeName in CLIENT_SIDE_DEMO_TYPE_INFO_MAP) {
+    for (const typeName in DemoTypeInfoMap) {
       const { primaryField, tags: { persisted = false } = {} } =
-        CLIENT_SIDE_DEMO_TYPE_INFO_MAP[typeName];
+        DemoTypeInfoMap[typeName];
 
       if (persisted && typeof primaryField === "string") {
         cft.applyPack(addDatabase, {
@@ -209,20 +209,21 @@ const IaC = new SimpleCFT({
         S3_API_BUCKET_NAME: {
           Ref: IDS.API.FILE_STORAGE,
         },
-        ...Object.keys(CLIENT_SIDE_DEMO_TYPE_INFO_MAP).reduce<
-          Record<string, any>
-        >((acc, k) => {
-          const { primaryField, tags: { persisted = false } = {} } =
-            CLIENT_SIDE_DEMO_TYPE_INFO_MAP[k];
+        ...Object.keys(DemoTypeInfoMap).reduce<Record<string, any>>(
+          (acc, k) => {
+            const { primaryField, tags: { persisted = false } = {} } =
+              DemoTypeInfoMap[k];
 
-          if (persisted && typeof primaryField === "string") {
-            acc[`TABLE_${k.toUpperCase()}`] = {
-              Ref: `${k}Table`,
-            };
-          }
+            if (persisted && typeof primaryField === "string") {
+              acc[`TABLE_${k.toUpperCase()}`] = {
+                Ref: `${k}Table`,
+              };
+            }
 
-          return acc;
-        }, {}),
+            return acc;
+          },
+          {},
+        ),
       },
     },
     runtime: "nodejs20.x" as any,
