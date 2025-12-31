@@ -61,6 +61,7 @@
     "site:build:app": "astro build && yarn finalize-site",
     "site:build:api": "node ./site/build-api.mjs",
     "site:build:iac": "tsx ./site/iac/index.ts",
+    "site:build:demo-types": "tsx ./site/build-demo-types.ts",
     "start": "astro dev --host docs-local.demo.voltra.app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/",
     "iac:types:gen": "tsx ./src/iac/types/generate.ts"
