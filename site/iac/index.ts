@@ -247,7 +247,7 @@ const IaC = new SimpleCFT({
               commands: ["yarn"],
             },
             build: {
-              commands: ["yarn site:build:api"],
+              commands: ["yarn site:build:demo-types", "yarn site:build:api"],
             },
             post_build: {
               commands: [
