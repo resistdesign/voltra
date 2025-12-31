@@ -252,8 +252,9 @@ const IaC = new SimpleCFT({
             },
             post_build: {
               commands: [
-                'PWD_RETURN_DIR="${!PWD}"',
-                "cd ${OutputDirectory} && zip -qr ../${ZipFileName}.zip * && cd ${!PWD_RETURN_DIR}",
+                'PWD_RETURN_DIR="$PWD"',
+                'cd "${OutputDirectory}" && zip -qr "../${ZipFileName}.zip" *',
+                'cd "$PWD_RETURN_DIR"',
                 'aws lambda update-function-code --function-name "${APIFunctionArn}" --zip-file "fileb://${ZipFileDirectory}${ZipFileName}.zip"',
               ],
             },
