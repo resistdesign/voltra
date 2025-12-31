@@ -14,7 +14,7 @@ await build({
   target: "node20",
   format: "esm",
   outfile: outputFile,
-  sourcemap: false,
+  sourcemap: true,
   external: ["aws-sdk"],
   plugins: [
     {
@@ -40,10 +40,13 @@ await build({
             namespace: "source-text",
           };
         });
-        build.onLoad({ filter: /.*/, namespace: "source-text" }, async (args) => ({
-          contents: await fs.promises.readFile(args.path, "utf8"),
-          loader: "text",
-        }));
+        build.onLoad(
+          { filter: /.*/, namespace: "source-text" },
+          async (args) => ({
+            contents: await fs.promises.readFile(args.path, "utf8"),
+            loader: "text",
+          }),
+        );
       },
     },
   ],
