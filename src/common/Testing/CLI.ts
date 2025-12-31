@@ -1,5 +1,3 @@
-#!/usr/bin/env ts-node
-
 /**
  * @packageDocumentation
  *
@@ -93,4 +91,7 @@ ${picocolors.redBright(picocolors.italic("ERRORS:"))} ${errors.length}
   process.exit(exitValue);
 };
 
-main().then();
+main().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});

@@ -1,5 +1,11 @@
 import { buildWindowMock } from "./utils/Route.test-utils";
 
+const loadAppModule = async (specifier: string) => {
+  const moduleUrl = new URL(specifier, import.meta.url);
+  moduleUrl.search = `?t=${Date.now()}`;
+  return import(moduleUrl.href);
+};
+
 export const runAppIndexScenario = async () => {
   const appKeys: string[] = [];
   const originalWindow = (globalThis as any).window;
@@ -16,16 +22,9 @@ export const runAppIndexScenario = async () => {
     }
   };
 
-  const App = require("./index");
+  const App = await loadAppModule("./index.ts");
   appKeys.push(...Object.keys(App));
-  const AppUtils = require("./utils");
-
-  const appIndexPath = require.resolve("./index");
-  const appUtilsPath = require.resolve("./utils");
-  const routeModulePath = require.resolve("./utils/Route");
-  delete require.cache[appIndexPath];
-  delete require.cache[appUtilsPath];
-  delete require.cache[routeModulePath];
+  const AppUtils = await loadAppModule("./utils/index.ts");
 
   (globalThis as any).window = originalWindow;
   (globalThis as any).CustomEvent = originalCustomEvent;

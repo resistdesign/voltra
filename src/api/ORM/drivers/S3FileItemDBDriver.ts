@@ -31,8 +31,13 @@ import {
 import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
 import Path from "path";
 import FS from "fs";
+import { fileURLToPath } from "url";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
 import { ListItemsConfig } from "../../../common/SearchTypes";
+
+const moduleDirname = typeof __dirname === "string"
+  ? __dirname
+  : Path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * ORM file item with id plus base file fields.
@@ -295,7 +300,7 @@ export const S3SupportedFileItemDBDriverEntry: SupportedDataItemDBDriverEntry =
      */
     getDBSpecificConfigTypeInfo: () => {
       const configTypesPath = Path.join(
-        __dirname,
+        moduleDirname,
         "S3FileItemDBDriver",
         "ConfigTypes.ts",
       );

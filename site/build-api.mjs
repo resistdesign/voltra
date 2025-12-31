@@ -2,13 +2,18 @@ import { build } from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
 
+const outputDir = "site-dist/api";
+const outputFile = path.join(outputDir, "index.js");
+
+await fs.promises.mkdir(outputDir, { recursive: true });
+
 await build({
   entryPoints: ["site/api/index.ts"],
   bundle: true,
   platform: "node",
   target: "node20",
-  format: "cjs",
-  outfile: "site-dist/api/index.js",
+  format: "esm",
+  outfile: outputFile,
   sourcemap: false,
   external: ["aws-sdk"],
   plugins: [
@@ -43,3 +48,7 @@ await build({
     },
   ],
 });
+await fs.promises.writeFile(
+  path.join(outputDir, "package.json"),
+  JSON.stringify({ type: "module" }, null, 2),
+);

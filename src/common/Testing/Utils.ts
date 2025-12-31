@@ -16,6 +16,12 @@ import {
 } from "./Types";
 import { promises as FS } from "fs";
 import Path from "path";
+import { pathToFileURL } from "url";
+
+const importModule = async (modulePath: string): Promise<any> => {
+  const moduleUrl = pathToFileURL(modulePath);
+  return import(moduleUrl.href);
+};
 
 const stringifyOutput = (value: any): string =>
   JSON.stringify(
@@ -153,20 +159,20 @@ export const compare = (
  * @param isSetup - Whether the conditions are for setup.
  * @returns Resolved conditions array.
  * */
-export const getResolvedConditions = (
+export const getResolvedConditions = async (
   testFilePath: string,
   targetTestIndex: number,
   targetTestExport: string,
   conditions: unknown[] | ConditionConfig,
   isSetup: boolean = false,
-): unknown[] => {
+): Promise<unknown[]> => {
   if (Array.isArray(conditions)) {
     return conditions;
   } else if (typeof conditions === "object" && conditions !== null) {
     const { file, export: targetConditionExport } =
       conditions as ConditionConfig;
     const modulePath = Path.resolve(Path.dirname(testFilePath), file);
-    const targetModule = require(modulePath);
+    const targetModule = await importModule(modulePath);
     const conditionArray = targetModule[targetConditionExport];
 
     if (Array.isArray(conditionArray)) {
@@ -204,7 +210,7 @@ export const getSetupInstance = async (
 
   const { conditions: baseConditions, export: targetSetupExport } = setup;
   const setupFunction = module[targetSetupExport];
-  const conditions = getResolvedConditions(
+  const conditions = await getResolvedConditions(
     testFilePath,
     targetTestIndex,
     targetTestExport,
@@ -296,7 +302,7 @@ export const getResolvedTestConfig = async (
   }
 
   const modulePath = Path.resolve(Path.dirname(testFilePath), file);
-  const targetModule = require(modulePath);
+  const targetModule = await importModule(modulePath);
 
   return {
     file,
@@ -363,7 +369,7 @@ export const runTest = async (
     operation,
     expectUndefined,
   } = test;
-  const conditions = getResolvedConditions(
+  const conditions = await getResolvedConditions(
     testFilePath,
     index,
     targetExport,
@@ -434,7 +440,7 @@ export const generateTestsForFile = async (
         operation,
         expectUndefined,
       } = test;
-      const conditions = getResolvedConditions(
+      const conditions = await getResolvedConditions(
         testFilePath,
         i,
         targetExport,

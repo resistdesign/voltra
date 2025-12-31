@@ -1,7 +1,7 @@
 /**
  * Relationship info types used by ORM and relationship utilities.
  */
-import { ExpandComplexType } from "./HelperTypes";
+import type { ExpandComplexType } from "./HelperTypes";
 
 /**
  * The keys for item relationship info.

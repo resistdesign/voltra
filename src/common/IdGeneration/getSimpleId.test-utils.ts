@@ -1,6 +1,11 @@
+const loadGetSimpleId = async () => {
+  const moduleUrl = new URL("./getSimpleId.ts", import.meta.url);
+  moduleUrl.search = `?t=${Date.now()}`;
+  return import(moduleUrl.href);
+};
 const FIXED_ISO = "2020-01-01T00:00:00.000Z";
 
-export const runGetSimpleIdScenario = () => {
+export const runGetSimpleIdScenario = async () => {
   const originalRandom = Math.random;
   const originalDate = Date;
   const fakeRandom = 0.123456789;
@@ -18,10 +23,7 @@ export const runGetSimpleIdScenario = () => {
   (globalThis as any).Date = FakeDate;
   Math.random = () => fakeRandom;
 
-  const modulePath = require.resolve("./getSimpleId");
-  delete require.cache[modulePath];
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { getSimpleId } = require("./getSimpleId");
+  const { getSimpleId } = await loadGetSimpleId();
 
   const firstId: string = getSimpleId();
   const secondId: string = getSimpleId();

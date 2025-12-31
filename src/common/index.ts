@@ -12,5 +12,5 @@ export * as StringTransformers from "./StringTransformers";
 export * as ItemRelationshipInfoTypes from "./ItemRelationshipInfoTypes";
 export * as ItemRelationships from "./ItemRelationships";
 export * as Testing from "./Testing";
-export * as HelperTypes from "./HelperTypes";
+export type * as HelperTypes from "./HelperTypes";
 export * as Logging from "./Logging";

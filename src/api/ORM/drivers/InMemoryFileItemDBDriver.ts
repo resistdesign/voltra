@@ -11,7 +11,12 @@ import type { BaseFileItem } from "./S3FileItemDBDriver";
 import { getFullFileKey } from "./S3FileItemDBDriver/S3FileDriver";
 import FS from "fs";
 import Path from "path";
+import { fileURLToPath } from "url";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+
+const moduleDirname = typeof __dirname === "string"
+  ? __dirname
+  : Path.dirname(fileURLToPath(import.meta.url));
 
 type CursorState = {
   offset?: number;
@@ -336,7 +341,7 @@ export const InMemoryFileSupportedDataItemDBDriverEntry: SupportedDataItemDBDriv
      */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
       const configTypesPath = Path.join(
-        __dirname,
+        moduleDirname,
         "InMemoryFileItemDBDriver",
         "ConfigTypes.ts",
       );
