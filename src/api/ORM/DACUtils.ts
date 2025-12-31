@@ -341,7 +341,7 @@ export const getFullORMDACRole = (
  * Get the access to a given data item resource for a given DAC role.
  * @returns Access result map for the item and its fields.
  * */
-export const getDACRoleHasAccessToDataItem = (
+export const getDACRoleHasAccessToDataItem = async (
   /**
    * Path prefix identifying the ORM scope.
    */
@@ -369,12 +369,12 @@ export const getDACRoleHasAccessToDataItem = (
   /**
    * Lookup helper used to resolve roles by id.
    */
-  getDACRoleById: (id: string) => DACRole,
+  getDACRoleById: (id: string) => Promise<DACRole>,
   /**
    * SECURITY: Don't use this if you want realtime role resolution.
    * */
   dacRoleCache?: Record<string, DACRole>,
-): DACDataItemResourceAccessResultMap => {
+): Promise<DACDataItemResourceAccessResultMap> => {
   const cleanItemPathPrefix = prefixPath ? prefixPath : [];
   const resultMap: DACDataItemResourceAccessResultMap = {
     allowed: false,
@@ -412,7 +412,7 @@ export const getDACRoleHasAccessToDataItem = (
         const {
           allowed: primaryResourceAllowed,
           denied: primaryResourceDenied,
-        } = getResourceAccessByDACRole(
+        } = await getResourceAccessByDACRole(
           primaryResourcePath,
           role,
           getDACRoleById,
@@ -437,7 +437,7 @@ export const getDACRoleHasAccessToDataItem = (
               const {
                 allowed: fieldResourceAllowed,
                 denied: fieldResourceDenied,
-              } = getResourceAccessByDACRole(
+              } = await getResourceAccessByDACRole(
                 fieldResourcePath,
                 role,
                 getDACRoleById,

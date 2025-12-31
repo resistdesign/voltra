@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## Agent Startup
+- Open `planning/` first; the active plan is the file directly under `planning/` (not inside `planning/complete/`).
+- If multiple active plans exist, ask the user which to run; if none exist, ask where the next task is tracked before proceeding.
+
 ## Project Structure & Module Organization
 - `src/` holds the TypeScript source. Key areas include `src/api/`, `src/app/`, `src/common/`, and `src/iac/`.
 - Tests are JSON specs alongside code, matched by `src/**/*.spec.json`.
@@ -32,6 +36,7 @@
 - Note any test commands run (or reasons for skipping) in the PR description.
 
 ## Agent Workflow & Progress Tracking
+- Treat the `planning/` directory as the authoritative source for current work. The active plan is the file directly under `planning/` (not inside `planning/complete/`). If multiple active plans exist, ask the user to choose; if none exist, ask the user where the next task is tracked before proceeding.
 - Treat user requests as the authoritative scope; do not down-scope without explicit user approval.
 - Start every task you are assigned by examining everything necessary, in the project, to confirming whether it can be completed in a single, uninterrupted attempt. If not, communicate that immediately and agree on a portion that you have already determined you can complete in one attempt.
 - When the user says "start the next task," proceed immediately using the current plan order; keep communication brief while remaining thorough.
