@@ -15,6 +15,8 @@ await build({
   format: "esm",
   outfile: outputFile,
   sourcemap: true,
+  conditions: ["node", "import", "default"],
+  mainFields: ["module", "main"],
   banner: {
     js: [
       'import { createRequire } from "node:module";',
