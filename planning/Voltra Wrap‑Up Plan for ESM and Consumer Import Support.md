@@ -8,6 +8,7 @@ This plan is based on the **current branch state** (tsup + `moduleResolution: bu
 - [x] Phase B — Make auto‑imports choose the barrels
 - [x] Phase C — Confirm runtime + TS correctness for consumers
 - [x] Phase D — CLI bin verification
+- [x] Phase E — Demo API bundle full ESM
 
 ## What’s already correct (do not undo)
 
@@ -138,6 +139,14 @@ In `consumer-smoke.mjs`, after install:
 Acceptance:
 
 * CLI works from a packed install.
+
+---
+
+## Phase E — Demo API bundle full ESM
+
+Switch the demo API build output to ESM so there are no CJS `import.meta` warnings:
+
+* `site/build-api.mjs` emits ESM and writes `site-dist/api/package.json` with `"type": "module"`.
 
 ---
 
