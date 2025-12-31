@@ -15,6 +15,12 @@ await build({
   format: "esm",
   outfile: outputFile,
   sourcemap: true,
+  banner: {
+    js: [
+      'import { createRequire } from "node:module";',
+      "const require = createRequire(import.meta.url);",
+    ].join("\n"),
+  },
   external: ["aws-sdk"],
   plugins: [
     {
