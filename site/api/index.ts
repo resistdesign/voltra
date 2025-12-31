@@ -9,20 +9,18 @@ import { getTypeInfoORMRouteMap } from "../../src/api/ORM";
 import { TypeInfo } from "../../src/common/TypeParsing/TypeInfo";
 import { DynamoDBDataItemDBDriver } from "../../src/api/ORM/drivers";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
-import { DEMO_TYPE_INFO_MAP } from "../common/TypeConstants";
 import {
   ERROR_MESSAGE_CONSTANTS,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
 } from "../../src/common/TypeParsing/Validation";
 import { TypeInfoORMServiceError } from "../../src/common/TypeInfoORM";
-import normalizeCloudFunctionEvent = AWS.normalizeCloudFunctionEvent;
 import {
   FullTextDdbBackend,
   RelationalDdbBackend,
-  StructuredDdbBackend,
-  relationEdgesSchema,
   type RelationEdgesDdbItem,
   type RelationEdgesDdbKey,
+  relationEdgesSchema,
+  StructuredDdbBackend,
 } from "../../src/api/Indexing";
 import type {
   BatchGetItemInput,
@@ -37,16 +35,18 @@ import type {
   WriteRequest,
 } from "../../src/api/Indexing/fulltext/ddbBackend";
 import {
+  type AttributeValue,
   BatchGetItemCommand,
   BatchWriteItemCommand,
   DynamoDBClient,
   GetItemCommand,
-  QueryCommand,
-  type AttributeValue,
   type KeysAndAttributes as AwsKeysAndAttributes,
+  QueryCommand,
   type WriteRequest as AwsWriteRequest,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
+import normalizeCloudFunctionEvent = AWS.normalizeCloudFunctionEvent;
 
 const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
   {
@@ -60,10 +60,13 @@ const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
   },
 ]);
 const ddbClient = new DynamoDBClient({});
-const toAwsKey = (item: Record<string, unknown>): Record<string, AttributeValue> =>
+const toAwsKey = (
+  item: Record<string, unknown>,
+): Record<string, AttributeValue> =>
   marshall(item) as Record<string, AttributeValue>;
-const fromAwsKey = (item: Record<string, AttributeValue>): Record<string, unknown> =>
-  unmarshall(item) as Record<string, unknown>;
+const fromAwsKey = (
+  item: Record<string, AttributeValue>,
+): Record<string, unknown> => unmarshall(item) as Record<string, unknown>;
 const toAwsWriteRequest = (request: WriteRequest): AwsWriteRequest => ({
   ...(request.PutRequest
     ? { PutRequest: { Item: toAwsKey(request.PutRequest.Item) } }
@@ -98,7 +101,9 @@ const fromAwsKeysAndAttributes = (
 });
 const fullTextBackend = new FullTextDdbBackend({
   client: {
-    batchWriteItem: async (input: BatchWriteItemInput): Promise<BatchWriteItemOutput> => {
+    batchWriteItem: async (
+      input: BatchWriteItemInput,
+    ): Promise<BatchWriteItemOutput> => {
       const awsInput = {
         RequestItems: Object.fromEntries(
           Object.entries(input.RequestItems).map(([tableName, requests]) => [
@@ -107,7 +112,9 @@ const fullTextBackend = new FullTextDdbBackend({
           ]),
         ),
       };
-      const response = await ddbClient.send(new BatchWriteItemCommand(awsInput));
+      const response = await ddbClient.send(
+        new BatchWriteItemCommand(awsInput),
+      );
       const unprocessed = response.UnprocessedItems ?? {};
 
       return {
@@ -119,7 +126,9 @@ const fullTextBackend = new FullTextDdbBackend({
         ),
       };
     },
-    batchGetItem: async (input: BatchGetItemInput): Promise<BatchGetItemOutput> => {
+    batchGetItem: async (
+      input: BatchGetItemInput,
+    ): Promise<BatchGetItemOutput> => {
       const awsInput = {
         RequestItems: Object.fromEntries(
           Object.entries(input.RequestItems).map(([tableName, entry]) => [
@@ -251,7 +260,9 @@ const relationalBackend = new RelationalDdbBackend({
         ExpressionAttributeValues: marshall({
           ":edgeKey": edgeKey,
         }),
-        ExclusiveStartKey: exclusiveStartKey ? marshall(exclusiveStartKey) : undefined,
+        ExclusiveStartKey: exclusiveStartKey
+          ? marshall(exclusiveStartKey)
+          : undefined,
         Limit: limit,
       }),
     );
@@ -270,10 +281,10 @@ const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
   ROUTE_MAP,
   getTypeInfoORMRouteMap(
     {
-      typeInfoMap: DEMO_TYPE_INFO_MAP,
+      typeInfoMap: DemoTypeInfoMap,
       getDriver: (typeName: string) => {
         const { primaryField }: Partial<TypeInfo> =
-          DEMO_TYPE_INFO_MAP[typeName] || {};
+          DemoTypeInfoMap[typeName] || {};
 
         if (primaryField) {
           return new DynamoDBDataItemDBDriver({
