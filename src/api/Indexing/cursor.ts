@@ -132,40 +132,58 @@ type CursorPayload = LossyCursorPayload | ExactCursorPayload;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-const utf8ToBase64 = (input: string): string => {
-  const bytes = textEncoder.encode(input);
-  const bin = String.fromCharCode(...bytes);
-  return btoa(bin);
-};
+function base64UrlFromBytes(bytes: Uint8Array): string {
+  let base64: string;
 
-const base64ToUtf8 = (input: string): string => {
-  const bin = atob(input);
-  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-  return textDecoder.decode(bytes);
-};
+  if (typeof (globalThis as any).Buffer !== "undefined") {
+    base64 = (globalThis as any).Buffer.from(bytes).toString("base64");
+  } else {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 1) {
+      bin += String.fromCharCode(bytes[i]);
+    }
+    base64 = btoa(bin);
+  }
 
-function encodeCursor(payload: CursorPayload): string {
-  return utf8ToBase64(JSON.stringify(payload));
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function decodeCursor(cursor: string): CursorPayload {
-  const base64 = cursor.replace(/-/g, "+").replace(/_/g, "/");
+function bytesFromBase64Url(input: string): Uint8Array {
+  const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64.padEnd(
     base64.length + ((4 - (base64.length % 4)) % 4),
     "=",
   );
 
-  let decoded: string;
-
-  try {
-    decoded = base64ToUtf8(padded);
-  } catch (error) {
-    throw new Error("Invalid cursor encoding.");
+  if (typeof (globalThis as any).Buffer !== "undefined") {
+    return new Uint8Array((globalThis as any).Buffer.from(padded, "base64"));
   }
 
+  const bin = atob(padded);
+  const bytes = new Uint8Array(bin.length);
+
+  for (let i = 0; i < bin.length; i += 1) {
+    bytes[i] = bin.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+function encodeCursor(payload: CursorPayload): string {
+  const json = JSON.stringify(payload);
+  const bytes = textEncoder.encode(json);
+
+  return base64UrlFromBytes(bytes);
+}
+
+function decodeCursor(cursor: string): CursorPayload {
   try {
+    const bytes = bytesFromBase64Url(cursor);
+    const decoded = textDecoder.decode(bytes);
+
     return JSON.parse(decoded) as CursorPayload;
-  } catch (error) {
+  } catch {
+    // tests expect this message for *both* invalid base64 and invalid JSON
     throw new Error("Invalid cursor payload.");
   }
 }
