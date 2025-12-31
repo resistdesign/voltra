@@ -52,8 +52,19 @@ export enum DACConstraintType {
 }
 
 /**
+ * A wildcard segment used in DAC resource paths.
+ * */
+export type DACWildcardSignifier = {
+  WILD_CARD: "*";
+};
+
+/**
  * A data access control (DAC) constraint.
  * */
+export type DACResourcePathPart = LiteralValue | DACWildcardSignifier;
+
+export type DACResourcePath = DACResourcePathPart[];
+
 export type DACConstraint = {
   /**
    * Whether the constraint explicitly allows or denies access.
@@ -62,7 +73,7 @@ export type DACConstraint = {
   /**
    * The resource path to match against, in order of path segments.
    */
-  resourcePath: LiteralValue[];
+  resourcePath: DACResourcePath;
   /**
    * When true, match the resource path as a prefix instead of an exact match.
    */
@@ -134,7 +145,7 @@ export type DACPathMatchResults = {
 /**
  * The prototype of a DAC wildcard signifier.
  * */
-export const WILDCARD_SIGNIFIER_PROTOTYPE: Record<string, string> = {
+export const WILDCARD_SIGNIFIER_PROTOTYPE: DACWildcardSignifier = {
   WILD_CARD: "*",
 };
 
@@ -150,7 +161,9 @@ export const getValueIsWildcardSignifier = (
 ): boolean => {
   if (typeof value === "object" && value !== null) {
     return Object.keys(WILDCARD_SIGNIFIER_PROTOTYPE).every(
-      (key) => value[key] === WILDCARD_SIGNIFIER_PROTOTYPE[key],
+      (key) =>
+        value[key] ===
+        WILDCARD_SIGNIFIER_PROTOTYPE[key as keyof DACWildcardSignifier],
     );
   }
 
@@ -173,7 +186,7 @@ export const getDACPathsMatch = (
   /**
    * DAC constraint path to evaluate for prefix/exact matches.
    */
-  dacPath: LiteralValue[],
+  dacPath: DACResourcePath,
   /**
    * Resource path to compare against the DAC path.
    */
@@ -253,10 +266,7 @@ export const getFlattenedDACConstraints = async (
       getDACRoleById,
       dacRoleCache,
     );
-    flattenedConstraints = [
-      ...flattenedConstraints,
-      ...childConstraints,
-    ];
+    flattenedConstraints = [...flattenedConstraints, ...childConstraints];
   }
 
   return flattenedConstraints;
