@@ -17,9 +17,10 @@ import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLin
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { CLIENT_SIDE_DEMO_TYPE_INFO_MAP } from "../common/ClientSideTypeConstants";
 
-const moduleDirname = typeof __dirname === "string"
-  ? __dirname
-  : Path.dirname(fileURLToPath(import.meta.url));
+const moduleDirname =
+  typeof __dirname === "string"
+    ? __dirname
+    : Path.dirname(fileURLToPath(import.meta.url));
 
 const ENV_VARS = collectRequiredEnvironmentVariables([
   "REPO_OWNER",
@@ -137,12 +138,42 @@ const IaC = new SimpleCFT({
       });
     };
 
-    addIndexingTable("LossyPostingsTable", "LossyPostings", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
-    addIndexingTable("ExactPostingsTable", "ExactPostings", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
-    addIndexingTable("FullTextDocMirrorTable", "FullTextDocMirror", { pk: "S" }, { pk: "HASH" });
-    addIndexingTable("FullTextTokenStatsTable", "FullTextTokenStats", { pk: "S" }, { pk: "HASH" });
-    addIndexingTable("DocTokensTable", "DocTokens", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
-    addIndexingTable("DocTokenPositionsTable", "DocTokenPositions", { pk: "S", sk: "S" }, { pk: "HASH", sk: "RANGE" });
+    addIndexingTable(
+      "LossyPostingsTable",
+      "LossyPostings",
+      { pk: "S", sk: "S" },
+      { pk: "HASH", sk: "RANGE" },
+    );
+    addIndexingTable(
+      "ExactPostingsTable",
+      "ExactPostings",
+      { pk: "S", sk: "S" },
+      { pk: "HASH", sk: "RANGE" },
+    );
+    addIndexingTable(
+      "FullTextDocMirrorTable",
+      "FullTextDocMirror",
+      { pk: "S" },
+      { pk: "HASH" },
+    );
+    addIndexingTable(
+      "FullTextTokenStatsTable",
+      "FullTextTokenStats",
+      { pk: "S" },
+      { pk: "HASH" },
+    );
+    addIndexingTable(
+      "DocTokensTable",
+      "DocTokens",
+      { pk: "S", sk: "S" },
+      { pk: "HASH", sk: "RANGE" },
+    );
+    addIndexingTable(
+      "DocTokenPositionsTable",
+      "DocTokenPositions",
+      { pk: "S", sk: "S" },
+      { pk: "HASH", sk: "RANGE" },
+    );
     addIndexingTable(
       "StructuredTermIndexTable",
       "StructuredTermIndex",
@@ -172,6 +203,7 @@ const IaC = new SimpleCFT({
     id: IDS.API.FUNCTION,
     environment: {
       Variables: {
+        NODE_OPTIONS: "--enable-source-maps",
         CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
         DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:1234`,
         S3_API_BUCKET_NAME: {
