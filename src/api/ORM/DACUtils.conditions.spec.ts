@@ -30,7 +30,7 @@ export const getDACRoleHasAccessToDataItemConditions: Parameters<
     childRoleIds: ["ec14ac8f-6fda-458c-b2df-e431dced0947"],
     constraints: [],
   },
-  (roleId: string) => ({
+  async (roleId: string) => ({
     id: roleId,
     childRoleIds: [],
     constraints: [

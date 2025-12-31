@@ -31,7 +31,7 @@ const buildConfig = (): BaseTypeInfoORMServiceConfig => ({
 const buildDacConfig = (): Omit<TypeInfoORMDACConfig, "accessingRole"> => ({
   itemResourcePathPrefix: ["items"],
   relationshipResourcePathPrefix: ["relationships"],
-  getDACRoleById: (id: string) => ({ id, constraints: [] }),
+  getDACRoleById: async (id: string) => ({ id, constraints: [] }),
 });
 
 const eventData: NormalizedCloudFunctionEventData = {
