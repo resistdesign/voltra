@@ -32,6 +32,9 @@ jobs:
         env:
           CI: true
 
+      - name: Build Demo Site Types
+        run: yarn site:build:demo-types
+
       - name: Build
         run: yarn site:build:iac
         env:
