@@ -39,11 +39,15 @@
     }
   },
   "files": [
-    "**/*",
+    "*.d.ts",
+    "*.d.ts.map",
+    "index.js",
+    "api/**",
+    "app/**",
+    "common/**",
+    "iac/**",
     "README.md",
-    "package.json",
-    "!iac/types/CloudFormationResourceSpecification.js",
-    "!iac/types/CloudFormationResourceSpecification.d.ts"
+    "package.json"
   ],
   "scripts": {
     "build": "tsup && yarn prep-dist",
