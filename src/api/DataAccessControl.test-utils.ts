@@ -10,7 +10,7 @@ import {
 } from "./DataAccessControl";
 import type { LiteralValue } from "../common/TypeParsing/TypeInfo";
 
-export const runDataAccessControlScenario = () => {
+export const runDataAccessControlScenario = async () => {
   const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE as unknown as LiteralValue;
   const wildcardMatch = getValueIsWildcardSignifier(wildcard);
   const wildcardMismatch = getValueIsWildcardSignifier({ WILD_CARD: "x" });
@@ -52,18 +52,18 @@ export const runDataAccessControlScenario = () => {
     },
   };
   const cache: Record<string, DACRole> = {};
-  const flattened = getFlattenedDACConstraints(
+  const flattened = await getFlattenedDACConstraints(
     roles.base,
-    (id) => roles[id],
+    async (id) => roles[id],
     cache,
   );
 
-  const accessSpecificity = getResourceAccessByDACRole(
+  const accessSpecificity = await getResourceAccessByDACRole(
     ["root", "private", "doc-1"],
     roles.base,
-    (id) => roles[id],
+    async (id) => roles[id],
   );
-  const accessExactOverrides = getResourceAccessByDACRole(
+  const accessExactOverrides = await getResourceAccessByDACRole(
     ["root", "public"],
     {
       id: "custom",
@@ -79,7 +79,7 @@ export const runDataAccessControlScenario = () => {
         },
       ],
     },
-    () => roles.base,
+    async () => roles.base,
   );
 
   const merged = mergeDACAccessResults(

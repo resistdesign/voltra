@@ -1,11 +1,22 @@
 import { TypeInfoORMService } from "./TypeInfoORMService";
 import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import { InMemoryItemRelationshipDBDriver } from "./drivers/InMemoryItemRelationshipDBDriver";
-import { TypeInfoORMServiceError } from "../../common/TypeInfoORM";
+import {
+  ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+  OperationGroup,
+  RelationshipOperation,
+  TypeInfoORMServiceError,
+} from "../../common/TypeInfoORM";
 import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import type { ListItemsConfig } from "../../common/SearchTypes";
 import type { DataItemDBDriver } from "./drivers/common/Types";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfoTypes";
+import {
+  DACConstraintType,
+  DACRole,
+  WILDCARD_SIGNIFIER_PROTOTYPE,
+} from "../DataAccessControl";
 
 type Author = {
   id: string;
@@ -188,5 +199,162 @@ export const runTypeInfoORMServiceScenario = async () => {
     relationshipsAfterDelete: relationshipsAfterDelete.items.map(
       (item) => item.toTypePrimaryFieldValue,
     ),
+  };
+};
+
+export const runTypeInfoORMServiceDACScenario = async () => {
+  const { drivers, relationshipDriver } = buildDrivers();
+  const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE;
+
+  const accessRole: DACRole = {
+    id: "dac-role",
+    constraints: [
+      {
+        type: DACConstraintType.ALLOW,
+        pathIsPrefix: true,
+        resourcePath: [
+          "ORM",
+          OperationGroup.ALL_OPERATIONS,
+          "Author",
+          wildcard,
+        ],
+      },
+      {
+        type: DACConstraintType.ALLOW,
+        pathIsPrefix: true,
+        resourcePath: ["ORM", OperationGroup.ALL_OPERATIONS, "Book", wildcard],
+      },
+      {
+        type: DACConstraintType.DENY,
+        pathIsPrefix: true,
+        resourcePath: [
+          "ORM",
+          TypeOperation.READ,
+          "Author",
+          wildcard,
+          "name",
+          wildcard,
+        ],
+      },
+      {
+        type: DACConstraintType.ALLOW,
+        pathIsPrefix: true,
+        resourcePath: [
+          "REL",
+          OperationGroup.ALL_RELATIONSHIP_OPERATIONS,
+          ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+          "Author",
+          "books",
+          wildcard,
+          wildcard,
+        ],
+      },
+      {
+        type: DACConstraintType.DENY,
+        pathIsPrefix: true,
+        resourcePath: [
+          "REL",
+          RelationshipOperation.UNSET,
+          ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
+          "Author",
+          "books",
+          wildcard,
+          wildcard,
+        ],
+      },
+    ],
+  };
+
+  const orm = new TypeInfoORMService({
+    typeInfoMap,
+    getDriver: (typeName) =>
+      drivers[typeName as keyof typeof drivers] as DataItemDBDriver<any, any>,
+    getRelationshipDriver: () => relationshipDriver,
+    useDAC: true,
+    dacConfig: {
+      itemResourcePathPrefix: ["ORM"],
+      relationshipResourcePathPrefix: ["REL"],
+      accessingRole: accessRole,
+      getDACRoleById: async () => accessRole,
+    },
+  });
+
+  const bookId1 = "book-1";
+  const bookId2 = "book-2";
+  const authorId = "author-1";
+
+  const seedBook1 = await orm.update("Book", { id: bookId1, title: "Alpha" });
+  const seedBook2 = await orm.update("Book", { id: bookId2, title: "Beta" });
+  const seedAuthor = await orm.update("Author", {
+    id: authorId,
+    name: "Alice",
+  });
+
+  const readAuthorSelected = await orm.read("Author", authorId, ["name"]);
+
+  const listConfig: ListItemsConfig = {
+    itemsPerPage: 10,
+    sortFields: [{ field: "title" }],
+  };
+  const listBooks = await orm.list("Book", listConfig, ["id", "title"]);
+
+  const relationshipItemBase = {
+    fromTypeName: "Author",
+    fromTypeFieldName: "books",
+    fromTypePrimaryFieldValue: authorId,
+    toTypePrimaryFieldValue: bookId1,
+  };
+  await orm.createRelationship({
+    ...relationshipItemBase,
+    toTypePrimaryFieldValue: bookId1,
+  });
+  await orm.createRelationship({
+    ...relationshipItemBase,
+    toTypePrimaryFieldValue: bookId2,
+  });
+
+  const listRelationships = await orm.listRelationships({
+    relationshipItemOrigin: relationshipItemBase,
+    itemsPerPage: 10,
+  });
+
+  const relatedItems = await orm.listRelatedItems(
+    {
+      relationshipItemOrigin: relationshipItemBase,
+      itemsPerPage: 10,
+    },
+    ["title"],
+  );
+
+  let deleteRelationshipError: string | undefined;
+  try {
+    await orm.deleteRelationship({
+      ...relationshipItemBase,
+      toTypePrimaryFieldValue: bookId1,
+    });
+  } catch (error: any) {
+    deleteRelationshipError = error?.message ?? String(error);
+  }
+
+  return {
+    createdIds: {
+      bookId1,
+      bookId2,
+      authorId,
+    },
+    seedResults: {
+      seedBook1,
+      seedBook2,
+      seedAuthor,
+    },
+    readAuthorSelected,
+    listBookIds: listBooks.items.map((item) => item.id),
+    listBookTitles: listBooks.items.map((item) => item.title),
+    relationshipTargets: listRelationships.items.map(
+      (item) => item.toTypePrimaryFieldValue,
+    ),
+    relatedItemTitles: relatedItems.items.map((item) => item.title),
+    deleteRelationshipError,
+    deleteRelationshipErrorExpected: TypeInfoORMServiceError.INVALID_OPERATION,
   };
 };
