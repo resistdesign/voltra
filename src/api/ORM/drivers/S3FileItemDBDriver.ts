@@ -29,15 +29,9 @@ import {
   SupportedDataItemDBDriverEntry,
 } from "./common/Types";
 import { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
-import Path from "path";
-import FS from "fs";
-import { fileURLToPath } from "url";
-import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
 import { ListItemsConfig } from "../../../common/SearchTypes";
-
-const moduleDirname = typeof __dirname === "string"
-  ? __dirname
-  : Path.dirname(fileURLToPath(import.meta.url));
+import ConfigTypeInfoMap from "./S3FileItemDBDriver/ConfigTypeInfoMap.json";
+import { TypeInfoMap } from "../../../common/TypeParsing/TypeInfo";
 
 /**
  * ORM file item with id plus base file fields.
@@ -52,9 +46,10 @@ export type BaseFileItem = {
 /**
  * Use S3 as a {@link DataItemDBDriver} for {@link BaseFileItem}s.
  * */
-export class S3FileItemDBDriver
-  implements DataItemDBDriver<BaseFileItem, "id">
-{
+export class S3FileItemDBDriver implements DataItemDBDriver<
+  BaseFileItem,
+  "id"
+> {
   protected specificConfig: S3SpecificConfig;
   protected s3: S3;
   protected s3FileDriver: CloudFileServiceDriver;
@@ -299,17 +294,9 @@ export const S3SupportedFileItemDBDriverEntry: SupportedDataItemDBDriverEntry =
      * @returns Type info pack for the S3 config.
      */
     getDBSpecificConfigTypeInfo: () => {
-      const configTypesPath = Path.join(
-        moduleDirname,
-        "S3FileItemDBDriver",
-        "ConfigTypes.ts",
-      );
-      const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
-      const typeInfoMap = getTypeInfoMapFromTypeScript(configTypesTS);
-
       return {
         entryTypeName: "S3SpecificConfig",
-        typeInfoMap,
+        typeInfoMap: ConfigTypeInfoMap as TypeInfoMap,
       };
     },
   };

@@ -25,6 +25,10 @@
       "types": "./app/index.d.ts",
       "import": "./app/index.js"
     },
+    "./build": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    },
     "./common": {
       "types": "./common/index.d.ts",
       "import": "./common/index.js"
@@ -44,6 +48,7 @@
     "index.js",
     "api/**",
     "app/**",
+    "build/**",
     "common/**",
     "iac/**",
     "README.md",

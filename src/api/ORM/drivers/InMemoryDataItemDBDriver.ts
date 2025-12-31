@@ -5,20 +5,27 @@ import {
   SupportedDataItemDBDriverEntry,
 } from "./common/Types";
 import { v4 as UUIDV4 } from "uuid";
-import type { TypeInfoDataItem, TypeInfoPack } from "../../../common/TypeParsing/TypeInfo";
-import type { ListItemsConfig, ListItemsResults } from "../../../common/SearchTypes";
+import type {
+  TypeInfoDataItem,
+  TypeInfoMap,
+  TypeInfoPack,
+} from "../../../common/TypeParsing/TypeInfo";
+import type {
+  ListItemsConfig,
+  ListItemsResults,
+} from "../../../common/SearchTypes";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
 } from "../../../common/SearchUtils";
-import FS from "fs";
 import Path from "path";
 import { fileURLToPath } from "url";
-import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+import ConfigTypeInfoMap from "./InMemoryDataItemDBDriver/ConfigTypeInfoMap.json";
 
-const moduleDirname = typeof __dirname === "string"
-  ? __dirname
-  : Path.dirname(fileURLToPath(import.meta.url));
+const moduleDirname =
+  typeof __dirname === "string"
+    ? __dirname
+    : Path.dirname(fileURLToPath(import.meta.url));
 
 type CursorState = {
   offset?: number;
@@ -68,8 +75,7 @@ const selectFieldsFromItem = <ItemType extends TypeInfoDataItem>(
 export class InMemoryDataItemDBDriver<
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
-> implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>
-{
+> implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> {
   private items = new Map<ItemType[UniquelyIdentifyingFieldName], ItemType>();
 
   constructor(
@@ -94,7 +100,9 @@ export class InMemoryDataItemDBDriver<
       uniquelyIdentifyingFieldName,
       generateUniqueIdentifier = () => UUIDV4(),
     } = this.config;
-    const newItemId = generateUniqueIdentifier(newItem as ItemType) as ItemType[UniquelyIdentifyingFieldName];
+    const newItemId = generateUniqueIdentifier(
+      newItem as ItemType,
+    ) as ItemType[UniquelyIdentifyingFieldName];
     const cleanNewItemWithId = {
       ...newItem,
       [uniquelyIdentifyingFieldName]: newItemId,
@@ -192,12 +200,7 @@ export class InMemoryDataItemDBDriver<
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
   ): Promise<ListItemsResults<ItemType>> => {
-    const {
-      itemsPerPage = 10,
-      cursor,
-      sortFields,
-      criteria,
-    } = config;
+    const { itemsPerPage = 10, cursor, sortFields, criteria } = config;
 
     const allItems = Array.from(this.items.values());
     const filteredItems = criteria
@@ -206,7 +209,10 @@ export class InMemoryDataItemDBDriver<
           allItems as TypeInfoDataItem[],
         ) as ItemType[])
       : allItems;
-    const sortedItems = getSortedItems(sortFields, filteredItems as TypeInfoDataItem[]) as ItemType[];
+    const sortedItems = getSortedItems(
+      sortFields,
+      filteredItems as TypeInfoDataItem[],
+    ) as ItemType[];
     const offset = decodeCursor(cursor);
     const items = sortedItems
       .slice(offset, offset + itemsPerPage)
@@ -216,7 +222,8 @@ export class InMemoryDataItemDBDriver<
 
     return {
       items,
-      cursor: nextOffset < sortedItems.length ? encodeCursor(nextOffset) : undefined,
+      cursor:
+        nextOffset < sortedItems.length ? encodeCursor(nextOffset) : undefined,
     };
   };
 }
@@ -242,17 +249,9 @@ export const InMemorySupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
      * @returns Type info pack for the in-memory config.
      */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
-      const configTypesPath = Path.join(
-        moduleDirname,
-        "InMemoryDataItemDBDriver",
-        "ConfigTypes.ts",
-      );
-      const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
-      const typeInfoMap = getTypeInfoMapFromTypeScript(configTypesTS);
-
       return {
         entryTypeName: "InMemorySpecificConfig",
-        typeInfoMap,
+        typeInfoMap: ConfigTypeInfoMap as TypeInfoMap,
       };
     },
   };
