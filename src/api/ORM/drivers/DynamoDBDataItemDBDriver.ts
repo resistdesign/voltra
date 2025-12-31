@@ -26,6 +26,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import {
   TypeInfoDataItem,
+  TypeInfoMap,
   TypeInfoPack,
 } from "../../../common/TypeParsing/TypeInfo";
 import {
@@ -37,14 +38,14 @@ import {
   SearchCriteria,
 } from "../../../common/SearchTypes";
 import { getSortedItems } from "../../../common/SearchUtils";
-import FS from "fs";
 import Path from "path";
 import { fileURLToPath } from "url";
-import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+import ConfigTypeInfoMap from "./DynamoDBDataItemDBDriver/ConfigTypeInfoMap.json";
 
-const moduleDirname = typeof __dirname === "string"
-  ? __dirname
-  : Path.dirname(fileURLToPath(import.meta.url));
+const moduleDirname =
+  typeof __dirname === "string"
+    ? __dirname
+    : Path.dirname(fileURLToPath(import.meta.url));
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>
@@ -199,8 +200,7 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
 export class DynamoDBDataItemDBDriver<
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
-> implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName>
-{
+> implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> {
   protected dynamoDBClient: DynamoDBClient;
 
   /**
@@ -478,17 +478,9 @@ export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
      * @returns Type info pack for the DynamoDB-specific config.
      */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
-      const configTypesPath = Path.join(
-        moduleDirname,
-        "DynamoDBDataItemDBDriver",
-        "ConfigTypes.ts",
-      );
-      const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
-      const typeInfoMap = getTypeInfoMapFromTypeScript(configTypesTS);
-
       return {
         entryTypeName: "DynamoDBSpecificConfig",
-        typeInfoMap,
+        typeInfoMap: ConfigTypeInfoMap as TypeInfoMap,
       };
     },
   };
