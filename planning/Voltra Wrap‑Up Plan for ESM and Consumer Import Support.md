@@ -2,6 +2,13 @@
 
 This plan is based on the **current branch state** (tsup + `moduleResolution: bundler` + `exports` + `prep-dist.mjs` + consumer smoke test).
 
+## Progress
+
+- [x] Phase A — Make the published tarball minimal and intentional
+- [x] Phase B — Make auto‑imports choose the barrels
+- [x] Phase C — Confirm runtime + TS correctness for consumers
+- [x] Phase D — CLI bin verification
+
 ## What’s already correct (do not undo)
 
 * `tsconfig.json` uses `"moduleResolution": "bundler"` (prevents `.js` specifiers in TS source).

@@ -26,6 +26,12 @@ const runTsc = (configPath) => {
   }
 };
 
+const runNodeModule = (args, options = {}) =>
+  execFileSync(process.execPath, args, { stdio: "pipe", ...options });
+
+const runBinary = (binaryPath, args, options = {}) =>
+  execFileSync(binaryPath, args, { stdio: "pipe", ...options });
+
 const run = async () => {
   try {
     await fs.access(distPackageJson);
@@ -143,6 +149,36 @@ const run = async () => {
     if (!deepImportFailed) {
       throw new Error("Deep import unexpectedly resolved. Exports guard failed.");
     }
+
+    runNodeModule(
+      [
+        "--input-type=module",
+        "-e",
+        "import('@resistdesign/voltra/iac/packs').then((m)=>{if(!m.addDNS){process.exit(1);}}).catch((err)=>{console.error(err);process.exit(1);});",
+      ],
+      { cwd: consumerDir },
+    );
+
+    try {
+      runNodeModule(
+        [
+          "--input-type=module",
+          "-e",
+          "import('@resistdesign/voltra/iac/packs/dns').then(()=>process.exit(1)).catch(()=>process.exit(0));",
+        ],
+        { cwd: consumerDir },
+      );
+    } catch (_error) {
+      throw new Error("Deep runtime import unexpectedly resolved.");
+    }
+
+    const vestBin = path.join(
+      consumerDir,
+      "node_modules",
+      ".bin",
+      process.platform === "win32" ? "vest.cmd" : "vest",
+    );
+    runBinary(vestBin, ["--help"], { cwd: consumerDir });
   } finally {
     await fs.rm(tempDir, { recursive: true, force: true });
     await fs.rm(tarballPath, { force: true });
