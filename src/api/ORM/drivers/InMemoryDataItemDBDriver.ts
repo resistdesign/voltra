@@ -13,7 +13,12 @@ import {
 } from "../../../common/SearchUtils";
 import FS from "fs";
 import Path from "path";
+import { fileURLToPath } from "url";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+
+const moduleDirname = typeof __dirname === "string"
+  ? __dirname
+  : Path.dirname(fileURLToPath(import.meta.url));
 
 type CursorState = {
   offset?: number;
@@ -238,7 +243,7 @@ export const InMemorySupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
      */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
       const configTypesPath = Path.join(
-        __dirname,
+        moduleDirname,
         "InMemoryDataItemDBDriver",
         "ConfigTypes.ts",
       );

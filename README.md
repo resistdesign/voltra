@@ -14,6 +14,33 @@
 yarn add @resistdesign/voltra
 ```
 
+### Imports
+
+Prefer the public entrypoints below to keep imports stable and IDE auto-imports clean.
+
+Preferred:
+
+```ts
+import { IaC } from "@resistdesign/voltra";
+import { Packs } from "@resistdesign/voltra/iac";
+import { addDNS } from "@resistdesign/voltra/iac/packs";
+```
+
+Not supported:
+
+```ts
+import addDNS from "@resistdesign/voltra/iac/packs/dns";
+```
+
+Public entrypoints:
+
+- `@resistdesign/voltra`
+- `@resistdesign/voltra/api`
+- `@resistdesign/voltra/app`
+- `@resistdesign/voltra/common`
+- `@resistdesign/voltra/iac`
+- `@resistdesign/voltra/iac/packs`
+
 ## With our powers combined!
 
 <table style="border: 0 solid black;">

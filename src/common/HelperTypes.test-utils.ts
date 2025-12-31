@@ -1,4 +1,4 @@
-import { ExpandComplexType } from "./HelperTypes";
+import type { ExpandComplexType } from "./HelperTypes";
 
 export const runHelperTypesScenario = () => {
   type Input = { a: string } & { b: number };

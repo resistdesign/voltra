@@ -39,7 +39,12 @@ import {
 import { getSortedItems } from "../../../common/SearchUtils";
 import FS from "fs";
 import Path from "path";
+import { fileURLToPath } from "url";
 import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+
+const moduleDirname = typeof __dirname === "string"
+  ? __dirname
+  : Path.dirname(fileURLToPath(import.meta.url));
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>
@@ -474,7 +479,7 @@ export const DynamoDBSupportedDataItemDBDriverEntry: SupportedDataItemDBDriverEn
      */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
       const configTypesPath = Path.join(
-        __dirname,
+        moduleDirname,
         "DynamoDBDataItemDBDriver",
         "ConfigTypes.ts",
       );
