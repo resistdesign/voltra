@@ -4,19 +4,28 @@ import {
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
 } from "./common/Types";
-import type { TypeInfoPack } from "../../../common/TypeParsing/TypeInfo";
-import type { ListItemsConfig, ListItemsResults } from "../../../common/SearchTypes";
-import { getFilterTypeInfoDataItemsBySearchCriteria, getSortedItems } from "../../../common/SearchUtils";
+import type {
+  TypeInfoMap,
+  TypeInfoPack,
+} from "../../../common/TypeParsing/TypeInfo";
+import type {
+  ListItemsConfig,
+  ListItemsResults,
+} from "../../../common/SearchTypes";
+import {
+  getFilterTypeInfoDataItemsBySearchCriteria,
+  getSortedItems,
+} from "../../../common/SearchUtils";
 import type { BaseFileItem } from "./S3FileItemDBDriver";
 import { getFullFileKey } from "./S3FileItemDBDriver/S3FileDriver";
-import FS from "fs";
 import Path from "path";
 import { fileURLToPath } from "url";
-import { getTypeInfoMapFromTypeScript } from "../../../common/TypeParsing";
+import ConfigTypeInfoMap from "./InMemoryFileItemDBDriver/ConfigTypeInfoMap.json";
 
-const moduleDirname = typeof __dirname === "string"
-  ? __dirname
-  : Path.dirname(fileURLToPath(import.meta.url));
+const moduleDirname =
+  typeof __dirname === "string"
+    ? __dirname
+    : Path.dirname(fileURLToPath(import.meta.url));
 
 type CursorState = {
   offset?: number;
@@ -81,9 +90,10 @@ const selectFieldsFromItem = (
 /**
  * In-memory file driver backed by local state.
  */
-export class InMemoryFileItemDBDriver
-  implements DataItemDBDriver<BaseFileItem, "id">
-{
+export class InMemoryFileItemDBDriver implements DataItemDBDriver<
+  BaseFileItem,
+  "id"
+> {
   private items = new Map<string, BaseFileItem>();
   private aliases = new Map<string, string>();
   private readonly now: () => number;
@@ -96,7 +106,8 @@ export class InMemoryFileItemDBDriver
      */
     protected config: DataItemDBDriverConfig<BaseFileItem, "id">,
   ) {
-    const specific = (config.dbSpecificConfig ?? {}) as InMemoryFileSpecificConfig;
+    const specific = (config.dbSpecificConfig ??
+      {}) as InMemoryFileSpecificConfig;
     this.now = specific.now ?? (() => Date.now());
     this.uploadUrlPrefix = specific.uploadUrlPrefix ?? "memory://upload/";
     this.downloadUrlPrefix = specific.downloadUrlPrefix ?? "memory://download/";
@@ -121,15 +132,16 @@ export class InMemoryFileItemDBDriver
      */
     item: Partial<Omit<BaseFileItem, "id">>,
   ): Promise<string> => {
-    const {
-      generateUniqueIdentifier,
-    } = this.config;
+    const { generateUniqueIdentifier } = this.config;
 
     if (!item?.name) {
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     }
 
-    const fileLocation = { name: item.name as string, directory: item.directory };
+    const fileLocation = {
+      name: item.name as string,
+      directory: item.directory,
+    };
     const id =
       typeof generateUniqueIdentifier === "function"
         ? String(generateUniqueIdentifier(item as BaseFileItem))
@@ -217,7 +229,10 @@ export class InMemoryFileItemDBDriver
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
     }
 
-    const directory = typeof item.directory === "undefined" ? existing.directory : item.directory;
+    const directory =
+      typeof item.directory === "undefined"
+        ? existing.directory
+        : item.directory;
     const name = typeof item.name === "undefined" ? existing.name : item.name;
     const nextLocationId =
       name && (name !== existing.name || directory !== existing.directory)
@@ -293,7 +308,10 @@ export class InMemoryFileItemDBDriver
           allItems,
         ) as BaseFileItem[])
       : allItems;
-    const sortedItems = getSortedItems(sortFields, filteredItems) as BaseFileItem[];
+    const sortedItems = getSortedItems(
+      sortFields,
+      filteredItems,
+    ) as BaseFileItem[];
     const offset = decodeCursor(cursor);
     const slice = sortedItems.slice(offset, offset + itemsPerPage);
     const expandedItems = slice.map((item) => {
@@ -307,14 +325,17 @@ export class InMemoryFileItemDBDriver
         entry.downloadUrl = this.buildUrl(this.downloadUrlPrefix, item.id);
       }
 
-      return selectFields ? selectFieldsFromItem(entry as BaseFileItem, selectFields) : entry;
+      return selectFields
+        ? selectFieldsFromItem(entry as BaseFileItem, selectFields)
+        : entry;
     });
 
     const nextOffset = offset + itemsPerPage;
 
     return {
       items: expandedItems,
-      cursor: nextOffset < sortedItems.length ? encodeCursor(nextOffset) : undefined,
+      cursor:
+        nextOffset < sortedItems.length ? encodeCursor(nextOffset) : undefined,
     };
   };
 }
@@ -340,17 +361,9 @@ export const InMemoryFileSupportedDataItemDBDriverEntry: SupportedDataItemDBDriv
      * @returns Type info pack for the in-memory file config.
      */
     getDBSpecificConfigTypeInfo: (): TypeInfoPack => {
-      const configTypesPath = Path.join(
-        moduleDirname,
-        "InMemoryFileItemDBDriver",
-        "ConfigTypes.ts",
-      );
-      const configTypesTS = FS.readFileSync(configTypesPath, "utf8");
-      const typeInfoMap = getTypeInfoMapFromTypeScript(configTypesTS);
-
       return {
         entryTypeName: "InMemoryFileSpecificConfig",
-        typeInfoMap,
+        typeInfoMap: ConfigTypeInfoMap as TypeInfoMap,
       };
     },
   };
