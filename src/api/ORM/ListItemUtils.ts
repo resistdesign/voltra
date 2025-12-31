@@ -30,11 +30,13 @@ export const executeDriverListItems = async (
   /**
    * Optional client-side filter predicate.
    */
-  filter?: (item: Partial<TypeInfoDataItem>) => boolean,
+  filter?: (item: Partial<TypeInfoDataItem>) => boolean | Promise<boolean>,
   /**
    * Optional transform applied to each included item.
    */
-  transform?: (item: Partial<TypeInfoDataItem>) => Partial<TypeInfoDataItem>,
+  transform?: (
+    item: Partial<TypeInfoDataItem>,
+  ) => Partial<TypeInfoDataItem> | Promise<Partial<TypeInfoDataItem>>,
   /**
    * Optional field selection passed to the driver when no filter is used.
    */
@@ -47,10 +49,10 @@ export const executeDriverListItems = async (
   )) as ListItemsResults<Partial<TypeInfoDataItem>>;
 
   for (const itm of items) {
-    const includeItem = filter ? filter(itm) : true;
+    const includeItem = filter ? await filter(itm) : true;
 
     if (includeItem) {
-      const transformedItem = transform ? transform(itm) : itm;
+      const transformedItem = transform ? await transform(itm) : itm;
 
       filteredItems.push(transformedItem);
     }

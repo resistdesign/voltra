@@ -10,6 +10,7 @@
  * import {
  *   DACConstraintType,
  *   DACRole,
+ *   getResourceAccessByDACRole,
  *   WILDCARD_SIGNIFIER_PROTOTYPE,
  * } from "./DataAccessControl";
  *
@@ -29,6 +30,15 @@
  *     },
  *   ],
  * };
+ *
+ * const getDACRoleById = async (id: string) =>
+ *   id === readerRole.id ? readerRole : readerRole;
+ *
+ * const access = await getResourceAccessByDACRole(
+ *   ["books", "public"],
+ *   readerRole,
+ *   getDACRoleById,
+ * );
  * ```
  */
 import { LiteralValue } from "../common/TypeParsing/TypeInfo";
@@ -207,7 +217,7 @@ export const getDACPathsMatch = (
  * Get the flattened constraints of a DAC role.
  * @returns Flattened constraint list including child roles.
  * */
-export const getFlattenedDACConstraints = (
+export const getFlattenedDACConstraints = async (
   /**
    * Role whose constraints (and child role constraints) are flattened.
    */
@@ -215,12 +225,12 @@ export const getFlattenedDACConstraints = (
   /**
    * Lookup helper used to resolve child roles by id.
    */
-  getDACRoleById: (id: string) => DACRole,
+  getDACRoleById: (id: string) => Promise<DACRole>,
   /**
    * SECURITY: Don't use this if you want realtime role resolution.
    * */
   dacRoleCache?: Record<string, DACRole>,
-): DACConstraint[] => {
+): Promise<DACConstraint[]> => {
   const { childRoleIds = [], constraints = [] } = role;
 
   let flattenedConstraints: DACConstraint[] = [...constraints];
@@ -231,16 +241,21 @@ export const getFlattenedDACConstraints = (
     if (dacRoleCache && dacRoleCache[cRI]) {
       childRole = dacRoleCache[cRI];
     } else {
-      childRole = getDACRoleById(cRI);
+      childRole = await getDACRoleById(cRI);
 
       if (dacRoleCache) {
         dacRoleCache[cRI] = childRole;
       }
     }
 
+    const childConstraints = await getFlattenedDACConstraints(
+      childRole,
+      getDACRoleById,
+      dacRoleCache,
+    );
     flattenedConstraints = [
       ...flattenedConstraints,
-      ...getFlattenedDACConstraints(childRole, getDACRoleById, dacRoleCache),
+      ...childConstraints,
     ];
   }
 
@@ -251,7 +266,7 @@ export const getFlattenedDACConstraints = (
  * Get the access to a given resource for a given DAC role.
  * @returns Allow/deny summary for the resource path.
  * */
-export const getResourceAccessByDACRole = (
+export const getResourceAccessByDACRole = async (
   /**
    * Full resource path to test against the role's constraints.
    */
@@ -263,13 +278,13 @@ export const getResourceAccessByDACRole = (
   /**
    * Lookup helper used to resolve child roles by id.
    */
-  getDACRoleById: (id: string) => DACRole,
+  getDACRoleById: (id: string) => Promise<DACRole>,
   /**
    * Optional cache to reuse resolved roles across calls.
    */
   dacRoleCache?: Record<string, DACRole>,
-): DACAccessResult => {
-  const flattenedConstraints = getFlattenedDACConstraints(
+): Promise<DACAccessResult> => {
+  const flattenedConstraints = await getFlattenedDACConstraints(
     role,
     getDACRoleById,
     dacRoleCache,

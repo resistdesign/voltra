@@ -162,7 +162,7 @@ export type TypeInfoORMDACConfig = {
   /**
    * Lookup helper used to resolve roles by id.
    */
-  getDACRoleById: (id: string) => DACRole;
+  getDACRoleById: (id: string) => Promise<DACRole>;
 };
 
 /**
@@ -299,7 +299,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   }
 
-  protected getItemDACValidation = (
+  protected getItemDACValidation = async (
     /**
      * Item to evaluate for access.
      */
@@ -312,7 +312,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      * Operation being evaluated.
      */
     typeOperation: TypeOperation,
-  ): DACDataItemResourceAccessResultMap => {
+  ): Promise<DACDataItemResourceAccessResultMap> => {
     const { useDAC } = this.config;
 
     if (useDAC) {
@@ -321,7 +321,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const { itemResourcePathPrefix, accessingRole, getDACRoleById } =
         dacConfig;
 
-      return mergeDACDataItemResourceAccessResultMaps(
+      const [
+        typeOperationAccess,
+        allItemOperationsAccess,
+        allOperationsAccess,
+      ] = await Promise.all([
         getDACRoleHasAccessToDataItem(
           itemResourcePathPrefix,
           typeOperation,
@@ -352,6 +356,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           getDACRoleById,
           this.dacRoleCache,
         ),
+      ]);
+
+      return mergeDACDataItemResourceAccessResultMaps(
+        typeOperationAccess,
+        allItemOperationsAccess,
+        allOperationsAccess,
       );
     } else {
       return {
@@ -362,7 +372,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
-  protected getRelationshipDACValidation = (
+  protected getRelationshipDACValidation = async (
     /**
      * Relationship to evaluate for access.
      */
@@ -371,7 +381,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      * Relationship operation being evaluated.
      */
     relationshipOperation: RelationshipOperation,
-  ): DACAccessResult => {
+  ): Promise<DACAccessResult> => {
     const { useDAC } = this.config;
 
     if (useDAC) {
@@ -379,7 +389,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const { relationshipResourcePathPrefix, accessingRole, getDACRoleById } =
         dacConfig;
 
-      return mergeDACAccessResults(
+      const [
+        operationAccess,
+        allRelationshipOperationsAccess,
+        allOperationsAccess,
+      ] = await Promise.all([
         getResourceAccessByDACRole(
           getItemRelationshipDACResourcePath(
             relationshipResourcePathPrefix,
@@ -410,6 +424,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           getDACRoleById,
           this.dacRoleCache,
         ),
+      ]);
+
+      return mergeDACAccessResults(
+        operationAccess,
+        allRelationshipOperationsAccess,
+        allOperationsAccess,
       );
     } else {
       return {
@@ -1070,7 +1090,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validateRelationshipItem(relationshipItem);
 
     const { allowed: createAllowed, denied: createDenied } =
-      this.getRelationshipDACValidation(
+      await this.getRelationshipDACValidation(
         relationshipItem,
         RelationshipOperation.SET,
       );
@@ -1169,7 +1189,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validateRelationshipItem(relationshipItem);
 
     const { allowed: deleteAllowed, denied: deleteDenied } =
-      this.getRelationshipDACValidation(
+      await this.getRelationshipDACValidation(
         relationshipItem,
         RelationshipOperation.UNSET,
       );
@@ -1328,7 +1348,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       for (const rItm of items) {
         const { allowed: readAllowed, denied: readDenied } =
-          this.getRelationshipDACValidation(
+          await this.getRelationshipDACValidation(
             rItm as ItemRelationshipInfo,
             RelationshipOperation.GET,
           );
@@ -1414,7 +1434,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       allowed: createAllowed,
       denied: createDenied,
       fieldsResources = {},
-    } = this.getItemDACValidation(item, typeName, TypeOperation.CREATE);
+    } = await this.getItemDACValidation(item, typeName, TypeOperation.CREATE);
 
     if (createDenied || !createAllowed) {
       throw {
@@ -1470,7 +1490,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       allowed: readAllowed,
       denied: readDenied,
       fieldsResources = {},
-    } = this.getItemDACValidation(item, typeName, TypeOperation.READ);
+    } = await this.getItemDACValidation(item, typeName, TypeOperation.READ);
 
     if (readDenied || !readAllowed) {
       throw {
@@ -1531,7 +1551,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         allowed: updateAllowed,
         denied: updateDenied,
         fieldsResources = {},
-      } = this.getItemDACValidation(
+      } = await this.getItemDACValidation(
         initialCleanItem,
         typeName,
         TypeOperation.UPDATE,
@@ -1546,7 +1566,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       } else {
         // SECURITY: Update could potentially delete fields. Use `fieldsResources` from `TypeOperation.DELETE` to prevent this issue.
         const { fieldsResources: fieldsResourcesForDeleteOperation = {} } =
-          this.getItemDACValidation(
+          await this.getItemDACValidation(
             initialCleanItem,
             typeName,
             TypeOperation.DELETE,
@@ -1612,7 +1632,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const driver = this.getDriverInternal(typeName);
     const existingItem = await driver.readItem(primaryFieldValue);
     const { allowed: deleteAllowed, denied: deleteDenied } =
-      this.getItemDACValidation(existingItem, typeName, TypeOperation.DELETE);
+      await this.getItemDACValidation(
+        existingItem,
+        typeName,
+        TypeOperation.DELETE,
+      );
 
     if (deleteDenied || !deleteAllowed) {
       throw {
@@ -1785,7 +1809,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                 allowed: readAllowed,
                 denied: readDenied,
                 fieldsResources = {},
-              } = this.getItemDACValidation(item, typeName, TypeOperation.READ);
+              } = await this.getItemDACValidation(
+                item,
+                typeName,
+                TypeOperation.READ,
+              );
               const listDenied = readDenied || !readAllowed;
 
               if (listDenied) {
@@ -1833,12 +1861,16 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         driver,
         config,
         useDAC
-          ? (item: Partial<TypeInfoDataItem>): boolean => {
+          ? async (item: Partial<TypeInfoDataItem>): Promise<boolean> => {
               const {
                 allowed: readAllowed,
                 denied: readDenied,
                 fieldsResources = {},
-              } = this.getItemDACValidation(item, typeName, TypeOperation.READ);
+              } = await this.getItemDACValidation(
+                item,
+                typeName,
+                TypeOperation.READ,
+              );
               const listDenied = readDenied || !readAllowed;
 
               if (!listDenied) {
