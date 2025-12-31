@@ -96,6 +96,14 @@ export type AddCloudFunctionConfig = {
    * IAM policy statements to attach to the role.
    */
   policies?: AWS.IAM.Role.Policy[];
+  /**
+   * Lambda function memory size in MB.
+   *
+   * You can configure memory between 128 MB and 10,240 MB in 1-MB increments.
+   *
+   * @default 128
+   */
+  memorySize?: number;
 };
 
 /**
@@ -133,6 +141,7 @@ export const addCloudFunction = createResourcePack(
         },
       },
     ],
+    memorySize = 128,
   }: AddCloudFunctionConfig) => {
     return {
       Resources: {
@@ -168,6 +177,7 @@ export const addCloudFunction = createResourcePack(
               "Fn::GetAtt": [`${id}Role`, "Arn"],
             },
             Runtime: runtime,
+            MemorySize: memorySize,
           },
         },
       },
