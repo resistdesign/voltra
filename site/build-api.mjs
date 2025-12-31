@@ -15,7 +15,6 @@ await build({
   format: "esm",
   outfile: outputFile,
   sourcemap: true,
-  external: ["@aws-sdk/*"],
   conditions: ["node", "import", "default"],
   mainFields: ["module", "main"],
   banner: {
