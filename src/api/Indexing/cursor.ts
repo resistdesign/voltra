@@ -1,9 +1,9 @@
-import type { DocId } from './types.js';
+import type { DocId } from "./types.js";
 
 /**
  * The supported ordering strategy for cursors.
  * */
-export type SortingStrategy = 'docIdAsc';
+export type SortingStrategy = "docIdAsc";
 
 /**
  * Cursor planner metadata used to resume searches efficiently.
@@ -76,34 +76,34 @@ type PlannerPayload = {
 
 type LossyCursorPayloadV1 = {
   v: 1;
-  t: 'lossy';
+  t: "lossy";
   lastDocId?: string | number;
 };
 
 type LossyCursorPayloadV2 = {
   v: 2;
-  t: 'lossy';
+  t: "lossy";
   lastDocId?: string | number;
   plan?: PlannerPayload;
 };
 
 type LossyCursorPayloadV3 = {
   v: 3;
-  t: 'lossy';
+  t: "lossy";
   lastDocId?: string | number;
   plan?: PlannerPayload;
 };
 
 type ExactCursorPayloadV1 = {
   v: 1;
-  t: 'exact';
+  t: "exact";
   lossyLastDocId?: string | number;
   verificationLastDocId?: string | number;
 };
 
 type ExactCursorPayloadV2 = {
   v: 2;
-  t: 'exact';
+  t: "exact";
   lossyLastDocId?: string | number;
   verificationLastDocId?: string | number;
   plan?: PlannerPayload;
@@ -111,7 +111,7 @@ type ExactCursorPayloadV2 = {
 
 type ExactCursorPayloadV3 = {
   v: 3;
-  t: 'exact';
+  t: "exact";
   lossyLastDocId?: string | number;
   verificationLastDocId?: string | number;
   verificationPending?: Array<string | number>;
@@ -119,29 +119,54 @@ type ExactCursorPayloadV3 = {
   plan?: PlannerPayload;
 };
 
-type LossyCursorPayload = LossyCursorPayloadV1 | LossyCursorPayloadV2 | LossyCursorPayloadV3;
-type ExactCursorPayload = ExactCursorPayloadV1 | ExactCursorPayloadV2 | ExactCursorPayloadV3;
+type LossyCursorPayload =
+  | LossyCursorPayloadV1
+  | LossyCursorPayloadV2
+  | LossyCursorPayloadV3;
+type ExactCursorPayload =
+  | ExactCursorPayloadV1
+  | ExactCursorPayloadV2
+  | ExactCursorPayloadV3;
 type CursorPayload = LossyCursorPayload | ExactCursorPayload;
 
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+const utf8ToBase64 = (input: string): string => {
+  const bytes = textEncoder.encode(input);
+  const bin = String.fromCharCode(...bytes);
+  return btoa(bin);
+};
+
+const base64ToUtf8 = (input: string): string => {
+  const bin = atob(input);
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return textDecoder.decode(bytes);
+};
+
 function encodeCursor(payload: CursorPayload): string {
-  return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  return utf8ToBase64(JSON.stringify(payload));
 }
 
 function decodeCursor(cursor: string): CursorPayload {
-  const base64 = cursor.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+  const base64 = cursor.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(
+    base64.length + ((4 - (base64.length % 4)) % 4),
+    "=",
+  );
 
   let decoded: string;
+
   try {
-    decoded = Buffer.from(padded, 'base64').toString('utf8');
+    decoded = base64ToUtf8(padded);
   } catch (error) {
-    throw new Error('Invalid cursor encoding.');
+    throw new Error("Invalid cursor encoding.");
   }
 
   try {
     return JSON.parse(decoded) as CursorPayload;
   } catch (error) {
-    throw new Error('Invalid cursor payload.');
+    throw new Error("Invalid cursor payload.");
   }
 }
 
@@ -154,9 +179,9 @@ function decodePayload(cursor: string): CursorPayload {
 
   if (
     (parsed.v !== 1 && parsed.v !== 2 && parsed.v !== 3) ||
-    (parsed.t !== 'lossy' && parsed.t !== 'exact')
+    (parsed.t !== "lossy" && parsed.t !== "exact")
   ) {
-    throw new Error('Unsupported cursor payload.');
+    throw new Error("Unsupported cursor payload.");
   }
 
   return parsed;
@@ -175,7 +200,11 @@ function decodePlanner(payload?: PlannerPayload): PlannerMetadata | undefined {
     return undefined;
   }
 
-  return { primaryToken: payload.p, statsVersion: payload.sv, sorting: payload.s ?? 'docIdAsc' };
+  return {
+    primaryToken: payload.p,
+    statsVersion: payload.sv,
+    sorting: payload.s ?? "docIdAsc",
+  };
 }
 
 function normalizeDocId(value: string | number | undefined): DocId | undefined {
@@ -186,7 +215,9 @@ function normalizeDocId(value: string | number | undefined): DocId | undefined {
   return String(value);
 }
 
-function normalizeDocIdList(values?: Array<string | number>): DocId[] | undefined {
+function normalizeDocIdList(
+  values?: Array<string | number>,
+): DocId[] | undefined {
   if (!values) {
     return undefined;
   }
@@ -211,12 +242,12 @@ export function encodeLossyCursor(
   const plan = encodePlanner(state.plan);
 
   if (!plan) {
-    return encodePayload({ v: 1, t: 'lossy', lastDocId: state.lastDocId });
+    return encodePayload({ v: 1, t: "lossy", lastDocId: state.lastDocId });
   }
 
   return encodePayload({
     v: 3,
-    t: 'lossy',
+    t: "lossy",
     lastDocId: state.lastDocId,
     plan,
   });
@@ -238,8 +269,8 @@ export function decodeLossyCursor(
 
   const payload = decodePayload(cursor);
 
-  if (payload.t !== 'lossy') {
-    throw new Error('Expected lossy cursor payload.');
+  if (payload.t !== "lossy") {
+    throw new Error("Expected lossy cursor payload.");
   }
 
   return {
@@ -279,13 +310,22 @@ export function encodeExactCursor(
 
   const plan = encodePlanner(state.plan);
 
-  if (!plan && verificationPending === undefined && verificationOffset === undefined) {
-    return encodePayload({ v: 1, t: 'exact', lossyLastDocId, verificationLastDocId });
+  if (
+    !plan &&
+    verificationPending === undefined &&
+    verificationOffset === undefined
+  ) {
+    return encodePayload({
+      v: 1,
+      t: "exact",
+      lossyLastDocId,
+      verificationLastDocId,
+    });
   }
 
   return encodePayload({
     v: 3,
-    t: 'exact',
+    t: "exact",
     lossyLastDocId,
     verificationLastDocId,
     verificationPending,
@@ -310,13 +350,15 @@ export function decodeExactCursor(
 
   const payload = decodePayload(cursor);
 
-  if (payload.t !== 'exact') {
-    throw new Error('Expected exact cursor payload.');
+  if (payload.t !== "exact") {
+    throw new Error("Expected exact cursor payload.");
   }
 
   const payloadV3 = payload as ExactCursorPayloadV3;
 
-  const normalizedVerificationPending = normalizeDocIdList(payloadV3.verificationPending);
+  const normalizedVerificationPending = normalizeDocIdList(
+    payloadV3.verificationPending,
+  );
 
   return {
     lossy:
@@ -325,7 +367,8 @@ export function decodeExactCursor(
         : { lastDocId: normalizeDocId(payload.lossyLastDocId) },
     verification:
       payload.verificationLastDocId === undefined
-        ? normalizedVerificationPending || payloadV3.verificationOffset !== undefined
+        ? normalizedVerificationPending ||
+          payloadV3.verificationOffset !== undefined
           ? {
               pendingCandidates: normalizedVerificationPending,
               pendingOffset: payloadV3.verificationOffset,
