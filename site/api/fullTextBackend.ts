@@ -4,19 +4,16 @@ import {
   GetItemCommand,
   QueryCommand,
 } from "@aws-sdk/client-dynamodb";
-
 import {
-  FullTextDdbBackend,
   type BatchGetItemInput,
   type BatchGetItemOutput,
   type BatchWriteItemInput,
   type BatchWriteItemOutput,
+  FullTextDdbBackend,
   type GetItemInput,
   type GetItemOutput,
-  type KeysAndAttributes,
   type QueryInput,
   type QueryOutput,
-  type WriteRequest,
 } from "../../src/api/Indexing";
 import { ddbClient } from "./ddbClient";
 import {
@@ -79,7 +76,9 @@ export const createFullTextBackend = () =>
             ]),
           ),
         };
-        const response = await ddbClient.send(new BatchGetItemCommand(awsInput));
+        const response = await ddbClient.send(
+          new BatchGetItemCommand(awsInput),
+        );
         const responses = response.Responses ?? {};
         const unprocessed = response.UnprocessedKeys ?? {};
 
@@ -122,7 +121,9 @@ export const createFullTextBackend = () =>
             TableName: input.TableName,
             KeyConditionExpression: input.KeyConditionExpression,
             ExpressionAttributeNames: input.ExpressionAttributeNames,
-            ExpressionAttributeValues: toAwsKey(input.ExpressionAttributeValues),
+            ExpressionAttributeValues: toAwsKey(
+              input.ExpressionAttributeValues,
+            ),
             ExclusiveStartKey: input.ExclusiveStartKey
               ? toAwsKey(input.ExclusiveStartKey)
               : undefined,
