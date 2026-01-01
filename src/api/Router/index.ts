@@ -41,8 +41,9 @@ import {
   getPathString,
   mergeStringPaths,
 } from "../../common/Routing";
-import { logFunctionCall } from "../../common/Logging/Utils";
+import { logFunctionCall } from "../../common/Logging";
 
+export * from "./Types";
 export * from "./AWS";
 
 /**
