@@ -33,41 +33,45 @@ export function createHash(alg: "sha256"): Hash {
 
   const chunks: Uint8Array[] = [];
 
+  async function digest(): Promise<Uint8Array>;
+  async function digest(encoding: HashEncoding): Promise<string>;
+  async function digest(encoding?: HashEncoding): Promise<Uint8Array | string> {
+    const total = chunks.reduce((n, c) => n + c.length, 0);
+    const merged = new Uint8Array(total);
+
+    let offset = 0;
+    for (const c of chunks) {
+      merged.set(c, offset);
+      offset += c.length;
+    }
+
+    const out = new Uint8Array(
+      await getSubtleCrypto().digest("SHA-256", merged),
+    );
+
+    return encoding === "hex" ? toHex(out) : out;
+  }
+
   const hash: Hash = {
     update(value: string | ArrayBuffer | ArrayBufferView): Hash {
       if (typeof value === "string") {
         chunks.push(textEncoder.encode(value));
       } else if (value instanceof Uint8Array) {
-        chunks.push(value);
+        chunks.push(new Uint8Array(value));
       } else if (ArrayBuffer.isView(value)) {
-        chunks.push(
+        const copy = new Uint8Array(value.byteLength);
+        copy.set(
           new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
         );
-      } else if (value instanceof ArrayBuffer) {
-        chunks.push(new Uint8Array(value));
+        chunks.push(copy);
       } else {
-        throw new TypeError("Unsupported value type for update()");
+        chunks.push(new Uint8Array(value.slice(0)));
       }
 
       return hash;
     },
 
-    async digest(encoding?: HashEncoding): Promise<string | Uint8Array> {
-      const total = chunks.reduce((n, c) => n + c.length, 0);
-      const merged = new Uint8Array(total);
-
-      let offset = 0;
-      for (const c of chunks) {
-        merged.set(c, offset);
-        offset += c.length;
-      }
-
-      const out = new Uint8Array(
-        await getSubtleCrypto().digest("SHA-256", merged),
-      );
-
-      return encoding === "hex" ? toHex(out) : out;
-    },
+    digest,
   };
 
   return hash;
