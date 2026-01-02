@@ -7,35 +7,36 @@ import {
 import { TypeInfoORMServiceError } from "../../src/common/TypeInfoORM";
 import { ROUTE_MAP_WITH_DB } from "./routeMap";
 
+const allowedErrors = new Set<string>([
+  ...Object.values(PRIMITIVE_ERROR_MESSAGE_CONSTANTS),
+  ...Object.values(ERROR_MESSAGE_CONSTANTS),
+  ...Object.values(TypeInfoORMServiceError),
+]);
+
 /**
  * Filters errors to determine whether they are safe to return to clients.
  */
 const allowClientError = (error: unknown): boolean => {
-  if (error && typeof error === "object" && "error" in error) {
-    const { error: mainError } = error;
 
-    if (typeof mainError === "string") {
-      const primitiveErrorValues = Object.values(
-        PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
-      );
-      const validationErrorValues = Object.values(ERROR_MESSAGE_CONSTANTS);
-      const typeInfoORMErrorValues = Object.values(TypeInfoORMServiceError);
+  const errorCode = (() => {
+    if (typeof error === "string") {
+      return error;
+    }
 
-      if (primitiveErrorValues.includes(mainError)) {
-        return true;
+    if (error && typeof error === "object") {
+      if ("error" in error && typeof (error as any).error === "string") {
+        return (error as any).error as string;
       }
 
-      if (validationErrorValues.includes(mainError)) {
-        return true;
-      }
-
-      if (typeInfoORMErrorValues.includes(mainError as TypeInfoORMServiceError)) {
-        return true;
+      if ("message" in error && typeof (error as any).message === "string") {
+        return (error as any).message as string;
       }
     }
-  }
 
-  return false;
+    return undefined;
+  })();
+
+  return typeof errorCode === "string" && allowedErrors.has(errorCode);
 };
 
 /**
@@ -50,8 +51,6 @@ export const handler = async (event: any): Promise<CloudFunctionResponse> =>
       process.env.CLIENT_ORIGIN as string,
       process.env.DEV_CLIENT_ORIGIN as string,
     ],
-    // TODO: What to really do with this?
-    //  How do we decide which errors should go to the client?
     allowClientError,
     true, // debug
   );
