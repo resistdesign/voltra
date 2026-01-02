@@ -203,8 +203,8 @@ function setBackendTrace(backend: IndexBackend, trace: SearchTrace | undefined):
   }
 }
 
-function hashString(value: string): string {
-  return createHash('sha256').update(value).digest('hex') as string;
+async function hashString(value: string): Promise<string> {
+  return createHash('sha256').update(value).digest('hex');
 }
 
 function intersectTwoSorted(left: DocId[], right: DocId[]): DocId[] {
@@ -542,7 +542,7 @@ async function selectPrimaryToken(
   }
 
   if (trace) {
-    trace.primaryTokenHash = hashString(primaryToken);
+    trace.primaryTokenHash = await hashString(primaryToken);
   }
 
   return {primaryToken, statsVersion, sorting};
@@ -666,7 +666,7 @@ export async function searchLossy({
     const secondaryTokenCost = Math.max(0, tokenCost - 1);
     if (trace) {
       trace.tokenCount = wordTokens.length;
-      trace.queryHash = hashString(normalized);
+      trace.queryHash = await hashString(normalized);
     }
     const docTokenChecker = buildDocTokenMembershipChecker(reader, indexField, trace);
     const limitTracker = new SearchLimitTracker(limits, trace);
@@ -886,7 +886,7 @@ export async function searchExact({
 
     if (trace) {
       trace.tokenCount = distinctLossyTokens.length;
-      trace.queryHash = hashString(normalized);
+      trace.queryHash = await hashString(normalized);
     }
     const docTokenChecker = buildDocTokenMembershipChecker(reader, indexField, trace);
     const positionsLoader = buildExactPositionsLoader(reader, indexField, trace);
