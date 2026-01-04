@@ -1,0 +1,56 @@
+---
+import { AutoForm, parseSchema } from "../../../../src/app/forms/index";
+
+const typeInfo = {
+  user: {
+    label: "User Profile",
+    type: "object",
+    fields: {
+      name: { label: "Full Name", type: "string", required: true },
+      age: { label: "Age", type: "number" },
+      role: {
+        label: "Role",
+        type: "string",
+        allowedValues: ["Admin", "User", "Guest"],
+      },
+      isActive: { label: "Active Account", type: "boolean" },
+      tags: {
+        label: "Tags",
+        type: "array",
+        itemType: { type: "string" },
+      },
+    },
+  },
+};
+
+const metadata = parseSchema(typeInfo.user.fields);
+
+const handleFormSubmit = (values: any) => {
+  console.log("Form Submitted:", values);
+  alert(JSON.stringify(values, null, 2));
+};
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Voltra Form Demo</title>
+  </head>
+  <body style="font-family: system-ui, sans-serif; padding: 2rem;">
+    <h1>Voltra Form Generation Demo</h1>
+    <p>
+      This form is generated dynamically from a JSON schema using the new Form
+      Engine.
+    </p>
+
+    <div style="margin-top: 2rem;">
+      <AutoForm
+        client:load
+        schema={metadata}
+        onSubmit={handleFormSubmit}
+        initialValues={{ name: "John Doe", role: "User", isActive: true }}
+      />
+    </div>
+  </body>
+</html>

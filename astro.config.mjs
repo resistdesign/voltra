@@ -5,6 +5,9 @@ import react from "@astrojs/react";
 export default defineConfig({
   vite: {
     plugins: [basicSsl()],
+    ssr: {
+      noExternal: ["styled-components", "@emotion/*"],
+    },
   },
   integrations: [react()],
   srcDir: "./site/app/src",
