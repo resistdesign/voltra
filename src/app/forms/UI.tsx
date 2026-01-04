@@ -5,7 +5,16 @@
  */
 
 import React, { FC, FormEvent } from "react";
-import { AutoFieldProps, FormMetadata } from "./types.js";
+import type {
+  TypeInfo,
+  TypeInfoField,
+  LiteralValue,
+} from "../../common/TypeParsing/TypeInfo.js";
+import type {
+  AutoFieldProps,
+  FormController,
+  RelationActionPayload,
+} from "./types.js";
 import { useFormEngine } from "./Engine.js";
 import {
   ArrayContainer,
@@ -46,102 +55,191 @@ const SubmitButton = styled("button")`
   }
 `;
 
+/**
+ * Creates a non-array version of a field for use as array item metadata.
+ */
+const createArrayItemField = (field: TypeInfoField): TypeInfoField => ({
+  ...field,
+  array: false,
+  tags: {
+    ...field.tags,
+    label: undefined,
+  },
+});
+
+/**
+ * Converts a LiteralValue to a string suitable for HTML option value.
+ */
+const toOptionValue = (val: LiteralValue): string | undefined => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val === "boolean") return undefined; // booleans not valid for selects
+  return String(val);
+};
+
 export const AutoField: FC<AutoFieldProps> = ({
-  metadata,
+  field,
+  fieldKey,
   value,
   onChange,
   error,
+  onRelationAction,
 }) => {
-  const { key, label, type, required, allowedValues } = metadata;
-  const id = `field-${key}`;
+  const label = field.tags?.label ?? fieldKey;
+  const id = `field-${fieldKey}`;
+  const isRequired = !field.optional;
+  const { possibleValues } = field;
+  const allowCustom = field.tags?.allowCustomSelection;
 
-  return (
-    <FieldWrapper>
-      {type !== "boolean" && (
-        <Label htmlFor={id}>
-          {label} {required && "*"}
-        </Label>
-      )}
+  // Filter out boolean and null values for select options
+  const selectableValues = possibleValues?.filter(
+    (v): v is string | number => typeof v === "string" || typeof v === "number",
+  );
 
-      {type === "string" && !allowedValues && (
-        <Input
-          id={id}
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
+  const emitRelationAction = (payload: RelationActionPayload) => {
+    if (onRelationAction) {
+      onRelationAction(payload);
+    }
+  };
 
-      {type === "number" && (
-        <Input
-          id={id}
-          type="number"
-          value={value || ""}
-          onChange={(e) => onChange(Number(e.target.value))}
-        />
-      )}
+  const formatRelationValue = (val: unknown) => {
+    if (val === null || val === undefined) return "None";
+    if (typeof val === "string" || typeof val === "number") return String(val);
+    return JSON.stringify(val, null, 2);
+  };
 
-      {type === "boolean" && (
-        <CheckboxWrapper>
-          <Input
-            id={id}
-            type="checkbox"
-            checked={!!value}
-            onChange={(e) => onChange(e.target.checked)}
-          />
-          <Label htmlFor={id}> {label} </Label>
-        </CheckboxWrapper>
-      )}
+  if (field.typeReference) {
+    if (field.array) {
+      const arrayValue = Array.isArray(value) ? value : [];
 
-      {(type === "string" || type === "number") &&
-        allowedValues &&
-        metadata.allowCustom && (
-          <>
-            <Input
-              id={id}
-              list={`list-${id}`}
-              value={value || ""}
-              onChange={(e) =>
-                onChange(
-                  type === "number" ? Number(e.target.value) : e.target.value,
-                )
-              }
-              placeholder="Select or type..."
-            />
-            <datalist id={`list-${id}`}>
-              {allowedValues.map((val) => (
-                <option key={val} value={val} />
-              ))}
-            </datalist>
-          </>
-        )}
-
-      {(type === "string" || type === "number") &&
-        allowedValues &&
-        !metadata.allowCustom && (
-          <Select
-            id={id}
-            value={value || ""}
-            onChange={(e) => onChange(e.target.value)}
-          >
-            <option value=""> Select...</option>
-            {allowedValues.map((val) => (
-              <option key={val} value={val}>
-                {val}
-              </option>
+      return (
+        <FieldWrapper>
+          <Label htmlFor={id}>
+            {label} {isRequired && "*"}
+          </Label>
+          <RelationList>
+            {arrayValue.length === 0 && (
+              <RelationHint>No related items.</RelationHint>
+            )}
+            {arrayValue.map((item, index) => (
+              <RelationItem key={`${fieldKey}-${index}`}>
+                <RelationValue>{formatRelationValue(item)}</RelationValue>
+                {onRelationAction ? (
+                  <RelationActions>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        emitRelationAction({
+                          action: "edit",
+                          fieldKey,
+                          field,
+                          value: item,
+                          index,
+                          onChange,
+                        })
+                      }
+                    >
+                      Manage
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        emitRelationAction({
+                          action: "remove",
+                          fieldKey,
+                          field,
+                          value: item,
+                          index,
+                          onChange,
+                        })
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </RelationActions>
+                ) : (
+                  <RelationHint>
+                    Provide onRelationAction to manage related items.
+                  </RelationHint>
+                )}
+              </RelationItem>
             ))}
-          </Select>
-        )}
+          </RelationList>
+          {onRelationAction ? (
+            <Button
+              type="button"
+              onClick={() =>
+                emitRelationAction({
+                  action: "add",
+                  fieldKey,
+                  field,
+                  value: arrayValue,
+                  onChange,
+                })
+              }
+            >
+              Add Related
+            </Button>
+          ) : (
+            <RelationHint>
+              Provide onRelationAction to manage related items.
+            </RelationHint>
+          )}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+        </FieldWrapper>
+      );
+    }
 
-      {type === "array" && metadata.itemMetadata && (
+    return (
+      <FieldWrapper>
+        <Label htmlFor={id}>
+          {label} {isRequired && "*"}
+        </Label>
+        <RelationValue>{formatRelationValue(value)}</RelationValue>
+        {onRelationAction ? (
+          <Button
+            type="button"
+            onClick={() =>
+              emitRelationAction({
+                action: "open",
+                fieldKey,
+                field,
+                value,
+                onChange,
+              })
+            }
+          >
+            Manage
+          </Button>
+        ) : (
+          <RelationHint>
+            Provide onRelationAction to manage related items.
+          </RelationHint>
+        )}
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </FieldWrapper>
+    );
+  }
+
+  // Handle array fields
+  if (field.array) {
+    const itemField = createArrayItemField(field);
+    const arrayValue = Array.isArray(value) ? value : [];
+
+    return (
+      <FieldWrapper>
+        <Label htmlFor={id}>
+          {label} {isRequired && "*"}
+        </Label>
         <ArrayContainer>
-          {(Array.isArray(value) ? value : []).map((item, index) => (
+          {arrayValue.map((item, index) => (
             <ArrayItemWrapper key={index}>
               <div style={{ flex: 1 }}>
                 <AutoField
-                  metadata={metadata.itemMetadata!}
+                  field={itemField}
+                  fieldKey={`${fieldKey}[${index}]`}
                   value={item}
                   onChange={(newItem) => {
-                    const newValue = [...(value || [])];
+                    const newValue = [...arrayValue];
                     newValue[index] = newItem;
                     onChange(newValue);
                   }}
@@ -150,7 +248,7 @@ export const AutoField: FC<AutoFieldProps> = ({
               <Button
                 type="button"
                 onClick={() => {
-                  const newValue = [...(value || [])];
+                  const newValue = [...arrayValue];
                   newValue.splice(index, 1);
                   onChange(newValue);
                 }}
@@ -162,12 +260,12 @@ export const AutoField: FC<AutoFieldProps> = ({
           <Button
             type="button"
             onClick={() => {
-              const newValue = [...(value || [])];
+              const newValue = [...arrayValue];
               // Default value based on item type
               const newItem =
-                metadata.itemMetadata?.type === "number"
+                field.type === "number"
                   ? 0
-                  : metadata.itemMetadata?.type === "boolean"
+                  : field.type === "boolean"
                     ? false
                     : "";
               newValue.push(newItem);
@@ -177,56 +275,196 @@ export const AutoField: FC<AutoFieldProps> = ({
             Add Item
           </Button>
         </ArrayContainer>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </FieldWrapper>
+    );
+  }
+
+  // Handle scalar fields
+  return (
+    <FieldWrapper>
+      {field.type !== "boolean" && (
+        <Label htmlFor={id}>
+          {label} {isRequired && "*"}
+        </Label>
       )}
 
-      {error && <ErrorMessage>{error} </ErrorMessage>}
+      {field.type === "string" && !selectableValues && (
+        <Input
+          id={id}
+          value={(value as string) || ""}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+
+      {field.type === "number" && !selectableValues && (
+        <Input
+          id={id}
+          type="number"
+          value={(value as number) ?? ""}
+          onChange={(e) => onChange(Number(e.target.value))}
+        />
+      )}
+
+      {field.type === "boolean" && (
+        <CheckboxWrapper>
+          <Input
+            id={id}
+            type="checkbox"
+            checked={!!value}
+            onChange={(e) => onChange(e.target.checked)}
+          />
+          <Label htmlFor={id}> {label} </Label>
+        </CheckboxWrapper>
+      )}
+
+      {(field.type === "string" || field.type === "number") &&
+        selectableValues &&
+        allowCustom && (
+          <>
+            <Input
+              id={id}
+              list={`list-${id}`}
+              value={(value as string | number) ?? ""}
+              onChange={(e) =>
+                onChange(
+                  field.type === "number"
+                    ? Number(e.target.value)
+                    : e.target.value,
+                )
+              }
+              placeholder="Select or type..."
+            />
+            <datalist id={`list-${id}`}>
+              {selectableValues.map((val) => (
+                <option key={String(val)} value={toOptionValue(val)} />
+              ))}
+            </datalist>
+          </>
+        )}
+
+      {(field.type === "string" || field.type === "number") &&
+        selectableValues &&
+        !allowCustom && (
+          <Select
+            id={id}
+            value={(value as string | number) ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            <option value="">Select...</option>
+            {selectableValues.map((val) => (
+              <option key={String(val)} value={toOptionValue(val)}>
+                {String(val)}
+              </option>
+            ))}
+          </Select>
+        )}
+
+      {error && <ErrorMessage>{error}</ErrorMessage>}
     </FieldWrapper>
   );
 };
 
-export interface AutoFormProps {
-  schema: FormMetadata;
-  onSubmit: (values: any) => void;
-  initialValues?: any;
-  onValuesChange?: (values: any) => void;
+export interface AutoFormViewProps {
+  controller: FormController;
+  onSubmit: (values: Record<string, unknown>) => void;
+  onRelationAction?: (payload: RelationActionPayload) => void;
 }
 
-export const AutoForm: FC<AutoFormProps> = ({
-  schema,
+export const AutoFormView: FC<AutoFormViewProps> = ({
+  controller,
   onSubmit,
-  initialValues,
-  onValuesChange,
+  onRelationAction,
 }) => {
-  const { values, errors, setFieldValue, validate } = useFormEngine(
-    initialValues,
-    schema,
-  );
-
-  React.useEffect(() => {
-    if (onValuesChange) {
-      onValuesChange(values);
-    }
-  }, [values, onValuesChange]);
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      onSubmit(values);
+    if (controller.validate()) {
+      onSubmit(controller.values);
     }
   };
 
   return (
     <FormContainer onSubmit={handleSubmit}>
-      {Object.values(schema.rootFields).map((field) => (
+      {controller.fields.map((fieldController) => (
         <AutoField
-          key={field.key}
-          metadata={field}
-          value={values[field.key]}
-          onChange={(val) => setFieldValue(field.key, val)}
-          error={errors[field.key]}
+          key={fieldController.key}
+          field={fieldController.field}
+          fieldKey={fieldController.key}
+          value={fieldController.value}
+          onChange={fieldController.onChange}
+          error={fieldController.error}
+          onRelationAction={onRelationAction}
         />
       ))}
       <SubmitButton type="submit">Submit</SubmitButton>
     </FormContainer>
   );
 };
+
+export interface AutoFormProps {
+  typeInfo: TypeInfo;
+  onSubmit: (values: Record<string, unknown>) => void;
+  initialValues?: Record<string, unknown>;
+  onValuesChange?: (values: Record<string, unknown>) => void;
+  onRelationAction?: (payload: RelationActionPayload) => void;
+}
+
+export const AutoForm: FC<AutoFormProps> = ({
+  typeInfo,
+  onSubmit,
+  initialValues,
+  onValuesChange,
+  onRelationAction,
+}) => {
+  const controller = useFormEngine(initialValues, typeInfo);
+
+  React.useEffect(() => {
+    if (onValuesChange) {
+      onValuesChange(controller.values);
+    }
+  }, [controller.values, onValuesChange]);
+
+  return (
+    <AutoFormView
+      controller={controller}
+      onSubmit={onSubmit}
+      onRelationAction={onRelationAction}
+    />
+  );
+};
+
+const RelationList = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+`;
+
+const RelationItem = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+`;
+
+const RelationValue = styled("pre")`
+  margin: 0;
+  background: #f7f7f7;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+`;
+
+const RelationActions = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+`;
+
+const RelationHint = styled("div")`
+  color: #777;
+  font-size: 0.85rem;
+`;

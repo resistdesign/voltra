@@ -3,8 +3,9 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/theme-twilight";
-import { AutoForm } from "../../../../../src/app/forms/UI";
-import { parseSchema } from "../../../../../src/app/forms/Schema";
+import { AutoFormView } from "../../../../src/app/forms/UI";
+import { useFormEngine } from "../../../../src/app/forms/Engine";
+import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
 
 const DEFAULT_CODE = `
 /**
@@ -54,7 +55,6 @@ export const AdvancedDemo = () => {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [types, setTypes] = useState<any>({});
   const [selectedType, setSelectedType] = useState("");
-  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editorTheme, setEditorTheme] = useState("github");
@@ -109,10 +109,30 @@ export const AdvancedDemo = () => {
     fetchTypes();
   }, []);
 
-  const currentSchema =
-    selectedType && types[selectedType]
-      ? parseSchema(types[selectedType])
-      : null;
+  const currentTypeInfo =
+    selectedType && types[selectedType] ? types[selectedType] : null;
+
+  const FormPreview = ({ typeInfo }: { typeInfo: TypeInfo }) => {
+    const controller = useFormEngine({}, typeInfo);
+
+    return (
+      <>
+        <AutoFormView controller={controller} onSubmit={() => {}} />
+        <JSONPreview>
+          <b>Live Data JSON:</b>
+          <pre>{JSON.stringify(controller.values, null, 2)}</pre>
+        </JSONPreview>
+        <ControllerExample>
+          <b>Controller Usage (React):</b>
+          <ControllerCode>{`const controller = useFormEngine(initialValues, typeInfo);
+
+return (
+  <AutoFormView controller={controller} onSubmit={handleSubmit} />
+);`}</ControllerCode>
+        </ControllerExample>
+      </>
+    );
+  };
 
   return (
     <DemoGrid>
@@ -163,22 +183,14 @@ export const AdvancedDemo = () => {
           </Select>
         </PaneHeader>
         <PreviewContainer>
-          {currentSchema ? (
-            <AutoForm
-              schema={currentSchema}
-              onSubmit={(vals) => {}}
-              onValuesChange={setFormData}
-            />
+          {currentTypeInfo ? (
+            <FormPreview typeInfo={currentTypeInfo} key={selectedType} />
           ) : (
             <EmptyState>
               Parse code and select a type to generate form.
             </EmptyState>
           )}
         </PreviewContainer>
-        <JSONPreview>
-          <b>Live Data JSON:</b>
-          <pre>{JSON.stringify(formData, null, 2)}</pre>
-        </JSONPreview>
       </Pane>
     </DemoGrid>
   );
@@ -288,4 +300,19 @@ const JSONPreview = styled.div`
     margin-top: 0.5rem;
     color: var(--pico-color);
   }
+`;
+
+const ControllerExample = styled.div`
+  border-top: 1px dashed var(--pico-muted-border-color, #eee);
+  padding-top: 1rem;
+`;
+
+const ControllerCode = styled.pre`
+  background: var(--pico-card-sectioning-background-color, #f1f3f5);
+  padding: 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  margin-top: 0.5rem;
+  color: var(--pico-color);
 `;

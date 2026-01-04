@@ -4,40 +4,15 @@
  * Types for the form generation system.
  */
 
-/**
- * Basic scalar types supported by the form system.
- */
-export type ScalarType = "string" | "number" | "boolean";
-
-/**
- * Schema metadata for a single field used by the engine.
- */
-export interface FieldMetadata {
-  key: string;
-  label: string;
-  type: ScalarType | "object" | "array";
-  required?: boolean;
-  description?: string;
-  // For 'object' type
-  fields?: Record<string, FieldMetadata>;
-  // For 'array' type
-  itemMetadata?: FieldMetadata;
-  // For enums/unions
-  allowedValues?: (string | number)[];
-  allowCustom?: boolean;
-}
-
-/**
- * The normalized schema for a form.
- */
-export interface FormMetadata {
-  rootFields: Record<string, FieldMetadata>;
-}
+import type {
+  TypeInfo,
+  TypeInfoField,
+} from "../../common/TypeParsing/TypeInfo.js";
 
 /**
  * Props for primitive input components.
  */
-export interface PrimitiveInputProps<T = any> {
+export interface PrimitiveInputProps<T = unknown> {
   value: T;
   onChange: (value: T) => void;
   id?: string;
@@ -50,9 +25,41 @@ export interface PrimitiveInputProps<T = any> {
  * Props for the AutoField component.
  */
 export interface AutoFieldProps {
-  metadata: FieldMetadata;
-  value: any;
-  onChange: (value: any) => void;
+  field: TypeInfoField;
+  fieldKey: string;
+  value: unknown;
+  onChange: (value: unknown) => void;
   error?: string;
   disabled?: boolean;
+  onRelationAction?: (payload: RelationActionPayload) => void;
 }
+
+export type FormFieldController = {
+  key: string;
+  field: TypeInfoField;
+  label: string;
+  required: boolean;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  error?: string;
+};
+
+export type FormController = {
+  typeInfo: TypeInfo;
+  values: Record<string, unknown>;
+  errors: Record<string, string>;
+  fields: FormFieldController[];
+  setFieldValue: (key: string, value: unknown) => void;
+  validate: () => boolean;
+};
+
+export type RelationAction = "open" | "add" | "edit" | "remove";
+
+export type RelationActionPayload = {
+  action: RelationAction;
+  fieldKey: string;
+  field: TypeInfoField;
+  value: unknown;
+  index?: number;
+  onChange: (value: unknown) => void;
+};
