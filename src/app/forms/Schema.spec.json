@@ -1,5 +1,5 @@
 {
-    "file": "./index.test-utils.ts",
+    "file": "./Schema.test-utils.ts",
     "tests": [
         {
             "export": "runSchemaParsingScenario",

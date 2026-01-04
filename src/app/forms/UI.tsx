@@ -9,8 +9,8 @@ import {
     FieldMetadata,
     FormMetadata,
     AutoFieldProps,
-} from "../types.js";
-import { useFormEngine } from "../Engine/index.js";
+} from "./types.js";
+import { useFormEngine } from "./Engine.js";
 import {
     FieldWrapper,
     Label,
@@ -21,7 +21,7 @@ import {
     Button,
     ArrayContainer,
     ArrayItemWrapper,
-} from "../Primitives/index.js";
+} from "./Primitives.js";
 
 import styled from "styled-components";
 

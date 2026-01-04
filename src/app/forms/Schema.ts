@@ -4,7 +4,7 @@
  * Logic to parse generic TypeInfo into FormMetadata.
  */
 
-import { FormMetadata, FieldMetadata } from "../types.js";
+import { FormMetadata, FieldMetadata } from "./types.js";
 
 /**
  * Parses a raw TypeInfo-like object into normalized FormMetadata.
