@@ -159,7 +159,7 @@ export const AdvancedDemo = () => {
                     {currentSchema ? (
                         <AutoForm
                             schema={currentSchema}
-                            onSubmit={(vals) => console.log("Submitted:", vals)}
+                            onSubmit={(vals) => { }}
                             onValuesChange={setFormData}
                         />
                     ) : (
