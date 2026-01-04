@@ -1,6 +1,7 @@
 import { FC } from "react";
 import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
+import { AdvancedDemo } from "../pages/_components/AdvancedDemo";
 
 const NavBar = styled.nav`
   & > ul {
@@ -88,7 +89,7 @@ export const App: FC = () => {
                 <a href="https://docs.voltra.app/docs">Docs</a>
               </li>
               <li>
-                <a href="type-info">Type Info Demo</a>
+                <a href="type-info">Form Generation Demo</a>
               </li>
             </ul>
           </NavBar>
@@ -201,7 +202,10 @@ export const App: FC = () => {
               </GridCard>
             </ContentCardGrid>
           </Route>
-          <Route path="type-info">Coming Soon.</Route>
+
+          <Route path="type-info">
+            <AdvancedDemo />
+          </Route>
         </Content>
       </Route>
     </ApplicationStateProvider>

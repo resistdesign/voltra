@@ -5,7 +5,7 @@
  */
 
 export * from "./types.js";
-export * from "./primitives/index.js";
-export * from "./schema/index.js";
-export * from "./engine/index.js";
-export * from "./ui/index.js";
+export * from "./Primitives/index.js";
+export * from "./Schema/index.js";
+export * from "./Engine/index.js";
+export * from "./UI/index.js";

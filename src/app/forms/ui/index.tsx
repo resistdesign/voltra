@@ -21,7 +21,7 @@ import {
     Button,
     ArrayContainer,
     ArrayItemWrapper,
-} from "../primitives/index.js";
+} from "../Primitives/index.js";
 
 import styled from "styled-components";
 
