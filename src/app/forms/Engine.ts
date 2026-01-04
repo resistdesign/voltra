@@ -13,6 +13,7 @@ import type {
   FormValue,
   FormValues,
 } from "./types.js";
+import { normalizeFieldTags } from "./utils.js";
 
 const getDeniedOperation = (
   deniedOperations: DeniedOperations | undefined,
@@ -117,25 +118,29 @@ export const useFormEngine = (
   }, [typeInfo, values]);
 
   const fields = useMemo<FormFieldController[]>(() => {
-    return Object.entries(typeInfo.fields ?? {}).map(([key, field]) => ({
-      key,
-      field,
-      label: field.tags?.label ?? key,
-      required: !field.optional,
-      disabled:
-        field.readonly ||
-        getDeniedOperation(typeInfo.tags?.deniedOperations, operation) ||
-        getDeniedOperation(field.tags?.deniedOperations, operation) ||
-        (operation === TypeOperation.UPDATE &&
-          (field.tags?.primaryField || typeInfo.primaryField === key)),
-      hidden: !!field.tags?.hidden,
-      primary: field.tags?.primaryField || typeInfo.primaryField === key,
-      format: field.tags?.format,
-      constraints: field.tags?.constraints,
-      value: values[key],
-      onChange: (value: FormValue) => setFieldValue(key, value),
-      error: errors[key],
-    }));
+    return Object.entries(typeInfo.fields ?? {}).map(([key, field]) => {
+      const tags = normalizeFieldTags(field.tags);
+      const isPrimary = tags?.primaryField || typeInfo.primaryField === key;
+
+      return {
+        key,
+        field,
+        label: tags?.label ?? key,
+        required: !field.optional,
+        disabled:
+          field.readonly ||
+          getDeniedOperation(typeInfo.tags?.deniedOperations, operation) ||
+          getDeniedOperation(tags?.deniedOperations, operation) ||
+          (operation === TypeOperation.UPDATE && isPrimary),
+        hidden: !!tags?.hidden,
+        primary: isPrimary,
+        format: tags?.format,
+        constraints: tags?.constraints,
+        value: values[key],
+        onChange: (value: FormValue) => setFieldValue(key, value),
+        error: errors[key],
+      };
+    });
   }, [typeInfo, values, errors, setFieldValue, operation]);
 
   return {
