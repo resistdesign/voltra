@@ -4,8 +4,6 @@
  * Types for the form generation system.
  */
 
-import { FC, ReactNode } from "react";
-
 /**
  * Basic scalar types supported by the form system.
  */

@@ -23,7 +23,7 @@ export const Input = styled("input")`
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
-  
+
   &:focus {
     outline: none;
     border-color: #007bff;
@@ -41,7 +41,7 @@ export const Select = styled("select")`
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
-  
+
   &:focus {
     outline: none;
     border-color: #007bff;
@@ -70,20 +70,20 @@ export const Button = styled("button")`
   font-size: 0.875rem;
 
   &:hover {
-      background-color: #e0e0e0;
+    background-color: #e0e0e0;
   }
 `;
 
 export const ArrayContainer = styled("div")`
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-left: 1rem;
-    border-left: 2px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid #eee;
 `;
 
 export const ArrayItemWrapper = styled("div")`
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;

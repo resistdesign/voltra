@@ -4,45 +4,43 @@
  * Core engine logic for managing form state.
  */
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { FormMetadata } from "./types.js";
 
 export const useFormEngine = <T extends Record<string, any> = any>(
-    initialValues: T = {} as T,
-    schema: FormMetadata
+  initialValues: T = {} as T,
+  schema: FormMetadata,
 ) => {
-    const [values, setValues] = useState<T>(initialValues);
-    const [errors, setErrors] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<T>(initialValues);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const setFieldValue = useCallback((path: string, value: any) => {
-        setValues((prev) => {
-            // Simplified deep set for trial run
-            // In a real app, use lodash.set or similar for nested paths
-            return {
-                ...prev,
-                [path]: value,
-            };
-        });
-    }, []);
+  const setFieldValue = useCallback((path: string, value: any) => {
+    setValues((prev) => {
+      return {
+        ...prev,
+        [path]: value,
+      };
+    });
+  }, []);
 
-    const validate = useCallback(() => {
-        // Basic validation based on schema
-        const newErrors: Record<string, string> = {};
-        for (const [key, field] of Object.entries(schema.rootFields)) {
-            const val = values[key];
-            const isMissing = val === undefined || val === null || val === "";
-            if (field.required && isMissing) {
-                newErrors[key] = "This field is required";
-            }
-        }
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    }, [schema, values]);
+  const validate = useCallback(() => {
+    // Basic validation based on schema
+    const newErrors: Record<string, string> = {};
+    for (const [key, field] of Object.entries(schema.rootFields)) {
+      const val = values[key];
+      const isMissing = val === undefined || val === null || val === "";
+      if (field.required && isMissing) {
+        newErrors[key] = "This field is required";
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [schema, values]);
 
-    return {
-        values,
-        errors,
-        setFieldValue,
-        validate,
-    };
+  return {
+    values,
+    errors,
+    setFieldValue,
+    validate,
+  };
 };
