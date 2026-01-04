@@ -5,7 +5,6 @@ import react from "@astrojs/react";
 export default defineConfig({
   vite: {
     plugins: [basicSsl()],
-
   },
   integrations: [react()],
   srcDir: "./site/app/src",
