@@ -13,7 +13,9 @@ import { StructuredInMemoryIndex } from "./inMemory";
 
 type StructuredPage = { candidateIds: DocId[]; lastEvaluatedKey?: string };
 
-const normalizeFields = (fields: StructuredDocFieldsRecord): StructuredDocFieldsRecord => {
+const normalizeFields = (
+  fields: StructuredDocFieldsRecord,
+): StructuredDocFieldsRecord => {
   const normalized: StructuredDocFieldsRecord = {};
 
   for (const [field, value] of Object.entries(fields)) {
@@ -30,7 +32,9 @@ const normalizeFields = (fields: StructuredDocFieldsRecord): StructuredDocFields
 /**
  * In-memory structured backend for tests and local usage.
  */
-export class StructuredInMemoryBackend implements StructuredSearchDependencies, StructuredWriter {
+export class StructuredInMemoryBackend
+  implements StructuredSearchDependencies, StructuredWriter
+{
   private docFields = new Map<DocId, StructuredDocFieldsRecord>();
   private index = new StructuredInMemoryIndex();
 
@@ -44,9 +48,10 @@ export class StructuredInMemoryBackend implements StructuredSearchDependencies, 
     this.index = nextIndex;
   }
 
-  private buildPage(
-    page: { candidateIds: DocId[]; cursor?: string },
-  ): StructuredPage {
+  private buildPage(page: {
+    candidateIds: DocId[];
+    cursor?: string;
+  }): StructuredPage {
     return {
       candidateIds: page.candidateIds,
       lastEvaluatedKey: page.cursor,

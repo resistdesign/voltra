@@ -7,11 +7,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "resourceName": "TYPE_INFO_ORM_ITEM_RELATIONSHIP",
-        "relationshipOperations": [
-          "GET",
-          "SET",
-          "UNSET"
-        ],
+        "relationshipOperations": ["GET", "SET", "UNSET"],
         "operationGroups": [
           "ALL_OPERATIONS",
           "ALL_ITEM_OPERATIONS",

@@ -26,7 +26,10 @@ import {
   type StructuredTermIndexItem,
   type StructuredTermIndexKey,
 } from "./structuredDdb.js";
-import { StructuredDdbWriter, type StructuredWriterDependencies } from "./structuredWriter.js";
+import {
+  StructuredDdbWriter,
+  type StructuredWriterDependencies,
+} from "./structuredWriter.js";
 
 type DynamoKey = Record<string, any>;
 
@@ -79,8 +82,10 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
    */
   constructor(config: StructuredDdbConfig) {
     this.client = config.client;
-    this.termTableName = config.termTableName ?? structuredTermIndexSchema.tableName;
-    this.rangeTableName = config.rangeTableName ?? structuredRangeIndexSchema.tableName;
+    this.termTableName =
+      config.termTableName ?? structuredTermIndexSchema.tableName;
+    this.rangeTableName =
+      config.rangeTableName ?? structuredRangeIndexSchema.tableName;
   }
 
   /**
@@ -116,7 +121,9 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         }),
       );
 
-      const items = (response.Items ?? []).map((item) => unmarshall(item) as StructuredTermIndexItem);
+      const items = (response.Items ?? []).map(
+        (item) => unmarshall(item) as StructuredTermIndexItem,
+      );
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -146,7 +153,8 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
       const response = await this.client.send(
         new QueryCommand({
           TableName: this.rangeTableName,
-          KeyConditionExpression: "#field = :field AND #rangeKey BETWEEN :lower AND :upper",
+          KeyConditionExpression:
+            "#field = :field AND #rangeKey BETWEEN :lower AND :upper",
           ExpressionAttributeNames: {
             "#field": structuredRangeIndexSchema.partitionKey,
             "#rangeKey": structuredRangeIndexSchema.sortKey,
@@ -161,7 +169,9 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         }),
       );
 
-      const items = (response.Items ?? []).map((item) => unmarshall(item) as StructuredRangeIndexItem);
+      const items = (response.Items ?? []).map(
+        (item) => unmarshall(item) as StructuredRangeIndexItem,
+      );
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -197,7 +207,9 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         }),
       );
 
-      const items = (response.Items ?? []).map((item) => unmarshall(item) as StructuredRangeIndexItem);
+      const items = (response.Items ?? []).map(
+        (item) => unmarshall(item) as StructuredRangeIndexItem,
+      );
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -233,7 +245,9 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         }),
       );
 
-      const items = (response.Items ?? []).map((item) => unmarshall(item) as StructuredRangeIndexItem);
+      const items = (response.Items ?? []).map(
+        (item) => unmarshall(item) as StructuredRangeIndexItem,
+      );
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -252,12 +266,17 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
 
   constructor(config: StructuredDdbConfig) {
     this.client = config.client;
-    this.termTableName = config.termTableName ?? structuredTermIndexSchema.tableName;
-    this.rangeTableName = config.rangeTableName ?? structuredRangeIndexSchema.tableName;
-    this.docFieldsTableName = config.docFieldsTableName ?? structuredDocFieldsSchema.tableName;
+    this.termTableName =
+      config.termTableName ?? structuredTermIndexSchema.tableName;
+    this.rangeTableName =
+      config.rangeTableName ?? structuredRangeIndexSchema.tableName;
+    this.docFieldsTableName =
+      config.docFieldsTableName ?? structuredDocFieldsSchema.tableName;
   }
 
-  async loadDocFields(docId: DocId): Promise<StructuredDocFieldsRecord | undefined> {
+  async loadDocFields(
+    docId: DocId,
+  ): Promise<StructuredDocFieldsRecord | undefined> {
     const response = await this.client.send(
       new GetItemCommand({
         TableName: this.docFieldsTableName,
@@ -269,11 +288,16 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
       return undefined;
     }
 
-    const item = unmarshall(response.Item) as { fields?: StructuredDocFieldsRecord };
+    const item = unmarshall(response.Item) as {
+      fields?: StructuredDocFieldsRecord;
+    };
     return item.fields;
   }
 
-  async putDocFields(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
+  async putDocFields(
+    docId: DocId,
+    fields: StructuredDocFieldsRecord,
+  ): Promise<void> {
     await this.client.send(
       new PutItemCommand({
         TableName: this.docFieldsTableName,
@@ -286,45 +310,53 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   }
 
   async putTermEntries(entries: StructuredTermIndexItem[]): Promise<void> {
-    await this.batchWrite(entries.map((entry) => ({
-      tableName: this.termTableName,
-      request: { PutRequest: { Item: marshall(entry) } },
-    })));
+    await this.batchWrite(
+      entries.map((entry) => ({
+        tableName: this.termTableName,
+        request: { PutRequest: { Item: marshall(entry) } },
+      })),
+    );
   }
 
   async deleteTermEntries(entries: StructuredTermIndexKey[]): Promise<void> {
-    await this.batchWrite(entries.map((entry) => ({
-      tableName: this.termTableName,
-      request: {
-        DeleteRequest: {
-          Key: marshall({
-            [structuredTermIndexSchema.partitionKey]: entry.termKey,
-            [structuredTermIndexSchema.sortKey]: entry.docId,
-          }),
+    await this.batchWrite(
+      entries.map((entry) => ({
+        tableName: this.termTableName,
+        request: {
+          DeleteRequest: {
+            Key: marshall({
+              [structuredTermIndexSchema.partitionKey]: entry.termKey,
+              [structuredTermIndexSchema.sortKey]: entry.docId,
+            }),
+          },
         },
-      },
-    })));
+      })),
+    );
   }
 
   async putRangeEntries(entries: StructuredRangeIndexItem[]): Promise<void> {
-    await this.batchWrite(entries.map((entry) => ({
-      tableName: this.rangeTableName,
-      request: { PutRequest: { Item: marshall(entry) } },
-    })));
+    await this.batchWrite(
+      entries.map((entry) => ({
+        tableName: this.rangeTableName,
+        request: { PutRequest: { Item: marshall(entry) } },
+      })),
+    );
   }
 
   async deleteRangeEntries(entries: StructuredRangeIndexKey[]): Promise<void> {
-    await this.batchWrite(entries.map((entry) => ({
-      tableName: this.rangeTableName,
-      request: {
-        DeleteRequest: {
-          Key: marshall({
-            [structuredRangeIndexSchema.partitionKey]: entry.field,
-            [structuredRangeIndexSchema.sortKey]: entry.rangeKey,
-          }),
+    await this.batchWrite(
+      entries.map((entry) => ({
+        tableName: this.rangeTableName,
+        request: {
+          DeleteRequest: {
+            Key: marshall({
+              [structuredRangeIndexSchema.partitionKey]: entry.field,
+              [structuredRangeIndexSchema.sortKey]: entry.rangeKey,
+            }),
+          },
         },
-      },
-    })));
+      })),
+    );
   }
 
   private async batchWrite(
@@ -373,6 +405,8 @@ export class StructuredDdbBackend {
    */
   constructor(config: StructuredDdbConfig) {
     this.reader = new StructuredDdbReader(config);
-    this.writer = new StructuredDdbWriter(new StructuredDdbWriterDependencies(config));
+    this.writer = new StructuredDdbWriter(
+      new StructuredDdbWriterDependencies(config),
+    );
   }
 }

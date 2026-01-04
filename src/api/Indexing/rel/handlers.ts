@@ -4,7 +4,13 @@
  * Lambda-style handler for relational edge operations (put/remove/query).
  * Use {@link setRelationalHandlerDependencies} to supply a backend implementation.
  */
-import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
+import type {
+  Direction,
+  Edge,
+  EdgeKey,
+  EdgePage,
+  RelationalQueryOptions,
+} from "./types";
 
 type EdgeMetadata = Record<string, unknown>;
 
@@ -54,7 +60,7 @@ export type EdgePutEvent<TMetadata extends EdgeMetadata = EdgeMetadata> = {
   /**
    * Action discriminator for edge inserts.
    */
-  action: 'edge/put';
+  action: "edge/put";
   /**
    * Edge payload to insert.
    */
@@ -68,7 +74,7 @@ export type EdgeRemoveEvent = {
   /**
    * Action discriminator for edge removals.
    */
-  action: 'edge/remove';
+  action: "edge/remove";
   /**
    * Edge key to remove.
    */
@@ -82,7 +88,7 @@ export type EdgeQueryEvent = {
   /**
    * Action discriminator for edge queries.
    */
-  action: 'edge/query';
+  action: "edge/query";
   /**
    * Direction of traversal (outgoing or incoming).
    */
@@ -108,15 +114,16 @@ export type EdgeQueryEvent = {
 /**
  * Union of relational handler event payloads.
  */
-export type RelationalHandlerEvent<TMetadata extends EdgeMetadata = EdgeMetadata> =
-  | EdgePutEvent<TMetadata>
-  | EdgeRemoveEvent
-  | EdgeQueryEvent;
+export type RelationalHandlerEvent<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> = EdgePutEvent<TMetadata> | EdgeRemoveEvent | EdgeQueryEvent;
 
 /**
  * Dependencies for the relational handler.
  */
-export type RelationalHandlerDependencies<TMetadata extends EdgeMetadata = EdgeMetadata> = {
+export type RelationalHandlerDependencies<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> = {
   /**
    * Relational backend implementation to execute operations.
    */
@@ -169,26 +176,42 @@ export async function handler(
   event: RelationalHandlerEvent,
 ): Promise<LambdaResponse> {
   if (!dependencies) {
-    throw new Error('Relational handler dependencies are not configured. Call setRelationalHandlerDependencies().');
+    throw new Error(
+      "Relational handler dependencies are not configured. Call setRelationalHandlerDependencies().",
+    );
   }
 
   switch (event.action) {
-    case 'edge/put':
+    case "edge/put":
       await dependencies.backend.putEdge(event.edge);
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-    case 'edge/remove':
+    case "edge/remove":
       await dependencies.backend.removeEdge(event.key);
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
-    case 'edge/query': {
-      const options: RelationalQueryOptions = { limit: event.limit, cursor: event.cursor };
+    case "edge/query": {
+      const options: RelationalQueryOptions = {
+        limit: event.limit,
+        cursor: event.cursor,
+      };
       const result =
-        event.direction === 'out'
-          ? await dependencies.backend.getOutgoing(event.entityId, event.relation, options)
-          : await dependencies.backend.getIncoming(event.entityId, event.relation, options);
+        event.direction === "out"
+          ? await dependencies.backend.getOutgoing(
+              event.entityId,
+              event.relation,
+              options,
+            )
+          : await dependencies.backend.getIncoming(
+              event.entityId,
+              event.relation,
+              options,
+            );
 
       return { statusCode: 200, body: JSON.stringify(result) };
     }
     default:
-      return { statusCode: 400, body: JSON.stringify({ error: 'Unsupported action.' }) };
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Unsupported action." }),
+      };
   }
 }

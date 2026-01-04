@@ -16,16 +16,8 @@
           }
         ],
         "arrayValue": "next",
-        "arrayParent": [
-          "zero",
-          "next"
-        ],
-        "arrayChanges": [
-          [
-            "zero",
-            "next"
-          ]
-        ],
+        "arrayParent": ["zero", "next"],
+        "arrayChanges": [["zero", "next"]],
         "missingValue": "updated",
         "missingParent": {
           "name": "updated"

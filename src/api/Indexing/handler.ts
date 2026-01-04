@@ -17,7 +17,7 @@ export type IndexDocumentEvent = {
   /**
    * Action discriminator for indexing.
    */
-  action: 'indexDocument';
+  action: "indexDocument";
   /**
    * Document record to index.
    */
@@ -39,7 +39,7 @@ export type RemoveDocumentEvent = {
   /**
    * Action discriminator for removals.
    */
-  action: 'removeDocument';
+  action: "removeDocument";
   /**
    * Document record to remove.
    */
@@ -61,7 +61,7 @@ export type SearchLossyEvent = {
   /**
    * Action discriminator for lossy search.
    */
-  action: 'searchLossy';
+  action: "searchLossy";
   /**
    * Query string to search for.
    */
@@ -91,7 +91,7 @@ export type SearchExactEvent = {
   /**
    * Action discriminator for exact search.
    */
-  action: 'searchExact';
+  action: "searchExact";
   /**
    * Query string to search for.
    */
@@ -185,7 +185,9 @@ export async function handler(
   event: HandlerEvent,
 ): Promise<LambdaResponse> {
   if (!dependencies) {
-    throw new Error("Handler dependencies are not configured. Call setHandlerDependencies().");
+    throw new Error(
+      "Handler dependencies are not configured. Call setHandlerDependencies().",
+    );
   }
 
   switch (event.action) {
@@ -220,7 +222,10 @@ export async function handler(
       const { startTimeMs, ...traceDetails } = trace;
       const elapsedMs = Date.now() - startTimeMs;
       console.log(
-        JSON.stringify({ action: event.action, trace: { ...traceDetails, elapsedMs, limits } }),
+        JSON.stringify({
+          action: event.action,
+          trace: { ...traceDetails, elapsedMs, limits },
+        }),
       );
       return { statusCode: 200, body: JSON.stringify(result) };
     }
@@ -239,11 +244,17 @@ export async function handler(
       const { startTimeMs, ...traceDetails } = trace;
       const elapsedMs = Date.now() - startTimeMs;
       console.log(
-        JSON.stringify({ action: event.action, trace: { ...traceDetails, elapsedMs, limits } }),
+        JSON.stringify({
+          action: event.action,
+          trace: { ...traceDetails, elapsedMs, limits },
+        }),
       );
       return { statusCode: 200, body: JSON.stringify(result) };
     }
     default:
-      return { statusCode: 400, body: JSON.stringify({ error: "Unsupported action." }) };
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Unsupported action." }),
+      };
   }
 }

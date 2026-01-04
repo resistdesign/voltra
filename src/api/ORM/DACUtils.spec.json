@@ -3,45 +3,20 @@
   "tests": [
     {
       "export": "getORMDACResourcePath",
-      "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
-        "ALL_OPERATIONS"
-      ],
+      "conditions": [["DEMO", "APP"], "ALL_OPERATIONS"],
       "operation": "ARRAY_EQUALS",
-      "expectation": [
-        "DEMO",
-        "APP",
-        "ALL_OPERATIONS"
-      ]
+      "expectation": ["DEMO", "APP", "ALL_OPERATIONS"]
     },
     {
       "export": "getItemTypeDACResourcePath",
-      "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
-        "ALL_OPERATIONS",
-        "Contact"
-      ],
+      "conditions": [["DEMO", "APP"], "ALL_OPERATIONS", "Contact"],
       "operation": "ARRAY_EQUALS",
-      "expectation": [
-        "DEMO",
-        "APP",
-        "ALL_OPERATIONS",
-        "Contact"
-      ]
+      "expectation": ["DEMO", "APP", "ALL_OPERATIONS", "Contact"]
     },
     {
       "export": "getDataItemDACResourcePath",
       "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
+        ["DEMO", "APP"],
         "ALL_OPERATIONS",
         "Contact",
         "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
@@ -58,10 +33,7 @@
     {
       "export": "getItemRelationshipOriginDACResourcePath",
       "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
+        ["DEMO", "APP"],
         "ALL_OPERATIONS",
         {
           "fromTypeName": "Contact",
@@ -81,10 +53,7 @@
     {
       "export": "getItemRelationshipDACResourcePath",
       "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
+        ["DEMO", "APP"],
         "ALL_OPERATIONS",
         {
           "fromTypeName": "Contact",
@@ -108,10 +77,7 @@
     {
       "export": "getDataItemFieldValueDACResourcePath",
       "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
+        ["DEMO", "APP"],
         "id",
         "a38bc40e-052d-47e2-89c5-6a1e5593bc7f"
       ],
@@ -125,34 +91,18 @@
     },
     {
       "export": "getItemTypeDACConstraint",
-      "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
-        "ALL_OPERATIONS",
-        "Contact",
-        "ALLOW"
-      ],
+      "conditions": [["DEMO", "APP"], "ALL_OPERATIONS", "Contact", "ALLOW"],
       "operation": "DEEP_EQUALS",
       "expectation": {
         "type": "ALLOW",
         "pathIsPrefix": true,
-        "resourcePath": [
-          "DEMO",
-          "APP",
-          "ALL_OPERATIONS",
-          "Contact"
-        ]
+        "resourcePath": ["DEMO", "APP", "ALL_OPERATIONS", "Contact"]
       }
     },
     {
       "export": "getItemRelationshipOriginDACConstraint",
       "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
+        ["DEMO", "APP"],
         "ALL_OPERATIONS",
         {
           "fromTypeName": "Contact",
@@ -176,27 +126,14 @@
     },
     {
       "export": "getItemTypeDACRole",
-      "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
-        "ALL_OPERATIONS",
-        "Contact",
-        "ALLOW"
-      ],
+      "conditions": [["DEMO", "APP"], "ALL_OPERATIONS", "Contact", "ALLOW"],
       "operation": "DEEP_EQUALS",
       "expectation": {
         "constraints": [
           {
             "type": "ALLOW",
             "pathIsPrefix": true,
-            "resourcePath": [
-              "DEMO",
-              "APP",
-              "ALL_OPERATIONS",
-              "Contact"
-            ]
+            "resourcePath": ["DEMO", "APP", "ALL_OPERATIONS", "Contact"]
           }
         ]
       }
@@ -204,10 +141,7 @@
     {
       "export": "getItemRelationshipOriginDACRole",
       "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
+        ["DEMO", "APP"],
         "ALL_OPERATIONS",
         {
           "fromTypeName": "Contact",
@@ -235,24 +169,14 @@
     },
     {
       "export": "getFullORMDACRole",
-      "conditions": [
-        [
-          "DEMO",
-          "APP"
-        ],
-        "ALLOW"
-      ],
+      "conditions": [["DEMO", "APP"], "ALLOW"],
       "operation": "DEEP_EQUALS",
       "expectation": {
         "constraints": [
           {
             "type": "ALLOW",
             "pathIsPrefix": true,
-            "resourcePath": [
-              "DEMO",
-              "APP",
-              "ALL_OPERATIONS"
-            ]
+            "resourcePath": ["DEMO", "APP", "ALL_OPERATIONS"]
           }
         ]
       }

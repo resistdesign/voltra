@@ -21,15 +21,21 @@ const buildDriver = () => {
 export const runListItemUtilsScenario = async () => {
   const driver = buildDriver() as unknown as DataItemDBDriver<any, any>;
 
-  const id1 = await (driver as InMemoryDataItemDBDriver<TestItem, "id">).createItem({
+  const id1 = await (
+    driver as InMemoryDataItemDBDriver<TestItem, "id">
+  ).createItem({
     name: "Alpha",
     status: "active",
   });
-  const id2 = await (driver as InMemoryDataItemDBDriver<TestItem, "id">).createItem({
+  const id2 = await (
+    driver as InMemoryDataItemDBDriver<TestItem, "id">
+  ).createItem({
     name: "Beta",
     status: "archived",
   });
-  const id3 = await (driver as InMemoryDataItemDBDriver<TestItem, "id">).createItem({
+  const id3 = await (
+    driver as InMemoryDataItemDBDriver<TestItem, "id">
+  ).createItem({
     name: "Gamma",
     status: "active",
   });
@@ -71,7 +77,9 @@ export const runListItemUtilsScenario = async () => {
     noFilterIds: noFilter.items.map((item) => item.id),
     filteredIds: filtered.items.map((item) => item.id),
     transformedItems: transformed.items,
-    selectedFieldKeys: selectedFields.items.map((item) => Object.keys(item).sort()),
+    selectedFieldKeys: selectedFields.items.map((item) =>
+      Object.keys(item).sort(),
+    ),
     filteredWithSelect: filteredWithSelect.items,
   };
 };

@@ -11,10 +11,7 @@
           "export type Existing = string;"
         ],
         "bucketResourceType": "AWS::S3::Bucket",
-        "propertyTypeKeys": [
-          "CorsConfiguration",
-          "CorsRule"
-        ],
+        "propertyTypeKeys": ["CorsConfiguration", "CorsRule"],
         "corsRulesType": "List"
       }
     },

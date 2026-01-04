@@ -16,13 +16,23 @@ export const runExactIndexScenario = () => {
   const missingPhrase = index.hasPhrase("doc-1", "text", ["world", "hello"]);
 
   const candidates = ["doc-1", "doc-2", "doc-3"];
-  const verifiedPage1 = index.verifyCandidates(["hello", "world"], "text", candidates, {
-    limit: 1,
-  });
-  const verifiedPage2 = index.verifyCandidates(["hello", "world"], "text", candidates, {
-    limit: 1,
-    lastDocId: verifiedPage1.nextCursor,
-  });
+  const verifiedPage1 = index.verifyCandidates(
+    ["hello", "world"],
+    "text",
+    candidates,
+    {
+      limit: 1,
+    },
+  );
+  const verifiedPage2 = index.verifyCandidates(
+    ["hello", "world"],
+    "text",
+    candidates,
+    {
+      limit: 1,
+      lastDocId: verifiedPage1.nextCursor,
+    },
+  );
 
   index.removePositions("hello", "text", "doc-2");
   const positionsAfterRemove = index.getPositions("hello", "text", "doc-2");

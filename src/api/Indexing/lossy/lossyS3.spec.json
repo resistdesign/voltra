@@ -7,11 +7,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "key": "lossy/text/hello%20world.json",
-        "loaded": [
-          1,
-          "2",
-          3
-        ],
+        "loaded": [1, "2", 3],
         "missing": []
       }
     }

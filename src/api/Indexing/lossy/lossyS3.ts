@@ -32,7 +32,8 @@ export function buildLossyS3Key(token: string, indexField: string): string {
 
 const lossyStore = new Map<string, DocId[]>();
 
-const buildStoreKey = (pointer: LossyS3Pointer): string => `${pointer.bucket}/${pointer.key}`;
+const buildStoreKey = (pointer: LossyS3Pointer): string =>
+  `${pointer.bucket}/${pointer.key}`;
 
 /**
  * Store lossy postings for a pointer.
@@ -40,7 +41,10 @@ const buildStoreKey = (pointer: LossyS3Pointer): string => `${pointer.bucket}/${
  * @param docIds Document ids to store for the token.
  * @returns Promise resolved once postings are stored.
  */
-export async function storeLossyIndex(pointer: LossyS3Pointer, docIds: DocId[]): Promise<void> {
+export async function storeLossyIndex(
+  pointer: LossyS3Pointer,
+  docIds: DocId[],
+): Promise<void> {
   lossyStore.set(buildStoreKey(pointer), [...docIds]);
 }
 
@@ -49,6 +53,8 @@ export async function storeLossyIndex(pointer: LossyS3Pointer, docIds: DocId[]):
  * @param pointer Bucket/key pair for the postings object.
  * @returns Document ids stored for the token.
  */
-export async function loadLossyIndex(pointer: LossyS3Pointer): Promise<DocId[]> {
+export async function loadLossyIndex(
+  pointer: LossyS3Pointer,
+): Promise<DocId[]> {
   return [...(lossyStore.get(buildStoreKey(pointer)) ?? [])];
 }

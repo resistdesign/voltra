@@ -74,9 +74,7 @@ export const runRouteScenario = async () => {
     return createElement("span", null, JSON.stringify(context));
   };
 
-  const defaultContextRender = renderToString(
-    createElement(ContextProbe),
-  );
+  const defaultContextRender = renderToString(createElement(ContextProbe));
 
   const nestedRouteRender = renderToString(
     createElement(

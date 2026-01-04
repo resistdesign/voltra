@@ -89,13 +89,14 @@ export const runApplicationStateLoaderScenario = async () => {
     },
   });
 
-  globalThis.fetch = async (_input, init) => ({
-    ok: true,
-    json: async () => ({
-      result: "ok",
-      args: JSON.parse((init?.body as string) ?? "[]"),
-    }),
-  } as Response);
+  globalThis.fetch = async (_input, init) =>
+    ({
+      ok: true,
+      json: async () => ({
+        result: "ok",
+        args: JSON.parse((init?.body as string) ?? "[]"),
+      }),
+    }) as Response;
 
   await successHarness.controller.makeRemoteProcedureCall("direct");
 
@@ -113,10 +114,11 @@ export const runApplicationStateLoaderScenario = async () => {
     },
   });
 
-  globalThis.fetch = async () => ({
-    ok: false,
-    json: async () => ({ message: "nope" }),
-  } as Response);
+  globalThis.fetch = async () =>
+    ({
+      ok: false,
+      json: async () => ({ message: "nope" }),
+    }) as Response;
 
   await errorHarness.controller.makeRemoteProcedureCall("direct");
 

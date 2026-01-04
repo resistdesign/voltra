@@ -20,33 +20,16 @@
           "name": "Alice"
         },
         "updatedAuthorName": "Alice Cooper",
-        "listBookIds": [
-          "book-1",
-          "book-2"
-        ],
-        "listBookTitles": [
-          "Alpha",
-          "Beta"
-        ],
-        "relationshipTargets": [
-          "book-1",
-          "book-2"
-        ],
-        "relatedItemTitles": [
-          "Alpha",
-          "Beta"
-        ],
-        "relatedItemIds": [
-          "book-1",
-          "book-2"
-        ],
+        "listBookIds": ["book-1", "book-2"],
+        "listBookTitles": ["Alpha", "Beta"],
+        "relationshipTargets": ["book-1", "book-2"],
+        "relatedItemTitles": ["Alpha", "Beta"],
+        "relatedItemIds": ["book-1", "book-2"],
         "deleteRelationshipResult": {
           "success": true,
           "remainingItemsExist": false
         },
-        "relationshipsAfterDelete": [
-          "book-2"
-        ]
+        "relationshipsAfterDelete": ["book-2"]
       }
     },
     {
@@ -67,22 +50,10 @@
         "readAuthorSelected": {
           "id": "author-1"
         },
-        "listBookIds": [
-          "book-1",
-          "book-2"
-        ],
-        "listBookTitles": [
-          "Alpha",
-          "Beta"
-        ],
-        "relationshipTargets": [
-          "book-1",
-          "book-2"
-        ],
-        "relatedItemTitles": [
-          "Alpha",
-          "Beta"
-        ],
+        "listBookIds": ["book-1", "book-2"],
+        "listBookTitles": ["Alpha", "Beta"],
+        "relationshipTargets": ["book-1", "book-2"],
+        "relatedItemTitles": ["Alpha", "Beta"],
         "deleteRelationshipError": "INVALID_OPERATION",
         "deleteRelationshipErrorExpected": "INVALID_OPERATION"
       }

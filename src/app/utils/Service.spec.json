@@ -17,10 +17,7 @@
         },
         "successResponse": {
           "ok": true,
-          "args": [
-            "a",
-            1
-          ]
+          "args": ["a", 1]
         },
         "errorMessage": "nope"
       }

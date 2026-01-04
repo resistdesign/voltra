@@ -17,9 +17,7 @@
           "valid": false,
           "error": "",
           "errorMap": {
-            "title": [
-              "INVALID_OPERATOR"
-            ]
+            "title": ["INVALID_OPERATOR"]
           }
         },
         "invalidField": {
@@ -27,9 +25,7 @@
           "valid": false,
           "error": "",
           "errorMap": {
-            "missing": [
-              "INVALID_FIELD"
-            ]
+            "missing": ["INVALID_FIELD"]
           }
         },
         "relationalDenied": {
@@ -37,9 +33,7 @@
           "valid": false,
           "error": "",
           "errorMap": {
-            "author": [
-              "INVALID_FIELD"
-            ]
+            "author": ["INVALID_FIELD"]
           }
         },
         "relationalDisallowed": {
@@ -47,9 +41,7 @@
           "valid": false,
           "error": "",
           "errorMap": {
-            "author": [
-              "INVALID_FIELD"
-            ]
+            "author": ["INVALID_FIELD"]
           }
         },
         "invalidValueOption": {

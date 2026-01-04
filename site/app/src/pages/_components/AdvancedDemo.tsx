@@ -51,130 +51,137 @@ export type UserProfile = {
 `;
 
 export const AdvancedDemo = () => {
-    const [code, setCode] = useState(DEFAULT_CODE);
-    const [types, setTypes] = useState<any>({});
-    const [selectedType, setSelectedType] = useState("");
-    const [formData, setFormData] = useState({});
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [editorTheme, setEditorTheme] = useState("github");
+  const [code, setCode] = useState(DEFAULT_CODE);
+  const [types, setTypes] = useState<any>({});
+  const [selectedType, setSelectedType] = useState("");
+  const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editorTheme, setEditorTheme] = useState("github");
 
-    useEffect(() => {
-        // Check system preference
-        const matchDark = window.matchMedia("(prefers-color-scheme: dark)");
-        const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
-            setEditorTheme(e.matches ? "twilight" : "github");
-        };
-
-        updateTheme(matchDark); // Initial check
-
-        matchDark.addEventListener("change", updateTheme);
-        return () => matchDark.removeEventListener("change", updateTheme);
-    }, []);
-
-    const fetchTypes = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch("/api/parse-types", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ source: code }),
-            });
-
-            const data = await res.json();
-
-            if (data.error) throw new Error(data.error);
-
-            setTypes(data);
-
-            // Auto-select first type if none selected or current valid
-            const typeNames = Object.keys(data);
-            if (typeNames.length > 0) {
-                if (!typeNames.includes(selectedType)) {
-                    setSelectedType(typeNames[0]);
-                }
-            } else {
-                setSelectedType("");
-            }
-
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
-        }
+  useEffect(() => {
+    // Check system preference
+    const matchDark = window.matchMedia("(prefers-color-scheme: dark)");
+    const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
+      setEditorTheme(e.matches ? "twilight" : "github");
     };
 
-    // Initial load
-    useEffect(() => {
-        fetchTypes();
-    }, []);
+    updateTheme(matchDark); // Initial check
 
-    const currentSchema = selectedType && types[selectedType]
-        ? parseSchema(types[selectedType])
-        : null;
+    matchDark.addEventListener("change", updateTheme);
+    return () => matchDark.removeEventListener("change", updateTheme);
+  }, []);
 
-    return (
-        <DemoGrid>
-            <Pane>
-                <PaneHeader>
-                    <div>
-                        TypeScript Interface <span style={{ fontSize: '0.8em', fontWeight: 'normal', color: '#666' }}>(Exported types only)</span>
-                    </div>
-                    <Button onClick={fetchTypes} disabled={loading}>
-                        {loading ? "Parsing..." : "Update / Parse"}
-                    </Button>
-                </PaneHeader>
-                <EditorContainer>
-                    <AceEditor
-                        mode="typescript"
-                        theme={editorTheme}
-                        value={code}
-                        onChange={setCode}
-                        name="ts-editor"
-                        editorProps={{ $blockScrolling: true }}
-                        width="100%"
-                        height="100%"
-                        fontSize={14}
-                    />
-                </EditorContainer>
-                {error && <ErrorMessage>{error}</ErrorMessage>}
-            </Pane>
+  const fetchTypes = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/parse-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: code }),
+      });
 
-            <Pane>
-                <PaneHeader>
-                    Generated Form
-                    <Select
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value)}
-                        disabled={Object.keys(types).length === 0}
-                    >
-                        <option value="">Select Type...</option>
-                        {Object.keys(types).map(t => (
-                            <option key={t} value={t}>{t}</option>
-                        ))}
-                    </Select>
-                </PaneHeader>
-                <PreviewContainer>
-                    {currentSchema ? (
-                        <AutoForm
-                            schema={currentSchema}
-                            onSubmit={(vals) => { }}
-                            onValuesChange={setFormData}
-                        />
-                    ) : (
-                        <EmptyState>
-                            Parse code and select a type to generate form.
-                        </EmptyState>
-                    )}
-                </PreviewContainer>
-                <JSONPreview>
-                    <b>Live Data JSON:</b>
-                    <pre>{JSON.stringify(formData, null, 2)}</pre>
-                </JSONPreview>
-            </Pane>
-        </DemoGrid>
-    );
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+
+      setTypes(data);
+
+      // Auto-select first type if none selected or current valid
+      const typeNames = Object.keys(data);
+      if (typeNames.length > 0) {
+        if (!typeNames.includes(selectedType)) {
+          setSelectedType(typeNames[0]);
+        }
+      } else {
+        setSelectedType("");
+      }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchTypes();
+  }, []);
+
+  const currentSchema =
+    selectedType && types[selectedType]
+      ? parseSchema(types[selectedType])
+      : null;
+
+  return (
+    <DemoGrid>
+      <Pane>
+        <PaneHeader>
+          <div>
+            TypeScript Interface{" "}
+            <span
+              style={{ fontSize: "0.8em", fontWeight: "normal", color: "#666" }}
+            >
+              (Exported types only)
+            </span>
+          </div>
+          <Button onClick={fetchTypes} disabled={loading}>
+            {loading ? "Parsing..." : "Update / Parse"}
+          </Button>
+        </PaneHeader>
+        <EditorContainer>
+          <AceEditor
+            mode="typescript"
+            theme={editorTheme}
+            value={code}
+            onChange={setCode}
+            name="ts-editor"
+            editorProps={{ $blockScrolling: true }}
+            width="100%"
+            height="100%"
+            fontSize={14}
+          />
+        </EditorContainer>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </Pane>
+
+      <Pane>
+        <PaneHeader>
+          Generated Form
+          <Select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            disabled={Object.keys(types).length === 0}
+          >
+            <option value="">Select Type...</option>
+            {Object.keys(types).map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </Select>
+        </PaneHeader>
+        <PreviewContainer>
+          {currentSchema ? (
+            <AutoForm
+              schema={currentSchema}
+              onSubmit={(vals) => {}}
+              onValuesChange={setFormData}
+            />
+          ) : (
+            <EmptyState>
+              Parse code and select a type to generate form.
+            </EmptyState>
+          )}
+        </PreviewContainer>
+        <JSONPreview>
+          <b>Live Data JSON:</b>
+          <pre>{JSON.stringify(formData, null, 2)}</pre>
+        </JSONPreview>
+      </Pane>
+    </DemoGrid>
+  );
 };
 
 // Styled Components
@@ -185,7 +192,7 @@ const DemoGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   height: 80vh;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     height: auto;
@@ -199,7 +206,7 @@ const Pane = styled.div`
   background: var(--pico-card-background-color, #fff);
   padding: 1rem;
   border-radius: var(--pico-border-radius, 8px);
-  box-shadow: var(--pico-card-box-shadow, 0 2px 8px rgba(0,0,0,0.05));
+  box-shadow: var(--pico-card-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.05));
   border: 1px solid var(--pico-muted-border-color, #eee);
   overflow: hidden;
   min-height: 500px;
@@ -237,9 +244,14 @@ const Button = styled.button`
   cursor: pointer;
   font-weight: 500;
   transition: background-color var(--pico-transition);
-  
-  &:hover { background: var(--pico-primary-hover-background); }
-  &:disabled { background: var(--pico-muted-border-color); cursor: not-allowed; }
+
+  &:hover {
+    background: var(--pico-primary-hover-background);
+  }
+  &:disabled {
+    background: var(--pico-muted-border-color);
+    cursor: not-allowed;
+  }
 `;
 
 const Select = styled.select`
@@ -266,7 +278,7 @@ const JSONPreview = styled.div`
   margin-top: auto;
   border-top: 1px solid var(--pico-muted-border-color, #eee);
   padding-top: 1rem;
-  
+
   pre {
     background: var(--pico-card-sectioning-background-color, #f1f3f5);
     padding: 1rem;

@@ -16,6 +16,7 @@ Serverless handlers (`src/handler.ts`) wrap these primitives. Use `setHandlerDep
 ## DynamoDB Schemas
 
 ### Full-text tables
+
 - **LossyPostings** (`pk`, `sk`): `pk=f#<indexField>#t#<token>`, `sk=d#<docId>`
 - **ExactPostings** (`pk`, `sk`, `positions`): `pk=f#<indexField>#t#<token>`, `sk=d#<docId>`, `positions` array
 - **FullTextDocMirror** (`pk`, `content`): optional mirror of full docs keyed by `pk=d#<docId>#f#<indexField>`
@@ -24,11 +25,13 @@ Serverless handlers (`src/handler.ts`) wrap these primitives. Use `setHandlerDep
 - **DocTokenPositions** (`pk`, `sk`, `positions`): optional doc→token positions `pk=d#<docId>`, `sk=f#<indexField>#t#<token>`
 
 ### Structured tables
+
 - **StructuredTermIndex** (`termKey`, `docId`, `field`, `value`, `mode`): `termKey=<field>#<mode>#<serializedValue>` supports `eq` and `contains` lookups.【F:src/structured/structuredDdb.ts†L1-L53】
 - **StructuredRangeIndex** (`field`, `rangeKey`, `value`, `docId`): `rangeKey=<serializedValue>#<docId padded>` for ordered range scans.【F:src/structured/structuredDdb.ts†L55-L76】
 - **StructuredDocFields** (`docId`, `fields`): optional per-document field mirror.【F:src/structured/structuredDdb.ts†L78-L82】
 
 ### Relational table
+
 - **RelationEdges** (`edgeKey`, `otherId`, `metadata`): `edgeKey=<entityId>\u0000<relation>\u0000<direction>` where direction is `in` or `out`; every edge is stored twice (forward/backward).【F:src/rel/relationalDdb.ts†L1-L62】
 
 ## Configuration and Limits
@@ -77,8 +80,8 @@ Vitest runs the unit suite covering tokenization, full-text modes, structured fi
 Configure the handler once at cold start:
 
 ```ts
-import { handler, setHandlerDependencies } from './src/handler.js';
-import { createDynamoBackend } from './your-backend-factory';
+import { handler, setHandlerDependencies } from "./src/handler.js";
+import { createDynamoBackend } from "./your-backend-factory";
 
 setHandlerDependencies({ backend: createDynamoBackend() });
 ```
@@ -87,19 +90,43 @@ Example payloads (invoke via Lambda, Functions, or tests):
 
 - Index a document
   ```json
-  { "action": "indexDocument", "document": { "id": "doc-1", "title": "Hello world", "fields": { "category": "news" } }, "primaryField": "id", "indexField": "title" }
+  {
+    "action": "indexDocument",
+    "document": {
+      "id": "doc-1",
+      "title": "Hello world",
+      "fields": { "category": "news" }
+    },
+    "primaryField": "id",
+    "indexField": "title"
+  }
   ```
 - Remove a document
   ```json
-  { "action": "removeDocument", "document": { "id": "doc-1", "title": "Hello world" }, "primaryField": "id", "indexField": "title" }
+  {
+    "action": "removeDocument",
+    "document": { "id": "doc-1", "title": "Hello world" },
+    "primaryField": "id",
+    "indexField": "title"
+  }
   ```
 - Lossy full-text search (recall-oriented)
   ```json
-  { "action": "searchLossy", "query": "hello world", "indexField": "title", "limit": 10 }
+  {
+    "action": "searchLossy",
+    "query": "hello world",
+    "indexField": "title",
+    "limit": 10
+  }
   ```
 - Exact/phrase search (position aware)
   ```json
-  { "action": "searchExact", "query": "\"hello world\"", "indexField": "title", "limit": 10 }
+  {
+    "action": "searchExact",
+    "query": "\"hello world\"",
+    "indexField": "title",
+    "limit": 10
+  }
   ```
 
 The handler logs a compact trace with elapsed time and resolved limits for observability.【F:src/handler.ts†L80-L123】
@@ -107,57 +134,84 @@ The handler logs a compact trace with elapsed time and resolved limits for obser
 ## Indexing and Query Recipes
 
 ### Indexing
+
 Use `indexDocument` to tokenize text and populate lossy/exact postings. Documents can use string IDs (numeric IDs are stringified), and callers choose which field to index via `indexField`.
 
 ```ts
 await indexDocument({
-  document: { id: 'doc-42', body: 'Quick brown fox' },
-  primaryField: 'id',
-  indexField: 'body',
+  document: { id: "doc-42", body: "Quick brown fox" },
+  primaryField: "id",
+  indexField: "body",
   backend,
 });
 ```
 
 ### Lossy full-text search
+
 Recall-focused matching that treats any token match as a candidate. Supports pagination via cursors.
 
 ```ts
-const result = await searchLossy({ query: 'quick fox', indexField: 'body', limit: 5, backend });
+const result = await searchLossy({
+  query: "quick fox",
+  indexField: "body",
+  limit: 5,
+  backend,
+});
 // result.docIds => [42, ...]; result.nextCursor for subsequent pages
 ```
 
 ### Exact full-text search
+
 Position-aware matching for phrases. Pass quoted phrases in the query; candidates are verified using stored token positions.
 
 ```ts
-const result = await searchExact({ query: '"quick brown"', indexField: 'body', limit: 5, backend });
+const result = await searchExact({
+  query: '"quick brown"',
+  indexField: "body",
+  limit: 5,
+  backend,
+});
 ```
 
 ### Structured queries
+
 Compose boolean trees with term and range clauses. Example: find docs in category "news" with a score >= 0.8 or tagged with "breaking".
 
 ```ts
 const where = {
   or: [
-    { and: [
-      { type: 'term', field: 'category', mode: 'eq', value: 'news' },
-      { type: 'gte', field: 'score', value: 0.8 },
-    ]},
-    { type: 'term', field: 'tags', mode: 'contains', value: 'breaking' },
+    {
+      and: [
+        { type: "term", field: "category", mode: "eq", value: "news" },
+        { type: "gte", field: "score", value: 0.8 },
+      ],
+    },
+    { type: "term", field: "tags", mode: "contains", value: "breaking" },
   ],
 };
-const page = await searchStructured({ where, backendStructured, options: { limit: 20 } });
+const page = await searchStructured({
+  where,
+  backendStructured,
+  options: { limit: 20 },
+});
 ```
 
 ### Relation queries
+
 Edges are stored in both directions. Fetch outgoing or incoming edges with cursors for pagination.
 
 ```ts
 // Add an edge
-await relationalBackend.putEdge({ key: { from: 'user#1', to: 'post#9', relation: 'LIKES' }, metadata: { at: Date.now() } });
+await relationalBackend.putEdge({
+  key: { from: "user#1", to: "post#9", relation: "LIKES" },
+  metadata: { at: Date.now() },
+});
 
 // Page outgoing edges
-const outgoing = await relationalBackend.getOutgoing('user#1', 'LIKES', { limit: 25, cursor });
+const outgoing = await relationalBackend.getOutgoing("user#1", "LIKES", {
+  limit: 25,
+  cursor,
+});
 // outgoing.edges => [{ key: { from, to, relation }, metadata }]; outgoing.nextCursor for the next page
 ```
 

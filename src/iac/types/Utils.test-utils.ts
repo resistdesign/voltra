@@ -1,6 +1,4 @@
-import {
-  getNamespaceStructure,
-} from "./Utils";
+import { getNamespaceStructure } from "./Utils";
 import {
   renderCommentBlock,
   renderPrimitiveType,
@@ -53,10 +51,7 @@ export const runIaCTypesUtilsScenario = () => {
     includes: ["export type Existing = string;"],
   };
 
-  const structure = getNamespaceStructure(
-    specification,
-    baseStructure,
-  );
+  const structure = getNamespaceStructure(specification, baseStructure);
   const bucketNamespace =
     structure.namespaces?.AWS?.namespaces?.S3?.namespaces?.Bucket;
 
@@ -64,9 +59,7 @@ export const runIaCTypesUtilsScenario = () => {
     includes: structure.includes,
     bucketResourceType:
       structure.namespaces?.AWS?.namespaces?.S3?.resourceTypes?.Bucket?.Type,
-    propertyTypeKeys: Object.keys(
-      bucketNamespace?.propertyTypes || {},
-    ).sort(),
+    propertyTypeKeys: Object.keys(bucketNamespace?.propertyTypes || {}).sort(),
     corsRulesType:
       bucketNamespace?.propertyTypes?.CorsConfiguration?.Properties?.CorsRules
         ?.Type,
@@ -75,33 +68,21 @@ export const runIaCTypesUtilsScenario = () => {
 
 export const runIaCTypesRenderersScenario = () => {
   const primitiveType = renderPrimitiveType("String");
-  const listPrimitiveType = renderPropertyType(
-    ["AWS", "S3", "Bucket"],
-    {
-      Type: "List",
-      PrimitiveItemType: "String",
-    },
-  );
-  const listItemType = renderPropertyType(
-    ["AWS", "S3", "Bucket"],
-    {
-      Type: "List",
-      ItemType: "CorsRule",
-    },
-  );
-  const tagItemType = renderPropertyType(
-    ["AWS", "S3", "Bucket"],
-    {
-      Type: "List",
-      ItemType: "Tag",
-    },
-  );
-  const propertyName = renderPropertyName(
-    "x-amz-meta.custom",
-    {
-      Required: false,
-    },
-  );
+  const listPrimitiveType = renderPropertyType(["AWS", "S3", "Bucket"], {
+    Type: "List",
+    PrimitiveItemType: "String",
+  });
+  const listItemType = renderPropertyType(["AWS", "S3", "Bucket"], {
+    Type: "List",
+    ItemType: "CorsRule",
+  });
+  const tagItemType = renderPropertyType(["AWS", "S3", "Bucket"], {
+    Type: "List",
+    ItemType: "Tag",
+  });
+  const propertyName = renderPropertyName("x-amz-meta.custom", {
+    Required: false,
+  });
   const commentBlock = renderCommentBlock({
     UpdateType: "Immutable",
     DuplicatesAllowed: true,
@@ -119,24 +100,20 @@ export const runIaCTypesRenderersScenario = () => {
       },
     },
   );
-  const resourceType = renderTypeFromResourceType(
-    ["AWS", "S3"],
-    "Bucket",
-    {
-      Type: "AWS::S3::Bucket",
-      Properties: {
-        BucketName: {
-          PrimitiveType: "String",
-          Required: false,
-        },
-      },
-      Attributes: {
-        Arn: {
-          PrimitiveType: "String",
-        },
+  const resourceType = renderTypeFromResourceType(["AWS", "S3"], "Bucket", {
+    Type: "AWS::S3::Bucket",
+    Properties: {
+      BucketName: {
+        PrimitiveType: "String",
+        Required: false,
       },
     },
-  );
+    Attributes: {
+      Arn: {
+        PrimitiveType: "String",
+      },
+    },
+  });
 
   return {
     primitiveType,

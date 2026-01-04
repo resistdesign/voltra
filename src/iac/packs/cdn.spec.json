@@ -16,9 +16,7 @@
         "viewerCertificateArn": "arn:aws:acm:us-east-1:123:cert/1",
         "defaultRootObject": "index.html",
         "route53HostedZoneId": "HZ123",
-        "route53DependsOn": [
-          "SiteCDN"
-        ]
+        "route53DependsOn": ["SiteCDN"]
       }
     }
   ]

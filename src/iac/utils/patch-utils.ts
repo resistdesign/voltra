@@ -131,9 +131,7 @@ export const mergeValues = (
       } else if (mergeStrategy === "accumulate-unique") {
         mergedValue = [
           ...existingValue,
-          ...newValue.filter(
-            (item: any) => existingValue.indexOf(item) === -1,
-          ),
+          ...newValue.filter((item: any) => existingValue.indexOf(item) === -1),
         ];
       } else if (mergeStrategy === "accumulate-unique-by") {
         const existingItemMap: Record<string, any> = {};

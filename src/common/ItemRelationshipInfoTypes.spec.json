@@ -12,9 +12,7 @@
           "fromTypePrimaryFieldValue",
           "toTypePrimaryFieldValue"
         ],
-        "identifyingKeys": [
-          "id"
-        ],
+        "identifyingKeys": ["id"],
         "baseInfo": {
           "fromTypeName": "Book",
           "fromTypeFieldName": "author",

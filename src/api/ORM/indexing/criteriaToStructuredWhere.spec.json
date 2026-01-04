@@ -47,10 +47,7 @@
             {
               "fieldName": "category",
               "operator": "IN",
-              "valueOptions": [
-                "a",
-                "b"
-              ]
+              "valueOptions": ["a", "b"]
             }
           ]
         }

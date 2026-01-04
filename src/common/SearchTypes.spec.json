@@ -60,10 +60,7 @@
           }
         },
         "operators": {
-          "logical": [
-            "AND",
-            "OR"
-          ],
+          "logical": ["AND", "OR"],
           "comparison": [
             "EQUALS",
             "NOT_EQUALS",

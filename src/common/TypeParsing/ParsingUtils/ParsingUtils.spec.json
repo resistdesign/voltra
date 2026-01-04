@@ -13,13 +13,7 @@
             "nested": 5
           }
         },
-        "typeInfoFieldKeys": [
-          "id",
-          "title",
-          "rating",
-          "tags",
-          "author"
-        ],
+        "typeInfoFieldKeys": ["id", "title", "rating", "tags", "author"],
         "titleFieldSummary": {
           "readonly": true,
           "optional": true,
@@ -33,53 +27,23 @@
         "ratingDetails": {
           "type": "number",
           "array": false,
-          "options": [
-            1,
-            2,
-            3
-          ]
+          "options": [1, 2, 3]
         },
         "ratingCheck": {
           "isArray": false,
           "typeKeyword": "number",
-          "options": [
-            1,
-            2,
-            3
-          ]
+          "options": [1, 2, 3]
         },
         "literalValues": {
-          "values": [
-            1,
-            2,
-            3
-          ],
+          "values": [1, 2, 3],
           "type": "number"
         },
-        "pickedValues": [
-          "id",
-          "rating"
-        ],
+        "pickedValues": ["id", "rating"],
         "unionFieldSets": [
-          [
-            "id",
-            "title",
-            "rating",
-            "tags",
-            "author"
-          ],
-          [
-            "name"
-          ]
+          ["id", "title", "rating", "tags", "author"],
+          ["name"]
         ],
-        "unionFieldKeys": [
-          "id",
-          "title",
-          "rating",
-          "tags",
-          "author",
-          "name"
-        ],
+        "unionFieldKeys": ["id", "title", "rating", "tags", "author", "name"],
         "flagKeyword": "boolean",
         "primaryField": "id",
         "primaryFieldError": "READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED"

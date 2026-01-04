@@ -5,10 +5,15 @@
  * optional document mirrors, and token stats to support fast search with
  * cursor-based paging.
  */
-import {tokenize, tokenizeLossyTrigrams} from "../tokenize.js";
-import type {DocId, DocTokenKey, DocumentRecord, TokenStats} from '../types.js';
-import type {SearchTrace} from '../trace.js';
-import {normalizeDocId} from '../docId.js';
+import { tokenize, tokenizeLossyTrigrams } from "../tokenize.js";
+import type {
+  DocId,
+  DocTokenKey,
+  DocumentRecord,
+  TokenStats,
+} from "../types.js";
+import type { SearchTrace } from "../trace.js";
+import { normalizeDocId } from "../docId.js";
 import {
   docTokenPositionsSchema,
   docTokensSchema,
@@ -22,7 +27,7 @@ import {
   fullTextKeyPrefixes,
   fullTextTokenStatsSchema,
   lossyPostingsSchema,
-} from './schema.js';
+} from "./schema.js";
 
 type AttributeMap = Record<string, unknown>;
 
@@ -251,10 +256,13 @@ function buildPositionMap(tokens: string[]): Map<string, number[]> {
   return positions;
 }
 
-function resolveIndexText(document: DocumentRecord, indexField: string): string {
+function resolveIndexText(
+  document: DocumentRecord,
+  indexField: string,
+): string {
   const value = document[indexField];
   if (value === null || value === undefined) {
-    return '';
+    return "";
   }
 
   return String(value);
@@ -290,13 +298,18 @@ function chunkArray<T>(items: T[], size: number): T[][] {
   return chunks;
 }
 
-function buildRequestItems(chunk: TableWrite[]): Record<string, WriteRequest[]> {
-  return chunk.reduce<Record<string, WriteRequest[]>>((accumulator, {tableName, request}) => {
-    const tableRequests = accumulator[tableName] ?? [];
-    tableRequests.push(request);
-    accumulator[tableName] = tableRequests;
-    return accumulator;
-  }, {});
+function buildRequestItems(
+  chunk: TableWrite[],
+): Record<string, WriteRequest[]> {
+  return chunk.reduce<Record<string, WriteRequest[]>>(
+    (accumulator, { tableName, request }) => {
+      const tableRequests = accumulator[tableName] ?? [];
+      tableRequests.push(request);
+      accumulator[tableName] = tableRequests;
+      return accumulator;
+    },
+    {},
+  );
 }
 
 async function batchWriteWithRetry(
@@ -306,13 +319,13 @@ async function batchWriteWithRetry(
   let unprocessed: Record<string, WriteRequest[]> | undefined = requestItems;
 
   while (unprocessed && Object.keys(unprocessed).length > 0) {
-    const response = await client.batchWriteItem({RequestItems: unprocessed});
+    const response = await client.batchWriteItem({ RequestItems: unprocessed });
     unprocessed = response.UnprocessedItems;
   }
 }
 
 function decodeDocKey(value: unknown): DocId | undefined {
-  if (typeof value !== 'string' || !value.startsWith(fullTextKeyPrefixes.doc)) {
+  if (typeof value !== "string" || !value.startsWith(fullTextKeyPrefixes.doc)) {
     return undefined;
   }
 
@@ -340,13 +353,18 @@ export class FullTextDdbWriter {
    */
   constructor(config: FullTextDdbWriterConfig) {
     this.client = config.client;
-    this.lossyTableName = config.lossyTableName ?? lossyPostingsSchema.tableName;
-    this.exactTableName = config.exactTableName ?? exactPostingsSchema.tableName;
-    this.mirrorTableName = config.mirrorTableName ?? fullTextDocMirrorSchema.tableName;
-    this.docTokensTableName = config.docTokensTableName ?? docTokensSchema.tableName;
+    this.lossyTableName =
+      config.lossyTableName ?? lossyPostingsSchema.tableName;
+    this.exactTableName =
+      config.exactTableName ?? exactPostingsSchema.tableName;
+    this.mirrorTableName =
+      config.mirrorTableName ?? fullTextDocMirrorSchema.tableName;
+    this.docTokensTableName =
+      config.docTokensTableName ?? docTokensSchema.tableName;
     this.docTokenPositionsTableName =
       config.docTokenPositionsTableName ?? docTokenPositionsSchema.tableName;
-    this.tokenStatsTableName = config.tokenStatsTableName ?? fullTextTokenStatsSchema.tableName;
+    this.tokenStatsTableName =
+      config.tokenStatsTableName ?? fullTextTokenStatsSchema.tableName;
   }
 
   /**
@@ -368,12 +386,16 @@ export class FullTextDdbWriter {
     const response = await this.client.getItem({
       TableName: this.tokenStatsTableName,
       Key: {
-        [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(indexField, token),
+        [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(
+          indexField,
+          token,
+        ),
       },
     });
 
-    const rawDf = response.Item?.[fullTextTokenStatsSchema.documentFrequencyAttribute];
-    const currentDf = typeof rawDf === 'number' ? rawDf : 0;
+    const rawDf =
+      response.Item?.[fullTextTokenStatsSchema.documentFrequencyAttribute];
+    const currentDf = typeof rawDf === "number" ? rawDf : 0;
     const nextDf = currentDf + delta;
 
     if (nextDf <= 0) {
@@ -382,7 +404,10 @@ export class FullTextDdbWriter {
         request: {
           DeleteRequest: {
             Key: {
-              [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -394,7 +419,10 @@ export class FullTextDdbWriter {
       request: {
         PutRequest: {
           Item: {
-            [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(indexField, token),
+            [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(
+              indexField,
+              token,
+            ),
             [fullTextTokenStatsSchema.documentFrequencyAttribute]: nextDf,
           },
         },
@@ -402,16 +430,22 @@ export class FullTextDdbWriter {
     };
   }
 
-  private async loadMirrorContent(docId: DocId, indexField: string): Promise<string | undefined> {
+  private async loadMirrorContent(
+    docId: DocId,
+    indexField: string,
+  ): Promise<string | undefined> {
     const response = await this.client.getItem({
       TableName: this.mirrorTableName,
       Key: {
-        [fullTextDocMirrorSchema.partitionKey]: encodeDocMirrorKey(indexField, docId),
+        [fullTextDocMirrorSchema.partitionKey]: encodeDocMirrorKey(
+          indexField,
+          docId,
+        ),
       },
     });
 
     const raw = response.Item?.[fullTextDocMirrorSchema.contentAttribute];
-    return typeof raw === 'string' ? raw : undefined;
+    return typeof raw === "string" ? raw : undefined;
   }
 
   /**
@@ -428,10 +462,12 @@ export class FullTextDdbWriter {
   ): Promise<void> {
     const docId = normalizeDocId(document[primaryField], primaryField);
     const text = resolveIndexText(document, indexField);
-    const {tokens: lossyTokens} = tokenizeLossyTrigrams(text);
-    const {normalized, tokens} = tokenize(text);
+    const { tokens: lossyTokens } = tokenizeLossyTrigrams(text);
+    const { normalized, tokens } = tokenize(text);
     const previousContent = await this.loadMirrorContent(docId, indexField);
-    const previousTokens = previousContent ? tokenize(previousContent).tokens : [];
+    const previousTokens = previousContent
+      ? tokenize(previousContent).tokens
+      : [];
     const previousLossyTokens = previousContent
       ? tokenizeLossyTrigrams(previousContent).tokens
       : [];
@@ -479,8 +515,12 @@ export class FullTextDdbWriter {
     const docKey = encodeDocKey(docId);
 
     const statWrites = await Promise.all([
-      ...[...removedLossyTokens].map((token) => this.buildTokenStatsWrite(token, indexField, -1)),
-      ...[...addedLossyTokens].map((token) => this.buildTokenStatsWrite(token, indexField, 1)),
+      ...[...removedLossyTokens].map((token) =>
+        this.buildTokenStatsWrite(token, indexField, -1),
+      ),
+      ...[...addedLossyTokens].map((token) =>
+        this.buildTokenStatsWrite(token, indexField, 1),
+      ),
     ]);
 
     for (const token of removedLossyTokens) {
@@ -489,7 +529,10 @@ export class FullTextDdbWriter {
         request: {
           DeleteRequest: {
             Key: {
-              [lossyPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [lossyPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [lossyPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
             },
           },
@@ -501,7 +544,10 @@ export class FullTextDdbWriter {
           DeleteRequest: {
             Key: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -514,7 +560,10 @@ export class FullTextDdbWriter {
         request: {
           PutRequest: {
             Item: {
-              [lossyPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [lossyPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [lossyPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
             },
           },
@@ -526,7 +575,10 @@ export class FullTextDdbWriter {
           PutRequest: {
             Item: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -539,7 +591,10 @@ export class FullTextDdbWriter {
         request: {
           DeleteRequest: {
             Key: {
-              [exactPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [exactPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [exactPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
             },
           },
@@ -551,7 +606,10 @@ export class FullTextDdbWriter {
           DeleteRequest: {
             Key: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -562,7 +620,10 @@ export class FullTextDdbWriter {
           DeleteRequest: {
             Key: {
               [docTokenPositionsSchema.partitionKey]: docKey,
-              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -585,7 +646,10 @@ export class FullTextDdbWriter {
         request: {
           PutRequest: {
             Item: {
-              [exactPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [exactPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [exactPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
               [exactPostingsSchema.positionsAttribute]: [...positions],
             },
@@ -598,7 +662,10 @@ export class FullTextDdbWriter {
           PutRequest: {
             Item: {
               [docTokenPositionsSchema.partitionKey]: docKey,
-              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
               [docTokenPositionsSchema.positionsAttribute]: [...positions],
             },
           },
@@ -611,7 +678,10 @@ export class FullTextDdbWriter {
       request: {
         PutRequest: {
           Item: {
-            [fullTextDocMirrorSchema.partitionKey]: encodeDocMirrorKey(indexField, docId),
+            [fullTextDocMirrorSchema.partitionKey]: encodeDocMirrorKey(
+              indexField,
+              docId,
+            ),
             [fullTextDocMirrorSchema.contentAttribute]: normalized,
           },
         },
@@ -712,7 +782,11 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
    * @param docId Document id containing the token.
    * @returns Promise resolved once posting is added.
    */
-  async addLossyPosting(token: string, indexField: string, docId: DocId): Promise<void> {
+  async addLossyPosting(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<void> {
     const docKey = encodeDocKey(docId);
     const writes: TableWrite[] = [
       {
@@ -720,7 +794,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
         request: {
           PutRequest: {
             Item: {
-              [lossyPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [lossyPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [lossyPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
             },
           },
@@ -732,7 +809,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
           PutRequest: {
             Item: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -754,7 +834,11 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
    * @param docId Document id containing the token.
    * @returns Promise resolved once posting is removed.
    */
-  async removeLossyPosting(token: string, indexField: string, docId: DocId): Promise<void> {
+  async removeLossyPosting(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<void> {
     const docKey = encodeDocKey(docId);
     const writes: TableWrite[] = [
       {
@@ -762,7 +846,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
         request: {
           DeleteRequest: {
             Key: {
-              [lossyPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [lossyPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [lossyPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
             },
           },
@@ -774,7 +861,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
           DeleteRequest: {
             Key: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -800,7 +890,9 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
     let exclusiveStartDocId: DocId | undefined;
 
     while (true) {
-      const page = await this.queryLossyPostingsPage(token, indexField, {exclusiveStartDocId});
+      const page = await this.queryLossyPostingsPage(token, indexField, {
+        exclusiveStartDocId,
+      });
       docIds.push(...page.docIds);
 
       if (page.lastEvaluatedDocId === undefined) {
@@ -828,32 +920,37 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
     this.recordQuery();
     const response = await this.queryClient.query({
       TableName: this.lossyTableName,
-      KeyConditionExpression: '#pk = :pk',
+      KeyConditionExpression: "#pk = :pk",
       ExpressionAttributeNames: {
-        '#pk': lossyPostingsSchema.partitionKey,
+        "#pk": lossyPostingsSchema.partitionKey,
       },
       ExpressionAttributeValues: {
-        ':pk': encodeTokenKey(indexField, token),
+        ":pk": encodeTokenKey(indexField, token),
       },
       ExclusiveStartKey: options.exclusiveStartDocId
         ? {
-          [lossyPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
-          [lossyPostingsSchema.sortKey]: encodeDocKey(options.exclusiveStartDocId),
-        }
+            [lossyPostingsSchema.partitionKey]: encodeTokenKey(
+              indexField,
+              token,
+            ),
+            [lossyPostingsSchema.sortKey]: encodeDocKey(
+              options.exclusiveStartDocId,
+            ),
+          }
         : undefined,
       Limit: options.limit,
     });
 
     const docIds =
-      response.Items?.map((item) => decodeDocKey(item[lossyPostingsSchema.sortKey])).filter(
-        (docId): docId is DocId => docId !== undefined,
-      ) ?? [];
+      response.Items?.map((item) =>
+        decodeDocKey(item[lossyPostingsSchema.sortKey]),
+      ).filter((docId): docId is DocId => docId !== undefined) ?? [];
 
     const lastEvaluatedDocId = decodeDocKey(
       response.LastEvaluatedKey?.[lossyPostingsSchema.sortKey],
     );
 
-    return {docIds, lastEvaluatedDocId};
+    return { docIds, lastEvaluatedDocId };
   }
 
   /**
@@ -877,7 +974,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
         request: {
           PutRequest: {
             Item: {
-              [exactPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [exactPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [exactPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
               [exactPostingsSchema.positionsAttribute]: [...positions],
             },
@@ -890,7 +990,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
           PutRequest: {
             Item: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -901,7 +1004,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
           PutRequest: {
             Item: {
               [docTokenPositionsSchema.partitionKey]: docKey,
-              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
               [docTokenPositionsSchema.positionsAttribute]: [...positions],
             },
           },
@@ -919,7 +1025,11 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
    * @param docId Document id containing the token.
    * @returns Promise resolved once positions are removed.
    */
-  async removeExactPositions(token: string, indexField: string, docId: DocId): Promise<void> {
+  async removeExactPositions(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<void> {
     const docKey = encodeDocKey(docId);
     const writes: TableWrite[] = [
       {
@@ -927,7 +1037,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
         request: {
           DeleteRequest: {
             Key: {
-              [exactPostingsSchema.partitionKey]: encodeTokenKey(indexField, token),
+              [exactPostingsSchema.partitionKey]: encodeTokenKey(
+                indexField,
+                token,
+              ),
               [exactPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
             },
           },
@@ -939,7 +1052,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
           DeleteRequest: {
             Key: {
               [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -950,7 +1066,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
           DeleteRequest: {
             Key: {
               [docTokenPositionsSchema.partitionKey]: docKey,
-              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+              [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
             },
           },
         },
@@ -977,7 +1096,10 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       TableName: this.docTokenPositionsTableName,
       Key: {
         [docTokenPositionsSchema.partitionKey]: encodeDocKey(docId),
-        [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+        [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+          indexField,
+          token,
+        ),
       },
     });
 
@@ -986,7 +1108,9 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       return undefined;
     }
 
-    const positions = raw.filter((value): value is number => typeof value === 'number');
+    const positions = raw.filter(
+      (value): value is number => typeof value === "number",
+    );
     return positions.length ? positions : undefined;
   }
 
@@ -995,14 +1119,19 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
    * @param keys Token keys to load positions for.
    * @returns Positions arrays aligned with the input keys.
    */
-  async batchLoadExactPositions(keys: DocTokenKey[]): Promise<(number[] | undefined)[]> {
+  async batchLoadExactPositions(
+    keys: DocTokenKey[],
+  ): Promise<(number[] | undefined)[]> {
     const results: (number[] | undefined)[] = [];
     const keyChunks = chunkArray(keys, 100);
 
     for (const chunk of keyChunks) {
       const requestKeys = chunk.map((key) => ({
         [docTokenPositionsSchema.partitionKey]: encodeDocKey(key.docId),
-        [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(key.indexField, key.token),
+        [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+          key.indexField,
+          key.token,
+        ),
       }));
 
       const foundPositions = new Map<string, number[] | undefined>();
@@ -1015,28 +1144,36 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
 
       while (unprocessed && Object.keys(unprocessed).length > 0) {
         this.recordBatchGet();
-        const response = await this.client.batchGetItem({RequestItems: unprocessed});
-        const tableResponses = response.Responses?.[this.docTokenPositionsTableName] ?? [];
+        const response = await this.client.batchGetItem({
+          RequestItems: unprocessed,
+        });
+        const tableResponses =
+          response.Responses?.[this.docTokenPositionsTableName] ?? [];
 
         for (const item of tableResponses) {
           const partitionKey = item[docTokenPositionsSchema.partitionKey];
           const sortKey = item[docTokenPositionsSchema.sortKey];
-          if (typeof partitionKey !== 'string' || typeof sortKey !== 'string') {
+          if (typeof partitionKey !== "string" || typeof sortKey !== "string") {
             continue;
           }
 
           const rawPositions = item[docTokenPositionsSchema.positionsAttribute];
           const positions = Array.isArray(rawPositions)
-            ? rawPositions.filter((value): value is number => typeof value === 'number')
+            ? rawPositions.filter(
+                (value): value is number => typeof value === "number",
+              )
             : undefined;
           const key = buildDocTokenItemKey(partitionKey, sortKey);
-          foundPositions.set(key, positions && positions.length ? positions : undefined);
+          foundPositions.set(
+            key,
+            positions && positions.length ? positions : undefined,
+          );
         }
 
         unprocessed = response.UnprocessedKeys;
       }
 
-      chunk.forEach(({docId, indexField, token}) => {
+      chunk.forEach(({ docId, indexField, token }) => {
         const key = buildDocTokenItemKey(
           encodeDocKey(docId),
           encodeDocTokenSortKey(indexField, token),
@@ -1055,7 +1192,11 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
    * @param token Token value to check.
    * @returns True when the document contains the token.
    */
-  async hasDocToken(docId: DocId, indexField: string, token: string): Promise<boolean> {
+  async hasDocToken(
+    docId: DocId,
+    indexField: string,
+    token: string,
+  ): Promise<boolean> {
     this.recordItemRead();
     const response = await this.client.getItem({
       TableName: this.docTokensTableName,
@@ -1080,23 +1221,29 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
     for (const chunk of keyChunks) {
       const requestKeys = chunk.map((key) => ({
         [docTokensSchema.partitionKey]: encodeDocKey(key.docId),
-        [docTokensSchema.sortKey]: encodeDocTokenSortKey(key.indexField, key.token),
+        [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+          key.indexField,
+          key.token,
+        ),
       }));
 
       const foundKeys = new Set<string>();
       let unprocessed: Record<string, KeysAndAttributes> | undefined = {
-        [this.docTokensTableName]: {Keys: requestKeys},
+        [this.docTokensTableName]: { Keys: requestKeys },
       };
 
       while (unprocessed && Object.keys(unprocessed).length > 0) {
         this.recordBatchGet();
-        const response = await this.client.batchGetItem({RequestItems: unprocessed});
-        const tableResponses = response.Responses?.[this.docTokensTableName] ?? [];
+        const response = await this.client.batchGetItem({
+          RequestItems: unprocessed,
+        });
+        const tableResponses =
+          response.Responses?.[this.docTokensTableName] ?? [];
 
         for (const item of tableResponses) {
           const partitionKey = item[docTokensSchema.partitionKey];
           const sortKey = item[docTokensSchema.sortKey];
-          if (typeof partitionKey === 'string' && typeof sortKey === 'string') {
+          if (typeof partitionKey === "string" && typeof sortKey === "string") {
             foundKeys.add(buildDocTokenItemKey(partitionKey, sortKey));
           }
         }
@@ -1104,7 +1251,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
         unprocessed = response.UnprocessedKeys;
       }
 
-      chunk.forEach(({docId, indexField, token}) => {
+      chunk.forEach(({ docId, indexField, token }) => {
         const key = buildDocTokenItemKey(
           encodeDocKey(docId),
           encodeDocTokenSortKey(indexField, token),
@@ -1122,20 +1269,27 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
    * @param indexField Field name the token was indexed under.
    * @returns Token stats or undefined when missing.
    */
-  async loadTokenStats(token: string, indexField: string): Promise<TokenStats | undefined> {
+  async loadTokenStats(
+    token: string,
+    indexField: string,
+  ): Promise<TokenStats | undefined> {
     this.recordItemRead();
     const response = await this.client.getItem({
       TableName: this.tokenStatsTableName,
       Key: {
-        [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(indexField, token),
+        [fullTextTokenStatsSchema.partitionKey]: encodeTokenKey(
+          indexField,
+          token,
+        ),
       },
     });
 
-    const rawDf = response.Item?.[fullTextTokenStatsSchema.documentFrequencyAttribute];
-    if (typeof rawDf !== 'number') {
+    const rawDf =
+      response.Item?.[fullTextTokenStatsSchema.documentFrequencyAttribute];
+    if (typeof rawDf !== "number") {
       return undefined;
     }
 
-    return {df: rawDf, version: 1};
+    return { df: rawDf, version: 1 };
   }
 }

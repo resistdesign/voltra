@@ -1,5 +1,8 @@
 import { InMemoryItemRelationshipDBDriver } from "./InMemoryItemRelationshipDBDriver";
-import { ComparisonOperators, LogicalOperators } from "../../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../../common/SearchTypes";
 import type {
   BaseItemRelationshipInfo,
   ItemRelationshipInfo,
@@ -85,7 +88,9 @@ export const runInMemoryRelationshipDriverScenario = async () => {
     cursor: page1.cursor,
   });
 
-  await driver.updateItem(id1, { toTypePrimaryFieldValue: "post-1b" } as Partial<ItemRelationshipInfo>);
+  await driver.updateItem(id1, {
+    toTypePrimaryFieldValue: "post-1b",
+  } as Partial<ItemRelationshipInfo>);
   const afterUpdate = await driver.readItem(id1);
 
   const deleteResult = await driver.deleteItem(id2);

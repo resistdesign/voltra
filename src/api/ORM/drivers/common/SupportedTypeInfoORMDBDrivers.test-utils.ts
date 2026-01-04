@@ -1,7 +1,4 @@
-import {
-  DATA_ITEM_DB_DRIVER_ERRORS,
-  type DataItemDBDriver,
-} from "./Types";
+import { DATA_ITEM_DB_DRIVER_ERRORS, type DataItemDBDriver } from "./Types";
 import {
   SupportedTypeInfoORMDBDriverNames,
   SUPPORTED_TYPE_INFO_ORM_DB_DRIVERS,
@@ -29,9 +26,15 @@ export const runSupportedTypeInfoOrmDriversScenario = () => {
   const getEntry = (name: SupportedTypeInfoORMDBDriverNames) =>
     SUPPORTED_TYPE_INFO_ORM_DB_DRIVERS[name];
 
-  const dynamoEntry = getEntry(SupportedTypeInfoORMDBDriverNames.DYNAMO_DB_DATA_ITEM);
-  const inMemoryEntry = getEntry(SupportedTypeInfoORMDBDriverNames.IN_MEMORY_DATA_ITEM);
-  const inMemoryFileEntry = getEntry(SupportedTypeInfoORMDBDriverNames.IN_MEMORY_FILE_ITEM);
+  const dynamoEntry = getEntry(
+    SupportedTypeInfoORMDBDriverNames.DYNAMO_DB_DATA_ITEM,
+  );
+  const inMemoryEntry = getEntry(
+    SupportedTypeInfoORMDBDriverNames.IN_MEMORY_DATA_ITEM,
+  );
+  const inMemoryFileEntry = getEntry(
+    SupportedTypeInfoORMDBDriverNames.IN_MEMORY_FILE_ITEM,
+  );
   const s3Entry = getEntry(SupportedTypeInfoORMDBDriverNames.S3_FILE_ITEM);
 
   const dynamoDriver = dynamoEntry?.factory<TestItem, "id">({
@@ -59,7 +62,8 @@ export const runSupportedTypeInfoOrmDriversScenario = () => {
     entryTypeNames: {
       dynamo: dynamoEntry?.getDBSpecificConfigTypeInfo().entryTypeName,
       inMemory: inMemoryEntry?.getDBSpecificConfigTypeInfo().entryTypeName,
-      inMemoryFile: inMemoryFileEntry?.getDBSpecificConfigTypeInfo().entryTypeName,
+      inMemoryFile:
+        inMemoryFileEntry?.getDBSpecificConfigTypeInfo().entryTypeName,
       s3: s3Entry?.getDBSpecificConfigTypeInfo().entryTypeName,
     },
     dynamoDriverShape: dynamoDriver
