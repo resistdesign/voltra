@@ -74,3 +74,33 @@
     - Phase 3: Relation fields, validation wiring, permissions
     - Phase 4: Application-style forms, layout enhancements, docs
 
+- [x] Current Task: TypeInfo-Only Form Schema
+  - [x] Review form module usage and schema parsing entry points
+  - [x] Refactor schema helper to normalize into TypeInfo only
+  - [x] Remove FormMetadata/FieldMetadata exports from form types
+  - [x] Update schema tests to assert TypeInfo output
+  - [x] Verify tests/docs output remains clean
+
+- [x] Current Task: Remove Schema Parsing Layer
+  - [x] Confirm demo API returns TypeInfoMap from TypeParsing
+  - [x] Remove Schema module exports and tests from forms
+  - [x] Run tests or document follow-up checks
+
+- [x] Current Task: Controller-First Form Engine
+  - [x] Define form controller types for TypeInfo-driven fields
+  - [x] Expose a form controller hook from the engine
+  - [x] Update default AutoForm UI to render via controller
+  - [x] Add or update tests/fixtures if needed
+
+- Current Task: Refactor Consumers
+  - [x] Update demo form to render via controller + AutoFormView
+  - [x] Re-verify tests or doc build if needed
+
+- [x] Current Task: Document Controller Usage
+  - [x] Add controller-focused example to the demo app
+
+- Current Task: Relation Handling + Client Demo Placement
+  - [x] Add relation handler hooks for TypeInfo references
+  - [x] Defer sub-object handling in AutoField UI for relations
+  - [x] Move AdvancedDemo into client bundle
+  - [x] Re-verify tests or doc build if needed

@@ -1,7 +1,7 @@
 import { FC } from "react";
 import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
-import { AdvancedDemo } from "../pages/_components/AdvancedDemo";
+import { AdvancedDemo } from "./AdvancedDemo";
 
 const NavBar = styled.nav`
   & > ul {
