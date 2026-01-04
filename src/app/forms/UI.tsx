@@ -19,6 +19,7 @@ import type {
   CustomTypeActionPayload,
 } from "./types.js";
 import { useFormEngine } from "./Engine.js";
+import { normalizeFieldTags } from "./utils.js";
 import {
   ArrayContainer,
   ArrayItemWrapper,
@@ -89,14 +90,18 @@ export const AutoField: FC<AutoFieldProps> = ({
   disabled,
   onCustomTypeAction,
 }) => {
-  const label = field.tags?.label ?? fieldKey;
+  const tags = normalizeFieldTags(field.tags);
+  const label = tags?.label ?? fieldKey;
   const id = `field-${fieldKey}`;
   const isRequired = !field.optional;
   const { possibleValues } = field;
-  const allowCustom = field.tags?.allowCustomSelection;
-  const constraints = field.tags?.constraints;
-  const format = field.tags?.format;
-  const customType = field.tags?.customType;
+  const allowCustom = tags?.allowCustomSelection;
+  const constraints = tags?.constraints;
+  const format = tags?.format;
+  const customType = tags?.customType;
+
+  const parseNumberValue = (raw: string) =>
+    raw === "" ? null : Number(raw);
 
   // Filter out boolean and null values for select options
   const selectableValues = possibleValues?.filter(
@@ -384,7 +389,7 @@ export const AutoField: FC<AutoFieldProps> = ({
           id={id}
           type="number"
           value={(value as number) ?? ""}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) => onChange(parseNumberValue(e.target.value))}
           disabled={disabled}
           min={constraints?.min}
           max={constraints?.max}
@@ -416,7 +421,7 @@ export const AutoField: FC<AutoFieldProps> = ({
               onChange={(e) =>
                 onChange(
                   field.type === "number"
-                    ? Number(e.target.value)
+                    ? parseNumberValue(e.target.value)
                     : e.target.value,
                 )
               }
@@ -437,7 +442,13 @@ export const AutoField: FC<AutoFieldProps> = ({
           <Select
             id={id}
             value={(value as string | number) ?? ""}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) =>
+              onChange(
+                field.type === "number"
+                  ? parseNumberValue(e.target.value)
+                  : e.target.value,
+              )
+            }
             disabled={disabled}
           >
             <option value="">Select...</option>
