@@ -1,6 +1,7 @@
 import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { useFormEngine } from "./Engine";
+import { TypeOperation } from "../../common/TypeParsing/TypeInfo.js";
 
 export const runFormControllerScenario = () => {
   let snapshot: any = null;
@@ -9,6 +10,7 @@ export const runFormControllerScenario = () => {
     const controller = useFormEngine(
       { name: "Ada" },
       {
+        primaryField: "name",
         fields: {
           name: {
             type: "string",
@@ -23,18 +25,51 @@ export const runFormControllerScenario = () => {
             readonly: false,
             optional: true,
           },
+          email: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              constraints: {
+                defaultValue: "ada@example.com",
+              },
+            },
+          },
+          token: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              hidden: true,
+              deniedOperations: { UPDATE: true },
+            },
+          },
+          status: {
+            type: "string",
+            array: false,
+            readonly: true,
+            optional: true,
+          },
         },
       },
+      { operation: TypeOperation.UPDATE },
     );
 
     snapshot = {
       values: controller.values,
-      fields: controller.fields.map(({ key, label, required, value }) => ({
+      fields: controller.fields.map(
+        ({ key, label, required, value, disabled, hidden, primary }) => ({
         key,
         label,
         required,
         value: value ?? null,
-      })),
+        disabled,
+        hidden,
+        primary,
+      }),
+      ),
     };
 
     return null;

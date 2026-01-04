@@ -14,17 +14,27 @@ const DEFAULT_CODE = `
  */
 export type UserProfile = {
   /**
+   * @label User ID
+   * @primaryField
+   */
+  readonly id: string;
+
+  /**
    * @label Full Name
    */
   name: string;
 
   /**
    * @label Email Address
+   * @format email
    */
-  email: string;
+  email?: string;
 
   /**
    * @label Age (Years)
+   * @constraints.min 1
+   * @constraints.max 120
+   * @constraints.step 1
    */
   age: number;
 
@@ -46,8 +56,52 @@ export type UserProfile = {
   
   /**
    * @label Tags
+   * @constraints.defaultValue ["news","updates"]
    */
   tags: string[];
+
+  /**
+   * @label Profile Image
+   * @customType FileUpload
+   */
+  profileImage?: string;
+
+  /**
+   * @label Attachments
+   * @customType FileAttachment
+   */
+  attachments?: string[];
+
+  /**
+   * @label Department Record
+   */
+  departmentRecord?: Department;
+
+  /**
+   * @label Team
+   */
+  team?: Department[];
+
+  /**
+   * @hidden
+   */
+  internalNotes?: string;
+}
+
+/**
+ * @label Department
+ */
+export type Department = {
+  /**
+   * @label Department ID
+   * @primaryField
+   */
+  readonly id: string;
+
+  /**
+   * @label Name
+   */
+  name: string;
 }
 `;
 
@@ -114,20 +168,79 @@ export const AdvancedDemo = () => {
 
   const FormPreview = ({ typeInfo }: { typeInfo: TypeInfo }) => {
     const controller = useFormEngine({}, typeInfo);
+    const [lastAction, setLastAction] = useState<string | null>(null);
+
+    const handleRelationAction = ({
+      action,
+      fieldKey,
+    }: {
+      action: string;
+      fieldKey: string;
+    }) => {
+      setLastAction(`Relation ${action} on ${fieldKey}`);
+    };
+
+    const handleCustomTypeAction = ({
+      action,
+      fieldKey,
+      customType,
+    }: {
+      action: string;
+      fieldKey: string;
+      customType: string;
+    }) => {
+      setLastAction(`Custom ${customType} ${action} on ${fieldKey}`);
+    };
 
     return (
       <>
-        <AutoFormView controller={controller} onSubmit={() => {}} />
+        <AutoFormView
+          controller={controller}
+          onSubmit={() => {}}
+          onRelationAction={handleRelationAction}
+          onCustomTypeAction={handleCustomTypeAction}
+        />
         <JSONPreview>
           <b>Live Data JSON:</b>
           <pre>{JSON.stringify(controller.values, null, 2)}</pre>
         </JSONPreview>
+        {lastAction && <ActionPreview>Last action: {lastAction}</ActionPreview>}
         <ControllerExample>
           <b>Controller Usage (React):</b>
           <ControllerCode>{`const controller = useFormEngine(initialValues, typeInfo);
 
 return (
   <AutoFormView controller={controller} onSubmit={handleSubmit} />
+);`}</ControllerCode>
+        </ControllerExample>
+        <ControllerExample>
+          <b>Relation Handler (React):</b>
+          <ControllerCode>{`const handleRelationAction = ({ action, fieldKey }) => {
+  console.log(action, fieldKey);
+  // Use action to open a picker, create related items, etc.
+};
+
+return (
+  <AutoFormView
+    controller={controller}
+    onSubmit={handleSubmit}
+    onRelationAction={handleRelationAction}
+  />
+);`}</ControllerCode>
+        </ControllerExample>
+        <ControllerExample>
+          <b>Custom Type Handler (React):</b>
+          <ControllerCode>{`const handleCustomTypeAction = ({ action, fieldKey, customType }) => {
+  console.log(customType, action, fieldKey);
+  // Route to a custom editor or upload flow.
+};
+
+return (
+  <AutoFormView
+    controller={controller}
+    onSubmit={handleSubmit}
+    onCustomTypeAction={handleCustomTypeAction}
+  />
 );`}</ControllerCode>
         </ControllerExample>
       </>
@@ -305,6 +418,12 @@ const JSONPreview = styled.div`
 const ControllerExample = styled.div`
   border-top: 1px dashed var(--pico-muted-border-color, #eee);
   padding-top: 1rem;
+`;
+
+const ActionPreview = styled.div`
+  margin-top: 0.75rem;
+  color: var(--pico-muted-color, #666);
+  font-size: 0.85rem;
 `;
 
 const ControllerCode = styled.pre`

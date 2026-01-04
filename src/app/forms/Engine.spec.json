@@ -7,20 +7,54 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "values": {
-          "name": "Ada"
+          "name": "Ada",
+          "email": "ada@example.com"
         },
         "fields": [
           {
             "key": "name",
             "label": "Name",
             "required": true,
-            "value": "Ada"
+            "value": "Ada",
+            "disabled": true,
+            "hidden": false,
+            "primary": true
           },
           {
             "key": "age",
             "label": "age",
             "required": false,
-            "value": null
+            "value": null,
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "email",
+            "label": "email",
+            "required": false,
+            "value": "ada@example.com",
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "token",
+            "label": "token",
+            "required": false,
+            "value": null,
+            "disabled": true,
+            "hidden": true,
+            "primary": false
+          },
+          {
+            "key": "status",
+            "label": "status",
+            "required": false,
+            "value": null,
+            "disabled": true,
+            "hidden": false,
+            "primary": false
           }
         ]
       }
