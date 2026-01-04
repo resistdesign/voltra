@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
-import { AutoForm } from "../../../../../src/app/forms/ui";
-import { parseSchema } from "../../../../../src/app/forms/schema";
+import "ace-builds/src-noconflict/theme-twilight";
+import { AutoForm } from "../../../../../src/app/forms/UI";
+import { parseSchema } from "../../../../../src/app/forms/Schema";
 
 const DEFAULT_CODE = `
 /**
@@ -56,6 +57,20 @@ export const AdvancedDemo = () => {
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [editorTheme, setEditorTheme] = useState("github");
+
+    useEffect(() => {
+        // Check system preference
+        const matchDark = window.matchMedia("(prefers-color-scheme: dark)");
+        const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
+            setEditorTheme(e.matches ? "twilight" : "github");
+        };
+
+        updateTheme(matchDark); // Initial check
+
+        matchDark.addEventListener("change", updateTheme);
+        return () => matchDark.removeEventListener("change", updateTheme);
+    }, []);
 
     const fetchTypes = async () => {
         setLoading(true);
@@ -100,20 +115,20 @@ export const AdvancedDemo = () => {
         : null;
 
     return (
-        <div className="demo-grid">
-            <div className="pane">
-                <div className="pane-header">
+        <DemoGrid>
+            <Pane>
+                <PaneHeader>
                     <div>
                         TypeScript Interface <span style={{ fontSize: '0.8em', fontWeight: 'normal', color: '#666' }}>(Exported types only)</span>
                     </div>
-                    <button onClick={fetchTypes} disabled={loading}>
+                    <Button onClick={fetchTypes} disabled={loading}>
                         {loading ? "Parsing..." : "Update / Parse"}
-                    </button>
-                </div>
-                <div className="editor-container">
+                    </Button>
+                </PaneHeader>
+                <EditorContainer>
                     <AceEditor
                         mode="typescript"
-                        theme="github"
+                        theme={editorTheme}
                         value={code}
                         onChange={setCode}
                         name="ts-editor"
@@ -122,14 +137,14 @@ export const AdvancedDemo = () => {
                         height="100%"
                         fontSize={14}
                     />
-                </div>
-                {error && <div style={{ color: "red", fontSize: "0.9rem" }}>{error}</div>}
-            </div>
+                </EditorContainer>
+                {error && <ErrorMessage>{error}</ErrorMessage>}
+            </Pane>
 
-            <div className="pane">
-                <div className="pane-header">
+            <Pane>
+                <PaneHeader>
                     Generated Form
-                    <select
+                    <Select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
                         disabled={Object.keys(types).length === 0}
@@ -138,9 +153,9 @@ export const AdvancedDemo = () => {
                         {Object.keys(types).map(t => (
                             <option key={t} value={t}>{t}</option>
                         ))}
-                    </select>
-                </div>
-                <div className="preview-container">
+                    </Select>
+                </PaneHeader>
+                <PreviewContainer>
                     {currentSchema ? (
                         <AutoForm
                             schema={currentSchema}
@@ -148,16 +163,117 @@ export const AdvancedDemo = () => {
                             onValuesChange={setFormData}
                         />
                     ) : (
-                        <div style={{ padding: "2rem", textAlign: "center", color: "#888" }}>
+                        <EmptyState>
                             Parse code and select a type to generate form.
-                        </div>
+                        </EmptyState>
                     )}
-                </div>
-                <div style={{ marginTop: "auto", borderTop: "1px solid #eee", paddingTop: "1rem" }}>
+                </PreviewContainer>
+                <JSONPreview>
                     <b>Live Data JSON:</b>
                     <pre>{JSON.stringify(formData, null, 2)}</pre>
-                </div>
-            </div>
-        </div>
+                </JSONPreview>
+            </Pane>
+        </DemoGrid>
     );
 };
+
+// Styled Components
+import styled from "styled-components";
+
+const DemoGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  height: 80vh;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+`;
+
+const Pane = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--pico-card-background-color, #fff);
+  padding: 1rem;
+  border-radius: var(--pico-border-radius, 8px);
+  box-shadow: var(--pico-card-box-shadow, 0 2px 8px rgba(0,0,0,0.05));
+  border: 1px solid var(--pico-muted-border-color, #eee);
+  overflow: hidden;
+  min-height: 500px;
+`;
+
+const PaneHeader = styled.div`
+  font-weight: 600;
+  color: var(--pico-h1-color, #444);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const EditorContainer = styled.div`
+  flex: 1;
+  border: 1px solid var(--pico-muted-border-color, #ddd);
+  border-radius: 4px;
+  overflow: hidden;
+  min-height: 300px;
+`;
+
+const PreviewContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+`;
+
+const Button = styled.button`
+  /* Inherit Pico styles for buttons via class or vars, but here we keep custom structure using vars */
+  background: var(--pico-primary-background);
+  color: var(--pico-primary-inverse);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--pico-border-radius, 4px);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color var(--pico-transition);
+  
+  &:hover { background: var(--pico-primary-hover-background); }
+  &:disabled { background: var(--pico-muted-border-color); cursor: not-allowed; }
+`;
+
+const Select = styled.select`
+  padding: 0.5rem;
+  border-radius: var(--pico-border-radius, 4px);
+  border: 1px solid var(--pico-muted-border-color, #ccc);
+  background-color: var(--pico-form-element-background-color);
+  color: var(--pico-color);
+  min-width: 150px;
+`;
+
+const ErrorMessage = styled.div`
+  color: var(--pico-del-color, red);
+  font-size: 0.9rem;
+`;
+
+const EmptyState = styled.div`
+  padding: 2rem;
+  text-align: center;
+  color: var(--pico-muted-color, #888);
+`;
+
+const JSONPreview = styled.div`
+  margin-top: auto;
+  border-top: 1px solid var(--pico-muted-border-color, #eee);
+  padding-top: 1rem;
+  
+  pre {
+    background: var(--pico-card-sectioning-background-color, #f1f3f5);
+    padding: 1rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    margin-top: 0.5rem;
+    color: var(--pico-color);
+  }
+`;
