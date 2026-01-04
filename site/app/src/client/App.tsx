@@ -89,7 +89,7 @@ export const App: FC = () => {
                 <a href="https://docs.voltra.app/docs">Docs</a>
               </li>
               <li>
-                <a href="type-info">Form Generation Demo</a>
+                <a href="/type-info">Form Generation Demo</a>
               </li>
             </ul>
           </NavBar>
@@ -203,7 +203,7 @@ export const App: FC = () => {
             </ContentCardGrid>
           </Route>
 
-          <Route path="type-info">
+          <Route path="type-info" exact>
             <AdvancedDemo />
           </Route>
         </Content>
