@@ -135,7 +135,9 @@ const buildDriver = () => {
       const attributeNames = command.input.ExpressionAttributeNames ?? {};
 
       updates.forEach((update) => {
-        const [namePlaceholder, valuePlaceholder] = update.split("=").map((s) => s.trim());
+        const [namePlaceholder, valuePlaceholder] = update
+          .split("=")
+          .map((s) => s.trim());
         const fieldName = attributeNames[namePlaceholder];
         if (!fieldName) {
           return;
@@ -250,7 +252,10 @@ export const runDynamoDBDataItemDriverScenario = async () => {
   const lastScanInput = getLastScanInput();
 
   const page1 = await driver.listItems({ itemsPerPage: 2 });
-  const page2 = await driver.listItems({ itemsPerPage: 2, cursor: page1.cursor });
+  const page2 = await driver.listItems({
+    itemsPerPage: 2,
+    cursor: page1.cursor,
+  });
 
   const listSelected = await driver.listItems({ itemsPerPage: 3 }, ["id"]);
 
@@ -283,7 +288,9 @@ export const runDynamoDBDataItemDriverScenario = async () => {
     filteredIds: filtered.items.map((item) => item.id),
     page1Ids: page1.items.map((item) => item.id),
     page2Ids: page2.items.map((item) => item.id),
-    listSelectedKeys: listSelected.items.map((item) => Object.keys(item).sort()),
+    listSelectedKeys: listSelected.items.map((item) =>
+      Object.keys(item).sort(),
+    ),
     deleteResult,
     missingReadError,
     invalidCursorError,

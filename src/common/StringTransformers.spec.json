@@ -14,11 +14,7 @@
         "customDate": "2020-01-01T00:00:00.000Z",
         "customUnknown": "123",
         "customFallback": "",
-        "keywords": [
-          "boolean",
-          "number",
-          "string"
-        ],
+        "keywords": ["boolean", "number", "string"],
         "customKeys": [
           "date",
           "datetime",

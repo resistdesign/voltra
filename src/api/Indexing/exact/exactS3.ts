@@ -37,7 +37,8 @@ export function buildExactS3Key(
 
 const exactStore = new Map<string, number[]>();
 
-const buildStoreKey = (pointer: ExactS3Pointer): string => `${pointer.bucket}/${pointer.key}`;
+const buildStoreKey = (pointer: ExactS3Pointer): string =>
+  `${pointer.bucket}/${pointer.key}`;
 
 /**
  * Store exact token positions for a pointer.
@@ -57,6 +58,8 @@ export async function storeExactPositions(
  * @param pointer Bucket/key pair for the postings object.
  * @returns Positions array (empty when not found).
  */
-export async function loadExactPositions(pointer: ExactS3Pointer): Promise<number[]> {
+export async function loadExactPositions(
+  pointer: ExactS3Pointer,
+): Promise<number[]> {
   return [...(exactStore.get(buildStoreKey(pointer)) ?? [])];
 }

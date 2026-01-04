@@ -20,11 +20,7 @@
         },
         "arrayDefault": {
           "hasDefaultValue": true,
-          "defaultValue": [
-            1,
-            2,
-            3
-          ]
+          "defaultValue": [1, 2, 3]
         },
         "rawArrayDefault": {
           "hasDefaultValue": true,

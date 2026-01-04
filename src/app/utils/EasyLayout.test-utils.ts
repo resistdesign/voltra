@@ -1,4 +1,7 @@
-import { getEasyLayoutTemplateDetails, getPascalCaseAreaName } from "./EasyLayout";
+import {
+  getEasyLayoutTemplateDetails,
+  getPascalCaseAreaName,
+} from "./EasyLayout";
 
 export const runEasyLayoutScenario = () => {
   const layout = `

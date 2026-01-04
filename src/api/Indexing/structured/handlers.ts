@@ -5,11 +5,11 @@
  * with {@link setStructuredHandlerDependencies}.
  */
 import { searchStructured } from "./searchStructured.js";
-import type { DocId } from '../types.js';
-import { normalizeDocId } from '../docId.js';
-import type { StructuredSearchDependencies } from './searchStructured.js';
-import type { StructuredDocFieldsRecord } from './structuredDdb.js';
-import type { StructuredQueryOptions, Where } from './types.js';
+import type { DocId } from "../types.js";
+import { normalizeDocId } from "../docId.js";
+import type { StructuredSearchDependencies } from "./searchStructured.js";
+import type { StructuredDocFieldsRecord } from "./structuredDdb.js";
+import type { StructuredQueryOptions, Where } from "./types.js";
 
 /**
  * Document payload for structured indexing.
@@ -32,7 +32,7 @@ export type StructuredIndexDocumentEvent = {
   /**
    * Action discriminator for indexing.
    */
-  action: 'indexDocument';
+  action: "indexDocument";
   /**
    * Document payload to index.
    */
@@ -46,7 +46,7 @@ export type StructuredSearchEvent = {
   /**
    * Action discriminator for structured search.
    */
-  action: 'searchStructured';
+  action: "searchStructured";
   /**
    * Structured query clause.
    */
@@ -64,7 +64,9 @@ export type StructuredSearchEvent = {
 /**
  * Union of structured handler events.
  */
-export type StructuredHandlerEvent = StructuredIndexDocumentEvent | StructuredSearchEvent;
+export type StructuredHandlerEvent =
+  | StructuredIndexDocumentEvent
+  | StructuredSearchEvent;
 
 /**
  * Writer interface for structured indexing.
@@ -142,19 +144,21 @@ export function setStructuredHandlerDependencies(
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isWhereValue(value: unknown): boolean {
   return (
     value === null ||
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean'
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
   );
 }
 
-function isStructuredFields(value: unknown): value is StructuredDocFieldsRecord {
+function isStructuredFields(
+  value: unknown,
+): value is StructuredDocFieldsRecord {
   if (!isPlainRecord(value)) {
     return false;
   }
@@ -168,13 +172,18 @@ function isStructuredFields(value: unknown): value is StructuredDocFieldsRecord 
   });
 }
 
-function validateSearchOptions(options: StructuredQueryOptions): string | undefined {
-  if (options.limit !== undefined && (typeof options.limit !== 'number' || options.limit <= 0)) {
-    return 'Search limit must be a positive number.';
+function validateSearchOptions(
+  options: StructuredQueryOptions,
+): string | undefined {
+  if (
+    options.limit !== undefined &&
+    (typeof options.limit !== "number" || options.limit <= 0)
+  ) {
+    return "Search limit must be a positive number.";
   }
 
-  if (options.cursor !== undefined && typeof options.cursor !== 'string') {
-    return 'Search cursor must be a string.';
+  if (options.cursor !== undefined && typeof options.cursor !== "string") {
+    return "Search cursor must be a string.";
   }
 
   return undefined;
@@ -194,37 +203,37 @@ export async function structuredHandler(
 ): Promise<LambdaResponse> {
   if (!dependencies) {
     throw new Error(
-      'Structured handler dependencies are not configured. Call setStructuredHandlerDependencies().',
+      "Structured handler dependencies are not configured. Call setStructuredHandlerDependencies().",
     );
   }
 
-  if (!event || typeof event !== 'object') {
-    return errorResponse('Event payload must be an object.');
+  if (!event || typeof event !== "object") {
+    return errorResponse("Event payload must be an object.");
   }
 
   switch (event.action) {
-    case 'indexDocument': {
+    case "indexDocument": {
       if (!event.document) {
-        return errorResponse('Document is required for indexing.');
+        return errorResponse("Document is required for indexing.");
       }
 
       let docId: DocId;
       try {
-        docId = normalizeDocId(event.document.id, 'id');
+        docId = normalizeDocId(event.document.id, "id");
       } catch (error) {
         return errorResponse((error as Error).message);
       }
 
       if (!isStructuredFields(event.document.fields)) {
-        return errorResponse('Document fields must be a structured record.');
+        return errorResponse("Document fields must be a structured record.");
       }
 
       await dependencies.writer.write(docId, event.document.fields);
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
     }
-    case 'searchStructured': {
+    case "searchStructured": {
       if (!isPlainRecord(event.where)) {
-        return errorResponse('Search where clause must be an object.');
+        return errorResponse("Search where clause must be an object.");
       }
 
       const validationError = validateSearchOptions({
@@ -244,6 +253,6 @@ export async function structuredHandler(
       return { statusCode: 200, body: JSON.stringify({ ...result, cursor }) };
     }
     default:
-      return errorResponse('Unsupported action.');
+      return errorResponse("Unsupported action.");
   }
 }

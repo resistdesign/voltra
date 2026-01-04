@@ -60,9 +60,7 @@ export const runParsingUtilsScenario = () => {
   const ratingType = ratingProperty.type;
   const ratingDetails = extractTypeDetails(ratingType);
   const ratingCheck = checkType(ratingType);
-  const literalValues = extractLiteralValues(
-    ratingType as UnionTypeNode,
-  );
+  const literalValues = extractLiteralValues(ratingType as UnionTypeNode);
 
   const pickedTypeRef = pickedNode.type as TypeReferenceNode;
   const pickedValues = getUnionOrLiteralStringValues(

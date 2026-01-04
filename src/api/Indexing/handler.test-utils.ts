@@ -37,7 +37,7 @@ export const runIndexingHandlerScenario = async () => {
     cursor: apiLossyFirst.nextCursor,
   });
   const apiExact = await searchExact({
-    query: "\"hello world\"",
+    query: '"hello world"',
     indexField: "text",
   });
 
@@ -48,7 +48,7 @@ export const runIndexingHandlerScenario = async () => {
 
   const handlerExactResponse = await handler({
     action: "searchExact",
-    query: "\"hello world\"",
+    query: '"hello world"',
     indexField: "text",
   });
   const handlerExact = JSON.parse(handlerExactResponse.body);

@@ -6,29 +6,18 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "routeKeys": [
-          "\"alpha\"",
-          "\"beta\"",
-          "\"gamma\"",
-          "\"status\""
-        ],
+        "routeKeys": ["\"alpha\"", "\"beta\"", "\"gamma\"", "\"status\""],
         "normalized": {
           "authInfo": {
             "userId": "user-1",
-            "roles": [
-              "admin"
-            ]
+            "roles": ["admin"]
           },
           "headers": {
-            "origin": [
-              "https://example.com"
-            ]
+            "origin": ["https://example.com"]
           },
           "method": "POST",
           "path": "status",
-          "body": [
-            "payload"
-          ]
+          "body": ["payload"]
         },
         "handlerResponse": {
           "statusCode": 200,

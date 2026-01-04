@@ -1,4 +1,4 @@
-import type { DocId } from '../types.js';
+import type { DocId } from "../types.js";
 
 /**
  * Cursor state for structured indexing paging.
@@ -21,19 +21,26 @@ type StructuredCursorPayload = {
 };
 
 function encodeBase64Url(value: string): string {
-  const binary = encodeURIComponent(value).replace(/%([0-9A-F]{2})/g, (_, hex) =>
-    String.fromCharCode(Number.parseInt(hex, 16)),
+  const binary = encodeURIComponent(value).replace(
+    /%([0-9A-F]{2})/g,
+    (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)),
   );
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
 }
 
 function decodeBase64Url(value: string): string {
-  const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(
+    base64.length + ((4 - (base64.length % 4)) % 4),
+    "=",
+  );
   const binary = atob(padded);
   const encoded = Array.from(binary)
-    .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
-    .join('');
+    .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+    .join("");
   return decodeURIComponent(encoded);
 }
 
@@ -45,7 +52,7 @@ function decodePayload(cursor: string): StructuredCursorPayload {
   const parsed = JSON.parse(decodeBase64Url(cursor)) as StructuredCursorPayload;
 
   if (parsed.v !== 1) {
-    throw new Error('Unsupported cursor payload.');
+    throw new Error("Unsupported cursor payload.");
   }
 
   return parsed;
@@ -87,7 +94,8 @@ export function decodeStructuredCursor(
   const payload = decodePayload(cursor);
 
   return {
-    lastDocId: payload.lastDocId === undefined ? undefined : String(payload.lastDocId),
+    lastDocId:
+      payload.lastDocId === undefined ? undefined : String(payload.lastDocId),
     backendToken: payload.backendToken,
   };
 }

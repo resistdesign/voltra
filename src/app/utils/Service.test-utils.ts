@@ -8,7 +8,13 @@ export const runServiceScenario = async () => {
     basePath: "api",
     authorization: "token-1",
   };
-  const url = getFullUrl(config.protocol, config.domain, config.basePath, "v1", config.port);
+  const url = getFullUrl(
+    config.protocol,
+    config.domain,
+    config.basePath,
+    "v1",
+    config.port,
+  );
 
   const originalFetch = globalThis.fetch;
   let requestInfo: any = {};
@@ -17,7 +23,10 @@ export const runServiceScenario = async () => {
     requestInfo = { input, init };
     return {
       ok: true,
-      json: async () => ({ ok: true, args: JSON.parse((init?.body as string) ?? "[]") }),
+      json: async () => ({
+        ok: true,
+        args: JSON.parse((init?.body as string) ?? "[]"),
+      }),
     } as Response;
   };
 

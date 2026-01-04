@@ -179,7 +179,9 @@ export const runS3FileItemDriverScenario = async () => {
     listPage1Ids: listPage1.items.map((item) => item.id),
     listPage2Ids: listPage2.items.map((item) => item.id),
     listWithUrlsIds: listWithUrls.items.map((item) => item.id),
-    listWithUrlsDownloadUrls: listWithUrls.items.map((item) => item.downloadUrl),
+    listWithUrlsDownloadUrls: listWithUrls.items.map(
+      (item) => item.downloadUrl,
+    ),
     deleteResult,
     missingIdError,
     missingIdErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID,

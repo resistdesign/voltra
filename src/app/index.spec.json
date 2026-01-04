@@ -6,9 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "appKeys": [
-          "Utils"
-        ],
+        "appKeys": ["Utils"],
         "hasUtilsNamespace": true,
         "hasUseController": true,
         "hasTypeInfoORMClient": true,

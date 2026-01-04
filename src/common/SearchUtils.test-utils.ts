@@ -141,10 +141,7 @@ export const runSearchUtilsScenario = () => {
     typeInfoMap,
   );
 
-  const sorted = getSortedItems(
-    [{ field: "rating", reverse: true }],
-    items,
-  );
+  const sorted = getSortedItems([{ field: "rating", reverse: true }], items);
   const sortedIds = sorted.map((item) => item.id);
 
   return {

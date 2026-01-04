@@ -39,7 +39,11 @@ import {
   TypeInfoORMAPI,
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
-import { IndexingRelationshipDriver, DataItemDBDriver, ItemRelationshipDBDriver } from "./drivers";
+import {
+  IndexingRelationshipDriver,
+  DataItemDBDriver,
+  ItemRelationshipDBDriver,
+} from "./drivers";
 import {
   removeNonexistentFieldsFromDataItem,
   removeNonexistentFieldsFromSelectedFields,
@@ -68,9 +72,17 @@ import {
   mergeDACDataItemResourceAccessResultMaps,
 } from "./DACUtils";
 import { executeDriverListItems } from "./ListItemUtils";
-import { indexDocument, removeDocument, searchExact, searchLossy } from "../Indexing/api";
+import {
+  indexDocument,
+  removeDocument,
+  searchExact,
+  searchLossy,
+} from "../Indexing/api";
 import type { IndexBackend } from "../Indexing/types";
-import { searchStructured, type StructuredSearchDependencies } from "../Indexing/structured/searchStructured";
+import {
+  searchStructured,
+  type StructuredSearchDependencies,
+} from "../Indexing/structured/searchStructured";
 import type { StructuredWriter } from "../Indexing/structured/handlers";
 import type { ResolvedSearchLimits } from "../Indexing/handler/config";
 import { normalizeDocId } from "../Indexing/docId";
@@ -210,7 +222,10 @@ export type TypeInfoORMIndexingConfig = {
     /**
      * Resolver for relation name from type/field.
      */
-    relationNameFor: (fromTypeName: string, fromTypeFieldName: string) => string;
+    relationNameFor: (
+      fromTypeName: string,
+      fromTypeFieldName: string,
+    ) => string;
     /**
      * Optional encoder for entity ids.
      */
@@ -522,19 +537,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * @returns Indexing relationship driver for relation indexing.
    */
-  protected getIndexingRelationshipDriverInternal = (): IndexingRelationshipDriver => {
-    if (!this.config.indexing?.relations) {
-      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP_DRIVER);
-    }
+  protected getIndexingRelationshipDriverInternal =
+    (): IndexingRelationshipDriver => {
+      if (!this.config.indexing?.relations) {
+        throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP_DRIVER);
+      }
 
-    if (!this.indexingRelationshipDriver) {
-      this.indexingRelationshipDriver = new IndexingRelationshipDriver(
-        this.config.indexing.relations,
-      );
-    }
+      if (!this.indexingRelationshipDriver) {
+        this.indexingRelationshipDriver = new IndexingRelationshipDriver(
+          this.config.indexing.relations,
+        );
+      }
 
-    return this.indexingRelationshipDriver;
-  };
+      return this.indexingRelationshipDriver;
+    };
 
   /**
    * @param typeName Type name to resolve.
@@ -610,7 +626,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     item: Partial<TypeInfoDataItem>,
   ): StructuredDocFieldsRecord => {
     const typeInfo = this.getTypeInfo(typeName);
-    const fieldMap = this.config.indexing?.structured?.fieldMapByType?.[typeName];
+    const fieldMap =
+      this.config.indexing?.structured?.fieldMapByType?.[typeName];
     const withoutRefs = removeTypeReferenceFieldsFromDataItem(typeInfo, item);
     const fields: StructuredDocFieldsRecord = {};
 
@@ -655,11 +672,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     if ("and" in where) {
-      return { and: where.and.map((child) => this.applyStructuredFieldMap(child, fieldMap)) };
+      return {
+        and: where.and.map((child) =>
+          this.applyStructuredFieldMap(child, fieldMap),
+        ),
+      };
     }
 
     if ("or" in where) {
-      return { or: where.or.map((child) => this.applyStructuredFieldMap(child, fieldMap)) };
+      return {
+        or: where.or.map((child) =>
+          this.applyStructuredFieldMap(child, fieldMap),
+        ),
+      };
     }
 
     const mappedField = fieldMap[where.field] ?? where.field;
@@ -689,7 +714,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(typeName, indexFieldOverride);
+    const indexField = this.resolveFullTextIndexField(
+      typeName,
+      indexFieldOverride,
+    );
 
     if (!fullText || !indexField) {
       return;
@@ -731,7 +759,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(typeName, indexFieldOverride);
+    const indexField = this.resolveFullTextIndexField(
+      typeName,
+      indexFieldOverride,
+    );
 
     if (!fullText || !indexField) {
       return;
@@ -1290,9 +1321,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
       relationshipItemOrigin;
     const {
-      fields: {
-        [fromTypeFieldName]: { typeReference = undefined } = {},
-      } = {},
+      fields: { [fromTypeFieldName]: { typeReference = undefined } = {} } = {},
     } = this.getTypeInfo(fromTypeName);
     const relatedTypeName =
       typeof typeReference === "string" ? typeReference : undefined;

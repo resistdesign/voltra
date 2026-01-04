@@ -1,4 +1,4 @@
-import type { DocId } from './types.js';
+import type { DocId } from "./types.js";
 
 /**
  * Compare two document ids for sorting.
@@ -35,8 +35,10 @@ export function normalizeDocId(
    */
   primaryField: string,
 ): DocId {
-  if (value === null || value === undefined || value === '') {
-    throw new Error(`Document is missing a non-empty primary field "${primaryField}".`);
+  if (value === null || value === undefined || value === "") {
+    throw new Error(
+      `Document is missing a non-empty primary field "${primaryField}".`,
+    );
   }
 
   return String(value);

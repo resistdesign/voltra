@@ -47,8 +47,9 @@ export const getNamespaceStructure = (
         targetNamespace.propertyTypes[part] = propType;
       } else {
         targetNamespace.namespaces = targetNamespace.namespaces || {};
-        targetNamespace.namespaces[part] =
-          targetNamespace.namespaces[part] || { path: [...currentPath] };
+        targetNamespace.namespaces[part] = targetNamespace.namespaces[part] || {
+          path: [...currentPath],
+        };
         targetNamespace = targetNamespace.namespaces[part];
       }
     }
@@ -76,8 +77,9 @@ export const getNamespaceStructure = (
         resourceTypeOptions.push(currentPath.join(NAMESPACE_DELIMITERS.OUTPUT));
       } else {
         targetNamespace.namespaces = targetNamespace.namespaces || {};
-        targetNamespace.namespaces[part] =
-          targetNamespace.namespaces[part] || { path: [...currentPath] };
+        targetNamespace.namespaces[part] = targetNamespace.namespaces[part] || {
+          path: [...currentPath],
+        };
         targetNamespace = targetNamespace.namespaces[part];
       }
     }

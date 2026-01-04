@@ -26,7 +26,9 @@ export const runTypeInfoORMClientScenario = async () => {
   };
   const client = new TypeInfoORMClient(config);
 
-  const created = await client.create("Book", { title: "Alpha" } as TypeInfoDataItem);
+  const created = await client.create("Book", {
+    title: "Alpha",
+  } as TypeInfoDataItem);
   const read = await client.read("Book", "book-1");
   const updated = await client.update("Book", { id: "book-1", title: "Beta" });
   const deleted = await client.delete("Book", "book-1");

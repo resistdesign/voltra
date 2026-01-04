@@ -22,7 +22,11 @@ export const runIndexingCoreScenario = () => {
   const exactWithPending = decodeExactCursor(
     encodeExactCursor({
       lossy: { lastDocId: "a" },
-      verification: { lastDocId: 2, pendingCandidates: [1, "2"], pendingOffset: 3 },
+      verification: {
+        lastDocId: 2,
+        pendingCandidates: [1, "2"],
+        pendingOffset: 3,
+      },
       plan: { primaryToken: "primary" },
     }),
   );
@@ -38,9 +42,7 @@ export const runIndexingCoreScenario = () => {
 
   let exactWrongTypeError: string | undefined;
   try {
-    decodeExactCursor(
-      encodeLossyCursor({ lastDocId: "x" }) as string,
-    );
+    decodeExactCursor(encodeLossyCursor({ lastDocId: "x" }) as string);
   } catch (error: any) {
     exactWrongTypeError = error?.message ?? String(error);
   }

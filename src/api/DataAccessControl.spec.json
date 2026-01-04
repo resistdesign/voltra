@@ -21,10 +21,7 @@
           "exactMatch": false
         },
         "flattenedCount": 3,
-        "cacheKeys": [
-          "child-1",
-          "child-2"
-        ],
+        "cacheKeys": ["child-1", "child-2"],
         "accessSpecificity": {
           "allowed": false,
           "denied": true

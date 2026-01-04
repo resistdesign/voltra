@@ -28,16 +28,19 @@ export const runFileStoragePackScenario = () => {
   return {
     resourceKeys: Object.keys(defaultResources).sort(),
     defaultDeletionPolicy: defaultBucket?.DeletionPolicy,
-    defaultPublicAccess: defaultBucket?.Properties?.PublicAccessBlockConfiguration,
+    defaultPublicAccess:
+      defaultBucket?.Properties?.PublicAccessBlockConfiguration,
     defaultCors: defaultBucket?.Properties?.CorsConfiguration ?? null,
     defaultOwnershipControls:
       defaultBucket?.Properties?.OwnershipControls ?? null,
     defaultEncryption:
-      defaultBucket?.Properties?.BucketEncryption?.ServerSideEncryptionConfiguration,
+      defaultBucket?.Properties?.BucketEncryption
+        ?.ServerSideEncryptionConfiguration,
     customDeletionPolicy: customBucket?.DeletionPolicy,
     customBucketName: customBucket?.Properties?.BucketName,
     customAccessControl: customBucket?.Properties?.AccessControl,
-    customPublicAccess: customBucket?.Properties?.PublicAccessBlockConfiguration,
+    customPublicAccess:
+      customBucket?.Properties?.PublicAccessBlockConfiguration,
     customCors: customBucket?.Properties?.CorsConfiguration,
     customOwnershipControls: customBucket?.Properties?.OwnershipControls,
   };

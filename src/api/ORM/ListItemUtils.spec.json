@@ -6,20 +6,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": [
-          "item-1",
-          "item-2",
-          "item-3"
-        ],
-        "noFilterIds": [
-          "item-1",
-          "item-2",
-          "item-3"
-        ],
-        "filteredIds": [
-          "item-1",
-          "item-3"
-        ],
+        "createdIds": ["item-1", "item-2", "item-3"],
+        "noFilterIds": ["item-1", "item-2", "item-3"],
+        "filteredIds": ["item-1", "item-3"],
         "transformedItems": [
           {
             "id": "item-1",
@@ -34,17 +23,7 @@
             "status": "active"
           }
         ],
-        "selectedFieldKeys": [
-          [
-            "id"
-          ],
-          [
-            "id"
-          ],
-          [
-            "id"
-          ]
-        ],
+        "selectedFieldKeys": [["id"], ["id"], ["id"]],
         "filteredWithSelect": [
           {
             "name": "Alpha",

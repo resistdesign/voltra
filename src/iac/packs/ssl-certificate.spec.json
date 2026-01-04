@@ -6,9 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "resourceKeys": [
-          "Certificate"
-        ],
+        "resourceKeys": ["Certificate"],
         "defaultDomainName": "example.com",
         "defaultHostedZoneId": "HZ123",
         "defaultSANs": [

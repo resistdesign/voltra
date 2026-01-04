@@ -33,8 +33,8 @@ export type LossyDdbItem = LossyDdbKey;
  * Schema metadata for the lossy postings table.
  */
 export const lossyDdbSchema = {
-  partitionKey: 'token',
-  sortKey: 'docId',
+  partitionKey: "token",
+  sortKey: "docId",
 } as const;
 
 /**

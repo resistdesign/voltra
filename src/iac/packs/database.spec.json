@@ -6,9 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "resourceKeys": [
-          "BooksTable"
-        ],
+        "resourceKeys": ["BooksTable"],
         "tableName": "books",
         "billingMode": "PAY_PER_REQUEST",
         "attributeDefinitions": [

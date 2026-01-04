@@ -16,7 +16,10 @@ export const runDataAccessControlScenario = async () => {
   const wildcardMismatch = getValueIsWildcardSignifier({ WILD_CARD: "x" });
 
   const exactMatch = getDACPathsMatch(["a", "b"], ["a", "b"]);
-  const prefixWildcardMatch = getDACPathsMatch(["a", wildcard], ["a", "b", "c"]);
+  const prefixWildcardMatch = getDACPathsMatch(
+    ["a", wildcard],
+    ["a", "b", "c"],
+  );
   const noMatch = getDACPathsMatch(["a", "x"], ["a", "b"]);
 
   const roles: Record<string, DACRole> = {

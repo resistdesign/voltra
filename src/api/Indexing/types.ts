@@ -96,7 +96,11 @@ export type DocTokenReader = {
    * @param token Token value to check.
    * @returns True when the token exists for the document.
    */
-  hasDocToken(docId: DocId, indexField: string, token: string): Promise<boolean>;
+  hasDocToken(
+    docId: DocId,
+    indexField: string,
+    token: string,
+  ): Promise<boolean>;
 };
 
 /**
@@ -122,7 +126,11 @@ export type ExactReader = {
    * @param docId Document id containing the token.
    * @returns Positions array or undefined if not present.
    */
-  loadExactPositions(token: string, indexField: string, docId: DocId): Promise<number[] | undefined>;
+  loadExactPositions(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<number[] | undefined>;
 };
 
 /**
@@ -134,7 +142,9 @@ export type ExactBatchReader = {
    * @param keys Token keys to load positions for.
    * @returns Positions arrays aligned with the input keys.
    */
-  batchLoadExactPositions(keys: DocTokenKey[]): Promise<(number[] | undefined)[]>;
+  batchLoadExactPositions(
+    keys: DocTokenKey[],
+  ): Promise<(number[] | undefined)[]>;
 };
 
 /**
@@ -161,13 +171,19 @@ export type TokenStatsReader = {
    * @param indexField Field name the token was indexed under.
    * @returns Token stats or undefined when missing.
    */
-  loadTokenStats(token: string, indexField: string): Promise<TokenStats | undefined>;
+  loadTokenStats(
+    token: string,
+    indexField: string,
+  ): Promise<TokenStats | undefined>;
 };
 
 /**
  * Combined reader interface for lossy, exact, and stats operations.
  */
-export type IndexReader = LossyReader & ExactReader & TokenStatsReader & Partial<ExactBatchReader>;
+export type IndexReader = LossyReader &
+  ExactReader &
+  TokenStatsReader &
+  Partial<ExactBatchReader>;
 
 /**
  * Writer interface for lossy postings.
@@ -180,7 +196,11 @@ export type LossyWriter = {
    * @param docId Document id to associate.
    * @returns Promise resolved when the posting is written.
    */
-  addLossyPosting(token: string, indexField: string, docId: DocId): Promise<void>;
+  addLossyPosting(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<void>;
   /**
    * Remove a lossy posting for a token.
    * @param token Token to remove.
@@ -188,7 +208,11 @@ export type LossyWriter = {
    * @param docId Document id to disassociate.
    * @returns Promise resolved when the posting is removed.
    */
-  removeLossyPosting(token: string, indexField: string, docId: DocId): Promise<void>;
+  removeLossyPosting(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<void>;
 };
 
 /**
@@ -216,7 +240,11 @@ export type ExactWriter = {
    * @param docId Document id to disassociate.
    * @returns Promise resolved when positions are removed.
    */
-  removeExactPositions(token: string, indexField: string, docId: DocId): Promise<void>;
+  removeExactPositions(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): Promise<void>;
 };
 
 /**

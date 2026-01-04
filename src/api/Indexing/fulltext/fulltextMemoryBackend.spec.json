@@ -6,29 +6,13 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "lossyAll": [
-          "doc-1",
-          "doc-2"
-        ],
+        "lossyAll": ["doc-1", "doc-2"],
         "lossyPage": {
-          "docIds": [
-            "doc-1"
-          ],
+          "docIds": ["doc-1"],
           "lastEvaluatedDocId": "doc-1"
         },
-        "exactDoc1": [
-          0,
-          2
-        ],
-        "exactBatch": [
-          [
-            0,
-            2
-          ],
-          [
-            1
-          ]
-        ],
+        "exactDoc1": [0, 2],
+        "exactBatch": [[0, 2], [1]],
         "tokenStats": {
           "df": 2,
           "version": 1
@@ -36,14 +20,8 @@
         "tokenStatsMissing": null,
         "hasDocToken": true,
         "hasDocTokenMissing": false,
-        "batchHas": [
-          true,
-          true,
-          false
-        ],
-        "lossyAfterRemove": [
-          "doc-1"
-        ],
+        "batchHas": [true, true, false],
+        "lossyAfterRemove": ["doc-1"],
         "exactAfterRemove": null,
         "schema": {
           "tokenKey": "f#text#t#hello",

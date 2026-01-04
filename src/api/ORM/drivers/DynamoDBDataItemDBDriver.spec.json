@@ -6,11 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": [
-          "item-1",
-          "item-2",
-          "item-3"
-        ],
+        "createdIds": ["item-1", "item-2", "item-3"],
         "readSelected": {
           "id": "item-1",
           "name": "Alpha"
@@ -19,28 +15,10 @@
           "name": "Alpha+",
           "age": 35
         },
-        "filteredIds": [
-          "item-1",
-          "item-3"
-        ],
-        "page1Ids": [
-          "item-1",
-          "item-2"
-        ],
-        "page2Ids": [
-          "item-3"
-        ],
-        "listSelectedKeys": [
-          [
-            "id"
-          ],
-          [
-            "id"
-          ],
-          [
-            "id"
-          ]
-        ],
+        "filteredIds": ["item-1", "item-3"],
+        "page1Ids": ["item-1", "item-2"],
+        "page2Ids": ["item-3"],
+        "listSelectedKeys": [["id"], ["id"], ["id"]],
         "deleteResult": true,
         "missingReadError": "ITEM_NOT_FOUND",
         "invalidCursorError": "INVALID_CURSOR",

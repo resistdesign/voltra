@@ -93,7 +93,9 @@ export const runORMRouteMapScenario = () => {
     dacConfig,
     () => validRole,
   );
-  const handlerWithRole = getHandlerFactory(routeMapWithRole[createPath])(eventData);
+  const handlerWithRole = getHandlerFactory(routeMapWithRole[createPath])(
+    eventData,
+  );
 
   return {
     routePaths,
@@ -106,7 +108,8 @@ export const runORMRouteMapScenario = () => {
     handlerStableWithoutDac: handler1 === handler2,
     missingGetterError,
     missingRoleError,
-    missingRoleErrorExpected: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE,
+    missingRoleErrorExpected:
+      TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE,
     missingGetterErrorExpected:
       TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER,
     handlerWithRoleIsFunction: typeof handlerWithRole === "function",

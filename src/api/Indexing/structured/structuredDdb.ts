@@ -9,12 +9,15 @@ import type { WhereValue } from "./types.js";
 /**
  * Document fields stored for structured indexing.
  */
-export type StructuredDocFieldsRecord = Record<string, WhereValue | WhereValue[]>;
+export type StructuredDocFieldsRecord = Record<
+  string,
+  WhereValue | WhereValue[]
+>;
 
 /**
  * Term query mode for structured indexing.
  */
-export type StructuredTermMode = 'eq' | 'contains';
+export type StructuredTermMode = "eq" | "contains";
 
 /**
  * DynamoDB key shape for term index entries.
@@ -100,32 +103,32 @@ export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
  * Schema metadata for the structured term index table.
  */
 export const structuredTermIndexSchema = {
-  tableName: 'StructuredTermIndex',
-  partitionKey: 'termKey',
-  sortKey: 'docId',
-  fieldAttribute: 'field',
-  valueAttribute: 'value',
-  modeAttribute: 'mode',
+  tableName: "StructuredTermIndex",
+  partitionKey: "termKey",
+  sortKey: "docId",
+  fieldAttribute: "field",
+  valueAttribute: "value",
+  modeAttribute: "mode",
 } as const;
 
 /**
  * Schema metadata for the structured range index table.
  */
 export const structuredRangeIndexSchema = {
-  tableName: 'StructuredRangeIndex',
-  partitionKey: 'field',
-  sortKey: 'rangeKey',
-  valueAttribute: 'value',
-  docIdAttribute: 'docId',
+  tableName: "StructuredRangeIndex",
+  partitionKey: "field",
+  sortKey: "rangeKey",
+  valueAttribute: "value",
+  docIdAttribute: "docId",
 } as const;
 
 /**
  * Schema metadata for the structured document fields table.
  */
 export const structuredDocFieldsSchema = {
-  tableName: 'StructuredDocFields',
-  partitionKey: 'docId',
-  fieldsAttribute: 'fields',
+  tableName: "StructuredDocFields",
+  partitionKey: "docId",
+  fieldsAttribute: "fields",
 } as const;
 
 /**
@@ -135,16 +138,16 @@ export const structuredDocFieldsSchema = {
  */
 export function serializeStructuredValue(value: WhereValue): string {
   if (value === null) {
-    return 'null';
+    return "null";
   }
 
   switch (typeof value) {
-    case 'number':
+    case "number":
       return `n:${value}`;
-    case 'string':
+    case "string":
       return `s:${value}`;
-    case 'boolean':
-      return `b:${value ? '1' : '0'}`;
+    case "boolean":
+      return `b:${value ? "1" : "0"}`;
     default:
       return `u:${String(value)}`;
   }
@@ -171,7 +174,10 @@ export function buildStructuredTermKey(
  * @param docId Document id containing the value.
  * @returns Range key for the structured range index.
  */
-export function buildStructuredRangeKey(value: WhereValue, docId: DocId): string {
+export function buildStructuredRangeKey(
+  value: WhereValue,
+  docId: DocId,
+): string {
   return `${serializeStructuredValue(value)}#${docId}`;
 }
 

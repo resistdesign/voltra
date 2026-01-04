@@ -6,27 +6,17 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "positionsDoc1Hello": [
-          0,
-          2
-        ],
-        "positionsDoc2Hello": [
-          0,
-          2
-        ],
+        "positionsDoc1Hello": [0, 2],
+        "positionsDoc2Hello": [0, 2],
         "hasPhraseDoc1": true,
         "hasPhraseDoc2": true,
         "missingPhrase": true,
         "verifiedPage1": {
-          "docIds": [
-            "doc-1"
-          ],
+          "docIds": ["doc-1"],
           "nextCursor": "doc-1"
         },
         "verifiedPage2": {
-          "docIds": [
-            "doc-2"
-          ],
+          "docIds": ["doc-2"],
           "nextCursor": "doc-2"
         },
         "positionsAfterRemove": null,
@@ -39,10 +29,7 @@
           "token": "token",
           "indexField": "text",
           "docId": "doc-1",
-          "positions": [
-            3,
-            4
-          ]
+          "positions": [3, 4]
         }
       }
     }

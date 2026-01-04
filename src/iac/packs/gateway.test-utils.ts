@@ -40,8 +40,10 @@ export const runGatewayPackScenario = () => {
   const customResources = customTemplate.Resources || {};
   const defaultMethod = defaultResources.ApiGatewayGatewayRESTAPIMethod as any;
   const customMethod = customResources.ApiGatewayGatewayRESTAPIMethod as any;
-  const defaultStage = defaultResources.ApiGatewayGatewayRESTAPIEnvironment as any;
-  const customStage = customResources.ApiGatewayGatewayRESTAPIEnvironment as any;
+  const defaultStage =
+    defaultResources.ApiGatewayGatewayRESTAPIEnvironment as any;
+  const customStage =
+    customResources.ApiGatewayGatewayRESTAPIEnvironment as any;
   const defaultRoute53 = defaultResources.ApiGatewayRoute53Record as any;
   const customAuthorizer = customResources.ApiGatewayCustomAuthorizer as any;
 
@@ -50,7 +52,8 @@ export const runGatewayPackScenario = () => {
     defaultAuthType: defaultMethod?.Properties?.AuthorizationType,
     defaultStageName: defaultStage?.Properties?.StageName,
     defaultDeploymentId: defaultStage?.Properties?.DeploymentId?.Ref,
-    defaultIntegrationUri: defaultMethod?.Properties?.Integration?.Uri?.["Fn::Sub"],
+    defaultIntegrationUri:
+      defaultMethod?.Properties?.Integration?.Uri?.["Fn::Sub"],
     defaultRoute53RecordType: defaultRoute53?.Properties?.Type,
     customAuthType: customMethod?.Properties?.AuthorizationType,
     customAuthScopes: customMethod?.Properties?.AuthorizationScopes,

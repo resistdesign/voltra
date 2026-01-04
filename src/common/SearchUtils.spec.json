@@ -9,19 +9,9 @@
         "compareResult": true,
         "compareArrayContains": true,
         "compareArrayNotContains": false,
-        "filteredAndIds": [
-          "1"
-        ],
-        "filteredOrIds": [
-          "1",
-          "2",
-          "3"
-        ],
-        "sortedIds": [
-          "1",
-          "3",
-          "2"
-        ]
+        "filteredAndIds": ["1"],
+        "filteredOrIds": ["1", "2", "3"],
+        "sortedIds": ["1", "3", "2"]
       }
     }
   ]

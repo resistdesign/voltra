@@ -19,11 +19,27 @@ export const runApplicationStateScenario = () => {
   const initialState: ApplicationState = new Map();
   const initialModified: ApplicationStateModificationState = new Map();
 
-  const stateWithA = setApplicationStateValue(identifierA, "alpha", initialState);
-  const stateWithBoth = setApplicationStateValue(identifierB, "beta", stateWithA);
+  const stateWithA = setApplicationStateValue(
+    identifierA,
+    "alpha",
+    initialState,
+  );
+  const stateWithBoth = setApplicationStateValue(
+    identifierB,
+    "beta",
+    stateWithA,
+  );
 
-  const modifiedWithA = setApplicationStateModified(identifierA, true, initialModified);
-  const modifiedWithBoth = setApplicationStateModified(identifierB, false, modifiedWithA);
+  const modifiedWithA = setApplicationStateModified(
+    identifierA,
+    true,
+    initialModified,
+  );
+  const modifiedWithBoth = setApplicationStateModified(
+    identifierB,
+    false,
+    modifiedWithA,
+  );
 
   const valueA = getApplicationStateValue(identifierA, stateWithBoth);
   const valueB = getApplicationStateValue(identifierB, stateWithBoth);
