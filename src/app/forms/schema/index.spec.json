@@ -1,0 +1,31 @@
+{
+    "file": "./index.test-utils.ts",
+    "tests": [
+        {
+            "export": "runSchemaParsingScenario",
+            "conditions": [],
+            "operation": "DEEP_EQUALS",
+            "expectation": {
+                "result1": {
+                    "rootFields": {
+                        "name": {
+                            "key": "name",
+                            "label": "Name",
+                            "type": "string"
+                        }
+                    }
+                },
+                "result2": {
+                    "rootFields": {
+                        "age": {
+                            "key": "age",
+                            "label": "age",
+                            "type": "number",
+                            "required": true
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
