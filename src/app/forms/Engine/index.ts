@@ -29,7 +29,9 @@ export const useFormEngine = <T extends Record<string, any> = any>(
         // Basic validation based on schema
         const newErrors: Record<string, string> = {};
         for (const [key, field] of Object.entries(schema.rootFields)) {
-            if (field.required && !values[key]) {
+            const val = values[key];
+            const isMissing = val === undefined || val === null || val === "";
+            if (field.required && isMissing) {
                 newErrors[key] = "This field is required";
             }
         }

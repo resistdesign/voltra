@@ -58,7 +58,8 @@ const parseField = (key: string, value: any): FieldMetadata => {
         }
     }
 
-    if (value.required) {
+    // Set required if explicitly required or if optional is explicitly false
+    if (value.required || value.optional === false) {
         base.required = true;
     }
 
