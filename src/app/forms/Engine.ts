@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { FormMetadata } from "../types.js";
+import { FormMetadata } from "./types.js";
 
 export const useFormEngine = <T extends Record<string, any> = any>(
     initialValues: T = {} as T,

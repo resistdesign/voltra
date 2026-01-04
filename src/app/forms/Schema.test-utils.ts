@@ -1,4 +1,4 @@
-import { parseSchema } from "./index.js";
+import { parseSchema } from "./Schema.js";
 
 export const runSchemaParsingScenario = () => {
     const result1 = parseSchema({
