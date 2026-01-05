@@ -4,7 +4,7 @@
  * Tier 1 primitives for the form generation system.
  */
 
-import styled from "styled-components";
+import styled from "../helpers/styled";
 
 export const FieldWrapper = styled("div")`
   display: flex;

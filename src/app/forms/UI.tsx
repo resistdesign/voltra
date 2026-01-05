@@ -10,16 +10,15 @@ import type {
   TypeInfo,
   TypeInfoField,
   TypeOperation,
-} from "../../common/TypeParsing/TypeInfo.js";
+} from "../../common/TypeParsing/TypeInfo";
 import type {
   AutoFieldProps,
   CustomTypeActionPayload,
   FormController,
   FormValues,
   RelationActionPayload,
-} from "./types.js";
-import { useFormEngine } from "./Engine.js";
-import { normalizeFieldTags } from "./utils.js";
+} from "./types";
+import { useFormEngine } from "./Engine";
 import {
   ArrayContainer,
   ArrayItemWrapper,
@@ -30,8 +29,8 @@ import {
   Input,
   Label,
   Select,
-} from "./Primitives.js";
-import styled from "styled-components";
+} from "./Primitives";
+import styled from "../helpers/styled";
 
 // Use function syntax for better ecosystem compatibility
 const FormContainer = styled("form")`
@@ -89,7 +88,7 @@ export const AutoField: FC<AutoFieldProps> = ({
   disabled,
   onCustomTypeAction,
 }) => {
-  const tags = normalizeFieldTags(field.tags);
+  const { tags } = field;
   const label = tags?.label ?? fieldKey;
   const id = `field-${fieldKey}`;
   const isRequired = !field.optional;
@@ -370,7 +369,7 @@ export const AutoField: FC<AutoFieldProps> = ({
           id={id}
           type={format || "text"}
           value={(value as string) || ""}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e: any) => onChange(e.target.value)}
           disabled={disabled}
           pattern={constraints?.pattern}
         />
@@ -381,7 +380,7 @@ export const AutoField: FC<AutoFieldProps> = ({
           id={id}
           type="number"
           value={(value as number) ?? ""}
-          onChange={(e) => onChange(parseNumberValue(e.target.value))}
+          onChange={(e: any) => onChange(parseNumberValue(e.target.value))}
           disabled={disabled}
           min={constraints?.min}
           max={constraints?.max}
@@ -395,7 +394,7 @@ export const AutoField: FC<AutoFieldProps> = ({
             id={id}
             type="checkbox"
             checked={!!value}
-            onChange={(e) => onChange(e.target.checked)}
+            onChange={(e: any) => onChange(e.target.checked)}
             disabled={disabled}
           />
           <Label htmlFor={id}> {label} </Label>
@@ -410,7 +409,7 @@ export const AutoField: FC<AutoFieldProps> = ({
               id={id}
               list={`list-${id}`}
               value={(value as string | number) ?? ""}
-              onChange={(e) =>
+              onChange={(e: any) =>
                 onChange(
                   field.type === "number"
                     ? parseNumberValue(e.target.value)
@@ -434,7 +433,7 @@ export const AutoField: FC<AutoFieldProps> = ({
           <Select
             id={id}
             value={(value as string | number) ?? ""}
-            onChange={(e) =>
+            onChange={(e: any) =>
               onChange(
                 field.type === "number"
                   ? parseNumberValue(e.target.value)

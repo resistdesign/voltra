@@ -4,7 +4,7 @@
  * Form generation module.
  */
 
-export * from "./types.js";
-export * from "./Primitives.js";
-export * from "./Engine.js";
-export * from "./UI.js";
+export * from "./types";
+export * from "./Primitives";
+export * from "./Engine";
+export * from "./UI";
