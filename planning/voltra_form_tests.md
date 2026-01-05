@@ -19,9 +19,9 @@
       - Number input leading-zero padding was fixed by parsing from raw string.
 
   - TypeInfo
-    - [ ] primaryField: primary field disables on update and shows primary flag
-    - [ ] fields: field map drives controller list order and key mapping
-    - [ ] unionFieldSets: controller preserves field list when union sets present
+    - [x] primaryField: primary field disables on update and shows primary flag
+    - [x] fields: field map drives controller list order and key mapping
+    - [x] unionFieldSets: controller preserves field list when union sets present
 
   - TypeInfoField
     - [ ] type: renders correct primitive input for string
