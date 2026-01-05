@@ -5,6 +5,7 @@ import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/theme-twilight";
 import { AutoFormView } from "../../../../src/app/forms/UI";
 import { useFormEngine } from "../../../../src/app/forms/Engine";
+import type { CustomTypeActionPayload } from "../../../../src/app/forms/types";
 import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
 
 const DEFAULT_CODE = `
@@ -184,12 +185,35 @@ export const AdvancedDemo = () => {
       action,
       fieldKey,
       customType,
-    }: {
-      action: string;
-      fieldKey: string;
-      customType: string;
-    }) => {
+      value,
+      index,
+      field,
+      onChange,
+    }: CustomTypeActionPayload) => {
       setLastAction(`Custom ${customType} ${action} on ${fieldKey}`);
+
+      if (action === "add") {
+        const nextItem = `${customType} item`;
+        if (field.array) {
+          const current = Array.isArray(value) ? value : [];
+          onChange([...current, nextItem]);
+        } else {
+          onChange(nextItem);
+        }
+        return;
+      }
+
+      if (action === "remove") {
+        if (field.array && Array.isArray(value)) {
+          const next = [...value];
+          if (typeof index === "number") {
+            next.splice(index, 1);
+            onChange(next);
+          }
+        } else {
+          onChange(null);
+        }
+      }
     };
 
     return (
