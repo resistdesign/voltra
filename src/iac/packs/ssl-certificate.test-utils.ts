@@ -28,7 +28,8 @@ export const runSSLCertificatePackScenario = () => {
     resourceKeys: Object.keys(defaultResources).sort(),
     defaultDomainName: defaultCertificate?.Properties?.DomainName,
     defaultHostedZoneId:
-      defaultCertificate?.Properties?.DomainValidationOptions?.[0]?.HostedZoneId,
+      defaultCertificate?.Properties?.DomainValidationOptions?.[0]
+        ?.HostedZoneId,
     defaultSANs: defaultCertificate?.Properties?.SubjectAlternativeNames,
     customHostedZoneId:
       customCertificate?.Properties?.DomainValidationOptions?.[0]?.HostedZoneId,

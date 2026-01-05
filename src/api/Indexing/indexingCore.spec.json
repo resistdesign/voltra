@@ -21,10 +21,7 @@
           },
           "verification": {
             "lastDocId": "2",
-            "pendingCandidates": [
-              "1",
-              "2"
-            ],
+            "pendingCandidates": ["1", "2"],
             "pendingOffset": 3
           },
           "plan": {
@@ -37,29 +34,15 @@
         "invalidEncodingError": "Invalid cursor payload.",
         "invalidPayloadError": "Invalid cursor payload.",
         "unsupportedPayloadError": "Unsupported cursor payload.",
-        "docIdCompare": [
-          0,
-          -1,
-          1
-        ],
+        "docIdCompare": [0, -1, 1],
         "normalizedDocId": "0",
         "normalizeError": "Document is missing a non-empty primary field \"id\".",
         "tokenized": {
           "normalized": "creme brulee",
-          "tokens": [
-            "creme",
-            "brulee"
-          ]
+          "tokens": ["creme", "brulee"]
         },
-        "lossyTokens": [
-          "ell",
-          "hel",
-          "hell*",
-          "llo"
-        ],
-        "lossyShortTokens": [
-          "hi*"
-        ],
+        "lossyTokens": ["ell", "hel", "hell*", "llo"],
+        "lossyShortTokens": ["hi*"],
         "traceSnapshot": {
           "postingsPages": 0,
           "candidatesVerified": 0,

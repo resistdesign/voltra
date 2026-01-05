@@ -7,17 +7,15 @@ import {
   encodeRelationEdgePartitionKey,
   relationEdgesSchema,
 } from "./relationalDdb";
-import type {
-  Edge,
-  EdgePage,
-  RelationalQueryOptions,
-} from "./types";
+import type { Edge, EdgePage, RelationalQueryOptions } from "./types";
 import {
   handler as relationalHandler,
   setRelationalHandlerDependencies,
 } from "./handlers";
 
-type RelationEdgeStoreItem<TMetadata extends Record<string, unknown> = Record<string, unknown>> = {
+type RelationEdgeStoreItem<
+  TMetadata extends Record<string, unknown> = Record<string, unknown>,
+> = {
   edgeKey: string;
   otherId: string;
   metadata?: TMetadata;
@@ -34,8 +32,14 @@ const buildCursorKey = (request: {
 
 export const runRelationalIndexingScenario = async () => {
   const inMemory = new RelationalInMemoryBackend<{ weight: number }>();
-  inMemory.putEdge({ key: { from: "a", to: "b", relation: "owns" }, metadata: { weight: 1 } });
-  inMemory.putEdge({ key: { from: "a", to: "c", relation: "owns" }, metadata: { weight: 2 } });
+  inMemory.putEdge({
+    key: { from: "a", to: "b", relation: "owns" },
+    metadata: { weight: 1 },
+  });
+  inMemory.putEdge({
+    key: { from: "a", to: "c", relation: "owns" },
+    metadata: { weight: 2 },
+  });
 
   const outgoingPage1 = inMemory.getOutgoing("a", "owns", { limit: 1 });
   const outgoingPage2 = inMemory.getOutgoing("a", "owns", {
@@ -50,7 +54,7 @@ export const runRelationalIndexingScenario = async () => {
   });
   const relationalCursorDecoded = decodeRelationalCursor(relationalCursor);
 
-  const store = new Map<string, RelationEdgeStoreItem<{ weight: number }>[]>(); 
+  const store = new Map<string, RelationEdgeStoreItem<{ weight: number }>[]>();
   const ddbBackend = new RelationalDdbBackend<{ weight: number }>({
     putEdges: async (items) => {
       for (const item of items) {
@@ -75,23 +79,37 @@ export const runRelationalIndexingScenario = async () => {
     queryEdges: async (request) => {
       const list = store.get(request.edgeKey) ?? [];
       const startIndex = request.exclusiveStartKey
-        ? list.findIndex((entry) => entry.otherId === request.exclusiveStartKey?.otherId) + 1
+        ? list.findIndex(
+            (entry) => entry.otherId === request.exclusiveStartKey?.otherId,
+          ) + 1
         : 0;
       const limit = request.limit ?? list.length;
       const items = list.slice(startIndex, startIndex + limit);
       const lastEvaluatedKey =
         startIndex + limit < list.length && items.length > 0
-          ? { edgeKey: request.edgeKey, otherId: items[items.length - 1].otherId }
+          ? {
+              edgeKey: request.edgeKey,
+              otherId: items[items.length - 1].otherId,
+            }
           : undefined;
 
       return { items, lastEvaluatedKey };
     },
   });
 
-  await ddbBackend.putEdge({ key: { from: "a", to: "b", relation: "owns" }, metadata: { weight: 1 } });
-  await ddbBackend.putEdge({ key: { from: "a", to: "c", relation: "owns" }, metadata: { weight: 2 } });
+  await ddbBackend.putEdge({
+    key: { from: "a", to: "b", relation: "owns" },
+    metadata: { weight: 1 },
+  });
+  await ddbBackend.putEdge({
+    key: { from: "a", to: "c", relation: "owns" },
+    metadata: { weight: 2 },
+  });
   const ddbPage1 = await ddbBackend.getOutgoing("a", "owns", { limit: 1 });
-  const ddbPage2 = await ddbBackend.getOutgoing("a", "owns", { limit: 1, cursor: ddbPage1.nextCursor });
+  const ddbPage2 = await ddbBackend.getOutgoing("a", "owns", {
+    limit: 1,
+    cursor: ddbPage1.nextCursor,
+  });
   await ddbBackend.removeEdge({ from: "a", to: "b", relation: "owns" });
   const ddbAfterRemove = await ddbBackend.getOutgoing("a", "owns");
 

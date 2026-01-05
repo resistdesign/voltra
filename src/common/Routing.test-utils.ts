@@ -22,11 +22,7 @@ export const runRoutingScenario = () => {
   const resolvedRelative = resolvePath("/books/42", "../authors/7");
   const resolvedAbsolute = resolvePath("/books/42", "/authors/7");
   const params = getParamsAndTestPath("/books/42/chapters/3", "/books/:id");
-  const exactParams = getParamsAndTestPath(
-    "/books/42",
-    "/books/:id",
-    true,
-  );
+  const exactParams = getParamsAndTestPath("/books/42", "/books/:id", true);
   const exactMismatch = getParamsAndTestPath(
     "/books/42/chapters/3",
     "/books/:id",

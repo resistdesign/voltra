@@ -2,8 +2,14 @@ import { TypeInfoORMService } from "./TypeInfoORMService";
 import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import { InMemoryItemRelationshipDBDriver } from "./drivers/InMemoryItemRelationshipDBDriver";
 import { StructuredInMemoryBackend } from "../Indexing/structured/inMemoryBackend";
-import { ComparisonOperators, LogicalOperators } from "../../common/SearchTypes";
-import type { TypeInfoMap, TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../common/SearchTypes";
+import type {
+  TypeInfoMap,
+  TypeInfoDataItem,
+} from "../../common/TypeParsing/TypeInfo";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfoTypes";
 
 type Post = {

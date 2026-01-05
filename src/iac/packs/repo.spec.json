@@ -6,19 +6,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "parameterKeys": [
-          "RepoBranch",
-          "RepoName",
-          "RepoOwner",
-          "RepoToken"
-        ],
+        "parameterKeys": ["RepoBranch", "RepoName", "RepoOwner", "RepoToken"],
         "groupLabel": "Repository",
-        "groupParameters": [
-          "RepoOwner",
-          "RepoName",
-          "RepoBranch",
-          "RepoToken"
-        ],
+        "groupParameters": ["RepoOwner", "RepoName", "RepoBranch", "RepoToken"],
         "ownerParamLabel": "RepoOwner",
         "ownerParamType": "String",
         "nameParamLabel": "RepoName",

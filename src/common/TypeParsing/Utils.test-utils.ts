@@ -33,10 +33,9 @@ export const runTypeParsingUtilsScenario = () => {
   };
 
   const selectedFields = ["id", "author", "missing"] as const;
-  const cleanedSelected = removeNonexistentFieldsFromSelectedFields(
-    typeInfo,
-    [...selectedFields],
-  );
+  const cleanedSelected = removeNonexistentFieldsFromSelectedFields(typeInfo, [
+    ...selectedFields,
+  ]);
   const nonReferenceSelected = removeTypeReferenceFieldsFromSelectedFields(
     typeInfo,
     [...selectedFields],

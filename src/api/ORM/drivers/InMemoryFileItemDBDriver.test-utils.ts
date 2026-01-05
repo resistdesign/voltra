@@ -1,5 +1,8 @@
 import { InMemoryFileItemDBDriver } from "./InMemoryFileItemDBDriver";
-import { ComparisonOperators, LogicalOperators } from "../../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../../common/SearchTypes";
 import type { BaseFileItem } from "./S3FileItemDBDriver";
 
 const buildDriver = () =>
@@ -35,7 +38,11 @@ export const runInMemoryFileItemDriverScenario = async () => {
     sizeInBytes: 8,
   });
 
-  const readWithUrls = await driver.readItem(id1, ["id", "uploadUrl", "downloadUrl"]);
+  const readWithUrls = await driver.readItem(id1, [
+    "id",
+    "uploadUrl",
+    "downloadUrl",
+  ]);
   await driver.updateItem(id1, { sizeInBytes: 18 } as Partial<BaseFileItem>);
   const afterUpdate = await driver.readItem(id1);
 

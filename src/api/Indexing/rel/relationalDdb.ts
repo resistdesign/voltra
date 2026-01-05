@@ -5,7 +5,13 @@
  * support directional traversal with cursor-based paging.
  */
 import { decodeRelationalCursor, encodeRelationalCursor } from "./cursor";
-import type { Direction, Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./types";
+import type {
+  Direction,
+  Edge,
+  EdgeKey,
+  EdgePage,
+  RelationalQueryOptions,
+} from "./types";
 
 type EdgeMetadata = Record<string, unknown>;
 
@@ -26,7 +32,9 @@ export type RelationEdgesDdbKey = {
 /**
  * DynamoDB item shape for relation edges.
  */
-export type RelationEdgesDdbItem<TMetadata extends EdgeMetadata = EdgeMetadata> = RelationEdgesDdbKey & {
+export type RelationEdgesDdbItem<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> = RelationEdgesDdbKey & {
   /**
    * Optional metadata stored with the edge.
    */
@@ -37,10 +45,10 @@ export type RelationEdgesDdbItem<TMetadata extends EdgeMetadata = EdgeMetadata> 
  * Schema metadata for relational edges stored in DynamoDB.
  */
 export const relationEdgesSchema = {
-  tableName: 'RelationEdges',
-  partitionKey: 'edgeKey',
-  sortKey: 'otherId',
-  metadataAttribute: 'metadata',
+  tableName: "RelationEdges",
+  partitionKey: "edgeKey",
+  sortKey: "otherId",
+  metadataAttribute: "metadata",
 } as const;
 
 /**
@@ -121,7 +129,9 @@ export type RelationEdgesQueryRequest = {
 /**
  * Query results for relation edges.
  */
-export type RelationEdgesQueryResult<TMetadata extends EdgeMetadata = EdgeMetadata> = {
+export type RelationEdgesQueryResult<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> = {
   /**
    * Returned items for the query.
    */
@@ -135,7 +145,9 @@ export type RelationEdgesQueryResult<TMetadata extends EdgeMetadata = EdgeMetada
 /**
  * DynamoDB dependencies required for relation edge storage.
  */
-export type RelationEdgesDdbDependencies<TMetadata extends EdgeMetadata = EdgeMetadata> = {
+export type RelationEdgesDdbDependencies<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> = {
   /**
    * Batch put relation edge items.
    * @param items Edge items to store.
@@ -153,7 +165,9 @@ export type RelationEdgesDdbDependencies<TMetadata extends EdgeMetadata = EdgeMe
    * @param request Query request parameters.
    * @returns Query results and pagination key.
    */
-  queryEdges(request: RelationEdgesQueryRequest): Promise<RelationEdgesQueryResult<TMetadata>>;
+  queryEdges(
+    request: RelationEdgesQueryRequest,
+  ): Promise<RelationEdgesQueryResult<TMetadata>>;
 };
 
 type RelationEdgesCursorToken = {
@@ -161,7 +175,9 @@ type RelationEdgesCursorToken = {
   otherId: string;
 };
 
-function encodeRelationEdgesToken(key?: RelationEdgesDdbKey): string | undefined {
+function encodeRelationEdgesToken(
+  key?: RelationEdgesDdbKey,
+): string | undefined {
   if (!key) {
     return undefined;
   }
@@ -169,15 +185,20 @@ function encodeRelationEdgesToken(key?: RelationEdgesDdbKey): string | undefined
   return JSON.stringify(key);
 }
 
-function decodeRelationEdgesToken(token?: string): RelationEdgesCursorToken | undefined {
+function decodeRelationEdgesToken(
+  token?: string,
+): RelationEdgesCursorToken | undefined {
   if (!token) {
     return undefined;
   }
 
   const parsed = JSON.parse(token) as Partial<RelationEdgesCursorToken>;
 
-  if (typeof parsed.edgeKey !== 'string' || typeof parsed.otherId !== 'string') {
-    throw new Error('Invalid relation edges cursor token.');
+  if (
+    typeof parsed.edgeKey !== "string" ||
+    typeof parsed.otherId !== "string"
+  ) {
+    throw new Error("Invalid relation edges cursor token.");
   }
 
   return { edgeKey: parsed.edgeKey, otherId: parsed.otherId };
@@ -186,11 +207,15 @@ function decodeRelationEdgesToken(token?: string): RelationEdgesCursorToken | un
 /**
  * DynamoDB-backed relational edge store with directional queries.
  */
-export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata> {
+export class RelationalDdbBackend<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> {
   /**
    * @param dependencies DynamoDB query/write dependencies.
    */
-  constructor(private readonly dependencies: RelationEdgesDdbDependencies<TMetadata>) {}
+  constructor(
+    private readonly dependencies: RelationEdgesDdbDependencies<TMetadata>,
+  ) {}
 
   /**
    * Insert or update an edge.
@@ -199,8 +224,20 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
    */
   async putEdge(edge: Edge<TMetadata>): Promise<void> {
     const { from, to, relation } = edge.key;
-    const forwardItem = buildRelationEdgeDdbItem(from, relation, 'out', to, edge.metadata);
-    const reverseItem = buildRelationEdgeDdbItem(to, relation, 'in', from, edge.metadata);
+    const forwardItem = buildRelationEdgeDdbItem(
+      from,
+      relation,
+      "out",
+      to,
+      edge.metadata,
+    );
+    const reverseItem = buildRelationEdgeDdbItem(
+      to,
+      relation,
+      "in",
+      from,
+      edge.metadata,
+    );
 
     await this.dependencies.putEdges([forwardItem, reverseItem]);
   }
@@ -212,8 +249,8 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
    */
   async removeEdge(key: EdgeKey): Promise<void> {
     const { from, to, relation } = key;
-    const forwardKey = buildRelationEdgeDdbKey(from, relation, 'out', to);
-    const reverseKey = buildRelationEdgeDdbKey(to, relation, 'in', from);
+    const forwardKey = buildRelationEdgeDdbKey(from, relation, "out", to);
+    const reverseKey = buildRelationEdgeDdbKey(to, relation, "in", from);
 
     await this.dependencies.deleteEdges([forwardKey, reverseKey]);
   }
@@ -231,8 +268,10 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
     options: RelationalQueryOptions = {},
   ): Promise<EdgePage<TMetadata>> {
     const cursorState = decodeRelationalCursor(options.cursor);
-    const exclusiveStartKey = decodeRelationEdgesToken(cursorState?.continuationToken);
-    const edgeKey = encodeRelationEdgePartitionKey(fromId, relation, 'out');
+    const exclusiveStartKey = decodeRelationEdgesToken(
+      cursorState?.continuationToken,
+    );
+    const edgeKey = encodeRelationEdgePartitionKey(fromId, relation, "out");
     const result = await this.dependencies.queryEdges({
       edgeKey,
       limit: options.limit,
@@ -265,8 +304,10 @@ export class RelationalDdbBackend<TMetadata extends EdgeMetadata = EdgeMetadata>
     options: RelationalQueryOptions = {},
   ): Promise<EdgePage<TMetadata>> {
     const cursorState = decodeRelationalCursor(options.cursor);
-    const exclusiveStartKey = decodeRelationEdgesToken(cursorState?.continuationToken);
-    const edgeKey = encodeRelationEdgePartitionKey(toId, relation, 'in');
+    const exclusiveStartKey = decodeRelationEdgesToken(
+      cursorState?.continuationToken,
+    );
+    const edgeKey = encodeRelationEdgePartitionKey(toId, relation, "in");
     const result = await this.dependencies.queryEdges({
       edgeKey,
       limit: options.limit,

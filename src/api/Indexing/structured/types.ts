@@ -17,7 +17,7 @@ export type StructuredTermWhere = {
   /**
    * Clause type discriminator.
    */
-  type: 'term';
+  type: "term";
   /**
    * Field name to query.
    */
@@ -25,7 +25,7 @@ export type StructuredTermWhere = {
   /**
    * Term match mode.
    */
-  mode: 'eq' | 'contains';
+  mode: "eq" | "contains";
   /**
    * Value to match.
    */
@@ -40,7 +40,7 @@ export type StructuredRangeWhere =
       /**
        * Clause type discriminator for range between.
        */
-      type: 'between';
+      type: "between";
       /**
        * Field name to query.
        */
@@ -58,7 +58,7 @@ export type StructuredRangeWhere =
       /**
        * Clause type discriminator for range gte.
        */
-      type: 'gte';
+      type: "gte";
       /**
        * Field name to query.
        */
@@ -72,7 +72,7 @@ export type StructuredRangeWhere =
       /**
        * Clause type discriminator for range lte.
        */
-      type: 'lte';
+      type: "lte";
       /**
        * Field name to query.
        */
@@ -106,7 +106,11 @@ export type WhereOr = {
 /**
  * Structured query expression.
  */
-export type Where = WhereAnd | WhereOr | StructuredTermWhere | StructuredRangeWhere;
+export type Where =
+  | WhereAnd
+  | WhereOr
+  | StructuredTermWhere
+  | StructuredRangeWhere;
 
 /**
  * Paging options for structured queries.

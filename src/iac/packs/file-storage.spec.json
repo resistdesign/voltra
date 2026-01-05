@@ -6,9 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "resourceKeys": [
-          "FileStorage"
-        ],
+        "resourceKeys": ["FileStorage"],
         "defaultDeletionPolicy": "Delete",
         "defaultPublicAccess": {
           "BlockPublicAcls": true,
@@ -37,19 +35,9 @@
         "customCors": {
           "CorsRules": [
             {
-              "AllowedHeaders": [
-                "*"
-              ],
-              "AllowedMethods": [
-                "GET",
-                "PUT",
-                "POST",
-                "DELETE",
-                "HEAD"
-              ],
-              "AllowedOrigins": [
-                "*"
-              ]
+              "AllowedHeaders": ["*"],
+              "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+              "AllowedOrigins": ["*"]
             }
           ]
         },

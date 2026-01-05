@@ -17,17 +17,10 @@
         "arrayContainsResult": true,
         "arrayEqualsResult": true,
         "merged": {
-          "messages": [
-            "m1",
-            "m2"
-          ],
+          "messages": ["m1", "m2"],
           "generated": [],
-          "passes": [
-            "p1"
-          ],
-          "failures": [
-            "f1"
-          ],
+          "passes": ["p1"],
+          "failures": ["f1"],
           "errors": []
         },
         "operationKeys": [

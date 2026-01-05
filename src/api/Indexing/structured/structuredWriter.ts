@@ -1,16 +1,16 @@
-import type { DocId } from '../types.js';
-import type { WhereValue } from './types.js';
+import type { DocId } from "../types.js";
+import type { WhereValue } from "./types.js";
 import type {
   StructuredDocFieldsRecord,
   StructuredRangeIndexItem,
   StructuredRangeIndexKey,
   StructuredTermIndexItem,
   StructuredTermIndexKey,
-} from './structuredDdb.js';
+} from "./structuredDdb.js";
 import {
   buildStructuredRangeItem,
   buildStructuredTermItem,
-} from './structuredDdb.js';
+} from "./structuredDdb.js";
 
 /**
  * Dependencies required to persist structured index entries.
@@ -59,7 +59,9 @@ type TermEntry = StructuredTermIndexItem;
 
 type RangeEntry = StructuredRangeIndexItem;
 
-function normalizeFields(fields: StructuredDocFieldsRecord): StructuredDocFieldsRecord {
+function normalizeFields(
+  fields: StructuredDocFieldsRecord,
+): StructuredDocFieldsRecord {
   const normalized: StructuredDocFieldsRecord = {};
 
   for (const [field, value] of Object.entries(fields)) {
@@ -74,24 +76,30 @@ function normalizeFields(fields: StructuredDocFieldsRecord): StructuredDocFields
   return normalized;
 }
 
-function buildTermEntries(docId: DocId, fields: StructuredDocFieldsRecord): TermEntry[] {
+function buildTermEntries(
+  docId: DocId,
+  fields: StructuredDocFieldsRecord,
+): TermEntry[] {
   const entries: TermEntry[] = [];
 
   for (const [field, value] of Object.entries(fields)) {
     if (Array.isArray(value)) {
       const uniqueValues = new Set<WhereValue>(value);
       for (const entry of uniqueValues) {
-        entries.push(buildStructuredTermItem(field, entry, 'contains', docId));
+        entries.push(buildStructuredTermItem(field, entry, "contains", docId));
       }
     } else {
-      entries.push(buildStructuredTermItem(field, value, 'eq', docId));
+      entries.push(buildStructuredTermItem(field, value, "eq", docId));
     }
   }
 
   return entries;
 }
 
-function buildRangeEntries(docId: DocId, fields: StructuredDocFieldsRecord): RangeEntry[] {
+function buildRangeEntries(
+  docId: DocId,
+  fields: StructuredDocFieldsRecord,
+): RangeEntry[] {
   const entries: RangeEntry[] = [];
 
   for (const [field, value] of Object.entries(fields)) {
@@ -140,11 +148,17 @@ function diffEntries<T>(
 }
 
 function toTermKeys(entries: TermEntry[]): StructuredTermIndexKey[] {
-  return entries.map((entry) => ({ termKey: entry.termKey, docId: entry.docId }));
+  return entries.map((entry) => ({
+    termKey: entry.termKey,
+    docId: entry.docId,
+  }));
 }
 
 function toRangeKeys(entries: RangeEntry[]): StructuredRangeIndexKey[] {
-  return entries.map((entry) => ({ field: entry.field, rangeKey: entry.rangeKey }));
+  return entries.map((entry) => ({
+    field: entry.field,
+    rangeKey: entry.rangeKey,
+  }));
 }
 
 /**
@@ -165,7 +179,9 @@ export class StructuredDdbWriter {
   async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
     const normalized = normalizeFields(fields);
     const previousFields = await this.dependencies.loadDocFields(docId);
-    const previousNormalized = previousFields ? normalizeFields(previousFields) : {};
+    const previousNormalized = previousFields
+      ? normalizeFields(previousFields)
+      : {};
 
     const previousTerms = buildTermEntries(docId, previousNormalized);
     const nextTerms = buildTermEntries(docId, normalized);
@@ -180,7 +196,9 @@ export class StructuredDdbWriter {
     }
 
     if (rangeDiff.toDelete.length > 0) {
-      await this.dependencies.deleteRangeEntries(toRangeKeys(rangeDiff.toDelete));
+      await this.dependencies.deleteRangeEntries(
+        toRangeKeys(rangeDiff.toDelete),
+      );
     }
 
     if (termDiff.toAdd.length > 0) {

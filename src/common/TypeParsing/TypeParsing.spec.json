@@ -15,51 +15,19 @@
           "PickedBook"
         ],
         "bookPrimaryField": "id",
-        "bookFields": [
-          "id",
-          "title",
-          "rating",
-          "tags",
-          "author"
-        ],
+        "bookFields": ["id", "title", "rating", "tags", "author"],
         "bookTags": {
           "label": "Book",
           "persisted": true
         },
-        "bookRatingOptions": [
-          1,
-          2
-        ],
-        "pickedFields": [
-          "id",
-          "rating"
-        ],
-        "omittedFields": [
-          "id",
-          "title",
-          "rating",
-          "author"
-        ],
+        "bookRatingOptions": [1, 2],
+        "pickedFields": ["id", "rating"],
+        "omittedFields": ["id", "title", "rating", "author"],
         "mixedUnionFieldSets": [
-          [
-            "id",
-            "title",
-            "rating",
-            "tags",
-            "author"
-          ],
-          [
-            "name"
-          ]
+          ["id", "title", "rating", "tags", "author"],
+          ["name"]
         ],
-        "mixedFields": [
-          "author",
-          "id",
-          "name",
-          "rating",
-          "tags",
-          "title"
-        ]
+        "mixedFields": ["author", "id", "name", "rating", "tags", "title"]
       }
     }
   ]

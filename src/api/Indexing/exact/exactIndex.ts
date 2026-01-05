@@ -77,7 +77,12 @@ export class ExactIndex {
    * @param positions Token positions within the document.
    * @returns Nothing.
    */
-  addPositions(token: string, indexField: string, docId: DocId, positions: number[]): void {
+  addPositions(
+    token: string,
+    indexField: string,
+    docId: DocId,
+    positions: number[],
+  ): void {
     const key = this.buildTokenKey(indexField, token);
     const tokenPostings = this.postings.get(key) ?? new Map();
     tokenPostings.set(docId, [...positions]);
@@ -129,7 +134,11 @@ export class ExactIndex {
    * @param docId Document id containing the token.
    * @returns Positions array or undefined if not found.
    */
-  getPositions(token: string, indexField: string, docId: DocId): number[] | undefined {
+  getPositions(
+    token: string,
+    indexField: string,
+    docId: DocId,
+  ): number[] | undefined {
     const key = this.buildTokenKey(indexField, token);
     return this.postings.get(key)?.get(docId);
   }
@@ -163,7 +172,9 @@ export class ExactIndex {
     });
 
     return firstPositions.some((start) =>
-      restPositionSets.every((positions, offset) => positions.has(start + offset + 1)),
+      restPositionSets.every((positions, offset) =>
+        positions.has(start + offset + 1),
+      ),
     );
   }
 

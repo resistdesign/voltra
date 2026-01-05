@@ -26,9 +26,7 @@ export const runSearchTypesScenario = () => {
     ],
   };
 
-  const sortFields: SortField[] = [
-    { field: "publishedAt", reverse: true },
-  ];
+  const sortFields: SortField[] = [{ field: "publishedAt", reverse: true }];
 
   const text: TextSearchConfig = {
     query: "Voltra",

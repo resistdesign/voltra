@@ -13,7 +13,9 @@ import {
 import type { Where } from "../../Indexing/structured/types";
 import { TypeInfoORMServiceError } from "../../../common/TypeInfoORM";
 
-const resolveBetweenBounds = (criterion: FieldCriterion): [unknown, unknown] => {
+const resolveBetweenBounds = (
+  criterion: FieldCriterion,
+): [unknown, unknown] => {
   const { value, valueOptions } = criterion;
   if (Array.isArray(valueOptions) && valueOptions.length === 2) {
     return [valueOptions[0], valueOptions[1]];
@@ -56,7 +58,12 @@ const buildWhereForCriterion = (criterion: FieldCriterion): Where => {
       return { type: "lte", field: fieldName, value: value as any };
     case ComparisonOperators.BETWEEN: {
       const [lower, upper] = resolveBetweenBounds(criterion);
-      return { type: "between", field: fieldName, lower: lower as any, upper: upper as any };
+      return {
+        type: "between",
+        field: fieldName,
+        lower: lower as any,
+        upper: upper as any,
+      };
     }
     case ComparisonOperators.IN: {
       const values = Array.isArray(criterion.valueOptions)

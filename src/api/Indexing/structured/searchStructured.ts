@@ -13,7 +13,7 @@ import type {
 type StructuredTermIndex = {
   query(
     field: string,
-    mode: StructuredTermWhere['mode'],
+    mode: StructuredTermWhere["mode"],
     value: WhereValue,
     options?: StructuredQueryOptions,
   ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }>;
@@ -118,10 +118,15 @@ async function evaluateTerm(
   options: StructuredQueryOptions,
   cursorState: CursorState | undefined,
 ): Promise<CandidateSource & { nextCursor?: string }> {
-  const response = await dependencies.terms.query(where.field, where.mode, where.value, {
-    limit: options.limit,
-    cursor: cursorState?.termToken,
-  });
+  const response = await dependencies.terms.query(
+    where.field,
+    where.mode,
+    where.value,
+    {
+      limit: options.limit,
+      cursor: cursorState?.termToken,
+    },
+  );
 
   const candidateIds = response.candidateIds.slice().sort(compareDocId);
   const nextCursor =
@@ -141,15 +146,31 @@ async function evaluateRange(
   options: StructuredQueryOptions,
   cursorState: CursorState | undefined,
 ): Promise<CandidateSource & { nextCursor?: string }> {
-  const rangeOptions = { limit: options.limit, cursor: cursorState?.rangeToken };
+  const rangeOptions = {
+    limit: options.limit,
+    cursor: cursorState?.rangeToken,
+  };
   let response: { candidateIds: DocId[]; lastEvaluatedKey?: string };
 
-  if (where.type === 'between') {
-    response = await dependencies.ranges.between(where.field, where.lower, where.upper, rangeOptions);
-  } else if (where.type === 'gte') {
-    response = await dependencies.ranges.gte(where.field, where.value, rangeOptions);
+  if (where.type === "between") {
+    response = await dependencies.ranges.between(
+      where.field,
+      where.lower,
+      where.upper,
+      rangeOptions,
+    );
+  } else if (where.type === "gte") {
+    response = await dependencies.ranges.gte(
+      where.field,
+      where.value,
+      rangeOptions,
+    );
   } else {
-    response = await dependencies.ranges.lte(where.field, where.value, rangeOptions);
+    response = await dependencies.ranges.lte(
+      where.field,
+      where.value,
+      rangeOptions,
+    );
   }
 
   const candidateIds = response.candidateIds.slice().sort(compareDocId);
@@ -170,7 +191,7 @@ async function evaluateLeaf(
   options: StructuredQueryOptions,
   cursorState: CursorState | undefined,
 ): Promise<CandidateSource & { nextCursor?: string }> {
-  if (where.type === 'term') {
+  if (where.type === "term") {
     return evaluateTerm(dependencies, where, options, cursorState);
   }
 
@@ -183,13 +204,15 @@ async function evaluateWhere(
   options: StructuredQueryOptions,
   cursorState: CursorState | undefined,
 ): Promise<CandidateSource & { nextCursor?: string }> {
-  if ('and' in where) {
+  if ("and" in where) {
     if (where.and.length === 0) {
       return { size: 0, candidateIds: [] };
     }
 
     const childResults = await Promise.all(
-      where.and.map((child) => evaluateWhere(dependencies, child, {}, undefined)),
+      where.and.map((child) =>
+        evaluateWhere(dependencies, child, {}, undefined),
+      ),
     );
     const ordered = childResults.slice().sort((a, b) => a.size - b.size);
     let candidates = ordered[0]?.candidateIds ?? [];
@@ -206,27 +229,35 @@ async function evaluateWhere(
     const candidateIds = filtered.slice(0, limit);
     const hasMore = filtered.length > limit;
     const nextCursor = hasMore
-      ? encodeStructuredCursor({ lastDocId: candidateIds[candidateIds.length - 1] })
+      ? encodeStructuredCursor({
+          lastDocId: candidateIds[candidateIds.length - 1],
+        })
       : undefined;
 
     return { size: candidates.length, candidateIds, nextCursor };
   }
 
-  if ('or' in where) {
+  if ("or" in where) {
     if (where.or.length === 0) {
       return { size: 0, candidateIds: [] };
     }
 
     const childResults = await Promise.all(
-      where.or.map((child) => evaluateWhere(dependencies, child, {}, undefined)),
+      where.or.map((child) =>
+        evaluateWhere(dependencies, child, {}, undefined),
+      ),
     );
-    const candidates = mergeOrSorted(childResults.map((result) => result.candidateIds));
+    const candidates = mergeOrSorted(
+      childResults.map((result) => result.candidateIds),
+    );
     const filtered = applyCursor(candidates, cursorState?.lastDocId);
     const limit = options.limit ?? filtered.length;
     const candidateIds = filtered.slice(0, limit);
     const hasMore = filtered.length > limit;
     const nextCursor = hasMore
-      ? encodeStructuredCursor({ lastDocId: candidateIds[candidateIds.length - 1] })
+      ? encodeStructuredCursor({
+          lastDocId: candidateIds[candidateIds.length - 1],
+        })
       : undefined;
 
     return { size: candidates.length, candidateIds, nextCursor };

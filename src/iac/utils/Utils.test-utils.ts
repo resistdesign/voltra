@@ -3,8 +3,8 @@ import { addParameter, addParameters, patchTemplate } from "./index";
 
 export const runPatchUtilsScenario = () => {
   const mergeConfig = {
-    "arr": { strategy: "accumulate" },
-    "unique": { strategy: "accumulate-unique" },
+    arr: { strategy: "accumulate" },
+    unique: { strategy: "accumulate-unique" },
     "by-id": { strategy: "accumulate-unique-by", data: "id" },
   } as const;
 
@@ -33,9 +33,9 @@ export const runPatchUtilsScenario = () => {
       },
     },
     {
-      "arr": mergeConfig.arr,
-      "unique": mergeConfig.unique,
-      "byId": mergeConfig["by-id"],
+      arr: mergeConfig.arr,
+      unique: mergeConfig.unique,
+      byId: mergeConfig["by-id"],
     },
   );
 
@@ -44,7 +44,7 @@ export const runPatchUtilsScenario = () => {
     { value: 1 },
     { value: 2 },
     {
-      "value": { strategy: "replace" },
+      value: { strategy: "replace" },
     },
   );
 

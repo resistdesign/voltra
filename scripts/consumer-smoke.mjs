@@ -147,7 +147,9 @@ const run = async () => {
     const deepImportFailed = !deepResult.ok;
 
     if (!deepImportFailed) {
-      throw new Error("Deep import unexpectedly resolved. Exports guard failed.");
+      throw new Error(
+        "Deep import unexpectedly resolved. Exports guard failed.",
+      );
     }
 
     runNodeModule(

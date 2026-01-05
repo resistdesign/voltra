@@ -16,7 +16,9 @@ export const runFullTextMemoryBackendScenario = async () => {
   await backend.addLossyPosting("world", "text", "doc-2");
 
   const lossyAll = await backend.loadLossyPostings("hello", "text");
-  const lossyPage = await backend.queryLossyPostingsPage("hello", "text", { limit: 1 });
+  const lossyPage = await backend.queryLossyPostingsPage("hello", "text", {
+    limit: 1,
+  });
 
   await backend.addExactPositions("hello", "text", "doc-1", [0, 2]);
   await backend.addExactPositions("hello", "text", "doc-2", [1]);
@@ -31,7 +33,11 @@ export const runFullTextMemoryBackendScenario = async () => {
   const tokenStatsMissing = await backend.loadTokenStats("missing", "text");
 
   const hasDocToken = await backend.hasDocToken("doc-2", "text", "world");
-  const hasDocTokenMissing = await backend.hasDocToken("doc-3", "text", "hello");
+  const hasDocTokenMissing = await backend.hasDocToken(
+    "doc-3",
+    "text",
+    "hello",
+  );
   const batchHas = await backend.batchHasDocTokens([
     { docId: "doc-1", indexField: "text", token: "hello" },
     { docId: "doc-2", indexField: "text", token: "world" },
@@ -41,7 +47,11 @@ export const runFullTextMemoryBackendScenario = async () => {
   await backend.removeLossyPosting("hello", "text", "doc-2");
   await backend.removeExactPositions("hello", "text", "doc-2");
   const lossyAfterRemove = await backend.loadLossyPostings("hello", "text");
-  const exactAfterRemove = await backend.loadExactPositions("hello", "text", "doc-2");
+  const exactAfterRemove = await backend.loadExactPositions(
+    "hello",
+    "text",
+    "doc-2",
+  );
 
   return {
     lossyAll,
@@ -61,7 +71,11 @@ export const runFullTextMemoryBackendScenario = async () => {
       docMirrorKey: encodeDocMirrorKey("text", "doc-1"),
       tokenDocSortKey: encodeTokenDocSortKey("doc-1"),
       docTokenSortKey: encodeDocTokenSortKey("text", "hello"),
-      docTokenPositionSortKey: encodeDocTokenPositionSortKey("text", "hello", 2),
+      docTokenPositionSortKey: encodeDocTokenPositionSortKey(
+        "text",
+        "hello",
+        2,
+      ),
     },
   };
 };

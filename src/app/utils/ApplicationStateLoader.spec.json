@@ -11,20 +11,14 @@
         "successHasValue": true,
         "successValue": {
           "result": "ok",
-          "args": [
-            "direct"
-          ]
+          "args": ["direct"]
         },
         "successModified": false,
-        "successOnLoadCalls": [
-          true
-        ],
+        "successOnLoadCalls": [true],
         "errorHasValue": true,
         "errorValue": null,
         "errorModified": false,
-        "errorOnLoadCalls": [
-          false
-        ]
+        "errorOnLoadCalls": [false]
       }
     }
   ]

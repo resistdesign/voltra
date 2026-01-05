@@ -36,13 +36,11 @@ export const checkType = (
     const elementType = (node as ArrayTypeNode).elementType;
     const {
       typeReference: elementReference,
-      isArray: elementIsArray,
       typeKeyword: elementKeyword,
       options: elementOptions,
     } = checkType(elementType);
 
     typeReference = elementReference;
-    isArray = !!elementIsArray;
     typeKeyword = elementKeyword || "string";
     options = elementOptions;
   } else if (node.kind === SyntaxKind.UnionType) {

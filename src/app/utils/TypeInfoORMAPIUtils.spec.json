@@ -20,9 +20,7 @@
             "loading": false,
             "data": {
               "ok": true,
-              "args": [
-                "a"
-              ]
+              "args": ["a"]
             },
             "error": null
           }
@@ -50,9 +48,7 @@
           null,
           {
             "ok": true,
-            "args": [
-              "factory"
-            ]
+            "args": ["factory"]
           }
         ]
       }

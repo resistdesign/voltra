@@ -1,0 +1,244 @@
+{
+  "file": "./Engine.test-utils.ts",
+  "tests": [
+    {
+      "export": "runFormControllerScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "values": {
+          "name": "Ada",
+          "email": "ada@example.com",
+          "active": false,
+          "tags": []
+        },
+        "fields": [
+          {
+            "key": "name",
+            "label": "Name",
+            "required": true,
+            "value": "Ada",
+            "disabled": true,
+            "hidden": false,
+            "primary": true
+          },
+          {
+            "key": "age",
+            "label": "age",
+            "required": false,
+            "value": null,
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "email",
+            "label": "email",
+            "required": false,
+            "value": "ada@example.com",
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "token",
+            "label": "token",
+            "required": false,
+            "value": null,
+            "disabled": true,
+            "hidden": true,
+            "primary": false
+          },
+          {
+            "key": "status",
+            "label": "status",
+            "required": false,
+            "value": null,
+            "disabled": true,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "active",
+            "label": "active",
+            "required": true,
+            "value": false,
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "tags",
+            "label": "tags",
+            "required": true,
+            "value": [],
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          }
+        ]
+      }
+    },
+    {
+      "export": "runFieldOrderScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fields": [
+          {
+            "key": "alpha",
+            "type": "string",
+            "array": false,
+            "optional": false
+          },
+          {
+            "key": "beta",
+            "type": "number",
+            "array": false,
+            "optional": true
+          },
+          {
+            "key": "gamma",
+            "type": "boolean",
+            "array": false,
+            "optional": false
+          }
+        ]
+      }
+    },
+    {
+      "export": "runUnionFieldSetsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fieldKeys": ["first", "second", "third"]
+      }
+    },
+    {
+      "export": "runReadonlyValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validationPassed": true,
+        "fieldDisabled": true,
+        "fieldRequired": true
+      }
+    },
+    {
+      "export": "runOptionalValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validationPassed": true,
+        "fieldRequired": false
+      }
+    },
+    {
+      "export": "runNormalizedTagsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "Outer",
+        "hidden": false
+      }
+    },
+    {
+      "export": "runPrimaryTagScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "primary": true,
+        "disabled": true
+      }
+    },
+    {
+      "export": "runLabelTagScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "Display Title"
+      }
+    },
+    {
+      "export": "runDefaultValueConstraintScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "value": "draft"
+      }
+    },
+    {
+      "export": "runPatternValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validationPassed": false
+      }
+    },
+    {
+      "export": "runDeniedOperationsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createDisabled": true,
+        "readDisabled": true,
+        "updateDisabled": true,
+        "deleteDisabled": true
+      }
+    },
+    {
+      "export": "runTypeTagsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "Widget",
+        "fullPaging": true,
+        "persisted": false
+      }
+    },
+    {
+      "export": "runTypeDeniedOperationsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createDisabled": true,
+        "readDisabled": true,
+        "updateDisabled": true,
+        "deleteDisabled": true
+      }
+    },
+    {
+      "export": "runTypeInfoPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fieldKeys": ["title"],
+        "entryTypeName": "Widget"
+      }
+    },
+    {
+      "export": "runLiteralValueScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "values": {
+          "name": "Ada",
+          "age": 42,
+          "active": true,
+          "note": null
+        },
+        "validationPassed": true
+      }
+    },
+    {
+      "export": "runDataItemScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "scalarValue": "Nova",
+        "arrayValue": ["alpha", "beta"],
+        "arrayIsArray": true
+      }
+    }
+  ]
+}

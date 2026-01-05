@@ -126,14 +126,23 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
       margin: 0;
       padding: 1em;
 
-      & > img.logo {
-        max-width: 60%;
-        filter: drop-shadow(0 0 30px rgba(128, 0, 255, 1)) drop-shadow(0 0 60px rgba(128, 0, 255, 0.8)) drop-shadow(0 0 90px rgba(128, 0, 255, 0.5));
+      & > a.logo-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        width: 100%;
+
+        & > img.logo {
+          max-width: 60%;
+          filter: drop-shadow(0 0 30px rgba(128, 0, 255, 1)) drop-shadow(0 0 60px rgba(128, 0, 255, 0.8)) drop-shadow(0 0 90px rgba(128, 0, 255, 0.5));
+        }
       }
-    }
   </style>
   <header>
-    <img class="logo" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
+    <a class="logo-link" href="/">
+      <img class="logo" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
+    </a>
   </header>
     <slot />
   </body>

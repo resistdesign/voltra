@@ -25,9 +25,7 @@
               "Statement": [
                 {
                   "Effect": "Allow",
-                  "Action": [
-                    "*"
-                  ],
+                  "Action": ["*"],
                   "Resource": "*"
                 }
               ]
@@ -53,9 +51,7 @@
               "Statement": [
                 {
                   "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogGroup"
-                  ],
+                  "Action": ["logs:CreateLogGroup"],
                   "Resource": "*"
                 }
               ]
