@@ -1,0 +1,81 @@
+- Voltra Form System Test Plan (TypeInfo Coverage)
+  - Scope
+    - Add tests for form engine + UI behavior driven by `TypeInfo` and sub-types.
+    - Each checklist item below maps 1:1 to a single property or tag in `TypeInfo`/sub-types.
+    - Target locations: `src/app/forms/Engine.ts`, `src/app/forms/UI.tsx`, `src/app/forms/types.ts`, `src/app/forms/utils.ts`.
+    - Test harness: JSON spec runner using `src/**/*.spec.json` and `src/**/Engine.test-utils.ts` style helpers.
+    - Known assumptions: form values are flat (`TypeInfoDataItem`), arrays are primitives only, relations/custom types defer to handlers.
+    - Demo reference: `site/app/src/client/AdvancedDemo.tsx` reflects current behaviors but is not the test target.
+    - Validation rules: required checks skip hidden fields; readonly fields skip required validation when empty; empty arrays are missing for required.
+    - Recent refactor history (for test context):
+      - `TypeInfo`/`TypeInfoField` are the single source of truth; legacy metadata types were removed.
+      - Form engine uses `TypeInfoDataItem` values; no nested objects, deepest value is array of primitives.
+      - Relations (`typeReference`) do not bind values; the UI only triggers handler actions (button-only).
+      - Custom types (`tags.customType`) also defer to handlers; arrays of custom types use add/edit/remove actions.
+      - Hidden tags can appear nested; `normalizeFieldTags` merges nested `tags` and `tags.tags`.
+      - Required boolean defaults to `false` when missing; number inputs treat empty as `null`.
+      - Required arrays validate on length > 0; optional arrays should not be defaulted until first add.
+      - Readonly required fields should not block submit if empty.
+      - Number input leading-zero padding was fixed by parsing from raw string.
+
+  - TypeInfo
+    - [ ] primaryField: primary field disables on update and shows primary flag
+    - [ ] fields: field map drives controller list order and key mapping
+    - [ ] unionFieldSets: controller preserves field list when union sets present
+
+  - TypeInfoField
+    - [ ] type: renders correct primitive input for string
+    - [ ] type: renders correct primitive input for number
+    - [ ] type: renders correct primitive input for boolean
+    - [ ] typeReference: renders relation control (single)
+    - [ ] typeReference: renders relation control (array)
+    - [ ] array: renders repeatable array UI for primitives
+    - [ ] readonly: disables input and skips required validation when empty
+    - [ ] optional: required validation toggled off when true
+    - [ ] possibleValues: renders select for string values
+    - [ ] possibleValues: renders select for number values
+    - [ ] possibleValues: boolean/null values ignored in select options
+    - [ ] tags: normalized tags map from parser to form UI
+
+  - SupportedFieldTags
+    - [ ] primaryField: marks controller field as primary (and disables on update)
+    - [ ] label: label overrides default field key
+    - [ ] format: uses correct input `type` for string
+    - [ ] allowCustomSelection: datalist input when possibleValues present
+    - [ ] customType: defers to custom type handler for scalar
+    - [ ] customType: defers to custom type handler for arrays
+    - [ ] hidden: field omitted from AutoFormView
+    - [ ] fullPaging: passed through to relation handler payload
+    - [ ] constraints.defaultValue: applied for missing initial values
+    - [ ] constraints.step: number input step attribute
+    - [ ] constraints.min: number input min attribute
+    - [ ] constraints.max: number input max attribute
+    - [ ] constraints.pattern: string input pattern attribute
+    - [ ] constraints.pattern: string input validation error on submit
+    - [ ] deniedOperations.CREATE: disables field on create
+    - [ ] deniedOperations.READ: disables field on read
+    - [ ] deniedOperations.UPDATE: disables field on update
+    - [ ] deniedOperations.DELETE: disables field on delete
+
+  - SupportedTags (Type-Level)
+    - [ ] label: exposed for type-level consumers
+    - [ ] deniedOperations.CREATE: disables all fields on create
+    - [ ] deniedOperations.READ: disables all fields on read
+    - [ ] deniedOperations.UPDATE: disables all fields on update
+    - [ ] deniedOperations.DELETE: disables all fields on delete
+    - [ ] fullPaging: exposed for type-level consumers
+    - [ ] persisted: exposed for type-level consumers
+
+  - TypeInfoPack
+    - [ ] entryTypeName: form system resolves correct entry type for rendering
+    - [ ] typeInfoMap: form system uses map to look up entry type
+
+  - LiteralValue
+    - [ ] string: accepts + submits string inputs
+    - [ ] number: accepts + submits number inputs
+    - [ ] boolean: accepts + submits boolean inputs
+    - [ ] null: supports nullable values without validation errors
+
+  - TypeInfoDataItem
+    - [ ] supports scalar values per field
+    - [ ] supports array values for primitive arrays
