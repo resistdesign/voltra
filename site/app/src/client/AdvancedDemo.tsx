@@ -17,16 +17,22 @@ import { getTypeInfoMapFromTypeScript } from "../../../../src/common/TypeParsing
 
 const DEFAULT_CODE = `
 /**
- * User Profile
- * @label User Profile Form
- */
-export type UserProfile = {
+ * Internal
+ * */
+type PersistableItem = {
   /**
    * @label User ID
    * @primaryField
+   * @hidden
    */
   readonly id: string;
+};
 
+/**
+ * User Profile
+ * @label User Profile Form
+ */
+export type UserProfile = PersistableItem & {
   /**
    * @label Full Name
    */
@@ -99,13 +105,7 @@ export type UserProfile = {
 /**
  * @label Department
  */
-export type Department = {
-  /**
-   * @label Department ID
-   * @primaryField
-   */
-  readonly id: string;
-
+export type Department = PersistableItem & {
   /**
    * @label Name
    */
@@ -119,9 +119,24 @@ export const AdvancedDemo = () => {
   const [selectedType, setSelectedType] = useState("");
   const [editorTheme, setEditorTheme] = useState("github");
   const getTypeInfo = useCallback(() => {
-    const types: TypeInfoMap = getTypeInfoMapFromTypeScript(code);
+    try {
+      const types: TypeInfoMap = getTypeInfoMapFromTypeScript(code);
 
-    setTypes(types);
+      setTypes(types);
+
+      // Auto-select first type if none selected or current valid
+      const typeNames = Object.keys(types);
+      if (typeNames.length > 0) {
+        if (!typeNames.includes(selectedType)) {
+          setSelectedType(typeNames[0]);
+        }
+      } else {
+        setSelectedType("");
+      }
+    } catch (error) {
+      setTypes({});
+      setSelectedType("");
+    }
   }, [code]);
 
   useEffect(() => {
