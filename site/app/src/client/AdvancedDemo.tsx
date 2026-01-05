@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/theme-twilight";
-import { AutoFormView } from "../../../../src/app/forms/UI";
-import { useFormEngine } from "../../../../src/app/forms/Engine";
-import type { CustomTypeActionPayload } from "../../../../src/app/forms/types";
+import {
+  AutoFormView,
+  type CustomTypeActionPayload,
+  useFormEngine,
+} from "../../../../src/app/forms";
 import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
+import styled from "styled-components";
 
 const DEFAULT_CODE = `
 /**
@@ -332,9 +335,6 @@ return (
     </DemoGrid>
   );
 };
-
-// Styled Components
-import styled from "styled-components";
 
 const DemoGrid = styled.div`
   display: grid;
