@@ -78,6 +78,41 @@
           }
         ]
       }
+    },
+    {
+      "export": "runFieldOrderScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fields": [
+          {
+            "key": "alpha",
+            "type": "string",
+            "array": false,
+            "optional": false
+          },
+          {
+            "key": "beta",
+            "type": "number",
+            "array": false,
+            "optional": true
+          },
+          {
+            "key": "gamma",
+            "type": "boolean",
+            "array": false,
+            "optional": false
+          }
+        ]
+      }
+    },
+    {
+      "export": "runUnionFieldSetsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fieldKeys": ["first", "second", "third"]
+      }
     }
   ]
 }

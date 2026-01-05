@@ -91,3 +91,96 @@ export const runFormControllerScenario = () => {
 
   return snapshot;
 };
+
+export const runFieldOrderScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          alpha: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          beta: {
+            type: "number",
+            array: false,
+            readonly: false,
+            optional: true,
+          },
+          gamma: {
+            type: "boolean",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+        },
+      },
+    );
+
+    snapshot = controller.fields.map(({ key, field }) => ({
+      key,
+      type: field.type,
+      array: field.array,
+      optional: field.optional,
+    }));
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return {
+    fields: snapshot,
+  };
+};
+
+export const runUnionFieldSetsScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          first: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          second: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          third: {
+            type: "number",
+            array: false,
+            readonly: false,
+            optional: true,
+          },
+        },
+        unionFieldSets: [
+          ["first", "second"],
+          ["third"],
+        ],
+      },
+    );
+
+    snapshot = controller.fields.map(({ key }) => key);
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return {
+    fieldKeys: snapshot,
+  };
+};
