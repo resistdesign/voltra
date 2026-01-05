@@ -113,6 +113,34 @@
       "expectation": {
         "fieldKeys": ["first", "second", "third"]
       }
+    },
+    {
+      "export": "runReadonlyValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validationPassed": true,
+        "fieldDisabled": true,
+        "fieldRequired": true
+      }
+    },
+    {
+      "export": "runOptionalValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validationPassed": true,
+        "fieldRequired": false
+      }
+    },
+    {
+      "export": "runNormalizedTagsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "Inner",
+        "hidden": true
+      }
     }
   ]
 }

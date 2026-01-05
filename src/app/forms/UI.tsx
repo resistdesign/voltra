@@ -6,17 +6,17 @@
 
 import React, { FC, FormEvent } from "react";
 import type {
+  LiteralValue,
   TypeInfo,
   TypeInfoField,
   TypeOperation,
-  LiteralValue,
 } from "../../common/TypeParsing/TypeInfo.js";
 import type {
   AutoFieldProps,
+  CustomTypeActionPayload,
   FormController,
   FormValues,
   RelationActionPayload,
-  CustomTypeActionPayload,
 } from "./types.js";
 import { useFormEngine } from "./Engine.js";
 import { normalizeFieldTags } from "./utils.js";
@@ -31,7 +31,6 @@ import {
   Label,
   Select,
 } from "./Primitives.js";
-
 import styled from "styled-components";
 
 // Use function syntax for better ecosystem compatibility
@@ -100,8 +99,7 @@ export const AutoField: FC<AutoFieldProps> = ({
   const format = tags?.format;
   const customType = tags?.customType;
 
-  const parseNumberValue = (raw: string) =>
-    raw === "" ? null : Number(raw);
+  const parseNumberValue = (raw: string) => (raw === "" ? null : Number(raw));
 
   // Filter out boolean and null values for select options
   const selectableValues = possibleValues?.filter(
@@ -296,7 +294,9 @@ export const AutoField: FC<AutoFieldProps> = ({
   // Handle array fields
   if (field.array) {
     const itemField = createArrayItemField(field);
-    const arrayValue = Array.isArray(value) ? [...(value as LiteralValue[])] : [];
+    const arrayValue = Array.isArray(value)
+      ? [...(value as LiteralValue[])]
+      : [];
 
     return (
       <FieldWrapper>
@@ -486,14 +486,14 @@ export const AutoFormView: FC<AutoFormViewProps> = ({
             key={fieldController.key}
             field={fieldController.field}
             fieldKey={fieldController.key}
-          value={fieldController.value}
-          onChange={fieldController.onChange}
-          error={fieldController.error}
-          onRelationAction={onRelationAction}
-          disabled={fieldController.disabled}
-          onCustomTypeAction={onCustomTypeAction}
-        />
-      ))}
+            value={fieldController.value}
+            onChange={fieldController.onChange}
+            error={fieldController.error}
+            onRelationAction={onRelationAction}
+            disabled={fieldController.disabled}
+            onCustomTypeAction={onCustomTypeAction}
+          />
+        ))}
       <SubmitButton type="submit">Submit</SubmitButton>
     </FormContainer>
   );

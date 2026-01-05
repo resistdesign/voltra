@@ -2,6 +2,7 @@ import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { useFormEngine } from "./Engine";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo.js";
+import type { FormController } from "./types.js";
 
 export const runFormControllerScenario = () => {
   let snapshot: any = null;
@@ -183,4 +184,117 @@ export const runUnionFieldSetsScenario = () => {
   return {
     fieldKeys: snapshot,
   };
+};
+
+export const runReadonlyValidationScenario = () => {
+  let controller: FormController | undefined;
+
+  const Component = () => {
+    controller = useFormEngine(
+      {},
+      {
+        fields: {
+          locked: {
+            type: "string",
+            array: false,
+            readonly: true,
+            optional: false,
+          },
+        },
+      },
+    );
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  if (!controller) {
+    throw new Error("Expected controller to be initialized.");
+  }
+
+  const validationPassed = controller.validate();
+  const field = controller.fields[0];
+
+  return {
+    validationPassed,
+    fieldDisabled: field?.disabled ?? null,
+    fieldRequired: field?.required ?? null,
+  };
+};
+
+export const runOptionalValidationScenario = () => {
+  let controller: FormController | undefined;
+
+  const Component = () => {
+    controller = useFormEngine(
+      {},
+      {
+        fields: {
+          nickname: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+          },
+        },
+      },
+    );
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  if (!controller) {
+    throw new Error("Expected controller to be initialized.");
+  }
+
+  const validationPassed = controller.validate();
+  const field = controller.fields[0];
+
+  return {
+    validationPassed,
+    fieldRequired: field?.required ?? null,
+  };
+};
+
+export const runNormalizedTagsScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          title: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              label: "Outer",
+              tags: {
+                label: "Inner",
+                hidden: true,
+              },
+            },
+          },
+        },
+      },
+    );
+
+    const field = controller.fields[0];
+
+    snapshot = {
+      label: field?.label ?? null,
+      hidden: field?.hidden ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
 };

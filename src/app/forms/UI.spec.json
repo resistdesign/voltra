@@ -1,0 +1,61 @@
+{
+  "file": "./UI.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runPrimitiveInputScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringHasTextInput": true,
+        "numberHasNumberInput": true,
+        "booleanHasCheckbox": true
+      }
+    },
+    {
+      "export": "runRelationFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "singleHasManage": true,
+        "singleHasManageRelated": false,
+        "arrayHasManageRelated": true,
+        "arrayHasManage": false,
+        "singleHasRelationHint": false
+      }
+    },
+    {
+      "export": "runArrayFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasAddItemButton": true,
+        "hasRemoveButton": true,
+        "itemHasTextInput": true
+      }
+    },
+    {
+      "export": "runPossibleValuesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringHasSelect": true,
+        "stringHasAlpha": true,
+        "stringHasBeta": true,
+        "numberHasSelect": true,
+        "numberHasOne": true,
+        "numberHasTwo": true
+      }
+    },
+    {
+      "export": "runPossibleValuesFilterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasAlphaOption": true,
+        "hasNumberOption": true,
+        "hasBooleanOption": false,
+        "hasNullOption": false
+      }
+    }
+  ]
+}
