@@ -6,6 +6,10 @@ export default defineConfig({
   vite: {
     plugins: [basicSsl()],
   },
+  output: "static",
+  redirects: {
+    "/form-generation": "/",
+  },
   integrations: [react()],
   srcDir: "./site/app/src",
   publicDir: "./public",
