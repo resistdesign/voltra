@@ -167,16 +167,16 @@ export const AutoField: FC<AutoFieldProps> = ({
             type="button"
             disabled={disabled}
             onClick={() =>
-                emitRelationAction({
-                  action: "open",
-                  fieldKey,
-                  field,
-                  value: undefined,
-                  fullPaging: tags?.fullPaging,
-                  onChange,
-                })
-              }
-            >
+              emitRelationAction({
+                action: "open",
+                fieldKey,
+                field,
+                value: undefined,
+                fullPaging: tags?.fullPaging,
+                onChange,
+              })
+            }
+          >
             Manage
           </Button>
         ) : (

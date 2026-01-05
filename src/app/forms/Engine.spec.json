@@ -206,6 +206,39 @@
         "updateDisabled": true,
         "deleteDisabled": true
       }
+    },
+    {
+      "export": "runTypeInfoPackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fieldKeys": ["title"],
+        "entryTypeName": "Widget"
+      }
+    },
+    {
+      "export": "runLiteralValueScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "values": {
+          "name": "Ada",
+          "age": 42,
+          "active": true,
+          "note": null
+        },
+        "validationPassed": true
+      }
+    },
+    {
+      "export": "runDataItemScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "scalarValue": "Nova",
+        "arrayValue": ["alpha", "beta"],
+        "arrayIsArray": true
+      }
     }
   ]
 }
