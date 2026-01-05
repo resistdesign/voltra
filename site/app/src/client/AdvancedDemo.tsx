@@ -13,7 +13,7 @@ import type {
   TypeInfoMap,
 } from "../../../../src/common/TypeParsing/TypeInfo";
 import styled from "styled-components";
-import { getTypeInfoMapFromTypeScript } from "../../../../src/common/TypeParsing/TypeParsing";
+import { getTypeInfoMapFromTypeScript } from "../../../../src/build";
 
 const DEFAULT_CODE = `
 /**
