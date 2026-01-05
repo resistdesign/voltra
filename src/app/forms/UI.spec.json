@@ -56,6 +56,64 @@
         "hasBooleanOption": false,
         "hasNullOption": false
       }
+    },
+    {
+      "export": "runFormatScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasEmailType": true
+      }
+    },
+    {
+      "export": "runAllowCustomSelectionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasDatalist": true,
+        "hasListAttribute": true
+      }
+    },
+    {
+      "export": "runConstraintAttributeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "numberHasMin": true,
+        "numberHasMax": true,
+        "numberHasStep": true,
+        "stringHasPattern": true
+      }
+    },
+    {
+      "export": "runCustomTypeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "scalarAction": "open",
+        "scalarCustomType": "Special",
+        "arrayAction": "add",
+        "arrayCustomType": "Special",
+        "arrayValueIsArray": true
+      }
+    },
+    {
+      "export": "runRelationFullPagingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "action": "open",
+        "fullPaging": true
+      }
+    },
+    {
+      "export": "runHiddenFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasVisibleField": true,
+        "hasHiddenField": false
+      }
     }
   ]
 }

@@ -38,24 +38,24 @@
     - [x] tags: normalized tags map from parser to form UI
 
   - SupportedFieldTags
-    - [ ] primaryField: marks controller field as primary (and disables on update)
-    - [ ] label: label overrides default field key
-    - [ ] format: uses correct input `type` for string
-    - [ ] allowCustomSelection: datalist input when possibleValues present
-    - [ ] customType: defers to custom type handler for scalar
-    - [ ] customType: defers to custom type handler for arrays
-    - [ ] hidden: field omitted from AutoFormView
-    - [ ] fullPaging: passed through to relation handler payload
-    - [ ] constraints.defaultValue: applied for missing initial values
-    - [ ] constraints.step: number input step attribute
-    - [ ] constraints.min: number input min attribute
-    - [ ] constraints.max: number input max attribute
-    - [ ] constraints.pattern: string input pattern attribute
-    - [ ] constraints.pattern: string input validation error on submit
-    - [ ] deniedOperations.CREATE: disables field on create
-    - [ ] deniedOperations.READ: disables field on read
-    - [ ] deniedOperations.UPDATE: disables field on update
-    - [ ] deniedOperations.DELETE: disables field on delete
+    - [x] primaryField: marks controller field as primary (and disables on update)
+    - [x] label: label overrides default field key
+    - [x] format: uses correct input `type` for string
+    - [x] allowCustomSelection: datalist input when possibleValues present
+    - [x] customType: defers to custom type handler for scalar
+    - [x] customType: defers to custom type handler for arrays
+    - [x] hidden: field omitted from AutoFormView
+    - [x] fullPaging: passed through to relation handler payload
+    - [x] constraints.defaultValue: applied for missing initial values
+    - [x] constraints.step: number input step attribute
+    - [x] constraints.min: number input min attribute
+    - [x] constraints.max: number input max attribute
+    - [x] constraints.pattern: string input pattern attribute
+    - [x] constraints.pattern: string input validation error on submit
+    - [x] deniedOperations.CREATE: disables field on create
+    - [x] deniedOperations.READ: disables field on read
+    - [x] deniedOperations.UPDATE: disables field on update
+    - [x] deniedOperations.DELETE: disables field on delete
 
   - SupportedTags (Type-Level)
     - [ ] label: exposed for type-level consumers
