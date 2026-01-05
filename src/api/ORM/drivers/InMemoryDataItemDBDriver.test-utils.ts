@@ -1,5 +1,8 @@
 import { InMemoryDataItemDBDriver } from "./InMemoryDataItemDBDriver";
-import { ComparisonOperators, LogicalOperators } from "../../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../../common/SearchTypes";
 
 type TestItem = {
   id: string;
@@ -105,7 +108,9 @@ export const runInMemoryDataItemDriverScenario = async () => {
     filteredIds: filtered.items.map((item) => item.id),
     page1Ids: page1.items.map((item) => item.id),
     page2Ids: page2.items.map((item) => item.id),
-    listSelectedKeys: listSelected.items.map((item) => Object.keys(item).sort()),
+    listSelectedKeys: listSelected.items.map((item) =>
+      Object.keys(item).sort(),
+    ),
     deleteResult,
     missingReadError,
     invalidCursorError,

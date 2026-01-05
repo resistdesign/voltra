@@ -30,9 +30,7 @@
         "defaultIntegrationUri": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations",
         "defaultRoute53RecordType": "A",
         "customAuthType": "CUSTOM",
-        "customAuthScopes": [
-          "email"
-        ],
+        "customAuthScopes": ["email"],
         "customAuthorizerRef": "ApiGatewayCustomAuthorizer",
         "customAuthorizerIdentitySource": "method.request.header.Authorization",
         "customAuthorizerProviderARNs": [

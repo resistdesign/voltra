@@ -18,10 +18,7 @@
           },
           {
             "path": "read",
-            "args": [
-              "Book",
-              "book-1"
-            ]
+            "args": ["Book", "book-1"]
           },
           {
             "path": "update",
@@ -35,10 +32,7 @@
           },
           {
             "path": "delete",
-            "args": [
-              "Book",
-              "book-1"
-            ]
+            "args": ["Book", "book-1"]
           },
           {
             "path": "list",
@@ -47,9 +41,7 @@
               {
                 "itemsPerPage": 5
               },
-              [
-                "id"
-              ]
+              ["id"]
             ]
           },
           {
@@ -96,9 +88,7 @@
                   "fromTypePrimaryFieldValue": "author-1"
                 }
               },
-              [
-                "title"
-              ]
+              ["title"]
             ]
           }
         ],
@@ -115,10 +105,7 @@
         "read": {
           "ok": true,
           "path": "read",
-          "args": [
-            "Book",
-            "book-1"
-          ]
+          "args": ["Book", "book-1"]
         },
         "updated": {
           "ok": true,
@@ -134,10 +121,7 @@
         "deleted": {
           "ok": true,
           "path": "delete",
-          "args": [
-            "Book",
-            "book-1"
-          ]
+          "args": ["Book", "book-1"]
         },
         "list": {
           "ok": true,
@@ -147,9 +131,7 @@
             {
               "itemsPerPage": 5
             },
-            [
-              "id"
-            ]
+            ["id"]
           ]
         },
         "relCreated": {
@@ -200,9 +182,7 @@
                 "fromTypePrimaryFieldValue": "author-1"
               }
             },
-            [
-              "title"
-            ]
+            ["title"]
           ]
         }
       }

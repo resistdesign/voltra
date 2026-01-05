@@ -17,9 +17,7 @@
           "valid": false,
           "error": "INVALID_RELATIONSHIP_ITEM",
           "errorMap": {
-            "toTypePrimaryFieldValue": [
-              "INVALID_RELATIONSHIP_ITEM_FIELD"
-            ]
+            "toTypePrimaryFieldValue": ["INVALID_RELATIONSHIP_ITEM_FIELD"]
           }
         },
         "omittedFieldResult": {

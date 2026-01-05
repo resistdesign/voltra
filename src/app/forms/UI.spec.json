@@ -1,0 +1,119 @@
+{
+  "file": "./UI.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runPrimitiveInputScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringHasTextInput": true,
+        "numberHasNumberInput": true,
+        "booleanHasCheckbox": true
+      }
+    },
+    {
+      "export": "runRelationFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "singleHasManage": true,
+        "singleHasManageRelated": false,
+        "arrayHasManageRelated": true,
+        "arrayHasManage": false,
+        "singleHasRelationHint": false
+      }
+    },
+    {
+      "export": "runArrayFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasAddItemButton": true,
+        "hasRemoveButton": true,
+        "itemHasTextInput": true
+      }
+    },
+    {
+      "export": "runPossibleValuesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringHasSelect": true,
+        "stringHasAlpha": true,
+        "stringHasBeta": true,
+        "numberHasSelect": true,
+        "numberHasOne": true,
+        "numberHasTwo": true
+      }
+    },
+    {
+      "export": "runPossibleValuesFilterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasAlphaOption": true,
+        "hasNumberOption": true,
+        "hasBooleanOption": false,
+        "hasNullOption": false
+      }
+    },
+    {
+      "export": "runFormatScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasEmailType": true
+      }
+    },
+    {
+      "export": "runAllowCustomSelectionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasDatalist": true,
+        "hasListAttribute": true
+      }
+    },
+    {
+      "export": "runConstraintAttributeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "numberHasMin": true,
+        "numberHasMax": true,
+        "numberHasStep": true,
+        "stringHasPattern": true
+      }
+    },
+    {
+      "export": "runCustomTypeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "scalarAction": "open",
+        "scalarCustomType": "Special",
+        "arrayAction": "add",
+        "arrayCustomType": "Special",
+        "arrayValueIsArray": true
+      }
+    },
+    {
+      "export": "runRelationFullPagingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "action": "open",
+        "fullPaging": true
+      }
+    },
+    {
+      "export": "runHiddenFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasVisibleField": true,
+        "hasHiddenField": false
+      }
+    }
+  ]
+}

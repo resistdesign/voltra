@@ -1,8 +1,5 @@
 import { SimpleCFT } from "../SimpleCFT";
-import {
-  addCloudFunction,
-  PLACEHOLDER_FUNCTION_CODE,
-} from "./cloud-function";
+import { addCloudFunction, PLACEHOLDER_FUNCTION_CODE } from "./cloud-function";
 
 export const runCloudFunctionPackScenario = () => {
   const defaultTemplate = new SimpleCFT()

@@ -6,12 +6,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "afterFirst": [
-          "post-1"
-        ],
-        "afterSecond": [
-          "post-2"
-        ],
+        "afterFirst": ["post-1"],
+        "afterSecond": ["post-2"],
         "afterDelete": []
       }
     }

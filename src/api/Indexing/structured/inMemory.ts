@@ -6,7 +6,11 @@
 import { decodeStructuredCursor, encodeStructuredCursor } from "./cursor";
 import type { DocId } from "../types";
 import { compareDocId } from "../docId";
-import type { CandidatePage, StructuredQueryOptions, WhereValue } from "./types";
+import type {
+  CandidatePage,
+  StructuredQueryOptions,
+  WhereValue,
+} from "./types";
 
 type RangeEntry = {
   value: WhereValue;
@@ -64,22 +68,26 @@ function compareValues(left: WhereValue, right: WhereValue): number {
   const rightType = typeof right;
 
   if (leftType === rightType) {
-    if (leftType === 'number') {
+    if (leftType === "number") {
       return (left as number) - (right as number);
     }
 
-    if (leftType === 'boolean') {
+    if (leftType === "boolean") {
       return Number(left) - Number(right);
     }
 
     return String(left).localeCompare(String(right));
   }
 
-  const order = ['number', 'string', 'boolean', 'object'];
+  const order = ["number", "string", "boolean", "object"];
   return order.indexOf(leftType) - order.indexOf(rightType);
 }
 
-function compareRangeEntry(value: WhereValue, docId: DocId, entry: RangeEntry): number {
+function compareRangeEntry(
+  value: WhereValue,
+  docId: DocId,
+  entry: RangeEntry,
+): number {
   const valueCompare = compareValues(value, entry.value);
   if (valueCompare !== 0) {
     return valueCompare;
@@ -88,7 +96,11 @@ function compareRangeEntry(value: WhereValue, docId: DocId, entry: RangeEntry): 
   return compareDocId(docId, entry.docId);
 }
 
-function insertRangeEntry(entries: RangeEntry[], value: WhereValue, docId: DocId): void {
+function insertRangeEntry(
+  entries: RangeEntry[],
+  value: WhereValue,
+  docId: DocId,
+): void {
   let low = 0;
   let high = entries.length;
 
@@ -101,8 +113,11 @@ function insertRangeEntry(entries: RangeEntry[], value: WhereValue, docId: DocId
     }
   }
 
-  if (entries[low]?.docId !== docId || compareValues(entries[low]?.value ?? value, value) !== 0) {
-    entries.splice(low, 0, {value, docId});
+  if (
+    entries[low]?.docId !== docId ||
+    compareValues(entries[low]?.value ?? value, value) !== 0
+  ) {
+    entries.splice(low, 0, { value, docId });
   }
 }
 
@@ -138,7 +153,10 @@ function upperBound(entries: RangeEntry[], value: WhereValue): number {
   return low;
 }
 
-function paginate(docIds: DocId[], options: StructuredQueryOptions = {}): CandidatePage {
+function paginate(
+  docIds: DocId[],
+  options: StructuredQueryOptions = {},
+): CandidatePage {
   const cursorState = decodeStructuredCursor(options.cursor);
   const startIndex = findStartIndex(docIds, cursorState?.lastDocId);
   const limit = options.limit ?? docIds.length;
@@ -147,11 +165,13 @@ function paginate(docIds: DocId[], options: StructuredQueryOptions = {}): Candid
   if (startIndex + limit < docIds.length && candidateIds.length > 0) {
     return {
       candidateIds,
-      cursor: encodeStructuredCursor({lastDocId: candidateIds[candidateIds.length - 1]}),
+      cursor: encodeStructuredCursor({
+        lastDocId: candidateIds[candidateIds.length - 1],
+      }),
     };
   }
 
-  return {candidateIds};
+  return { candidateIds };
 }
 
 function addPosting(
@@ -181,7 +201,10 @@ export class StructuredInMemoryIndex {
    * @param record Structured field record for the document.
    * @returns Nothing.
    */
-  addDocument(docId: DocId, record: Record<string, WhereValue | WhereValue[]>): void {
+  addDocument(
+    docId: DocId,
+    record: Record<string, WhereValue | WhereValue[]>,
+  ): void {
     for (const [field, value] of Object.entries(record)) {
       if (Array.isArray(value)) {
         const uniqueValues = new Set(value);
@@ -205,7 +228,11 @@ export class StructuredInMemoryIndex {
    * @param options Optional paging options.
    * @returns Candidate page of matching document ids.
    */
-  eq(field: string, value: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
+  eq(
+    field: string,
+    value: WhereValue,
+    options: StructuredQueryOptions = {},
+  ): CandidatePage {
     const docIds = this.eqIndex.get(field)?.get(value) ?? [];
     return paginate(docIds, options);
   }
@@ -217,7 +244,11 @@ export class StructuredInMemoryIndex {
    * @param options Optional paging options.
    * @returns Candidate page of matching document ids.
    */
-  contains(field: string, value: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
+  contains(
+    field: string,
+    value: WhereValue,
+    options: StructuredQueryOptions = {},
+  ): CandidatePage {
     const docIds = this.containsIndex.get(field)?.get(value) ?? [];
     return paginate(docIds, options);
   }
@@ -239,7 +270,10 @@ export class StructuredInMemoryIndex {
     const entries = this.rangeIndex.get(field) ?? [];
     const start = lowerBound(entries, lower);
     const end = upperBound(entries, upper);
-    const docIds = entries.slice(start, end).map((entry) => entry.docId).sort(compareDocId);
+    const docIds = entries
+      .slice(start, end)
+      .map((entry) => entry.docId)
+      .sort(compareDocId);
     return paginate(docIds, options);
   }
 
@@ -250,10 +284,17 @@ export class StructuredInMemoryIndex {
    * @param options Optional paging options.
    * @returns Candidate page of matching document ids.
    */
-  gte(field: string, lower: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
+  gte(
+    field: string,
+    lower: WhereValue,
+    options: StructuredQueryOptions = {},
+  ): CandidatePage {
     const entries = this.rangeIndex.get(field) ?? [];
     const start = lowerBound(entries, lower);
-    const docIds = entries.slice(start).map((entry) => entry.docId).sort(compareDocId);
+    const docIds = entries
+      .slice(start)
+      .map((entry) => entry.docId)
+      .sort(compareDocId);
     return paginate(docIds, options);
   }
 
@@ -264,10 +305,17 @@ export class StructuredInMemoryIndex {
    * @param options Optional paging options.
    * @returns Candidate page of matching document ids.
    */
-  lte(field: string, upper: WhereValue, options: StructuredQueryOptions = {}): CandidatePage {
+  lte(
+    field: string,
+    upper: WhereValue,
+    options: StructuredQueryOptions = {},
+  ): CandidatePage {
     const entries = this.rangeIndex.get(field) ?? [];
     const end = upperBound(entries, upper);
-    const docIds = entries.slice(0, end).map((entry) => entry.docId).sort(compareDocId);
+    const docIds = entries
+      .slice(0, end)
+      .map((entry) => entry.docId)
+      .sort(compareDocId);
     return paginate(docIds, options);
   }
 }

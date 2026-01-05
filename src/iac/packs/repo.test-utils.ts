@@ -12,8 +12,7 @@ export const runRepoPackScenario = () => {
     .toJSON();
 
   const { Parameters = {}, Metadata = {} } = template;
-  const interfaceMeta =
-    Metadata["AWS::CloudFormation::Interface"] || {};
+  const interfaceMeta = Metadata["AWS::CloudFormation::Interface"] || {};
   const { ParameterGroups = [], ParameterLabels = {} } = interfaceMeta;
   const repoGroup = ParameterGroups.find(
     (group: any) => group?.Label?.default === "Repository",

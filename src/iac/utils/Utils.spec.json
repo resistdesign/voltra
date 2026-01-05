@@ -6,16 +6,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "mergedArr": [
-          1,
-          2,
-          3
-        ],
-        "mergedUnique": [
-          1,
-          2,
-          3
-        ],
+        "mergedArr": [1, 2, 3],
+        "mergedUnique": [1, 2, 3],
         "mergedById": [
           {
             "id": "a",
@@ -42,24 +34,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "parameterKeys": [
-          "Env",
-          "Owner",
-          "Region"
-        ],
-        "groupLabels": [
-          "Main",
-          "Extra"
-        ],
-        "groupParameters": [
-          [
-            "Env",
-            "Region"
-          ],
-          [
-            "Owner"
-          ]
-        ],
+        "parameterKeys": ["Env", "Owner", "Region"],
+        "groupLabels": ["Main", "Extra"],
+        "groupParameters": [["Env", "Region"], ["Owner"]],
         "envLabel": "Environment",
         "ownerLabel": "Owner"
       }

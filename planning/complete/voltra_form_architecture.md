@@ -1,0 +1,106 @@
+- Voltra Form Generation Architecture
+  - Core Principles
+    - Rendering-agnostic: logic separated from UI framework
+    - TypeInfo as source of truth for schema
+    - Clean separation of view, mutation, and validation logic
+    - Composable primitives with universal escape hatches
+  
+  - System Layers
+    - Schema Layer
+      - Parses TypeInfo into normalized form metadata
+      - Supports tags: labels, permissions, widgets, relations
+    - Core Engine
+      - Traverses schema metadata into abstract field tree
+      - Applies validation from schema or external rules (e.g. Zod)
+      - Produces data model + change handler map
+    - Renderers (React, CLI, etc.)
+      - Maps abstract fields to components
+      - Uses component registry for widget resolution
+      - Manages layout (inline, tabs, modals, etc.)
+  
+  - Components (by Tier)
+    - Tier 1: UI Primitives
+      - Input primitives (TextInput, NumberInput, Checkbox, etc.)
+      - List/Table (data display, sort, filter, pagination)
+      - FieldLabel, FieldError
+    - Tier 2: Schema-Aware UI
+      - AutoField: given schema field, render resolved input
+      - AutoForm: generate full form from schema
+      - FieldGroup: wrapper for nested object fields
+      - FieldArray: repeatable field sets
+    - Tier 3: TypeInfo-Aware Wrappers
+      - TypeForm: generates AutoForm from TypeInfo name
+      - TypeField: resolves AutoField via TypeInfo key
+    - Tier 4: Application-Opinionated
+      - TypeInfoApplicationForm: full-featured form with permissions
+      - RelationPicker: selects related entity via handler
+      - FieldAccessFilter: hides fields based on role/context
+
+  - Features & Handling
+    - Scalars (string, number, boolean)
+      - Input primitive mapping via type name
+    - Enums and unions
+      - Render as Select or RadioGroup using allowedValues
+    - Nested objects
+      - Recursively rendered via FieldGroup
+    - Arrays of values or objects
+      - Rendered with add/remove controls via FieldArray
+    - Relationships
+      - Field with relation metadata → RelationPicker
+      - Uses provided search and create handlers
+    - Custom components
+      - Component registry allows per-field override
+      - Supports component resolver function for dynamic cases
+    - Validation
+      - Attached via schema or imported from validation source
+      - Errors shown inline per field
+    - Permission-based field inclusion
+      - Field tags parsed into access rules
+      - Filtered at schema traversal or render time
+    - Layout control
+      - Field order tag (e.g. @formOrder)
+      - Optional layout schema for grouped views
+    - Handler delegation
+      - All non-trivial operations (e.g. create related, file upload) done via injectable handlers
+      - No mutation logic hardcoded
+    - Extensibility
+      - FormSchema exportable as data structure
+      - UI pluggable at every layer
+      - No runtime logic hidden in UI layer
+
+  - Development Strategy
+    - Phase 1: Core schema traversal + basic renderers (text, number, boolean)
+    - Phase 2: Nested fields, arrays, custom component registry
+    - Phase 3: Relation fields, validation wiring, permissions
+    - Phase 4: Application-style forms, layout enhancements, docs
+
+- [x] Current Task: TypeInfo-Only Form Schema
+  - [x] Review form module usage and schema parsing entry points
+  - [x] Refactor schema helper to normalize into TypeInfo only
+  - [x] Remove FormMetadata/FieldMetadata exports from form types
+  - [x] Update schema tests to assert TypeInfo output
+  - [x] Verify tests/docs output remains clean
+
+- [x] Current Task: Remove Schema Parsing Layer
+  - [x] Confirm demo API returns TypeInfoMap from TypeParsing
+  - [x] Remove Schema module exports and tests from forms
+  - [x] Run tests or document follow-up checks
+
+- [x] Current Task: Controller-First Form Engine
+  - [x] Define form controller types for TypeInfo-driven fields
+  - [x] Expose a form controller hook from the engine
+  - [x] Update default AutoForm UI to render via controller
+  - [x] Add or update tests/fixtures if needed
+
+- Current Task: Refactor Consumers
+  - [x] Update demo form to render via controller + AutoFormView
+  - [x] Re-verify tests or doc build if needed
+
+- [x] Current Task: Document Controller Usage
+  - [x] Add controller-focused example to the demo app
+
+- Current Task: Relation Handling + Client Demo Placement
+  - [x] Add relation handler hooks for TypeInfo references
+  - [x] Defer sub-object handling in AutoField UI for relations
+  - [x] Move AdvancedDemo into client bundle
+  - [x] Re-verify tests or doc build if needed

@@ -1,0 +1,13 @@
+---
+import { App } from "../client/App";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+// This ensures all routes are served as static HTML for SPA behavior if not prerendered differently
+export const prerender = false; 
+---
+
+<BaseLayout>
+  <section>
+    <App client:only="react" />
+  </section>
+</BaseLayout>

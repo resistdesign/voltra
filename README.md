@@ -84,13 +84,15 @@ front-end apps.</td>
 
 ## Features
 
-| API                                                                         | App                                           | IaC                                                           |
-|-----------------------------------------------------------------------------|-----------------------------------------------|---------------------------------------------------------------|
-| RPC                                                                         | Easy Layout                                   | Full Parameter Support: Groups/Labels/Types/etc...            |
-| Auth: Public/Secured/Role Based                                             | State Management                              | Packs: Easy to add Database/Storage/Auth/Functions/etc...     |
-| Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
-| ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships |                                               | Typed Build Spec Creation                                     |
-|                                                                             |                                               | Typed Resource Parameters                                     |
+App features include form generation via TypeInfo-driven AutoForm/AutoField with validation, constraints, and relation/custom handlers.
+
+| API                                                                         | App                                                             | IaC                                                           |
+|-----------------------------------------------------------------------------|-----------------------------------------------------------------|---------------------------------------------------------------|
+| RPC                                                                         | Easy Layout                                                     | Full Parameter Support: Groups/Labels/Types/etc...            |
+| Auth: Public/Secured/Role Based                                             | State Management                                                | Packs: Easy to add Database/Storage/Auth/Functions/etc...     |
+| Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks                   | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
+| ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships | Form Generation: AutoForm/AutoField + constraints/relations     | Typed Build Spec Creation                                     |
+|                                                                             | Form Engine: validation, defaults, denied ops, custom type flow | Typed Resource Parameters                                     |
 
 ## Docs Site
 

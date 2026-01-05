@@ -1,9 +1,5 @@
 import { TestComparisonOperation } from "./Types";
-import {
-  compare,
-  mergeTestResults,
-  OPERATIONS,
-} from "./Utils";
+import { compare, mergeTestResults, OPERATIONS } from "./Utils";
 
 export const runTestingUtilsScenario = () => {
   const equalsResult = compare(1, 1, TestComparisonOperation.EQUALS);
@@ -23,10 +19,7 @@ export const runTestingUtilsScenario = () => {
   const extRegexResult = compare(
     "alpha-123",
     {
-      pattern: [
-        { value: "alpha-" },
-        { value: "\\d+", escaped: false },
-      ],
+      pattern: [{ value: "alpha-" }, { value: "\\d+", escaped: false }],
     },
     TestComparisonOperation.EXT_REGEX,
   );

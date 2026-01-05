@@ -38,9 +38,9 @@ export type ExactDdbItem = ExactDdbKey & {
  * Schema metadata for the exact postings table.
  */
 export const exactDdbSchema = {
-  partitionKey: 'token',
-  sortKey: 'docId',
-  positionsAttribute: 'positions',
+  partitionKey: "token",
+  sortKey: "docId",
+  positionsAttribute: "positions",
 } as const;
 
 /**

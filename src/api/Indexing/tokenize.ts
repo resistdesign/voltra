@@ -23,15 +23,15 @@ export function tokenize(
   input: string,
 ): TokenizationResult {
   const normalized = input
-    .normalize('NFKD')
-    .replace(/\p{Diacritic}/gu, '')
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 
   const tokens = normalized.length > 0 ? normalized.split(/\s+/) : [];
 
-  return {normalized, tokens};
+  return { normalized, tokens };
 }
 
 /**
@@ -68,5 +68,5 @@ export function tokenizeLossyTrigrams(
   }
 
   const tokens = Array.from(new Set(grams));
-  return {normalized, tokens};
+  return { normalized, tokens };
 }

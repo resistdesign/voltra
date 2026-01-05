@@ -59,11 +59,17 @@ function clampLimit(value: number, fallback: number, cap: number): number {
  * @param limits Optional requested limits to apply.
  * @returns Resolved and clamped limits.
  */
-export function resolveSearchLimits(limits?: SearchLimits): ResolvedSearchLimits {
+export function resolveSearchLimits(
+  limits?: SearchLimits,
+): ResolvedSearchLimits {
   const requested = { ...SEARCH_DEFAULTS, ...limits };
 
   return {
-    maxTokens: clampLimit(requested.maxTokens, SEARCH_DEFAULTS.maxTokens, SEARCH_CAPS.maxTokens),
+    maxTokens: clampLimit(
+      requested.maxTokens,
+      SEARCH_DEFAULTS.maxTokens,
+      SEARCH_CAPS.maxTokens,
+    ),
     maxPostingsPages: clampLimit(
       requested.maxPostingsPages,
       SEARCH_DEFAULTS.maxPostingsPages,
@@ -74,6 +80,10 @@ export function resolveSearchLimits(limits?: SearchLimits): ResolvedSearchLimits
       SEARCH_DEFAULTS.maxCandidatesVerified,
       SEARCH_CAPS.maxCandidatesVerified,
     ),
-    softTimeBudgetMs: clampLimit(requested.softTimeBudgetMs, SEARCH_DEFAULTS.softTimeBudgetMs, SEARCH_CAPS.softTimeBudgetMs),
+    softTimeBudgetMs: clampLimit(
+      requested.softTimeBudgetMs,
+      SEARCH_DEFAULTS.softTimeBudgetMs,
+      SEARCH_CAPS.softTimeBudgetMs,
+    ),
   };
 }

@@ -7,19 +7,19 @@ export const fullTextKeyPrefixes = {
   /**
    * Prefix for index field values.
    */
-  field: 'f#',
+  field: "f#",
   /**
    * Prefix for token values.
    */
-  token: 't#',
+  token: "t#",
   /**
    * Prefix for document ids.
    */
-  doc: 'd#',
+  doc: "d#",
   /**
    * Prefix for token position values.
    */
-  position: 'p#',
+  position: "p#",
 } as const;
 
 /**
@@ -31,15 +31,15 @@ export const lossyPostingsSchema = {
   /**
    * DynamoDB table name for lossy postings.
    */
-  tableName: 'LossyPostings',
+  tableName: "LossyPostings",
   /**
    * Partition key attribute for lossy postings.
    */
-  partitionKey: 'pk',
+  partitionKey: "pk",
   /**
    * Sort key attribute for lossy postings.
    */
-  sortKey: 'sk',
+  sortKey: "sk",
 } as const;
 
 /**
@@ -51,19 +51,19 @@ export const exactPostingsSchema = {
   /**
    * DynamoDB table name for exact postings.
    */
-  tableName: 'ExactPostings',
+  tableName: "ExactPostings",
   /**
    * Partition key attribute for exact postings.
    */
-  partitionKey: 'pk',
+  partitionKey: "pk",
   /**
    * Sort key attribute for exact postings.
    */
-  sortKey: 'sk',
+  sortKey: "sk",
   /**
    * Attribute name holding position arrays.
    */
-  positionsAttribute: 'positions',
+  positionsAttribute: "positions",
 } as const;
 
 /**
@@ -74,15 +74,15 @@ export const fullTextDocMirrorSchema = {
   /**
    * DynamoDB table name for document mirrors.
    */
-  tableName: 'FullTextDocMirror',
+  tableName: "FullTextDocMirror",
   /**
    * Partition key attribute for document mirrors.
    */
-  partitionKey: 'pk',
+  partitionKey: "pk",
   /**
    * Attribute name for stored normalized content.
    */
-  contentAttribute: 'content',
+  contentAttribute: "content",
 } as const;
 
 /**
@@ -93,15 +93,15 @@ export const fullTextTokenStatsSchema = {
   /**
    * DynamoDB table name for token stats.
    */
-  tableName: 'FullTextTokenStats',
+  tableName: "FullTextTokenStats",
   /**
    * Partition key attribute for token stats.
    */
-  partitionKey: 'pk',
+  partitionKey: "pk",
   /**
    * Attribute name for document frequency values.
    */
-  documentFrequencyAttribute: 'df',
+  documentFrequencyAttribute: "df",
 } as const;
 
 /**
@@ -113,15 +113,15 @@ export const docTokensSchema = {
   /**
    * DynamoDB table name for doc token membership.
    */
-  tableName: 'DocTokens',
+  tableName: "DocTokens",
   /**
    * Partition key attribute for doc token membership.
    */
-  partitionKey: 'pk',
+  partitionKey: "pk",
   /**
    * Sort key attribute for doc token membership.
    */
-  sortKey: 'sk',
+  sortKey: "sk",
 } as const;
 
 /**
@@ -133,19 +133,19 @@ export const docTokenPositionsSchema = {
   /**
    * DynamoDB table name for doc token positions.
    */
-  tableName: 'DocTokenPositions',
+  tableName: "DocTokenPositions",
   /**
    * Partition key attribute for doc token positions.
    */
-  partitionKey: 'pk',
+  partitionKey: "pk",
   /**
    * Sort key attribute for doc token positions.
    */
-  sortKey: 'sk',
+  sortKey: "sk",
   /**
    * Attribute name holding position arrays.
    */
-  positionsAttribute: 'positions',
+  positionsAttribute: "positions",
 } as const;
 
 /**
@@ -173,7 +173,10 @@ export function encodeDocKey(docId: string | number): string {
  * @param docId Document id to encode.
  * @returns Encoded document mirror key.
  */
-export function encodeDocMirrorKey(indexField: string | number, docId: string | number): string {
+export function encodeDocMirrorKey(
+  indexField: string | number,
+  docId: string | number,
+): string {
   return `${encodeDocKey(docId.toString())}#${fullTextKeyPrefixes.field}${indexField}`;
 }
 
@@ -192,7 +195,10 @@ export function encodeTokenDocSortKey(docId: string | number): string {
  * @param token Token value.
  * @returns Encoded sort key for doc tokens.
  */
-export function encodeDocTokenSortKey(indexField: string, token: string): string {
+export function encodeDocTokenSortKey(
+  indexField: string,
+  token: string,
+): string {
   return encodeTokenKey(indexField, token);
 }
 

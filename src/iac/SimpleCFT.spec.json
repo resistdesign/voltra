@@ -29,17 +29,13 @@
                   "Label": {
                     "default": "Main"
                   },
-                  "Parameters": [
-                    "Env"
-                  ]
+                  "Parameters": ["Env"]
                 },
                 {
                   "Label": {
                     "default": "Extra"
                   },
-                  "Parameters": [
-                    "Region"
-                  ]
+                  "Parameters": ["Region"]
                 }
               ],
               "ParameterLabels": {

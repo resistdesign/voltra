@@ -19,7 +19,10 @@ type EdgeEntry<TMetadata extends EdgeMetadata> = {
   metadata?: TMetadata;
 };
 
-type EdgeLookup<TMetadata extends EdgeMetadata> = Map<string, Map<string, EdgeEntry<TMetadata>>>;
+type EdgeLookup<TMetadata extends EdgeMetadata> = Map<
+  string,
+  Map<string, EdgeEntry<TMetadata>>
+>;
 
 function edgeKey(entityId: string, relation: string): string {
   return `${entityId}\u0000${relation}`;
@@ -69,7 +72,9 @@ function paginateIds<TMetadata extends EdgeMetadata>(
 /**
  * In-memory relational backend for tests and local runs.
  */
-export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMetadata> {
+export class RelationalInMemoryBackend<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> {
   private forward: EdgeLookup<TMetadata> = new Map();
   private reverse: EdgeLookup<TMetadata> = new Map();
 
@@ -129,7 +134,9 @@ export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMeta
   ): EdgePage<TMetadata> {
     const forwardKey = edgeKey(fromId, relation);
     const map = this.forward.get(forwardKey);
-    const ids = map ? Array.from(map.keys()).sort((a, b) => a.localeCompare(b)) : [];
+    const ids = map
+      ? Array.from(map.keys()).sort((a, b) => a.localeCompare(b))
+      : [];
 
     return paginateIds(ids, options, (otherId) => ({
       key: { from: fromId, to: otherId, relation },
@@ -151,7 +158,9 @@ export class RelationalInMemoryBackend<TMetadata extends EdgeMetadata = EdgeMeta
   ): EdgePage<TMetadata> {
     const reverseKey = edgeKey(toId, relation);
     const map = this.reverse.get(reverseKey);
-    const ids = map ? Array.from(map.keys()).sort((a, b) => a.localeCompare(b)) : [];
+    const ids = map
+      ? Array.from(map.keys()).sort((a, b) => a.localeCompare(b))
+      : [];
 
     return paginateIds(ids, options, (otherId) => ({
       key: { from: otherId, to: toId, relation },

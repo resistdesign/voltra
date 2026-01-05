@@ -14,7 +14,12 @@
  * ```
  */
 import type { ExactCursorState, PlannerMetadata } from "./cursor";
-import { decodeExactCursor, decodeLossyCursor, encodeExactCursor, encodeLossyCursor } from "./cursor";
+import {
+  decodeExactCursor,
+  decodeLossyCursor,
+  encodeExactCursor,
+  encodeLossyCursor,
+} from "./cursor";
 import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
 import type {
   DocId,
@@ -33,7 +38,9 @@ import type { SearchTrace } from "./trace";
 import { createHash } from "./hash-universal";
 import { compareDocId, normalizeDocId } from "./docId";
 
-type TraceableIndexBackend = IndexBackend & { setActiveTrace(trace?: SearchTrace): void };
+type TraceableIndexBackend = IndexBackend & {
+  setActiveTrace(trace?: SearchTrace): void;
+};
 
 /**
  * Input for indexing a document.
@@ -191,20 +198,25 @@ function resolveBackend(backend: IndexBackend | undefined): IndexBackend {
   }
 
   if (!configuredBackend) {
-    throw new Error('Index backend is not configured. Call setIndexBackend or pass backend.');
+    throw new Error(
+      "Index backend is not configured. Call setIndexBackend or pass backend.",
+    );
   }
 
   return configuredBackend;
 }
 
-function setBackendTrace(backend: IndexBackend, trace: SearchTrace | undefined): void {
-  if (typeof (backend as TraceableIndexBackend).setActiveTrace === 'function') {
+function setBackendTrace(
+  backend: IndexBackend,
+  trace: SearchTrace | undefined,
+): void {
+  if (typeof (backend as TraceableIndexBackend).setActiveTrace === "function") {
     (backend as TraceableIndexBackend).setActiveTrace(trace);
   }
 }
 
 async function hashString(value: string): Promise<string> {
-  return createHash('sha256').update(value).digest('hex');
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function intersectTwoSorted(left: DocId[], right: DocId[]): DocId[] {
@@ -238,27 +250,33 @@ function intersectSorted(lists: DocId[][]): DocId[] {
   return lists.reduce((acc, current) => intersectTwoSorted(acc, current));
 }
 
-function supportsDocTokens(reader: IndexReader): reader is IndexReader & DocTokenReader {
+function supportsDocTokens(
+  reader: IndexReader,
+): reader is IndexReader & DocTokenReader {
   return (
-    'hasDocToken' in reader && typeof (reader as DocTokenReader).hasDocToken === 'function'
+    "hasDocToken" in reader &&
+    typeof (reader as DocTokenReader).hasDocToken === "function"
   );
 }
 
-function supportsLossyPaging(reader: IndexReader): reader is IndexReader & LossyPagingReader & DocTokenReader {
-  return (
-    'queryLossyPostingsPage' in reader &&
-    supportsDocTokens(reader)
-  );
+function supportsLossyPaging(
+  reader: IndexReader,
+): reader is IndexReader & LossyPagingReader & DocTokenReader {
+  return "queryLossyPostingsPage" in reader && supportsDocTokens(reader);
 }
 
-function supportsLossyPagingForExact(reader: IndexReader): reader is IndexReader & LossyPagingReader {
-  return 'queryLossyPostingsPage' in reader;
+function supportsLossyPagingForExact(
+  reader: IndexReader,
+): reader is IndexReader & LossyPagingReader {
+  return "queryLossyPostingsPage" in reader;
 }
 
-function supportsBatchDocTokens(reader: IndexReader): reader is IndexReader & DocTokenBatchReader {
+function supportsBatchDocTokens(
+  reader: IndexReader,
+): reader is IndexReader & DocTokenBatchReader {
   return (
-    'batchHasDocTokens' in reader &&
-    typeof (reader as DocTokenBatchReader).batchHasDocTokens === 'function'
+    "batchHasDocTokens" in reader &&
+    typeof (reader as DocTokenBatchReader).batchHasDocTokens === "function"
   );
 }
 
@@ -296,7 +314,10 @@ class SearchLimitTracker {
   private readonly softTimeBudgetMs: number;
   private readonly startTime = Date.now();
 
-  constructor(limits: ResolvedSearchLimits = SEARCH_DEFAULTS, private readonly trace?: SearchTrace) {
+  constructor(
+    limits: ResolvedSearchLimits = SEARCH_DEFAULTS,
+    private readonly trace?: SearchTrace,
+  ) {
     this.trace = trace;
 
     this.maxTokens = limits.maxTokens;
@@ -330,7 +351,10 @@ class SearchLimitTracker {
   }
 
   shouldStop(): boolean {
-    if (this.softTimeBudgetMs >= 0 && Date.now() - this.startTime >= this.softTimeBudgetMs) {
+    if (
+      this.softTimeBudgetMs >= 0 &&
+      Date.now() - this.startTime >= this.softTimeBudgetMs
+    ) {
       return true;
     }
 
@@ -342,7 +366,7 @@ class SearchLimitTracker {
   }
 }
 
-function createDocTokenKey({docId, indexField, token}: DocTokenKey): string {
+function createDocTokenKey({ docId, indexField, token }: DocTokenKey): string {
   return `${indexField}#${docId}#${token}`;
 }
 
@@ -364,8 +388,14 @@ function buildDocTokenMembershipChecker(
   return {
     async hasDocTokens(docId: DocId, tokens: string[]): Promise<boolean> {
       const distinctTokens = Array.from(new Set(tokens));
-      const keys = distinctTokens.map((token) => ({docId, indexField, token}));
-      const missingKeys = keys.filter((key) => !cache.has(createDocTokenKey(key)));
+      const keys = distinctTokens.map((token) => ({
+        docId,
+        indexField,
+        token,
+      }));
+      const missingKeys = keys.filter(
+        (key) => !cache.has(createDocTokenKey(key)),
+      );
 
       if (missingKeys.length && batchReader) {
         if (trace) {
@@ -379,7 +409,11 @@ function buildDocTokenMembershipChecker(
       } else if (missingKeys.length) {
         await Promise.all(
           missingKeys.map(async (key) => {
-            const exists = await reader.hasDocToken(key.docId, key.indexField, key.token);
+            const exists = await reader.hasDocToken(
+              key.docId,
+              key.indexField,
+              key.token,
+            );
             cache.set(createDocTokenKey(key), exists);
           }),
         );
@@ -387,12 +421,19 @@ function buildDocTokenMembershipChecker(
 
       return keys.every((key) => cache.get(createDocTokenKey(key)) === true);
     },
-    async filterDocsByTokens(docIds: DocId[], tokens: string[]): Promise<Set<DocId>> {
+    async filterDocsByTokens(
+      docIds: DocId[],
+      tokens: string[],
+    ): Promise<Set<DocId>> {
       const distinctTokens = Array.from(new Set(tokens));
       const keys = docIds.flatMap((docId) =>
-        distinctTokens.map((token) => ({docId, indexField, token} satisfies DocTokenKey)),
+        distinctTokens.map(
+          (token) => ({ docId, indexField, token }) satisfies DocTokenKey,
+        ),
       );
-      const missingKeys = keys.filter((key) => !cache.has(createDocTokenKey(key)));
+      const missingKeys = keys.filter(
+        (key) => !cache.has(createDocTokenKey(key)),
+      );
 
       if (missingKeys.length && batchReader) {
         if (trace) {
@@ -406,7 +447,11 @@ function buildDocTokenMembershipChecker(
       } else if (missingKeys.length) {
         await Promise.all(
           missingKeys.map(async (key) => {
-            const exists = await reader.hasDocToken(key.docId, key.indexField, key.token);
+            const exists = await reader.hasDocToken(
+              key.docId,
+              key.indexField,
+              key.token,
+            );
             cache.set(createDocTokenKey(key), exists);
           }),
         );
@@ -414,8 +459,9 @@ function buildDocTokenMembershipChecker(
 
       const matchingDocs = new Set<DocId>();
       docIds.forEach((docId) => {
-        const hasAllTokens = distinctTokens.every((token) =>
-          cache.get(createDocTokenKey({docId, indexField, token})) === true,
+        const hasAllTokens = distinctTokens.every(
+          (token) =>
+            cache.get(createDocTokenKey({ docId, indexField, token })) === true,
         );
         if (hasAllTokens) {
           matchingDocs.add(docId);
@@ -439,21 +485,29 @@ function buildExactPositionsLoader(
 ): ExactPositionsLoader {
   const cache = new Map<string, number[] | undefined>();
   const batchLoader =
-    typeof reader.batchLoadExactPositions === 'function'
+    typeof reader.batchLoadExactPositions === "function"
       ? reader.batchLoadExactPositions.bind(reader)
       : undefined;
 
   return {
-    async loadPositions(token: string, docId: DocId): Promise<number[] | undefined> {
-      const key = createDocTokenKey({docId, indexField, token});
+    async loadPositions(
+      token: string,
+      docId: DocId,
+    ): Promise<number[] | undefined> {
+      const key = createDocTokenKey({ docId, indexField, token });
       if (!cache.has(key)) {
-        cache.set(key, await reader.loadExactPositions(token, indexField, docId));
+        cache.set(
+          key,
+          await reader.loadExactPositions(token, indexField, docId),
+        );
       }
 
       return cache.get(key);
     },
     async loadBatch(keys: DocTokenKey[]): Promise<void> {
-      const missingKeys = keys.filter((key) => !cache.has(createDocTokenKey(key)));
+      const missingKeys = keys.filter(
+        (key) => !cache.has(createDocTokenKey(key)),
+      );
 
       if (!missingKeys.length) {
         return;
@@ -486,7 +540,11 @@ function buildExactPositionsLoader(
         uniqueMissingKeys.map(async (key) => {
           cache.set(
             createDocTokenKey(key),
-            await reader.loadExactPositions(key.token, key.indexField, key.docId),
+            await reader.loadExactPositions(
+              key.token,
+              key.indexField,
+              key.docId,
+            ),
           );
         }),
       );
@@ -521,10 +579,10 @@ async function selectPrimaryToken(
   existingPlan?: PlannerMetadata,
   trace?: SearchTrace,
 ): Promise<PlannerMetadata> {
-  const sorting = existingPlan?.sorting ?? 'docIdAsc';
+  const sorting = existingPlan?.sorting ?? "docIdAsc";
 
   if (existingPlan && tokens.includes(existingPlan.primaryToken)) {
-    return {...existingPlan, sorting};
+    return { ...existingPlan, sorting };
   }
 
   let primaryToken = tokens[0];
@@ -545,13 +603,16 @@ async function selectPrimaryToken(
     trace.primaryTokenHash = await hashString(primaryToken);
   }
 
-  return {primaryToken, statsVersion, sorting};
+  return { primaryToken, statsVersion, sorting };
 }
 
-function resolveIndexText(document: DocumentRecord, indexField: string): string {
+function resolveIndexText(
+  document: DocumentRecord,
+  indexField: string,
+): string {
   const value = document[indexField];
   if (value === null || value === undefined) {
-    return '';
+    return "";
   }
 
   return String(value);
@@ -566,11 +627,11 @@ function resolveIndexText(document: DocumentRecord, indexField: string): string 
  * @returns Promise resolved once indexing is complete.
  * */
 export async function indexDocument({
-                                      document,
-                                      primaryField,
-                                      indexField,
-                                      backend,
-                                    }: IndexDocumentInput): Promise<void> {
+  document,
+  primaryField,
+  indexField,
+  backend,
+}: IndexDocumentInput): Promise<void> {
   const writer = resolveBackend(backend);
   const docId = normalizeDocId(document[primaryField], primaryField);
   const text = resolveIndexText(document, indexField);
@@ -579,14 +640,16 @@ export async function indexDocument({
     return;
   }
 
-  const {tokens: exactTokens} = tokenize(text);
-  const {tokens: lossyTokens} = tokenizeLossyTrigrams(text);
+  const { tokens: exactTokens } = tokenize(text);
+  const { tokens: lossyTokens } = tokenizeLossyTrigrams(text);
 
   const uniqueLossyTokens = Array.from(new Set(lossyTokens));
   const positions = buildExactPositions(exactTokens);
 
   await Promise.all(
-    uniqueLossyTokens.map((token) => writer.addLossyPosting(token, indexField, docId)),
+    uniqueLossyTokens.map((token) =>
+      writer.addLossyPosting(token, indexField, docId),
+    ),
   );
   await Promise.all(
     Array.from(positions.entries()).map(([token, tokenPositions]) =>
@@ -604,11 +667,11 @@ export async function indexDocument({
  * @returns Promise resolved once removal is complete.
  * */
 export async function removeDocument({
-                                       document,
-                                       primaryField,
-                                       indexField,
-                                       backend,
-                                     }: RemoveDocumentInput): Promise<void> {
+  document,
+  primaryField,
+  indexField,
+  backend,
+}: RemoveDocumentInput): Promise<void> {
   const writer = resolveBackend(backend);
   const docId = normalizeDocId(document[primaryField], primaryField);
   const text = resolveIndexText(document, indexField);
@@ -617,17 +680,21 @@ export async function removeDocument({
     return;
   }
 
-  const {tokens: exactTokens} = tokenize(text);
-  const {tokens: lossyTokens} = tokenizeLossyTrigrams(text);
+  const { tokens: exactTokens } = tokenize(text);
+  const { tokens: lossyTokens } = tokenizeLossyTrigrams(text);
 
   const uniqueLossyTokens = Array.from(new Set(lossyTokens));
   const uniqueExactTokens = Array.from(new Set(exactTokens));
 
   await Promise.all(
-    uniqueLossyTokens.map((token) => writer.removeLossyPosting(token, indexField, docId)),
+    uniqueLossyTokens.map((token) =>
+      writer.removeLossyPosting(token, indexField, docId),
+    ),
   );
   await Promise.all(
-    uniqueExactTokens.map((token) => writer.removeExactPositions(token, indexField, docId)),
+    uniqueExactTokens.map((token) =>
+      writer.removeExactPositions(token, indexField, docId),
+    ),
   );
 }
 
@@ -643,49 +710,63 @@ export async function removeDocument({
  * @returns Search results with doc ids and optional next cursor.
  * */
 export async function searchLossy({
-                                    query,
-                                    indexField,
-                                    limit,
-                                    cursor,
-                                    backend,
-                                    limits,
-                                    trace,
-                                  }: SearchLossyInput): Promise<SearchResult> {
+  query,
+  indexField,
+  limit,
+  cursor,
+  backend,
+  limits,
+  trace,
+}: SearchLossyInput): Promise<SearchResult> {
   const reader = resolveBackend(backend);
   setBackendTrace(reader, trace);
 
   try {
-    const {normalized, tokens} = tokenizeLossyTrigrams(query);
+    const { normalized, tokens } = tokenizeLossyTrigrams(query);
     const wordTokens = normalized.length ? normalized.split(/\s+/) : [];
     const cursorState = decodeLossyCursor(cursor);
     const statsCache: TokenStatsCache = new Map();
     const distinctTokens = Array.from(new Set(tokens));
-    const prefixTokens = distinctTokens.filter((token) => token.endsWith('*'));
-    const trigramTokens = distinctTokens.filter((token) => !token.endsWith('*'));
+    const prefixTokens = distinctTokens.filter((token) => token.endsWith("*"));
+    const trigramTokens = distinctTokens.filter(
+      (token) => !token.endsWith("*"),
+    );
     const tokenCost = Math.max(1, wordTokens.length);
     const secondaryTokenCost = Math.max(0, tokenCost - 1);
     if (trace) {
       trace.tokenCount = wordTokens.length;
       trace.queryHash = await hashString(normalized);
     }
-    const docTokenChecker = buildDocTokenMembershipChecker(reader, indexField, trace);
+    const docTokenChecker = buildDocTokenMembershipChecker(
+      reader,
+      indexField,
+      trace,
+    );
     const limitTracker = new SearchLimitTracker(limits, trace);
 
     if (distinctTokens.length === 0) {
-      return {normalized, tokens, docIds: []};
+      return { normalized, tokens, docIds: [] };
     }
 
     const usePaging = supportsLossyPaging(reader) && prefixTokens.length === 0;
 
     if (!usePaging) {
       const postings = await Promise.all(
-        trigramTokens.map((token) => reader.loadLossyPostings(token, indexField)),
+        trigramTokens.map((token) =>
+          reader.loadLossyPostings(token, indexField),
+        ),
       );
-      const trigramCandidates = trigramTokens.length ? intersectSorted(postings) : [];
+      const trigramCandidates = trigramTokens.length
+        ? intersectSorted(postings)
+        : [];
       const prefixPostings = await Promise.all(
-        prefixTokens.map((token) => reader.loadLossyPostings(token, indexField)),
+        prefixTokens.map((token) =>
+          reader.loadLossyPostings(token, indexField),
+        ),
       );
-      const prefixCandidates = prefixTokens.length ? intersectSorted(prefixPostings) : [];
+      const prefixCandidates = prefixTokens.length
+        ? intersectSorted(prefixPostings)
+        : [];
       const mergedCandidateSet = new Set<DocId>();
       for (const docId of trigramCandidates) {
         mergedCandidateSet.add(docId);
@@ -694,11 +775,14 @@ export async function searchLossy({
         mergedCandidateSet.add(docId);
       }
 
-      const mergedCandidates = Array.from(mergedCandidateSet).sort(compareDocId);
+      const mergedCandidates =
+        Array.from(mergedCandidateSet).sort(compareDocId);
       const lastDocId = cursorState?.lastDocId;
       const filtered =
         lastDocId !== undefined
-          ? mergedCandidates.filter((docId) => compareDocId(docId, lastDocId) > 0)
+          ? mergedCandidates.filter(
+              (docId) => compareDocId(docId, lastDocId) > 0,
+            )
           : mergedCandidates;
       const docIds: DocId[] = [];
       let hasMore = false;
@@ -707,7 +791,10 @@ export async function searchLossy({
       for (const candidate of filtered) {
         lastProcessed = candidate;
 
-        if (limitTracker.shouldStop() || !limitTracker.tryConsumeCandidate(tokenCost)) {
+        if (
+          limitTracker.shouldStop() ||
+          !limitTracker.tryConsumeCandidate(tokenCost)
+        ) {
           hasMore = true;
           break;
         }
@@ -721,9 +808,11 @@ export async function searchLossy({
 
       const cursorDocId = lastProcessed ?? cursorState?.lastDocId;
       const nextCursor =
-        hasMore && cursorDocId !== undefined ? encodeLossyCursor({lastDocId: cursorDocId}) : undefined;
+        hasMore && cursorDocId !== undefined
+          ? encodeLossyCursor({ lastDocId: cursorDocId })
+          : undefined;
 
-      return {normalized, tokens, docIds, nextCursor};
+      return { normalized, tokens, docIds, nextCursor };
     }
 
     const planner = await selectPrimaryToken(
@@ -735,7 +824,9 @@ export async function searchLossy({
       trace,
     );
     const primaryToken = planner.primaryToken;
-    const secondaryTokens = distinctTokens.filter((token) => token !== primaryToken);
+    const secondaryTokens = distinctTokens.filter(
+      (token) => token !== primaryToken,
+    );
     const max = limit ?? Number.POSITIVE_INFINITY;
     const docIds: DocId[] = [];
     let exclusiveStartDocId = cursorState?.lastDocId;
@@ -771,7 +862,8 @@ export async function searchLossy({
         if (
           limitTracker.shouldStop() ||
           !limitTracker.tryConsumeCandidate(secondaryTokenCost) ||
-          (secondaryTokens.length && !(await docTokenChecker.hasDocTokens(docId, secondaryTokens)))
+          (secondaryTokens.length &&
+            !(await docTokenChecker.hasDocTokens(docId, secondaryTokens)))
         ) {
           hasMore = true;
           continue;
@@ -796,14 +888,15 @@ export async function searchLossy({
     }
 
     const nextCursor =
-      hasMore && (lastProcessedDocId !== undefined || exclusiveStartDocId !== undefined)
+      hasMore &&
+      (lastProcessedDocId !== undefined || exclusiveStartDocId !== undefined)
         ? encodeLossyCursor({
-          lastDocId: lastProcessedDocId ?? exclusiveStartDocId,
-          plan: planner,
-        })
+            lastDocId: lastProcessedDocId ?? exclusiveStartDocId,
+            plan: planner,
+          })
         : undefined;
 
-    return {normalized, tokens, docIds, nextCursor};
+    return { normalized, tokens, docIds, nextCursor };
   } finally {
     setBackendTrace(reader, undefined);
   }
@@ -827,10 +920,14 @@ async function hasExactPhrase(
   }
 
   const positionsByToken = await Promise.all(
-    phraseTokens.map(async (token) => positionsLoader.loadPositions(token, docId)),
+    phraseTokens.map(async (token) =>
+      positionsLoader.loadPositions(token, docId),
+    ),
   );
 
-  if (positionsByToken.some((positions) => !positions || positions.length === 0)) {
+  if (
+    positionsByToken.some((positions) => !positions || positions.length === 0)
+  ) {
     return false;
   }
 
@@ -859,20 +956,20 @@ async function hasExactPhrase(
  * @returns Search results with doc ids and optional next cursor.
  * */
 export async function searchExact({
-                                    query,
-                                    indexField,
-                                    limit,
-                                    cursor,
-                                    backend,
-                                    limits,
-                                    trace,
-                                  }: SearchExactInput): Promise<SearchResult> {
+  query,
+  indexField,
+  limit,
+  cursor,
+  backend,
+  limits,
+  trace,
+}: SearchExactInput): Promise<SearchResult> {
   const reader = resolveBackend(backend);
   setBackendTrace(reader, trace);
 
   try {
-    const {normalized, tokens: exactTokens} = tokenize(query);
-    const {tokens: lossyTokens} = tokenizeLossyTrigrams(query);
+    const { normalized, tokens: exactTokens } = tokenize(query);
+    const { tokens: lossyTokens } = tokenizeLossyTrigrams(query);
     const cursorState = decodeExactCursor(cursor);
     const lastDocId = cursorState?.verification?.lastDocId;
     const statsCache: TokenStatsCache = new Map();
@@ -881,15 +978,23 @@ export async function searchExact({
     const distinctLossyTokens = Array.from(new Set(lossyTokens));
 
     if (distinctExactTokens.length === 0) {
-      return {normalized, tokens: exactTokens, docIds: []};
+      return { normalized, tokens: exactTokens, docIds: [] };
     }
 
     if (trace) {
       trace.tokenCount = distinctLossyTokens.length;
       trace.queryHash = await hashString(normalized);
     }
-    const docTokenChecker = buildDocTokenMembershipChecker(reader, indexField, trace);
-    const positionsLoader = buildExactPositionsLoader(reader, indexField, trace);
+    const docTokenChecker = buildDocTokenMembershipChecker(
+      reader,
+      indexField,
+      trace,
+    );
+    const positionsLoader = buildExactPositionsLoader(
+      reader,
+      indexField,
+      trace,
+    );
     const limitTracker = new SearchLimitTracker(limits, trace);
     const preloadPositions = async (docIds: DocId[]): Promise<void> => {
       if (!docIds.length) {
@@ -897,19 +1002,23 @@ export async function searchExact({
       }
 
       const keys = docIds.flatMap((docId) =>
-        distinctExactTokens.map((token) => ({docId, indexField, token} satisfies DocTokenKey)),
+        distinctExactTokens.map(
+          (token) => ({ docId, indexField, token }) satisfies DocTokenKey,
+        ),
       );
 
       await positionsLoader.loadBatch(keys);
     };
 
     if (distinctLossyTokens.length === 0) {
-      return {normalized, tokens: exactTokens, docIds: []};
+      return { normalized, tokens: exactTokens, docIds: [] };
     }
 
     if (!supportsLossyPagingForExact(reader)) {
       const postings = await Promise.all(
-        distinctLossyTokens.map((token) => reader.loadLossyPostings(token, indexField)),
+        distinctLossyTokens.map((token) =>
+          reader.loadLossyPostings(token, indexField),
+        ),
       );
       const candidates = intersectSorted(postings);
       const filteredCandidates =
@@ -926,7 +1035,10 @@ export async function searchExact({
       let hasMore = false;
 
       for (const docId of filteredCandidates) {
-        if (limitTracker.shouldStop() || !limitTracker.tryConsumeCandidate(exactTokens.length)) {
+        if (
+          limitTracker.shouldStop() ||
+          !limitTracker.tryConsumeCandidate(exactTokens.length)
+        ) {
           hasMore = true;
           break;
         }
@@ -937,7 +1049,14 @@ export async function searchExact({
         }
 
         if (
-          await hasExactPhrase(reader, docId, indexField, exactTokens, docTokenChecker, positionsLoader)
+          await hasExactPhrase(
+            reader,
+            docId,
+            indexField,
+            exactTokens,
+            docTokenChecker,
+            positionsLoader,
+          )
         ) {
           docIds.push(docId);
           if (docIds.length >= max) {
@@ -948,16 +1067,21 @@ export async function searchExact({
       }
 
       const lastCandidate = filteredCandidates[filteredCandidates.length - 1];
-      if (!hasMore && lastProcessed !== undefined && lastCandidate !== undefined) {
+      if (
+        !hasMore &&
+        lastProcessed !== undefined &&
+        lastCandidate !== undefined
+      ) {
         hasMore = compareDocId(lastProcessed, lastCandidate) < 0;
       }
 
       const cursorDocId = lastProcessed ?? lastDocId;
-      const nextCursor = hasMore && cursorDocId !== undefined
-        ? encodeExactCursor({verification: {lastDocId: cursorDocId}})
-        : undefined;
+      const nextCursor =
+        hasMore && cursorDocId !== undefined
+          ? encodeExactCursor({ verification: { lastDocId: cursorDocId } })
+          : undefined;
 
-      return {normalized, tokens: exactTokens, docIds, nextCursor};
+      return { normalized, tokens: exactTokens, docIds, nextCursor };
     }
 
     const planner = await selectPrimaryToken(
@@ -979,16 +1103,26 @@ export async function searchExact({
 
     const verifyCandidate = async (docId: DocId): Promise<boolean> => {
       lastProcessedDocId = docId;
-      return hasExactPhrase(reader, docId, indexField, exactTokens, docTokenChecker, positionsLoader);
+      return hasExactPhrase(
+        reader,
+        docId,
+        indexField,
+        exactTokens,
+        docTokenChecker,
+        positionsLoader,
+      );
     };
 
     const nextCursorWithState = (
-      verification?: ExactCursorState['verification'],
+      verification?: ExactCursorState["verification"],
       lossyLastDocId?: DocId,
     ) =>
       encodeExactCursor({
         plan: planner,
-        lossy: lossyLastDocId === undefined ? undefined : {lastDocId: lossyLastDocId},
+        lossy:
+          lossyLastDocId === undefined
+            ? undefined
+            : { lastDocId: lossyLastDocId },
         verification,
       });
 
@@ -1001,7 +1135,10 @@ export async function searchExact({
     await preloadPositions(pendingCandidates.slice(pendingOffset));
 
     while (pendingOffset < pendingCandidates.length && docIds.length < max) {
-      if (limitTracker.shouldStop() || !limitTracker.tryConsumeCandidate(exactTokens.length)) {
+      if (
+        limitTracker.shouldStop() ||
+        !limitTracker.tryConsumeCandidate(exactTokens.length)
+      ) {
         limitsHit = true;
         break;
       }
@@ -1051,7 +1188,8 @@ export async function searchExact({
 
       const pageCandidates = page.docIds.filter(
         (docId) =>
-          lastProcessedDocId === undefined || compareDocId(docId, lastProcessedDocId) > 0,
+          lastProcessedDocId === undefined ||
+          compareDocId(docId, lastProcessedDocId) > 0,
       );
       const pageCandidatesWithTokens = await docTokenChecker.filterDocsByTokens(
         pageCandidates,
@@ -1064,7 +1202,10 @@ export async function searchExact({
       await preloadPositions(candidatesToVerify);
 
       while (pendingOffset < candidatesToVerify.length && docIds.length < max) {
-        if (limitTracker.shouldStop() || !limitTracker.tryConsumeCandidate(exactTokens.length)) {
+        if (
+          limitTracker.shouldStop() ||
+          !limitTracker.tryConsumeCandidate(exactTokens.length)
+        ) {
           limitsHit = true;
           break;
         }
@@ -1105,9 +1246,11 @@ export async function searchExact({
 
     if (limitsHit) {
       const verificationState =
-        lastProcessedDocId === undefined && pendingCandidates.length === 0 && pendingOffset === 0
+        lastProcessedDocId === undefined &&
+        pendingCandidates.length === 0 &&
+        pendingOffset === 0
           ? undefined
-          : {lastDocId: lastProcessedDocId, pendingCandidates, pendingOffset};
+          : { lastDocId: lastProcessedDocId, pendingCandidates, pendingOffset };
 
       return {
         normalized,
@@ -1117,7 +1260,7 @@ export async function searchExact({
       };
     }
 
-    return {normalized, tokens: exactTokens, docIds};
+    return { normalized, tokens: exactTokens, docIds };
   } finally {
     setBackendTrace(reader, undefined);
   }

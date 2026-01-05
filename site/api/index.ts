@@ -17,7 +17,6 @@ const allowedErrors = new Set<string>([
  * Filters errors to determine whether they are safe to return to clients.
  */
 const allowClientError = (error: unknown): boolean => {
-
   const errorCode = (() => {
     if (typeof error === "string") {
       return error;

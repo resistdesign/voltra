@@ -19,8 +19,10 @@ import {
 /**
  * An object, nested or not, used as the identifier or identifier path for a state value.
  * */
-export interface ApplicationStateIdentifier
-  extends Record<string, ApplicationStateIdentifier | {}> {}
+export interface ApplicationStateIdentifier extends Record<
+  string,
+  ApplicationStateIdentifier | {}
+> {}
 
 /**
  * The stored value type for application state entries.

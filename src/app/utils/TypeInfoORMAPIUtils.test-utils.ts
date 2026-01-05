@@ -12,7 +12,10 @@ type RequestStateSummary = {
 const buildApi = (): TypeInfoORMAPI =>
   ({
     createRelationship: async () => true,
-    deleteRelationship: async () => ({ success: true, remainingItemsExist: false }),
+    deleteRelationship: async () => ({
+      success: true,
+      remainingItemsExist: false,
+    }),
     listRelationships: async () => ({ items: [], cursor: undefined }),
     listRelatedItems: async () => ({ items: [], cursor: undefined }),
     create: async () => "created",
@@ -29,36 +32,52 @@ export const runTypeInfoORMAPIUtilsScenario = async () => {
   const successCalls: RequestStateSummary[] = [];
   const errorCalls: RequestStateSummary[] = [];
 
-  await handleRequest("req-1", ["a"], api, "read", (methodName, requestId, state) => {
-    successCalls.push({
-      methodName: String(methodName),
-      requestId,
-      loading: !!state.loading,
-      data: state.data ?? null,
-      error: state.error ?? null,
-    });
-  });
+  await handleRequest(
+    "req-1",
+    ["a"],
+    api,
+    "read",
+    (methodName, requestId, state) => {
+      successCalls.push({
+        methodName: String(methodName),
+        requestId,
+        loading: !!state.loading,
+        data: state.data ?? null,
+        error: state.error ?? null,
+      });
+    },
+  );
 
-  await handleRequest("req-2", [], api, "update", (methodName, requestId, state) => {
-    errorCalls.push({
-      methodName: String(methodName),
-      requestId,
-      loading: !!state.loading,
-      data: state.data ?? null,
-      error: state.error ?? null,
-    });
-  });
+  await handleRequest(
+    "req-2",
+    [],
+    api,
+    "update",
+    (methodName, requestId, state) => {
+      errorCalls.push({
+        methodName: String(methodName),
+        requestId,
+        loading: !!state.loading,
+        data: state.data ?? null,
+        error: state.error ?? null,
+      });
+    },
+  );
 
   const factoryCalls: RequestStateSummary[] = [];
-  const handler = requestHandlerFactory(api, "read", (methodName, requestId, state) => {
-    factoryCalls.push({
-      methodName: String(methodName),
-      requestId,
-      loading: !!state.loading,
-      data: state.data ?? null,
-      error: state.error ?? null,
-    });
-  });
+  const handler = requestHandlerFactory(
+    api,
+    "read",
+    (methodName, requestId, state) => {
+      factoryCalls.push({
+        methodName: String(methodName),
+        requestId,
+        loading: !!state.loading,
+        data: state.data ?? null,
+        error: state.error ?? null,
+      });
+    },
+  );
   const requestId = handler("factory");
   await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -67,7 +86,9 @@ export const runTypeInfoORMAPIUtilsScenario = async () => {
     errorCalls,
     requestIdIsString: typeof requestId === "string" && requestId.length > 0,
     factoryCallsCount: factoryCalls.length,
-    factoryCallMatchesId: factoryCalls.every((call) => call.requestId === requestId),
+    factoryCallMatchesId: factoryCalls.every(
+      (call) => call.requestId === requestId,
+    ),
     factoryCallData: factoryCalls.map((call) => call.data),
   };
 };
