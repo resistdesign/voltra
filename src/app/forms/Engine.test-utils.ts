@@ -1,9 +1,18 @@
+/**
+ * @packageDocumentation
+ *
+ * Test utilities for the form engine hook.
+ */
+
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { useFormEngine } from "./Engine";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import type { FormController } from "./types";
 
+/**
+ * Run a basic controller scenario covering defaults and derived field state.
+ */
 export const runFormControllerScenario = () => {
   let snapshot: any = null;
 
@@ -93,6 +102,9 @@ export const runFormControllerScenario = () => {
   return snapshot;
 };
 
+/**
+ * Capture the field order emitted by the form engine.
+ */
 export const runFieldOrderScenario = () => {
   let snapshot: any = null;
 
@@ -140,6 +152,9 @@ export const runFieldOrderScenario = () => {
   };
 };
 
+/**
+ * Capture field ordering for union field sets.
+ */
 export const runUnionFieldSetsScenario = () => {
   let snapshot: any = null;
 
@@ -183,6 +198,9 @@ export const runUnionFieldSetsScenario = () => {
   };
 };
 
+/**
+ * Validate readonly field behavior and required validation.
+ */
 export const runReadonlyValidationScenario = () => {
   let controller: FormController | undefined;
 
@@ -220,6 +238,9 @@ export const runReadonlyValidationScenario = () => {
   };
 };
 
+/**
+ * Validate optional field behavior for required checks.
+ */
 export const runOptionalValidationScenario = () => {
   let controller: FormController | undefined;
 
@@ -256,6 +277,9 @@ export const runOptionalValidationScenario = () => {
   };
 };
 
+/**
+ * Validate normalized tags usage in label/hidden field settings.
+ */
 export const runNormalizedTagsScenario = () => {
   let snapshot: any = null;
 
@@ -292,6 +316,9 @@ export const runNormalizedTagsScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate primary tag behavior for update operations.
+ */
 export const runPrimaryTagScenario = () => {
   let snapshot: any = null;
 
@@ -329,6 +356,9 @@ export const runPrimaryTagScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate label tag usage for fields.
+ */
 export const runLabelTagScenario = () => {
   let snapshot: any = null;
 
@@ -364,6 +394,9 @@ export const runLabelTagScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate default value constraints applied to initial values.
+ */
 export const runDefaultValueConstraintScenario = () => {
   let snapshot: any = null;
 
@@ -399,6 +432,9 @@ export const runDefaultValueConstraintScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate regex-based pattern constraints during validation.
+ */
 export const runPatternValidationScenario = () => {
   let controller: FormController | undefined;
 
@@ -438,6 +474,9 @@ export const runPatternValidationScenario = () => {
   };
 };
 
+/**
+ * Validate field-level denied operations handling.
+ */
 export const runDeniedOperationsScenario = () => {
   let snapshot: any = null;
 
@@ -483,6 +522,9 @@ export const runDeniedOperationsScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate type tags passthrough on the controller.
+ */
 export const runTypeTagsScenario = () => {
   let snapshot: any = null;
 
@@ -520,6 +562,9 @@ export const runTypeTagsScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate type-level denied operations handling.
+ */
 export const runTypeDeniedOperationsScenario = () => {
   let snapshot: any = null;
 
@@ -565,6 +610,9 @@ export const runTypeDeniedOperationsScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate field extraction from a packed type info map.
+ */
 export const runTypeInfoPackScenario = () => {
   let snapshot: any = null;
 
@@ -613,6 +661,9 @@ export const runTypeInfoPackScenario = () => {
   return snapshot;
 };
 
+/**
+ * Validate literal value handling for initial values and validation.
+ */
 export const runLiteralValueScenario = () => {
   let controller: FormController | undefined;
 
@@ -676,6 +727,9 @@ export const runLiteralValueScenario = () => {
   };
 };
 
+/**
+ * Validate array vs scalar value handling for data item shapes.
+ */
 export const runDataItemScenario = () => {
   let snapshot: any = null;
 

@@ -6,6 +6,9 @@
 
 import styled from "../helpers/styled";
 
+/**
+ * Wrapper for grouped field content.
+ */
 export const FieldWrapper = styled("div")`
   display: flex;
   flex-direction: column;
@@ -13,11 +16,17 @@ export const FieldWrapper = styled("div")`
   margin-bottom: 1rem;
 `;
 
+/**
+ * Label element for form controls.
+ */
 export const Label = styled("label")`
   font-weight: 500;
   font-size: 0.875rem;
 `;
 
+/**
+ * Base input styling for text, number, and checkbox controls.
+ */
 export const Input = styled("input")`
   padding: 0.5rem;
   border: 1px solid #ccc;
@@ -36,6 +45,9 @@ export const Input = styled("input")`
   }
 `;
 
+/**
+ * Select dropdown styling.
+ */
 export const Select = styled("select")`
   padding: 0.5rem;
   border: 1px solid #ccc;
@@ -49,17 +61,26 @@ export const Select = styled("select")`
   }
 `;
 
+/**
+ * Wrapper for checkbox input and label alignment.
+ */
 export const CheckboxWrapper = styled("div")`
   display: flex;
   align-items: center;
   gap: 0.5rem;
 `;
 
+/**
+ * Inline error message styling.
+ */
 export const ErrorMessage = styled("span")`
   color: #dc3545;
   font-size: 0.875rem;
 `;
 
+/**
+ * Button styling for form actions.
+ */
 export const Button = styled("button")`
   padding: 0.5rem 1rem;
   background-color: #f0f0f0;
@@ -74,6 +95,9 @@ export const Button = styled("button")`
   }
 `;
 
+/**
+ * Container for array field items.
+ */
 export const ArrayContainer = styled("div")`
   display: flex;
   flex-direction: column;
@@ -82,6 +106,9 @@ export const ArrayContainer = styled("div")`
   border-left: 2px solid #eee;
 `;
 
+/**
+ * Wrapper for an individual array item row.
+ */
 export const ArrayItemWrapper = styled("div")`
   display: flex;
   align-items: center;

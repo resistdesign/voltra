@@ -1,3 +1,9 @@
+/**
+ * @packageDocumentation
+ *
+ * Test helpers and scenarios for form UI components.
+ */
+
 import { createElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { renderToString } from "react-dom/server";
@@ -10,6 +16,13 @@ import type {
 } from "./types";
 import { AutoField, AutoFormView } from "./UI";
 
+/**
+ * Render a single AutoField to an HTML string.
+ *
+ * @param field - Field metadata to render.
+ * @param options - Optional render configuration.
+ * @returns Rendered HTML string.
+ */
 const renderField = (
   field: TypeInfoField,
   options?: {
@@ -31,13 +44,26 @@ const renderField = (
     }),
   );
 
+/**
+ * Minimal props shape for element filtering helpers.
+ */
 type AnyProps = {
   children?: ReactNode;
   onClick?: () => void;
 };
 
+/**
+ * React element type used for DOM-less tree inspection.
+ */
 type AnyReactElement = ReactElement<AnyProps, any>;
 
+/**
+ * Render an AutoField to a React element tree.
+ *
+ * @param field - Field metadata to render.
+ * @param options - Optional render configuration.
+ * @returns ReactNode tree for inspection.
+ */
 const renderFieldElement = (
   field: TypeInfoField,
   options?: {
@@ -57,9 +83,21 @@ const renderFieldElement = (
     onCustomTypeAction: options?.onCustomTypeAction,
   }) as ReactNode;
 
+/**
+ * Narrow a ReactNode to a React element with props.
+ *
+ * @param node - Node to check.
+ * @returns True when the node is a React element.
+ */
 const isElement = (node: ReactNode): node is AnyReactElement =>
   !!node && typeof node === "object" && "props" in node;
 
+/**
+ * Extract text content from a ReactNode tree.
+ *
+ * @param node - Node tree to flatten.
+ * @returns Text content from the tree.
+ */
 const getTextContent = (node: ReactNode): string => {
   if (node === null || node === undefined || typeof node === "boolean") {
     return "";
@@ -77,6 +115,14 @@ const getTextContent = (node: ReactNode): string => {
   return "";
 };
 
+/**
+ * Collect matching elements from a ReactNode tree.
+ *
+ * @param node - Node tree to search.
+ * @param predicate - Predicate applied to each element.
+ * @param results - Accumulator for matching elements.
+ * @returns Collected elements that match the predicate.
+ */
 const collectElements = (
   node: ReactNode,
   predicate: (element: AnyReactElement) => boolean,
@@ -103,6 +149,13 @@ const collectElements = (
   return results;
 };
 
+/**
+ * Find the first clickable element containing target text.
+ *
+ * @param node - Node tree to search.
+ * @param text - Text to match within clickable elements.
+ * @returns First matching clickable element, if any.
+ */
 const findClickableByText = (node: ReactNode, text: string) => {
   const matches = collectElements(
     node,
@@ -114,6 +167,9 @@ const findClickableByText = (node: ReactNode, text: string) => {
   return matches[0];
 };
 
+/**
+ * Validate base input rendering for primitive field types.
+ */
 export const runPrimitiveInputScenario = () => {
   const stringRender = renderField({
     type: "string",
@@ -143,6 +199,9 @@ export const runPrimitiveInputScenario = () => {
   };
 };
 
+/**
+ * Validate relation field rendering behavior.
+ */
 export const runRelationFieldScenario = () => {
   const onRelationAction = () => {};
 
@@ -177,6 +236,9 @@ export const runRelationFieldScenario = () => {
   };
 };
 
+/**
+ * Validate array field rendering and controls.
+ */
 export const runArrayFieldScenario = () => {
   const arrayRender = renderField(
     {
@@ -195,6 +257,9 @@ export const runArrayFieldScenario = () => {
   };
 };
 
+/**
+ * Validate select rendering for possible values.
+ */
 export const runPossibleValuesScenario = () => {
   const stringRender = renderField({
     type: "string",
@@ -222,6 +287,9 @@ export const runPossibleValuesScenario = () => {
   };
 };
 
+/**
+ * Validate filtering of boolean/null values from select options.
+ */
 export const runPossibleValuesFilterScenario = () => {
   const mixedRender = renderField({
     type: "string",
@@ -244,6 +312,9 @@ export const runPossibleValuesFilterScenario = () => {
   };
 };
 
+/**
+ * Validate input type formatting based on tag format.
+ */
 export const runFormatScenario = () => {
   const render = renderField({
     type: "string",
@@ -260,6 +331,9 @@ export const runFormatScenario = () => {
   };
 };
 
+/**
+ * Validate custom selection rendering with datalist.
+ */
 export const runAllowCustomSelectionScenario = () => {
   const render = renderField({
     type: "string",
@@ -278,6 +352,9 @@ export const runAllowCustomSelectionScenario = () => {
   };
 };
 
+/**
+ * Validate constraint attributes for number and string inputs.
+ */
 export const runConstraintAttributeScenario = () => {
   const numberRender = renderField({
     type: "number",
@@ -313,6 +390,9 @@ export const runConstraintAttributeScenario = () => {
   };
 };
 
+/**
+ * Validate custom type action payloads for scalar and array fields.
+ */
 export const runCustomTypeScenario = () => {
   const payloads: CustomTypeActionPayload[] = [];
   const onCustomTypeAction = (payload: CustomTypeActionPayload) => {
@@ -363,6 +443,9 @@ export const runCustomTypeScenario = () => {
   };
 };
 
+/**
+ * Validate relation actions include full paging flag when set.
+ */
 export const runRelationFullPagingScenario = () => {
   let payload: RelationActionPayload | null = null;
   const onRelationAction = (nextPayload: RelationActionPayload) => {
@@ -394,6 +477,9 @@ export const runRelationFullPagingScenario = () => {
   };
 };
 
+/**
+ * Validate hidden fields are omitted from AutoFormView output.
+ */
 export const runHiddenFieldScenario = () => {
   const controller: FormController = {
     typeInfo: {},

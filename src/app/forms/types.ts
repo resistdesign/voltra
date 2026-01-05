@@ -12,9 +12,19 @@ import type {
 } from "../../common/TypeParsing/TypeInfo";
 import type { ItemRelationshipInfoType } from "../../common/ItemRelationshipInfoTypes";
 
+/**
+ * Loose map of form values keyed by field.
+ */
 export type FormValues = Partial<TypeInfoDataItem>;
+
+/**
+ * Value type for a single form field.
+ */
 export type FormValue = TypeInfoDataItem[keyof TypeInfoDataItem];
 
+/**
+ * Constraints extracted from TypeInfo field tags.
+ */
 type FieldConstraints = NonNullable<TypeInfoField["tags"]>["constraints"];
 
 /**
@@ -43,6 +53,9 @@ export interface AutoFieldProps {
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
 }
 
+/**
+ * Controller metadata for a single field instance.
+ */
 export type FormFieldController = {
   key: string;
   field: TypeInfoField;
@@ -58,6 +71,9 @@ export type FormFieldController = {
   error?: string;
 };
 
+/**
+ * Controller for a form instance and its fields.
+ */
 export type FormController = {
   typeInfo: TypeInfo;
   typeTags?: TypeInfo["tags"];
@@ -69,8 +85,14 @@ export type FormController = {
   validate: () => boolean;
 };
 
+/**
+ * Supported relation actions emitted by fields.
+ */
 export type RelationAction = "open" | "add" | "edit" | "remove";
 
+/**
+ * Payload for relation action callbacks.
+ */
 export type RelationActionPayload = {
   action: RelationAction;
   fieldKey: string;
@@ -81,8 +103,14 @@ export type RelationActionPayload = {
   onChange: (value: FormValue) => void;
 };
 
+/**
+ * Supported actions for custom type handlers.
+ */
 export type CustomTypeAction = "open" | "add" | "edit" | "remove";
 
+/**
+ * Payload for custom type action callbacks.
+ */
 export type CustomTypeActionPayload = {
   action: CustomTypeAction;
   fieldKey: string;
