@@ -93,6 +93,9 @@ export const useFormEngine = (
       }
 
       const val = values[key];
+      if (field.readonly && (val === undefined || val === null || val === "")) {
+        continue;
+      }
       const isMissing =
         val === undefined ||
         val === null ||
