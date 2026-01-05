@@ -58,13 +58,13 @@
     - [x] deniedOperations.DELETE: disables field on delete
 
   - SupportedTags (Type-Level)
-    - [ ] label: exposed for type-level consumers
-    - [ ] deniedOperations.CREATE: disables all fields on create
-    - [ ] deniedOperations.READ: disables all fields on read
-    - [ ] deniedOperations.UPDATE: disables all fields on update
-    - [ ] deniedOperations.DELETE: disables all fields on delete
-    - [ ] fullPaging: exposed for type-level consumers
-    - [ ] persisted: exposed for type-level consumers
+    - [x] label: exposed for type-level consumers
+    - [x] deniedOperations.CREATE: disables all fields on create
+    - [x] deniedOperations.READ: disables all fields on read
+    - [x] deniedOperations.UPDATE: disables all fields on update
+    - [x] deniedOperations.DELETE: disables all fields on delete
+    - [x] fullPaging: exposed for type-level consumers
+    - [x] persisted: exposed for type-level consumers
 
   - TypeInfoPack
     - [ ] entryTypeName: form system resolves correct entry type for rendering
