@@ -24,18 +24,18 @@
     - [x] unionFieldSets: controller preserves field list when union sets present
 
   - TypeInfoField
-    - [ ] type: renders correct primitive input for string
-    - [ ] type: renders correct primitive input for number
-    - [ ] type: renders correct primitive input for boolean
-    - [ ] typeReference: renders relation control (single)
-    - [ ] typeReference: renders relation control (array)
-    - [ ] array: renders repeatable array UI for primitives
-    - [ ] readonly: disables input and skips required validation when empty
-    - [ ] optional: required validation toggled off when true
-    - [ ] possibleValues: renders select for string values
-    - [ ] possibleValues: renders select for number values
-    - [ ] possibleValues: boolean/null values ignored in select options
-    - [ ] tags: normalized tags map from parser to form UI
+    - [x] type: renders correct primitive input for string
+    - [x] type: renders correct primitive input for number
+    - [x] type: renders correct primitive input for boolean
+    - [x] typeReference: renders relation control (single)
+    - [x] typeReference: renders relation control (array)
+    - [x] array: renders repeatable array UI for primitives
+    - [x] readonly: disables input and skips required validation when empty
+    - [x] optional: required validation toggled off when true
+    - [x] possibleValues: renders select for string values
+    - [x] possibleValues: renders select for number values
+    - [x] possibleValues: boolean/null values ignored in select options
+    - [x] tags: normalized tags map from parser to form UI
 
   - SupportedFieldTags
     - [ ] primaryField: marks controller field as primary (and disables on update)

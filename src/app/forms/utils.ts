@@ -4,7 +4,7 @@
  * Shared helpers for form generation.
  */
 
-import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo.js";
+import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo";
 
 export const normalizeFieldTags = (
   tags?: TypeInfoField["tags"],
