@@ -141,6 +141,50 @@
         "label": "Outer",
         "hidden": false
       }
+    },
+    {
+      "export": "runPrimaryTagScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "primary": true,
+        "disabled": true
+      }
+    },
+    {
+      "export": "runLabelTagScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "Display Title"
+      }
+    },
+    {
+      "export": "runDefaultValueConstraintScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "value": "draft"
+      }
+    },
+    {
+      "export": "runPatternValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validationPassed": false
+      }
+    },
+    {
+      "export": "runDeniedOperationsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createDisabled": true,
+        "readDisabled": true,
+        "updateDisabled": true,
+        "deleteDisabled": true
+      }
     }
   ]
 }

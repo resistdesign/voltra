@@ -291,3 +291,194 @@ export const runNormalizedTagsScenario = () => {
 
   return snapshot;
 };
+
+export const runPrimaryTagScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          id: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+            tags: {
+              primaryField: true,
+            },
+          },
+        },
+      },
+      { operation: TypeOperation.UPDATE },
+    );
+
+    const field = controller.fields[0];
+
+    snapshot = {
+      primary: field?.primary ?? null,
+      disabled: field?.disabled ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+export const runLabelTagScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          title: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              label: "Display Title",
+            },
+          },
+        },
+      },
+    );
+
+    const field = controller.fields[0];
+
+    snapshot = {
+      label: field?.label ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+export const runDefaultValueConstraintScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          status: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              constraints: {
+                defaultValue: "draft",
+              },
+            },
+          },
+        },
+      },
+    );
+
+    snapshot = {
+      value: controller.values.status ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+export const runPatternValidationScenario = () => {
+  let controller: FormController | undefined;
+
+  const Component = () => {
+    controller = useFormEngine(
+      { code: "abc" },
+      {
+        fields: {
+          code: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+            tags: {
+              constraints: {
+                pattern: "^[A-Z]+$",
+              },
+            },
+          },
+        },
+      },
+    );
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  if (!controller) {
+    throw new Error("Expected controller to be initialized.");
+  }
+
+  const validationPassed = controller.validate();
+
+  return {
+    validationPassed,
+  };
+};
+
+export const runDeniedOperationsScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const buildController = (operation: TypeOperation) =>
+      useFormEngine(
+        {},
+        {
+          fields: {
+            name: {
+              type: "string",
+              array: false,
+              readonly: false,
+              optional: true,
+              tags: {
+                deniedOperations: {
+                  [operation]: true,
+                },
+              },
+            },
+          },
+        },
+        { operation },
+      );
+
+    const createController = buildController(TypeOperation.CREATE);
+    const readController = buildController(TypeOperation.READ);
+    const updateController = buildController(TypeOperation.UPDATE);
+    const deleteController = buildController(TypeOperation.DELETE);
+
+    snapshot = {
+      createDisabled: createController.fields[0]?.disabled ?? null,
+      readDisabled: readController.fields[0]?.disabled ?? null,
+      updateDisabled: updateController.fields[0]?.disabled ?? null,
+      deleteDisabled: deleteController.fields[0]?.disabled ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};

@@ -76,6 +76,7 @@ export type RelationActionPayload = {
   fieldKey: string;
   field: TypeInfoField;
   value: ItemRelationshipInfoType | ItemRelationshipInfoType[] | undefined;
+  fullPaging?: boolean;
   index?: number;
   onChange: (value: FormValue) => void;
 };
