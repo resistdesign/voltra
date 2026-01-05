@@ -185,6 +185,27 @@
         "updateDisabled": true,
         "deleteDisabled": true
       }
+    },
+    {
+      "export": "runTypeTagsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "Widget",
+        "fullPaging": true,
+        "persisted": false
+      }
+    },
+    {
+      "export": "runTypeDeniedOperationsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createDisabled": true,
+        "readDisabled": true,
+        "updateDisabled": true,
+        "deleteDisabled": true
+      }
     }
   ]
 }

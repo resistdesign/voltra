@@ -482,3 +482,85 @@ export const runDeniedOperationsScenario = () => {
 
   return snapshot;
 };
+
+export const runTypeTagsScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          name: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+          },
+        },
+        tags: {
+          label: "Widget",
+          fullPaging: true,
+          persisted: false,
+        },
+      },
+    );
+
+    snapshot = {
+      label: controller.typeTags?.label ?? null,
+      fullPaging: controller.typeTags?.fullPaging ?? null,
+      persisted: controller.typeTags?.persisted ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+export const runTypeDeniedOperationsScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const buildController = (operation: TypeOperation) =>
+      useFormEngine(
+        {},
+        {
+          fields: {
+            name: {
+              type: "string",
+              array: false,
+              readonly: false,
+              optional: true,
+            },
+          },
+          tags: {
+            deniedOperations: {
+              [operation]: true,
+            },
+          },
+        },
+        { operation },
+      );
+
+    const createController = buildController(TypeOperation.CREATE);
+    const readController = buildController(TypeOperation.READ);
+    const updateController = buildController(TypeOperation.UPDATE);
+    const deleteController = buildController(TypeOperation.DELETE);
+
+    snapshot = {
+      createDisabled: createController.fields[0]?.disabled ?? null,
+      readDisabled: readController.fields[0]?.disabled ?? null,
+      updateDisabled: updateController.fields[0]?.disabled ?? null,
+      deleteDisabled: deleteController.fields[0]?.disabled ?? null,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
