@@ -8,7 +8,9 @@
       "expectation": {
         "values": {
           "name": "Ada",
-          "email": "ada@example.com"
+          "email": "ada@example.com",
+          "active": false,
+          "tags": []
         },
         "fields": [
           {
@@ -53,6 +55,24 @@
             "required": false,
             "value": null,
             "disabled": true,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "active",
+            "label": "active",
+            "required": true,
+            "value": false,
+            "disabled": false,
+            "hidden": false,
+            "primary": false
+          },
+          {
+            "key": "tags",
+            "label": "tags",
+            "required": true,
+            "value": [],
+            "disabled": false,
             "hidden": false,
             "primary": false
           }

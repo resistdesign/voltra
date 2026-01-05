@@ -46,6 +46,16 @@ const buildInitialValues = (
 
     if (defaultValue !== undefined) {
       values[key] = defaultValue;
+      continue;
+    }
+
+    if (field.array && !field.typeReference && !field.optional) {
+      values[key] = [];
+      continue;
+    }
+
+    if (field.type === "boolean" && !field.optional) {
+      values[key] = false;
     }
   }
 
@@ -83,7 +93,11 @@ export const useFormEngine = (
       }
 
       const val = values[key];
-      const isMissing = val === undefined || val === null || val === "";
+      const isMissing =
+        val === undefined ||
+        val === null ||
+        val === "" ||
+        (field.array && (!Array.isArray(val) || val.length === 0));
       if (!field.optional && isMissing) {
         newErrors[key] = "This field is required";
         continue;

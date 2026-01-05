@@ -296,7 +296,7 @@ export const AutoField: FC<AutoFieldProps> = ({
   // Handle array fields
   if (field.array) {
     const itemField = createArrayItemField(field);
-    const arrayValue = Array.isArray(value) ? (value as LiteralValue[]) : [];
+    const arrayValue = Array.isArray(value) ? [...(value as LiteralValue[])] : [];
 
     return (
       <FieldWrapper>
@@ -336,22 +336,14 @@ export const AutoField: FC<AutoFieldProps> = ({
             type="button"
             disabled={disabled}
             onClick={() => {
-              const newValue = [...arrayValue];
-              // Default value based on item type
-              let newItem =
+              const baseValue = Array.isArray(value) ? value : [];
+              const newValue = [...baseValue];
+              const newItem =
                 field.type === "number"
                   ? 0
                   : field.type === "boolean"
                     ? false
                     : "";
-              const defaultValue = constraints?.defaultValue;
-              if (defaultValue !== undefined) {
-                if (Array.isArray(defaultValue)) {
-                  newItem = defaultValue[0] ?? newItem;
-                } else {
-                  newItem = defaultValue;
-                }
-              }
               newValue.push(newItem);
               onChange(newValue);
             }}

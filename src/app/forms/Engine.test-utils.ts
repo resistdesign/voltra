@@ -52,6 +52,18 @@ export const runFormControllerScenario = () => {
             readonly: true,
             optional: true,
           },
+          active: {
+            type: "boolean",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          tags: {
+            type: "string",
+            array: true,
+            readonly: false,
+            optional: false,
+          },
         },
       },
       { operation: TypeOperation.UPDATE },
