@@ -6,6 +6,7 @@ export default defineConfig({
   vite: {
     plugins: [basicSsl()],
   },
+  output: "static",
   integrations: [react()],
   srcDir: "./site/app/src",
   publicDir: "./public",
