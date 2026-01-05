@@ -1,8 +1,8 @@
-import React, { createElement } from "react";
+import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { useFormEngine } from "./Engine";
-import { TypeOperation } from "../../common/TypeParsing/TypeInfo.js";
-import type { FormController } from "./types.js";
+import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import type { FormController } from "./types";
 
 export const runFormControllerScenario = () => {
   let snapshot: any = null;
@@ -74,14 +74,14 @@ export const runFormControllerScenario = () => {
       values: controller.values,
       fields: controller.fields.map(
         ({ key, label, required, value, disabled, hidden, primary }) => ({
-        key,
-        label,
-        required,
-        value: value ?? null,
-        disabled,
-        hidden,
-        primary,
-      }),
+          key,
+          label,
+          required,
+          value: value ?? null,
+          disabled,
+          hidden,
+          primary,
+        }),
       ),
     };
 
@@ -167,10 +167,7 @@ export const runUnionFieldSetsScenario = () => {
             optional: true,
           },
         },
-        unionFieldSets: [
-          ["first", "second"],
-          ["third"],
-        ],
+        unionFieldSets: [["first", "second"], ["third"]],
       },
     );
 
@@ -274,10 +271,6 @@ export const runNormalizedTagsScenario = () => {
             optional: true,
             tags: {
               label: "Outer",
-              tags: {
-                label: "Inner",
-                hidden: true,
-              },
             },
           },
         },

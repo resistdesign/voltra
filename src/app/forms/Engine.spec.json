@@ -138,8 +138,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "label": "Inner",
-        "hidden": true
+        "label": "Outer",
+        "hidden": false
       }
     }
   ]

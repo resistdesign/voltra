@@ -5,15 +5,17 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { TypeOperation } from "../../common/TypeParsing/TypeInfo.js";
-import type { DeniedOperations, TypeInfo } from "../../common/TypeParsing/TypeInfo.js";
+import type {
+  DeniedOperations,
+  TypeInfo,
+} from "../../common/TypeParsing/TypeInfo";
+import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import type {
   FormController,
   FormFieldController,
   FormValue,
   FormValues,
-} from "./types.js";
-import { normalizeFieldTags } from "./utils.js";
+} from "./types";
 
 const getDeniedOperation = (
   deniedOperations: DeniedOperations | undefined,
@@ -28,7 +30,9 @@ const getDeniedOperation = (
     return denied;
   }
 
-  return deniedOperations[operation.toLowerCase() as keyof DeniedOperations] ?? false;
+  return (
+    deniedOperations[operation.toLowerCase() as keyof DeniedOperations] ?? false
+  );
 };
 
 const buildInitialValues = (
@@ -136,7 +140,7 @@ export const useFormEngine = (
 
   const fields = useMemo<FormFieldController[]>(() => {
     return Object.entries(typeInfo.fields ?? {}).map(([key, field]) => {
-      const tags = normalizeFieldTags(field.tags);
+      const { tags } = field;
       const isPrimary = tags?.primaryField || typeInfo.primaryField === key;
 
       return {

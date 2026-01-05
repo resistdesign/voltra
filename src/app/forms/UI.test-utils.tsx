@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo.js";
-import { AutoField } from "./UI.js";
+import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo";
+import { AutoField } from "./UI";
 
 const renderField = (
   field: TypeInfoField,
@@ -15,7 +15,7 @@ const renderField = (
     createElement(AutoField, {
       field,
       fieldKey: "field",
-      value: options?.value,
+      value: options?.value as any,
       onChange: () => {},
       disabled: options?.disabled,
       onRelationAction: options?.onRelationAction,

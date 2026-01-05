@@ -9,8 +9,8 @@ import type {
   TypeInfoDataItem,
   TypeInfoField,
   TypeOperation,
-} from "../../common/TypeParsing/TypeInfo.js";
-import type { ItemRelationshipInfoType } from "../../common/ItemRelationshipInfoTypes.js";
+} from "../../common/TypeParsing/TypeInfo";
+import type { ItemRelationshipInfoType } from "../../common/ItemRelationshipInfoTypes";
 
 export type FormValues = Partial<TypeInfoDataItem>;
 export type FormValue = TypeInfoDataItem[keyof TypeInfoDataItem];
