@@ -564,3 +564,155 @@ export const runTypeDeniedOperationsScenario = () => {
 
   return snapshot;
 };
+
+export const runTypeInfoPackScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const typeInfoPack = {
+      entryTypeName: "Widget",
+      typeInfoMap: {
+        Widget: {
+          fields: {
+            title: {
+              type: "string",
+              array: false,
+              readonly: false,
+              optional: false,
+            },
+          },
+        },
+        Other: {
+          fields: {
+            count: {
+              type: "number",
+              array: false,
+              readonly: false,
+              optional: true,
+            },
+          },
+        },
+      },
+    } as const;
+
+    const controller = useFormEngine(
+      {},
+      typeInfoPack.typeInfoMap[typeInfoPack.entryTypeName],
+    );
+
+    snapshot = {
+      fieldKeys: controller.fields.map(({ key }) => key),
+      entryTypeName: typeInfoPack.entryTypeName,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+export const runLiteralValueScenario = () => {
+  let controller: FormController | undefined;
+
+  const Component = () => {
+    controller = useFormEngine(
+      {
+        name: "Ada",
+        age: 42,
+        active: true,
+        note: null,
+      },
+      {
+        fields: {
+          name: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          age: {
+            type: "number",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          active: {
+            type: "boolean",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          note: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+          },
+        },
+      },
+    );
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  if (!controller) {
+    throw new Error("Expected controller to be initialized.");
+  }
+
+  const validationPassed = controller.validate();
+
+  return {
+    values: {
+      name: controller.values.name ?? null,
+      age: controller.values.age ?? null,
+      active: controller.values.active ?? null,
+      note: controller.values.note ?? null,
+    },
+    validationPassed,
+  };
+};
+
+export const runDataItemScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const controller = useFormEngine(
+      {
+        name: "Nova",
+        tags: ["alpha", "beta"],
+      },
+      {
+        fields: {
+          name: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+          tags: {
+            type: "string",
+            array: true,
+            readonly: false,
+            optional: false,
+          },
+        },
+      },
+    );
+
+    snapshot = {
+      scalarValue: controller.values.name ?? null,
+      arrayValue: controller.values.tags ?? null,
+      arrayIsArray: Array.isArray(controller.values.tags),
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};

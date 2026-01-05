@@ -2,11 +2,14 @@
   - Scope
     - Add tests for form engine + UI behavior driven by `TypeInfo` and sub-types.
     - Each checklist item below maps 1:1 to a single property or tag in `TypeInfo`/sub-types.
-    - Target locations: `src/app/forms/Engine.ts`, `src/app/forms/UI.tsx`, `src/app/forms/types.ts`, `src/app/forms/utils.ts`.
+    - Target locations: `src/app/forms/Engine.ts`, `src/app/forms/UI.tsx`, `src/app/forms/types.ts`,
+      `src/app/forms/utils.ts`.
     - Test harness: JSON spec runner using `src/**/*.spec.json` and `src/**/Engine.test-utils.ts` style helpers.
-    - Known assumptions: form values are flat (`TypeInfoDataItem`), arrays are primitives only, relations/custom types defer to handlers.
+    - Known assumptions: form values are flat (`TypeInfoDataItem`), arrays are primitives only, relations/custom types
+      defer to handlers.
     - Demo reference: `site/app/src/client/AdvancedDemo.tsx` reflects current behaviors but is not the test target.
-    - Validation rules: required checks skip hidden fields; readonly fields skip required validation when empty; empty arrays are missing for required.
+    - Validation rules: required checks skip hidden fields; readonly fields skip required validation when empty; empty
+      arrays are missing for required.
     - Recent refactor history (for test context):
       - `TypeInfo`/`TypeInfoField` are the single source of truth; legacy metadata types were removed.
       - Form engine uses `TypeInfoDataItem` values; no nested objects, deepest value is array of primitives.
@@ -67,15 +70,15 @@
     - [x] persisted: exposed for type-level consumers
 
   - TypeInfoPack
-    - [ ] entryTypeName: form system resolves correct entry type for rendering
-    - [ ] typeInfoMap: form system uses map to look up entry type
+    - [x] entryTypeName: form system resolves correct entry type for rendering
+    - [x] typeInfoMap: form system uses map to look up entry type
 
   - LiteralValue
-    - [ ] string: accepts + submits string inputs
-    - [ ] number: accepts + submits number inputs
-    - [ ] boolean: accepts + submits boolean inputs
-    - [ ] null: supports nullable values without validation errors
+    - [x] string: accepts + submits string inputs
+    - [x] number: accepts + submits number inputs
+    - [x] boolean: accepts + submits boolean inputs
+    - [x] null: supports nullable values without validation errors
 
   - TypeInfoDataItem
-    - [ ] supports scalar values per field
-    - [ ] supports array values for primitive arrays
+    - [x] supports scalar values per field
+    - [x] supports array values for primitive arrays
