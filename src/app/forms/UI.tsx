@@ -33,6 +33,9 @@ import {
 import styled from "../helpers/styled";
 
 // Use function syntax for better ecosystem compatibility
+/**
+ * Layout wrapper for auto-generated forms.
+ */
 const FormContainer = styled("form")`
   display: flex;
   flex-direction: column;
@@ -43,6 +46,9 @@ const FormContainer = styled("form")`
   border-radius: 8px;
 `;
 
+/**
+ * Primary submit button styling for auto forms.
+ */
 const SubmitButton = styled("button")`
   padding: 0.75rem 1.5rem;
   background-color: #007bff;
@@ -59,6 +65,9 @@ const SubmitButton = styled("button")`
 
 /**
  * Creates a non-array version of a field for use as array item metadata.
+ *
+ * @param field - Original type info field.
+ * @returns A field definition without array metadata.
  */
 const createArrayItemField = (field: TypeInfoField): TypeInfoField => ({
   ...field,
@@ -71,6 +80,9 @@ const createArrayItemField = (field: TypeInfoField): TypeInfoField => ({
 
 /**
  * Converts a LiteralValue to a string suitable for HTML option value.
+ *
+ * @param val - Literal value for an option.
+ * @returns String value suitable for a select option or undefined.
  */
 const toOptionValue = (val: LiteralValue): string | undefined => {
   if (val === null || val === undefined) return undefined;
@@ -78,6 +90,12 @@ const toOptionValue = (val: LiteralValue): string | undefined => {
   return String(val);
 };
 
+/**
+ * Render a form field based on TypeInfo metadata.
+ *
+ * @param props - AutoField props describing the field and handlers.
+ * @returns Rendered field UI.
+ */
 export const AutoField: FC<AutoFieldProps> = ({
   field,
   fieldKey,
@@ -458,6 +476,9 @@ export const AutoField: FC<AutoFieldProps> = ({
   );
 };
 
+/**
+ * Props for the AutoFormView component.
+ */
 export interface AutoFormViewProps {
   controller: FormController;
   onSubmit: (values: FormValues) => void;
@@ -465,6 +486,12 @@ export interface AutoFormViewProps {
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
 }
 
+/**
+ * Render a form UI from a prepared form controller.
+ *
+ * @param props - View props including controller and callbacks.
+ * @returns Rendered form view.
+ */
 export const AutoFormView: FC<AutoFormViewProps> = ({
   controller,
   onSubmit,
@@ -500,6 +527,9 @@ export const AutoFormView: FC<AutoFormViewProps> = ({
   );
 };
 
+/**
+ * Props for the AutoForm component.
+ */
 export interface AutoFormProps {
   typeInfo: TypeInfo;
   onSubmit: (values: FormValues) => void;
@@ -510,6 +540,12 @@ export interface AutoFormProps {
   operation?: TypeOperation;
 }
 
+/**
+ * Build a controller from type metadata and render an auto form.
+ *
+ * @param props - Auto form props including type info and callbacks.
+ * @returns Rendered form bound to a new controller.
+ */
 export const AutoForm: FC<AutoFormProps> = ({
   typeInfo,
   onSubmit,
@@ -537,11 +573,17 @@ export const AutoForm: FC<AutoFormProps> = ({
   );
 };
 
+/**
+ * Informational hint for relation fields without handlers.
+ */
 const RelationHint = styled("div")`
   color: #777;
   font-size: 0.85rem;
 `;
 
+/**
+ * Wrapper for relation items list.
+ */
 const RelationList = styled("div")`
   display: flex;
   flex-direction: column;
@@ -549,6 +591,9 @@ const RelationList = styled("div")`
   margin-bottom: 0.5rem;
 `;
 
+/**
+ * Wrapper for a single relation item.
+ */
 const RelationItem = styled("div")`
   display: flex;
   flex-direction: column;
@@ -558,6 +603,9 @@ const RelationItem = styled("div")`
   border-radius: 6px;
 `;
 
+/**
+ * Display for relation item values.
+ */
 const RelationValue = styled("pre")`
   margin: 0;
   background: #f7f7f7;
@@ -567,6 +615,9 @@ const RelationValue = styled("pre")`
   white-space: pre-wrap;
 `;
 
+/**
+ * Wrapper for relation item actions.
+ */
 const RelationActions = styled("div")`
   display: flex;
   gap: 0.5rem;

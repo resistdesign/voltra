@@ -17,6 +17,13 @@ import type {
   FormValues,
 } from "./types";
 
+/**
+ * Resolve whether an operation is denied, accounting for enum key casing.
+ *
+ * @param deniedOperations - Map of denied operations from tags.
+ * @param operation - Operation to check.
+ * @returns True if the operation is denied.
+ */
 const getDeniedOperation = (
   deniedOperations: DeniedOperations | undefined,
   operation: TypeOperation,
@@ -35,6 +42,13 @@ const getDeniedOperation = (
   );
 };
 
+/**
+ * Build initial values by applying defaults and non-optional fallbacks.
+ *
+ * @param initialValues - Starting values provided by callers.
+ * @param typeInfo - Type metadata for fields.
+ * @returns Normalized initial values with defaults applied.
+ */
 const buildInitialValues = (
   initialValues: FormValues,
   typeInfo: TypeInfo,
@@ -66,6 +80,14 @@ const buildInitialValues = (
   return values;
 };
 
+/**
+ * Hook that derives form state and field controllers from type metadata.
+ *
+ * @param initialValues - Initial form values.
+ * @param typeInfo - Type metadata for the form.
+ * @param options - Optional behavior overrides.
+ * @returns Form controller with state, fields, and validation helpers.
+ */
 export const useFormEngine = (
   initialValues: FormValues = {},
   typeInfo: TypeInfo,
