@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
@@ -8,21 +8,31 @@ import {
   type CustomTypeActionPayload,
   useFormEngine,
 } from "../../../../src/app/forms";
-import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
+import type {
+  TypeInfo,
+  TypeInfoMap,
+} from "../../../../src/common/TypeParsing/TypeInfo";
 import styled from "styled-components";
+import { getTypeInfoMapFromTypeScript } from "../../../../src/common/TypeParsing/TypeParsing";
 
 const DEFAULT_CODE = `
+/**
+ * Internal
+ * */
+type PersistableItem = {
+  /**
+   * @label User ID
+   * @primaryField
+   * @hidden
+   */
+  readonly id: string;
+};
+
 /**
  * User Profile
  * @label User Profile Form
  */
-export type UserProfile = {
-  /**
-   * @label User ID
-   * @primaryField
-   */
-  readonly id: string;
-
+export type UserProfile = PersistableItem & {
   /**
    * @label Full Name
    */
@@ -95,13 +105,7 @@ export type UserProfile = {
 /**
  * @label Department
  */
-export type Department = {
-  /**
-   * @label Department ID
-   * @primaryField
-   */
-  readonly id: string;
-
+export type Department = PersistableItem & {
   /**
    * @label Name
    */
@@ -113,9 +117,27 @@ export const AdvancedDemo = () => {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [types, setTypes] = useState<any>({});
   const [selectedType, setSelectedType] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [editorTheme, setEditorTheme] = useState("github");
+  const getTypeInfo = useCallback(() => {
+    try {
+      const types: TypeInfoMap = getTypeInfoMapFromTypeScript(code);
+
+      setTypes(types);
+
+      // Auto-select first type if none selected or current valid
+      const typeNames = Object.keys(types);
+      if (typeNames.length > 0) {
+        if (!typeNames.includes(selectedType)) {
+          setSelectedType(typeNames[0]);
+        }
+      } else {
+        setSelectedType("");
+      }
+    } catch (error) {
+      setTypes({});
+      setSelectedType("");
+    }
+  }, [code]);
 
   useEffect(() => {
     // Check system preference
@@ -130,41 +152,9 @@ export const AdvancedDemo = () => {
     return () => matchDark.removeEventListener("change", updateTheme);
   }, []);
 
-  const fetchTypes = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/parse-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: code }),
-      });
-
-      const data = await res.json();
-
-      if (data.error) throw new Error(data.error);
-
-      setTypes(data);
-
-      // Auto-select first type if none selected or current valid
-      const typeNames = Object.keys(data);
-      if (typeNames.length > 0) {
-        if (!typeNames.includes(selectedType)) {
-          setSelectedType(typeNames[0]);
-        }
-      } else {
-        setSelectedType("");
-      }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Initial load
   useEffect(() => {
-    fetchTypes();
+    getTypeInfo();
   }, []);
 
   const currentTypeInfo =
@@ -286,9 +276,7 @@ return (
               (Exported types only)
             </span>
           </div>
-          <Button onClick={fetchTypes} disabled={loading}>
-            {loading ? "Parsing..." : "Update / Parse"}
-          </Button>
+          <Button onClick={getTypeInfo}>Update / Parse</Button>
         </PaneHeader>
         <EditorContainer>
           <AceEditor
@@ -303,7 +291,6 @@ return (
             fontSize={14}
           />
         </EditorContainer>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Pane>
 
       <Pane>
@@ -410,11 +397,6 @@ const Select = styled.select`
   background-color: var(--pico-form-element-background-color);
   color: var(--pico-color);
   min-width: 150px;
-`;
-
-const ErrorMessage = styled.div`
-  color: var(--pico-del-color, red);
-  font-size: 0.9rem;
 `;
 
 const EmptyState = styled.div`

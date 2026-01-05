@@ -93,7 +93,12 @@ export const App: FC = () => {
               </li>
             </ul>
           </NavBar>
-          <h3>Features</h3>
+          <h3>
+            <Route exact>Features</Route>
+            <Route path="form-generation" exact>
+              Form Generation Demo
+            </Route>
+          </h3>
           <Route exact>
             <ContentCardGrid>
               <GridCard>
