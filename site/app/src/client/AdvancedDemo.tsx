@@ -372,8 +372,8 @@ const PreviewContainer = styled.div`
 
 const Button = styled.button`
   /* Inherit Pico styles for buttons via class or vars, but here we keep custom structure using vars */
-  background: var(--pico-primary-background);
-  color: var(--pico-primary-inverse);
+  background: var(--pico-primary-nav-background);
+  color: var(--pico-primary-nav-color);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: var(--pico-border-radius, 4px);
@@ -384,6 +384,7 @@ const Button = styled.button`
   &:hover {
     background: var(--pico-primary-hover-background);
   }
+
   &:disabled {
     background: var(--pico-muted-border-color);
     cursor: not-allowed;
