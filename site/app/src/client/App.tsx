@@ -13,8 +13,8 @@ const NavBar = styled.nav`
 
     & > li {
       & > a {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--pico-primary-inverse);
+        background: var(--pico-primary-nav-background);
+        color: var(--pico-primary-nav-color);
 
         transition: background 0.2s ease-in-out;
 

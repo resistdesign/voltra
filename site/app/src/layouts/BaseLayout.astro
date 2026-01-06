@@ -35,6 +35,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
       /* Voltra theme colors for light mode */
       [data-theme="light"],
       :root:not([data-theme="dark"]) {
+        --pico-h3-color: rgba(0, 0, 0, 1);
         --pico-text-selection-color: rgba(
           230,
           65,
@@ -47,7 +48,10 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
         --pico-primary-hover: rgba(126, 46, 164, 1); /* deeper violet for hover */
         --pico-primary-hover-background: rgba(126, 46, 164, 1);
         --pico-primary-focus: rgba(230, 65, 140, 0.25);
-        --pico-primary-inverse: rgba(255, 255, 255, 1);
+        --pico-primary-inverse: rgba(0, 0, 0, 1);
+        --pico-primary-nav-background: rgba(126, 46, 164, 0.75);
+        --pico-primary-nav-color: rgba(255, 255, 255, 1);
+        --pico-heading-shadow-color: rgba(255, 255, 255, 0.75);
 
         --pico-border-radius: 0;
       }
@@ -55,6 +59,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
       /* Voltra theme colors for dark mode (auto) */
       @media only screen and (prefers-color-scheme: dark) {
         :root:not([data-theme]) {
+          --pico-h3-color: rgba(255, 255, 255, 1);
           --pico-text-selection-color: rgba(230, 65, 140, 0.2);
           --pico-primary: rgba(245, 139, 189, 1); /* light coral pink */
           --pico-primary-background: rgba(97, 41, 120, 1);
@@ -63,11 +68,15 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
           --pico-primary-hover-background: rgba(126, 46, 164, 1);
           --pico-primary-focus: rgba(245, 139, 189, 0.25);
           --pico-primary-inverse: rgba(255, 255, 255, 1);
+          --pico-primary-nav-background: rgba(50, 50, 50, 0.75);
+          --pico-primary-nav-color: rgba(255, 255, 255, 1);
+          --pico-heading-shadow-color: rgba(0, 0, 0, 0.75);
         }
       }
 
       /* Voltra theme colors for forced dark mode */
       [data-theme="dark"] {
+        --pico-h3-color: rgba(255, 255, 255, 1);
         --pico-text-selection-color: rgba(230, 65, 140, 0.2);
         --pico-primary: rgba(245, 139, 189, 1);
         --pico-primary-background: rgba(97, 41, 120, 1);
@@ -76,6 +85,9 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
         --pico-primary-hover-background: rgba(126, 46, 164, 1);
         --pico-primary-focus: rgba(245, 139, 189, 0.25);
         --pico-primary-inverse: rgba(255, 255, 255, 1);
+        --pico-primary-nav-background: rgba(50, 50, 50, 0.75);
+        --pico-primary-nav-color: rgba(255, 255, 255, 1);
+        --pico-heading-shadow-color: rgba(0, 0, 0, 0.75);
       }
 
       button,
@@ -93,6 +105,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
 
       h1, h2, h3, h4, h5, h6 {
         font-family: 'Montserrat Subrayada', sans-serif;
+        text-shadow: -0.06125em -0.06125em 0 var(--pico-heading-shadow-color);
       }
 
       html {
