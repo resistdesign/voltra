@@ -1978,8 +1978,8 @@ return (
   padding-right: 0.5rem;
 `,Syt=km.button`
   /* Inherit Pico styles for buttons via class or vars, but here we keep custom structure using vars */
-  background: var(--pico-primary-background);
-  color: var(--pico-primary-inverse);
+  background: var(--pico-primary-nav-background);
+  color: var(--pico-primary-nav-color);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: var(--pico-border-radius, 4px);
@@ -1990,6 +1990,7 @@ return (
   &:hover {
     background: var(--pico-primary-hover-background);
   }
+
   &:disabled {
     background: var(--pico-muted-border-color);
     cursor: not-allowed;
@@ -2044,8 +2045,8 @@ return (
 
     & > li {
       & > a {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--pico-primary-inverse);
+        background: var(--pico-primary-nav-background);
+        color: var(--pico-primary-nav-color);
 
         transition: background 0.2s ease-in-out;
 
