@@ -1,4 +1,4 @@
-import type { DocId } from "../types.js";
+import type { DocId } from "../Types.js";
 
 /**
  * Cursor state for structured indexing paging.

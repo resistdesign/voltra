@@ -1,17 +1,17 @@
-import { RelationalInMemoryBackend } from "./inMemory";
-import { decodeRelationalCursor, encodeRelationalCursor } from "./cursor";
+import { RelationalInMemoryBackend } from "./RelationalInMemoryBackend";
+import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
 import {
   RelationalDdbBackend,
   buildRelationEdgeDdbItem,
   buildRelationEdgeDdbKey,
   encodeRelationEdgePartitionKey,
   relationEdgesSchema,
-} from "./relationalDdb";
-import type { Edge, EdgePage, RelationalQueryOptions } from "./types";
+} from "./RelationalDdb";
+import type { Edge, EdgePage, RelationalQueryOptions } from "./Types";
 import {
   handler as relationalHandler,
   setRelationalHandlerDependencies,
-} from "./handlers";
+} from "./Handlers";
 
 type RelationEdgeStoreItem<
   TMetadata extends Record<string, unknown> = Record<string, unknown>,
@@ -31,22 +31,22 @@ const buildCursorKey = (request: {
     : `${request.edgeKey}|${request.limit ?? ""}`;
 
 export const runRelationalIndexingScenario = async () => {
-  const inMemory = new RelationalInMemoryBackend<{ weight: number }>();
-  inMemory.putEdge({
+  const inMemoryBackend = new RelationalInMemoryBackend<{ weight: number }>();
+  inMemoryBackend.putEdge({
     key: { from: "a", to: "b", relation: "owns" },
     metadata: { weight: 1 },
   });
-  inMemory.putEdge({
+  inMemoryBackend.putEdge({
     key: { from: "a", to: "c", relation: "owns" },
     metadata: { weight: 2 },
   });
 
-  const outgoingPage1 = inMemory.getOutgoing("a", "owns", { limit: 1 });
-  const outgoingPage2 = inMemory.getOutgoing("a", "owns", {
+  const outgoingPage1 = inMemoryBackend.getOutgoing("a", "owns", { limit: 1 });
+  const outgoingPage2 = inMemoryBackend.getOutgoing("a", "owns", {
     limit: 1,
     cursor: outgoingPage1.nextCursor,
   });
-  const incomingPage = inMemory.getIncoming("b", "owns");
+  const incomingPage = inMemoryBackend.getIncoming("b", "owns");
 
   const relationalCursor = encodeRelationalCursor({
     lastId: "b",
@@ -113,7 +113,7 @@ export const runRelationalIndexingScenario = async () => {
   await ddbBackend.removeEdge({ from: "a", to: "b", relation: "owns" });
   const ddbAfterRemove = await ddbBackend.getOutgoing("a", "owns");
 
-  setRelationalHandlerDependencies({ backend: inMemory });
+  setRelationalHandlerDependencies({ backend: inMemoryBackend });
   const handlerPut = await relationalHandler({
     action: "edge/put",
     edge: { key: { from: "x", to: "y", relation: "likes" } },

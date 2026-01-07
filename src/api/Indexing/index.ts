@@ -19,14 +19,14 @@
  * const page = await searchLossy({ backend, indexField: "title", query: "Hello", limit: 10 });
  * ```
  */
-export * from "./api.js";
-export * from "./cursor.js";
-export * from "./ddb/awsSdkV3Adapter.js";
-export * from "./ddb/types.js";
-export * from "./exact/exactDdb.js";
-export * from "./exact/exactIndex.js";
-export * from "./exact/exactS3.js";
-export * from "./fulltext/memoryBackend.js";
+export * from "./Api.js";
+export * from "./Cursor.js";
+export * from "./ddb/AwsSdkV3Adapter.js";
+export * from "./ddb/Types.js";
+export * from "./exact/ExactDdb.js";
+export * from "./exact/ExactIndex.js";
+export * from "./exact/ExactS3.js";
+export * from "./fulltext/FullTextMemoryBackend.js";
 export {
   FullTextDdbBackend,
   FullTextDdbWriter,
@@ -40,14 +40,14 @@ export {
   type KeysAndAttributes,
   type QueryInput,
   type QueryOutput,
-} from "./fulltext/ddbBackend.js";
-export * from "./fulltext/schema.js";
-export * from "./lossy/lossyDdb.js";
-export * from "./lossy/lossyIndex.js";
-export * from "./lossy/lossyS3.js";
-export * from "./rel/inMemory.js";
-export * from "./rel/relationalDdb.js";
-export * from "./rel/cursor.js";
+} from "./fulltext/FullTextDdbBackend.js";
+export * from "./fulltext/Schema.js";
+export * from "./lossy/LossyDdb.js";
+export * from "./lossy/LossyIndex.js";
+export * from "./lossy/LossyS3.js";
+export * from "./rel/RelationalInMemoryBackend.js";
+export * from "./rel/RelationalDdb.js";
+export * from "./rel/Cursor.js";
 export {
   handler as relHandler,
   setRelationalHandlerDependencies,
@@ -57,10 +57,10 @@ export {
   type RelationalHandlerDependencies,
   type RelationalHandlerEvent,
   type LambdaResponse as RelLambdaResponse,
-} from "./rel/handlers.js";
-export * from "./rel/types.js";
+} from "./rel/Handlers.js";
+export * from "./rel/Types.js";
 export * from "./structured/index.js";
 export * from "./tokenize.js";
-export * from "./types.js";
-export * from "./trace.js";
-export type { ResolvedSearchLimits } from "./handler/config.js";
+export * from "./Types.js";
+export * from "./Trace.js";
+export type { ResolvedSearchLimits } from "./Handler/Config.js";

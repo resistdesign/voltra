@@ -1,5 +1,5 @@
-import { LossyIndex } from "./lossyIndex";
-import { buildLossyDdbKey } from "./lossyDdb";
+import { LossyIndex } from "./LossyIndex";
+import { buildLossyDdbKey } from "./LossyDdb";
 
 export const runLossyIndexScenario = () => {
   const index = new LossyIndex();

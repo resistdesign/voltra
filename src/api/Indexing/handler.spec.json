@@ -1,5 +1,5 @@
 {
-  "file": "./handler.test-utils.ts",
+  "file": "./Handler.test-utils.ts",
   "tests": [
     {
       "export": "runIndexingHandlerScenario",

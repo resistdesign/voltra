@@ -1,5 +1,5 @@
 {
-  "file": "./relationalIndexing.test-utils.ts",
+  "file": "./RelationalIndexing.test-utils.ts",
   "tests": [
     {
       "export": "runRelationalIndexingScenario",

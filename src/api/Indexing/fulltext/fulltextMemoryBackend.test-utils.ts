@@ -1,4 +1,4 @@
-import { FullTextMemoryBackend } from "./memoryBackend";
+import { FullTextMemoryBackend } from "./FullTextMemoryBackend";
 import {
   encodeDocKey,
   encodeDocMirrorKey,
@@ -6,7 +6,7 @@ import {
   encodeDocTokenSortKey,
   encodeTokenDocSortKey,
   encodeTokenKey,
-} from "./schema";
+} from "./Schema";
 
 export const runFullTextMemoryBackendScenario = async () => {
   const backend = new FullTextMemoryBackend();

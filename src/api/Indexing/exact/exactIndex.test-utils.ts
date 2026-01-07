@@ -1,5 +1,5 @@
-import { ExactIndex } from "./exactIndex";
-import { buildExactDdbItem, buildExactDdbKey } from "./exactDdb";
+import { ExactIndex } from "./ExactIndex";
+import { buildExactDdbItem, buildExactDdbKey } from "./ExactDdb";
 
 export const runExactIndexScenario = () => {
   const index = new ExactIndex();

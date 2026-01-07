@@ -1,5 +1,5 @@
 {
-  "file": "./exactIndex.test-utils.ts",
+  "file": "./ExactIndex.test-utils.ts",
   "tests": [
     {
       "export": "runExactIndexScenario",

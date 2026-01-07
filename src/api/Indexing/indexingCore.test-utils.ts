@@ -3,10 +3,10 @@ import {
   decodeLossyCursor,
   encodeExactCursor,
   encodeLossyCursor,
-} from "./cursor";
+} from "./Cursor";
 import { compareDocId, normalizeDocId } from "./docId";
 import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
-import { createSearchTrace } from "./trace";
+import { createSearchTrace } from "./Trace";
 
 const encodeBase64Url = (value: string): string =>
   Buffer.from(value, "utf8").toString("base64url");

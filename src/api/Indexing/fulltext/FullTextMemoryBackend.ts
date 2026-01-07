@@ -4,8 +4,8 @@
  * In-memory fulltext backend that combines lossy and exact indexes plus
  * doc-token membership checks. Useful for tests and local development.
  */
-import { ExactIndex } from "../exact/exactIndex";
-import { LossyIndex } from "../lossy/lossyIndex";
+import { ExactIndex } from "../exact/ExactIndex";
+import { LossyIndex } from "../lossy/LossyIndex";
 import type {
   DocId,
   DocTokenBatchReader,
@@ -16,7 +16,7 @@ import type {
   LossyPostingsPage,
   LossyPostingsPageOptions,
   TokenStats,
-} from "../types";
+} from "../Types";
 
 /**
  * In-memory backend combining lossy and exact indexes.
@@ -24,8 +24,8 @@ import type {
 export class FullTextMemoryBackend
   implements IndexReader, IndexWriter, LossyPagingReader, DocTokenBatchReader
 {
-  private lossyIndex = new LossyIndex();
-  private exactIndex = new ExactIndex();
+  private LossyIndex = new LossyIndex();
+  private ExactIndex = new ExactIndex();
   private docTokenMembership = new Set<string>();
 
   private createMembershipKey(
@@ -48,7 +48,7 @@ export class FullTextMemoryBackend
     indexField: string,
     docId: DocId,
   ): Promise<void> {
-    this.lossyIndex.addPosting(token, indexField, docId);
+    this.LossyIndex.addPosting(token, indexField, docId);
     this.docTokenMembership.add(
       this.createMembershipKey(docId, indexField, token),
     );
@@ -66,7 +66,7 @@ export class FullTextMemoryBackend
     indexField: string,
     docId: DocId,
   ): Promise<void> {
-    this.lossyIndex.removePosting(token, indexField, docId);
+    this.LossyIndex.removePosting(token, indexField, docId);
     this.docTokenMembership.delete(
       this.createMembershipKey(docId, indexField, token),
     );
@@ -79,7 +79,7 @@ export class FullTextMemoryBackend
    * @returns Document ids containing the token.
    */
   async loadLossyPostings(token: string, indexField: string): Promise<DocId[]> {
-    return this.lossyIndex.getPostings(token, indexField).docIds;
+    return this.LossyIndex.getPostings(token, indexField).docIds;
   }
 
   /**
@@ -94,7 +94,7 @@ export class FullTextMemoryBackend
     indexField: string,
     options: LossyPostingsPageOptions = {},
   ): Promise<LossyPostingsPage> {
-    const { docIds, nextCursor } = this.lossyIndex.getPostings(
+    const { docIds, nextCursor } = this.LossyIndex.getPostings(
       token,
       indexField,
       {
@@ -120,7 +120,7 @@ export class FullTextMemoryBackend
     docId: DocId,
     positions: number[],
   ): Promise<void> {
-    this.exactIndex.addPositions(token, indexField, docId, positions);
+    this.ExactIndex.addPositions(token, indexField, docId, positions);
     this.docTokenMembership.add(
       this.createMembershipKey(docId, indexField, token),
     );
@@ -138,7 +138,7 @@ export class FullTextMemoryBackend
     indexField: string,
     docId: DocId,
   ): Promise<void> {
-    this.exactIndex.removePositions(token, indexField, docId);
+    this.ExactIndex.removePositions(token, indexField, docId);
     this.docTokenMembership.delete(
       this.createMembershipKey(docId, indexField, token),
     );
@@ -156,7 +156,7 @@ export class FullTextMemoryBackend
     indexField: string,
     docId: DocId,
   ): Promise<number[] | undefined> {
-    const positions = this.exactIndex.getPositions(token, indexField, docId);
+    const positions = this.ExactIndex.getPositions(token, indexField, docId);
     return positions ? [...positions] : undefined;
   }
 
@@ -169,7 +169,7 @@ export class FullTextMemoryBackend
     keys: DocTokenKey[],
   ): Promise<(number[] | undefined)[]> {
     return keys.map((key) => {
-      const positions = this.exactIndex.getPositions(
+      const positions = this.ExactIndex.getPositions(
         key.token,
         key.indexField,
         key.docId,
@@ -188,7 +188,7 @@ export class FullTextMemoryBackend
     token: string,
     indexField: string,
   ): Promise<TokenStats | undefined> {
-    const postings = this.lossyIndex.getPostings(token, indexField);
+    const postings = this.LossyIndex.getPostings(token, indexField);
     return postings.docIds.length > 0
       ? { df: postings.docIds.length, version: 1 }
       : undefined;

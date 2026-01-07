@@ -1,7 +1,7 @@
 import { TypeInfoORMService } from "./TypeInfoORMService";
 import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import { InMemoryItemRelationshipDBDriver } from "./drivers/InMemoryItemRelationshipDBDriver";
-import { StructuredInMemoryBackend } from "../Indexing/structured/inMemoryBackend";
+import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
 import {
   ComparisonOperators,
   LogicalOperators,

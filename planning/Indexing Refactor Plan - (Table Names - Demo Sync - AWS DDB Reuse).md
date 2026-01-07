@@ -7,6 +7,7 @@
 - [x] Phase 3: Added shared AWS SDK v3 adapter + retry helper; structured indexing now uses the shared client interface.
 - [x] Phase 3: Demo API indexing backends now use library adapters and no longer carry AWS conversion glue.
 - [x] Phase 6: Updated relational indexing spec to match schema shape changes.
+- [x] Indexing naming cleanup in `src/api/Indexing` (ClassCase component files, camelCase utilities) plus import updates.
 - [~] Demo API table names still hardcoded in `site/api` (to be replaced by IaC-driven constants later).
 
 * Goals
@@ -20,9 +21,9 @@
 
   * Library hardcoded indexing table names (must go)
 
-    * Fulltext: `src/api/Indexing/fulltext/schema.ts` (`LossyPostings`, `ExactPostings`, `FullTextDocMirror`, `FullTextTokenStats`, `DocTokens`, `DocTokenPositions`)
-    * Relations: `src/api/Indexing/rel/relationalDdb.ts` (`RelationEdges`)
-    * Structured: `src/api/Indexing/structured/structuredDdb.ts` (term/range/docFields tables)
+    * Fulltext: `src/api/Indexing/fulltext/Schema.ts` (`LossyPostings`, `ExactPostings`, `FullTextDocMirror`, `FullTextTokenStats`, `DocTokens`, `DocTokenPositions`)
+    * Relations: `src/api/Indexing/rel/RelationalDdb.ts` (`RelationEdges`)
+    * Structured: `src/api/Indexing/structured/StructuredDdb.ts` (term/range/docFields tables)
   * Library backends that *default* to schema.tableName (must go)
 
     * Fulltext writer/reader/backend (e.g. `FullTextDdbWriter` uses `config.* ?? schema.tableName`)
@@ -63,18 +64,18 @@
 
   * Fulltext
 
-    * Edit `src/api/Indexing/fulltext/schema.ts`
+    * Edit `src/api/Indexing/fulltext/Schema.ts`
 
       * Delete `tableName` fields from all `*Schema` objects
       * Ensure all code that referenced `*.tableName` is migrated to injected config
   * Relations
 
-    * Edit `src/api/Indexing/rel/relationalDdb.ts`
+    * Edit `src/api/Indexing/rel/RelationalDdb.ts`
 
       * Remove `tableName` from `relationEdgesSchema`
   * Structured
 
-    * Edit `src/api/Indexing/structured/structuredDdb.ts`
+    * Edit `src/api/Indexing/structured/StructuredDdb.ts`
 
       * Remove `tableName` fields from `structuredTermIndexSchema`, `structuredRangeIndexSchema`, `structuredDocFieldsSchema`
 
@@ -127,12 +128,12 @@
 
     * If choosing Option A
 
-      * Refactor `src/api/Indexing/fulltext/ddbBackend.ts` to use AWS SDK commands directly and delete `site/api/awsConversions.ts` usage for indexing
+      * Refactor `src/api/Indexing/fulltext/FullTextDdbBackend.ts` to use AWS SDK commands directly and delete `site/api/awsConversions.ts` usage for indexing
       * Refactor relations backend builder similarly (move retry/chunk logic to library)
     * If choosing Option B
 
       * Refactor structured backend to use the same minimal client interface as fulltext (remove direct `send(new QueryCommand(...))` from indexing core)
-      * Add `src/api/Indexing/ddb/awsSdkV3Adapter.ts` that implements the minimal interface once using `marshall/unmarshall`
+      * Add `src/api/Indexing/ddb/AwsSdkV3Adapter.ts` that implements the minimal interface once using `marshall/unmarshall`
   * Required outcomes regardless of option
 
     * `site/api/fullTextBackend.ts`, `site/api/relationalBackend.ts`, `site/api/structuredBackend.ts` become thin wrappers (or disappear entirely)
@@ -184,7 +185,7 @@
 
   * Update indexing spec tests under `src/api/Indexing/**.spec.json`
 
-    * Relational: `src/api/Indexing/rel/relationalIndexing.spec.json` currently includes `tableName` in expected config payloads (remove/replace)
+    * Relational: `src/api/Indexing/rel/RelationalIndexing.spec.json` currently includes `tableName` in expected config payloads (remove/replace)
     * Any fulltext/structured tests that assume default table names must now provide explicit `tables` config in the test harness
   * Add a focused unit-test for “missing table names fails fast”
 

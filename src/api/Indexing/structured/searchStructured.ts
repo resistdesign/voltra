@@ -1,5 +1,5 @@
-import { decodeStructuredCursor, encodeStructuredCursor } from "./cursor";
-import type { DocId } from "../types";
+import { decodeStructuredCursor, encodeStructuredCursor } from "./Cursor";
+import type { DocId } from "../Types";
 import { compareDocId } from "../docId";
 import type {
   CandidatePage,
@@ -8,7 +8,7 @@ import type {
   StructuredTermWhere,
   Where,
   WhereValue,
-} from "./types";
+} from "./Types";
 
 type StructuredTermIndex = {
   query(

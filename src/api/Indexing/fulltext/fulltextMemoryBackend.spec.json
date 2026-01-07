@@ -1,5 +1,5 @@
 {
-  "file": "./fulltextMemoryBackend.test-utils.ts",
+  "file": "./FullTextMemoryBackend.test-utils.ts",
   "tests": [
     {
       "export": "runFullTextMemoryBackendScenario",

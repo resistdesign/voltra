@@ -4,7 +4,7 @@
  * In-memory exact index that stores token positions per document. Useful for
  * tests and local workflows where you want phrase verification without DynamoDB.
  */
-import type { DocId } from "../types";
+import type { DocId } from "../Types";
 import { compareDocId } from "../docId";
 
 /**

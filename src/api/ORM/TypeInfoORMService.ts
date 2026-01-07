@@ -77,17 +77,17 @@ import {
   removeDocument,
   searchExact,
   searchLossy,
-} from "../Indexing/api";
-import type { IndexBackend } from "../Indexing/types";
+} from "../Indexing/Api";
+import type { IndexBackend } from "../Indexing/Types";
 import {
   searchStructured,
   type StructuredSearchDependencies,
-} from "../Indexing/structured/searchStructured";
-import type { StructuredWriter } from "../Indexing/structured/handlers";
-import type { ResolvedSearchLimits } from "../Indexing/handler/config";
+} from "../Indexing/structured/SearchStructured";
+import type { StructuredWriter } from "../Indexing/structured/Handlers";
+import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
-import type { StructuredDocFieldsRecord } from "../Indexing/structured/structuredDdb";
-import type { Where, WhereValue } from "../Indexing/structured/types";
+import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
+import type { Where, WhereValue } from "../Indexing/structured/Types";
 import { getSortedItems } from "../../common/SearchUtils";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
 import { criteriaToStructuredWhere } from "./indexing/criteriaToStructuredWhere";
