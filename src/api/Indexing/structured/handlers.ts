@@ -46,7 +46,7 @@ export type StructuredSearchEvent = {
   /**
    * Action discriminator for structured search.
    */
-  action: "searchStructured";
+  action: "SearchStructured";
   /**
    * Structured query clause.
    */
@@ -127,7 +127,7 @@ let dependencies: StructuredHandlerDependencies | undefined;
  *
  * Example search event:
  * {
- *   "action": "searchStructured",
+ *   "action": "SearchStructured",
  *   "where": { "and": [{ "type": "term", "field": "category", "mode": "eq", "value": "news" }] },
  *   "limit": 10,
  *   "cursor": "eyJ2IjoxLCJsYXN0RG9jSWQiOiJkb2MtNDIifQ"
@@ -231,7 +231,7 @@ export async function structuredHandler(
       await dependencies.writer.write(docId, event.document.fields);
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
     }
-    case "searchStructured": {
+    case "SearchStructured": {
       if (!isPlainRecord(event.where)) {
         return errorResponse("Search where clause must be an object.");
       }

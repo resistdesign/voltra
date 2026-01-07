@@ -6,14 +6,18 @@ A serverless-friendly toolkit for building multi-modal indexes (lossy and exact 
 
 The project layers three complementary index types that can be combined in application code:
 
-- **Full-text (lossy)** — Inverted index keyed by field + tokens. Great for recall-heavy searches; uses `LossyPostings` table (`pk=f#indexField#t#token`, `sk=d#docId`). Implementation lives in `src/lossy` and shared full-text schema helpers in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L1-L42】
-- **Full-text (exact)** — Tracks token positions to support phrase queries. Stored alongside lossy data in `ExactPostings` (`pk=f#indexField#t#token`, `sk=d#docId`, `positions`). Helpers in `src/exact` and schema in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L16-L33】【F:src/exact/ExactDdb.ts†L1-L22】
+- **Full-text (lossy)** — Inverted index keyed by field + tokens. Great for recall-heavy searches; uses a lossy postings table (`pk=f#indexField#t#token`, `sk=d#docId`) whose name is injected per deployment. Implementation lives in `src/lossy` and shared full-text schema helpers in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L1-L42】
+- **Full-text (exact)** — Tracks token positions to support phrase queries. Stored alongside lossy data in an exact postings table (`pk=f#indexField#t#token`, `sk=d#docId`, `positions`) whose name is injected per deployment. Helpers in `src/exact` and schema in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L16-L33】【F:src/exact/ExactDdb.ts†L1-L22】
 - **Structured filters** — Term and range indexes per field for equality/contains or numeric/string comparisons. Schemas in `src/structured/StructuredDdb.ts`. Query composition happens in `src/structured/SearchStructured.ts` using AND/OR trees and cursor-based paging.【F:src/structured/StructuredDdb.ts†L1-L78】【F:src/structured/Types.ts†L1-L34】【F:src/structured/SearchStructured.ts†L1-L90】
 - **Relational edges** — Simple graph edges (outgoing/incoming) stored twice for each relation to support directional traversals. Schema and cursor encoding live in `src/rel/RelationalDdb.ts`.【F:src/rel/RelationalDdb.ts†L1-L108】
 
 Serverless handlers (`src/Handler.ts`) wrap these primitives. Use `setHandlerDependencies` to inject a concrete backend (DynamoDB, in-memory for tests), then dispatch index/search events by `action`.【F:src/Handler.ts†L1-L78】
 
 ## DynamoDB Schemas
+
+Table names are deployment-specific; the schemas below describe key and attribute
+shapes. The demo IaC uses `site/common/IndexingTableNames.ts` and wires names into
+Lambda via `INDEXING_*` env vars consumed in `site/api/indexing.ts`.
 
 ### Full-text tables
 
@@ -43,7 +47,7 @@ Search operations enforce soft guards via `SearchLimits` (tokens processed, post
 
 Override per request by passing a `limits` object to search calls or handler events; the handler resolver merges overrides with defaults and clamps to the caps to prevent runaway workloads.【F:src/Handler/Config.ts†L1-L51】【F:src/Handler.ts†L16-L116】
 
-No mandatory environment variables are required by the library itself; configure your DynamoDB client and table names in the backend wiring for your runtime.
+No mandatory environment variables are required by the library itself; configure your DynamoDB client and table names in the backend wiring for your runtime. The demo uses `site/common/IndexingTableNames.ts` to define table names and `INDEXING_*` env vars that are read in `site/api/indexing.ts`.
 
 ## Indexing Fields and IDs
 
