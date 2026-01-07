@@ -4,12 +4,12 @@
  * In-memory backend that wires {@link StructuredInMemoryIndex} to the structured
  * search interfaces and write contract.
  */
-import type { DocId } from "../types";
-import type { StructuredSearchDependencies } from "./searchStructured";
-import type { StructuredWriter } from "./handlers";
-import type { StructuredQueryOptions, WhereValue } from "./types";
-import type { StructuredDocFieldsRecord } from "./structuredDdb";
-import { StructuredInMemoryIndex } from "./inMemory";
+import type { DocId } from "../Types";
+import type { StructuredSearchDependencies } from "./SearchStructured";
+import type { StructuredWriter } from "./Handlers";
+import type { StructuredQueryOptions, WhereValue } from "./Types";
+import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import { StructuredInMemoryIndex } from "./StructuredInMemoryIndex";
 
 type StructuredPage = { candidateIds: DocId[]; lastEvaluatedKey?: string };
 

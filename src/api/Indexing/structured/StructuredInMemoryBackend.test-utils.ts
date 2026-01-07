@@ -1,5 +1,5 @@
-import { StructuredInMemoryBackend } from "./inMemoryBackend";
-import { searchStructured } from "./searchStructured";
+import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
+import { searchStructured } from "./SearchStructured";
 
 export const runStructuredInMemoryBackendScenario = async () => {
   const backend = new StructuredInMemoryBackend();

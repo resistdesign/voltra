@@ -1,5 +1,5 @@
 {
-  "file": "./lossyS3.test-utils.ts",
+  "file": "./LossyS3.test-utils.ts",
   "tests": [
     {
       "export": "runLossyS3MemoryScenario",

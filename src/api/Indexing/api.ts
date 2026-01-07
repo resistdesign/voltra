@@ -7,19 +7,19 @@
  *
  * Example:
  * ```ts
- * import { indexDocument, searchExact } from "./api";
+ * import { indexDocument, searchExact } from "./Api";
  *
  * await indexDocument({ document: { id: "1", text: "hello world" }, primaryField: "id", indexField: "text", backend });
  * const results = await searchExact({ query: "\"hello world\"", indexField: "text", backend, limit: 10 });
  * ```
  */
-import type { ExactCursorState, PlannerMetadata } from "./cursor";
+import type { ExactCursorState, PlannerMetadata } from "./Cursor";
 import {
   decodeExactCursor,
   decodeLossyCursor,
   encodeExactCursor,
   encodeLossyCursor,
-} from "./cursor";
+} from "./Cursor";
 import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
 import type {
   DocId,
@@ -32,10 +32,10 @@ import type {
   LossyPagingReader,
   LossyPostingsPageOptions,
   TokenStats,
-} from "./types";
-import { type ResolvedSearchLimits, SEARCH_DEFAULTS } from "./handler/config";
-import type { SearchTrace } from "./trace";
-import { createHash } from "./hash-universal";
+} from "./Types";
+import { type ResolvedSearchLimits, SEARCH_DEFAULTS } from "./Handler/Config";
+import type { SearchTrace } from "./Trace";
+import { createHash } from "./hashUniversal";
 import { compareDocId, normalizeDocId } from "./docId";
 
 type TraceableIndexBackend = IndexBackend & {

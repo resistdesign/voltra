@@ -4,7 +4,7 @@
  * S3 key helpers for the exact (position-aware) index. The S3 layout stores
  * token postings with positions encoded in JSON for batch retrieval.
  */
-import type { DocId } from "../types";
+import type { DocId } from "../Types";
 
 /**
  * Location of an exact postings object in S3.

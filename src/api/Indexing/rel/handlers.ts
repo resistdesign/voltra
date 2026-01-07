@@ -10,7 +10,7 @@ import type {
   EdgeKey,
   EdgePage,
   RelationalQueryOptions,
-} from "./types";
+} from "./Types";
 
 type EdgeMetadata = Record<string, unknown>;
 

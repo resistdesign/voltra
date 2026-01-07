@@ -3,7 +3,7 @@ import {
   loadLossyIndex,
   storeLossyIndex,
   type LossyS3Pointer,
-} from "./lossyS3";
+} from "./LossyS3";
 
 export const runLossyS3MemoryScenario = async () => {
   const pointer: LossyS3Pointer = {

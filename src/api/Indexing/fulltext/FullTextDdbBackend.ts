@@ -11,8 +11,8 @@ import type {
   DocTokenKey,
   DocumentRecord,
   TokenStats,
-} from "../types.js";
-import type { SearchTrace } from "../trace.js";
+} from "../Types.js";
+import type { SearchTrace } from "../Trace.js";
 import { normalizeDocId } from "../docId.js";
 import {
   docTokenPositionsSchema,
@@ -27,8 +27,8 @@ import {
   fullTextKeyPrefixes,
   fullTextTokenStatsSchema,
   lossyPostingsSchema,
-} from "./schema.js";
-import { batchWriteWithRetry } from "../ddb/awsSdkV3Adapter.js";
+} from "./Schema.js";
+import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter.js";
 import type {
   BatchGetItemInput,
   BatchGetItemOutput,
@@ -42,7 +42,7 @@ import type {
   QueryInput,
   QueryOutput,
   WriteRequest,
-} from "../ddb/types.js";
+} from "../ddb/Types.js";
 export type {
   BatchGetItemInput,
   BatchGetItemOutput,
@@ -56,7 +56,7 @@ export type {
   QueryInput,
   QueryOutput,
   WriteRequest,
-} from "../ddb/types.js";
+} from "../ddb/Types.js";
 
 /**
  * Configuration for the DynamoDB fulltext writer.

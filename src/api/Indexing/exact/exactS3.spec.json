@@ -1,5 +1,5 @@
 {
-  "file": "./exactS3.test-utils.ts",
+  "file": "./ExactS3.test-utils.ts",
   "tests": [
     {
       "export": "runExactS3MemoryScenario",

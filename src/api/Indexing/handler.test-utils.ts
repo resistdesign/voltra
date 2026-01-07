@@ -1,12 +1,12 @@
-import { FullTextMemoryBackend } from "./fulltext/memoryBackend";
+import { FullTextMemoryBackend } from "./fulltext/FullTextMemoryBackend";
 import {
   indexDocument,
   removeDocument,
   searchExact,
   searchLossy,
   setIndexBackend,
-} from "./api";
-import { handler, setHandlerDependencies } from "./handler";
+} from "./Api";
+import { handler, setHandlerDependencies } from "./Handler";
 
 export const runIndexingHandlerScenario = async () => {
   const backend = new FullTextMemoryBackend();

@@ -1,5 +1,5 @@
 {
-  "file": "./indexingCore.test-utils.ts",
+  "file": "./IndexingCore.test-utils.ts",
   "tests": [
     {
       "export": "runIndexingCoreScenario",

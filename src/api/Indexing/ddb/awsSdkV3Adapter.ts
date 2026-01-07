@@ -23,7 +23,7 @@ import type {
   QueryInput,
   QueryOutput,
   WriteRequest,
-} from "./types.js";
+} from "./Types.js";
 
 type AttributeMap = Record<string, unknown>;
 

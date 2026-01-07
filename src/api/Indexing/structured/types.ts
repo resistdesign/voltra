@@ -3,7 +3,7 @@
  *
  * Types for structured query expressions and paging options.
  */
-import type { DocId } from "../types.js";
+import type { DocId } from "../Types.js";
 
 /**
  * Supported value types for structured queries.

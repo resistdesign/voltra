@@ -4,12 +4,12 @@
  * Lambda-style handler for structured indexing (index/search). Configure it
  * with {@link setStructuredHandlerDependencies}.
  */
-import { searchStructured } from "./searchStructured.js";
-import type { DocId } from "../types.js";
+import { searchStructured } from "./SearchStructured.js";
+import type { DocId } from "../Types.js";
 import { normalizeDocId } from "../docId.js";
-import type { StructuredSearchDependencies } from "./searchStructured.js";
-import type { StructuredDocFieldsRecord } from "./structuredDdb.js";
-import type { StructuredQueryOptions, Where } from "./types.js";
+import type { StructuredSearchDependencies } from "./SearchStructured.js";
+import type { StructuredDocFieldsRecord } from "./StructuredDdb.js";
+import type { StructuredQueryOptions, Where } from "./Types.js";
 
 /**
  * Document payload for structured indexing.

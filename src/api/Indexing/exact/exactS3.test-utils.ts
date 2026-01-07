@@ -3,7 +3,7 @@ import {
   loadExactPositions,
   storeExactPositions,
   type ExactS3Pointer,
-} from "./exactS3";
+} from "./ExactS3";
 
 export const runExactS3MemoryScenario = async () => {
   const pointer: ExactS3Pointer = {
