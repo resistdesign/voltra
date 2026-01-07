@@ -5,7 +5,7 @@ import {
   searchExact,
   searchLossy,
   setIndexBackend,
-} from "./Api";
+} from "./API";
 import { handler, setHandlerDependencies } from "./Handler";
 
 export const runIndexingHandlerScenario = async () => {

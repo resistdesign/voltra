@@ -77,7 +77,7 @@ import {
   removeDocument,
   searchExact,
   searchLossy,
-} from "../Indexing/Api";
+} from "../Indexing/API";
 import type { IndexBackend } from "../Indexing/Types";
 import {
   searchStructured,

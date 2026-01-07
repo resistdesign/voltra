@@ -19,7 +19,7 @@
  * const page = await searchLossy({ backend, indexField: "title", query: "Hello", limit: 10 });
  * ```
  */
-export * from "./Api.js";
+export * from "./API";
 export * from "./Cursor.js";
 export * from "./ddb/AwsSdkV3Adapter.js";
 export * from "./ddb/Types.js";
