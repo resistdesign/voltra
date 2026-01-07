@@ -10,6 +10,9 @@
 - [x] Indexing naming cleanup in `src/api/Indexing` (ClassCase component files, camelCase utilities) plus import updates.
 - [x] Phase 4: Demo IaC and shared constants now define indexing table names and env vars.
 - [x] Phase 5: Demo API reads indexing table names from env via `site/api/indexing.ts`.
+- [x] Phase 6: Added unit coverage for missing table-name configs (FullText/Structured/Relations).
+- [x] Phase 6: Added env var mapping sanity check for demo indexing tables.
+- [x] Phase 7: Documented deployment-specific table names and demo env var wiring.
 
 * Goals
 

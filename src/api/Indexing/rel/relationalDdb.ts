@@ -53,12 +53,17 @@ export const relationEdgesSchema = {
 } as const;
 
 /**
- * DynamoDB table names required for relational edges storage.
+ * Deployment-specific DynamoDB table names required for relational edges.
  */
 export type RelationsTableNames = {
   relationEdges: string;
 };
 
+/**
+ * Configuration for relational DynamoDB backends.
+ *
+ * Table names are required and should be injected per deployment.
+ */
 export type RelationsDdbConfig = {
   client: DynamoQueryClient;
   tables: RelationsTableNames;
@@ -68,6 +73,12 @@ export type RelationsDdbConfig = {
 type TableWrite = {
   tableName: string;
   request: WriteRequest;
+};
+
+const assertTableName = (label: string, value: string): void => {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`Missing table name for ${label}.`);
+  }
 };
 
 const chunkRequests = (requests: TableWrite[], size: number): TableWrite[][] => {
@@ -96,6 +107,7 @@ export const createRelationEdgesDdbDependencies = <
 >(
   config: RelationsDdbConfig,
 ): RelationEdgesDdbDependencies<TMetadata> => {
+  assertTableName("relations.relationEdges", config.tables.relationEdges);
   const tableName = config.tables.relationEdges;
   const batchSize = config.batchSize ?? 25;
 

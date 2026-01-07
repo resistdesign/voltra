@@ -59,7 +59,7 @@ export type {
 } from "../ddb/Types.js";
 
 /**
- * Configuration for the DynamoDB fulltext writer.
+ * Deployment-specific DynamoDB table names required for fulltext storage.
  */
 export type FullTextTableNames = {
   lossyPostings: string;
@@ -70,6 +70,11 @@ export type FullTextTableNames = {
   docTokenPositions: string;
 };
 
+/**
+ * Configuration for the DynamoDB fulltext writer.
+ *
+ * Table names are required and should be injected per deployment.
+ */
 export type FullTextDdbWriterConfig = {
   /**
    * DynamoDB client used for batch writes and gets.
@@ -84,6 +89,21 @@ export type FullTextDdbWriterConfig = {
 type TableWrite = {
   tableName: string;
   request: WriteRequest;
+};
+
+const assertTableName = (label: string, value: string): void => {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`Missing table name for ${label}.`);
+  }
+};
+
+const assertFullTextTables = (tables: FullTextTableNames): void => {
+  assertTableName("fulltext.lossyPostings", tables.lossyPostings);
+  assertTableName("fulltext.exactPostings", tables.exactPostings);
+  assertTableName("fulltext.docMirror", tables.docMirror);
+  assertTableName("fulltext.tokenStats", tables.tokenStats);
+  assertTableName("fulltext.docTokens", tables.docTokens);
+  assertTableName("fulltext.docTokenPositions", tables.docTokenPositions);
 };
 
 function buildPositionMap(tokens: string[]): Map<string, number[]> {
@@ -180,6 +200,7 @@ export class FullTextDdbWriter {
    * @param config Writer configuration including client and table names.
    */
   constructor(config: FullTextDdbWriterConfig) {
+    assertFullTextTables(config.tables);
     this.client = config.client;
     this.lossyTableName = config.tables.lossyPostings;
     this.exactTableName = config.tables.exactPostings;
@@ -520,6 +541,11 @@ export class FullTextDdbWriter {
 
 /**
  * Configuration for the DynamoDB fulltext backend.
+ */
+/**
+ * Configuration for the combined fulltext backend.
+ *
+ * Table names are required and should be injected per deployment.
  */
 export type FullTextDdbBackendConfig = FullTextDdbWriterConfig & {
   /**

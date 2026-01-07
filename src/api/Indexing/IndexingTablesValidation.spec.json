@@ -1,0 +1,15 @@
+{
+  "file": "./IndexingTablesValidation.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexingTablesValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "missingFullTextTableError": "Missing table name for fulltext.lossyPostings.",
+        "missingStructuredTableError": "Missing table name for structured.rangeIndex.",
+        "missingRelationsTableError": "Missing table name for relations.relationEdges."
+      }
+    }
+  ]
+}

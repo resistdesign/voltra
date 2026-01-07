@@ -27,15 +27,35 @@ import {
 
 type DynamoKey = Record<string, unknown>;
 
+/**
+ * Deployment-specific DynamoDB table names required for structured indexing.
+ */
 export type StructuredTableNames = {
   termIndex: string;
   rangeIndex: string;
   docFields: string;
 };
 
+/**
+ * Configuration for structured DynamoDB backends.
+ *
+ * Table names are required and should be injected per deployment.
+ */
 type StructuredDdbConfig = {
   client: DynamoQueryClient;
   tables: StructuredTableNames;
+};
+
+const assertTableName = (label: string, value: string): void => {
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`Missing table name for ${label}.`);
+  }
+};
+
+const assertStructuredTables = (tables: StructuredTableNames): void => {
+  assertTableName("structured.termIndex", tables.termIndex);
+  assertTableName("structured.rangeIndex", tables.rangeIndex);
+  assertTableName("structured.docFields", tables.docFields);
 };
 
 const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
@@ -83,6 +103,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
    * @param config DynamoDB config for structured tables.
    */
   constructor(config: StructuredDdbConfig) {
+    assertStructuredTables(config.tables);
     this.client = config.client;
     this.termTableName = config.tables.termIndex;
     this.rangeTableName = config.tables.rangeIndex;
@@ -249,6 +270,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   private readonly docFieldsTableName: string;
 
   constructor(config: StructuredDdbConfig) {
+    assertStructuredTables(config.tables);
     this.client = config.client;
     this.termTableName = config.tables.termIndex;
     this.rangeTableName = config.tables.rangeIndex;
