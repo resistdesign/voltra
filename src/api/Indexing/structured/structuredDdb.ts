@@ -3,8 +3,8 @@
  *
  * DynamoDB schema helpers for structured indexing (term, range, and doc fields).
  */
-import type { DocId } from "../Types.js";
-import type { WhereValue } from "./Types.js";
+import type { DocId } from "../Types";
+import type { WhereValue } from "./Types";
 
 /**
  * Document fields stored for structured indexing.
