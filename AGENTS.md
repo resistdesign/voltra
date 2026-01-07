@@ -49,3 +49,18 @@
 - If a task cannot be completed in one pass, mark it `[~]` and explicitly list what remains.
 - Provide concrete evidence of progress when asked (e.g., `git diff --stat`, specific files edited, or test outputs).
 - If scope changes become necessary, pause and ask the user before proceeding; do not assume consent.
+## Execution Style
+- Default to forward progress: make reasonable decisions and proceed without waiting for confirmation, unless a scope change or destructive action would require it.
+- Keep requests scoped; do not expand beyond the specified area without explicit approval.
+- Prefer correctness and alignment with repo conventions over tidying git status; never revert unrelated changes.
+
+## Naming & Organization Details
+- Component-centric files use ClassCase, with related sub-files placed inside a folder sharing that component name.
+- Utility-oriented files use camelCase.
+- Major module acronyms may be uppercase (e.g., ORM).
+- `src/iac/packs/` follows its own naming conventions due to consumption patterns.
+
+## Documentation, Tests, and Exports
+- Add doc comments for new or changed public types/functions in `src/`.
+- Add or update nearby JSON spec tests for new behavior.
+- Ensure exports align with existing barrels and entrypoints; follow established patterns.
