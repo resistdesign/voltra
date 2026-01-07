@@ -16,6 +16,10 @@ import { fileURLToPath } from "url";
 import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
+import {
+  indexingTableEnvVars,
+  indexingTableNames,
+} from "../common/IndexingTableNames";
 
 const moduleDirname =
   typeof __dirname === "string"
@@ -124,6 +128,25 @@ const IaC = new SimpleCFT({
       }
     }
 
+    const indexingTableIds = {
+      fullText: {
+        lossyPostings: "LossyPostingsTable",
+        exactPostings: "ExactPostingsTable",
+        docMirror: "FullTextDocMirrorTable",
+        tokenStats: "FullTextTokenStatsTable",
+        docTokens: "DocTokensTable",
+        docTokenPositions: "DocTokenPositionsTable",
+      },
+      structured: {
+        termIndex: "StructuredTermIndexTable",
+        rangeIndex: "StructuredRangeIndexTable",
+        docFields: "StructuredDocFieldsTable",
+      },
+      relations: {
+        relationEdges: "RelationEdgesTable",
+      },
+    } as const;
+
     const addIndexingTable = (
       tableId: string,
       tableName: string,
@@ -139,95 +162,126 @@ const IaC = new SimpleCFT({
     };
 
     addIndexingTable(
-      "LossyPostingsTable",
-      "LossyPostings",
+      indexingTableIds.fullText.lossyPostings,
+      indexingTableNames.fullText.lossyPostings,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
-      "ExactPostingsTable",
-      "ExactPostings",
+      indexingTableIds.fullText.exactPostings,
+      indexingTableNames.fullText.exactPostings,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
-      "FullTextDocMirrorTable",
-      "FullTextDocMirror",
+      indexingTableIds.fullText.docMirror,
+      indexingTableNames.fullText.docMirror,
       { pk: "S" },
       { pk: "HASH" },
     );
     addIndexingTable(
-      "FullTextTokenStatsTable",
-      "FullTextTokenStats",
+      indexingTableIds.fullText.tokenStats,
+      indexingTableNames.fullText.tokenStats,
       { pk: "S" },
       { pk: "HASH" },
     );
     addIndexingTable(
-      "DocTokensTable",
-      "DocTokens",
+      indexingTableIds.fullText.docTokens,
+      indexingTableNames.fullText.docTokens,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
-      "DocTokenPositionsTable",
-      "DocTokenPositions",
+      indexingTableIds.fullText.docTokenPositions,
+      indexingTableNames.fullText.docTokenPositions,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
-      "StructuredTermIndexTable",
-      "StructuredTermIndex",
+      indexingTableIds.structured.termIndex,
+      indexingTableNames.structured.termIndex,
       { termKey: "S", docId: "S" },
       { termKey: "HASH", docId: "RANGE" },
     );
     addIndexingTable(
-      "StructuredRangeIndexTable",
-      "StructuredRangeIndex",
+      indexingTableIds.structured.rangeIndex,
+      indexingTableNames.structured.rangeIndex,
       { field: "S", rangeKey: "S" },
       { field: "HASH", rangeKey: "RANGE" },
     );
     addIndexingTable(
-      "StructuredDocFieldsTable",
-      "StructuredDocFields",
+      indexingTableIds.structured.docFields,
+      indexingTableNames.structured.docFields,
       { docId: "S" },
       { docId: "HASH" },
     );
     addIndexingTable(
-      "RelationEdgesTable",
-      "RelationEdges",
+      indexingTableIds.relations.relationEdges,
+      indexingTableNames.relations.relationEdges,
       { edgeKey: "S", otherId: "S" },
       { edgeKey: "HASH", otherId: "RANGE" },
     );
-  })
-  .applyPack(addCloudFunction, {
-    id: IDS.API.FUNCTION,
-    environment: {
-      Variables: {
-        NODE_OPTIONS: "--enable-source-maps",
-        CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
-        DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:1234`,
-        S3_API_BUCKET_NAME: {
-          Ref: IDS.API.FILE_STORAGE,
-        },
-        ...Object.keys(DemoTypeInfoMap).reduce<Record<string, any>>(
-          (acc, k) => {
-            const { primaryField, tags: { persisted = false } = {} } =
-              DemoTypeInfoMap[k];
 
-            if (persisted && typeof primaryField === "string") {
-              acc[`TABLE_${k.toUpperCase()}`] = {
-                Ref: `${k}Table`,
-              };
-            }
-
-            return acc;
+    cft.applyPack(addCloudFunction, {
+      id: IDS.API.FUNCTION,
+      environment: {
+        Variables: {
+          NODE_OPTIONS: "--enable-source-maps",
+          CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
+          DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:1234`,
+          S3_API_BUCKET_NAME: {
+            Ref: IDS.API.FILE_STORAGE,
           },
-          {},
-        ),
+          ...Object.keys(DemoTypeInfoMap).reduce<Record<string, any>>(
+            (acc, k) => {
+              const { primaryField, tags: { persisted = false } = {} } =
+                DemoTypeInfoMap[k];
+
+              if (persisted && typeof primaryField === "string") {
+                acc[`TABLE_${k.toUpperCase()}`] = {
+                  Ref: `${k}Table`,
+                };
+              }
+
+              return acc;
+            },
+            {},
+          ),
+          [indexingTableEnvVars.fullText.lossyPostings]: {
+            Ref: indexingTableIds.fullText.lossyPostings,
+          },
+          [indexingTableEnvVars.fullText.exactPostings]: {
+            Ref: indexingTableIds.fullText.exactPostings,
+          },
+          [indexingTableEnvVars.fullText.docMirror]: {
+            Ref: indexingTableIds.fullText.docMirror,
+          },
+          [indexingTableEnvVars.fullText.tokenStats]: {
+            Ref: indexingTableIds.fullText.tokenStats,
+          },
+          [indexingTableEnvVars.fullText.docTokens]: {
+            Ref: indexingTableIds.fullText.docTokens,
+          },
+          [indexingTableEnvVars.fullText.docTokenPositions]: {
+            Ref: indexingTableIds.fullText.docTokenPositions,
+          },
+          [indexingTableEnvVars.structured.termIndex]: {
+            Ref: indexingTableIds.structured.termIndex,
+          },
+          [indexingTableEnvVars.structured.rangeIndex]: {
+            Ref: indexingTableIds.structured.rangeIndex,
+          },
+          [indexingTableEnvVars.structured.docFields]: {
+            Ref: indexingTableIds.structured.docFields,
+          },
+          [indexingTableEnvVars.relations.relationEdges]: {
+            Ref: indexingTableIds.relations.relationEdges,
+          },
+        },
       },
-    },
-    runtime: "nodejs20.x" as any,
-    memorySize: 512,
+      runtime: "nodejs20.x" as any,
+      memorySize: 512,
+    });
   })
   .applyPack(addBuildPipeline, {
     id: IDS.API.BUILD_PIPELINE,

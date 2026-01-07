@@ -8,9 +8,12 @@ import { DynamoDBDataItemDBDriver } from "../../src/api/ORM/drivers";
 import { TypeInfo } from "../../src/common/TypeParsing/TypeInfo";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
-import { fullTextBackend } from "./fullTextBackend";
-import { relationalBackend } from "./relationalBackend";
-import { structuredReader, structuredWriter } from "./structuredBackend";
+import {
+  fullTextBackend,
+  relationalBackend,
+  structuredReader,
+  structuredWriter,
+} from "./indexing";
 
 /**
  * Base route map containing lightweight demo routes that do not rely on DynamoDB.
