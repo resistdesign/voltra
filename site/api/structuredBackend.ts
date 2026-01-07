@@ -1,5 +1,6 @@
 import {
   StructuredDdbBackend,
+  createAwsSdkV3DynamoClient,
   type StructuredTableNames,
 } from "../../src/api/Indexing";
 
@@ -9,7 +10,7 @@ import { ddbClient } from "./ddbClient";
  * Shared DynamoDB-backed structured indexing backend used by the route map.
  */
 const structuredBackend = new StructuredDdbBackend({
-  client: ddbClient,
+  client: createAwsSdkV3DynamoClient(ddbClient),
   tables: {
     termIndex: "StructuredTermIndex",
     rangeIndex: "StructuredRangeIndex",

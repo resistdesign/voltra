@@ -4,6 +4,8 @@
 
 - [x] Phase 1: Removed indexing table names from library schemas (fulltext/structured/relations).
 - [x] Phase 2: Require table-name injection for fulltext + structured DDB configs; added `*TableNames` types.
+- [x] Phase 3: Added shared AWS SDK v3 adapter + retry helper; structured indexing now uses the shared client interface.
+- [x] Phase 3: Demo API indexing backends now use library adapters and no longer carry AWS conversion glue.
 - [x] Phase 6: Updated relational indexing spec to match schema shape changes.
 - [~] Demo API table names still hardcoded in `site/api` (to be replaced by IaC-driven constants later).
 

@@ -3,17 +3,11 @@
  *
  * DynamoDB-backed structured indexing reader/writer implementations.
  */
-import {
-  BatchWriteItemCommand,
-  DynamoDBClient,
-  GetItemCommand,
-  PutItemCommand,
-  QueryCommand,
-} from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import type { DynamoQueryClient, WriteRequest } from "../ddb/types.js";
 import type { DocId } from "../types.js";
 import type { StructuredSearchDependencies } from "./searchStructured.js";
 import type { StructuredQueryOptions, WhereValue } from "./types.js";
+import { batchWriteWithRetry } from "../ddb/awsSdkV3Adapter.js";
 import {
   buildStructuredTermKey,
   serializeStructuredValue,
@@ -31,7 +25,7 @@ import {
   type StructuredWriterDependencies,
 } from "./structuredWriter.js";
 
-type DynamoKey = Record<string, any>;
+type DynamoKey = Record<string, unknown>;
 
 export type StructuredTableNames = {
   termIndex: string;
@@ -40,7 +34,7 @@ export type StructuredTableNames = {
 };
 
 type StructuredDdbConfig = {
-  client: DynamoDBClient;
+  client: DynamoQueryClient;
   tables: StructuredTableNames;
 };
 
@@ -50,14 +44,18 @@ const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
   }
 
   try {
-    return marshall(JSON.parse(cursor));
+    const parsed = JSON.parse(cursor) as DynamoKey;
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("Invalid structured cursor token.");
+    }
+    return parsed;
   } catch (_error) {
     throw new Error("Invalid structured cursor token.");
   }
 };
 
 const encodeCursorKey = (key?: DynamoKey): string | undefined =>
-  key ? JSON.stringify(unmarshall(key)) : undefined;
+  key ? JSON.stringify(key) : undefined;
 
 const chunk = <T>(items: T[], size: number): T[][] => {
   const batches: T[][] = [];
@@ -77,7 +75,7 @@ const buildRangeUpperKey = (value: WhereValue): string =>
  * Read-only structured queries against DynamoDB term/range indexes.
  */
 export class StructuredDdbReader implements StructuredSearchDependencies {
-  private readonly client: DynamoDBClient;
+  private readonly client: DynamoQueryClient;
   private readonly termTableName: string;
   private readonly rangeTableName: string;
 
@@ -108,24 +106,20 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
       options: StructuredQueryOptions = {},
     ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }> => {
       const termKey = buildStructuredTermKey(field, value, mode);
-      const response = await this.client.send(
-        new QueryCommand({
-          TableName: this.termTableName,
-          KeyConditionExpression: "#termKey = :termKey",
-          ExpressionAttributeNames: {
-            "#termKey": structuredTermIndexSchema.partitionKey,
-          },
-          ExpressionAttributeValues: marshall({
-            ":termKey": termKey,
-          }),
-          ExclusiveStartKey: decodeCursorKey(options.cursor),
-          Limit: options.limit,
-        }),
-      );
+      const response = await this.client.query({
+        TableName: this.termTableName,
+        KeyConditionExpression: "#termKey = :termKey",
+        ExpressionAttributeNames: {
+          "#termKey": structuredTermIndexSchema.partitionKey,
+        },
+        ExpressionAttributeValues: {
+          ":termKey": termKey,
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
 
-      const items = (response.Items ?? []).map(
-        (item) => unmarshall(item) as StructuredTermIndexItem,
-      );
+      const items = (response.Items ?? []) as StructuredTermIndexItem[];
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -152,28 +146,24 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
       upper: WhereValue,
       options: StructuredQueryOptions = {},
     ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }> => {
-      const response = await this.client.send(
-        new QueryCommand({
-          TableName: this.rangeTableName,
-          KeyConditionExpression:
-            "#field = :field AND #rangeKey BETWEEN :lower AND :upper",
-          ExpressionAttributeNames: {
-            "#field": structuredRangeIndexSchema.partitionKey,
-            "#rangeKey": structuredRangeIndexSchema.sortKey,
-          },
-          ExpressionAttributeValues: marshall({
-            ":field": field,
-            ":lower": buildRangeLowerKey(lower),
-            ":upper": buildRangeUpperKey(upper),
-          }),
-          ExclusiveStartKey: decodeCursorKey(options.cursor),
-          Limit: options.limit,
-        }),
-      );
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression:
+          "#field = :field AND #rangeKey BETWEEN :lower AND :upper",
+        ExpressionAttributeNames: {
+          "#field": structuredRangeIndexSchema.partitionKey,
+          "#rangeKey": structuredRangeIndexSchema.sortKey,
+        },
+        ExpressionAttributeValues: {
+          ":field": field,
+          ":lower": buildRangeLowerKey(lower),
+          ":upper": buildRangeUpperKey(upper),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
 
-      const items = (response.Items ?? []).map(
-        (item) => unmarshall(item) as StructuredRangeIndexItem,
-      );
+      const items = (response.Items ?? []) as StructuredRangeIndexItem[];
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -192,26 +182,22 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
       lower: WhereValue,
       options: StructuredQueryOptions = {},
     ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }> => {
-      const response = await this.client.send(
-        new QueryCommand({
-          TableName: this.rangeTableName,
-          KeyConditionExpression: "#field = :field AND #rangeKey >= :lower",
-          ExpressionAttributeNames: {
-            "#field": structuredRangeIndexSchema.partitionKey,
-            "#rangeKey": structuredRangeIndexSchema.sortKey,
-          },
-          ExpressionAttributeValues: marshall({
-            ":field": field,
-            ":lower": buildRangeLowerKey(lower),
-          }),
-          ExclusiveStartKey: decodeCursorKey(options.cursor),
-          Limit: options.limit,
-        }),
-      );
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#field = :field AND #rangeKey >= :lower",
+        ExpressionAttributeNames: {
+          "#field": structuredRangeIndexSchema.partitionKey,
+          "#rangeKey": structuredRangeIndexSchema.sortKey,
+        },
+        ExpressionAttributeValues: {
+          ":field": field,
+          ":lower": buildRangeLowerKey(lower),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
 
-      const items = (response.Items ?? []).map(
-        (item) => unmarshall(item) as StructuredRangeIndexItem,
-      );
+      const items = (response.Items ?? []) as StructuredRangeIndexItem[];
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -230,26 +216,22 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
       upper: WhereValue,
       options: StructuredQueryOptions = {},
     ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }> => {
-      const response = await this.client.send(
-        new QueryCommand({
-          TableName: this.rangeTableName,
-          KeyConditionExpression: "#field = :field AND #rangeKey <= :upper",
-          ExpressionAttributeNames: {
-            "#field": structuredRangeIndexSchema.partitionKey,
-            "#rangeKey": structuredRangeIndexSchema.sortKey,
-          },
-          ExpressionAttributeValues: marshall({
-            ":field": field,
-            ":upper": buildRangeUpperKey(upper),
-          }),
-          ExclusiveStartKey: decodeCursorKey(options.cursor),
-          Limit: options.limit,
-        }),
-      );
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#field = :field AND #rangeKey <= :upper",
+        ExpressionAttributeNames: {
+          "#field": structuredRangeIndexSchema.partitionKey,
+          "#rangeKey": structuredRangeIndexSchema.sortKey,
+        },
+        ExpressionAttributeValues: {
+          ":field": field,
+          ":upper": buildRangeUpperKey(upper),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
 
-      const items = (response.Items ?? []).map(
-        (item) => unmarshall(item) as StructuredRangeIndexItem,
-      );
+      const items = (response.Items ?? []) as StructuredRangeIndexItem[];
       const candidateIds = items.map((item) => item.docId);
 
       return {
@@ -261,7 +243,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
 }
 
 class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
-  private readonly client: DynamoDBClient;
+  private readonly client: DynamoQueryClient;
   private readonly termTableName: string;
   private readonly rangeTableName: string;
   private readonly docFieldsTableName: string;
@@ -276,18 +258,16 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   async loadDocFields(
     docId: DocId,
   ): Promise<StructuredDocFieldsRecord | undefined> {
-    const response = await this.client.send(
-      new GetItemCommand({
-        TableName: this.docFieldsTableName,
-        Key: marshall({ [structuredDocFieldsSchema.partitionKey]: docId }),
-      }),
-    );
+    const response = await this.client.getItem({
+      TableName: this.docFieldsTableName,
+      Key: { [structuredDocFieldsSchema.partitionKey]: docId },
+    });
 
     if (!response.Item) {
       return undefined;
     }
 
-    const item = unmarshall(response.Item) as {
+    const item = response.Item as {
       fields?: StructuredDocFieldsRecord;
     };
     return item.fields;
@@ -297,22 +277,27 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     docId: DocId,
     fields: StructuredDocFieldsRecord,
   ): Promise<void> {
-    await this.client.send(
-      new PutItemCommand({
-        TableName: this.docFieldsTableName,
-        Item: marshall({
-          [structuredDocFieldsSchema.partitionKey]: docId,
-          [structuredDocFieldsSchema.fieldsAttribute]: fields,
-        }),
-      }),
-    );
+    const requestItems: Record<string, WriteRequest[]> = {
+      [this.docFieldsTableName]: [
+        {
+          PutRequest: {
+            Item: {
+              [structuredDocFieldsSchema.partitionKey]: docId,
+              [structuredDocFieldsSchema.fieldsAttribute]: fields,
+            },
+          },
+        },
+      ],
+    };
+
+    await batchWriteWithRetry(this.client, requestItems);
   }
 
   async putTermEntries(entries: StructuredTermIndexItem[]): Promise<void> {
     await this.batchWrite(
       entries.map((entry) => ({
         tableName: this.termTableName,
-        request: { PutRequest: { Item: marshall(entry) } },
+        request: { PutRequest: { Item: entry } },
       })),
     );
   }
@@ -323,10 +308,10 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         tableName: this.termTableName,
         request: {
           DeleteRequest: {
-            Key: marshall({
+            Key: {
               [structuredTermIndexSchema.partitionKey]: entry.termKey,
               [structuredTermIndexSchema.sortKey]: entry.docId,
-            }),
+            },
           },
         },
       })),
@@ -337,7 +322,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     await this.batchWrite(
       entries.map((entry) => ({
         tableName: this.rangeTableName,
-        request: { PutRequest: { Item: marshall(entry) } },
+        request: { PutRequest: { Item: entry } },
       })),
     );
   }
@@ -348,10 +333,10 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         tableName: this.rangeTableName,
         request: {
           DeleteRequest: {
-            Key: marshall({
+            Key: {
               [structuredRangeIndexSchema.partitionKey]: entry.field,
               [structuredRangeIndexSchema.sortKey]: entry.rangeKey,
-            }),
+            },
           },
         },
       })),
@@ -364,24 +349,15 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const batches = chunk(requests, 25);
 
     for (const batch of batches) {
-      let requestItems = batch.reduce<Record<string, any[]>>(
+      const requestItems = batch.reduce<Record<string, WriteRequest[]>>(
         (acc, { tableName, request }) => {
           acc[tableName] = acc[tableName] ?? [];
-          acc[tableName].push(request);
+          acc[tableName].push(request as WriteRequest);
           return acc;
         },
         {},
       );
-
-      while (Object.keys(requestItems).length > 0) {
-        const response = await this.client.send(
-          new BatchWriteItemCommand({
-            RequestItems: requestItems,
-          }),
-        );
-
-        requestItems = response.UnprocessedItems ?? {};
-      }
+      await batchWriteWithRetry(this.client, requestItems);
     }
   }
 }
