@@ -29,10 +29,6 @@ export const fullTextKeyPrefixes = {
  */
 export const lossyPostingsSchema = {
   /**
-   * DynamoDB table name for lossy postings.
-   */
-  tableName: "LossyPostings",
-  /**
    * Partition key attribute for lossy postings.
    */
   partitionKey: "pk",
@@ -48,10 +44,6 @@ export const lossyPostingsSchema = {
  * SK: d#{docId}
  */
 export const exactPostingsSchema = {
-  /**
-   * DynamoDB table name for exact postings.
-   */
-  tableName: "ExactPostings",
   /**
    * Partition key attribute for exact postings.
    */
@@ -72,10 +64,6 @@ export const exactPostingsSchema = {
  */
 export const fullTextDocMirrorSchema = {
   /**
-   * DynamoDB table name for document mirrors.
-   */
-  tableName: "FullTextDocMirror",
-  /**
    * Partition key attribute for document mirrors.
    */
   partitionKey: "pk",
@@ -90,10 +78,6 @@ export const fullTextDocMirrorSchema = {
  * PK: f#{indexField}#t#{token}
  */
 export const fullTextTokenStatsSchema = {
-  /**
-   * DynamoDB table name for token stats.
-   */
-  tableName: "FullTextTokenStats",
   /**
    * Partition key attribute for token stats.
    */
@@ -111,10 +95,6 @@ export const fullTextTokenStatsSchema = {
  */
 export const docTokensSchema = {
   /**
-   * DynamoDB table name for doc token membership.
-   */
-  tableName: "DocTokens",
-  /**
    * Partition key attribute for doc token membership.
    */
   partitionKey: "pk",
@@ -130,10 +110,6 @@ export const docTokensSchema = {
  * SK: f#{indexField}#t#{token}
  */
 export const docTokenPositionsSchema = {
-  /**
-   * DynamoDB table name for doc token positions.
-   */
-  tableName: "DocTokenPositions",
   /**
    * Partition key attribute for doc token positions.
    */

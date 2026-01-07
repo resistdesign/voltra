@@ -3,6 +3,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import {
   RelationalDdbBackend,
+  type RelationsTableNames,
   relationEdgesSchema,
   type RelationEdgesDdbItem,
   type RelationEdgesDdbKey,
@@ -44,6 +45,10 @@ const batchWriteWithRetry = async (
 /**
  * DynamoDB-backed implementation of the relations backend used by the ORM layer.
  */
+const relationTables = {
+  relationEdges: "RelationEdges",
+} satisfies RelationsTableNames;
+
 export const relationalBackend = new RelationalDdbBackend({
   /**
    * Persists relation edges in chunks, retrying DynamoDB batch writes when
@@ -57,7 +62,7 @@ export const relationalBackend = new RelationalDdbBackend({
 
     for (const chunk of chunks) {
       await batchWriteWithRetry({
-        [relationEdgesSchema.tableName]: chunk.map((item) => ({
+        [relationTables.relationEdges]: chunk.map((item) => ({
           PutRequest: { Item: item as Record<string, unknown> },
         })),
       });
@@ -74,7 +79,7 @@ export const relationalBackend = new RelationalDdbBackend({
 
     for (const chunk of chunks) {
       await batchWriteWithRetry({
-        [relationEdgesSchema.tableName]: chunk.map((key) => ({
+        [relationTables.relationEdges]: chunk.map((key) => ({
           DeleteRequest: { Key: key as Record<string, unknown> },
         })),
       });
@@ -86,7 +91,7 @@ export const relationalBackend = new RelationalDdbBackend({
   queryEdges: async ({ edgeKey, limit, exclusiveStartKey }) => {
     const response = await ddbClient.send(
       new QueryCommand({
-        TableName: relationEdgesSchema.tableName,
+        TableName: relationTables.relationEdges,
         KeyConditionExpression: "#edgeKey = :edgeKey",
         ExpressionAttributeNames: {
           "#edgeKey": relationEdgesSchema.partitionKey,

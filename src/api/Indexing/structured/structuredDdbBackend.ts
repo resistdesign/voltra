@@ -33,11 +33,15 @@ import {
 
 type DynamoKey = Record<string, any>;
 
+export type StructuredTableNames = {
+  termIndex: string;
+  rangeIndex: string;
+  docFields: string;
+};
+
 type StructuredDdbConfig = {
   client: DynamoDBClient;
-  termTableName?: string;
-  rangeTableName?: string;
-  docFieldsTableName?: string;
+  tables: StructuredTableNames;
 };
 
 const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
@@ -82,10 +86,8 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
    */
   constructor(config: StructuredDdbConfig) {
     this.client = config.client;
-    this.termTableName =
-      config.termTableName ?? structuredTermIndexSchema.tableName;
-    this.rangeTableName =
-      config.rangeTableName ?? structuredRangeIndexSchema.tableName;
+    this.termTableName = config.tables.termIndex;
+    this.rangeTableName = config.tables.rangeIndex;
   }
 
   /**
@@ -266,12 +268,9 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
 
   constructor(config: StructuredDdbConfig) {
     this.client = config.client;
-    this.termTableName =
-      config.termTableName ?? structuredTermIndexSchema.tableName;
-    this.rangeTableName =
-      config.rangeTableName ?? structuredRangeIndexSchema.tableName;
-    this.docFieldsTableName =
-      config.docFieldsTableName ?? structuredDocFieldsSchema.tableName;
+    this.termTableName = config.tables.termIndex;
+    this.rangeTableName = config.tables.rangeIndex;
+    this.docFieldsTableName = config.tables.docFields;
   }
 
   async loadDocFields(

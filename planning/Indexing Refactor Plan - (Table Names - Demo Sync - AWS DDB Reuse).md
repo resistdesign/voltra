@@ -1,5 +1,12 @@
 # Indexing Refactor Plan (Table Names + Demo Sync + AWS DDB Reuse)
 
+## Progress
+
+- [x] Phase 1: Removed indexing table names from library schemas (fulltext/structured/relations).
+- [x] Phase 2: Require table-name injection for fulltext + structured DDB configs; added `*TableNames` types.
+- [x] Phase 6: Updated relational indexing spec to match schema shape changes.
+- [~] Demo API table names still hardcoded in `site/api` (to be replaced by IaC-driven constants later).
+
 * Goals
 
   * Eliminate *all* hardcoded indexing table names from `src/api/Indexing/**` (fulltext/structured/rel) and force table-name injection through the type system
