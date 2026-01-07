@@ -5,15 +5,15 @@
  * optional document mirrors, and token stats to support fast search with
  * cursor-based paging.
  */
-import { tokenize, tokenizeLossyTrigrams } from "../tokenize.js";
+import { tokenize, tokenizeLossyTrigrams } from "../tokenize";
 import type {
   DocId,
   DocTokenKey,
   DocumentRecord,
   TokenStats,
-} from "../Types.js";
-import type { SearchTrace } from "../Trace.js";
-import { normalizeDocId } from "../docId.js";
+} from "../Types";
+import type { SearchTrace } from "../Trace";
+import { normalizeDocId } from "../docId";
 import {
   docTokenPositionsSchema,
   docTokensSchema,
@@ -27,8 +27,8 @@ import {
   fullTextKeyPrefixes,
   fullTextTokenStatsSchema,
   lossyPostingsSchema,
-} from "./Schema.js";
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter.js";
+} from "./Schema";
+import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
 import type {
   BatchGetItemInput,
   BatchGetItemOutput,
@@ -42,7 +42,7 @@ import type {
   QueryInput,
   QueryOutput,
   WriteRequest,
-} from "../ddb/Types.js";
+} from "../ddb/Types";
 export type {
   BatchGetItemInput,
   BatchGetItemOutput,
@@ -56,7 +56,7 @@ export type {
   QueryInput,
   QueryOutput,
   WriteRequest,
-} from "../ddb/Types.js";
+} from "../ddb/Types";
 
 /**
  * Deployment-specific DynamoDB table names required for fulltext storage.

@@ -4,8 +4,8 @@
  * DynamoDB backend for relational edges. Stores each edge twice (out/in) to
  * support directional traversal with cursor-based paging.
  */
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter.js";
-import type { DynamoQueryClient, WriteRequest } from "../ddb/Types.js";
+import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
+import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
 import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
 import type {
   Direction,

@@ -1,16 +1,16 @@
-import type { DocId } from "../Types.js";
-import type { WhereValue } from "./Types.js";
+import type { DocId } from "../Types";
+import type { WhereValue } from "./Types";
 import type {
   StructuredDocFieldsRecord,
   StructuredRangeIndexItem,
   StructuredRangeIndexKey,
   StructuredTermIndexItem,
   StructuredTermIndexKey,
-} from "./StructuredDdb.js";
+} from "./StructuredDdb";
 import {
   buildStructuredRangeItem,
   buildStructuredTermItem,
-} from "./StructuredDdb.js";
+} from "./StructuredDdb";
 
 /**
  * Dependencies required to persist structured index entries.

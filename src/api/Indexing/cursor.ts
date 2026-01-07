@@ -1,4 +1,4 @@
-import type { DocId } from "./Types.js";
+import type { DocId } from "./Types";
 
 /**
  * The supported ordering strategy for cursors.

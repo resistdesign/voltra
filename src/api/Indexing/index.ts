@@ -20,13 +20,13 @@
  * ```
  */
 export * from "./API";
-export * from "./Cursor.js";
-export * from "./ddb/AwsSdkV3Adapter.js";
-export * from "./ddb/Types.js";
-export * from "./exact/ExactDdb.js";
-export * from "./exact/ExactIndex.js";
-export * from "./exact/ExactS3.js";
-export * from "./fulltext/FullTextMemoryBackend.js";
+export * from "./Cursor";
+export * from "./ddb/AwsSdkV3Adapter";
+export * from "./ddb/Types";
+export * from "./exact/ExactDdb";
+export * from "./exact/ExactIndex";
+export * from "./exact/ExactS3";
+export * from "./fulltext/FullTextMemoryBackend";
 export {
   FullTextDdbBackend,
   FullTextDdbWriter,
@@ -40,14 +40,14 @@ export {
   type KeysAndAttributes,
   type QueryInput,
   type QueryOutput,
-} from "./fulltext/FullTextDdbBackend.js";
-export * from "./fulltext/Schema.js";
-export * from "./lossy/LossyDdb.js";
-export * from "./lossy/LossyIndex.js";
-export * from "./lossy/LossyS3.js";
-export * from "./rel/RelationalInMemoryBackend.js";
-export * from "./rel/RelationalDdb.js";
-export * from "./rel/Cursor.js";
+} from "./fulltext/FullTextDdbBackend";
+export * from "./fulltext/Schema";
+export * from "./lossy/LossyDdb";
+export * from "./lossy/LossyIndex";
+export * from "./lossy/LossyS3";
+export * from "./rel/RelationalInMemoryBackend";
+export * from "./rel/RelationalDdb";
+export * from "./rel/Cursor";
 export {
   handler as relHandler,
   setRelationalHandlerDependencies,
@@ -57,10 +57,10 @@ export {
   type RelationalHandlerDependencies,
   type RelationalHandlerEvent,
   type LambdaResponse as RelLambdaResponse,
-} from "./rel/Handlers.js";
-export * from "./rel/Types.js";
-export * from "./structured/index.js";
-export * from "./tokenize.js";
-export * from "./Types.js";
-export * from "./Trace.js";
-export type { ResolvedSearchLimits } from "./Handler/Config.js";
+} from "./rel/Handlers";
+export * from "./rel/Types";
+export * from "./structured/index";
+export * from "./tokenize";
+export * from "./Types";
+export * from "./Trace";
+export type { ResolvedSearchLimits } from "./Handler/Config";

@@ -84,7 +84,7 @@ Vitest runs the unit suite covering tokenization, full-text modes, structured fi
 Configure the handler once at cold start:
 
 ```ts
-import { handler, setHandlerDependencies } from "./src/Handler.js";
+import { handler, setHandlerDependencies } from "./src/Handler";
 import { createDynamoBackend } from "./your-backend-factory";
 
 setHandlerDependencies({ backend: createDynamoBackend() });

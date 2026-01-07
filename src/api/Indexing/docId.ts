@@ -1,4 +1,4 @@
-import type { DocId } from "./Types.js";
+import type { DocId } from "./Types";
 
 /**
  * Compare two document ids for sorting.

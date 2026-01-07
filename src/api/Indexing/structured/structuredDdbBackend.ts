@@ -3,11 +3,11 @@
  *
  * DynamoDB-backed structured indexing reader/writer implementations.
  */
-import type { DynamoQueryClient, WriteRequest } from "../ddb/Types.js";
-import type { DocId } from "../Types.js";
-import type { StructuredSearchDependencies } from "./SearchStructured.js";
-import type { StructuredQueryOptions, WhereValue } from "./Types.js";
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter.js";
+import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
+import type { DocId } from "../Types";
+import type { StructuredSearchDependencies } from "./SearchStructured";
+import type { StructuredQueryOptions, WhereValue } from "./Types";
+import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
 import {
   buildStructuredTermKey,
   serializeStructuredValue,
@@ -19,11 +19,11 @@ import {
   type StructuredRangeIndexKey,
   type StructuredTermIndexItem,
   type StructuredTermIndexKey,
-} from "./StructuredDdb.js";
+} from "./StructuredDdb";
 import {
   StructuredDdbWriter,
   type StructuredWriterDependencies,
-} from "./StructuredWriter.js";
+} from "./StructuredWriter";
 
 type DynamoKey = Record<string, unknown>;
 
