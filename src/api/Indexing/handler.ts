@@ -5,7 +5,7 @@
  * configured {@link IndexBackend}. Use this when you want a single entry point
  * for indexDocument/removeDocument/searchLossy/searchExact.
  */
-import { indexDocument, removeDocument, searchExact, searchLossy } from "./Api";
+import { indexDocument, removeDocument, searchExact, searchLossy } from "./API";
 import { resolveSearchLimits, type SearchLimits } from "./Handler/Config";
 import type { DocumentRecord, IndexBackend } from "./Types";
 import { createSearchTrace } from "./Trace";
