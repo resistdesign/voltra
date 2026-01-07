@@ -4,6 +4,8 @@
  * DynamoDB backend for relational edges. Stores each edge twice (out/in) to
  * support directional traversal with cursor-based paging.
  */
+import { batchWriteWithRetry } from "../ddb/awsSdkV3Adapter.js";
+import type { DynamoQueryClient, WriteRequest } from "../ddb/types.js";
 import { decodeRelationalCursor, encodeRelationalCursor } from "./cursor";
 import type {
   Direction,
@@ -55,6 +57,93 @@ export const relationEdgesSchema = {
  */
 export type RelationsTableNames = {
   relationEdges: string;
+};
+
+export type RelationsDdbConfig = {
+  client: DynamoQueryClient;
+  tables: RelationsTableNames;
+  batchSize?: number;
+};
+
+type TableWrite = {
+  tableName: string;
+  request: WriteRequest;
+};
+
+const chunkRequests = (requests: TableWrite[], size: number): TableWrite[][] => {
+  const chunks: TableWrite[][] = [];
+  for (let index = 0; index < requests.length; index += size) {
+    chunks.push(requests.slice(index, index + size));
+  }
+  return chunks;
+};
+
+const buildRequestItems = (
+  chunk: TableWrite[],
+): Record<string, WriteRequest[]> =>
+  chunk.reduce<Record<string, WriteRequest[]>>(
+    (accumulator, { tableName, request }) => {
+      const tableRequests = accumulator[tableName] ?? [];
+      tableRequests.push(request);
+      accumulator[tableName] = tableRequests;
+      return accumulator;
+    },
+    {},
+  );
+
+export const createRelationEdgesDdbDependencies = <
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+>(
+  config: RelationsDdbConfig,
+): RelationEdgesDdbDependencies<TMetadata> => {
+  const tableName = config.tables.relationEdges;
+  const batchSize = config.batchSize ?? 25;
+
+  return {
+    putEdges: async (items) => {
+      const writes = items.map<TableWrite>((item) => ({
+        tableName,
+        request: { PutRequest: { Item: item as Record<string, unknown> } },
+      }));
+      const chunks = chunkRequests(writes, batchSize);
+      for (const chunk of chunks) {
+        await batchWriteWithRetry(config.client, buildRequestItems(chunk));
+      }
+    },
+    deleteEdges: async (keys) => {
+      const writes = keys.map<TableWrite>((key) => ({
+        tableName,
+        request: { DeleteRequest: { Key: key as Record<string, unknown> } },
+      }));
+      const chunks = chunkRequests(writes, batchSize);
+      for (const chunk of chunks) {
+        await batchWriteWithRetry(config.client, buildRequestItems(chunk));
+      }
+    },
+    queryEdges: async ({ edgeKey, limit, exclusiveStartKey }) => {
+      const response = await config.client.query({
+        TableName: tableName,
+        KeyConditionExpression: "#edgeKey = :edgeKey",
+        ExpressionAttributeNames: {
+          "#edgeKey": relationEdgesSchema.partitionKey,
+        },
+        ExpressionAttributeValues: {
+          ":edgeKey": edgeKey,
+        },
+        ExclusiveStartKey: exclusiveStartKey
+          ? (exclusiveStartKey as Record<string, unknown>)
+          : undefined,
+        Limit: limit,
+      });
+
+      return {
+        items: (response.Items ?? []) as RelationEdgesDdbItem<TMetadata>[],
+        lastEvaluatedKey: response.LastEvaluatedKey as
+          | RelationEdgesDdbKey
+          | undefined,
+      };
+    },
+  };
 };
 
 /**

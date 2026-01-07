@@ -21,6 +21,8 @@
  */
 export * from "./api.js";
 export * from "./cursor.js";
+export * from "./ddb/awsSdkV3Adapter.js";
+export * from "./ddb/types.js";
 export * from "./exact/exactDdb.js";
 export * from "./exact/exactIndex.js";
 export * from "./exact/exactS3.js";
