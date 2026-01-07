@@ -10,6 +10,7 @@ import {
   type BatchWriteItemInput,
   type BatchWriteItemOutput,
   FullTextDdbBackend,
+  type FullTextTableNames,
   type GetItemInput,
   type GetItemOutput,
   type QueryInput,
@@ -31,6 +32,14 @@ import {
  */
 export const createFullTextBackend = () =>
   new FullTextDdbBackend({
+    tables: {
+      lossyPostings: "LossyPostings",
+      exactPostings: "ExactPostings",
+      docMirror: "FullTextDocMirror",
+      tokenStats: "FullTextTokenStats",
+      docTokens: "DocTokens",
+      docTokenPositions: "DocTokenPositions",
+    } satisfies FullTextTableNames,
     client: {
       /**
        * Writes batches of items with conversion to DynamoDB shapes, returning any

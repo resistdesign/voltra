@@ -55,7 +55,6 @@
           "continuationToken": "token-1"
         },
         "ddbSchema": {
-          "tableName": "RelationEdges",
           "partitionKey": "edgeKey",
           "sortKey": "otherId",
           "metadataAttribute": "metadata"

@@ -210,35 +210,24 @@ export type DynamoQueryClient = DynamoBatchWriter & {
 /**
  * Configuration for the DynamoDB fulltext writer.
  */
+export type FullTextTableNames = {
+  lossyPostings: string;
+  exactPostings: string;
+  docMirror: string;
+  tokenStats: string;
+  docTokens: string;
+  docTokenPositions: string;
+};
+
 export type FullTextDdbWriterConfig = {
   /**
    * DynamoDB client used for batch writes and gets.
    */
   client: DynamoBatchWriter;
   /**
-   * Optional lossy postings table name override.
+   * Table names for fulltext indexing storage.
    */
-  lossyTableName?: string;
-  /**
-   * Optional exact postings table name override.
-   */
-  exactTableName?: string;
-  /**
-   * Optional mirror table name override.
-   */
-  mirrorTableName?: string;
-  /**
-   * Optional doc tokens table name override.
-   */
-  docTokensTableName?: string;
-  /**
-   * Optional doc token positions table name override.
-   */
-  docTokenPositionsTableName?: string;
-  /**
-   * Optional token stats table name override.
-   */
-  tokenStatsTableName?: string;
+  tables: FullTextTableNames;
 };
 
 type TableWrite = {
@@ -353,18 +342,13 @@ export class FullTextDdbWriter {
    */
   constructor(config: FullTextDdbWriterConfig) {
     this.client = config.client;
-    this.lossyTableName =
-      config.lossyTableName ?? lossyPostingsSchema.tableName;
-    this.exactTableName =
-      config.exactTableName ?? exactPostingsSchema.tableName;
-    this.mirrorTableName =
-      config.mirrorTableName ?? fullTextDocMirrorSchema.tableName;
-    this.docTokensTableName =
-      config.docTokensTableName ?? docTokensSchema.tableName;
+    this.lossyTableName = config.tables.lossyPostings;
+    this.exactTableName = config.tables.exactPostings;
+    this.mirrorTableName = config.tables.docMirror;
+    this.docTokensTableName = config.tables.docTokens;
     this.docTokenPositionsTableName =
-      config.docTokenPositionsTableName ?? docTokenPositionsSchema.tableName;
-    this.tokenStatsTableName =
-      config.tokenStatsTableName ?? fullTextTokenStatsSchema.tableName;
+      config.tables.docTokenPositions;
+    this.tokenStatsTableName = config.tables.tokenStats;
   }
 
   /**

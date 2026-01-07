@@ -32,6 +32,7 @@ export {
   type BatchGetItemOutput,
   type BatchWriteItemInput,
   type BatchWriteItemOutput,
+  type FullTextTableNames,
   type GetItemInput,
   type GetItemOutput,
   type KeysAndAttributes,

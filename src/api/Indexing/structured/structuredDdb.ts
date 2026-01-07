@@ -103,7 +103,6 @@ export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
  * Schema metadata for the structured term index table.
  */
 export const structuredTermIndexSchema = {
-  tableName: "StructuredTermIndex",
   partitionKey: "termKey",
   sortKey: "docId",
   fieldAttribute: "field",
@@ -115,7 +114,6 @@ export const structuredTermIndexSchema = {
  * Schema metadata for the structured range index table.
  */
 export const structuredRangeIndexSchema = {
-  tableName: "StructuredRangeIndex",
   partitionKey: "field",
   sortKey: "rangeKey",
   valueAttribute: "value",
@@ -126,7 +124,6 @@ export const structuredRangeIndexSchema = {
  * Schema metadata for the structured document fields table.
  */
 export const structuredDocFieldsSchema = {
-  tableName: "StructuredDocFields",
   partitionKey: "docId",
   fieldsAttribute: "fields",
 } as const;

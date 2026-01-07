@@ -45,11 +45,17 @@ export type RelationEdgesDdbItem<
  * Schema metadata for relational edges stored in DynamoDB.
  */
 export const relationEdgesSchema = {
-  tableName: "RelationEdges",
   partitionKey: "edgeKey",
   sortKey: "otherId",
   metadataAttribute: "metadata",
 } as const;
+
+/**
+ * DynamoDB table names required for relational edges storage.
+ */
+export type RelationsTableNames = {
+  relationEdges: string;
+};
 
 /**
  * Encode the partition key for relation edges.
