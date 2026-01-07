@@ -8,7 +8,8 @@
 - [x] Phase 3: Demo API indexing backends now use library adapters and no longer carry AWS conversion glue.
 - [x] Phase 6: Updated relational indexing spec to match schema shape changes.
 - [x] Indexing naming cleanup in `src/api/Indexing` (ClassCase component files, camelCase utilities) plus import updates.
-- [~] Demo API table names still hardcoded in `site/api` (to be replaced by IaC-driven constants later).
+- [x] Phase 4: Demo IaC and shared constants now define indexing table names and env vars.
+- [x] Phase 5: Demo API reads indexing table names from env via `site/api/indexing.ts`.
 
 * Goals
 
