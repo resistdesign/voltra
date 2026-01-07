@@ -1,5 +1,8 @@
 import { indexingTableEnvVars } from "../../../site/common/IndexingTableNames";
 
+/**
+ * Validate the demo indexing env var naming scheme is stable and unique.
+ */
 export const runIndexingEnvVarMappingScenario = () => {
   const envVars = [
     ...Object.values(indexingTableEnvVars.fullText),

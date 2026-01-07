@@ -10,6 +10,9 @@ const stubClient: DynamoQueryClient = {
   query: async () => ({}),
 };
 
+/**
+ * Validate that DDB backends fail fast when required table names are missing.
+ */
 export const runIndexingTablesValidationScenario = () => {
   let missingFullTextTableError: string | undefined;
   try {
