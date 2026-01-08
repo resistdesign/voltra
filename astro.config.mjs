@@ -9,6 +9,7 @@ export default defineConfig({
   output: "static",
   redirects: {
     "/form-generation": "/",
+    "/end-to-end-demo": "/",
   },
   integrations: [react()],
   srcDir: "./site/app/src",
