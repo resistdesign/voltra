@@ -12,6 +12,8 @@ import type { FormController } from "./types";
 
 /**
  * Run a basic controller scenario covering defaults and derived field state.
+ *
+ * @returns Snapshot of derived values and field states.
  */
 export const runFormControllerScenario = () => {
   let snapshot: any = null;
@@ -104,6 +106,8 @@ export const runFormControllerScenario = () => {
 
 /**
  * Capture the field order emitted by the form engine.
+ *
+ * @returns Snapshot of field order for a basic type info map.
  */
 export const runFieldOrderScenario = () => {
   let snapshot: any = null;
@@ -154,6 +158,8 @@ export const runFieldOrderScenario = () => {
 
 /**
  * Capture field ordering for union field sets.
+ *
+ * @returns Snapshot of field ordering for union field sets.
  */
 export const runUnionFieldSetsScenario = () => {
   let snapshot: any = null;
@@ -200,6 +206,8 @@ export const runUnionFieldSetsScenario = () => {
 
 /**
  * Validate readonly field behavior and required validation.
+ *
+ * @returns Validation result and derived field state.
  */
 export const runReadonlyValidationScenario = () => {
   let controller: FormController | undefined;
@@ -240,6 +248,8 @@ export const runReadonlyValidationScenario = () => {
 
 /**
  * Validate optional field behavior for required checks.
+ *
+ * @returns Validation result and derived field state.
  */
 export const runOptionalValidationScenario = () => {
   let controller: FormController | undefined;
@@ -279,6 +289,8 @@ export const runOptionalValidationScenario = () => {
 
 /**
  * Validate normalized tags usage in label/hidden field settings.
+ *
+ * @returns Snapshot of normalized label and hidden flag.
  */
 export const runNormalizedTagsScenario = () => {
   let snapshot: any = null;
@@ -318,6 +330,8 @@ export const runNormalizedTagsScenario = () => {
 
 /**
  * Validate primary tag behavior for update operations.
+ *
+ * @returns Snapshot of primary and disabled state for update operations.
  */
 export const runPrimaryTagScenario = () => {
   let snapshot: any = null;
@@ -358,6 +372,8 @@ export const runPrimaryTagScenario = () => {
 
 /**
  * Validate label tag usage for fields.
+ *
+ * @returns Snapshot of label derived from tags.
  */
 export const runLabelTagScenario = () => {
   let snapshot: any = null;
@@ -396,6 +412,8 @@ export const runLabelTagScenario = () => {
 
 /**
  * Validate default value constraints applied to initial values.
+ *
+ * @returns Snapshot of values after default constraints.
  */
 export const runDefaultValueConstraintScenario = () => {
   let snapshot: any = null;
@@ -434,6 +452,8 @@ export const runDefaultValueConstraintScenario = () => {
 
 /**
  * Validate regex-based pattern constraints during validation.
+ *
+ * @returns Validation result for pattern constraints.
  */
 export const runPatternValidationScenario = () => {
   let controller: FormController | undefined;
@@ -476,6 +496,8 @@ export const runPatternValidationScenario = () => {
 
 /**
  * Validate field-level denied operations handling.
+ *
+ * @returns Snapshot of disabled flags across operations.
  */
 export const runDeniedOperationsScenario = () => {
   let snapshot: any = null;
@@ -524,6 +546,8 @@ export const runDeniedOperationsScenario = () => {
 
 /**
  * Validate type tags passthrough on the controller.
+ *
+ * @returns Snapshot of type tags on the controller.
  */
 export const runTypeTagsScenario = () => {
   let snapshot: any = null;
@@ -564,6 +588,8 @@ export const runTypeTagsScenario = () => {
 
 /**
  * Validate type-level denied operations handling.
+ *
+ * @returns Snapshot of disabled flags for type-level denied ops.
  */
 export const runTypeDeniedOperationsScenario = () => {
   let snapshot: any = null;
@@ -612,6 +638,8 @@ export const runTypeDeniedOperationsScenario = () => {
 
 /**
  * Validate field extraction from a packed type info map.
+ *
+ * @returns Snapshot of field keys and entry type name.
  */
 export const runTypeInfoPackScenario = () => {
   let snapshot: any = null;
@@ -663,6 +691,8 @@ export const runTypeInfoPackScenario = () => {
 
 /**
  * Validate literal value handling for initial values and validation.
+ *
+ * @returns Snapshot of values and validation result.
  */
 export const runLiteralValueScenario = () => {
   let controller: FormController | undefined;
@@ -729,6 +759,8 @@ export const runLiteralValueScenario = () => {
 
 /**
  * Validate array vs scalar value handling for data item shapes.
+ *
+ * @returns Snapshot of scalar/array values and array detection.
  */
 export const runDataItemScenario = () => {
   let snapshot: any = null;

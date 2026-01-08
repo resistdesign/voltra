@@ -480,9 +480,13 @@ export const AutoField: FC<AutoFieldProps> = ({
  * Props for the AutoFormView component.
  */
 export interface AutoFormViewProps {
+  /** Prepared controller that supplies field state. */
   controller: FormController;
+  /** Submit handler invoked with validated form values. */
   onSubmit: (values: FormValues) => void;
+  /** Optional relation action handler for reference fields. */
   onRelationAction?: (payload: RelationActionPayload) => void;
+  /** Optional custom type action handler. */
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
 }
 
@@ -531,12 +535,19 @@ export const AutoFormView: FC<AutoFormViewProps> = ({
  * Props for the AutoForm component.
  */
 export interface AutoFormProps {
+  /** Type metadata used to build the form. */
   typeInfo: TypeInfo;
+  /** Submit handler invoked with validated form values. */
   onSubmit: (values: FormValues) => void;
+  /** Optional initial values applied before defaults. */
   initialValues?: FormValues;
+  /** Optional change handler invoked when values update. */
   onValuesChange?: (values: FormValues) => void;
+  /** Optional relation action handler for reference fields. */
   onRelationAction?: (payload: RelationActionPayload) => void;
+  /** Optional custom type action handler. */
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
+  /** Optional operation override for field state. */
   operation?: TypeOperation;
 }
 
