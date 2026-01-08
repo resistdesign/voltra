@@ -25,7 +25,16 @@ export const collectRequiredEnvironmentVariables = <VarName extends string>(
 
   if (missingEnvVars.length > 0) {
     throw new Error(
-      `Missing required environment variables: ${missingEnvVars.join(", ")}`,
+      `
+┌──────────────────────────────────┐
+│   ⚠  ENVIRONMENT CHECK FAILED    │
+└──────────────────────────────────┘
+
+Missing Required Environment Variables:
+
+${missingEnvVars.map((vN) => `- ${vN}`).join(`
+`)}
+`,
     );
   }
 
