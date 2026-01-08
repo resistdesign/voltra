@@ -1,20 +1,19 @@
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import type { RelationActionPayload } from "../../../../src/app/forms";
 import { AutoFormView, useFormEngine } from "../../../../src/app/forms";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
 import { getSimpleId } from "../../../../src/common/IdGeneration";
 import type { TypeInfoORMAPI } from "../../../../src/common/TypeInfoORM";
-import {
-  TypeInfoORMAPIRoutePaths,
-  type BaseItemRelationshipInfo,
-} from "../../../../src/common/TypeInfoORM";
+import { TypeInfoORMAPIRoutePaths } from "../../../../src/common/TypeInfoORM";
 import {
   ComparisonOperators,
-  LogicalOperators,
   type ListItemsConfig,
   type ListItemsResults,
   type ListRelationshipsConfig,
+  LogicalOperators,
 } from "../../../../src/common/SearchTypes";
+import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
 import {
   BASE_DOMAIN,
@@ -22,8 +21,7 @@ import {
   DOMAINS,
 } from "../../../common/Constants";
 import { DemoTypeInfoMap } from "../../../common/DemoTypeInfoMap";
-import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
-import type { RelationActionPayload } from "../../../../src/app/forms/types";
+import { BaseItemRelationshipInfo } from "../../../../src/common/ItemRelationshipInfoTypes";
 
 type RequestLogEntry = {
   id: string;
@@ -124,7 +122,10 @@ export const EndToEndDemo: FC = () => {
     null,
   );
 
-  const ormClient = useMemo(() => new TypeInfoORMClient(getServiceConfig()), []);
+  const ormClient = useMemo(
+    () => new TypeInfoORMClient(getServiceConfig()),
+    [],
+  );
   const personFormTypeInfo = useMemo(() => {
     if (!personTypeInfo) {
       return personTypeInfo;
@@ -220,20 +221,6 @@ export const EndToEndDemo: FC = () => {
     [logRequest, ormClient, personItemsPerPage],
   );
 
-  const loadPerson = useCallback(
-    async (personId: string) => {
-      const person = await logRequest("read", ["Person", personId], () =>
-        ormClient.read("Person", personId),
-      );
-
-      setSelectedPersonId(personId);
-      setSelectedPerson(person);
-      setSelectedCarCandidate(null);
-      await loadRelationship(personId);
-    },
-    [loadRelationship, logRequest, ormClient],
-  );
-
   const loadRelationship = useCallback(
     async (personId: string) => {
       const config: ListRelationshipsConfig = {
@@ -248,7 +235,8 @@ export const EndToEndDemo: FC = () => {
       const results = (await logRequest(
         "listRelatedItems",
         [config, ["id", "make", "model", "year"]],
-        () => ormClient.listRelatedItems(config, ["id", "make", "model", "year"]),
+        () =>
+          ormClient.listRelatedItems(config, ["id", "make", "model", "year"]),
       )) as ListItemsResults<any>;
 
       const [item] = results.items ?? [];
@@ -262,6 +250,20 @@ export const EndToEndDemo: FC = () => {
       }
     },
     [logRequest, ormClient],
+  );
+
+  const loadPerson = useCallback(
+    async (personId: string) => {
+      const person = await logRequest("read", ["Person", personId], () =>
+        ormClient.read("Person", personId),
+      );
+
+      setSelectedPersonId(personId);
+      setSelectedPerson(person);
+      setSelectedCarCandidate(null);
+      await loadRelationship(personId);
+    },
+    [loadRelationship, logRequest, ormClient],
   );
 
   const loadCar = useCallback(
@@ -315,8 +317,10 @@ export const EndToEndDemo: FC = () => {
       await logRequest("update", ["Person", payload], () =>
         ormClient.update("Person", payload),
       );
-      const person = await logRequest("read", ["Person", selectedPersonId], () =>
-        ormClient.read("Person", selectedPersonId),
+      const person = await logRequest(
+        "read",
+        ["Person", selectedPersonId],
+        () => ormClient.read("Person", selectedPersonId),
       );
 
       setSelectedPerson(person);
@@ -447,9 +451,7 @@ export const EndToEndDemo: FC = () => {
             fieldName: filter.fieldName,
             operator: filter.operator,
             value:
-              filter.fieldName === "year"
-                ? Number(filter.value)
-                : filter.value,
+              filter.fieldName === "year" ? Number(filter.value) : filter.value,
           })),
         };
       }
@@ -562,18 +564,6 @@ export const EndToEndDemo: FC = () => {
     setFilters((prev) => prev.filter((filter) => filter.id !== id));
   };
 
-  if (!personTypeInfo || !carTypeInfo) {
-    return (
-      <article>
-        <h4>End-to-End Demo</h4>
-        <p>
-          Demo type info is missing. Run <code>yarn site:build:demo-types</code>{" "}
-          to generate <code>site/common/DemoTypeInfoMap.json</code>.
-        </p>
-      </article>
-    );
-  }
-
   return (
     <Stack>
       <article>
@@ -656,9 +646,7 @@ export const EndToEndDemo: FC = () => {
                 ))}
               </List>
             )}
-            {personListCursor && (
-              <small>Cursor: {personListCursor}</small>
-            )}
+            {personListCursor && <small>Cursor: {personListCursor}</small>}
           </article>
         </Grid>
       </Section>
@@ -810,7 +798,8 @@ export const EndToEndDemo: FC = () => {
                           value={filter.operator}
                           onChange={(event) =>
                             updateFilter(filter.id, {
-                              operator: event.target.value as ComparisonOperators,
+                              operator: event.target
+                                .value as ComparisonOperators,
                             })
                           }
                         >
@@ -930,8 +919,8 @@ export const EndToEndDemo: FC = () => {
         <article>
           <InlineRow>
             <p>
-              Inspect the exact payloads sent to the ORM routes and the responses
-              returned.
+              Inspect the exact payloads sent to the ORM routes and the
+              responses returned.
             </p>
             <button type="button" onClick={() => setRequestLog([])}>
               Clear Log
