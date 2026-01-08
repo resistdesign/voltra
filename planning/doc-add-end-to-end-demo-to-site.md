@@ -205,3 +205,14 @@ When in doubt:
 4. Prefer boring code over clever code
 
 This demo exists to **prove Voltra’s intent**, not to impress with UI flair.
+
+---
+
+## Execution Checklist
+
+- [x] Add end-to-end demo route and navigation entry
+- [x] Wire ORM client config plus request/response logging panel
+- [x] Implement Person CRUD flow with list + detail view
+- [x] Implement Car search (lossy/exact/structured) with cursor paging
+- [x] Implement relationship set/replace/remove flow with confirmations
+- [x] Implement Car CRUD flow for related car (read/update/delete)
