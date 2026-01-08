@@ -2,6 +2,7 @@ import { FC } from "react";
 import styled from "styled-components";
 import { ApplicationStateProvider, Route } from "../../../../src/app/utils";
 import { AdvancedDemo } from "./AdvancedDemo";
+import { EndToEndDemo } from "./EndToEndDemo";
 
 const NavBar = styled.nav`
   & > ul {
@@ -91,12 +92,18 @@ export const App: FC = () => {
               <li>
                 <a href="/form-generation">Form Generation Demo</a>
               </li>
+              <li>
+                <a href="/end-to-end-demo">End-to-End Demo</a>
+              </li>
             </ul>
           </NavBar>
           <h3>
             <Route exact>Features</Route>
             <Route path="form-generation" exact>
               Form Generation Demo
+            </Route>
+            <Route path="end-to-end-demo" exact>
+              End-to-End Demo
             </Route>
           </h3>
           <Route exact>
@@ -210,6 +217,9 @@ export const App: FC = () => {
 
           <Route path="form-generation" exact>
             <AdvancedDemo />
+          </Route>
+          <Route path="end-to-end-demo" exact>
+            <EndToEndDemo />
           </Route>
         </Content>
       </Route>
