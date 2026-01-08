@@ -10,7 +10,7 @@ import {
   readIndexingTablesFromEnv,
 } from "../common/IndexingTableNames";
 import { ddbClient } from "./ddbClient";
-import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
+import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine";
 
 const ddbAdapter = createAwsSdkV3DynamoClient(ddbClient);
 

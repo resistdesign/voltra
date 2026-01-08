@@ -3,6 +3,8 @@
  *
  * Common module exports for shared utilities, types, and helpers.
  */
+
+export * as CommandLine from "./CommandLine";
 export * as TypeParsing from "./TypeParsing";
 export * as Routing from "./Routing";
 export * as IDGeneration from "./IdGeneration";
