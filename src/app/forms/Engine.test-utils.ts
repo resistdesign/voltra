@@ -441,7 +441,7 @@ export const runDefaultValueConstraintScenario = () => {
             optional: true,
             tags: {
               constraints: {
-                defaultValue: true,
+                defaultValue: "true",
               },
             },
           },
@@ -452,7 +452,7 @@ export const runDefaultValueConstraintScenario = () => {
             optional: true,
             tags: {
               constraints: {
-                defaultValue: 29.86,
+                defaultValue: "29.86",
               },
             },
           },
