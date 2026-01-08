@@ -10,7 +10,7 @@ import {
   LogicalOperators,
   SearchCriteria,
 } from "../../../common/SearchTypes";
-import type { Where } from "../../Indexing/structured/types";
+import type { Where } from "../../Indexing/structured/Types";
 import { TypeInfoORMServiceError } from "../../../common/TypeInfoORM";
 
 const resolveBetweenBounds = (

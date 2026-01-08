@@ -1,4 +1,4 @@
-import { RelationalInMemoryBackend } from "../../Indexing/rel/inMemory";
+import { RelationalInMemoryBackend } from "../../Indexing/rel/RelationalInMemoryBackend";
 import { IndexingRelationshipDriver } from "./IndexingRelationshipDriver";
 import type { BaseItemRelationshipInfo } from "../../../common/ItemRelationshipInfoTypes";
 
