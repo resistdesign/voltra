@@ -1,14 +1,25 @@
 import {
+  createAwsSdkV3DynamoClient,
+  createRelationEdgesDdbDependencies,
   FullTextDdbBackend,
   RelationalDdbBackend,
   StructuredDdbBackend,
-  createAwsSdkV3DynamoClient,
-  createRelationEdgesDdbDependencies,
 } from "../../src/api/Indexing";
-import { readIndexingTablesFromEnv } from "../common/IndexingTableNames";
+import {
+  indexingTableEnvVars,
+  readIndexingTablesFromEnv,
+} from "../common/IndexingTableNames";
 import { ddbClient } from "./ddbClient";
+import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
 
 const ddbAdapter = createAwsSdkV3DynamoClient(ddbClient);
+
+collectRequiredEnvironmentVariables([
+  ...Object.values(indexingTableEnvVars.fullText),
+  ...Object.values(indexingTableEnvVars.structured),
+  ...Object.values(indexingTableEnvVars.relations),
+]);
+
 const indexingTables = readIndexingTablesFromEnv(process.env);
 
 export const fullTextBackend = new FullTextDdbBackend({
