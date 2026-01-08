@@ -92,6 +92,7 @@ export const useFormEngine = (
   initialValues: FormValues = {},
   typeInfo: TypeInfo,
   options?: {
+    /** Operation to evaluate when deriving field state. */
     operation?: TypeOperation;
   },
 ): FormController => {
