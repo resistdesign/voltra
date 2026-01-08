@@ -169,6 +169,8 @@ const findClickableByText = (node: ReactNode, text: string) => {
 
 /**
  * Validate base input rendering for primitive field types.
+ *
+ * @returns Render assertions for primitive input types.
  */
 export const runPrimitiveInputScenario = () => {
   const stringRender = renderField({
@@ -201,6 +203,8 @@ export const runPrimitiveInputScenario = () => {
 
 /**
  * Validate relation field rendering behavior.
+ *
+ * @returns Render assertions for relation fields.
  */
 export const runRelationFieldScenario = () => {
   const onRelationAction = () => {};
@@ -238,6 +242,8 @@ export const runRelationFieldScenario = () => {
 
 /**
  * Validate array field rendering and controls.
+ *
+ * @returns Render assertions for array field controls.
  */
 export const runArrayFieldScenario = () => {
   const arrayRender = renderField(
@@ -259,6 +265,8 @@ export const runArrayFieldScenario = () => {
 
 /**
  * Validate select rendering for possible values.
+ *
+ * @returns Render assertions for possible value selects.
  */
 export const runPossibleValuesScenario = () => {
   const stringRender = renderField({
@@ -289,6 +297,8 @@ export const runPossibleValuesScenario = () => {
 
 /**
  * Validate filtering of boolean/null values from select options.
+ *
+ * @returns Render assertions for filtered possible values.
  */
 export const runPossibleValuesFilterScenario = () => {
   const mixedRender = renderField({
@@ -314,6 +324,8 @@ export const runPossibleValuesFilterScenario = () => {
 
 /**
  * Validate input type formatting based on tag format.
+ *
+ * @returns Render assertions for formatted input types.
  */
 export const runFormatScenario = () => {
   const render = renderField({
@@ -333,6 +345,8 @@ export const runFormatScenario = () => {
 
 /**
  * Validate custom selection rendering with datalist.
+ *
+ * @returns Render assertions for custom selection UI.
  */
 export const runAllowCustomSelectionScenario = () => {
   const render = renderField({
@@ -354,6 +368,8 @@ export const runAllowCustomSelectionScenario = () => {
 
 /**
  * Validate constraint attributes for number and string inputs.
+ *
+ * @returns Render assertions for constraint attributes.
  */
 export const runConstraintAttributeScenario = () => {
   const numberRender = renderField({
@@ -392,6 +408,8 @@ export const runConstraintAttributeScenario = () => {
 
 /**
  * Validate custom type action payloads for scalar and array fields.
+ *
+ * @returns Captured action payload details for custom type actions.
  */
 export const runCustomTypeScenario = () => {
   const payloads: CustomTypeActionPayload[] = [];
@@ -445,6 +463,8 @@ export const runCustomTypeScenario = () => {
 
 /**
  * Validate relation actions include full paging flag when set.
+ *
+ * @returns Captured relation action payload details.
  */
 export const runRelationFullPagingScenario = () => {
   let payload: RelationActionPayload | null = null;
@@ -479,6 +499,8 @@ export const runRelationFullPagingScenario = () => {
 
 /**
  * Validate hidden fields are omitted from AutoFormView output.
+ *
+ * @returns Render assertions for hidden vs visible fields.
  */
 export const runHiddenFieldScenario = () => {
   const controller: FormController = {
