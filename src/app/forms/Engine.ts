@@ -62,8 +62,8 @@ const buildInitialValues = (
 
     const defaultValue = field.tags?.constraints?.defaultValue;
 
-    if (defaultValue !== undefined) {
-      values[key] = defaultValue;
+    if (typeof defaultValue === "string") {
+      values[key] = JSON.parse(defaultValue);
       continue;
     }
 
