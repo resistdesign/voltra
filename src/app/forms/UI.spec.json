@@ -18,9 +18,8 @@
       "expectation": {
         "singleHasManage": true,
         "singleHasManageRelated": false,
-        "arrayHasManageRelated": true,
         "arrayHasManage": false,
-        "singleHasRelationHint": false
+        "arrayHasManageRelated": true
       }
     },
     {

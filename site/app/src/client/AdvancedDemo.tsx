@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/theme-twilight";
 import {
   AutoFormView,
+  CustomTypeAction,
   type CustomTypeActionPayload,
+  RelationAction,
   useFormEngine,
 } from "../../../../src/app/forms";
 import type {
@@ -163,15 +165,19 @@ export const AdvancedDemo = () => {
   const FormPreview = ({ typeInfo }: { typeInfo: TypeInfo }) => {
     const controller = useFormEngine({}, typeInfo);
     const [lastAction, setLastAction] = useState<string | null>(null);
+    const [lastActionType, setLastActionType] = useState<
+      CustomTypeAction | RelationAction
+    >("open");
 
     const handleRelationAction = ({
       action,
       fieldKey,
     }: {
-      action: string;
+      action: RelationAction;
       fieldKey: string;
     }) => {
       setLastAction(`Relation ${action} on ${fieldKey}`);
+      setLastActionType(action);
     };
 
     const handleCustomTypeAction = ({
@@ -184,6 +190,7 @@ export const AdvancedDemo = () => {
       onChange,
     }: CustomTypeActionPayload) => {
       setLastAction(`Custom ${customType} ${action} on ${fieldKey}`);
+      setLastActionType(action);
 
       if (action === "add") {
         const nextItem = `${customType} item`;
@@ -197,8 +204,8 @@ export const AdvancedDemo = () => {
       }
 
       if (action === "remove") {
-        if (field.array && Array.isArray(value)) {
-          const next = [...value];
+        if (field.array) {
+          const next = [...(Array.isArray(value) ? value : [])];
           if (typeof index === "number") {
             next.splice(index, 1);
             onChange(next);
@@ -217,22 +224,31 @@ export const AdvancedDemo = () => {
           onRelationAction={handleRelationAction}
           onCustomTypeAction={handleCustomTypeAction}
         />
+        {lastAction && (
+          <Alert
+            type={lastActionType}
+            message={`Last action: ${lastAction}`}
+            onClose={() => setLastAction(null)}
+          />
+        )}
         <JSONPreview>
           <b>Live Data JSON:</b>
           <pre>{JSON.stringify(controller.values, null, 2)}</pre>
         </JSONPreview>
-        {lastAction && <ActionPreview>Last action: {lastAction}</ActionPreview>}
         <ControllerExample>
           <b>Controller Usage (React):</b>
-          <ControllerCode>{`const controller = useFormEngine(initialValues, typeInfo);
+          <ControllerCode>
+            {`const controller = useFormEngine(initialValues, typeInfo);
 
 return (
   <AutoFormView controller={controller} onSubmit={handleSubmit} />
-);`}</ControllerCode>
+);`}
+          </ControllerCode>
         </ControllerExample>
         <ControllerExample>
           <b>Relation Handler (React):</b>
-          <ControllerCode>{`const handleRelationAction = ({ action, fieldKey }) => {
+          <ControllerCode>
+            {`const handleRelationAction = ({ action, fieldKey }) => {
   console.log(action, fieldKey);
   // Use action to open a picker, create related items, etc.
 };
@@ -243,11 +259,13 @@ return (
     onSubmit={handleSubmit}
     onRelationAction={handleRelationAction}
   />
-);`}</ControllerCode>
+);`}
+          </ControllerCode>
         </ControllerExample>
         <ControllerExample>
           <b>Custom Type Handler (React):</b>
-          <ControllerCode>{`const handleCustomTypeAction = ({ action, fieldKey, customType }) => {
+          <ControllerCode>
+            {`const handleCustomTypeAction = ({ action, fieldKey, customType }) => {
   console.log(customType, action, fieldKey);
   // Route to a custom editor or upload flow.
 };
@@ -258,7 +276,8 @@ return (
     onSubmit={handleSubmit}
     onCustomTypeAction={handleCustomTypeAction}
   />
-);`}</ControllerCode>
+);`}
+          </ControllerCode>
         </ControllerExample>
       </>
     );
@@ -276,7 +295,7 @@ return (
               (Exported types only)
             </span>
           </div>
-          <Button onClick={getTypeInfo}>Update / Parse</Button>
+          <button onClick={getTypeInfo}>Update / Parse</button>
         </PaneHeader>
         <EditorContainer>
           <AceEditor
@@ -296,7 +315,7 @@ return (
       <Pane>
         <PaneHeader>
           Generated Form
-          <Select
+          <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
             disabled={Object.keys(types).length === 0}
@@ -307,7 +326,7 @@ return (
                 {t}
               </option>
             ))}
-          </Select>
+          </select>
         </PaneHeader>
         <PreviewContainer>
           {currentTypeInfo ? (
@@ -327,7 +346,6 @@ const DemoGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  height: 80vh;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -335,22 +353,17 @@ const DemoGrid = styled.div`
   }
 `;
 
-const Pane = styled.div`
+const Pane = styled.article`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: var(--pico-card-background-color, #fff);
   padding: 1rem;
-  border-radius: var(--pico-border-radius, 8px);
-  box-shadow: var(--pico-card-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.05));
-  border: 1px solid var(--pico-muted-border-color, #eee);
   overflow: hidden;
   min-height: 500px;
 `;
 
 const PaneHeader = styled.div`
   font-weight: 600;
-  color: var(--pico-h1-color, #444);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -358,8 +371,6 @@ const PaneHeader = styled.div`
 
 const EditorContainer = styled.div`
   flex: 1;
-  border: 1px solid var(--pico-muted-border-color, #ddd);
-  border-radius: 4px;
   overflow: hidden;
   min-height: 300px;
 `;
@@ -370,75 +381,91 @@ const PreviewContainer = styled.div`
   padding-right: 0.5rem;
 `;
 
-const Button = styled.button`
-  /* Inherit Pico styles for buttons via class or vars, but here we keep custom structure using vars */
-  background: var(--pico-primary-nav-background);
-  color: var(--pico-primary-nav-color);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--pico-border-radius, 4px);
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color var(--pico-transition);
-
-  &:hover {
-    background: var(--pico-primary-hover-background);
-  }
-
-  &:disabled {
-    background: var(--pico-muted-border-color);
-    cursor: not-allowed;
-  }
-`;
-
-const Select = styled.select`
-  padding: 0.5rem;
-  border-radius: var(--pico-border-radius, 4px);
-  border: 1px solid var(--pico-muted-border-color, #ccc);
-  background-color: var(--pico-form-element-background-color);
-  color: var(--pico-color);
-  min-width: 150px;
-`;
-
 const EmptyState = styled.div`
   padding: 2rem;
   text-align: center;
-  color: var(--pico-muted-color, #888);
 `;
 
 const JSONPreview = styled.div`
   margin-top: auto;
-  border-top: 1px solid var(--pico-muted-border-color, #eee);
   padding-top: 1rem;
 
   pre {
-    background: var(--pico-card-sectioning-background-color, #f1f3f5);
     padding: 1rem;
     border-radius: 4px;
     font-size: 0.85rem;
     overflow-x: auto;
     margin-top: 0.5rem;
-    color: var(--pico-color);
   }
 `;
 
 const ControllerExample = styled.div`
-  border-top: 1px dashed var(--pico-muted-border-color, #eee);
   padding-top: 1rem;
 `;
 
-const ActionPreview = styled.div`
-  margin-top: 0.75rem;
-  color: var(--pico-muted-color, #666);
-  font-size: 0.85rem;
-`;
-
 const ControllerCode = styled.pre`
-  background: var(--pico-card-sectioning-background-color, #f1f3f5);
   padding: 1rem;
-  border-radius: 4px;
   font-size: 0.85rem;
   overflow-x: auto;
   margin-top: 0.5rem;
-  color: var(--pico-color);
 `;
+
+const ALERT_COLORS: Record<
+  CustomTypeAction | RelationAction,
+  { background: string; text: string }
+> = {
+  add: {
+    background: "#10b981",
+    text: "#ffffff",
+  },
+  remove: {
+    background: "#ef4444",
+    text: "#ffffff",
+  },
+  edit: {
+    background: "#f59e0b",
+    text: "#ffffff",
+  },
+  open: {
+    background: "#3b82f6",
+    text: "#ffffff",
+  },
+};
+
+const StyledAlert = styled.div<{ type: keyof typeof ALERT_COLORS }>`
+  position: relative;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid transparent;
+  background-color: ${(props) =>
+    ALERT_COLORS[props.type]?.background || ALERT_COLORS.open.background};
+  color: ${(props) => ALERT_COLORS[props.type]?.text || ALERT_COLORS.open.text};
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0.5em;
+  line-height: 0.5em;
+`;
+
+type AlertProps = {
+  type: CustomTypeAction | RelationAction;
+  message: string;
+  onClose: () => void;
+};
+
+const Alert: FC<AlertProps> = ({ message, type, onClose }) => {
+  return (
+    <StyledAlert type={type}>
+      {message}
+      <CloseButton onClick={onClose}>
+        &times; {/* This is an 'x' character for the close button */}
+      </CloseButton>
+    </StyledAlert>
+  );
+};
