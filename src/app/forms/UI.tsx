@@ -4,7 +4,7 @@
  * Tier 2 UI components: AutoForm, AutoField.
  */
 
-import React, { FC, FormEvent } from "react";
+import { FC, FormEvent, useEffect } from "react";
 import type {
   LiteralValue,
   TypeInfo,
@@ -22,46 +22,10 @@ import { useFormEngine } from "./Engine";
 import {
   ArrayContainer,
   ArrayItemWrapper,
-  Button,
-  CheckboxWrapper,
   ErrorMessage,
   FieldWrapper,
-  Input,
-  Label,
-  Select,
 } from "./Primitives";
 import styled from "../helpers/styled";
-
-// Use function syntax for better ecosystem compatibility
-/**
- * Layout wrapper for auto-generated forms.
- */
-const FormContainer = styled("form")`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  max-width: 600px;
-  padding: 1rem;
-  border: 1px solid #eee;
-  border-radius: 8px;
-`;
-
-/**
- * Primary submit button styling for auto forms.
- */
-const SubmitButton = styled("button")`
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
 
 /**
  * Creates a non-array version of a field for use as array item metadata.
@@ -145,11 +109,12 @@ export const AutoField: FC<AutoFieldProps> = ({
     if (field.array) {
       return (
         <FieldWrapper>
-          <Label htmlFor={id}>
+          <label htmlFor={id}>
             {label} {isRequired && "*"}
-          </Label>
+          </label>
           {onRelationAction ? (
-            <Button
+            <button
+              data-signifier="manage-related"
               type="button"
               disabled={disabled}
               onClick={() =>
@@ -163,13 +128,9 @@ export const AutoField: FC<AutoFieldProps> = ({
                 })
               }
             >
-              Manage Related
-            </Button>
-          ) : (
-            <RelationHint>
-              Provide onRelationAction to manage related items.
-            </RelationHint>
-          )}
+              Manage
+            </button>
+          ) : undefined}
           {error && <ErrorMessage>{error}</ErrorMessage>}
         </FieldWrapper>
       );
@@ -177,11 +138,12 @@ export const AutoField: FC<AutoFieldProps> = ({
 
     return (
       <FieldWrapper>
-        <Label htmlFor={id}>
+        <label htmlFor={id}>
           {label} {isRequired && "*"}
-        </Label>
+        </label>
         {onRelationAction ? (
-          <Button
+          <button
+            data-signifier="manage"
             type="button"
             disabled={disabled}
             onClick={() =>
@@ -196,12 +158,8 @@ export const AutoField: FC<AutoFieldProps> = ({
             }
           >
             Manage
-          </Button>
-        ) : (
-          <RelationHint>
-            Provide onRelationAction to manage related items.
-          </RelationHint>
-        )}
+          </button>
+        ) : undefined}
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </FieldWrapper>
     );
@@ -213,18 +171,19 @@ export const AutoField: FC<AutoFieldProps> = ({
 
       return (
         <FieldWrapper>
-          <Label htmlFor={id}>
+          <label htmlFor={id}>
             {label} {isRequired && "*"}
-          </Label>
+          </label>
           <RelationList>
             {arrayValue.length === 0 && (
-              <RelationHint>No items yet.</RelationHint>
+              <RelationValue>No items yet.</RelationValue>
             )}
             {arrayValue.map((item, index) => (
               <RelationItem key={`${fieldKey}-${index}`}>
                 <RelationValue>{formatCustomValue(item)}</RelationValue>
                 <RelationActions>
-                  <Button
+                  <button
+                    data-signifier="manage"
                     type="button"
                     disabled={disabled}
                     onClick={() =>
@@ -233,15 +192,15 @@ export const AutoField: FC<AutoFieldProps> = ({
                         fieldKey,
                         field,
                         customType,
-                        value: item,
+                        value,
                         index,
                         onChange,
                       })
                     }
                   >
                     Manage
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     type="button"
                     disabled={disabled}
                     onClick={() =>
@@ -250,19 +209,19 @@ export const AutoField: FC<AutoFieldProps> = ({
                         fieldKey,
                         field,
                         customType,
-                        value: item,
+                        value,
                         index,
                         onChange,
                       })
                     }
                   >
                     Remove
-                  </Button>
+                  </button>
                 </RelationActions>
               </RelationItem>
             ))}
           </RelationList>
-          <Button
+          <button
             type="button"
             disabled={disabled}
             onClick={() =>
@@ -271,13 +230,13 @@ export const AutoField: FC<AutoFieldProps> = ({
                 fieldKey,
                 field,
                 customType,
-                value: arrayValue,
+                value,
                 onChange,
               })
             }
           >
             Add Item
-          </Button>
+          </button>
           {error && <ErrorMessage>{error}</ErrorMessage>}
         </FieldWrapper>
       );
@@ -285,11 +244,12 @@ export const AutoField: FC<AutoFieldProps> = ({
 
     return (
       <FieldWrapper>
-        <Label htmlFor={id}>
+        <label htmlFor={id}>
           {label} {isRequired && "*"}
-        </Label>
+        </label>
         <RelationValue>{formatCustomValue(value)}</RelationValue>
-        <Button
+        <button
+          data-signifier="manage"
           type="button"
           disabled={disabled}
           onClick={() =>
@@ -304,7 +264,7 @@ export const AutoField: FC<AutoFieldProps> = ({
           }
         >
           Manage
-        </Button>
+        </button>
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </FieldWrapper>
     );
@@ -319,9 +279,9 @@ export const AutoField: FC<AutoFieldProps> = ({
 
     return (
       <FieldWrapper>
-        <Label htmlFor={id}>
+        <label htmlFor={id}>
           {label} {isRequired && "*"}
-        </Label>
+        </label>
         <ArrayContainer>
           {arrayValue.map((item, index) => (
             <ArrayItemWrapper key={index}>
@@ -338,7 +298,7 @@ export const AutoField: FC<AutoFieldProps> = ({
                   disabled={disabled}
                 />
               </div>
-              <Button
+              <button
                 type="button"
                 disabled={disabled}
                 onClick={() => {
@@ -348,10 +308,10 @@ export const AutoField: FC<AutoFieldProps> = ({
                 }}
               >
                 Remove
-              </Button>
+              </button>
             </ArrayItemWrapper>
           ))}
-          <Button
+          <button
             type="button"
             disabled={disabled}
             onClick={() => {
@@ -368,7 +328,7 @@ export const AutoField: FC<AutoFieldProps> = ({
             }}
           >
             Add Item
-          </Button>
+          </button>
         </ArrayContainer>
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </FieldWrapper>
@@ -379,13 +339,13 @@ export const AutoField: FC<AutoFieldProps> = ({
   return (
     <FieldWrapper>
       {field.type !== "boolean" && (
-        <Label htmlFor={id}>
+        <label htmlFor={id}>
           {label} {isRequired && "*"}
-        </Label>
+        </label>
       )}
 
       {field.type === "string" && !selectableValues && (
-        <Input
+        <input
           id={id}
           type={format || "text"}
           value={(value as string) || ""}
@@ -396,7 +356,7 @@ export const AutoField: FC<AutoFieldProps> = ({
       )}
 
       {field.type === "number" && !selectableValues && (
-        <Input
+        <input
           id={id}
           type="number"
           value={(value as number) ?? ""}
@@ -409,24 +369,25 @@ export const AutoField: FC<AutoFieldProps> = ({
       )}
 
       {field.type === "boolean" && (
-        <CheckboxWrapper>
-          <Input
+        <div>
+          <input
             id={id}
             type="checkbox"
             checked={!!value}
             onChange={(e: any) => onChange(e.target.checked)}
             disabled={disabled}
           />
-          <Label htmlFor={id}> {label} </Label>
-        </CheckboxWrapper>
+          <label htmlFor={id}> {label} </label>
+        </div>
       )}
 
       {(field.type === "string" || field.type === "number") &&
         selectableValues &&
         allowCustom && (
           <>
-            <Input
+            <input
               id={id}
+              type="text"
               list={`list-${id}`}
               value={(value as string | number) ?? ""}
               onChange={(e: any) =>
@@ -450,7 +411,7 @@ export const AutoField: FC<AutoFieldProps> = ({
       {(field.type === "string" || field.type === "number") &&
         selectableValues &&
         !allowCustom && (
-          <Select
+          <select
             id={id}
             value={(value as string | number) ?? ""}
             onChange={(e: any) =>
@@ -468,7 +429,7 @@ export const AutoField: FC<AutoFieldProps> = ({
                 {String(val)}
               </option>
             ))}
-          </Select>
+          </select>
         )}
 
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -526,7 +487,7 @@ export const AutoFormView: FC<AutoFormViewProps> = ({
             onCustomTypeAction={onCustomTypeAction}
           />
         ))}
-      <SubmitButton type="submit">Submit</SubmitButton>
+      <button type="submit">Submit</button>
     </FormContainer>
   );
 };
@@ -568,7 +529,7 @@ export const AutoForm: FC<AutoFormProps> = ({
 }) => {
   const controller = useFormEngine(initialValues, typeInfo, { operation });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (onValuesChange) {
       onValuesChange(controller.values);
     }
@@ -584,12 +545,12 @@ export const AutoForm: FC<AutoFormProps> = ({
   );
 };
 
-/**
- * Informational hint for relation fields without handlers.
- */
-const RelationHint = styled("div")`
-  color: #777;
-  font-size: 0.85rem;
+const FormContainer = styled("form")`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 1em;
 `;
 
 /**
@@ -598,8 +559,8 @@ const RelationHint = styled("div")`
 const RelationList = styled("div")`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
 `;
 
 /**
@@ -608,10 +569,8 @@ const RelationList = styled("div")`
 const RelationItem = styled("div")`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border: 1px dashed #ccc;
-  border-radius: 6px;
+  gap: 0.5em;
+  padding: 0.5em;
 `;
 
 /**
@@ -619,10 +578,8 @@ const RelationItem = styled("div")`
  */
 const RelationValue = styled("pre")`
   margin: 0;
-  background: #f7f7f7;
-  padding: 0.5rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  padding: 0.5em;
+  font-size: 0.85em;
   white-space: pre-wrap;
 `;
 
@@ -631,6 +588,6 @@ const RelationValue = styled("pre")`
  */
 const RelationActions = styled("div")`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.5em;
   flex-wrap: wrap;
 `;

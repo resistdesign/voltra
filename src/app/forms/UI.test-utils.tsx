@@ -4,8 +4,8 @@
  * Test helpers and scenarios for form UI components.
  */
 
-import { createElement } from "react";
 import type { ReactElement, ReactNode } from "react";
+import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
@@ -232,11 +232,14 @@ export const runRelationFieldScenario = () => {
   );
 
   return {
-    singleHasManage: singleRender.includes(">Manage</button>"),
-    singleHasManageRelated: singleRender.includes(">Manage Related</button>"),
-    arrayHasManageRelated: arrayRender.includes(">Manage Related</button>"),
-    arrayHasManage: arrayRender.includes(">Manage</button>"),
-    singleHasRelationHint: singleRender.includes("Provide onRelationAction"),
+    singleHasManage: singleRender.includes('data-signifier="manage"'),
+    singleHasManageRelated: singleRender.includes(
+      'data-signifier="manage-related"',
+    ),
+    arrayHasManage: arrayRender.includes('data-signifier="manage"'),
+    arrayHasManageRelated: arrayRender.includes(
+      'data-signifier="manage-related"',
+    ),
   };
 };
 
