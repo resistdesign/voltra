@@ -1,54 +1,207 @@
-# Plan: doc/add-end-to-end-demo-to-site
+# Voltra Demo Site – End‑to‑End Demo Execution Plan (Codex)
 
-## Overview
-We are building a new E2E demo app inside the docs site that exercises the
-Voltra ORM and indexing stack end-to-end. The backend already exposes a
-DynamoDB-backed ORM route map at `/db` via `ROUTE_MAP_WITH_DB`
-(`site/api/routeMap.ts`), using the TypeInfo map generated from
-`site/common/Types.ts` into `site/common/DemoTypeInfoMap.json`. The existing
-`AdvancedDemo` only showcases dynamic form generation from in-browser TypeScript
-parsing; the new demo must instead use the prebuilt TypeInfo map and make real
-API calls to the ORM + indexing routes for CRUD, list, relationships, and
-search (full-text lossy + exact, plus structured queries).
+## 0. Purpose (Non‑Negotiable)
 
-The UI will live in `site/app/src/client/` and be wired into
-`site/app/src/client/App.tsx` as a new route and nav entry. It should
-demonstrate `Person` and `Car` types from `site/common/Types.ts`, and leverage
-`useFormEngine` + `AutoFormView` from `src/app/forms` to render forms. API calls
-should be routed through `TypeInfoORMClient` (`src/app/utils/TypeInfoORMClient.ts`)
-with a service config pointing at the API domain and base path `/db`. We need
-clear flows for: create/read/update/delete/list, relationship create/delete/list,
-and search for full-text (lossy/exact) and structured criteria, plus visible
-error/result feedback for each operation. The plan below breaks this into
-primitive tasks so the work can resume across sessions with context intact.
+This demo is **both proof and reference**.
 
-## Checklist
-- [x] Review demo API entry points and ORM route wiring (`site/api/routeMap.ts`, `site/api/index.ts`, `src/api/ORM/ORMRouteMap.ts`).
-- [x] Review demo type pipeline and TypeInfo map generation (`site/common/Types.ts`, `site/common/DemoTypeInfoMap.ts`, `site/build-demo-types.ts`).
-- [x] Review existing form generation demo and app routing (`site/app/src/client/AdvancedDemo.tsx`, `site/app/src/client/App.tsx`, `src/app/forms/*`, `src/app/utils/TypeInfoORMClient.ts`).
-- [ ] Define E2E demo goals and user flows (CRUD, list, relationships, search: lossy + exact + structured) for `Person` and `Car`.
-  - [ ] List exact user flows to cover (Create, Read by ID, Update, Delete, List, Relationship create/delete/list, Full-text search, Structured search).
-  - [ ] Decide which flows are primary vs secondary UI actions.
-- [ ] Lock relationship strategy (manual relationship create/delete/list via relationship routes).
-- [ ] Decide API client config strategy (base path `/db`, domain selection for local vs prod, auth header handling) and where it lives in `site/app`.
-  - [ ] Document expected API host for local + prod, and how it is chosen in the UI.
-  - [ ] Decide whether the client config is global context, per-demo config, or local state in the demo component.
-- [ ] Define request/response transparency requirements (show payloads for all operations).
-- [ ] Draft UI composition plan for the E2E demo (type picker, list pane, form pane, detail/relationship pane, search controls, action feedback).
-  - [ ] Sketch component breakdown (layout + major panels + shared widgets).
-  - [ ] Define navigation entry (route path, header label, nav link placement).
-  - [ ] Determine how request/response and error states are visualized.
-- [ ] Specify data flow per action (create/read/update/delete/list/relationship ops/full-text + structured search) and how form state syncs with API responses.
-  - [ ] Define how form values map to API payloads for `create`/`update`.
-  - [ ] Define how list results hydrate selection and form values.
-  - [ ] Define relationship payloads for `createRelationship`/`deleteRelationship` and list queries.
-  - [ ] Define search config payloads for full-text (lossy/exact) and structured criteria.
-- [ ] Plan demo data seeding/reset strategy and failure states (empty lists, missing IDs, validation errors, indexing errors).
-  - [ ] Decide on seed dataset shape and whether it is client-generated or API-provided.
-  - [ ] Define "reset" behavior (clear local state only vs delete server data).
-  - [ ] Enumerate error handling behaviors and user messaging.
-- [ ] Identify docs/site navigation updates (new route, nav link, page copy) and any assets needed.
-  - [ ] Decide page copy and explanation text for demo usage.
-  - [ ] Identify any new images or diagrams for the demo page.
-- [ ] Note validation steps (manual smoke run, optional `yarn site:build:app`, `yarn site:build:demo-types`).
-  - [ ] List manual smoke checklist (load demo, create item, list item, search, relationship ops).
+It must demonstrate, using **real Voltra APIs and primitives only**, that the system correctly supports:
+
+* CRUD
+* List + cursor pagination
+* Full‑text search (lossy + exact)
+* Structured search
+* First‑class relationship records
+
+All of this must occur in **one cohesive UI flow**, not as isolated demos.
+
+No demo‑only shortcuts, fake data paths, or internal API reach‑ins are allowed.
+
+---
+
+## 1. Golden Path (Must Be Preserved)
+
+The demo’s core narrative is:
+
+1. Create a **Person**
+2. View Person details
+3. Manage the Person’s `car` relationship
+4. Search for Cars (lossy + exact + structured + cursor paging)
+5. Select an existing Car **or** create a new Car
+6. Establish the relationship (backend enforces ONE)
+7. Return to Person details
+8. Edit the related Car via its real form
+9. Optionally replace or remove the Car relationship (with confirmation)
+
+If this flow is broken, obscured, or bypassed, the demo fails.
+
+---
+
+## 2. Data Model Assumptions (Already True — Do Not Reinterpret)
+
+* `Person` has a **single** relationship field: `car: Car`
+* This is **not** an array
+* Cardinality is enforced by **TypeInfoORMService**, not the UI
+* Relationships are stored as **first‑class relationship records**, not foreign keys
+
+The UI must rely on backend semantics — no UI‑level enforcement hacks.
+
+---
+
+## 3. Relationship Semantics (Locked)
+
+### Creation
+
+* A Person **must exist** before a Car relationship can be created
+* No atomic multi‑entity creation
+* UI orchestrates multiple normal API calls
+
+### Replacement
+
+* If a Person already has a Car and a new Car is selected:
+
+  * UI **must show a confirmation step**
+  * On confirm, perform a normal relationship “set”
+  * Backend replaces existing relationship (ONE semantics)
+
+### Removal
+
+* Removing a Car relationship **requires confirmation**
+* After removal:
+
+  * `Person.car` may be empty
+  * This is a valid persisted state
+
+No relationship validation beyond this is allowed.
+
+---
+
+## 4. Search Requirements (Must Be Used in Real Flow)
+
+Search is not a separate demo page.
+
+During **Car selection**, the UI must expose:
+
+* Lossy full‑text search
+* Exact full‑text search
+* Structured filters
+* Cursor‑based pagination
+
+The relationship workflow itself must exercise indexing.
+
+---
+
+## 5. CRUD Coverage (Explicit)
+
+The demo must visibly and verifiably perform:
+
+* Create Person
+
+* Read Person (details view)
+
+* Update Person
+
+* Delete Person
+
+* Create Car
+
+* Read Car
+
+* Update Car
+
+* Delete Car
+
+No operation may be simulated or skipped.
+
+---
+
+## 6. API Usage Rules (Critical)
+
+* Use **only** public Voltra APIs
+* Use the same packages and routes a real consumer would
+* No direct access to internal services unless already exposed
+* No demo‑specific endpoints
+
+The demo should double as a reference implementation.
+
+---
+
+## 7. Request / Response Transparency
+
+The UI must make it possible to inspect:
+
+* Real request payloads
+* Real responses
+* Errors when they occur
+
+This may be via expandable panels, logs, or debug sections.
+
+Hidden magic is not acceptable.
+
+---
+
+## 8. Styling & UI Constraints (Production‑Adjacent)
+
+Styling rules:
+
+* **Pico CSS is the default**
+* Assume Pico already solves the problem
+* Add styling **only** when layout truly requires it
+
+Allowed styling additions:
+
+* Minimal styled‑components
+* Layout‑only properties:
+
+  * grid / flex
+  * spacing
+  * sizing
+  * responsiveness
+
+Disallowed:
+
+* New design systems
+* Color, typography, shadow, animation tweaks
+* Visual polish for its own sake
+
+Plain and correct beats fancy.
+
+---
+
+## 9. Explicit Non‑Goals (Do Not Add)
+
+* ❌ Atomic multi‑entity create APIs
+* ❌ Relationship validation systems
+* ❌ “Use Person” or domain‑level validation flows
+* ❌ Demo‑only shortcuts
+* ❌ Hardcoded glue logic
+* ❌ Excessive styling
+
+These belong to future phases.
+
+---
+
+## 10. Acceptance Criteria (Release Gate)
+
+The demo is acceptable only if:
+
+* The full golden path works end‑to‑end in prod
+* CRUD, search, and relationships are all exercised
+* Relationship cardinality is enforced by backend
+* Search is used *inside* relationship management
+* UI remains Pico‑first and minimal
+* Code reads as a reference implementation
+
+If any of these fail, the demo is incomplete.
+
+---
+
+## 11. Codex Execution Guidance
+
+When in doubt:
+
+1. Re‑read Section 0 and Section 1
+2. Prefer correctness over polish
+3. Prefer backend semantics over UI tricks
+4. Prefer boring code over clever code
+
+This demo exists to **prove Voltra’s intent**, not to impress with UI flair.
