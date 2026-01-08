@@ -205,6 +205,15 @@ export const EndToEndDemo: FC = () => {
     async (cursor?: string) => {
       const config: ListItemsConfig = {
         itemsPerPage: personItemsPerPage,
+        criteria: {
+          logicalOperator: LogicalOperators.AND,
+          fieldCriteria: [
+            {
+              fieldName: "id",
+              operator: ComparisonOperators.IS_NOT_EMPTY,
+            },
+          ],
+        },
       };
 
       if (cursor) {
@@ -440,20 +449,32 @@ export const EndToEndDemo: FC = () => {
           query: trimmedQuery,
           mode: carSearchMode,
         };
-      }
+      } else {
+        const activeFilters = filters.filter((filter) => filter.value.trim());
 
-      const activeFilters = filters.filter((filter) => filter.value.trim());
-
-      if (activeFilters.length > 0) {
-        config.criteria = {
-          logicalOperator: filtersOperator,
-          fieldCriteria: activeFilters.map((filter) => ({
-            fieldName: filter.fieldName,
-            operator: filter.operator,
-            value:
-              filter.fieldName === "year" ? Number(filter.value) : filter.value,
-          })),
-        };
+        if (activeFilters.length > 0) {
+          config.criteria = {
+            logicalOperator: filtersOperator,
+            fieldCriteria: activeFilters.map((filter) => ({
+              fieldName: filter.fieldName,
+              operator: filter.operator,
+              value:
+                filter.fieldName === "year"
+                  ? Number(filter.value)
+                  : filter.value,
+            })),
+          };
+        } else {
+          config.criteria = {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              {
+                fieldName: "id",
+                operator: ComparisonOperators.IS_NOT_EMPTY,
+              },
+            ],
+          };
+        }
       }
 
       return config;
