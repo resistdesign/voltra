@@ -48,52 +48,25 @@ export const indexingTableEnvVars = {
   },
 } as const;
 
-const readRequiredEnv = (
-  env: NodeJS.ProcessEnv,
-  key: string,
-): string => {
-  const value = env[key];
-  if (!value) {
-    throw new Error(`Missing required env var: ${key}`);
-  }
-  return value;
-};
-
 export const readIndexingTablesFromEnv = (
   env: NodeJS.ProcessEnv,
 ): IndexingTableNames => ({
   fullText: {
-    lossyPostings: readRequiredEnv(
-      env,
-      indexingTableEnvVars.fullText.lossyPostings,
-    ),
-    exactPostings: readRequiredEnv(
-      env,
-      indexingTableEnvVars.fullText.exactPostings,
-    ),
-    docMirror: readRequiredEnv(
-      env,
-      indexingTableEnvVars.fullText.docMirror,
-    ),
-    tokenStats: readRequiredEnv(
-      env,
-      indexingTableEnvVars.fullText.tokenStats,
-    ),
-    docTokens: readRequiredEnv(
-      env,
-      indexingTableEnvVars.fullText.docTokens,
-    ),
-    docTokenPositions: readRequiredEnv(
-      env,
-      indexingTableEnvVars.fullText.docTokenPositions,
-    ),
+    lossyPostings: env[indexingTableEnvVars.fullText.lossyPostings] as string,
+    exactPostings: env[indexingTableEnvVars.fullText.exactPostings] as string,
+    docMirror: env[indexingTableEnvVars.fullText.docMirror] as string,
+    tokenStats: env[indexingTableEnvVars.fullText.tokenStats] as string,
+    docTokens: env[indexingTableEnvVars.fullText.docTokens] as string,
+    docTokenPositions: env[
+      indexingTableEnvVars.fullText.docTokenPositions
+    ] as string,
   },
   structured: {
-    termIndex: readRequiredEnv(env, indexingTableEnvVars.structured.termIndex),
-    rangeIndex: readRequiredEnv(env, indexingTableEnvVars.structured.rangeIndex),
-    docFields: readRequiredEnv(env, indexingTableEnvVars.structured.docFields),
+    termIndex: env[indexingTableEnvVars.structured.termIndex] as string,
+    rangeIndex: env[indexingTableEnvVars.structured.rangeIndex] as string,
+    docFields: env[indexingTableEnvVars.structured.docFields] as string,
   },
   relations: {
-    relationEdges: readRequiredEnv(env, indexingTableEnvVars.relations.relationEdges),
+    relationEdges: env[indexingTableEnvVars.relations.relationEdges] as string,
   },
 });
