@@ -22,6 +22,13 @@ export const SEARCH_VALIDATION_ERRORS = {
   INVALID_OPERATOR: "INVALID_OPERATOR",
 };
 
+const OPERATORS_WITHOUT_VALUES = new Set<ComparisonOperators>([
+  ComparisonOperators.EXISTS,
+  ComparisonOperators.NOT_EXISTS,
+  ComparisonOperators.IS_EMPTY,
+  ComparisonOperators.IS_NOT_EMPTY,
+]);
+
 /**
  * Validate search fields against type info fields.
  *
@@ -79,6 +86,10 @@ export const validateSearchFields = (
               SEARCH_VALIDATION_ERRORS.RELATIONAL_FIELDS_NOT_ALLOWED,
             ];
           } else {
+            if (operator && OPERATORS_WITHOUT_VALUES.has(operator)) {
+              continue;
+            }
+
             const targetValueOptions = Array.isArray(valueOptions)
               ? valueOptions
               : [value];

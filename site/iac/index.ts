@@ -228,7 +228,7 @@ const IaC = new SimpleCFT({
         Variables: {
           NODE_OPTIONS: "--enable-source-maps",
           CLIENT_ORIGIN: `https://${DOMAINS.APP}`,
-          DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:1234`,
+          DEV_CLIENT_ORIGIN: `https://${DOMAINS.APP_LOCAL}:4321`,
           S3_API_BUCKET_NAME: {
             Ref: IDS.API.FILE_STORAGE,
           },

@@ -1,7 +1,38 @@
 let LAST_HAST_ID: number = 0;
 
-const getBase64EncodedString = (input: string): string =>
-  Buffer.from(input).toString("base64");
+const textEncoder: TextEncoder = new TextEncoder();
+
+const bytesToBinaryString = (bytes: Uint8Array): string => {
+  let out: string = "";
+
+  for (let i = 0; i < bytes.length; i++) {
+    out += String.fromCharCode(bytes[i]!);
+  }
+
+  return out;
+};
+
+const getBase64EncodedString = (input: string): string => {
+  const bytes: Uint8Array = textEncoder.encode(input);
+
+  let base64: string = "";
+
+  if (typeof globalThis.btoa === "function") {
+    const binary: string = bytesToBinaryString(bytes);
+
+    base64 = globalThis.btoa(binary);
+  } else {
+    const anyGlobal: any = globalThis as any;
+
+    if (typeof anyGlobal.Buffer === "function") {
+      base64 = anyGlobal.Buffer.from(bytes).toString("base64");
+    } else {
+      throw new Error("No base64 encoder available (need btoa or Buffer).");
+    }
+  }
+
+  return base64;
+};
 
 /**
  * Get a simple id, unique to the current run session.

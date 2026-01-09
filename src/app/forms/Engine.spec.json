@@ -164,7 +164,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "value": "draft"
+        "status": "draft",
+        "permitted": true,
+        "count": 29.86
       }
     },
     {
