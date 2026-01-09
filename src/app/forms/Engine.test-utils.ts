@@ -434,13 +434,33 @@ export const runDefaultValueConstraintScenario = () => {
               },
             },
           },
+          permitted: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              constraints: {
+                defaultValue: "true",
+              },
+            },
+          },
+          count: {
+            type: "number",
+            array: false,
+            readonly: false,
+            optional: true,
+            tags: {
+              constraints: {
+                defaultValue: "29.86",
+              },
+            },
+          },
         },
       },
     );
 
-    snapshot = {
-      value: controller.values.status ?? null,
-    };
+    snapshot = controller.values;
 
     return null;
   };

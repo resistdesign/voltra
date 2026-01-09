@@ -63,7 +63,15 @@ const buildInitialValues = (
     const defaultValue = field.tags?.constraints?.defaultValue;
 
     if (defaultValue !== undefined) {
-      values[key] = defaultValue;
+      let parsedDefaultValue: FormValue | undefined = defaultValue;
+
+      try {
+        parsedDefaultValue = JSON.parse(defaultValue);
+      } catch (error) {
+        // Ignore.
+      }
+
+      values[key] = parsedDefaultValue;
       continue;
     }
 
