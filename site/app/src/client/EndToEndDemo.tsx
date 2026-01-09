@@ -205,15 +205,6 @@ export const EndToEndDemo: FC = () => {
     async (cursor?: string) => {
       const config: ListItemsConfig = {
         itemsPerPage: personItemsPerPage,
-        criteria: {
-          logicalOperator: LogicalOperators.AND,
-          fieldCriteria: [
-            {
-              fieldName: "id",
-              operator: ComparisonOperators.IS_NOT_EMPTY,
-            },
-          ],
-        },
       };
 
       if (cursor) {
@@ -463,16 +454,6 @@ export const EndToEndDemo: FC = () => {
                   ? Number(filter.value)
                   : filter.value,
             })),
-          };
-        } else {
-          config.criteria = {
-            logicalOperator: LogicalOperators.AND,
-            fieldCriteria: [
-              {
-                fieldName: "id",
-                operator: ComparisonOperators.IS_NOT_EMPTY,
-              },
-            ],
           };
         }
       }
