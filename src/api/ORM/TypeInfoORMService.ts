@@ -1725,163 +1725,162 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const hasCriteria = !!criteria && fieldCriteria.length > 0;
       const hasText = !!text;
 
+      const shouldUseIndexing = !!hasCriteria || !!hasText;
+
       if (hasStructured || hasFullText) {
-        if (!hasCriteria && !hasText) {
-          throw {
-            message: TypeInfoORMServiceError.INDEXING_REQUIRES_CRITERIA,
-            typeName,
-          };
-        }
-
-        if (hasCriteria && hasText) {
-          throw {
-            message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
-            typeName,
-          };
-        }
-
-        if (hasCriteria && !hasStructured) {
-          throw {
-            message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-            typeName,
-            backend: "structured.reader",
-          };
-        }
-
-        if (hasText && !hasFullText) {
-          throw {
-            message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-            typeName,
-            backend: "fullText",
-          };
-        }
-
-        let docIds: Array<string | number> = [];
-        let nextCursor: string | undefined = undefined;
-
-        if (hasText) {
-          const indexField = this.resolveFullTextIndexField(
-            typeName,
-            text?.indexField,
-          );
-
-          if (!indexField) {
-            throw {
-              message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-              typeName,
-            };
-          }
-
-          const fullTextBackend = indexing?.fullText?.backend;
-          const searchResult =
-            text?.mode === "exact"
-              ? await searchExact({
-                  backend: fullTextBackend,
-                  query: text.query,
-                  indexField,
-                  limit: itemsPerPage,
-                  cursor,
-                  limits: indexing?.limits,
-                })
-              : await searchLossy({
-                  backend: fullTextBackend,
-                  query: text?.query ?? "",
-                  indexField,
-                  limit: itemsPerPage,
-                  cursor,
-                  limits: indexing?.limits,
-                });
-
-          docIds = searchResult.docIds;
-          nextCursor = searchResult.nextCursor;
+        if (!shouldUseIndexing) {
+          // Fall back to driver list when no criteria/text are supplied.
         } else {
-          const where = criteriaToStructuredWhere(criteria);
-
-          if (!where) {
+          if (hasCriteria && hasText) {
             throw {
-              message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+              message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
               typeName,
             };
           }
 
-          const mappedWhere = this.applyStructuredFieldMap(
-            where,
-            indexing?.structured?.fieldMapByType?.[typeName],
-          );
-          const structuredReader = indexing?.structured?.reader;
-          const page = await searchStructured(
-            structuredReader as StructuredSearchDependencies,
-            mappedWhere,
-            {
-              limit: itemsPerPage,
-              cursor,
-            },
-          );
+          if (hasCriteria && !hasStructured) {
+            throw {
+              message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
+              typeName,
+              backend: "structured.reader",
+            };
+          }
 
-          docIds = page.candidateIds;
-          nextCursor = page.cursor;
-        }
+          if (hasText && !hasFullText) {
+            throw {
+              message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
+              typeName,
+              backend: "fullText",
+            };
+          }
 
-        const driver = this.getDriverInternal(typeName);
-        const items: Partial<TypeInfoDataItem>[] = [];
-        const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
+          let docIds: Array<string | number> = [];
+          let nextCursor: string | undefined = undefined;
 
-        for (const docId of docIds) {
-          try {
-            const item = await driver.readItem(
-              docId as any,
-              useDAC ? undefined : cleanSelectedFields,
+          if (hasText) {
+            const indexField = this.resolveFullTextIndexField(
+              typeName,
+              text?.indexField,
             );
 
-            if (useDAC) {
-              const {
-                allowed: readAllowed,
-                denied: readDenied,
-                fieldsResources = {},
-              } = await this.getItemDACValidation(
-                item,
+            if (!indexField) {
+              throw {
+                message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
                 typeName,
-                TypeOperation.READ,
-              );
-              const listDenied = readDenied || !readAllowed;
+              };
+            }
 
-              if (listDenied) {
-                continue;
+            const fullTextBackend = indexing?.fullText?.backend;
+            const searchResult =
+              text?.mode === "exact"
+                ? await searchExact({
+                    backend: fullTextBackend,
+                    query: text.query,
+                    indexField,
+                    limit: itemsPerPage,
+                    cursor,
+                    limits: indexing?.limits,
+                  })
+                : await searchLossy({
+                    backend: fullTextBackend,
+                    query: text?.query ?? "",
+                    indexField,
+                    limit: itemsPerPage,
+                    cursor,
+                    limits: indexing?.limits,
+                  });
+
+            docIds = searchResult.docIds;
+            nextCursor = searchResult.nextCursor;
+          } else {
+            const where = criteriaToStructuredWhere(criteria);
+
+            if (!where) {
+              throw {
+                message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+                typeName,
+              };
+            }
+
+            const mappedWhere = this.applyStructuredFieldMap(
+              where,
+              indexing?.structured?.fieldMapByType?.[typeName],
+            );
+            const structuredReader = indexing?.structured?.reader;
+            const page = await searchStructured(
+              structuredReader as StructuredSearchDependencies,
+              mappedWhere,
+              {
+                limit: itemsPerPage,
+                cursor,
+              },
+            );
+
+            docIds = page.candidateIds;
+            nextCursor = page.cursor;
+          }
+
+          const driver = this.getDriverInternal(typeName);
+          const items: Partial<TypeInfoDataItem>[] = [];
+          const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
+
+          for (const docId of docIds) {
+            try {
+              const item = await driver.readItem(
+                docId as any,
+                useDAC ? undefined : cleanSelectedFields,
+              );
+
+              if (useDAC) {
+                const {
+                  allowed: readAllowed,
+                  denied: readDenied,
+                  fieldsResources = {},
+                } = await this.getItemDACValidation(
+                  item,
+                  typeName,
+                  TypeOperation.READ,
+                );
+                const listDenied = readDenied || !readAllowed;
+
+                if (listDenied) {
+                  continue;
+                }
+
+                fieldsResourcesCache.push(fieldsResources);
               }
 
-              fieldsResourcesCache.push(fieldsResources);
+              items.push(item);
+            } catch (error: any) {
+              if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+                continue;
+              }
+              throw error;
             }
-
-            items.push(item);
-          } catch (error: any) {
-            if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
-              continue;
-            }
-            throw error;
           }
-        }
 
-        const cleanedItems = items.map((item, index) => {
-          const fieldsResources = useDAC
-            ? fieldsResourcesCache[index]
-            : undefined;
+          const cleanedItems = items.map((item, index) => {
+            const fieldsResources = useDAC
+              ? fieldsResourcesCache[index]
+              : undefined;
 
-          return this.getCleanItem(
-            typeName,
-            item,
-            fieldsResources,
-            cleanSelectedFields,
+            return this.getCleanItem(
+              typeName,
+              item,
+              fieldsResources,
+              cleanSelectedFields,
+            );
+          });
+          const sortedItems = getSortedItems(
+            sortFields,
+            cleanedItems as TypeInfoDataItem[],
           );
-        });
-        const sortedItems = getSortedItems(
-          sortFields,
-          cleanedItems as TypeInfoDataItem[],
-        );
 
-        return {
-          items: sortedItems as Partial<TypeInfoDataItem>[],
-          cursor: nextCursor,
-        };
+          return {
+            items: sortedItems as Partial<TypeInfoDataItem>[],
+            cursor: nextCursor,
+          };
+        }
       }
 
       const driver = this.getDriverInternal(typeName);
