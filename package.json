@@ -67,7 +67,7 @@
     "site:build:api": "node ./site/build-api.mjs",
     "site:build:iac": "tsx ./site/iac/index.ts",
     "site:build:demo-types": "tsx ./site/build-demo-types.ts",
-    "start": "astro dev --host docs-local.demo.voltra.app --https",
+    "start": "astro dev --host docs-local.voltra.app --https",
     "finalize-site": "yarn doc && yarn doc-to-site && cp CNAME site-dist/app/",
     "iac:types:gen": "tsx ./src/iac/types/generate.ts",
     "src:build:api-orm-driver-config-types": "tsx ./scripts/prebuild-api-orm-driver-config-types.ts"
