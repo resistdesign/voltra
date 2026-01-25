@@ -56,8 +56,10 @@
   ],
   "scripts": {
     "build": "tsup && yarn prep-dist",
-    "test": "tsx src/common/Testing/CLI.ts \"./src/**/*.spec.json\"",
-    "test:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\"",
+    "test": "tsx src/common/Testing/CLI.ts \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
+    "test:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
+    "test:dbx:med": "tsx src/common/Testing/CLI.ts \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",
+    "test:dbx:med:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:consumer": "node ./scripts/consumer-smoke.mjs",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
