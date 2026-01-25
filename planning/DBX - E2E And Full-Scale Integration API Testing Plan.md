@@ -257,5 +257,5 @@ This work is done when:
 - [x] Phase 2: Validation scenario spec
 - [x] Phase 2: Aggregates/reports scenario spec
 - [x] Phase 2: Scale/perf scenario spec
-- [ ] Phase 3: CI wiring for SMALL + optional extended job
+- [x] Phase 3: CI wiring for SMALL + optional extended job
 - [ ] Phase 4: How-to-run doc

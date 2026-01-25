@@ -29,7 +29,8 @@ type StatusCounts = Record<Post["status"], number>;
 
 type TimingBucket = "fast" | "slow";
 
-const DATASET_SIZE = 50;
+const DATASET_SIZE_SMALL = 50;
+const DATASET_SIZE_MED = 200;
 const ITEMS_PER_PAGE = 20;
 const TIMING_BUCKET_MAX_MS = 10000;
 
@@ -118,12 +119,43 @@ const sampleEdges = (ids: string[], sampleSize = 5) => ({
   last: ids.slice(-sampleSize),
 });
 
-/**
- * Run the DBX scale/perf E2E scenario against the in-memory router/runtime.
- */
-export const runDbxScaleScenario = async () => {
+const listAllPages = async (
+  runtime: ReturnType<typeof buildDbxRuntime>,
+  listConfig: { itemsPerPage: number; sortFields: Array<{ field: string }> },
+  expectedTotalItems: number,
+) => {
+  const pages: Array<ListItemsResults<Post>> = [];
+  const maxPages = Math.ceil(expectedTotalItems / listConfig.itemsPerPage) + 1;
+  let cursor: string | undefined;
+
+  for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
+    const response = await runDbxRequest<ListItemsResults<Post>>(runtime, {
+      method: "POST",
+      path: "list",
+      args: [
+        "Post",
+        {
+          ...listConfig,
+          cursor,
+        },
+      ],
+    });
+
+    const page = response.parsedBody as ListItemsResults<Post>;
+    pages.push(page);
+    cursor = page.cursor;
+
+    if (!cursor) {
+      break;
+    }
+  }
+
+  return pages;
+};
+
+const runDbxScaleScenarioWithSize = async (datasetSize: number) => {
   const runtime = buildDbxRuntime();
-  const posts = buildScalePosts(DATASET_SIZE);
+  const posts = buildScalePosts(datasetSize);
   const statusCounts = buildStatusCounts(posts);
   const createdIds: string[] = [];
 
@@ -144,40 +176,8 @@ export const runDbxScaleScenario = async () => {
   };
 
   const listStart = Date.now();
-  const listPage1 = await runDbxRequest<ListItemsResults<Post>>(runtime, {
-    method: "POST",
-    path: "list",
-    args: ["Post", listConfig],
-  });
-  const listPage2 = await runDbxRequest<ListItemsResults<Post>>(runtime, {
-    method: "POST",
-    path: "list",
-    args: [
-      "Post",
-      {
-        ...listConfig,
-        cursor: listPage1.parsedBody?.cursor,
-      },
-    ],
-  });
-  const listPage3 = await runDbxRequest<ListItemsResults<Post>>(runtime, {
-    method: "POST",
-    path: "list",
-    args: [
-      "Post",
-      {
-        ...listConfig,
-        cursor: listPage2.parsedBody?.cursor,
-      },
-    ],
-  });
+  const pages = await listAllPages(runtime, listConfig, datasetSize);
   const listBucket = buildTimingBucket(Date.now() - listStart);
-
-  const pages = [
-    listPage1.parsedBody as ListItemsResults<Post>,
-    listPage2.parsedBody as ListItemsResults<Post>,
-    listPage3.parsedBody as ListItemsResults<Post>,
-  ];
 
   const paging = assertDbxPagingInvariants(pages, {
     itemsPerPage: ITEMS_PER_PAGE,
@@ -193,7 +193,7 @@ export const runDbxScaleScenario = async () => {
       args: [
         "Post",
         {
-          itemsPerPage: 100,
+          itemsPerPage: Math.max(datasetSize, 100),
           sortFields: [{ field: "score" }],
           criteria: buildPublishedCriteria(),
         },
@@ -215,7 +215,7 @@ export const runDbxScaleScenario = async () => {
 
   return {
     dataset: {
-      size: DATASET_SIZE,
+      size: datasetSize,
       statusCounts,
     },
     createSummary: {
@@ -253,3 +253,15 @@ export const runDbxScaleScenario = async () => {
     },
   };
 };
+
+/**
+ * Run the DBX scale/perf E2E scenario against the in-memory router/runtime.
+ */
+export const runDbxScaleScenario = async () =>
+  runDbxScaleScenarioWithSize(DATASET_SIZE_SMALL);
+
+/**
+ * Run the DBX scale/perf E2E scenario with a medium dataset.
+ */
+export const runDbxScaleScenarioMed = async () =>
+  runDbxScaleScenarioWithSize(DATASET_SIZE_MED);
