@@ -140,6 +140,7 @@ Expected outputs (asserted):
 **DBX_SEARCH_FULLTEXT_E2E**
 - Search within long text bodies
 - Verify ranking/order if your engine defines it; otherwise verify membership + stable ordering
+  - Coverage includes default limits vs expanded limits (maxTokens) to validate early cutoffs.
 
 **DBX_SEARCH_STRUCTURED_E2E**
 - Equality filters
