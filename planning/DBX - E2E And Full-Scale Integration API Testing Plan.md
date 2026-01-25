@@ -146,6 +146,8 @@ Expected outputs (asserted):
 - Equality filters
 - Range queries
 - Combined filters
+  - Coverage note: include AND/OR blends, array CONTAINS/NOT_CONTAINS, EXISTS/IS_EMPTY, and IN/NOT_IN for breadth.
+  - Include field-map behavior if structured field mapping is enabled for any type.
 
 Expected outputs:
 - query → result IDs (and any score if applicable)
@@ -157,6 +159,7 @@ Expected outputs:
 - List relationships by item (paging)
 - Resolve to actual related items
 - Delete a target item; ensure relationship resolution is graceful (explicit missing markers)
+  - Coverage note: include dangling targets, reverse-direction queries, and mixed relationship types to mirror real usage.
 
 Expected outputs:
 - relationship edges created
@@ -170,6 +173,7 @@ Expected outputs:
   - consistent shape
   - actionable messages
   - consistent across endpoints
+  - Coverage note: include missing required fields, wrong types, readonly fields, and multi-field error maps.
 
 Expected outputs:
 - error codes + messages
@@ -183,6 +187,7 @@ Expected outputs:
   - poll/track status
   - cancel job
   - re-run and fetch results
+  - Coverage note: include at least 2 aggregate shapes (count + sum or group-by) and ensure job lifecycle returns stable states.
 
 Implementation note:
 - If the production code doesn’t yet expose a job system, codify this scenario as a failing/expected TODO (or implement a minimal in-memory job runner behind the same interface the cloud version will use).
@@ -195,6 +200,7 @@ Expected outputs:
 **DBX_SCALE_E2E**
 - Run CRUD + a representative search query set on MED/LARGE
 - Capture timings (coarse) and key counts
+  - Coverage note: even without huge datasets, capture limit-hit signals and timing buckets to flag unexpected regressions.
 
 Rules:
 - Don’t assert absolute milliseconds in CI.
