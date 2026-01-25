@@ -1,0 +1,35 @@
+{
+  "file": "./DBX_SEARCH_STRUCTURED_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxStructuredSearchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdPostIds": ["post-1", "post-2", "post-3", "post-4"],
+        "publishedIds": ["post-2", "post-3"],
+        "alphaTagIds": ["post-1", "post-3"],
+        "scoreBetweenIds": ["post-2", "post-3"],
+        "statusInIds": ["post-1", "post-4"],
+        "publishedAlphaIds": ["post-3"],
+        "draftOrHighScoreIds": ["post-1", "post-4"],
+        "publishedPage1Ids": ["post-2"],
+        "publishedPage2Ids": ["post-3"],
+        "denseAndPublishedNewsIds": ["post-2"],
+        "denseAndPublishedAlphaIds": ["post-3"],
+        "denseAndContradictionIds": [],
+        "denseOrWideIds": ["post-1", "post-2", "post-3", "post-4"],
+        "denseOrDeltaOnlyIds": ["post-4"],
+        "denseAndWithInIds": ["post-2"],
+        "denseAndWithLikeIds": [],
+        "denseOrAlphaGammaIds": ["post-1", "post-3"],
+        "denseAndAlphaDraftIds": ["post-1"],
+        "denseAndBetaExactIds": ["post-2"],
+        "updateResult": true,
+        "afterUpdatePublishedIds": ["post-1", "post-2", "post-3"],
+        "deleteResult": true,
+        "afterDeletePublishedIds": ["post-1", "post-3"]
+      }
+    }
+  ]
+}
