@@ -1,0 +1,63 @@
+{
+  "file": "./DBX_AGGREGATES_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxAggregatesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdPostIds": [
+          "post-1",
+          "post-2",
+          "post-3",
+          "post-4",
+          "post-5",
+          "post-6"
+        ],
+        "orderedIds": [
+          "post-1",
+          "post-2",
+          "post-3",
+          "post-4",
+          "post-5",
+          "post-6"
+        ],
+        "realtimeAggregates": {
+          "totalCount": 6,
+          "statusCounts": {
+            "draft": 2,
+            "published": 3,
+            "archived": 1
+          },
+          "scoreSum": 180,
+          "scoreByStatus": {
+            "draft": 60,
+            "published": 85,
+            "archived": 35
+          },
+          "averageScore": 30,
+          "averageScoreByStatus": {
+            "draft": 30,
+            "published": 28.33,
+            "archived": 35
+          }
+        },
+        "reportJob": {
+          "supported": false,
+          "reason": "REPORT_JOB_API_NOT_IMPLEMENTED",
+          "requested": {
+            "reportType": "score-summary",
+            "groupBy": "status"
+          },
+          "lifecycle": [
+            { "action": "start", "status": "not_supported" },
+            { "action": "status", "status": "not_supported" },
+            { "action": "cancel", "status": "not_supported" },
+            { "action": "restart", "status": "not_supported" },
+            { "action": "fetch", "status": "not_supported" }
+          ]
+        }
+      }
+    }
+  ]
+}
