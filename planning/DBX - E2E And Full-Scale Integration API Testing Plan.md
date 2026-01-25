@@ -254,7 +254,7 @@ This work is done when:
 - [x] Phase 2: Full-text scenario spec
 - [x] Phase 2: Structured search scenario spec (added 10 stress cases with 5-10 criteria)
 - [x] Phase 2: Relationships scenario spec
-- [ ] Phase 2: Validation scenario spec
+- [x] Phase 2: Validation scenario spec
 - [ ] Phase 2: Aggregates/reports scenario spec
 - [ ] Phase 2: Scale/perf scenario spec
 - [ ] Phase 3: CI wiring for SMALL + optional extended job

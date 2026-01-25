@@ -1,0 +1,84 @@
+{
+  "file": "./DBX_VALIDATION_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "invalidFieldCreate": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "unknownField": ["INVALID_FIELD"]
+          }
+        },
+        "invalidTypeCreate": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "score": ["NOT_A_NUMBER"],
+            "status": ["NOT_A_STRING"],
+            "createdAt": ["NOT_A_STRING"]
+          }
+        },
+        "invalidRelationshipAuthorCreate": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "\"posts\"/\"0\"": ["RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED"]
+          }
+        },
+        "invalidRelationshipPostCreate": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "author": ["RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED"]
+          }
+        },
+        "invalidUpdateMissingId": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "NO_PRIMARY_FIELD_VALUE_SUPPLIED",
+          "errorMap": {}
+        },
+        "invalidUpdateUnknownField": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "nope": ["INVALID_FIELD"]
+          }
+        },
+        "invalidUpdateRelationshipField": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "author": ["RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED"]
+          }
+        },
+        "invalidUpdateTypeMismatch": {
+          "statusCode": 500,
+          "status": "Internal Server Error",
+          "error": "INVALID_TYPE",
+          "errorMap": {
+            "score": ["NOT_A_NUMBER"]
+          }
+        },
+        "expectedErrors": {
+          "invalidField": "INVALID_FIELD",
+          "invalidType": "INVALID_TYPE",
+          "notANumber": "NOT_A_NUMBER",
+          "notAString": "NOT_A_STRING",
+          "relationshipExcluded": "RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED",
+          "missingPrimaryField": "NO_PRIMARY_FIELD_VALUE_SUPPLIED"
+        }
+      }
+    }
+  ]
+}
