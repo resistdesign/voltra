@@ -280,7 +280,12 @@ const resolveFieldValue = (
   }
 
   if (field.possibleValues?.length) {
-    return rng.pick(field.possibleValues);
+    const scalarValues = field.possibleValues.filter(
+      (value): value is string | number | boolean => value !== null,
+    );
+    if (scalarValues.length) {
+      return rng.pick(scalarValues);
+    }
   }
 
   if (field.type === "boolean") {
