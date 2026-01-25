@@ -57,22 +57,28 @@
 - Treat the **user prompt** as the authoritative scope for this run; do not down-scope without explicit user approval.
 - Treat the `planning/` directory as the authoritative persisted work state once a plan exists. The active plan is the
   file directly under `planning/` (not inside `planning/complete/`).
+
 - Work in **phases**:
   - At the start of a run, identify the next achievable group of checklist items (a “phase”) from the current plan.
+  - Phases are **sequential by default** and form a single ordered queue.
+  - Do NOT treat later phases as alternatives unless the plan explicitly marks them as optional or branching.
   - A phase should be sized to complete cleanly in the current run without guesswork or scope changes.
   - If a phase is too large or contains uncertainty, split it and proceed with the smallest clearly-achievable subset.
+
 - Default to **forward progress**:
-  - Plan order is mandatory:
+  - **Plan order is mandatory.**
   - Execute checklist items strictly in plan order whenever possible.
   - Do NOT present alternative next steps or choices when the next plan item is clear.
-  - State the next planned action directly; only ask or offer options when the plan is ambiguous, blocked, or explicitly
-    requests a decision.
-  - If there is a clear next unchecked `[ ]` item, proceed from plan order without asking which item to start.
-  - Only ask a question when the next item is ambiguous, blocked, or requires a decision not present in the plan/prompt.
+  - Do NOT ask whether to continue when unchecked plan items remain.
+  - State the next planned action directly.
+  - Only ask or offer options when the plan is ambiguous, blocked, or explicitly requests a decision.
+
 - When the user says "start the next task," proceed immediately using the current plan order; keep communication brief
   while remaining thorough.
+
 - Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete
-  in this run (the current phase).
+  in this run (the current phase). This is a declaration of intent, not a choice list.
+
 - Maintain a live checklist while working; update it as each item is completed so progress is visible and verifiable.
 - Only mark an item `[x]` when it is fully complete (all required edits done and, when applicable, tests or verification
   steps run).
@@ -80,6 +86,7 @@
   completion of the whole area.
 - When all items in a plan are complete **and the user agrees the work is finished**, move the plan file to
   `planning/complete/` to mark it as closed.
+
 - For checklist-driven tasks, always update the relevant planning document(s) in the same response before declaring
   completion.
 - Keep repo-wide rules in this file, and put effort-specific guidance in the relevant planning document.
