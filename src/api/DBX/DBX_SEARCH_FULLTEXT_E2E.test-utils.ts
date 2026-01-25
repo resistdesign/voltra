@@ -48,7 +48,7 @@ const buildDbxRuntime = (options?: { maxTokens?: number }) => {
 const buildPosts = (): Array<Omit<Post, "id">> => [
   {
     title: "Sentences",
-    body: "Quick brown-fox jumps over 13 lazy dogs.",
+    body: "Quick brown-fox jumps over 13 lazy dogs today.",
     status: "published",
     score: 10,
     createdAt: "2024-04-01T00:00:00.000Z",
@@ -100,6 +100,60 @@ const buildPosts = (): Array<Omit<Post, "id">> => [
     tags: ["release"],
     authorId: "author-4",
   },
+  {
+    title: "Aurora",
+    body: "Aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars.",
+    status: "published",
+    score: 70,
+    createdAt: "2024-04-07T00:00:00.000Z",
+    tags: ["aurora"],
+    authorId: "author-5",
+  },
+  {
+    title: "Stopwords",
+    body: "the the the quick brown fox.",
+    status: "draft",
+    score: 80,
+    createdAt: "2024-04-08T00:00:00.000Z",
+    tags: ["stopwords"],
+    authorId: "author-6",
+  },
+  {
+    title: "Case",
+    body: "MiXeD CaSe Tokens Keep Showing Up.",
+    status: "published",
+    score: 90,
+    createdAt: "2024-04-09T00:00:00.000Z",
+    tags: ["case"],
+    authorId: "author-6",
+  },
+  {
+    title: "Punctuation",
+    body: "edge...case!!! punctuation--heavy?? yes.",
+    status: "archived",
+    score: 100,
+    createdAt: "2024-04-10T00:00:00.000Z",
+    tags: ["punctuation"],
+    authorId: "author-7",
+  },
+  {
+    title: "Emoji",
+    body: "Data 🚀 rocket ships launch; emoji should not break tokens.",
+    status: "published",
+    score: 110,
+    createdAt: "2024-04-11T00:00:00.000Z",
+    tags: ["emoji"],
+    authorId: "author-8",
+  },
+  {
+    title: "Quotes",
+    body: "\"Quoted phrase\" appears with quotes and ‘smart’ apostrophes.",
+    status: "draft",
+    score: 120,
+    createdAt: "2024-04-12T00:00:00.000Z",
+    tags: ["quotes"],
+    authorId: "author-9",
+  },
 ];
 
 const runFullTextSearch = async (
@@ -133,7 +187,8 @@ const runFullTextSearch = async (
  */
 export const runDbxFullTextSearchScenario = async () => {
   const runtime = buildDbxRuntime();
-  const runtimeWithExpandedLimits = buildDbxRuntime({ maxTokens: 12 });
+  const runtimeWithMidLimits = buildDbxRuntime({ maxTokens: 9 });
+  const runtimeWithHighLimits = buildDbxRuntime({ maxTokens: 20 });
   const postIds: string[] = [];
 
   for (const post of buildPosts()) {
@@ -146,7 +201,15 @@ export const runDbxFullTextSearchScenario = async () => {
   }
 
   for (const post of buildPosts()) {
-    await runDbxRequest<string>(runtimeWithExpandedLimits, {
+    await runDbxRequest<string>(runtimeWithMidLimits, {
+      method: "POST",
+      path: "create",
+      args: ["Post", post],
+    });
+  }
+
+  for (const post of buildPosts()) {
+    await runDbxRequest<string>(runtimeWithHighLimits, {
       method: "POST",
       path: "create",
       args: ["Post", post],
@@ -158,20 +221,55 @@ export const runDbxFullTextSearchScenario = async () => {
     "exact",
     "quick brown fox jumps over",
   );
-  const exactSentenceLongDefault = await runFullTextSearch(
+  const exactSentenceNineDefault = await runFullTextSearch(
     runtime,
     "exact",
-    "quick brown fox jumps over 13 lazy dogs",
+    "quick brown fox jumps over 13 lazy dogs today",
   );
-  const exactSentenceLongExpanded = await runFullTextSearch(
-    runtimeWithExpandedLimits,
+  const exactSentenceNineMid = await runFullTextSearch(
+    runtimeWithMidLimits,
     "exact",
-    "quick brown fox jumps over 13 lazy dogs",
+    "quick brown fox jumps over 13 lazy dogs today",
+  );
+  const exactSentenceNineHigh = await runFullTextSearch(
+    runtimeWithHighLimits,
+    "exact",
+    "quick brown fox jumps over 13 lazy dogs today",
+  );
+  const exactLongDefault = await runFullTextSearch(
+    runtime,
+    "exact",
+    "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
+  );
+  const exactLongMid = await runFullTextSearch(
+    runtimeWithMidLimits,
+    "exact",
+    "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
+  );
+  const exactLongHigh = await runFullTextSearch(
+    runtimeWithHighLimits,
+    "exact",
+    "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
   );
   const exactDiacritics = await runFullTextSearch(
     runtime,
     "exact",
     "naïve café résumé coöperate são paulo",
+  );
+  const exactStopwords = await runFullTextSearch(
+    runtime,
+    "exact",
+    "the the the",
+  );
+  const exactQuotedPhrase = await runFullTextSearch(
+    runtime,
+    "exact",
+    "quoted phrase",
+  );
+  const exactPunctuation = await runFullTextSearch(
+    runtime,
+    "exact",
+    "edge case",
   );
   const exactSeparators = await runFullTextSearch(
     runtime,
@@ -188,16 +286,6 @@ export const runDbxFullTextSearchScenario = async () => {
     "exact",
     "v2 0 fix 123",
   );
-  const exactNumericLongDefault = await runFullTextSearch(
-    runtime,
-    "exact",
-    "release v2 0 fix 123 o reilly media edition",
-  );
-  const exactNumericLongExpanded = await runFullTextSearch(
-    runtimeWithExpandedLimits,
-    "exact",
-    "release v2 0 fix 123 o reilly media edition",
-  );
 
   const lossyMiddleToken = await runFullTextSearch(runtime, "lossy", "rown");
   const lossyDiacritics = await runFullTextSearch(
@@ -210,6 +298,16 @@ export const runDbxFullTextSearchScenario = async () => {
     "lossy",
     "dot case",
   );
+  const lossyMixedCase = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "mixed case",
+  );
+  const lossyPunctuation = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "punctuation heavy",
+  );
   const lossyAddress = await runFullTextSearch(
     runtime,
     "lossy",
@@ -221,6 +319,12 @@ export const runDbxFullTextSearchScenario = async () => {
     "microserv",
   );
   const lossyShortToken = await runFullTextSearch(runtime, "lossy", "v2");
+  const lossyEmoji = await runFullTextSearch(runtime, "lossy", "rocket");
+  const lossySmartApostrophes = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "smart apostrophes",
+  );
   const lossyMixedPunctuation = await runFullTextSearch(
     runtime,
     "lossy",
@@ -230,20 +334,29 @@ export const runDbxFullTextSearchScenario = async () => {
   return {
     createdPostIds: postIds,
     exactSentenceIds: exactSentence.ids,
-    exactSentenceLongDefaultIds: exactSentenceLongDefault.ids,
-    exactSentenceLongExpandedIds: exactSentenceLongExpanded.ids,
+    exactSentenceNineDefaultIds: exactSentenceNineDefault.ids,
+    exactSentenceNineMidIds: exactSentenceNineMid.ids,
+    exactSentenceNineHighIds: exactSentenceNineHigh.ids,
+    exactLongDefaultIds: exactLongDefault.ids,
+    exactLongMidIds: exactLongMid.ids,
+    exactLongHighIds: exactLongHigh.ids,
     exactDiacriticsIds: exactDiacritics.ids,
+    exactStopwordsIds: exactStopwords.ids,
+    exactQuotedPhraseIds: exactQuotedPhrase.ids,
+    exactPunctuationIds: exactPunctuation.ids,
     exactSeparatorsIds: exactSeparators.ids,
     exactHyphenatedIds: exactHyphenated.ids,
     exactNumericShortIds: exactNumericShort.ids,
-    exactNumericLongDefaultIds: exactNumericLongDefault.ids,
-    exactNumericLongExpandedIds: exactNumericLongExpanded.ids,
     lossyMiddleTokenIds: lossyMiddleToken.ids,
     lossyDiacriticsIds: lossyDiacritics.ids,
     lossySeparatorsIds: lossySeparators.ids,
+    lossyMixedCaseIds: lossyMixedCase.ids,
+    lossyPunctuationIds: lossyPunctuation.ids,
     lossyAddressIds: lossyAddress.ids,
     lossyPrefixIds: lossyPrefix.ids,
     lossyShortTokenIds: lossyShortToken.ids,
+    lossyEmojiIds: lossyEmoji.ids,
+    lossySmartApostrophesIds: lossySmartApostrophes.ids,
     lossyMixedPunctuationIds: lossyMixedPunctuation.ids,
   };
 };
