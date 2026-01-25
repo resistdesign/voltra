@@ -1,0 +1,69 @@
+{
+  "file": "./DBX_CRUD_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxCrudScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdAuthorIds": ["author-1", "author-2"],
+        "createdPostIds": [
+          "post-1",
+          "post-2",
+          "post-3",
+          "post-4",
+          "post-5"
+        ],
+        "readPost": {
+          "id": "post-1",
+          "title": "Alpha",
+          "body": "Hello Alpha",
+          "status": "draft",
+          "score": 10,
+          "createdAt": "2024-01-01T00:00:00.000Z",
+          "tags": ["alpha", "one"],
+          "authorId": "author-1"
+        },
+        "updateResult": true,
+        "updatedPost": {
+          "id": "post-2",
+          "title": "Bravo Updated",
+          "body": "Hello Bravo",
+          "status": "published",
+          "score": 22,
+          "createdAt": "2024-01-02T00:00:00.000Z",
+          "tags": ["bravo"],
+          "authorId": "author-1"
+        },
+        "deleteResult": true,
+        "listPageIds": [
+          ["post-1", "post-2"],
+          ["post-4", "post-5"]
+        ],
+        "listCursors": ["{\"offset\":2}", null],
+        "paging": {
+          "ok": true,
+          "totalItems": 4,
+          "uniqueItems": 4,
+          "duplicateIds": [],
+          "emptyPageIndexes": [],
+          "pageSizeViolations": [],
+          "transcript": {
+            "pageCount": 2,
+            "cursors": ["{\"offset\":2}", null],
+            "idsByPage": [
+              ["post-1", "post-2"],
+              ["post-4", "post-5"]
+            ],
+            "flattenedIds": ["post-1", "post-2", "post-4", "post-5"]
+          }
+        },
+        "ordering": {
+          "ok": true,
+          "actualIds": ["post-1", "post-2", "post-4", "post-5"],
+          "expectedIds": ["post-1", "post-2", "post-4", "post-5"]
+        }
+      }
+    }
+  ]
+}

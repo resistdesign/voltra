@@ -2,9 +2,15 @@
 
 ## Agent Startup
 
-- Open `planning/` first; the active plan is the file directly under `planning/` (not inside `planning/complete/`).
-- If multiple active plans exist, ask the user which to run; if none exist, ask where the next task is tracked before
-  proceeding.
+- The **user prompt is the authoritative starting instruction** for this run.
+- Open `planning/` early. The active plan is the file directly under `planning/` (not inside `planning/complete/`).
+- If multiple active plans exist, ask the user which to run.
+- If no active plan exists:
+  - If the user prompt contains a plan, checklist, or task list: **save it as a new active plan file in `planning/`**,
+    then proceed.
+  - If the user prompt describes work but is not already a plan: create a brief plan in `planning/` (goals + checklist),
+    then proceed.
+  - Only ask where work is tracked if the user prompt provides insufficient detail to create a plan.
 
 ## Project Structure & Module Organization
 
@@ -48,21 +54,40 @@
 
 ## Agent Workflow & Progress Tracking
 
-- Treat the `planning/` directory as the authoritative source for current work. The active plan is the file directly
-  under `planning/` (not inside `planning/complete/`). If multiple active plans exist, ask the user to choose; if none
-  exist, ask the user where the next task is tracked before proceeding.
-- Treat user requests as the authoritative scope; do not down-scope without explicit user approval.
-- Start every task you are assigned by examining everything necessary, in the project, to confirming whether it can be
-  completed in a single, uninterrupted attempt. If not, communicate that immediately and agree on a portion that you
-  have already determined you can complete in one attempt.
+- Treat the **user prompt** as the authoritative scope for this run; do not down-scope without explicit user approval.
+- Treat the `planning/` directory as the authoritative persisted work state once a plan exists. The active plan is the
+  file directly under `planning/` (not inside `planning/complete/`).
+
+- Work in **phases**:
+  - At the start of a run, identify the next achievable group of checklist items (a “phase”) from the current plan.
+  - Phases are **sequential by default** and form a single ordered queue.
+  - Do NOT treat later phases as alternatives unless the plan explicitly marks them as optional or branching.
+  - A phase should be sized to complete cleanly in the current run without guesswork or scope changes.
+  - If a phase is too large or contains uncertainty, split it and proceed with the smallest clearly-achievable subset.
+
+- Default to **forward progress**:
+  - **Plan order is mandatory.**
+  - Execute checklist items strictly in plan order whenever possible.
+  - Do NOT present alternative next steps or choices when the next plan item is clear.
+  - Do NOT ask whether to continue when unchecked plan items remain.
+  - Do NOT present numbered or bulleted “Next steps” lists.
+  - End updates with a single `Next:` line stating the immediate next planned action in plan order.
+  - Only ask or offer options when the plan is ambiguous, blocked, or explicitly requests a decision.
+
 - When the user says "start the next task," proceed immediately using the current plan order; keep communication brief
   while remaining thorough.
-- Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete.
+
+- Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete in
+  this run (the current phase).
+
 - Maintain a live checklist while working; update it as each item is completed so progress is visible and verifiable.
 - Only mark an item `[x]` when it is fully complete (all required edits done and, when applicable, tests or verification
   steps run).
 - When all sub-items in a parent checklist section are marked `[x]`, mark the parent item `[x]` as well to reflect
   completion of the whole area.
+- When all items in a plan are complete **and the user agrees the work is finished**, move the plan file to
+  `planning/complete/` to mark it as closed.
+
 - For checklist-driven tasks, always update the relevant planning document(s) in the same response before declaring
   completion.
 - Keep repo-wide rules in this file, and put effort-specific guidance in the relevant planning document.
