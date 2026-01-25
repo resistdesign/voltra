@@ -32,6 +32,13 @@ export const DBX_TYPE_INFO_MAP: TypeInfoMap = {
         readonly: false,
         optional: true,
       },
+      posts: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: true,
+        typeReference: "Post",
+      },
     },
   },
   Post: {
@@ -86,6 +93,13 @@ export const DBX_TYPE_INFO_MAP: TypeInfoMap = {
         array: false,
         readonly: false,
         optional: true,
+      },
+      author: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: true,
+        typeReference: "Author",
       },
     },
   },
