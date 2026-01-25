@@ -243,7 +243,7 @@ This work is done when:
 - [x] Phase 1: Add memory backends/adapters for exact/lossy (if needed)
 - [x] Phase 2: CRUD scenario spec
 - [x] Phase 2: Exact search scenario spec
-- [ ] Phase 2: Lossy search scenario spec
+- [x] Phase 2: Lossy search scenario spec
 - [ ] Phase 2: Full-text scenario spec
 - [ ] Phase 2: Structured search scenario spec
 - [ ] Phase 2: Relationships scenario spec
