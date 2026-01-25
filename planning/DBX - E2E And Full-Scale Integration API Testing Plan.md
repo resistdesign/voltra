@@ -49,8 +49,8 @@ Create a small “scenario harness” that can:
 
 ### Phase 1 Progress
 - [x] 1A: Add DBXRuntime + DBXRequest + DBXTypes scaffolding
-- [ ] 1A: Add DBXSeed + DBXAsserts helpers
-- [ ] 1A: Add DBXTypes exports/index entrypoints
+- [x] 1A: Add DBXSeed + DBXAsserts helpers
+- [x] 1A: Add DBXTypes exports/index entrypoints
 
 ### 1A) Scenario Harness module
 Add a folder (choose one and stick to it):
