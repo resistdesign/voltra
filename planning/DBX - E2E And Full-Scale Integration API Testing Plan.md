@@ -230,7 +230,7 @@ This work is done when:
 ---
 
 ## Work Checklist (Codex should keep this live while implementing)
-- [ ] Phase 0: Inventory runner + route entrypoint + interfaces
+- [x] Phase 0: Inventory runner + route entrypoint + interfaces
 - [ ] Phase 1: Build DBX runtime + request runner + deterministic seed
 - [ ] Phase 1: Add memory backends/adapters for exact/lossy (if needed)
 - [ ] Phase 2: CRUD scenario spec
@@ -244,4 +244,3 @@ This work is done when:
 - [ ] Phase 2: Scale/perf scenario spec
 - [ ] Phase 3: CI wiring for SMALL + optional extended job
 - [ ] Phase 4: How-to-run doc
-
