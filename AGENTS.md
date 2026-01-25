@@ -62,6 +62,11 @@
   - A phase should be sized to complete cleanly in the current run without guesswork or scope changes.
   - If a phase is too large or contains uncertainty, split it and proceed with the smallest clearly-achievable subset.
 - Default to **forward progress**:
+  - Plan order is mandatory:
+  - Execute checklist items strictly in plan order whenever possible.
+  - Do NOT present alternative next steps or choices when the next plan item is clear.
+  - State the next planned action directly; only ask or offer options when the plan is ambiguous, blocked, or explicitly
+    requests a decision.
   - If there is a clear next unchecked `[ ]` item, proceed from plan order without asking which item to start.
   - Only ask a question when the next item is ambiguous, blocked, or requires a decision not present in the plan/prompt.
 - When the user says "start the next task," proceed immediately using the current plan order; keep communication brief
