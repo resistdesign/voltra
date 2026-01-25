@@ -92,6 +92,9 @@ Actions:
 
 Deliverable: `ExactMemoryBackend.ts` + `LossyMemoryBackend.ts` (or similar) and a `buildIndexingConfig({ backend: "memory" })` path.
 
+Status note:
+- Full-text already uses `FullTextMemoryBackend` (built from `LossyIndex` + `ExactIndex`), and DBX runtime defaults to it, so no additional adapters were required.
+
 ---
 
 ## Phase 2 — DBX Scenario Specs (map directly to the epic checklist)
@@ -237,9 +240,9 @@ This work is done when:
 ## Work Checklist (Codex should keep this live while implementing)
 - [x] Phase 0: Inventory runner + route entrypoint + interfaces
 - [x] Phase 1: Build DBX runtime + request runner + deterministic seed
-- [ ] Phase 1: Add memory backends/adapters for exact/lossy (if needed)
+- [x] Phase 1: Add memory backends/adapters for exact/lossy (if needed)
 - [x] Phase 2: CRUD scenario spec
-- [ ] Phase 2: Exact search scenario spec
+- [x] Phase 2: Exact search scenario spec
 - [ ] Phase 2: Lossy search scenario spec
 - [ ] Phase 2: Full-text scenario spec
 - [ ] Phase 2: Structured search scenario spec
