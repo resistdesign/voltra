@@ -70,14 +70,15 @@
   - Execute checklist items strictly in plan order whenever possible.
   - Do NOT present alternative next steps or choices when the next plan item is clear.
   - Do NOT ask whether to continue when unchecked plan items remain.
-  - State the next planned action directly.
+  - Do NOT present numbered or bulleted “Next steps” lists.
+  - End updates with a single `Next:` line stating the immediate next planned action in plan order.
   - Only ask or offer options when the plan is ambiguous, blocked, or explicitly requests a decision.
 
 - When the user says "start the next task," proceed immediately using the current plan order; keep communication brief
   while remaining thorough.
 
-- Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete
-  in this run (the current phase). This is a declaration of intent, not a choice list.
+- Before starting work on a multi-item request, enumerate the specific checklist items or plan rows you will complete in
+  this run (the current phase).
 
 - Maintain a live checklist while working; update it as each item is completed so progress is visible and verifiable.
 - Only mark an item `[x]` when it is fully complete (all required edits done and, when applicable, tests or verification

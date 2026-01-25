@@ -282,7 +282,21 @@ export const validateTypeInfoFieldValue = (
     !typeReference ||
     relationshipValidationType === RelationshipValidationType.INCLUDE;
 
-  if (requiredValueAllowed && !itemIsPartial && !optional && !hasValue(value)) {
+  const valueIsUndefined = typeof value === "undefined";
+  const valueIsNull = value === null;
+
+  const canSkipValidation =
+    (itemIsPartial && (valueIsUndefined || valueIsNull)) ||
+    (optional && valueIsUndefined);
+
+  if (canSkipValidation) {
+    results.valid = true;
+  } else if (
+    requiredValueAllowed &&
+    !itemIsPartial &&
+    !optional &&
+    !hasValue(value)
+  ) {
     results.valid = false;
     results.error = ERROR_MESSAGE_CONSTANTS.MISSING;
   } else if (array && !ignoreArray) {
