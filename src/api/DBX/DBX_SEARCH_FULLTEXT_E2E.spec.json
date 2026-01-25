@@ -1,0 +1,31 @@
+{
+  "file": "./DBX_SEARCH_FULLTEXT_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxFullTextSearchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdPostIds": [
+          "post-1",
+          "post-2",
+          "post-3",
+          "post-4",
+          "post-5",
+          "post-6"
+        ],
+        "exactSentenceIds": ["post-1"],
+        "exactDiacriticsIds": ["post-2"],
+        "exactSeparatorsIds": ["post-3"],
+        "exactHyphenatedIds": ["post-5"],
+        "exactNumericIds": ["post-6"],
+        "lossyMiddleTokenIds": ["post-1"],
+        "lossyDiacriticsIds": ["post-2"],
+        "lossySeparatorsIds": ["post-3"],
+        "lossyAddressIds": ["post-4"],
+        "lossyPrefixIds": ["post-5"],
+        "lossyShortTokenIds": ["post-6"]
+      }
+    }
+  ]
+}
