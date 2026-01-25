@@ -236,9 +236,9 @@ This work is done when:
 
 ## Work Checklist (Codex should keep this live while implementing)
 - [x] Phase 0: Inventory runner + route entrypoint + interfaces
-- [ ] Phase 1: Build DBX runtime + request runner + deterministic seed
+- [x] Phase 1: Build DBX runtime + request runner + deterministic seed
 - [ ] Phase 1: Add memory backends/adapters for exact/lossy (if needed)
-- [ ] Phase 2: CRUD scenario spec
+- [x] Phase 2: CRUD scenario spec
 - [ ] Phase 2: Exact search scenario spec
 - [ ] Phase 2: Lossy search scenario spec
 - [ ] Phase 2: Full-text scenario spec
