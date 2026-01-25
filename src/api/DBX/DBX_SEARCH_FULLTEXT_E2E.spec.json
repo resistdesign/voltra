@@ -15,16 +15,21 @@
           "post-6"
         ],
         "exactSentenceIds": ["post-1"],
+        "exactSentenceLongDefaultIds": [],
+        "exactSentenceLongExpandedIds": ["post-1"],
         "exactDiacriticsIds": ["post-2"],
         "exactSeparatorsIds": ["post-3"],
         "exactHyphenatedIds": ["post-5"],
-        "exactNumericIds": ["post-6"],
+        "exactNumericShortIds": ["post-6"],
+        "exactNumericLongDefaultIds": [],
+        "exactNumericLongExpandedIds": ["post-6"],
         "lossyMiddleTokenIds": ["post-1"],
         "lossyDiacriticsIds": ["post-2"],
         "lossySeparatorsIds": ["post-3"],
         "lossyAddressIds": ["post-4"],
         "lossyPrefixIds": ["post-5"],
-        "lossyShortTokenIds": ["post-6"]
+        "lossyShortTokenIds": ["post-6"],
+        "lossyMixedPunctuationIds": ["post-6"]
       }
     }
   ]

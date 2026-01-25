@@ -2,6 +2,7 @@ import type { ListItemsResults } from "../../common/SearchTypes";
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
+import { SEARCH_DEFAULTS } from "../Indexing/Handler/Config";
 
 type Post = {
   id: string;
@@ -20,7 +21,7 @@ type SearchResult = {
   ids: string[];
 };
 
-const buildDbxRuntime = () => {
+const buildDbxRuntime = (options?: { maxTokens?: number }) => {
   let postCounter = 0;
 
   return createDbxRuntime({
@@ -34,6 +35,12 @@ const buildDbxRuntime = () => {
           Post: "body",
         },
       },
+      limits: options?.maxTokens
+        ? {
+            ...SEARCH_DEFAULTS,
+            maxTokens: options.maxTokens,
+          }
+        : undefined,
     },
   });
 };
@@ -126,6 +133,7 @@ const runFullTextSearch = async (
  */
 export const runDbxFullTextSearchScenario = async () => {
   const runtime = buildDbxRuntime();
+  const runtimeWithExpandedLimits = buildDbxRuntime({ maxTokens: 12 });
   const postIds: string[] = [];
 
   for (const post of buildPosts()) {
@@ -137,10 +145,28 @@ export const runDbxFullTextSearchScenario = async () => {
     postIds.push(response.parsedBody as string);
   }
 
+  for (const post of buildPosts()) {
+    await runDbxRequest<string>(runtimeWithExpandedLimits, {
+      method: "POST",
+      path: "create",
+      args: ["Post", post],
+    });
+  }
+
   const exactSentence = await runFullTextSearch(
     runtime,
     "exact",
     "quick brown fox jumps over",
+  );
+  const exactSentenceLongDefault = await runFullTextSearch(
+    runtime,
+    "exact",
+    "quick brown fox jumps over 13 lazy dogs",
+  );
+  const exactSentenceLongExpanded = await runFullTextSearch(
+    runtimeWithExpandedLimits,
+    "exact",
+    "quick brown fox jumps over 13 lazy dogs",
   );
   const exactDiacritics = await runFullTextSearch(
     runtime,
@@ -157,10 +183,20 @@ export const runDbxFullTextSearchScenario = async () => {
     "exact",
     "service oriented architecture",
   );
-  const exactNumeric = await runFullTextSearch(
+  const exactNumericShort = await runFullTextSearch(
     runtime,
     "exact",
     "v2 0 fix 123",
+  );
+  const exactNumericLongDefault = await runFullTextSearch(
+    runtime,
+    "exact",
+    "release v2 0 fix 123 o reilly media edition",
+  );
+  const exactNumericLongExpanded = await runFullTextSearch(
+    runtimeWithExpandedLimits,
+    "exact",
+    "release v2 0 fix 123 o reilly media edition",
   );
 
   const lossyMiddleToken = await runFullTextSearch(runtime, "lossy", "rown");
@@ -185,19 +221,29 @@ export const runDbxFullTextSearchScenario = async () => {
     "microserv",
   );
   const lossyShortToken = await runFullTextSearch(runtime, "lossy", "v2");
+  const lossyMixedPunctuation = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "o reilly",
+  );
 
   return {
     createdPostIds: postIds,
     exactSentenceIds: exactSentence.ids,
+    exactSentenceLongDefaultIds: exactSentenceLongDefault.ids,
+    exactSentenceLongExpandedIds: exactSentenceLongExpanded.ids,
     exactDiacriticsIds: exactDiacritics.ids,
     exactSeparatorsIds: exactSeparators.ids,
     exactHyphenatedIds: exactHyphenated.ids,
-    exactNumericIds: exactNumeric.ids,
+    exactNumericShortIds: exactNumericShort.ids,
+    exactNumericLongDefaultIds: exactNumericLongDefault.ids,
+    exactNumericLongExpandedIds: exactNumericLongExpanded.ids,
     lossyMiddleTokenIds: lossyMiddleToken.ids,
     lossyDiacriticsIds: lossyDiacritics.ids,
     lossySeparatorsIds: lossySeparators.ids,
     lossyAddressIds: lossyAddress.ids,
     lossyPrefixIds: lossyPrefix.ids,
     lossyShortTokenIds: lossyShortToken.ids,
+    lossyMixedPunctuationIds: lossyMixedPunctuation.ids,
   };
 };
