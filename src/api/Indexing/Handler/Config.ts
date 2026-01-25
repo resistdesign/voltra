@@ -39,10 +39,10 @@ export const SEARCH_DEFAULTS: ResolvedSearchLimits = {
  * Maximum caps enforced for requested search limits.
  */
 export const SEARCH_CAPS: ResolvedSearchLimits = {
-  maxTokens: 12,
-  maxPostingsPages: 12,
-  maxCandidatesVerified: 1_000,
-  softTimeBudgetMs: 500,
+  maxTokens: Number.POSITIVE_INFINITY,
+  maxPostingsPages: Number.POSITIVE_INFINITY,
+  maxCandidatesVerified: Number.POSITIVE_INFINITY,
+  softTimeBudgetMs: Number.POSITIVE_INFINITY,
 };
 
 function clampLimit(value: number, fallback: number, cap: number): number {

@@ -1,0 +1,18 @@
+{
+  "file": "./DBX_SEARCH_LOSSY_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxLossySearchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdPostIds": ["post-1", "post-2", "post-3", "post-4"],
+        "initialSearchIds": ["post-1", "post-2"],
+        "updateResult": true,
+        "afterUpdateSearchIds": ["post-1", "post-2", "post-3"],
+        "deleteResult": true,
+        "afterDeleteSearchIds": ["post-2", "post-3"]
+      }
+    }
+  ]
+}
