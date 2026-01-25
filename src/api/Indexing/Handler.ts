@@ -221,12 +221,7 @@ export async function handler(
       });
       const { startTimeMs, ...traceDetails } = trace;
       const elapsedMs = Date.now() - startTimeMs;
-      console.log(
-        JSON.stringify({
-          action: event.action,
-          trace: { ...traceDetails, elapsedMs, limits },
-        }),
-      );
+
       return { statusCode: 200, body: JSON.stringify(result) };
     }
     case "searchExact": {
