@@ -2,6 +2,15 @@
 
 CI exposed a bunch of issues that now need to be fixed:
 
+## Plan
+- [x] Fix DBX search E2E test runtime indexing config to include a full text backend.
+  - [x] DBX_SEARCH_EXACT_E2E.test-utils.ts
+  - [x] DBX_SEARCH_LOSSY_E2E.test-utils.ts
+  - [x] DBX_SEARCH_FULLTEXT_E2E.test-utils.ts
+- [x] Remove DBX from generated docs and published outputs.
+  - [x] Stop exporting DBX from public API barrels.
+  - [x] Exclude DBX sources from TypeDoc config.
+
 ```
 Run yarn
 yarn install v1.22.22

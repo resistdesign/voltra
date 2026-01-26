@@ -3,6 +3,7 @@ import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
 import { SEARCH_DEFAULTS } from "../Indexing/Handler/Config";
+import { FullTextMemoryBackend } from "../Indexing";
 
 type Post = {
   id: string;
@@ -31,6 +32,7 @@ const buildDbxRuntime = (options?: { maxTokens?: number }) => {
     },
     indexing: {
       fullText: {
+        backend: new FullTextMemoryBackend(),
         defaultIndexFieldByType: {
           Post: "body",
         },
