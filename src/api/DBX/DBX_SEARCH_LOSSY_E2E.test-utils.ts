@@ -1,4 +1,5 @@
 import type { ListItemsResults } from "../../common/SearchTypes";
+import { FullTextMemoryBackend } from "../Indexing";
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
@@ -24,6 +25,7 @@ const buildDbxRuntime = () => {
     },
     indexing: {
       fullText: {
+        backend: new FullTextMemoryBackend(),
         defaultIndexFieldByType: {
           Post: "body",
         },

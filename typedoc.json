@@ -2,6 +2,7 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["./src/index.ts", "./src/build/index.ts"],
   "out": "docs",
+  "exclude": ["**/src/api/DBX/**"],
   "excludeExternals": true,
   "excludeNotDocumented": true,
   "excludeCategories": [],
