@@ -211,7 +211,7 @@ export function buildRelationEdgeDdbItem<TMetadata extends EdgeMetadata>(
 ): RelationEdgesDdbItem<TMetadata> {
   return {
     ...buildRelationEdgeDdbKey(entityId, relation, direction, otherId),
-    metadata,
+    ...(metadata !== undefined ? { metadata } : {}),
   };
 }
 
