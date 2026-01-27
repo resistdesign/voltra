@@ -219,85 +219,77 @@ export const runDbxRelationshipsScenario = async () => {
     });
   }
 
-  const author1Page1 = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Author",
-            fromTypeFieldName: "posts",
-            fromTypePrimaryFieldValue: authorIds[0],
-            toTypePrimaryFieldValue: postIds[0],
-          },
-          itemsPerPage: 1,
+  const author1Page1 = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Author",
+          fromTypeFieldName: "posts",
+          fromTypePrimaryFieldValue: authorIds[0],
         },
-      ],
-    },
-  );
+        itemsPerPage: 1,
+      },
+    ],
+  });
 
-  const author1Page2 = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Author",
-            fromTypeFieldName: "posts",
-            fromTypePrimaryFieldValue: authorIds[0],
-            toTypePrimaryFieldValue: postIds[0],
-          },
-          itemsPerPage: 1,
-          cursor: author1Page1.parsedBody?.cursor,
+  const author1Page2 = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Author",
+          fromTypeFieldName: "posts",
+          fromTypePrimaryFieldValue: authorIds[0],
         },
-      ],
-    },
-  );
+        itemsPerPage: 1,
+        cursor: author1Page1.parsedBody?.cursor,
+      },
+    ],
+  });
 
-  const author2List = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Author",
-            fromTypeFieldName: "posts",
-            fromTypePrimaryFieldValue: authorIds[1],
-            toTypePrimaryFieldValue: postIds[2],
-          },
-          itemsPerPage: 10,
+  const author2List = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Author",
+          fromTypeFieldName: "posts",
+          fromTypePrimaryFieldValue: authorIds[1],
         },
-      ],
-    },
-  );
+        itemsPerPage: 10,
+      },
+    ],
+  });
 
   const author2Targets = listRelationshipTargets(author2List.parsedBody);
   const author2Resolved = await resolvePostTargets(runtime, author2Targets);
 
-  const post1AuthorList = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Post",
-            fromTypeFieldName: "author",
-            fromTypePrimaryFieldValue: postIds[0],
-            toTypePrimaryFieldValue: authorIds[0],
-          },
-          itemsPerPage: 10,
+  const post1AuthorList = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Post",
+          fromTypeFieldName: "author",
+          fromTypePrimaryFieldValue: postIds[0],
         },
-      ],
-    },
-  );
+        itemsPerPage: 10,
+      },
+    ],
+  });
 
   const deleteAuthor1Post2 = await runDbxRequest<RelationshipDeleteResult>(
     runtime,
@@ -315,24 +307,22 @@ export const runDbxRelationshipsScenario = async () => {
     },
   );
 
-  const author1AfterDelete = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Author",
-            fromTypeFieldName: "posts",
-            fromTypePrimaryFieldValue: authorIds[0],
-            toTypePrimaryFieldValue: postIds[0],
-          },
-          itemsPerPage: 10,
+  const author1AfterDelete = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Author",
+          fromTypeFieldName: "posts",
+          fromTypePrimaryFieldValue: authorIds[0],
         },
-      ],
-    },
-  );
+        itemsPerPage: 10,
+      },
+    ],
+  });
 
   const deletePost3 = await runDbxRequest<boolean>(runtime, {
     method: "POST",
@@ -340,24 +330,22 @@ export const runDbxRelationshipsScenario = async () => {
     args: ["Post", postIds[2]],
   });
 
-  const author2AfterDelete = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Author",
-            fromTypeFieldName: "posts",
-            fromTypePrimaryFieldValue: authorIds[1],
-            toTypePrimaryFieldValue: postIds[2],
-          },
-          itemsPerPage: 10,
+  const author2AfterDelete = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Author",
+          fromTypeFieldName: "posts",
+          fromTypePrimaryFieldValue: authorIds[1],
         },
-      ],
-    },
-  );
+        itemsPerPage: 10,
+      },
+    ],
+  });
 
   const author2TargetsAfterDelete = listRelationshipTargets(
     author2AfterDelete.parsedBody,
@@ -383,24 +371,22 @@ export const runDbxRelationshipsScenario = async () => {
     },
   );
 
-  const author2AfterPrune = await runDbxRequest<ListItemsResults<ItemRelationshipInfo>>(
-    runtime,
-    {
-      method: "POST",
-      path: "list-relationships",
-      args: [
-        {
-          relationshipItemOrigin: {
-            fromTypeName: "Author",
-            fromTypeFieldName: "posts",
-            fromTypePrimaryFieldValue: authorIds[1],
-            toTypePrimaryFieldValue: postIds[2],
-          },
-          itemsPerPage: 10,
+  const author2AfterPrune = await runDbxRequest<
+    ListItemsResults<ItemRelationshipInfo>
+  >(runtime, {
+    method: "POST",
+    path: "list-relationships",
+    args: [
+      {
+        relationshipItemOrigin: {
+          fromTypeName: "Author",
+          fromTypeFieldName: "posts",
+          fromTypePrimaryFieldValue: authorIds[1],
         },
-      ],
-    },
-  );
+        itemsPerPage: 10,
+      },
+    ],
+  });
 
   return {
     createdAuthorIds: authorIds,
