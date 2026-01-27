@@ -144,6 +144,10 @@ export const runTypeInfoORMServiceScenario = async () => {
     fromTypePrimaryFieldValue: authorId,
     toTypePrimaryFieldValue: bookId1,
   };
+  const {
+    toTypePrimaryFieldValue: _omittedToTypePrimaryFieldValue,
+    ...relationshipOriginItem
+  } = relationshipItemBase;
   await orm.createRelationship({
     ...relationshipItemBase,
     toTypePrimaryFieldValue: bookId1,
@@ -154,13 +158,13 @@ export const runTypeInfoORMServiceScenario = async () => {
   });
 
   const listRelationships = await orm.listRelationships({
-    relationshipItemOrigin: relationshipItemBase,
+    relationshipItemOrigin: relationshipOriginItem,
     itemsPerPage: 10,
   });
 
   const relatedItems = await orm.listRelatedItems(
     {
-      relationshipItemOrigin: relationshipItemBase,
+      relationshipItemOrigin: relationshipOriginItem,
       itemsPerPage: 10,
     },
     ["title"],
@@ -171,7 +175,7 @@ export const runTypeInfoORMServiceScenario = async () => {
     toTypePrimaryFieldValue: bookId1,
   });
   const relationshipsAfterDelete = await orm.listRelationships({
-    relationshipItemOrigin: relationshipItemBase,
+    relationshipItemOrigin: relationshipOriginItem,
     itemsPerPage: 10,
   });
 
@@ -304,6 +308,10 @@ export const runTypeInfoORMServiceDACScenario = async () => {
     fromTypePrimaryFieldValue: authorId,
     toTypePrimaryFieldValue: bookId1,
   };
+  const {
+    toTypePrimaryFieldValue: _omittedToTypePrimaryFieldValue,
+    ...relationshipOriginItem
+  } = relationshipItemBase;
   await orm.createRelationship({
     ...relationshipItemBase,
     toTypePrimaryFieldValue: bookId1,
@@ -314,13 +322,13 @@ export const runTypeInfoORMServiceDACScenario = async () => {
   });
 
   const listRelationships = await orm.listRelationships({
-    relationshipItemOrigin: relationshipItemBase,
+    relationshipItemOrigin: relationshipOriginItem,
     itemsPerPage: 10,
   });
 
   const relatedItems = await orm.listRelatedItems(
     {
-      relationshipItemOrigin: relationshipItemBase,
+      relationshipItemOrigin: relationshipOriginItem,
       itemsPerPage: 10,
     },
     ["title"],
