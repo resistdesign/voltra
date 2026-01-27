@@ -12,6 +12,7 @@
           "\"delete\"",
           "\"delete-relationship\"",
           "\"list\"",
+          "\"list-related-items\"",
           "\"list-relationships\"",
           "\"read\"",
           "\"update\""
@@ -22,6 +23,7 @@
           "\"delete\"",
           "\"delete-relationship\"",
           "\"list\"",
+          "\"list-related-items\"",
           "\"list-relationships\"",
           "\"read\"",
           "\"update\""
