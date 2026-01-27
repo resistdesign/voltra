@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { TypeInfoORMClient } from "../src/app/utils/TypeInfoORMClient";
+import { TypeInfoORMClient } from "../src/app/utils";
 import {
   BASE_DOMAIN,
   DEMO_ORM_ROUTE_PATH,
