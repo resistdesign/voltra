@@ -10,25 +10,6 @@ export type IndexingTableNames = {
   relations: RelationsTableNames;
 };
 
-export const indexingTableNames = {
-  fullText: {
-    lossyPostings: "LossyPostings",
-    exactPostings: "ExactPostings",
-    docMirror: "FullTextDocMirror",
-    tokenStats: "FullTextTokenStats",
-    docTokens: "DocTokens",
-    docTokenPositions: "DocTokenPositions",
-  },
-  structured: {
-    termIndex: "StructuredTermIndex",
-    rangeIndex: "StructuredRangeIndex",
-    docFields: "StructuredDocFields",
-  },
-  relations: {
-    relationEdges: "RelationEdges",
-  },
-} as const satisfies IndexingTableNames;
-
 export const indexingTableEnvVars = {
   fullText: {
     lossyPostings: "INDEXING_FULLTEXT_LOSSY_POSTINGS_TABLE",
