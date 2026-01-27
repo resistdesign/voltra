@@ -244,9 +244,11 @@ export const EndToEndDemo: FC = () => {
       if (item?.id) {
         setRelatedCarId(String(item.id));
         setRelatedCarSummary(item);
+        setRelatedCar(item);
       } else {
         setRelatedCarId(null);
         setRelatedCarSummary(null);
+        setRelatedCar(null);
       }
     },
     [logRequest, ormClient],
