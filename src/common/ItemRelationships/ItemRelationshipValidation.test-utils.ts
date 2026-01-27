@@ -12,12 +12,19 @@ export const runItemRelationshipValidationScenario = () => {
     [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: "person-1",
   };
 
-  const validResult = validateRelationshipItem(baseItem);
-  const missingFieldResult = validateRelationshipItem({
-    ...baseItem,
-    [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: "",
-  });
-  const omittedFieldResult = validateRelationshipItem(
+  const validResult = validateRelationshipItem(baseItem, []);
+  const missingFieldResult = validateRelationshipItem(
+    {
+      ...baseItem,
+      [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: "",
+    },
+    [],
+  );
+  const { toTypePrimaryFieldValue: _omitted, ...originItem } = baseItem;
+  const omittedFieldResult = validateRelationshipItem(originItem, [
+    ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+  ]);
+  const omittedFieldErrorResult = validateRelationshipItem(
     {
       ...baseItem,
       [ItemRelationshipInfoKeys.toTypePrimaryFieldValue]: "",
@@ -29,6 +36,7 @@ export const runItemRelationshipValidationScenario = () => {
     validResult,
     missingFieldResult,
     omittedFieldResult,
+    omittedFieldErrorResult,
     expectedErrors: TYPE_INFO_ORM_RELATIONSHIP_ERRORS,
   };
 };

@@ -17,7 +17,7 @@
           "valid": false,
           "error": "INVALID_RELATIONSHIP_ITEM",
           "errorMap": {
-            "toTypePrimaryFieldValue": ["INVALID_RELATIONSHIP_ITEM_FIELD"]
+            "toTypePrimaryFieldValue": ["MISSING_RELATIONSHIP_ITEM_FIELD"]
           }
         },
         "omittedFieldResult": {
@@ -26,9 +26,18 @@
           "error": "",
           "errorMap": {}
         },
+        "omittedFieldErrorResult": {
+          "typeName": "Book",
+          "valid": false,
+          "error": "INVALID_RELATIONSHIP_ITEM",
+          "errorMap": {
+            "toTypePrimaryFieldValue": ["INVALID_RELATIONSHIP_ITEM_FIELD"]
+          }
+        },
         "expectedErrors": {
           "INVALID_RELATIONSHIP_ITEM": "INVALID_RELATIONSHIP_ITEM",
-          "INVALID_RELATIONSHIP_ITEM_FIELD": "INVALID_RELATIONSHIP_ITEM_FIELD"
+          "INVALID_RELATIONSHIP_ITEM_FIELD": "INVALID_RELATIONSHIP_ITEM_FIELD",
+          "MISSING_RELATIONSHIP_ITEM_FIELD": "MISSING_RELATIONSHIP_ITEM_FIELD"
         }
       }
     }

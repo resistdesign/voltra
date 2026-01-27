@@ -219,8 +219,6 @@ export async function handler(
         limits,
         trace,
       });
-      const { startTimeMs, ...traceDetails } = trace;
-      const elapsedMs = Date.now() - startTimeMs;
 
       return { statusCode: 200, body: JSON.stringify(result) };
     }
@@ -236,14 +234,7 @@ export async function handler(
         limits,
         trace,
       });
-      const { startTimeMs, ...traceDetails } = trace;
-      const elapsedMs = Date.now() - startTimeMs;
-      console.log(
-        JSON.stringify({
-          action: event.action,
-          trace: { ...traceDetails, elapsedMs, limits },
-        }),
-      );
+
       return { statusCode: 200, body: JSON.stringify(result) };
     }
     default:
