@@ -32,13 +32,13 @@ import {
     const result = pushState.apply(history, [state, ...remainingArguments]);
 
     // Dispatch a custom event 'statechanged'
-    window.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
+    window?.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
 
     return result;
   };
-})(window.history);
+})(window?.history);
 
-const CURRENT_PATH: string = window.location.pathname;
+const CURRENT_PATH: string = window?.location.pathname;
 
 /**
  * Access values for the current Route.
@@ -187,7 +187,7 @@ export const Route = <ParamsType extends Record<string, any>>({
           } catch (error) {
             // Partial URL
             const newPath = resolvePath(
-              window.location.pathname,
+              window?.location.pathname,
               href ? href : "",
             );
 
@@ -198,17 +198,17 @@ export const Route = <ParamsType extends Record<string, any>>({
         }
       };
       const handlePopOrReplaceState = () => {
-        setCurrentPath(window.location.pathname);
+        setCurrentPath(window?.location.pathname);
       };
 
-      window.document.addEventListener("click", handleAnchorClick);
-      window.addEventListener("popstate", handlePopOrReplaceState);
-      window.addEventListener("statechanged", handlePopOrReplaceState);
+      window?.document.addEventListener("click", handleAnchorClick);
+      window?.addEventListener("popstate", handlePopOrReplaceState);
+      window?.addEventListener("statechanged", handlePopOrReplaceState);
 
       return () => {
-        window.document.removeEventListener("click", handleAnchorClick);
-        window.removeEventListener("popstate", handlePopOrReplaceState);
-        window.removeEventListener("statechanged", handlePopOrReplaceState);
+        window?.document.removeEventListener("click", handleAnchorClick);
+        window?.removeEventListener("popstate", handlePopOrReplaceState);
+        window?.removeEventListener("statechanged", handlePopOrReplaceState);
       };
     }
   }, [isTopLevel]);
