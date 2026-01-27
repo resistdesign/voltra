@@ -13,6 +13,7 @@ import {
 export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
   INVALID_RELATIONSHIP_ITEM: "INVALID_RELATIONSHIP_ITEM",
   INVALID_RELATIONSHIP_ITEM_FIELD: "INVALID_RELATIONSHIP_ITEM_FIELD",
+  MISSING_RELATIONSHIP_ITEM_FIELD: "MISSING_RELATIONSHIP_ITEM_FIELD",
 };
 
 /**
@@ -24,7 +25,7 @@ export const TYPE_INFO_ORM_RELATIONSHIP_ERRORS = {
  * */
 export const validateRelationshipItem = (
   relationshipItem: ItemRelationshipInfoType,
-  omitFields: ItemRelationshipInfoKeys[] = [],
+  omitFields: ItemRelationshipInfoKeys[],
 ): TypeInfoValidationResults => {
   const { fromTypeName } = relationshipItem;
   const results: TypeInfoValidationResults = {
@@ -42,15 +43,27 @@ export const validateRelationshipItem = (
       const omitRKV = omitFields.includes(rKV);
 
       if (
-        !omitRKV &&
-        (typeof relationshipItem[universalRKV] !== "string" ||
-          !relationshipItem[universalRKV])
+        // Invalid Field Value
+        (universalRKV in relationshipItem &&
+          typeof relationshipItem[universalRKV] !== "string") ||
+        (omitRKV && universalRKV in relationshipItem)
       ) {
         results.valid = false;
         results.error =
           TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
         results.errorMap[rKV] = [
           TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM_FIELD,
+        ];
+      } else if (
+        // Missing Field
+        !omitRKV &&
+        (!(universalRKV in relationshipItem) || !relationshipItem[universalRKV])
+      ) {
+        results.valid = false;
+        results.error =
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+        results.errorMap[rKV] = [
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.MISSING_RELATIONSHIP_ITEM_FIELD,
         ];
       }
     }

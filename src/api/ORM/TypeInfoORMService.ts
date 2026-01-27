@@ -40,8 +40,8 @@ import {
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
 import {
-  IndexingRelationshipDriver,
   DataItemDBDriver,
+  IndexingRelationshipDriver,
   ItemRelationshipDBDriver,
 } from "./drivers";
 import {
@@ -1061,7 +1061,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Relationship fields to omit from validation.
      */
-    omitFields: ItemRelationshipInfoKeys[] = [],
+    omitFields: ItemRelationshipInfoKeys[],
   ) => {
     const validationResults = validateRelationshipItem(
       relationshipItem as BaseItemRelationshipInfo,
@@ -1118,7 +1118,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   createRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
   ): Promise<boolean> => {
-    this.validateRelationshipItem(relationshipItem);
+    this.validateRelationshipItem(relationshipItem, []);
 
     const { allowed: createAllowed, denied: createDenied } =
       await this.getRelationshipDACValidation(
@@ -1217,7 +1217,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   deleteRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
   ): Promise<DeleteRelationshipResults> => {
-    this.validateRelationshipItem(relationshipItem);
+    this.validateRelationshipItem(relationshipItem, []);
 
     const { allowed: deleteAllowed, denied: deleteDenied } =
       await this.getRelationshipDACValidation(
@@ -1316,7 +1316,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<ListItemsResults<ItemRelationshipInfo>> => {
     const { useDAC } = this.config;
     const { relationshipItemOrigin, ...remainingConfig } = config;
-    this.validateRelationshipItem(relationshipItemOrigin);
+    this.validateRelationshipItem(relationshipItemOrigin, [
+      ItemRelationshipInfoKeys.toTypePrimaryFieldValue,
+    ]);
 
     const { fromTypeName, fromTypeFieldName, fromTypePrimaryFieldValue } =
       relationshipItemOrigin;
@@ -1852,7 +1854,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
               items.push(item);
             } catch (error: any) {
-              if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+              if (
+                error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND
+              ) {
                 continue;
               }
               throw error;
