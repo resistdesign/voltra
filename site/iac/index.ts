@@ -13,13 +13,10 @@ import {
 import Path from "path";
 import FS from "fs";
 import { fileURLToPath } from "url";
-import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine/collectRequiredEnvironmentVariables";
+import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
-import {
-  indexingTableEnvVars,
-  indexingTableNames,
-} from "../common/IndexingTableNames";
+import { indexingTableEnvVars } from "../common/IndexingTableNames";
 
 const moduleDirname =
   typeof __dirname === "string"
@@ -117,7 +114,6 @@ const IaC = new SimpleCFT({
       if (persisted && typeof primaryField === "string") {
         cft.applyPack(addDatabase, {
           tableId: `${typeName}Table`,
-          tableName: typeName,
           attributes: {
             [primaryField]: "S",
           },
@@ -149,13 +145,11 @@ const IaC = new SimpleCFT({
 
     const addIndexingTable = (
       tableId: string,
-      tableName: string,
       attributes: Record<string, "S">,
       keys: Record<string, "HASH" | "RANGE">,
     ) => {
       cft.applyPack(addDatabase, {
         tableId,
-        tableName,
         attributes,
         keys,
       });
@@ -163,61 +157,51 @@ const IaC = new SimpleCFT({
 
     addIndexingTable(
       indexingTableIds.fullText.lossyPostings,
-      indexingTableNames.fullText.lossyPostings,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
       indexingTableIds.fullText.exactPostings,
-      indexingTableNames.fullText.exactPostings,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
       indexingTableIds.fullText.docMirror,
-      indexingTableNames.fullText.docMirror,
       { pk: "S" },
       { pk: "HASH" },
     );
     addIndexingTable(
       indexingTableIds.fullText.tokenStats,
-      indexingTableNames.fullText.tokenStats,
       { pk: "S" },
       { pk: "HASH" },
     );
     addIndexingTable(
       indexingTableIds.fullText.docTokens,
-      indexingTableNames.fullText.docTokens,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
       indexingTableIds.fullText.docTokenPositions,
-      indexingTableNames.fullText.docTokenPositions,
       { pk: "S", sk: "S" },
       { pk: "HASH", sk: "RANGE" },
     );
     addIndexingTable(
       indexingTableIds.structured.termIndex,
-      indexingTableNames.structured.termIndex,
       { termKey: "S", docId: "S" },
       { termKey: "HASH", docId: "RANGE" },
     );
     addIndexingTable(
       indexingTableIds.structured.rangeIndex,
-      indexingTableNames.structured.rangeIndex,
       { field: "S", rangeKey: "S" },
       { field: "HASH", rangeKey: "RANGE" },
     );
     addIndexingTable(
       indexingTableIds.structured.docFields,
-      indexingTableNames.structured.docFields,
       { docId: "S" },
       { docId: "HASH" },
     );
     addIndexingTable(
       indexingTableIds.relations.relationEdges,
-      indexingTableNames.relations.relationEdges,
       { edgeKey: "S", otherId: "S" },
       { edgeKey: "HASH", otherId: "RANGE" },
     );
