@@ -40,7 +40,7 @@ Record:
 * Where typeName is currently available at call sites.
 * Where only fieldName is available.
 
-Deliverable: short checklist of files + functions that need signature changes.
+Deliverable: short checklist of files + functions that need signature changes. (For your tracking during this plan.)
 
 ---
 
@@ -160,6 +160,7 @@ Ensure existing DBX CRUD + relationship tests still pass.
 
 ## Acceptance criteria
 
+* Solution/fix/refactor must be holistic and thoughtful.
 * Index keys are type-scoped for fulltext + structured.
 * Two types sharing a field name no longer collide.
 * DBX suite includes and passes multi-type collision tests.
