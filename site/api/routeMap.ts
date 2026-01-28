@@ -49,8 +49,11 @@ export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
           DemoTypeInfoMap[typeName] || {};
 
         if (primaryField) {
+          const tableName =
+            process.env[`TABLE_${typeName.toUpperCase()}`] ?? typeName;
+
           return new DynamoDBDataItemDBDriver({
-            tableName: typeName,
+            tableName,
             uniquelyIdentifyingFieldName: primaryField,
           });
         }
