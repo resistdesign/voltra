@@ -713,14 +713,105 @@ export const EndToEndDemo: FC = () => {
             <Grid>
               <article>
                 <h5>Search Cars (Text + Structured + Cursor Paging)</h5>
-                <label>
-                  Text Query
-                  <input
-                    type="text"
-                    value={carSearchQuery}
-                    onChange={(event) => setCarSearchQuery(event.target.value)}
-                  />
-                </label>
+                {carSearchMode === "lossy" ? (
+                  <label>
+                    Text Query
+                    <input
+                      type="text"
+                      value={carSearchQuery}
+                      onChange={(event) =>
+                        setCarSearchQuery(event.target.value)
+                      }
+                    />
+                  </label>
+                ) : (
+                  <fieldset>
+                    <legend>Structured Filters</legend>
+                    <InlineRow>
+                      <label>
+                        Operator
+                        <select
+                          value={filtersOperator}
+                          onChange={(event) =>
+                            setFiltersOperator(
+                              event.target.value as LogicalOperators,
+                            )
+                          }
+                        >
+                          <option value={LogicalOperators.AND}>AND</option>
+                          <option value={LogicalOperators.OR}>OR</option>
+                        </select>
+                      </label>
+                      <button type="button" onClick={addFilter}>
+                        Add Filter
+                      </button>
+                    </InlineRow>
+                    {filters.length === 0 ? (
+                      <p>No structured filters yet.</p>
+                    ) : (
+                      filters.map((filter) => (
+                        <InlineRow key={filter.id}>
+                          <select
+                            value={filter.fieldName}
+                            onChange={(event) =>
+                              updateFilter(filter.id, {
+                                fieldName: event.target.value as
+                                  | "make"
+                                  | "model"
+                                  | "year",
+                              })
+                            }
+                          >
+                            <option value="make">Make</option>
+                            <option value="model">Model</option>
+                            <option value="year">Year</option>
+                          </select>
+                          <select
+                            value={filter.operator}
+                            onChange={(event) =>
+                              updateFilter(filter.id, {
+                                operator: event.target
+                                  .value as ComparisonOperators,
+                              })
+                            }
+                          >
+                            <option value={ComparisonOperators.EQUALS}>
+                              Equals
+                            </option>
+                            <option value={ComparisonOperators.NOT_EQUALS}>
+                              Not Equals
+                            </option>
+                            <option value={ComparisonOperators.LIKE}>
+                              Like
+                            </option>
+                            <option value={ComparisonOperators.GREATER_THAN}>
+                              Greater Than
+                            </option>
+                            <option value={ComparisonOperators.LESS_THAN}>
+                              Less Than
+                            </option>
+                          </select>
+                          <input
+                            type="text"
+                            value={filter.value}
+                            onChange={(event) =>
+                              updateFilter(filter.id, {
+                                value: event.target.value,
+                              })
+                            }
+                            placeholder="Value"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeFilter(filter.id)}
+                          >
+                            Remove
+                          </button>
+                        </InlineRow>
+                      ))
+                    )}
+                  </fieldset>
+                )}
                 <label>
                   Text Mode
                   <select
@@ -756,92 +847,6 @@ export const EndToEndDemo: FC = () => {
                     Next Page
                   </button>
                 </InlineRow>
-
-                <fieldset>
-                  <legend>Structured Filters</legend>
-                  <InlineRow>
-                    <label>
-                      Operator
-                      <select
-                        value={filtersOperator}
-                        onChange={(event) =>
-                          setFiltersOperator(
-                            event.target.value as LogicalOperators,
-                          )
-                        }
-                      >
-                        <option value={LogicalOperators.AND}>AND</option>
-                        <option value={LogicalOperators.OR}>OR</option>
-                      </select>
-                    </label>
-                    <button type="button" onClick={addFilter}>
-                      Add Filter
-                    </button>
-                  </InlineRow>
-                  {filters.length === 0 ? (
-                    <p>No structured filters yet.</p>
-                  ) : (
-                    filters.map((filter) => (
-                      <InlineRow key={filter.id}>
-                        <select
-                          value={filter.fieldName}
-                          onChange={(event) =>
-                            updateFilter(filter.id, {
-                              fieldName: event.target.value as
-                                | "make"
-                                | "model"
-                                | "year",
-                            })
-                          }
-                        >
-                          <option value="make">Make</option>
-                          <option value="model">Model</option>
-                          <option value="year">Year</option>
-                        </select>
-                        <select
-                          value={filter.operator}
-                          onChange={(event) =>
-                            updateFilter(filter.id, {
-                              operator: event.target
-                                .value as ComparisonOperators,
-                            })
-                          }
-                        >
-                          <option value={ComparisonOperators.EQUALS}>
-                            Equals
-                          </option>
-                          <option value={ComparisonOperators.NOT_EQUALS}>
-                            Not Equals
-                          </option>
-                          <option value={ComparisonOperators.LIKE}>Like</option>
-                          <option value={ComparisonOperators.GREATER_THAN}>
-                            Greater Than
-                          </option>
-                          <option value={ComparisonOperators.LESS_THAN}>
-                            Less Than
-                          </option>
-                        </select>
-                        <input
-                          type="text"
-                          value={filter.value}
-                          onChange={(event) =>
-                            updateFilter(filter.id, {
-                              value: event.target.value,
-                            })
-                          }
-                          placeholder="Value"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeFilter(filter.id)}
-                        >
-                          Remove
-                        </button>
-                      </InlineRow>
-                    ))
-                  )}
-                </fieldset>
-
                 {carSearchCursor && <small>Cursor: {carSearchCursor}</small>}
               </article>
 
