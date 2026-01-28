@@ -11,6 +11,7 @@
           "input": "https://example.com:443api/v1",
           "method": "POST",
           "headers": {
+            "Content-Type": "application/json",
             "Authorization": "Bearer token-1"
           },
           "body": "[\"a\",1]"
