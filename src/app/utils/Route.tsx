@@ -18,27 +18,34 @@ import {
   resolvePath,
 } from "../../common/Routing";
 
-(function (history) {
-  const pushState = history.pushState;
+const WINDOW: (Window & typeof globalThis) | undefined =
+  typeof globalThis !== "undefined" && "window" in (globalThis as any)
+    ? ((globalThis as any).window as any)
+    : undefined;
 
-  history.pushState = function (state, ...remainingArguments) {
-    // @ts-ignore
-    if (typeof history.onpushstate == "function") {
+if (WINDOW?.history) {
+  ((history) => {
+    const pushState = history.pushState;
+
+    history.pushState = function (state, ...remainingArguments) {
       // @ts-ignore
-      history.onpushstate({ state: state });
-    }
+      if (typeof history.onpushstate == "function") {
+        // @ts-ignore
+        history.onpushstate({ state: state });
+      }
 
-    // @ts-ignore
-    const result = pushState.apply(history, [state, ...remainingArguments]);
+      // @ts-ignore
+      const result = pushState.apply(history, [state, ...remainingArguments]);
 
-    // Dispatch a custom event 'statechanged'
-    window?.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
+      // Dispatch a custom event 'statechanged'
+      WINDOW.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
 
-    return result;
-  };
-})(window?.history);
+      return result;
+    };
+  })(WINDOW.history);
+}
 
-const CURRENT_PATH: string = window?.location.pathname;
+const CURRENT_PATH: string = WINDOW?.location?.pathname ?? "";
 
 /**
  * Access values for the current Route.
@@ -168,7 +175,7 @@ export const Route = <ParamsType extends Record<string, any>>({
   }, [params, onParamsChange]);
 
   useEffect(() => {
-    if (isTopLevel) {
+    if (WINDOW && isTopLevel) {
       const handleAnchorClick = (event: MouseEvent) => {
         let target: Node | ParentNode | null = event.target as Node;
 
@@ -187,28 +194,28 @@ export const Route = <ParamsType extends Record<string, any>>({
           } catch (error) {
             // Partial URL
             const newPath = resolvePath(
-              window?.location.pathname,
+              WINDOW.location?.pathname ?? "",
               href ? href : "",
             );
 
             event.preventDefault();
-            history.pushState({}, title, newPath);
+            WINDOW.history.pushState({}, title, newPath);
             setCurrentPath(newPath);
           }
         }
       };
       const handlePopOrReplaceState = () => {
-        setCurrentPath(window?.location.pathname);
+        setCurrentPath(WINDOW.location?.pathname ?? "");
       };
 
-      window?.document.addEventListener("click", handleAnchorClick);
-      window?.addEventListener("popstate", handlePopOrReplaceState);
-      window?.addEventListener("statechanged", handlePopOrReplaceState);
+      WINDOW.document.addEventListener("click", handleAnchorClick);
+      WINDOW.addEventListener("popstate", handlePopOrReplaceState);
+      WINDOW.addEventListener("statechanged", handlePopOrReplaceState);
 
       return () => {
-        window?.document.removeEventListener("click", handleAnchorClick);
-        window?.removeEventListener("popstate", handlePopOrReplaceState);
-        window?.removeEventListener("statechanged", handlePopOrReplaceState);
+        WINDOW.document.removeEventListener("click", handleAnchorClick);
+        WINDOW.removeEventListener("popstate", handlePopOrReplaceState);
+        WINDOW.removeEventListener("statechanged", handlePopOrReplaceState);
       };
     }
   }, [isTopLevel]);
