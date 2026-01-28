@@ -112,6 +112,14 @@ Where fulltext indexing writes or queries tokens, ensure it supplies:
 
 * Fulltext search must query only within the qualified field space.
 
+### Step 3 progress
+
+- [x] Apply type-qualified fulltext fields in ORM indexing/search paths.
+  - [x] `src/api/ORM/TypeInfoORMService.ts`: qualify `indexField` with `typeName` for `indexDocument`, `removeDocument`, and `searchLossy`/`searchExact` calls (using `indexFieldQualified`).
+  - [x] `src/api/Indexing/API.ts`: added `indexFieldQualified` for index/remove to keep document field access unqualified.
+  - [x] `src/api/Indexing/Handler.ts`: pass through `indexFieldQualified` for handler indexing/removals.
+  - [x] `src/api/Indexing/fulltext/Schema.ts`: updated docs to require type-qualified indexField for multi-type use.
+
 ---
 
 ## Step 4 — Implement: Structured (term + range)

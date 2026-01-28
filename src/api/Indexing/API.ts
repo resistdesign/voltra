@@ -59,6 +59,11 @@ export type IndexDocumentInput = {
    */
   indexField: string;
   /**
+   * Optional index field key to use for persistence when the index key should
+   * be type-qualified. Defaults to indexField.
+   */
+  indexFieldQualified?: string;
+  /**
    * Optional backend override (defaults to configured backend).
    */
   backend?: IndexBackend;
@@ -80,6 +85,11 @@ export type RemoveDocumentInput = {
    * Field name containing the text to remove from the index.
    */
   indexField: string;
+  /**
+   * Optional index field key to use for persistence when the index key should
+   * be type-qualified. Defaults to indexField.
+   */
+  indexFieldQualified?: string;
   /**
    * Optional backend override (defaults to configured backend).
    */
@@ -630,11 +640,13 @@ export async function indexDocument({
   document,
   primaryField,
   indexField,
+  indexFieldQualified,
   backend,
 }: IndexDocumentInput): Promise<void> {
   const writer = resolveBackend(backend);
   const docId = normalizeDocId(document[primaryField], primaryField);
   const text = resolveIndexText(document, indexField);
+  const indexFieldKey = indexFieldQualified ?? indexField;
 
   if (!text) {
     return;
@@ -648,12 +660,12 @@ export async function indexDocument({
 
   await Promise.all(
     uniqueLossyTokens.map((token) =>
-      writer.addLossyPosting(token, indexField, docId),
+      writer.addLossyPosting(token, indexFieldKey, docId),
     ),
   );
   await Promise.all(
     Array.from(positions.entries()).map(([token, tokenPositions]) =>
-      writer.addExactPositions(token, indexField, docId, tokenPositions),
+      writer.addExactPositions(token, indexFieldKey, docId, tokenPositions),
     ),
   );
 }
@@ -670,11 +682,13 @@ export async function removeDocument({
   document,
   primaryField,
   indexField,
+  indexFieldQualified,
   backend,
 }: RemoveDocumentInput): Promise<void> {
   const writer = resolveBackend(backend);
   const docId = normalizeDocId(document[primaryField], primaryField);
   const text = resolveIndexText(document, indexField);
+  const indexFieldKey = indexFieldQualified ?? indexField;
 
   if (!text) {
     return;
@@ -688,12 +702,12 @@ export async function removeDocument({
 
   await Promise.all(
     uniqueLossyTokens.map((token) =>
-      writer.removeLossyPosting(token, indexField, docId),
+      writer.removeLossyPosting(token, indexFieldKey, docId),
     ),
   );
   await Promise.all(
     uniqueExactTokens.map((token) =>
-      writer.removeExactPositions(token, indexField, docId),
+      writer.removeExactPositions(token, indexFieldKey, docId),
     ),
   );
 }
