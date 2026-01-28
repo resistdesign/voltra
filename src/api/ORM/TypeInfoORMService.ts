@@ -78,6 +78,7 @@ import {
   searchExact,
   searchLossy,
 } from "../Indexing/API";
+import { qualifyIndexField } from "../Indexing/fieldQualification";
 import type { IndexBackend } from "../Indexing/Types";
 import {
   searchStructured,
@@ -723,6 +724,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       return;
     }
 
+    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
     if (!(indexField in item)) {
@@ -738,6 +740,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       document: item,
       primaryField: String(primaryField),
       indexField,
+      indexFieldQualified: qualifiedIndexField,
     });
   }
 
@@ -768,6 +771,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       return;
     }
 
+    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
     if (!(indexField in item)) {
@@ -783,6 +787,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       document: item,
       primaryField: String(primaryField),
       indexField,
+      indexFieldQualified: qualifiedIndexField,
     });
   }
 
@@ -1772,13 +1777,14 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
               };
             }
 
+            const qualifiedIndexField = qualifyIndexField(typeName, indexField);
             const fullTextBackend = indexing?.fullText?.backend;
             const searchResult =
               text?.mode === "exact"
                 ? await searchExact({
                     backend: fullTextBackend,
                     query: text.query,
-                    indexField,
+                    indexField: qualifiedIndexField,
                     limit: itemsPerPage,
                     cursor,
                     limits: indexing?.limits,
@@ -1786,7 +1792,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                 : await searchLossy({
                     backend: fullTextBackend,
                     query: text?.query ?? "",
-                    indexField,
+                    indexField: qualifiedIndexField,
                     limit: itemsPerPage,
                     cursor,
                     limits: indexing?.limits,
