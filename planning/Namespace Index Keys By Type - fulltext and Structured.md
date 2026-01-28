@@ -42,6 +42,23 @@ Record:
 
 Deliverable: short checklist of files + functions that need signature changes. (For your tracking during this plan.)
 
+### Audit findings (Step 1)
+
+- [ ] Fulltext key encoders + call sites (identified)
+  - [ ] `src/api/Indexing/fulltext/Schema.ts`: `encodeTokenKey`, `encodeDocMirrorKey`, `encodeDocTokenSortKey`, `encodeDocTokenPositionSortKey` (all derive from indexField).
+  - [ ] `src/api/Indexing/fulltext/FullTextDdbBackend.ts`: all uses of `encodeTokenKey(...)` (token stats, lossy/exact postings, doc tokens). Calls only have `indexField` today.
+  - [ ] `src/api/Indexing/API.ts`: `indexDocument`, `removeDocument`, `searchLossy`, `searchExact` accept `indexField` only.
+  - [ ] `src/api/Indexing/Handler.ts`: handler forwards `indexField` only.
+  - [ ] `src/api/ORM/TypeInfoORMService.ts`: `indexFullTextDocument` / `removeFullTextDocument` and list/search (`searchLossy`/`searchExact`) have `typeName` available before passing `indexField`.
+  - [ ] `src/api/Indexing/fulltext/FullTextMemoryBackend.ts` and `src/api/Indexing/lossy/*`, `src/api/Indexing/exact/*`: use `indexField` as a key component; will inherit any qualification applied upstream.
+- [ ] Structured key builders + call sites (identified)
+  - [ ] `src/api/Indexing/structured/StructuredDdb.ts`: `buildStructuredTermKey`, `buildStructuredTermItem`, `buildStructuredRangeItem` use bare `field`.
+  - [ ] `src/api/Indexing/structured/StructuredDdbBackend.ts`: term queries call `buildStructuredTermKey(field, ...)`; range queries use `field` as partition key value; writer persistence uses `entry.field`.
+  - [ ] `src/api/Indexing/structured/StructuredWriter.ts`: builds term/range entries from `StructuredDocFieldsRecord` keys (currently bare `field`).
+  - [ ] `src/api/Indexing/structured/StructuredInMemoryBackend.ts` + `src/api/Indexing/structured/StructuredInMemoryIndex.ts`: index lookups keyed by `field`.
+  - [ ] `src/api/ORM/TypeInfoORMService.ts`: `buildStructuredFields` and `applyStructuredFieldMap` have `typeName` available before calling `structured.writer` / `searchStructured`.
+  - [ ] `src/api/ORM/indexing/criteriaToStructuredWhere.ts`: builds `Where` with `fieldName` only; type name is available upstream.
+
 ---
 
 ## Step 2 — Decide and implement namespacing approach
