@@ -76,11 +76,14 @@ export const sendServiceRequest = async (
 ): Promise<any> => {
   const { protocol, domain, port, basePath = "", authorization = "" } = config;
   const fullUrl = getFullUrl(protocol, domain, basePath, path, port);
-  const requestHeaders = !!authorization
-    ? {
-        Authorization: `Bearer ${authorization}`,
-      }
-    : undefined;
+  const requestHeaders = {
+    "Content-Type": "application/json",
+    ...(!!authorization
+      ? {
+          Authorization: `Bearer ${authorization}`,
+        }
+      : {}),
+  };
   const response = await fetch(fullUrl, {
     headers: requestHeaders,
     credentials: "same-origin",
