@@ -21,6 +21,7 @@
  */
 export * from "./API";
 export * from "./Cursor";
+export * from "./fieldQualification";
 export * from "./ddb/AwsSdkV3Adapter";
 export * from "./ddb/Types";
 export * from "./exact/ExactDdb";

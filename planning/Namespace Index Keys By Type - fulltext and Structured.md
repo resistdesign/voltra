@@ -83,6 +83,10 @@ This avoids introducing new DDB attributes; it simply changes the content of exi
 * Reads must mirror writes exactly.
 * Keep the helper that builds qualified names in one place (shared utility).
 
+### Step 2 progress
+
+- [x] Added shared helper `qualifyIndexField(typeName, fieldName)` in `src/api/Indexing/fieldQualification.ts` and exported it from `src/api/Indexing/index.ts`.
+
 ---
 
 ## Step 3 — Implement: Fulltext
