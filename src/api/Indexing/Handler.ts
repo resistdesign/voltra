@@ -30,6 +30,10 @@ export type IndexDocumentEvent = {
    * Optional index field name (defaults to "text").
    */
   indexField?: string;
+  /**
+   * Optional qualified index field key used for persistence.
+   */
+  indexFieldQualified?: string;
 };
 
 /**
@@ -52,6 +56,10 @@ export type RemoveDocumentEvent = {
    * Optional index field name (defaults to "text").
    */
   indexField?: string;
+  /**
+   * Optional qualified index field key used for persistence.
+   */
+  indexFieldQualified?: string;
 };
 
 /**
@@ -196,6 +204,7 @@ export async function handler(
         document: event.document,
         primaryField: event.primaryField ?? "id",
         indexField: event.indexField ?? "text",
+        indexFieldQualified: event.indexFieldQualified,
         backend: dependencies.backend,
       });
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
@@ -204,6 +213,7 @@ export async function handler(
         document: event.document,
         primaryField: event.primaryField ?? "id",
         indexField: event.indexField ?? "text",
+        indexFieldQualified: event.indexFieldQualified,
         backend: dependencies.backend,
       });
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };

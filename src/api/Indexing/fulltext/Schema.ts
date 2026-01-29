@@ -126,7 +126,8 @@ export const docTokenPositionsSchema = {
 
 /**
  * Encode a token key for token-based tables.
- * @param indexField Field name the token was indexed under.
+ * @param indexField Field name the token was indexed under. Use a type-qualified
+ * field name (for example "Article.title") when multiple types share fields.
  * @param token Token value.
  * @returns Encoded token key.
  */
@@ -145,7 +146,8 @@ export function encodeDocKey(docId: string | number): string {
 
 /**
  * Encode the key used for the document mirror table.
- * @param indexField Field name the document was indexed under.
+ * @param indexField Field name the document was indexed under. Use a
+ * type-qualified field name when multiple types share fields.
  * @param docId Document id to encode.
  * @returns Encoded document mirror key.
  */
@@ -167,7 +169,8 @@ export function encodeTokenDocSortKey(docId: string | number): string {
 
 /**
  * Encode sort key for document-to-token tables.
- * @param indexField Field name the token was indexed under.
+ * @param indexField Field name the token was indexed under. Use a
+ * type-qualified field name when multiple types share fields.
  * @param token Token value.
  * @returns Encoded sort key for doc tokens.
  */
@@ -180,7 +183,8 @@ export function encodeDocTokenSortKey(
 
 /**
  * Encode sort key for token positions within a document.
- * @param indexField Field name the token was indexed under.
+ * @param indexField Field name the token was indexed under. Use a
+ * type-qualified field name when multiple types share fields.
  * @param token Token value.
  * @param position Token position within the document.
  * @returns Encoded sort key for token positions.
