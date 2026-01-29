@@ -1,0 +1,19 @@
+{
+  "file": "./DBX_INDEX_COLLISION_E2E.test-utils.ts",
+  "tests": [
+    {
+      "export": "runDbxIndexCollisionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createdAuthorIds": ["author-1", "author-2"],
+        "createdCustomerIds": ["customer-1", "customer-2"],
+        "structuredAuthorLastNameIds": ["author-1"],
+        "structuredCustomerLastNameIds": ["customer-1"],
+        "structuredAuthorScoreIds": ["author-1", "author-2"],
+        "fullTextAuthorLastNameIds": ["author-1"],
+        "fullTextCustomerLastNameIds": ["customer-1"]
+      }
+    }
+  ]
+}

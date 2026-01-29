@@ -638,17 +638,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       }
 
       const mappedField = fieldMap?.[fieldName] ?? fieldName;
+      const qualifiedField = qualifyIndexField(typeName, mappedField);
 
       if (Array.isArray(value)) {
         const filtered = value.filter((entry) => this.isStructuredValue(entry));
         if (filtered.length > 0) {
-          fields[mappedField] = filtered as WhereValue[];
+          fields[qualifiedField] = filtered as WhereValue[];
         }
         continue;
       }
 
       if (this.isStructuredValue(value)) {
-        fields[mappedField] = value;
+        fields[qualifiedField] = value;
       }
     }
 
@@ -660,6 +661,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    */
   protected applyStructuredFieldMap = (
     /**
+     * Type name used for field qualification.
+     */
+    typeName: string,
+    /**
      * Structured query to map.
      */
     where: Where,
@@ -668,14 +673,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      */
     fieldMap?: Record<string, string>,
   ): Where => {
-    if (!fieldMap || Object.keys(fieldMap).length === 0) {
-      return where;
-    }
-
     if ("and" in where) {
       return {
         and: where.and.map((child) =>
-          this.applyStructuredFieldMap(child, fieldMap),
+          this.applyStructuredFieldMap(typeName, child, fieldMap),
         ),
       };
     }
@@ -683,18 +684,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if ("or" in where) {
       return {
         or: where.or.map((child) =>
-          this.applyStructuredFieldMap(child, fieldMap),
+          this.applyStructuredFieldMap(typeName, child, fieldMap),
         ),
       };
     }
 
-    const mappedField = fieldMap[where.field] ?? where.field;
+    const mappedField = fieldMap?.[where.field] ?? where.field;
+    const qualifiedField = qualifyIndexField(typeName, mappedField);
 
     if (where.type === "term") {
-      return { ...where, field: mappedField };
+      return { ...where, field: qualifiedField };
     }
 
-    return { ...where, field: mappedField };
+    return { ...where, field: qualifiedField };
   };
 
   /**
@@ -1811,6 +1813,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             }
 
             const mappedWhere = this.applyStructuredFieldMap(
+              typeName,
               where,
               indexing?.structured?.fieldMapByType?.[typeName],
             );

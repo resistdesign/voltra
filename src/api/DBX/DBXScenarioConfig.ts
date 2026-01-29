@@ -20,6 +20,12 @@ export const DBX_TYPE_INFO_MAP: TypeInfoMap = {
         readonly: false,
         optional: true,
       },
+      lastName: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: true,
+      },
       handle: {
         type: "string",
         array: false,
@@ -32,12 +38,42 @@ export const DBX_TYPE_INFO_MAP: TypeInfoMap = {
         readonly: false,
         optional: true,
       },
+      score: {
+        type: "number",
+        array: false,
+        readonly: false,
+        optional: true,
+      },
       posts: {
         type: "string",
         array: true,
         readonly: false,
         optional: true,
         typeReference: "Post",
+      },
+    },
+  },
+  Customer: {
+    primaryField: "id",
+    fields: {
+      id: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+        tags: { primaryField: true },
+      },
+      lastName: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: true,
+      },
+      score: {
+        type: "number",
+        array: false,
+        readonly: false,
+        optional: true,
       },
     },
   },

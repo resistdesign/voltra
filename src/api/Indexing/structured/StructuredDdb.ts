@@ -7,7 +7,8 @@ import type { DocId } from "../Types";
 import type { WhereValue } from "./Types";
 
 /**
- * Document fields stored for structured indexing.
+ * Document fields stored for structured indexing. Keys should be type-qualified
+ * when multiple types share fields.
  */
 export type StructuredDocFieldsRecord = Record<
   string,
@@ -38,7 +39,8 @@ export type StructuredTermIndexKey = {
  */
 export type StructuredTermIndexItem = StructuredTermIndexKey & {
   /**
-   * Field name being indexed.
+   * Field name being indexed. Use a type-qualified field name when multiple
+   * types share fields.
    */
   field: string;
   /**
@@ -56,7 +58,8 @@ export type StructuredTermIndexItem = StructuredTermIndexKey & {
  */
 export type StructuredRangeIndexKey = {
   /**
-   * Field name being indexed.
+   * Field name being indexed. Use a type-qualified field name when multiple
+   * types share fields.
    */
   field: string;
   /**
@@ -152,7 +155,8 @@ export function serializeStructuredValue(value: WhereValue): string {
 
 /**
  * Build the term index partition key for a field/value/mode.
- * @param field Field name being indexed.
+ * @param field Field name being indexed. Use a type-qualified field name when
+ * multiple types share fields.
  * @param value Field value.
  * @param mode Term mode for the entry.
  * @returns Term key for the structured term index.
@@ -180,7 +184,8 @@ export function buildStructuredRangeKey(
 
 /**
  * Build a structured term index item.
- * @param field Field name being indexed.
+ * @param field Field name being indexed. Use a type-qualified field name when
+ * multiple types share fields.
  * @param value Field value.
  * @param mode Term mode for the entry.
  * @param docId Document id containing the value.
@@ -203,7 +208,8 @@ export function buildStructuredTermItem(
 
 /**
  * Build a structured range index item.
- * @param field Field name being indexed.
+ * @param field Field name being indexed. Use a type-qualified field name when
+ * multiple types share fields.
  * @param value Field value.
  * @param docId Document id containing the value.
  * @returns Structured range index item.
