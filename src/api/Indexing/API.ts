@@ -97,6 +97,37 @@ export type RemoveDocumentInput = {
 };
 
 /**
+ * Input for replacing a document in the index.
+ * */
+export type ReplaceDocumentInput = {
+  /**
+   * Previous document record to remove.
+   */
+  previousDocument: DocumentRecord;
+  /**
+   * Next document record to index.
+   */
+  nextDocument: DocumentRecord;
+  /**
+   * Field name used as the document id.
+   */
+  primaryField: string;
+  /**
+   * Field name containing the text to index.
+   */
+  indexField: string;
+  /**
+   * Optional index field key to use for persistence when the index key should
+   * be type-qualified. Defaults to indexField.
+   */
+  indexFieldQualified?: string;
+  /**
+   * Optional backend override (defaults to configured backend).
+   */
+  backend?: IndexBackend;
+};
+
+/**
  * Input for lossy search with paging support.
  * */
 export type SearchLossyInput = {
@@ -710,6 +741,41 @@ export async function removeDocument({
       writer.removeExactPositions(token, indexFieldKey, docId),
     ),
   );
+}
+
+/**
+ * Replace a document in exact and lossy backends.
+ * @param previousDocument Document record to remove.
+ * @param nextDocument Document record to index.
+ * @param primaryField Field name used as the document id.
+ * @param indexField Field name containing the text to index.
+ * @param backend Optional backend override (defaults to configured backend).
+ * @returns Promise resolved once replacement is complete.
+ * @remarks Replacement is remove-then-add; a failure between steps can
+ * temporarily hide the document until retried.
+ * */
+export async function replaceFullTextDocument({
+  previousDocument,
+  nextDocument,
+  primaryField,
+  indexField,
+  indexFieldQualified,
+  backend,
+}: ReplaceDocumentInput): Promise<void> {
+  await removeDocument({
+    backend,
+    document: previousDocument,
+    primaryField,
+    indexField,
+    indexFieldQualified,
+  });
+  await indexDocument({
+    backend,
+    document: nextDocument,
+    primaryField,
+    indexField,
+    indexFieldQualified,
+  });
 }
 
 /**

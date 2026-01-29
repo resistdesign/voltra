@@ -201,9 +201,9 @@ Tasks:
 
 ## Quick Self-Review Checklist (for Codex)
 
-* [ ] Update path reads `existingItem` before update and uses it for removal
-* [ ] Create path unchanged
-* [ ] Delete path unchanged
-* [ ] Replace is used in any non-ORM update flows
-* [ ] DBX spec added and passes
-* [ ] No unrelated changes
+* [x] Update path reads `existingItem` before update and uses it for removal
+* [x] Create path unchanged
+* [x] Delete path unchanged
+* [x] Replace is used in any non-ORM update flows
+* [x] DBX spec added and passes
+* [x] No unrelated changes
