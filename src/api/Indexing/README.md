@@ -6,8 +6,8 @@ A serverless-friendly toolkit for building multi-modal indexes (lossy and exact 
 
 The project layers three complementary index types that can be combined in application code:
 
-- **Full-text (lossy)** — Inverted index keyed by field + tokens. Great for recall-heavy searches; uses a lossy postings table (`pk=f#indexField#t#token`, `sk=d#docId`) whose name is injected per deployment. Implementation lives in `src/lossy` and shared full-text schema helpers in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L1-L42】
-- **Full-text (exact)** — Tracks token positions to support phrase queries. Stored alongside lossy data in an exact postings table (`pk=f#indexField#t#token`, `sk=d#docId`, `positions`) whose name is injected per deployment. Helpers in `src/exact` and schema in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L16-L33】【F:src/exact/ExactDdb.ts†L1-L22】
+- **Full-text (lossy)** — Inverted index keyed by field + tokens. Great for recall-heavy searches; uses a lossy postings table (`pk=f#qualifiedField#t#token`, `sk=d#docId`) whose name is injected per deployment. Implementation lives in `src/lossy` and shared full-text schema helpers in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L1-L42】
+- **Full-text (exact)** — Tracks token positions to support phrase queries. Stored alongside lossy data in an exact postings table (`pk=f#qualifiedField#t#token`, `sk=d#docId`, `positions`) whose name is injected per deployment. Helpers in `src/exact` and schema in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L16-L33】【F:src/exact/ExactDdb.ts†L1-L22】
 - **Structured filters** — Term and range indexes per field for equality/contains or numeric/string comparisons. Schemas in `src/structured/StructuredDdb.ts`. Query composition happens in `src/structured/SearchStructured.ts` using AND/OR trees and cursor-based paging.【F:src/structured/StructuredDdb.ts†L1-L78】【F:src/structured/Types.ts†L1-L34】【F:src/structured/SearchStructured.ts†L1-L90】
 - **Relational edges** — Simple graph edges (outgoing/incoming) stored twice for each relation to support directional traversals. Schema and cursor encoding live in `src/rel/RelationalDdb.ts`.【F:src/rel/RelationalDdb.ts†L1-L108】
 
@@ -21,17 +21,17 @@ Lambda via `INDEXING_*` env vars consumed in `site/api/indexing.ts`.
 
 ### Full-text tables
 
-- **LossyPostings** (`pk`, `sk`): `pk=f#<indexField>#t#<token>`, `sk=d#<docId>`
-- **ExactPostings** (`pk`, `sk`, `positions`): `pk=f#<indexField>#t#<token>`, `sk=d#<docId>`, `positions` array
-- **FullTextDocMirror** (`pk`, `content`): optional mirror of full docs keyed by `pk=d#<docId>#f#<indexField>`
-- **FullTextTokenStats** (`pk`, `df`): token document frequency by `pk=f#<indexField>#t#<token>`
-- **DocTokens** (`pk`, `sk`): optional doc→token mapping `pk=d#<docId>`, `sk=f#<indexField>#t#<token>`
-- **DocTokenPositions** (`pk`, `sk`, `positions`): optional doc→token positions `pk=d#<docId>`, `sk=f#<indexField>#t#<token>`
+- **LossyPostings** (`pk`, `sk`): `pk=f#<qualifiedField>#t#<token>`, `sk=d#<docId>`
+- **ExactPostings** (`pk`, `sk`, `positions`): `pk=f#<qualifiedField>#t#<token>`, `sk=d#<docId>`, `positions` array
+- **FullTextDocMirror** (`pk`, `content`): optional mirror of full docs keyed by `pk=d#<docId>#f#<qualifiedField>`
+- **FullTextTokenStats** (`pk`, `df`): token document frequency by `pk=f#<qualifiedField>#t#<token>`
+- **DocTokens** (`pk`, `sk`): optional doc→token mapping `pk=d#<docId>`, `sk=f#<qualifiedField>#t#<token>`
+- **DocTokenPositions** (`pk`, `sk`, `positions`): optional doc→token positions `pk=d#<docId>`, `sk=f#<qualifiedField>#t#<token>`
 
 ### Structured tables
 
-- **StructuredTermIndex** (`termKey`, `docId`, `field`, `value`, `mode`): `termKey=<field>#<mode>#<serializedValue>` supports `eq` and `contains` lookups.【F:src/structured/StructuredDdb.ts†L1-L53】
-- **StructuredRangeIndex** (`field`, `rangeKey`, `value`, `docId`): `rangeKey=<serializedValue>#<docId padded>` for ordered range scans.【F:src/structured/StructuredDdb.ts†L55-L76】
+- **StructuredTermIndex** (`termKey`, `docId`, `field`, `value`, `mode`): `termKey=<qualifiedField>#<mode>#<serializedValue>` supports `eq` and `contains` lookups.【F:src/structured/StructuredDdb.ts†L1-L53】
+- **StructuredRangeIndex** (`field`, `rangeKey`, `value`, `docId`): `field=<qualifiedField>` and `rangeKey=<serializedValue>#<docId padded>` for ordered range scans.【F:src/structured/StructuredDdb.ts†L55-L76】
 - **StructuredDocFields** (`docId`, `fields`): optional per-document field mirror.【F:src/structured/StructuredDdb.ts†L78-L82】
 
 ### Relational table
@@ -52,7 +52,7 @@ No mandatory environment variables are required by the library itself; configure
 ## Indexing Fields and IDs
 
 - `primaryField` identifies the document ID and is stringified (`String(value)`); missing or empty values throw.
-- `indexField` scopes tokens and postings, so searches must pass the same field used at index time.
+- `indexField` scopes tokens and postings. When multiple types share a field name, pass a type-qualified key (for example `Article.title`) via `indexFieldQualified` and use the same qualified key for searches.
 - Changing index-field behavior or upgrading from the legacy schema requires re-indexing; old entries are not migrated automatically.
 
 ## Setup
