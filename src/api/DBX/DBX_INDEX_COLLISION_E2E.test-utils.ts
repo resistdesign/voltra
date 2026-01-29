@@ -1,5 +1,11 @@
-import type { ListItemsResults, SearchCriteria } from "../../common/SearchTypes";
-import { ComparisonOperators, LogicalOperators } from "../../common/SearchTypes";
+import type {
+  ListItemsResults,
+  SearchCriteria,
+} from "../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../common/SearchTypes";
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
@@ -52,7 +58,7 @@ const buildCustomers = (): Array<Omit<Customer, "id">> => [
 const listIds = <T extends { id: string }>(results?: ListItemsResults<T>) =>
   (results?.items ?? []).map((item) => item.id);
 
-const runStructuredSearch = async <T>(
+const runStructuredSearch = async <T extends Record<any, any>>(
   runtime: ReturnType<typeof buildDbxRuntime>,
   typeName: "Author" | "Customer",
   criteria: SearchCriteria,
@@ -72,7 +78,7 @@ const runStructuredSearch = async <T>(
   return response.parsedBody as ListItemsResults<T>;
 };
 
-const runFullTextSearch = async <T>(
+const runFullTextSearch = async <T extends Record<any, any>>(
   runtime: ReturnType<typeof buildDbxRuntime>,
   typeName: "Author" | "Customer",
   query: string,
@@ -122,38 +128,50 @@ export const runDbxIndexCollisionScenario = async () => {
     customerIds.push(response.parsedBody as string);
   }
 
-  const authorLastNameResults = await runStructuredSearch<Author>(runtime, "Author", {
-    logicalOperator: LogicalOperators.AND,
-    fieldCriteria: [
-      {
-        fieldName: "lastName",
-        operator: ComparisonOperators.EQUALS,
-        value: "Adams",
-      },
-    ],
-  });
+  const authorLastNameResults = await runStructuredSearch<Author>(
+    runtime,
+    "Author",
+    {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "lastName",
+          operator: ComparisonOperators.EQUALS,
+          value: "Adams",
+        },
+      ],
+    },
+  );
 
-  const customerLastNameResults = await runStructuredSearch<Customer>(runtime, "Customer", {
-    logicalOperator: LogicalOperators.AND,
-    fieldCriteria: [
-      {
-        fieldName: "lastName",
-        operator: ComparisonOperators.EQUALS,
-        value: "Adams",
-      },
-    ],
-  });
+  const customerLastNameResults = await runStructuredSearch<Customer>(
+    runtime,
+    "Customer",
+    {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "lastName",
+          operator: ComparisonOperators.EQUALS,
+          value: "Adams",
+        },
+      ],
+    },
+  );
 
-  const authorScoreResults = await runStructuredSearch<Author>(runtime, "Author", {
-    logicalOperator: LogicalOperators.AND,
-    fieldCriteria: [
-      {
-        fieldName: "score",
-        operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
-        value: 10,
-      },
-    ],
-  });
+  const authorScoreResults = await runStructuredSearch<Author>(
+    runtime,
+    "Author",
+    {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "score",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 10,
+        },
+      ],
+    },
+  );
 
   const authorFullTextResults = await runFullTextSearch<Author>(
     runtime,
