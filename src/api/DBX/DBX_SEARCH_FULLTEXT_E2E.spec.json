@@ -44,7 +44,20 @@
         "lossyShortTokenIds": ["post-6"],
         "lossyEmojiIds": ["post-11"],
         "lossySmartApostrophesIds": ["post-12"],
-        "lossyMixedPunctuationIds": ["post-6"]
+        "lossyMixedPunctuationIds": ["post-6"],
+        "updateSwapId": "post-1",
+        "updateSwapBeforeIds": ["post-1"],
+        "updateSwapResult": true,
+        "updateSwapAfterOldIds": [],
+        "updateSwapAfterNewIds": ["post-1"],
+        "updateNullId": "post-2",
+        "updateNullBeforeIds": ["post-2"],
+        "updateNullResult": true,
+        "updateNullAfterIds": [],
+        "updateNonFullTextId": "post-3",
+        "updateNonFullTextBeforeIds": ["post-3"],
+        "updateNonFullTextResult": true,
+        "updateNonFullTextAfterIds": ["post-3"]
       }
     }
   ]

@@ -191,6 +191,7 @@ export const runDbxFullTextSearchScenario = async () => {
   const runtime = buildDbxRuntime();
   const runtimeWithMidLimits = buildDbxRuntime({ maxTokens: 9 });
   const runtimeWithHighLimits = buildDbxRuntime({ maxTokens: 20 });
+  const runtimeForUpdates = buildDbxRuntime();
   const postIds: string[] = [];
 
   for (const post of buildPosts()) {
@@ -333,6 +334,128 @@ export const runDbxFullTextSearchScenario = async () => {
     "o reilly",
   );
 
+  const updateSwapResponse = await runDbxRequest<string>(runtimeForUpdates, {
+    method: "POST",
+    path: "create",
+    args: [
+      "Post",
+      {
+        title: "Swap Tokens",
+        body: "alpha bravo",
+        status: "draft",
+        score: 1,
+        createdAt: "2024-05-01T00:00:00.000Z",
+      },
+    ],
+  });
+  const updateSwapId = updateSwapResponse.parsedBody as string;
+  const updateSwapBefore = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "alpha",
+  );
+  const updateSwapResult = await runDbxRequest<boolean>(runtimeForUpdates, {
+    method: "POST",
+    path: "update",
+    args: [
+      "Post",
+      {
+        id: updateSwapId,
+        body: "charlie delta",
+      },
+    ],
+  });
+  const updateSwapAfterOld = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "alpha",
+  );
+  const updateSwapAfterNew = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "charlie",
+  );
+
+  const updateNullResponse = await runDbxRequest<string>(runtimeForUpdates, {
+    method: "POST",
+    path: "create",
+    args: [
+      "Post",
+      {
+        title: "Clear Tokens",
+        body: "echo foxtrot",
+        status: "published",
+        score: 2,
+        createdAt: "2024-05-02T00:00:00.000Z",
+      },
+    ],
+  });
+  const updateNullId = updateNullResponse.parsedBody as string;
+  const updateNullBefore = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "echo",
+  );
+  const updateNullResult = await runDbxRequest<boolean>(runtimeForUpdates, {
+    method: "POST",
+    path: "update",
+    args: [
+      "Post",
+      {
+        id: updateNullId,
+        body: null,
+      },
+    ],
+  });
+  const updateNullAfter = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "echo",
+  );
+
+  const updateNonFullTextResponse = await runDbxRequest<string>(
+    runtimeForUpdates,
+    {
+      method: "POST",
+      path: "create",
+      args: [
+        "Post",
+        {
+          title: "Keep Tokens",
+          body: "golf hotel",
+          status: "draft",
+          score: 3,
+          createdAt: "2024-05-03T00:00:00.000Z",
+        },
+      ],
+    },
+  );
+  const updateNonFullTextId = updateNonFullTextResponse.parsedBody as string;
+  const updateNonFullTextBefore = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "golf",
+  );
+  const updateNonFullTextResult = await runDbxRequest<boolean>(
+    runtimeForUpdates,
+    {
+      method: "POST",
+      path: "update",
+      args: [
+        "Post",
+        {
+          id: updateNonFullTextId,
+          status: "archived",
+        },
+      ],
+    },
+  );
+  const updateNonFullTextAfter = await runFullTextSearch(
+    runtimeForUpdates,
+    "exact",
+    "golf",
+  );
+
   return {
     createdPostIds: postIds,
     exactSentenceIds: exactSentence.ids,
@@ -360,5 +483,18 @@ export const runDbxFullTextSearchScenario = async () => {
     lossyEmojiIds: lossyEmoji.ids,
     lossySmartApostrophesIds: lossySmartApostrophes.ids,
     lossyMixedPunctuationIds: lossyMixedPunctuation.ids,
+    updateSwapId,
+    updateSwapBeforeIds: updateSwapBefore.ids,
+    updateSwapResult: updateSwapResult.parsedBody,
+    updateSwapAfterOldIds: updateSwapAfterOld.ids,
+    updateSwapAfterNewIds: updateSwapAfterNew.ids,
+    updateNullId,
+    updateNullBeforeIds: updateNullBefore.ids,
+    updateNullResult: updateNullResult.parsedBody,
+    updateNullAfterIds: updateNullAfter.ids,
+    updateNonFullTextId,
+    updateNonFullTextBeforeIds: updateNonFullTextBefore.ids,
+    updateNonFullTextResult: updateNonFullTextResult.parsedBody,
+    updateNonFullTextAfterIds: updateNonFullTextAfter.ids,
   };
 };
