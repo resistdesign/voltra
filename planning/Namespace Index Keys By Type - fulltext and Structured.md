@@ -141,6 +141,14 @@ This keeps schema unchanged but eliminates collisions.
 
 Any structured index write/read must pass typeName (or qualified field).
 
+### Step 4 progress
+
+- [x] Qualify structured fields on write and read in ORM flows.
+  - [x] `src/api/ORM/TypeInfoORMService.ts`: structured fields are built with `qualifyIndexField`, and structured criteria are mapped to qualified fields before `searchStructured`.
+  - [x] `src/api/Indexing/structured/StructuredDdb.ts`: doc comments updated to require qualified field keys where relevant.
+  - [x] `src/api/Indexing/structured/Handlers.ts`: doc comments updated to require qualified fields in handler inputs.
+  - [x] `src/api/Indexing/README.md`: structured range/term key docs updated to reference qualified fields.
+
 ---
 
 ## Step 5 — Cross-check: Other indexing layers
@@ -151,6 +159,13 @@ Confirm these do NOT require changes:
 * Exact/lossy if they already use `resolveIndexKey` / type scoping
 
 If any other index layer persists by only `fieldName`, apply the same qualification rule.
+
+### Step 5 progress
+
+- [x] Cross-check other indexing layers.
+  - [x] Exact/lossy indexes continue to use `indexField` as the key component but are now fed qualified values by ORM fulltext flows when needed.
+  - [x] Relational indexing scopes by entity/relation keys and does not require field qualification.
+  - [x] README/docs updated to clarify qualified field usage for fulltext + structured paths.
 
 ---
 
@@ -184,6 +199,14 @@ Cover:
 ### 6.3 Regression check
 
 Ensure existing DBX CRUD + relationship tests still pass.
+
+### Step 6 progress
+
+- [x] Added multi-type collision coverage for structured + fulltext.
+  - [x] `src/api/DBX/DBXScenarioConfig.ts`: added `Customer` type and shared `lastName`/`score` fields for `Author` + `Customer`.
+  - [x] `src/api/DBX/DBX_INDEX_COLLISION_E2E.test-utils.ts`: new scenario covering structured term, structured range, and fulltext searches with overlapping field names.
+  - [x] `src/api/DBX/DBX_INDEX_COLLISION_E2E.spec.json`: expectations for multi-type collision behavior.
+- [x] Regression check: `yarn test`.
 
 ---
 

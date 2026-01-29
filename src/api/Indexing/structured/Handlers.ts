@@ -20,7 +20,8 @@ export type StructuredDocumentRecord = {
    */
   id: DocId | number;
   /**
-   * Structured fields to index.
+   * Structured fields to index. Field keys should be type-qualified when
+   * multiple types share fields.
    */
   fields: StructuredDocFieldsRecord;
 };
@@ -48,7 +49,8 @@ export type StructuredSearchEvent = {
    */
   action: "SearchStructured";
   /**
-   * Structured query clause.
+   * Structured query clause. Field values should be type-qualified when
+   * multiple types share fields.
    */
   where: Where;
   /**
