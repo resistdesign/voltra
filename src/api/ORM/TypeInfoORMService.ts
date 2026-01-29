@@ -75,6 +75,7 @@ import { executeDriverListItems } from "./ListItemUtils";
 import {
   indexDocument,
   removeDocument,
+  replaceFullTextDocument as replaceFullTextDocumentIndex,
   searchExact,
   searchLossy,
 } from "../Indexing/API";
@@ -787,6 +788,58 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     await removeDocument({
       backend: fullText.backend,
       document: item,
+      primaryField: String(primaryField),
+      indexField,
+      indexFieldQualified: qualifiedIndexField,
+    });
+  }
+
+  /**
+   * @returns Promise resolved once replacement is complete.
+   */
+  protected async replaceFullTextDocument(
+    /**
+     * Type name for index field resolution.
+     */
+    typeName: string,
+    /**
+     * Previous item state to remove from the index.
+     */
+    previousItem: Partial<TypeInfoDataItem>,
+    /**
+     * Next item state to index.
+     */
+    nextItem: Partial<TypeInfoDataItem>,
+    /**
+     * Optional override for the index field.
+     */
+    indexFieldOverride?: string,
+  ): Promise<void> {
+    const { fullText } = this.config.indexing ?? {};
+    const indexField = this.resolveFullTextIndexField(
+      typeName,
+      indexFieldOverride,
+    );
+
+    if (!fullText || !indexField) {
+      return;
+    }
+
+    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
+    const { primaryField } = this.getTypeInfo(typeName);
+
+    if (!(indexField in previousItem)) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+        typeName,
+        indexField,
+      };
+    }
+
+    await replaceFullTextDocumentIndex({
+      backend: fullText.backend,
+      previousDocument: previousItem,
+      nextDocument: nextItem,
       primaryField: String(primaryField),
       indexField,
       indexFieldQualified: qualifiedIndexField,
@@ -1611,18 +1664,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           );
         const fieldsResourcesForUpdateOperationForNullFields = Object.keys(
           initialCleanItem,
-        ).reduce(
-          (acc, fN) => ({
-            ...acc,
-            // TRICKY: Remove delete fields for fields not being deleted.
-            ...(initialCleanItem[fN] === null
-              ? {
-                  [fN]: fieldsResourcesForDeleteOperation[fN],
-                }
-              : undefined),
-          }),
-          {},
-        );
+        ).reduce((acc, fN) => {
+          const deleteFieldResource = fieldsResourcesForDeleteOperation[fN];
+          if (initialCleanItem[fN] === null && deleteFieldResource) {
+            return {
+              ...acc,
+              [fN]: deleteFieldResource,
+            };
+          }
+
+          return acc;
+        }, {});
         const { fieldsResources: mergedFieldsResources = {} } =
           mergeDACDataItemResourceAccessResultMaps(
             {
@@ -1641,10 +1693,25 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item,
           mergedFieldsResources,
         );
+        let existingItem: Partial<TypeInfoDataItem> | undefined;
+        try {
+          existingItem = await driver.readItem(primaryFieldValue);
+        } catch (error: any) {
+          if (
+            error?.message !== DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND
+          ) {
+            throw error;
+          }
+        }
         const result = await driver.updateItem(primaryFieldValue, cleanItem);
         const updatedItem = await driver.readItem(primaryFieldValue);
 
-        await this.indexFullTextDocument(typeName, updatedItem);
+        if (existingItem) {
+          await this.removeFullTextDocument(typeName, existingItem);
+          await this.indexFullTextDocument(typeName, updatedItem);
+        } else {
+          await this.indexFullTextDocument(typeName, updatedItem);
+        }
         await this.indexStructuredDocument(typeName, updatedItem);
 
         return result;
