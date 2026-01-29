@@ -26,6 +26,10 @@ Make update full‑text indexing a **replace** operation:
 
 This is simplest + most reliable. It mirrors how structured indexing diffs fields.
 
+Note: Replace is implemented as remove-then-add; if a failure occurs between steps the document can temporarily disappear from full‑text results until retried (acceptable eventual consistency for now).
+
+Seeder/demo verification skipped per user (not relevant for this fix).
+
 ### Key requirements
 
 * Use the **previous persisted item** as the source of truth for tokens to remove.
