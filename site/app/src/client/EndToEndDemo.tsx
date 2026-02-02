@@ -1,7 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
-import type { RelationActionPayload } from "../../../../src/app/forms";
-import { AutoFormView, useFormEngine } from "../../../../src/app/forms";
+import { FC, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
 import { getSimpleId } from "../../../../src/common/IdGeneration";
 import type { TypeInfoORMAPI } from "../../../../src/common/TypeInfoORM";
@@ -13,8 +10,6 @@ import {
   type ListRelationshipsConfig,
   LogicalOperators,
 } from "../../../../src/common/SearchTypes";
-import type { TypeInfo } from "../../../../src/common/TypeParsing/TypeInfo";
-import { TypeOperation } from "../../../../src/common/TypeParsing/TypeInfo";
 import {
   BASE_DOMAIN,
   DEMO_ORM_ROUTE_PATH,
@@ -22,17 +17,17 @@ import {
 } from "../../../common/Constants";
 import { DemoTypeInfoMap } from "../../../common/DemoTypeInfoMap";
 import { BaseItemRelationshipInfo } from "../../../../src/common/ItemRelationshipInfoTypes";
-
-type RequestLogEntry = {
-  id: string;
-  methodName: keyof TypeInfoORMAPI;
-  path: TypeInfoORMAPIRoutePaths;
-  args: any[];
-  status: "pending" | "success" | "error";
-  response?: any;
-  error?: any;
-  timestamp: string;
-};
+import { DebugLogPanel, type RequestLogEntry } from "./endToEndDemo/components/DebugLogPanel";
+import { CarRelateScreen } from "./endToEndDemo/screens/CarRelateScreen";
+import { CreatePersonScreen } from "./endToEndDemo/screens/CreatePersonScreen";
+import { PeopleHomeScreen } from "./endToEndDemo/screens/PeopleHomeScreen";
+import { PersonDetailScreen } from "./endToEndDemo/screens/PersonDetailScreen";
+import { Stack } from "./endToEndDemo/layout";
+import {
+  demoAppReducer,
+  demoInitialState,
+  getActiveScreen,
+} from "./endToEndDemo/demoState";
 
 type SearchFilter = {
   id: string;
@@ -80,18 +75,14 @@ const getServiceConfig = () => {
   };
 };
 
-const formatCarLabel = (item: any) => {
-  const make = item?.make ?? "Unknown";
-  const model = item?.model ?? "Model";
-  const year = item?.year ?? "Year";
-
-  return `${year} ${make} ${model}`;
-};
-
 export const EndToEndDemo: FC = () => {
   const typeInfoMap = DemoTypeInfoMap;
   const personTypeInfo = typeInfoMap.Person;
   const carTypeInfo = typeInfoMap.Car;
+  const [demoState, dispatch] = useReducer(
+    demoAppReducer,
+    demoInitialState,
+  );
   const [requestLog, setRequestLog] = useState<RequestLogEntry[]>([]);
   const [personList, setPersonList] = useState<any[]>([]);
   const [personListCursor, setPersonListCursor] = useState<string | undefined>(
@@ -301,8 +292,9 @@ export const EndToEndDemo: FC = () => {
       setPersonCreateKey((prev) => prev + 1);
       await refreshPeople();
       await loadRelationship(String(newId));
+      dispatch({ type: "enterPersonDetail", personId: String(newId) });
     },
-    [logRequest, ormClient, refreshPeople, loadRelationship],
+    [logRequest, ormClient, refreshPeople, loadRelationship, dispatch],
   );
 
   const handleUpdatePerson = useCallback(
@@ -352,8 +344,9 @@ export const EndToEndDemo: FC = () => {
     setRelatedCarId(null);
     setRelatedCar(null);
     setRelatedCarSummary(null);
+    dispatch({ type: "goToPeopleList" });
     await refreshPeople();
-  }, [logRequest, ormClient, refreshPeople, selectedPersonId]);
+  }, [logRequest, ormClient, refreshPeople, selectedPersonId, dispatch]);
 
   const handleCreateCar = useCallback(
     async (values: any) => {
@@ -508,6 +501,7 @@ export const EndToEndDemo: FC = () => {
 
     await loadRelationship(selectedPersonId);
     setSelectedCarCandidate(null);
+    dispatch({ type: "exitRelateBackToPerson" });
   }, [
     loadRelationship,
     logRequest,
@@ -515,6 +509,7 @@ export const EndToEndDemo: FC = () => {
     relatedCarId,
     selectedCarCandidate,
     selectedPersonId,
+    dispatch,
   ]);
 
   const handleRemoveRelationship = useCallback(async () => {
@@ -568,6 +563,8 @@ export const EndToEndDemo: FC = () => {
     setFilters((prev) => prev.filter((filter) => filter.id !== id));
   };
 
+  const screen = getActiveScreen(demoState);
+
   return (
     <Stack>
       <article>
@@ -587,467 +584,81 @@ export const EndToEndDemo: FC = () => {
         </p>
       </article>
 
-      <Section>
-        <h4>1. Create a Person</h4>
-        <Grid>
-          <article>
-            <h5>New Person</h5>
-            <FormBlock
-              key={`person-create-${personCreateKey}`}
-              typeInfo={personFormTypeInfo ?? personTypeInfo}
-              initialValues={{}}
-              operation={TypeOperation.CREATE}
-              onSubmit={handleCreatePerson}
-              onRelationAction={() => {}}
-            />
-          </article>
-          <article>
-            <h5>People List</h5>
-            <InlineRow>
-              <label>
-                Items per page
-                <input
-                  type="number"
-                  min={1}
-                  value={personItemsPerPage}
-                  onChange={(event) =>
-                    setPersonItemsPerPage(Number(event.target.value))
-                  }
-                />
-              </label>
-              <button type="button" onClick={() => refreshPeople()}>
-                Refresh
-              </button>
-              <button
-                type="button"
-                onClick={() => refreshPeople(personListCursor)}
-                disabled={!personListCursor}
-              >
-                Next Page
-              </button>
-            </InlineRow>
-            {personList.length === 0 ? (
-              <p>No people loaded yet.</p>
-            ) : (
-              <List>
-                {personList.map((person, index) => (
-                  <ListItem key={`${person.id ?? "person"}-${index}`}>
-                    <div>
-                      <strong>
-                        {(person.firstName ?? "First") +
-                          " " +
-                          (person.lastName ?? "Last")}
-                      </strong>
-                      <div>ID: {person.id ?? "unknown"}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => loadPerson(String(person.id))}
-                    >
-                      View
-                    </button>
-                  </ListItem>
-                ))}
-              </List>
-            )}
-            {personListCursor && <small>Cursor: {personListCursor}</small>}
-          </article>
-        </Grid>
-      </Section>
 
-      <Section>
-        <h4>2. Person Details & Update</h4>
-        {!selectedPersonId ? (
-          <article>
-            <p>Select a person from the list to load their details.</p>
-          </article>
-        ) : (
-          <Grid>
-            <article>
-              <h5>Selected Person</h5>
-              <FormBlock
-                key={`person-edit-${selectedPersonId}`}
-                typeInfo={personFormTypeInfo ?? personTypeInfo}
-                initialValues={selectedPerson ?? {}}
-                operation={TypeOperation.UPDATE}
-                onSubmit={handleUpdatePerson}
-                onRelationAction={() => {}}
-              />
-              <button type="button" onClick={handleDeletePerson}>
-                Delete Person
-              </button>
-            </article>
-            <article>
-              <h5>Person Record (Read)</h5>
-              <pre>{JSON.stringify(selectedPerson, null, 2)}</pre>
-            </article>
-          </Grid>
-        )}
-      </Section>
+      {screen === "PeopleHome" && (
+        <PeopleHomeScreen
+          personList={personList}
+          personItemsPerPage={personItemsPerPage}
+          personListCursor={personListCursor}
+          onItemsPerPageChange={setPersonItemsPerPage}
+          onRefresh={() => refreshPeople()}
+          onNextPage={() => refreshPeople(personListCursor)}
+          onSelectPerson={async (personId) => {
+            await loadPerson(personId);
+            dispatch({ type: "enterPersonDetail", personId });
+          }}
+          onStartCreate={() => dispatch({ type: "startCreatePerson" })}
+        />
+      )}
 
-      <Section>
-        <h4>3. Manage Car Relationship</h4>
-        {!selectedPersonId ? (
-          <article>
-            <p>Select a person to manage their car relationship.</p>
-          </article>
-        ) : (
-          <Stack>
-            <article>
-              <h5>Current Car Relationship</h5>
-              {relatedCarSummary ? (
-                <InlineRow>
-                  <div>
-                    <strong>{formatCarLabel(relatedCarSummary)}</strong>
-                    <div>ID: {relatedCarSummary.id}</div>
-                  </div>
-                  <button type="button" onClick={handleRemoveRelationship}>
-                    Remove Relationship
-                  </button>
-                </InlineRow>
-              ) : (
-                <p>No car linked yet.</p>
-              )}
-            </article>
+      {screen === "CreatePerson" && (
+        <CreatePersonScreen
+          personTypeInfo={personFormTypeInfo ?? personTypeInfo}
+          personCreateKey={personCreateKey}
+          onCreate={handleCreatePerson}
+          onBack={() => dispatch({ type: "goToPeopleList" })}
+        />
+      )}
 
-            <Grid>
-              <article>
-                <h5>Search Cars (Text + Structured + Cursor Paging)</h5>
-                {carSearchMode === "lossy" ? (
-                  <label>
-                    Text Query
-                    <input
-                      type="text"
-                      value={carSearchQuery}
-                      onChange={(event) =>
-                        setCarSearchQuery(event.target.value)
-                      }
-                    />
-                  </label>
-                ) : (
-                  <fieldset>
-                    <legend>Structured Filters</legend>
-                    <InlineRow>
-                      <label>
-                        Operator
-                        <select
-                          value={filtersOperator}
-                          onChange={(event) =>
-                            setFiltersOperator(
-                              event.target.value as LogicalOperators,
-                            )
-                          }
-                        >
-                          <option value={LogicalOperators.AND}>AND</option>
-                          <option value={LogicalOperators.OR}>OR</option>
-                        </select>
-                      </label>
-                      <button type="button" onClick={addFilter}>
-                        Add Filter
-                      </button>
-                    </InlineRow>
-                    {filters.length === 0 ? (
-                      <p>No structured filters yet.</p>
-                    ) : (
-                      filters.map((filter) => (
-                        <InlineRow key={filter.id}>
-                          <select
-                            value={filter.fieldName}
-                            onChange={(event) =>
-                              updateFilter(filter.id, {
-                                fieldName: event.target.value as
-                                  | "make"
-                                  | "model"
-                                  | "year",
-                              })
-                            }
-                          >
-                            <option value="make">Make</option>
-                            <option value="model">Model</option>
-                            <option value="year">Year</option>
-                          </select>
-                          <select
-                            value={filter.operator}
-                            onChange={(event) =>
-                              updateFilter(filter.id, {
-                                operator: event.target
-                                  .value as ComparisonOperators,
-                              })
-                            }
-                          >
-                            <option value={ComparisonOperators.EQUALS}>
-                              Equals
-                            </option>
-                            <option value={ComparisonOperators.NOT_EQUALS}>
-                              Not Equals
-                            </option>
-                            <option value={ComparisonOperators.LIKE}>
-                              Like
-                            </option>
-                            <option value={ComparisonOperators.GREATER_THAN}>
-                              Greater Than
-                            </option>
-                            <option value={ComparisonOperators.LESS_THAN}>
-                              Less Than
-                            </option>
-                          </select>
-                          <input
-                            type="text"
-                            value={filter.value}
-                            onChange={(event) =>
-                              updateFilter(filter.id, {
-                                value: event.target.value,
-                              })
-                            }
-                            placeholder="Value"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeFilter(filter.id)}
-                          >
-                            Remove
-                          </button>
-                        </InlineRow>
-                      ))
-                    )}
-                  </fieldset>
-                )}
-                <label>
-                  Text Mode
-                  <select
-                    value={carSearchMode}
-                    onChange={(event) =>
-                      setCarSearchMode(event.target.value as "lossy" | "exact")
-                    }
-                  >
-                    <option value="lossy">Lossy</option>
-                    <option value="exact">Exact</option>
-                  </select>
-                </label>
-                <InlineRow>
-                  <label>
-                    Items per page
-                    <input
-                      type="number"
-                      min={1}
-                      value={carItemsPerPage}
-                      onChange={(event) =>
-                        setCarItemsPerPage(Number(event.target.value))
-                      }
-                    />
-                  </label>
-                  <button type="button" onClick={() => runCarSearch()}>
-                    Run Search
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => runCarSearch(carSearchCursor)}
-                    disabled={!carSearchCursor}
-                  >
-                    Next Page
-                  </button>
-                </InlineRow>
-                {carSearchCursor && <small>Cursor: {carSearchCursor}</small>}
-              </article>
+      {screen === "PersonDetail" && selectedPersonId && (
+        <PersonDetailScreen
+          personTypeInfo={personFormTypeInfo ?? personTypeInfo}
+          personId={selectedPersonId}
+          person={selectedPerson}
+          onUpdate={handleUpdatePerson}
+          onDelete={handleDeletePerson}
+          onStartRelate={() =>
+            dispatch({ type: "startRelateCar", personId: selectedPersonId })
+          }
+          onBack={() => dispatch({ type: "goToPeopleList" })}
+        />
+      )}
 
-              <article>
-                <h5>Search Results</h5>
-                {carSearchResults.length === 0 ? (
-                  <p>No car results yet.</p>
-                ) : (
-                  <List>
-                    {carSearchResults.map((car, index) => (
-                      <ListItem key={`${car.id ?? "car"}-${index}`}>
-                        <div>
-                          <strong>{formatCarLabel(car)}</strong>
-                          <div>ID: {car.id ?? "unknown"}</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedCarCandidate(car)}
-                        >
-                          Select
-                        </button>
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-                <button
-                  type="button"
-                  onClick={handleSetRelationship}
-                  disabled={!selectedCarCandidate}
-                >
-                  Set Relationship to Selected Car
-                </button>
-                {selectedCarCandidate && (
-                  <small>
-                    Selected: {formatCarLabel(selectedCarCandidate)} (
-                    {selectedCarCandidate.id})
-                  </small>
-                )}
-              </article>
-            </Grid>
+      {screen === "CarRelate" && (
+        <CarRelateScreen
+          relatedCarSummary={relatedCarSummary}
+          relatedCarId={relatedCarId}
+          relatedCar={relatedCar}
+          selectedCarCandidate={selectedCarCandidate}
+          carTypeInfo={carTypeInfo}
+          carCreateKey={carCreateKey}
+          carSearchMode={carSearchMode}
+          carSearchQuery={carSearchQuery}
+          carSearchCursor={carSearchCursor}
+          carSearchResults={carSearchResults}
+          carItemsPerPage={carItemsPerPage}
+          filters={filters}
+          filtersOperator={filtersOperator}
+          onRemoveRelationship={handleRemoveRelationship}
+          onSetRelationship={handleSetRelationship}
+          onSelectCarCandidate={setSelectedCarCandidate}
+          onCreateCar={handleCreateCar}
+          onUpdateCar={handleUpdateCar}
+          onDeleteCar={handleDeleteCar}
+          onCarSearchQueryChange={setCarSearchQuery}
+          onCarSearchModeChange={setCarSearchMode}
+          onFiltersOperatorChange={setFiltersOperator}
+          onAddFilter={addFilter}
+          onUpdateFilter={updateFilter}
+          onRemoveFilter={removeFilter}
+          onCarItemsPerPageChange={setCarItemsPerPage}
+          onRunSearch={runCarSearch}
+          onBack={() => dispatch({ type: "exitRelateBackToPerson" })}
+        />
+      )}
 
-            <Grid>
-              <article>
-                <h5>Create a New Car</h5>
-                <FormBlock
-                  key={`car-create-${carCreateKey}`}
-                  typeInfo={carTypeInfo}
-                  initialValues={{}}
-                  operation={TypeOperation.CREATE}
-                  onSubmit={handleCreateCar}
-                />
-              </article>
-              <article>
-                <h5>Related Car Details & Update</h5>
-                {!relatedCarId ? (
-                  <p>No related car to edit yet.</p>
-                ) : (
-                  <>
-                    <FormBlock
-                      key={`car-edit-${relatedCarId}`}
-                      typeInfo={carTypeInfo}
-                      initialValues={relatedCar ?? {}}
-                      operation={TypeOperation.UPDATE}
-                      onSubmit={handleUpdateCar}
-                    />
-                    <button type="button" onClick={handleDeleteCar}>
-                      Delete Related Car
-                    </button>
-                  </>
-                )}
-              </article>
-            </Grid>
-          </Stack>
-        )}
-      </Section>
+      <DebugLogPanel requestLog={requestLog} onClear={() => setRequestLog([])} />
 
-      <Section>
-        <h4>Request / Response Log</h4>
-        <article>
-          <InlineRow>
-            <p>
-              Inspect the exact payloads sent to the ORM routes and the
-              responses returned.
-            </p>
-            <button type="button" onClick={() => setRequestLog([])}>
-              Clear Log
-            </button>
-          </InlineRow>
-          {requestLog.length === 0 ? (
-            <p>No requests yet.</p>
-          ) : (
-            <Stack>
-              {requestLog.map((entry) => (
-                <details key={entry.id}>
-                  <summary>
-                    {entry.methodName} ({entry.path}) - {entry.status}
-                  </summary>
-                  <LogGrid>
-                    <div>
-                      <strong>Request</strong>
-                      <pre>
-                        {JSON.stringify(
-                          {
-                            args: entry.args,
-                            timestamp: entry.timestamp,
-                          },
-                          null,
-                          2,
-                        )}
-                      </pre>
-                    </div>
-                    <div>
-                      <strong>Response</strong>
-                      <pre>{JSON.stringify(entry.response, null, 2)}</pre>
-                    </div>
-                    <div>
-                      <strong>Error</strong>
-                      <pre>{JSON.stringify(entry.error, null, 2)}</pre>
-                    </div>
-                  </LogGrid>
-                </details>
-              ))}
-            </Stack>
-          )}
-        </article>
-      </Section>
     </Stack>
   );
 };
-
-type FormBlockProps = {
-  typeInfo: TypeInfo;
-  initialValues: Record<string, any>;
-  operation: TypeOperation;
-  onSubmit: (values: any) => void;
-  onRelationAction?: (payload: RelationActionPayload) => void;
-};
-
-const FormBlock: FC<FormBlockProps> = ({
-  typeInfo,
-  initialValues,
-  operation,
-  onSubmit,
-  onRelationAction,
-}) => {
-  const controller = useFormEngine(initialValues, typeInfo, { operation });
-
-  return (
-    <AutoFormView
-      controller={controller}
-      onSubmit={onSubmit}
-      onRelationAction={onRelationAction}
-    />
-  );
-};
-
-const Stack = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-`;
-
-const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  align-items: start;
-`;
-
-const InlineRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-`;
-
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-`;
-
-const ListItem = styled.li`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem;
-`;
-
-const LogGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-`;
