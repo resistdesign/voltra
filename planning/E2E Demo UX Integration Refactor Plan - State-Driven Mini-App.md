@@ -91,39 +91,39 @@ Next: Create 3–5 “screens” that wrap existing sections.
 
 ### 2A. Define Screen components (wrappers around existing UI)
 
-- [ ] `PeopleHomeScreen`
+- [x] `PeopleHomeScreen`
   - Shows: People list + primary CTA “Create Person”
   - Optional: small create form inline or button to open create mode
-- [ ] `CreatePersonScreen`
+- [x] `CreatePersonScreen`
   - Shows: Create Person form
   - On success: auto-select the created Person and transition to `PersonDetailScreen`
-- [ ] `PersonDetailScreen`
+- [x] `PersonDetailScreen`
   - Shows: Person detail/update/delete
   - Includes entrypoint to relationship flow (“Manage Car Relationship”)
-- [ ] `CarRelateScreen`
+- [x] `CarRelateScreen`
   - Shows: Car search + select + confirm relationship
   - Optional: Create car inline if no result
   - On confirm: transition back to `PersonDetailScreen`
-- [ ] `DebugLogPanel` (persistent)
-  - Docked/collapsible; persists across screens
+- [~] `DebugLogPanel` (persistent)
+  - Persists across screens; dock/collapse pending
 
 Suggested structure:
-- [ ] `site/src/app/demos/e2e/screens/PeopleHomeScreen.tsx`
-- [ ] `site/src/app/demos/e2e/screens/CreatePersonScreen.tsx`
-- [ ] `site/src/app/demos/e2e/screens/PersonDetailScreen.tsx`
-- [ ] `site/src/app/demos/e2e/screens/CarRelateScreen.tsx`
-- [ ] `site/src/app/demos/e2e/components/DebugLogPanel.tsx`
+- [x] `site/app/src/client/endToEndDemo/screens/PeopleHomeScreen.tsx`
+- [x] `site/app/src/client/endToEndDemo/screens/CreatePersonScreen.tsx`
+- [x] `site/app/src/client/endToEndDemo/screens/PersonDetailScreen.tsx`
+- [x] `site/app/src/client/endToEndDemo/screens/CarRelateScreen.tsx`
+- [x] `site/app/src/client/endToEndDemo/components/DebugLogPanel.tsx`
 
 ### 2B. Wire screen switching (no router)
 
-- [ ] In the demo root component:
+- [x] In the demo root component:
   - render `screen = getActiveScreen(state)`
   - mount only the active screen component
-- [ ] Keep shared API client + logging store available to all screens via providers.
+- [x] Keep shared API client + logging store available to all screens via props.
 
 Deliverable:
-- [ ] Initial load shows PeopleHomeScreen.
-- [ ] Nothing “below” is visible until state warrants it.
+- [x] Initial load shows PeopleHomeScreen.
+- [x] Nothing “below” is visible until state warrants it.
 
 Next: Normalize selection + transitions (make it feel “stitched”).
 
