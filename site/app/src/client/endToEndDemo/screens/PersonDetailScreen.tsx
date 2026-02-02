@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import type { RelationActionPayload } from "../../../../../../src/app/forms";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { FormBlock } from "../components/FormBlock";
@@ -12,6 +13,7 @@ type PersonDetailScreenProps = {
   onDelete: () => void;
   onStartRelate: () => void;
   onBack: () => void;
+  onRelationAction: (payload: RelationActionPayload) => void;
 };
 
 export const PersonDetailScreen: FC<PersonDetailScreenProps> = ({
@@ -22,6 +24,7 @@ export const PersonDetailScreen: FC<PersonDetailScreenProps> = ({
   onDelete,
   onStartRelate,
   onBack,
+  onRelationAction,
 }) => (
   <Section>
     <InlineRow>
@@ -42,7 +45,7 @@ export const PersonDetailScreen: FC<PersonDetailScreenProps> = ({
           initialValues={person ?? {}}
           operation={TypeOperation.UPDATE}
           onSubmit={onUpdate}
-          onRelationAction={() => {}}
+          onRelationAction={onRelationAction}
         />
         <button type="button" onClick={onDelete}>
           Delete Person

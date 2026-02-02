@@ -621,6 +621,9 @@ export const EndToEndDemo: FC = () => {
             dispatch({ type: "startRelateCar", personId: selectedPersonId })
           }
           onBack={() => dispatch({ type: "goToPeopleList" })}
+          onRelationAction={() =>
+            dispatch({ type: "startRelateCar", personId: selectedPersonId })
+          }
         />
       )}
 
