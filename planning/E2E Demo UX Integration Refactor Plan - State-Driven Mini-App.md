@@ -133,31 +133,31 @@ Next: Normalize selection + transitions (make it feel “stitched”).
 
 ### 3A. Tighten cause/effect transitions
 
-- [ ] Create Person success:
+- [x] Create Person success:
   - set as active selection
   - jump to PersonDetailScreen
-- [ ] People list item click:
+- [x] People list item click:
   - set active selection
   - jump to PersonDetailScreen
-- [ ] Delete Person:
+- [x] Delete Person:
   - clear selection
   - jump back to PeopleHomeScreen and refresh list
-- [ ] Start relationship:
+- [x] Start relationship:
   - jump to CarRelateScreen with `relate.fromId = personId`
-- [ ] Confirm relationship:
+- [x] Confirm relationship:
   - jump back to PersonDetailScreen (same person)
   - refresh person read and relationship display
 
 ### 3B. Navigation affordances (minimal)
 
-- [ ] Add a small top “context bar”:
+- [x] Add a small top “context bar”:
   - `People` (back to list)
   - If person selected: `Person: <name>` (current)
   - If in relate mode: `Relating Car → Person: <name>`
-- [ ] Keep it dumb: it only dispatches context actions.
+- [x] Keep it dumb: it only dispatches context actions.
 
 Deliverable:
-- [ ] The demo feels like one app, not a stack of independent sections.
+- [x] The demo feels like one app, not a stack of independent sections.
 
 Next: Clean up shared logic (extract reusable hooks/utilities).
 
