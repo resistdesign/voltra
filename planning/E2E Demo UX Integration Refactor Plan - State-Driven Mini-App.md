@@ -53,7 +53,7 @@ Next: Define the app context + view model boundaries.
 
 ### 1A. Define the minimal state model
 
-- [ ] Add a single source of truth for demo navigation/state, e.g.:
+ - [x] Add a single source of truth for demo navigation/state, e.g.:
   - `activeType`: `"Person" | "Car"`
   - `activeId`: string | null (the selected entity id for the activeType)
   - `mode`: `"list" | "create" | "detail" | "relate"`
@@ -61,13 +61,11 @@ Next: Define the app context + view model boundaries.
   - Keep existing granular state (forms/search/paging) but route visibility via this model.
 
 Suggested file(s) (pick the closest matching convention where the demo lives):
-- [ ] `site/src/app/demos/e2e/DemoContext.tsx`
-- [ ] `site/src/app/demos/e2e/demoState.ts`
-- [ ] `site/src/app/demos/e2e/useDemoApp.ts`
+- [x] `site/app/src/client/endToEndDemo/demoState.ts`
 
 ### 1B. Implement reducer/actions
 
-- [ ] Actions:
+- [x] Actions:
   - `goToPeopleList`
   - `startCreatePerson`
   - `selectPerson(personId)`
@@ -77,13 +75,13 @@ Suggested file(s) (pick the closest matching convention where the demo lives):
   - `confirmRelateCar(carId)`
   - `exitRelateBackToPerson`
   - `clearSelection`
-- [ ] Ensure actions are pure transitions; do not embed API calls in reducer.
-- [ ] Add a tiny “view selector” helper:
+- [x] Ensure actions are pure transitions; do not embed API calls in reducer.
+- [x] Add a tiny “view selector” helper:
   - `getActiveScreen(state): "PeopleHome" | "PersonDetail" | "CarRelate" | ...`
 
 Deliverable:
-- [ ] Context provider + hook in place.
-- [ ] No UI changes yet besides wiring.
+- [x] State model + reducer in place.
+- [x] No UI changes yet besides wiring.
 
 Next: Create 3–5 “screens” that wrap existing sections.
 
