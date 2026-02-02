@@ -38,7 +38,7 @@ that feels integrated: views/screens change based on the active data type and th
   - paging cursor(s)
   - search query + mode
   - log store
-- [ ] Run locally and validate current behavior before refactor.
+- [x] Run locally and validate current behavior before refactor.
   - Command: `yarn start`
   - Optional: `yarn site:build:app` to ensure build stays green.
 
