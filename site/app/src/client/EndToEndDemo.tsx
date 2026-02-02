@@ -18,6 +18,7 @@ import {
 import { DemoTypeInfoMap } from "../../../common/DemoTypeInfoMap";
 import { BaseItemRelationshipInfo } from "../../../../src/common/ItemRelationshipInfoTypes";
 import { DebugLogPanel, type RequestLogEntry } from "./endToEndDemo/components/DebugLogPanel";
+import { ContextBar } from "./endToEndDemo/components/ContextBar";
 import { CarRelateScreen } from "./endToEndDemo/screens/CarRelateScreen";
 import { CreatePersonScreen } from "./endToEndDemo/screens/CreatePersonScreen";
 import { PeopleHomeScreen } from "./endToEndDemo/screens/PeopleHomeScreen";
@@ -28,6 +29,7 @@ import {
   demoInitialState,
   getActiveScreen,
 } from "./endToEndDemo/demoState";
+import { formatPersonLabel } from "./endToEndDemo/utils";
 
 type SearchFilter = {
   id: string;
@@ -500,6 +502,12 @@ export const EndToEndDemo: FC = () => {
     );
 
     await loadRelationship(selectedPersonId);
+    const person = await logRequest(
+      "read",
+      ["Person", selectedPersonId],
+      () => ormClient.read("Person", selectedPersonId),
+    );
+    setSelectedPerson(person);
     setSelectedCarCandidate(null);
     dispatch({ type: "exitRelateBackToPerson" });
   }, [
@@ -564,6 +572,9 @@ export const EndToEndDemo: FC = () => {
   };
 
   const screen = getActiveScreen(demoState);
+  const personLabel = formatPersonLabel(selectedPerson, selectedPersonId);
+  const showPerson = Boolean(selectedPersonId);
+  const isRelating = demoState.mode === "relate";
 
   return (
     <Stack>
@@ -584,6 +595,13 @@ export const EndToEndDemo: FC = () => {
         </p>
       </article>
 
+      <ContextBar
+        personLabel={personLabel}
+        showPerson={showPerson}
+        isRelating={isRelating}
+        onGoToPeople={() => dispatch({ type: "goToPeopleList" })}
+        onExitRelate={() => dispatch({ type: "exitRelateBackToPerson" })}
+      />
 
       {screen === "PeopleHome" && (
         <PeopleHomeScreen
