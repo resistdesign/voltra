@@ -24,15 +24,15 @@ that feels integrated: views/screens change based on the active data type and th
 
 ## Phase 0 — Baseline + inventory (no behavior change)
 
-- [ ] Locate the E2E demo entrypoint + components (likely under `site/`).
-- [ ] Identify the current “sections” and their boundaries:
+- [x] Locate the E2E demo entrypoint + components (likely under `site/`).
+- [x] Identify the current “sections” and their boundaries:
   - Create Person form
   - People list (paging)
   - Person detail/update/delete
   - Relationship management (Person ↔ Car)
   - Car search / create / update / delete (if currently present)
   - Request/response log
-- [ ] Note existing state sources:
+- [x] Note existing state sources:
   - selected person id
   - selected car id
   - paging cursor(s)
@@ -43,7 +43,7 @@ that feels integrated: views/screens change based on the active data type and th
   - Optional: `yarn site:build:app` to ensure build stays green.
 
 Deliverable:
-- [ ] A short “map” comment/doc inside the demo folder (or a small `README.md` next to the demo code) listing the above.
+- [x] A short “map” comment/doc inside the demo folder (or a small `README.md` next to the demo code) listing the above.
 
 Next: Define the app context + view model boundaries.
 
