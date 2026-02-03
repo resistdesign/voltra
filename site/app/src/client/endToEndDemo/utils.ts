@@ -23,3 +23,13 @@ export const formatPersonLabel = (
 
   return "Person";
 };
+
+export const toPositiveInt = (value: string, fallback: number) => {
+  const parsed = Number(value);
+
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return Math.floor(parsed);
+  }
+
+  return fallback;
+};

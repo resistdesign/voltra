@@ -4,7 +4,7 @@ import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { FormBlock } from "../components/FormBlock";
 import { Grid, InlineRow, List, ListItem, Section, Stack } from "../layout";
-import { formatCarLabel } from "../utils";
+import { formatCarLabel, toPositiveInt } from "../utils";
 
 type SearchFilter = {
   id: string;
@@ -209,7 +209,9 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                 min={1}
                 value={carItemsPerPage}
                 onChange={(event) =>
-                  onCarItemsPerPageChange(Number(event.target.value))
+                  onCarItemsPerPageChange(
+                    toPositiveInt(event.target.value, carItemsPerPage),
+                  )
                 }
               />
             </label>

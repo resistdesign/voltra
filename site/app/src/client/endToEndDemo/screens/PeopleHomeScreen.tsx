@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { Grid, InlineRow, List, ListItem, Section } from "../layout";
+import { toPositiveInt } from "../utils";
 
 type PeopleHomeScreenProps = {
   personList: any[];
@@ -35,7 +36,9 @@ export const PeopleHomeScreen: FC<PeopleHomeScreenProps> = ({
               min={1}
               value={personItemsPerPage}
               onChange={(event) =>
-                onItemsPerPageChange(Number(event.target.value))
+                onItemsPerPageChange(
+                  toPositiveInt(event.target.value, personItemsPerPage),
+                )
               }
             />
           </label>
