@@ -445,6 +445,8 @@ export interface AutoFormViewProps {
   controller: FormController;
   /** Submit handler invoked with validated form values. */
   onSubmit: (values: FormValues) => void;
+  /** Disable the submit button when true. */
+  submitDisabled?: boolean;
   /** Optional relation action handler for reference fields. */
   onRelationAction?: (payload: RelationActionPayload) => void;
   /** Optional custom type action handler. */
@@ -460,6 +462,7 @@ export interface AutoFormViewProps {
 export const AutoFormView: FC<AutoFormViewProps> = ({
   controller,
   onSubmit,
+  submitDisabled,
   onRelationAction,
   onCustomTypeAction,
 }) => {
@@ -487,7 +490,9 @@ export const AutoFormView: FC<AutoFormViewProps> = ({
             onCustomTypeAction={onCustomTypeAction}
           />
         ))}
-      <button type="submit">Submit</button>
+      <button type="submit" disabled={submitDisabled}>
+        Submit
+      </button>
     </FormContainer>
   );
 };
@@ -510,6 +515,8 @@ export interface AutoFormProps {
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
   /** Optional operation override for field state. */
   operation?: TypeOperation;
+  /** Disable the submit button when true. */
+  submitDisabled?: boolean;
 }
 
 /**
@@ -526,6 +533,7 @@ export const AutoForm: FC<AutoFormProps> = ({
   onRelationAction,
   onCustomTypeAction,
   operation,
+  submitDisabled,
 }) => {
   const controller = useFormEngine(initialValues, typeInfo, { operation });
 
@@ -541,6 +549,7 @@ export const AutoForm: FC<AutoFormProps> = ({
       onSubmit={onSubmit}
       onRelationAction={onRelationAction}
       onCustomTypeAction={onCustomTypeAction}
+      submitDisabled={submitDisabled}
     />
   );
 };

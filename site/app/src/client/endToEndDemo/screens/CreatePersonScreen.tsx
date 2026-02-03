@@ -7,6 +7,7 @@ import { Section } from "../layout";
 type CreatePersonScreenProps = {
   personTypeInfo: TypeInfo;
   personCreateKey: number;
+  isSaving?: boolean;
   onCreate: (values: any) => void;
   onBack: () => void;
 };
@@ -14,6 +15,7 @@ type CreatePersonScreenProps = {
 export const CreatePersonScreen: FC<CreatePersonScreenProps> = ({
   personTypeInfo,
   personCreateKey,
+  isSaving,
   onCreate,
   onBack,
 }) => (
@@ -33,7 +35,9 @@ export const CreatePersonScreen: FC<CreatePersonScreenProps> = ({
         operation={TypeOperation.CREATE}
         onSubmit={onCreate}
         onRelationAction={() => {}}
+        submitDisabled={isSaving}
       />
+      {isSaving && <small>Saving...</small>}
     </article>
   </Section>
 );

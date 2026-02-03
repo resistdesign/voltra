@@ -501,6 +501,36 @@ export const runRelationFullPagingScenario = () => {
 };
 
 /**
+ * Validate AutoFormView disables submit when requested.
+ *
+ * @returns Whether the submit button is disabled.
+ */
+export const runSubmitDisabledScenario = () => {
+  const controller: FormController = {
+    typeInfo: { fields: {} },
+    operation: TypeOperation.CREATE,
+    values: {},
+    errors: {},
+    fields: [],
+    setFieldValue: () => {},
+    validate: () => true,
+    setErrors: () => {},
+  };
+
+  const html = renderToString(
+    createElement(AutoFormView, {
+      controller,
+      onSubmit: () => {},
+      submitDisabled: true,
+    }),
+  );
+
+  return {
+    submitDisabled: html.includes("disabled"),
+  };
+};
+
+/**
  * Validate hidden fields are omitted from AutoFormView output.
  *
  * @returns Render assertions for hidden vs visible fields.
@@ -548,6 +578,7 @@ export const runHiddenFieldScenario = () => {
     ],
     setFieldValue: () => {},
     validate: () => true,
+    setErrors: () => {},
   };
 
   const render = renderToString(

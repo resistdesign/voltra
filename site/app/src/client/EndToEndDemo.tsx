@@ -103,6 +103,7 @@ export const EndToEndDemo: FC = () => {
   const [selectedCarCandidate, setSelectedCarCandidate] = useState<any | null>(
     null,
   );
+  const [pending, setPending] = useState<Record<string, boolean>>({});
 
   const ormClient = useMemo(
     () => new TypeInfoORMClient(getServiceConfig()),
@@ -139,22 +140,37 @@ export const EndToEndDemo: FC = () => {
     };
   }, [personTypeInfo]);
 
+  const withPending = useCallback(
+    async <T,>(key: string, task: () => Promise<T>): Promise<T> => {
+      setPending((prev) => ({ ...prev, [key]: true }));
+
+      try {
+        return await task();
+      } finally {
+        setPending((prev) => ({ ...prev, [key]: false }));
+      }
+    },
+    [],
+  );
+
   const refreshPeople = useCallback(
     async (cursor?: string) => {
-      const config: ListItemsConfig = {
-        itemsPerPage: personItemsPerPage,
-      };
+      await withPending("peopleLoading", async () => {
+        const config: ListItemsConfig = {
+          itemsPerPage: personItemsPerPage,
+        };
 
-      if (cursor) {
-        config.cursor = cursor;
-      }
+        if (cursor) {
+          config.cursor = cursor;
+        }
 
-      const results = (await listPeople(config)) as ListItemsResults<any>;
+        const results = (await listPeople(config)) as ListItemsResults<any>;
 
-      setPersonList(results.items ?? []);
-      setPersonListCursor(results.cursor);
+        setPersonList(results.items ?? []);
+        setPersonListCursor(results.cursor);
+      });
     },
-    [listPeople, personItemsPerPage],
+    [listPeople, personItemsPerPage, withPending],
   );
 
   const loadRelationship = useCallback(
@@ -221,17 +237,26 @@ export const EndToEndDemo: FC = () => {
 
   const handleCreatePerson = useCallback(
     async (values: any) => {
-      const newId = await createPerson(values);
-      const person = await readPerson(String(newId));
+      await withPending("personCreating", async () => {
+        const newId = await createPerson(values);
+        const person = await readPerson(String(newId));
 
-      setSelectedPersonId(String(newId));
-      setSelectedPerson(person);
-      setPersonCreateKey((prev) => prev + 1);
-      await refreshPeople();
-      await loadRelationship(String(newId));
-      dispatch({ type: "enterPersonDetail", personId: String(newId) });
+        setSelectedPersonId(String(newId));
+        setSelectedPerson(person);
+        setPersonCreateKey((prev) => prev + 1);
+        await refreshPeople();
+        await loadRelationship(String(newId));
+        dispatch({ type: "enterPersonDetail", personId: String(newId) });
+      });
     },
-    [createPerson, readPerson, refreshPeople, loadRelationship, dispatch],
+    [
+      createPerson,
+      readPerson,
+      refreshPeople,
+      loadRelationship,
+      dispatch,
+      withPending,
+    ],
   );
 
   const handleUpdatePerson = useCallback(
@@ -240,17 +265,19 @@ export const EndToEndDemo: FC = () => {
         return;
       }
 
-      const payload = {
-        ...values,
-        id: selectedPersonId,
-      };
+      await withPending("personUpdating", async () => {
+        const payload = {
+          ...values,
+          id: selectedPersonId,
+        };
 
-      await updatePerson(payload);
-      const person = await readPerson(selectedPersonId);
+        await updatePerson(payload);
+        const person = await readPerson(selectedPersonId);
 
-      setSelectedPerson(person);
+        setSelectedPerson(person);
+      });
     },
-    [updatePerson, readPerson, selectedPersonId],
+    [updatePerson, readPerson, selectedPersonId, withPending],
   );
 
   const handleDeletePerson = useCallback(async () => {
@@ -266,27 +293,31 @@ export const EndToEndDemo: FC = () => {
       return;
     }
 
-    await deletePerson(selectedPersonId);
+    await withPending("personDeleting", async () => {
+      await deletePerson(selectedPersonId);
 
-    setSelectedPersonId(null);
-    setSelectedPerson(null);
-    setRelatedCarId(null);
-    setRelatedCar(null);
-    setRelatedCarSummary(null);
-    dispatch({ type: "goToPeopleList" });
-    await refreshPeople();
-  }, [deletePerson, refreshPeople, selectedPersonId, dispatch]);
+      setSelectedPersonId(null);
+      setSelectedPerson(null);
+      setRelatedCarId(null);
+      setRelatedCar(null);
+      setRelatedCarSummary(null);
+      dispatch({ type: "goToPeopleList" });
+      await refreshPeople();
+    });
+  }, [deletePerson, refreshPeople, selectedPersonId, dispatch, withPending]);
 
   const handleCreateCar = useCallback(
     async (values: any) => {
-      const newId = await createCar(values);
-      const car = await readCar(String(newId));
+      await withPending("carCreating", async () => {
+        const newId = await createCar(values);
+        const car = await readCar(String(newId));
 
-      setSelectedCarCandidate(car);
-      setCarCreateKey((prev) => prev + 1);
-      setCarSearchResults((prev) => [car, ...prev]);
+        setSelectedCarCandidate(car);
+        setCarCreateKey((prev) => prev + 1);
+        setCarSearchResults((prev) => [car, ...prev]);
+      });
     },
-    [createCar, readCar],
+    [createCar, readCar, withPending],
   );
 
   const handleUpdateCar = useCallback(
@@ -295,15 +326,17 @@ export const EndToEndDemo: FC = () => {
         return;
       }
 
-      const payload = {
-        ...values,
-        id: relatedCarId,
-      };
+      await withPending("carUpdating", async () => {
+        const payload = {
+          ...values,
+          id: relatedCarId,
+        };
 
-      await updateCar(payload);
-      await loadCar(relatedCarId);
+        await updateCar(payload);
+        await loadCar(relatedCarId);
+      });
     },
-    [updateCar, relatedCarId, loadCar],
+    [updateCar, relatedCarId, loadCar, withPending],
   );
 
   const handleDeleteCar = useCallback(async () => {
@@ -319,23 +352,25 @@ export const EndToEndDemo: FC = () => {
       return;
     }
 
-    if (selectedPersonId) {
-      const relationship: BaseItemRelationshipInfo = {
-        fromTypeName: "Person",
-        fromTypeFieldName: "car",
-        fromTypePrimaryFieldValue: selectedPersonId,
-        toTypePrimaryFieldValue: relatedCarId,
-      };
+    await withPending("carDeleting", async () => {
+      if (selectedPersonId) {
+        const relationship: BaseItemRelationshipInfo = {
+          fromTypeName: "Person",
+          fromTypeFieldName: "car",
+          fromTypePrimaryFieldValue: selectedPersonId,
+          toTypePrimaryFieldValue: relatedCarId,
+        };
 
-      await deleteRelationship(relationship);
-    }
+        await deleteRelationship(relationship);
+      }
 
-    await deleteCar(relatedCarId);
+      await deleteCar(relatedCarId);
 
-    setRelatedCarId(null);
-    setRelatedCar(null);
-    setRelatedCarSummary(null);
-  }, [deleteRelationship, deleteCar, relatedCarId, selectedPersonId]);
+      setRelatedCarId(null);
+      setRelatedCar(null);
+      setRelatedCarSummary(null);
+    });
+  }, [deleteRelationship, deleteCar, relatedCarId, selectedPersonId, withPending]);
 
   const buildCarSearchConfig = useCallback(
     (cursor?: string): ListItemsConfig => {
@@ -393,13 +428,15 @@ export const EndToEndDemo: FC = () => {
 
   const runCarSearch = useCallback(
     async (cursor?: string) => {
-      const config = buildCarSearchConfig(cursor);
-      const results = (await listCars(config)) as ListItemsResults<any>;
+      await withPending("carSearching", async () => {
+        const config = buildCarSearchConfig(cursor);
+        const results = (await listCars(config)) as ListItemsResults<any>;
 
-      setCarSearchResults(results.items ?? []);
-      setCarSearchCursor(results.cursor);
+        setCarSearchResults(results.items ?? []);
+        setCarSearchCursor(results.cursor);
+      });
     },
-    [buildCarSearchConfig, listCars],
+    [buildCarSearchConfig, listCars, withPending],
   );
 
   const handleSetRelationship = useCallback(async () => {
@@ -426,13 +463,15 @@ export const EndToEndDemo: FC = () => {
       toTypePrimaryFieldValue: candidateId,
     };
 
-    await createRelationship(relationship);
+    await withPending("relationshipSaving", async () => {
+      await createRelationship(relationship);
 
-    await loadRelationship(selectedPersonId);
-    const person = await readPerson(selectedPersonId);
-    setSelectedPerson(person);
-    setSelectedCarCandidate(null);
-    dispatch({ type: "exitRelateBackToPerson" });
+      await loadRelationship(selectedPersonId);
+      const person = await readPerson(selectedPersonId);
+      setSelectedPerson(person);
+      setSelectedCarCandidate(null);
+      dispatch({ type: "exitRelateBackToPerson" });
+    });
   }, [
     loadRelationship,
     createRelationship,
@@ -441,6 +480,7 @@ export const EndToEndDemo: FC = () => {
     selectedCarCandidate,
     selectedPersonId,
     dispatch,
+    withPending,
   ]);
 
   const handleRemoveRelationship = useCallback(async () => {
@@ -461,12 +501,14 @@ export const EndToEndDemo: FC = () => {
       toTypePrimaryFieldValue: relatedCarId,
     };
 
-    await deleteRelationship(relationship);
+    await withPending("relationshipRemoving", async () => {
+      await deleteRelationship(relationship);
 
-    setRelatedCarId(null);
-    setRelatedCar(null);
-    setRelatedCarSummary(null);
-  }, [deleteRelationship, relatedCarId, selectedPersonId]);
+      setRelatedCarId(null);
+      setRelatedCar(null);
+      setRelatedCarSummary(null);
+    });
+  }, [deleteRelationship, relatedCarId, selectedPersonId, withPending]);
 
   const addFilter = () => {
     setFilters((prev) => [
@@ -496,6 +538,16 @@ export const EndToEndDemo: FC = () => {
   const personLabel = formatPersonLabel(selectedPerson, selectedPersonId);
   const showPerson = Boolean(selectedPersonId);
   const isRelating = demoState.mode === "relate";
+  const isPeopleLoading = !!pending.peopleLoading;
+  const isPersonCreating = !!pending.personCreating;
+  const isPersonUpdating = !!pending.personUpdating;
+  const isPersonDeleting = !!pending.personDeleting;
+  const isCarSearching = !!pending.carSearching;
+  const isCarCreating = !!pending.carCreating;
+  const isCarUpdating = !!pending.carUpdating;
+  const isCarDeleting = !!pending.carDeleting;
+  const isRelationshipSaving = !!pending.relationshipSaving;
+  const isRelationshipRemoving = !!pending.relationshipRemoving;
 
   return (
     <Stack>
@@ -529,6 +581,7 @@ export const EndToEndDemo: FC = () => {
           personList={personList}
           personItemsPerPage={personItemsPerPage}
           personListCursor={personListCursor}
+          isLoading={isPeopleLoading}
           onItemsPerPageChange={setPersonItemsPerPage}
           onRefresh={() => refreshPeople()}
           onNextPage={() => refreshPeople(personListCursor)}
@@ -544,6 +597,7 @@ export const EndToEndDemo: FC = () => {
         <CreatePersonScreen
           personTypeInfo={personFormTypeInfo ?? personTypeInfo}
           personCreateKey={personCreateKey}
+          isSaving={isPersonCreating}
           onCreate={handleCreatePerson}
           onBack={() => dispatch({ type: "goToPeopleList" })}
         />
@@ -554,6 +608,8 @@ export const EndToEndDemo: FC = () => {
           personTypeInfo={personFormTypeInfo ?? personTypeInfo}
           personId={selectedPersonId}
           person={selectedPerson}
+          isSaving={isPersonUpdating}
+          isDeleting={isPersonDeleting}
           onUpdate={handleUpdatePerson}
           onDelete={handleDeletePerson}
           onStartRelate={() =>
@@ -574,6 +630,12 @@ export const EndToEndDemo: FC = () => {
           selectedCarCandidate={selectedCarCandidate}
           carTypeInfo={carTypeInfo}
           carCreateKey={carCreateKey}
+          isSearching={isCarSearching}
+          isRelating={isRelationshipSaving}
+          isRemovingRelationship={isRelationshipRemoving}
+          isCarCreating={isCarCreating}
+          isCarUpdating={isCarUpdating}
+          isCarDeleting={isCarDeleting}
           carSearchMode={carSearchMode}
           carSearchQuery={carSearchQuery}
           carSearchCursor={carSearchCursor}

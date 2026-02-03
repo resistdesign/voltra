@@ -20,6 +20,12 @@ type CarRelateScreenProps = {
   selectedCarCandidate: any | null;
   carTypeInfo: TypeInfo;
   carCreateKey: number;
+  isSearching?: boolean;
+  isRelating?: boolean;
+  isRemovingRelationship?: boolean;
+  isCarCreating?: boolean;
+  isCarUpdating?: boolean;
+  isCarDeleting?: boolean;
   carSearchMode: "lossy" | "exact";
   carSearchQuery: string;
   carSearchCursor?: string;
@@ -51,6 +57,12 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
   selectedCarCandidate,
   carTypeInfo,
   carCreateKey,
+  isSearching,
+  isRelating,
+  isRemovingRelationship,
+  isCarCreating,
+  isCarUpdating,
+  isCarDeleting,
   carSearchMode,
   carSearchQuery,
   carSearchCursor,
@@ -90,9 +102,14 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
               <strong>{formatCarLabel(relatedCarSummary)}</strong>
               <div>ID: {relatedCarSummary.id}</div>
             </div>
-            <button type="button" onClick={onRemoveRelationship}>
+            <button
+              type="button"
+              onClick={onRemoveRelationship}
+              disabled={isRemovingRelationship}
+            >
               Remove Relationship
             </button>
+            {isRemovingRelationship && <small>Removing...</small>}
           </InlineRow>
         ) : (
           <p>No car linked yet.</p>
@@ -215,24 +232,29 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                 }
               />
             </label>
-            <button type="button" onClick={() => onRunSearch()}>
+            <button
+              type="button"
+              onClick={() => onRunSearch()}
+              disabled={isSearching}
+            >
               Run Search
             </button>
             <button
               type="button"
               onClick={() => onRunSearch(carSearchCursor)}
-              disabled={!carSearchCursor}
+              disabled={!carSearchCursor || isSearching}
             >
               Next Page
             </button>
           </InlineRow>
+          {isSearching && <small>Loading...</small>}
           {carSearchCursor && <small>Cursor: {carSearchCursor}</small>}
         </article>
 
         <article>
           <h5>Search Results</h5>
           {carSearchResults.length === 0 ? (
-            <p>No car results yet.</p>
+            <p>Search cars or create one, then attach.</p>
           ) : (
             <List>
               {carSearchResults.map((car, index) => (
@@ -251,10 +273,11 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
           <button
             type="button"
             onClick={onSetRelationship}
-            disabled={!selectedCarCandidate}
+            disabled={!selectedCarCandidate || isRelating}
           >
             Set Relationship to Selected Car
           </button>
+          {isRelating && <small>Saving...</small>}
           {selectedCarCandidate && (
             <small>
               Selected: {formatCarLabel(selectedCarCandidate)} ({selectedCarCandidate.id})
@@ -272,7 +295,9 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
             initialValues={{}}
             operation={TypeOperation.CREATE}
             onSubmit={onCreateCar}
+            submitDisabled={isCarCreating}
           />
+          {isCarCreating && <small>Saving...</small>}
         </article>
         <article>
           <h5>Related Car Details & Update</h5>
@@ -286,10 +311,17 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                 initialValues={relatedCar ?? {}}
                 operation={TypeOperation.UPDATE}
                 onSubmit={onUpdateCar}
+                submitDisabled={isCarUpdating}
               />
-              <button type="button" onClick={onDeleteCar}>
+              <button
+                type="button"
+                onClick={onDeleteCar}
+                disabled={isCarDeleting}
+              >
                 Delete Related Car
               </button>
+              {isCarUpdating && <small>Saving...</small>}
+              {isCarDeleting && <small>Deleting...</small>}
             </>
           )}
         </article>
