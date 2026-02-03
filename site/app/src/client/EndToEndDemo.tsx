@@ -355,19 +355,33 @@ export const EndToEndDemo: FC = () => {
           mode: carSearchMode,
         };
       } else {
-        const activeFilters = filters.filter((filter) => filter.value.trim());
+        const activeFilters = filters.filter((filter) => {
+          const trimmed = filter.value.trim();
+
+          if (!trimmed) {
+            return false;
+          }
+
+          if (filter.fieldName === "year") {
+            return Number.isFinite(Number(trimmed));
+          }
+
+          return true;
+        });
 
         if (activeFilters.length > 0) {
           config.criteria = {
             logicalOperator: filtersOperator,
-            fieldCriteria: activeFilters.map((filter) => ({
-              fieldName: filter.fieldName,
-              operator: filter.operator,
-              value:
-                filter.fieldName === "year"
-                  ? Number(filter.value)
-                  : filter.value,
-            })),
+            fieldCriteria: activeFilters.map((filter) => {
+              const trimmed = filter.value.trim();
+
+              return {
+                fieldName: filter.fieldName,
+                operator: filter.operator,
+                value:
+                  filter.fieldName === "year" ? Number(trimmed) : trimmed,
+              };
+            }),
           };
         }
       }

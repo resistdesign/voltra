@@ -181,7 +181,7 @@ Suggested file(s):
 
 ### 4B. Shared form state helpers
 
-- [ ] Consolidate duplicated form field parsing/validation UI behaviors.
+- [~] Consolidate duplicated form field parsing/validation UI behaviors.
 - [ ] Ensure required fields clearly map to API validation errors.
 
 Deliverable:
