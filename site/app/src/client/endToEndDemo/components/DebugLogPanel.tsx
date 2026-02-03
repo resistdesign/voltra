@@ -1,17 +1,6 @@
 import type { FC } from "react";
-import type { TypeInfoORMAPI, TypeInfoORMAPIRoutePaths } from "../../../../../../src/common/TypeInfoORM";
 import { InlineRow, LogGrid, Section, Stack } from "../layout";
-
-export type RequestLogEntry = {
-  id: string;
-  methodName: keyof TypeInfoORMAPI;
-  path: TypeInfoORMAPIRoutePaths;
-  args: any[];
-  status: "pending" | "success" | "error";
-  response?: any;
-  error?: any;
-  timestamp: string;
-};
+import type { RequestLogEntry } from "../logging/demoLogger";
 
 type DebugLogPanelProps = {
   requestLog: RequestLogEntry[];
