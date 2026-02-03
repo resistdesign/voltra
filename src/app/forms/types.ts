@@ -117,6 +117,8 @@ export type FormController = {
   setFieldValue: (key: string, value: FormValue) => void;
   /** Validate the form and return success. */
   validate: () => boolean;
+  /** Override form errors with a provided map. */
+  setErrors: (errors: Record<string, string>) => void;
 };
 
 /**
