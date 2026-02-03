@@ -204,5 +204,6 @@ export const useFormEngine = (
     fields,
     setFieldValue,
     validate,
+    setErrors,
   };
 };

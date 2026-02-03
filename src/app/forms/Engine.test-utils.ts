@@ -822,3 +822,40 @@ export const runDataItemScenario = () => {
 
   return snapshot;
 };
+
+/**
+ * Validate form controller exposes a setErrors helper.
+ *
+ * @returns Whether setErrors is available on the controller.
+ */
+export const runSetErrorsScenario = () => {
+  let controller: FormController | undefined;
+
+  const Component = () => {
+    controller = useFormEngine(
+      {},
+      {
+        fields: {
+          name: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+          },
+        },
+      },
+    );
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  if (!controller) {
+    throw new Error("Expected controller to be initialized.");
+  }
+
+  return {
+    hasSetErrors: typeof controller.setErrors === "function",
+  };
+};

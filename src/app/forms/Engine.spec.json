@@ -241,6 +241,14 @@
         "arrayValue": ["alpha", "beta"],
         "arrayIsArray": true
       }
+    },
+    {
+      "export": "runSetErrorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasSetErrors": true
+      }
     }
   ]
 }
