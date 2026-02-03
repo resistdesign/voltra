@@ -167,17 +167,17 @@ Next: Clean up shared logic (extract reusable hooks/utilities).
 
 ### 4A. API call hooks (no behavior changes)
 
-- [ ] Create `usePeople()` for list/read/create/update/delete
-- [ ] Create `useCars()` for search/read/create/update/delete
-- [ ] Create `useRelationship()` for relate/unrelate and fetching current related car
-- [ ] Ensure request/response log integration is consistent:
+- [x] Create `usePeople()` for list/read/create/update/delete
+- [x] Create `useCars()` for search/read/create/update/delete
+- [x] Create `useRelationship()` for relate/unrelate and fetching current related car
+- [x] Ensure request/response log integration is consistent:
   - Every hook call logs request + response uniformly.
 
 Suggested file(s):
-- [ ] `site/src/app/demos/e2e/hooks/usePeople.ts`
-- [ ] `site/src/app/demos/e2e/hooks/useCars.ts`
-- [ ] `site/src/app/demos/e2e/hooks/useRelationship.ts`
-- [ ] `site/src/app/demos/e2e/logging/demoLogger.ts`
+- [x] `site/app/src/client/endToEndDemo/hooks/usePeople.ts`
+- [x] `site/app/src/client/endToEndDemo/hooks/useCars.ts`
+- [x] `site/app/src/client/endToEndDemo/hooks/useRelationship.ts`
+- [x] `site/app/src/client/endToEndDemo/logging/demoLogger.ts`
 
 ### 4B. Shared form state helpers
 

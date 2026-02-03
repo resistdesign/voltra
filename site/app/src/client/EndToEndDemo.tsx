@@ -1,8 +1,6 @@
 import { FC, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
 import { getSimpleId } from "../../../../src/common/IdGeneration";
-import type { TypeInfoORMAPI } from "../../../../src/common/TypeInfoORM";
-import { TypeInfoORMAPIRoutePaths } from "../../../../src/common/TypeInfoORM";
 import {
   ComparisonOperators,
   type ListItemsConfig,
@@ -17,7 +15,7 @@ import {
 } from "../../../common/Constants";
 import { DemoTypeInfoMap } from "../../../common/DemoTypeInfoMap";
 import { BaseItemRelationshipInfo } from "../../../../src/common/ItemRelationshipInfoTypes";
-import { DebugLogPanel, type RequestLogEntry } from "./endToEndDemo/components/DebugLogPanel";
+import { DebugLogPanel } from "./endToEndDemo/components/DebugLogPanel";
 import { ContextBar } from "./endToEndDemo/components/ContextBar";
 import { CarRelateScreen } from "./endToEndDemo/screens/CarRelateScreen";
 import { CreatePersonScreen } from "./endToEndDemo/screens/CreatePersonScreen";
@@ -30,6 +28,10 @@ import {
   getActiveScreen,
 } from "./endToEndDemo/demoState";
 import { formatPersonLabel } from "./endToEndDemo/utils";
+import { useDemoLogger } from "./endToEndDemo/logging/demoLogger";
+import { usePeople } from "./endToEndDemo/hooks/usePeople";
+import { useCars } from "./endToEndDemo/hooks/useCars";
+import { useRelationship } from "./endToEndDemo/hooks/useRelationship";
 
 type SearchFilter = {
   id: string;
@@ -37,19 +39,6 @@ type SearchFilter = {
   operator: ComparisonOperators;
   value: string;
 };
-
-const ORM_METHOD_PATHS: Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRoutePaths> =
-  {
-    create: TypeInfoORMAPIRoutePaths.CREATE,
-    read: TypeInfoORMAPIRoutePaths.READ,
-    update: TypeInfoORMAPIRoutePaths.UPDATE,
-    delete: TypeInfoORMAPIRoutePaths.DELETE,
-    list: TypeInfoORMAPIRoutePaths.LIST,
-    createRelationship: TypeInfoORMAPIRoutePaths.CREATE_RELATIONSHIP,
-    deleteRelationship: TypeInfoORMAPIRoutePaths.DELETE_RELATIONSHIP,
-    listRelationships: TypeInfoORMAPIRoutePaths.LIST_RELATIONSHIPS,
-    listRelatedItems: TypeInfoORMAPIRoutePaths.LIST_RELATED_ITEMS,
-  };
 
 const getApiDomain = (hostname: string) => {
   if (hostname === DOMAINS.API) {
@@ -85,7 +74,7 @@ export const EndToEndDemo: FC = () => {
     demoAppReducer,
     demoInitialState,
   );
-  const [requestLog, setRequestLog] = useState<RequestLogEntry[]>([]);
+  const { requestLog, logRequest, clearLog } = useDemoLogger();
   const [personList, setPersonList] = useState<any[]>([]);
   const [personListCursor, setPersonListCursor] = useState<string | undefined>(
     undefined,
@@ -119,6 +108,14 @@ export const EndToEndDemo: FC = () => {
     () => new TypeInfoORMClient(getServiceConfig()),
     [],
   );
+  const { listPeople, readPerson, createPerson, updatePerson, deletePerson } =
+    usePeople({ ormClient, logRequest });
+  const { listCars, readCar, createCar, updateCar, deleteCar } = useCars({
+    ormClient,
+    logRequest,
+  });
+  const { listRelatedItems, createRelationship, deleteRelationship } =
+    useRelationship({ ormClient, logRequest });
   const personFormTypeInfo = useMemo(() => {
     if (!personTypeInfo) {
       return personTypeInfo;
@@ -142,58 +139,6 @@ export const EndToEndDemo: FC = () => {
     };
   }, [personTypeInfo]);
 
-  const logRequest = useCallback(
-    async <T,>(
-      methodName: keyof TypeInfoORMAPI,
-      args: any[],
-      request: () => Promise<T>,
-    ): Promise<T> => {
-      const id = getSimpleId();
-      const entry: RequestLogEntry = {
-        id,
-        methodName,
-        path: ORM_METHOD_PATHS[methodName],
-        args,
-        status: "pending",
-        timestamp: new Date().toISOString(),
-      };
-
-      setRequestLog((prev) => [entry, ...prev]);
-
-      try {
-        const response = await request();
-
-        setRequestLog((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  status: "success",
-                  response,
-                }
-              : item,
-          ),
-        );
-
-        return response;
-      } catch (error) {
-        setRequestLog((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  status: "error",
-                  error,
-                }
-              : item,
-          ),
-        );
-        throw error;
-      }
-    },
-    [],
-  );
-
   const refreshPeople = useCallback(
     async (cursor?: string) => {
       const config: ListItemsConfig = {
@@ -204,14 +149,12 @@ export const EndToEndDemo: FC = () => {
         config.cursor = cursor;
       }
 
-      const results = (await logRequest("list", ["Person", config], () =>
-        ormClient.list("Person", config),
-      )) as ListItemsResults<any>;
+      const results = (await listPeople(config)) as ListItemsResults<any>;
 
       setPersonList(results.items ?? []);
       setPersonListCursor(results.cursor);
     },
-    [logRequest, ormClient, personItemsPerPage],
+    [listPeople, personItemsPerPage],
   );
 
   const loadRelationship = useCallback(
@@ -225,12 +168,12 @@ export const EndToEndDemo: FC = () => {
         itemsPerPage: 1,
       };
 
-      const results = (await logRequest(
-        "listRelatedItems",
-        [config, ["id", "make", "model", "year"]],
-        () =>
-          ormClient.listRelatedItems(config, ["id", "make", "model", "year"]),
-      )) as ListItemsResults<any>;
+      const results = (await listRelatedItems(config, [
+        "id",
+        "make",
+        "model",
+        "year",
+      ])) as ListItemsResults<any>;
 
       const [item] = results.items ?? [];
 
@@ -244,32 +187,28 @@ export const EndToEndDemo: FC = () => {
         setRelatedCar(null);
       }
     },
-    [logRequest, ormClient],
+    [listRelatedItems],
   );
 
   const loadPerson = useCallback(
     async (personId: string) => {
-      const person = await logRequest("read", ["Person", personId], () =>
-        ormClient.read("Person", personId),
-      );
+      const person = await readPerson(personId);
 
       setSelectedPersonId(personId);
       setSelectedPerson(person);
       setSelectedCarCandidate(null);
       await loadRelationship(personId);
     },
-    [loadRelationship, logRequest, ormClient],
+    [loadRelationship, readPerson],
   );
 
   const loadCar = useCallback(
     async (carId: string) => {
-      const car = await logRequest("read", ["Car", carId], () =>
-        ormClient.read("Car", carId),
-      );
+      const car = await readCar(carId);
 
       setRelatedCar(car);
     },
-    [logRequest, ormClient],
+    [readCar],
   );
 
   useEffect(() => {
@@ -282,12 +221,8 @@ export const EndToEndDemo: FC = () => {
 
   const handleCreatePerson = useCallback(
     async (values: any) => {
-      const newId = await logRequest("create", ["Person", values], () =>
-        ormClient.create("Person", values),
-      );
-      const person = await logRequest("read", ["Person", newId], () =>
-        ormClient.read("Person", newId),
-      );
+      const newId = await createPerson(values);
+      const person = await readPerson(String(newId));
 
       setSelectedPersonId(String(newId));
       setSelectedPerson(person);
@@ -296,7 +231,7 @@ export const EndToEndDemo: FC = () => {
       await loadRelationship(String(newId));
       dispatch({ type: "enterPersonDetail", personId: String(newId) });
     },
-    [logRequest, ormClient, refreshPeople, loadRelationship, dispatch],
+    [createPerson, readPerson, refreshPeople, loadRelationship, dispatch],
   );
 
   const handleUpdatePerson = useCallback(
@@ -310,18 +245,12 @@ export const EndToEndDemo: FC = () => {
         id: selectedPersonId,
       };
 
-      await logRequest("update", ["Person", payload], () =>
-        ormClient.update("Person", payload),
-      );
-      const person = await logRequest(
-        "read",
-        ["Person", selectedPersonId],
-        () => ormClient.read("Person", selectedPersonId),
-      );
+      await updatePerson(payload);
+      const person = await readPerson(selectedPersonId);
 
       setSelectedPerson(person);
     },
-    [logRequest, ormClient, selectedPersonId],
+    [updatePerson, readPerson, selectedPersonId],
   );
 
   const handleDeletePerson = useCallback(async () => {
@@ -337,9 +266,7 @@ export const EndToEndDemo: FC = () => {
       return;
     }
 
-    await logRequest("delete", ["Person", selectedPersonId], () =>
-      ormClient.delete("Person", selectedPersonId),
-    );
+    await deletePerson(selectedPersonId);
 
     setSelectedPersonId(null);
     setSelectedPerson(null);
@@ -348,22 +275,18 @@ export const EndToEndDemo: FC = () => {
     setRelatedCarSummary(null);
     dispatch({ type: "goToPeopleList" });
     await refreshPeople();
-  }, [logRequest, ormClient, refreshPeople, selectedPersonId, dispatch]);
+  }, [deletePerson, refreshPeople, selectedPersonId, dispatch]);
 
   const handleCreateCar = useCallback(
     async (values: any) => {
-      const newId = await logRequest("create", ["Car", values], () =>
-        ormClient.create("Car", values),
-      );
-      const car = await logRequest("read", ["Car", newId], () =>
-        ormClient.read("Car", newId),
-      );
+      const newId = await createCar(values);
+      const car = await readCar(String(newId));
 
       setSelectedCarCandidate(car);
       setCarCreateKey((prev) => prev + 1);
       setCarSearchResults((prev) => [car, ...prev]);
     },
-    [logRequest, ormClient],
+    [createCar, readCar],
   );
 
   const handleUpdateCar = useCallback(
@@ -377,12 +300,10 @@ export const EndToEndDemo: FC = () => {
         id: relatedCarId,
       };
 
-      await logRequest("update", ["Car", payload], () =>
-        ormClient.update("Car", payload),
-      );
+      await updateCar(payload);
       await loadCar(relatedCarId);
     },
-    [logRequest, ormClient, relatedCarId, loadCar],
+    [updateCar, relatedCarId, loadCar],
   );
 
   const handleDeleteCar = useCallback(async () => {
@@ -406,19 +327,15 @@ export const EndToEndDemo: FC = () => {
         toTypePrimaryFieldValue: relatedCarId,
       };
 
-      await logRequest("deleteRelationship", [relationship], () =>
-        ormClient.deleteRelationship(relationship),
-      );
+      await deleteRelationship(relationship);
     }
 
-    await logRequest("delete", ["Car", relatedCarId], () =>
-      ormClient.delete("Car", relatedCarId),
-    );
+    await deleteCar(relatedCarId);
 
     setRelatedCarId(null);
     setRelatedCar(null);
     setRelatedCarSummary(null);
-  }, [logRequest, ormClient, relatedCarId, selectedPersonId]);
+  }, [deleteRelationship, deleteCar, relatedCarId, selectedPersonId]);
 
   const buildCarSearchConfig = useCallback(
     (cursor?: string): ListItemsConfig => {
@@ -463,14 +380,12 @@ export const EndToEndDemo: FC = () => {
   const runCarSearch = useCallback(
     async (cursor?: string) => {
       const config = buildCarSearchConfig(cursor);
-      const results = (await logRequest("list", ["Car", config], () =>
-        ormClient.list("Car", config),
-      )) as ListItemsResults<any>;
+      const results = (await listCars(config)) as ListItemsResults<any>;
 
       setCarSearchResults(results.items ?? []);
       setCarSearchCursor(results.cursor);
     },
-    [buildCarSearchConfig, logRequest, ormClient],
+    [buildCarSearchConfig, listCars],
   );
 
   const handleSetRelationship = useCallback(async () => {
@@ -497,23 +412,17 @@ export const EndToEndDemo: FC = () => {
       toTypePrimaryFieldValue: candidateId,
     };
 
-    await logRequest("createRelationship", [relationship], () =>
-      ormClient.createRelationship(relationship),
-    );
+    await createRelationship(relationship);
 
     await loadRelationship(selectedPersonId);
-    const person = await logRequest(
-      "read",
-      ["Person", selectedPersonId],
-      () => ormClient.read("Person", selectedPersonId),
-    );
+    const person = await readPerson(selectedPersonId);
     setSelectedPerson(person);
     setSelectedCarCandidate(null);
     dispatch({ type: "exitRelateBackToPerson" });
   }, [
     loadRelationship,
-    logRequest,
-    ormClient,
+    createRelationship,
+    readPerson,
     relatedCarId,
     selectedCarCandidate,
     selectedPersonId,
@@ -538,14 +447,12 @@ export const EndToEndDemo: FC = () => {
       toTypePrimaryFieldValue: relatedCarId,
     };
 
-    await logRequest("deleteRelationship", [relationship], () =>
-      ormClient.deleteRelationship(relationship),
-    );
+    await deleteRelationship(relationship);
 
     setRelatedCarId(null);
     setRelatedCar(null);
     setRelatedCarSummary(null);
-  }, [logRequest, ormClient, relatedCarId, selectedPersonId]);
+  }, [deleteRelationship, relatedCarId, selectedPersonId]);
 
   const addFilter = () => {
     setFilters((prev) => [
@@ -678,7 +585,7 @@ export const EndToEndDemo: FC = () => {
         />
       )}
 
-      <DebugLogPanel requestLog={requestLog} onClear={() => setRequestLog([])} />
+      <DebugLogPanel requestLog={requestLog} onClear={clearLog} />
 
     </Stack>
   );
