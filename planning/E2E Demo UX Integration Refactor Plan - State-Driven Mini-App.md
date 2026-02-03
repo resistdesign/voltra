@@ -200,9 +200,7 @@ Next: Stabilize demo UX defaults (load behavior, empty states, refresh cues).
 - [x] Loading states:
   - Disable submit buttons while pending
   - Add inline “loading…” (simple text is fine)
-- [x] Make log panel:
-  - Collapsed by default
-  - Sticky toggle (bottom-right or top-right)
+- [~] Make log panel:
   - Clear log button stays
 - [x] Ensure “items per page” defaults are consistent.
 
@@ -226,7 +224,7 @@ Next: Add/update tests and documentation notes.
 
 - [ ] Add one basic “happy path” UI check if infrastructure exists:
   - create person → appears in list → open detail → start relate → attach car → relationship visible
-- [ ] If no UI test infra exists, add a small manual QA checklist to this plan (below).
+- [x] If no UI test infra exists, add a small manual QA checklist to this plan (below).
 
 Manual QA checklist:
 - [ ] Load demo → PeopleHomeScreen visible, others hidden
