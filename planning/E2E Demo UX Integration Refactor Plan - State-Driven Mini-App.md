@@ -193,18 +193,18 @@ Next: Stabilize demo UX defaults (load behavior, empty states, refresh cues).
 
 ## Phase 5 — UX polish (small but meaningful)
 
-- [ ] Empty states:
+- [x] Empty states:
   - People list: “No people yet — create one to continue.”
   - Person detail: “Select a person from People.”
   - Car relate: “Search cars or create one, then attach.”
-- [ ] Loading states:
+- [x] Loading states:
   - Disable submit buttons while pending
   - Add inline “loading…” (simple text is fine)
-- [ ] Make log panel:
+- [x] Make log panel:
   - Collapsed by default
   - Sticky toggle (bottom-right or top-right)
   - Clear log button stays
-- [ ] Ensure “items per page” defaults are consistent.
+- [x] Ensure “items per page” defaults are consistent.
 
 Deliverable:
 - [ ] Demo is pleasant to use and explains itself through flow.

@@ -6,6 +6,7 @@ type PeopleHomeScreenProps = {
   personList: any[];
   personItemsPerPage: number;
   personListCursor?: string;
+  isLoading?: boolean;
   onItemsPerPageChange: (value: number) => void;
   onRefresh: () => void;
   onNextPage: () => void;
@@ -17,6 +18,7 @@ export const PeopleHomeScreen: FC<PeopleHomeScreenProps> = ({
   personList,
   personItemsPerPage,
   personListCursor,
+  isLoading,
   onItemsPerPageChange,
   onRefresh,
   onNextPage,
@@ -42,13 +44,13 @@ export const PeopleHomeScreen: FC<PeopleHomeScreenProps> = ({
               }
             />
           </label>
-          <button type="button" onClick={onRefresh}>
+          <button type="button" onClick={onRefresh} disabled={isLoading}>
             Refresh
           </button>
           <button
             type="button"
             onClick={onNextPage}
-            disabled={!personListCursor}
+            disabled={!personListCursor || isLoading}
           >
             Next Page
           </button>
@@ -56,8 +58,9 @@ export const PeopleHomeScreen: FC<PeopleHomeScreenProps> = ({
             Create Person
           </button>
         </InlineRow>
+        {isLoading && <small>Loading...</small>}
         {personList.length === 0 ? (
-          <p>No people loaded yet.</p>
+          <p>No people yet — create one to continue.</p>
         ) : (
           <List>
             {personList.map((person, index) => (

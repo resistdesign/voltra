@@ -11,6 +11,7 @@ type FormBlockProps = {
   operation: TypeOperation;
   onSubmit: (values: any) => void;
   onRelationAction?: (payload: RelationActionPayload) => void;
+  submitDisabled?: boolean;
 };
 
 export const FormBlock: FC<FormBlockProps> = ({
@@ -19,6 +20,7 @@ export const FormBlock: FC<FormBlockProps> = ({
   operation,
   onSubmit,
   onRelationAction,
+  submitDisabled,
 }) => {
   const controller = useFormEngine(initialValues, typeInfo, { operation });
   const handleSubmit = (values: any) => {
@@ -41,6 +43,7 @@ export const FormBlock: FC<FormBlockProps> = ({
       controller={controller}
       onSubmit={handleSubmit}
       onRelationAction={onRelationAction}
+      submitDisabled={submitDisabled}
     />
   );
 };

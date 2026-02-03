@@ -9,6 +9,8 @@ type PersonDetailScreenProps = {
   personTypeInfo: TypeInfo;
   personId: string;
   person: any | null;
+  isSaving?: boolean;
+  isDeleting?: boolean;
   onUpdate: (values: any) => void;
   onDelete: () => void;
   onStartRelate: () => void;
@@ -20,6 +22,8 @@ export const PersonDetailScreen: FC<PersonDetailScreenProps> = ({
   personTypeInfo,
   personId,
   person,
+  isSaving,
+  isDeleting,
   onUpdate,
   onDelete,
   onStartRelate,
@@ -36,25 +40,34 @@ export const PersonDetailScreen: FC<PersonDetailScreenProps> = ({
         Manage Car Relationship
       </button>
     </InlineRow>
-    <Grid>
+    {person ? (
+      <Grid>
+        <article>
+          <h5>Selected Person</h5>
+          <FormBlock
+            key={`person-edit-${personId}`}
+            typeInfo={personTypeInfo}
+            initialValues={person ?? {}}
+            operation={TypeOperation.UPDATE}
+            onSubmit={onUpdate}
+            onRelationAction={onRelationAction}
+            submitDisabled={isSaving}
+          />
+          <button type="button" onClick={onDelete} disabled={isDeleting}>
+            Delete Person
+          </button>
+          {isSaving && <small>Saving...</small>}
+          {isDeleting && <small>Deleting...</small>}
+        </article>
+        <article>
+          <h5>Person Record (Read)</h5>
+          <pre>{JSON.stringify(person, null, 2)}</pre>
+        </article>
+      </Grid>
+    ) : (
       <article>
-        <h5>Selected Person</h5>
-        <FormBlock
-          key={`person-edit-${personId}`}
-          typeInfo={personTypeInfo}
-          initialValues={person ?? {}}
-          operation={TypeOperation.UPDATE}
-          onSubmit={onUpdate}
-          onRelationAction={onRelationAction}
-        />
-        <button type="button" onClick={onDelete}>
-          Delete Person
-        </button>
+        <p>Select a person from People.</p>
       </article>
-      <article>
-        <h5>Person Record (Read)</h5>
-        <pre>{JSON.stringify(person, null, 2)}</pre>
-      </article>
-    </Grid>
+    )}
   </Section>
 );
