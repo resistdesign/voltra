@@ -244,9 +244,9 @@ Next: Final cleanup and doc touch-ups.
 
 ## Phase 7 — Cleanup + docs
 
-- [ ] Remove dead/unused components created by old section layout.
-- [ ] Ensure file naming follows repo conventions.
-- [ ] Add a short section to the demo’s local README:
+- [x] Remove dead/unused components created by old section layout.
+- [x] Ensure file naming follows repo conventions.
+- [x] Add a short section to the demo’s local README:
   - Screens
   - DemoContext state model
   - How to add a new entity type screen
