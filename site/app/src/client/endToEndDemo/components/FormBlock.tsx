@@ -9,7 +9,7 @@ type FormBlockProps = {
   typeInfo: TypeInfo;
   initialValues: Record<string, any>;
   operation: TypeOperation;
-  onSubmit: (values: any) => void;
+  onSubmit: (values: any) => Promise<unknown> | void;
   onRelationAction?: (payload: RelationActionPayload) => void;
   submitDisabled?: boolean;
 };
@@ -28,7 +28,7 @@ export const FormBlock: FC<FormBlockProps> = ({
     const result = onSubmit(values);
 
     if (result && typeof (result as Promise<unknown>).catch === "function") {
-      (result as Promise<unknown>).catch((error) => {
+      return (result as Promise<unknown>).catch((error) => {
         const fieldErrors = extractValidationErrors(error);
 
         if (fieldErrors) {
@@ -36,6 +36,8 @@ export const FormBlock: FC<FormBlockProps> = ({
         }
       });
     }
+
+    return result;
   };
 
   return (

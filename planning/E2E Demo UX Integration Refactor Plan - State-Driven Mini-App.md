@@ -217,7 +217,7 @@ Next: Add/update tests and documentation notes.
 
 ### 6A. Keep backend specs unchanged (unless UI uncovered a bug)
 
-- [ ] Run:
+- [x] Run:
   - `yarn test`
   - `yarn build`
   - `yarn site:build:app`
