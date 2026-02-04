@@ -181,6 +181,9 @@ export type TypeInfoORMDACConfig = {
    *
    * When present, the returned prefix is inserted after
    * `itemResourcePathPrefix` and before the canonical item path segments.
+   *
+   * Relationship create/delete operations also use this prefix to validate
+   * endpoint ownership for both the `from` and `to` items.
    */
   getOwnerPrefix?: (
     typeName: string,
@@ -1300,6 +1303,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Create a new relationship between two items.
    * @param relationshipItem Relationship item to create.
+   *
+   * When DAC is enabled and `getOwnerPrefix` is configured, relationship
+   * creation requires:
+   * 1) relationship permission on the relationship resource path, and
+   * 2) endpoint ownership permission for both `from` and `to` items.
    * @returns True when the relationship was created.
    * */
   createRelationship = async (
@@ -1409,6 +1417,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Delete a relationship between two items.
    * @param relationshipItem Relationship item to delete.
+   *
+   * When DAC is enabled and `getOwnerPrefix` is configured, relationship
+   * deletion requires:
+   * 1) relationship permission on the relationship resource path, and
+   * 2) endpoint ownership permission for both `from` and `to` items.
    * @returns Deletion results including whether items remain.
    * */
   deleteRelationship = async (

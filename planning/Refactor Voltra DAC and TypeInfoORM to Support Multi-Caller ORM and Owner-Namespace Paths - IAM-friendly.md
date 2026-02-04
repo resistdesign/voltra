@@ -249,7 +249,7 @@ Goal: Add the `TypeInfoORMContext` parameter to ORM entrypoints, but keep existi
   - [x] produce clear error if undefined (or treat as no permissions)
 - [x] Provide a backward-compat adapter for existing call sites (route map / legacy callers) that currently pass or
   embed accessing role:
-  - [ ] Option A: update call sites immediately to pass `TypeInfoORMContext`
+  - [~] Option A: update call sites immediately to pass `TypeInfoORMContext` (skipped in favor of Option B for now)
   - [x] Option B: keep legacy overloads temporarily (prefer A if feasible)
 
 Success: everything compiles, tests may still fail until Phase 2+.
@@ -313,7 +313,7 @@ Goal: `getTypeInfoORMRouteMap` (and any other API wiring) must pass access conte
 Goal: update existing tests and add new specs validating the refactor.
 
 - [x] Update failing specs due to signature changes (per-call context arg).
-- [ ] Add specs:
+- [x] Add specs:
   - [x] CRUD with accessingRoleId allowing base paths (no owner prefix)
   - [x] CRUD with owner prefix injection (single prefix allow grants access)
   - [x] DENY overrides with owner prefix applied (ensure deny wins at equal specificity)
@@ -329,16 +329,16 @@ Goal: update existing tests and add new specs validating the refactor.
 
 Goal: reflect new API in docs and update demo wiring.
 
-- [ ] Update TypeDoc comments for:
-  - [ ] `TypeInfoORMDACConfig`
-  - [ ] `TypeInfoORMContext`
-  - [ ] owner prefix semantics
-  - [ ] relationship two-gate semantics
-- [ ] Update docs site usage examples (where ORM access is shown) to pass `TypeInfoORMContext`.
-- [ ] Update demo app/API setup (route map or equivalent) to:
-  - [ ] provide accessingRoleId per request
-  - [ ] optionally provide `getOwnerPrefix` example (even if simple)
-- [ ] Verify docs build steps still work (`yarn doc`, `yarn site:build:app` if required by CI expectations).
+- [x] Update TypeDoc comments for:
+  - [x] `TypeInfoORMDACConfig`
+  - [x] `TypeInfoORMContext`
+  - [x] owner prefix semantics
+  - [x] relationship two-gate semantics
+- [x] Update docs site usage examples (where ORM access is shown) to pass `TypeInfoORMContext`.
+- [x] Update demo app/API setup (route map or equivalent) to:
+  - [x] provide accessingRoleId per request
+  - [x] optionally provide `getOwnerPrefix` example (even if simple)
+- [x] Verify docs build steps still work (`yarn doc`, `yarn site:build:app` if required by CI expectations).
 
 ---
 
