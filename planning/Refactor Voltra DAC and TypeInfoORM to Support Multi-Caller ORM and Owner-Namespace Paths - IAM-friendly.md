@@ -260,14 +260,14 @@ Success: everything compiles, tests may still fail until Phase 2+.
 
 Goal: Preserve canonical path building, add optional async prefix.
 
-- [ ] Add owner-prefix application to the item DAC evaluation path:
-  - [ ] When checking item permissions, compute basePath as today.
-  - [ ] If `access.getOwnerPrefix` exists, `await` it with `{typeName, primaryFieldValue}`.
-  - [ ] Prepend returned prefix to basePath before evaluating role constraints.
-- [ ] Ensure the prefix is applied consistently wherever DAC checks items:
-  - [ ] read/update/delete
-  - [ ] list item filtering / access validation
-  - [ ] any per-field checks that use resource paths (do not add “field lists” to access results; evaluate per-path as
+- [x] Add owner-prefix application to the item DAC evaluation path:
+  - [x] When checking item permissions, compute basePath as today.
+  - [x] If `dacConfig.getOwnerPrefix` exists, `await` it with `{typeName, primaryFieldValue}`.
+  - [x] Prepend returned prefix to basePath before evaluating role constraints.
+- [x] Ensure the prefix is applied consistently wherever DAC checks items:
+  - [x] read/update/delete
+  - [x] list item filtering / access validation
+  - [x] any per-field checks that use resource paths (do not add “field lists” to access results; evaluate per-path as
     today)
 
 Notes:
