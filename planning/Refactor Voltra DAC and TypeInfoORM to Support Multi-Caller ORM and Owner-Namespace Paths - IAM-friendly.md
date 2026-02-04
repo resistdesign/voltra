@@ -80,133 +80,102 @@ export type TypeInfoORMDACConfig = {
 
 ### Proposed ORM Method Signatures (Role Per Request)
 
+(The doc comments, here, are for the purposes of this plan, and can be used as a source of information when updating
+documentation, but are not intended to be definitive.)
+
 ```ts
 /**
  * The API type for TypeInfoORM providers to implement.
+ *
+ * Accessing Role:
+ * - `accessingRoleId` is OPTIONAL at the type level so callers can omit it when the ORM
+ *   is not configured with DAC (in that case it is ignored).
+ * - If the ORM *is* configured with DAC, providers MUST treat a missing `accessingRoleId`
+ *   as an error (throw), because proceeding would be a security foot-gun.
+ *
+ * Note:
+ * - The meaning and structure of `accessingRoleId` is intentionally opaque here.
+ *   It represents “who is accessing” in whatever role model the application uses.
  */
 export type TypeInfoORMAPI = {
   /**
    * Create a relationship record.
-   *
-   * @param relationshipItem - Relationship payload to create.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @returns Whether the create succeeded.
    */
   createRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
-    accessingRoleId: string,
+    accessingRoleId?: string,
   ) => Promise<boolean>;
 
   /**
    * Delete a relationship record.
-   *
-   * @param relationshipItem - Relationship payload to delete.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @returns Results describing deletion outcome.
    */
   deleteRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
-    accessingRoleId: string,
+    accessingRoleId?: string,
   ) => Promise<DeleteRelationshipResults>;
 
   /**
    * List relationships matching the query.
-   *
-   * @param config - Relationship list configuration.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @returns Relationship list results.
    */
   listRelationships: (
     config: ListRelationshipsConfig,
-    accessingRoleId: string,
+    accessingRoleId?: string,
   ) => Promise<ListItemsResults<ItemRelationshipInfo>>;
 
   /**
    * List related items for a relationship query.
-   *
-   * @param config - Relationship list configuration.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @param selectedFields - Optional fields to project.
-   * @returns Related item list results.
    */
   listRelatedItems: (
     config: ListRelationshipsConfig,
-    accessingRoleId: string,
+    accessingRoleId?: string,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 
   /**
    * Create an item.
-   *
-   * @param typeName - Type name to create.
-   * @param item - Item payload to create.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @returns The created item result.
    */
   create: (
     typeName: string,
     item: TypeInfoDataItem,
-    accessingRoleId: string,
+    accessingRoleId?: string,
   ) => Promise<any>;
 
   /**
    * Read an item by primary field value.
-   *
-   * @param typeName - Type name to read.
-   * @param primaryFieldValue - Primary field value to lookup.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @param selectedFields - Optional fields to project.
-   * @returns Retrieved item data.
    */
   read: (
     typeName: string,
     primaryFieldValue: any,
-    accessingRoleId: string,
+    accessingRoleId?: string,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<Partial<TypeInfoDataItem>>;
 
   /**
    * Update an item.
-   *
-   * @param typeName - Type name to update.
-   * @param item - Updated item payload.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @returns Whether the update succeeded.
    */
   update: (
     typeName: string,
     item: TypeInfoDataItem,
-    accessingRoleId: string,
+    accessingRoleId?: string,
   ) => Promise<boolean>;
 
   /**
    * Delete an item by primary field value.
-   *
-   * @param typeName - Type name to delete.
-   * @param primaryFieldValue - Primary field value to delete.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @returns Whether the delete succeeded.
    */
   delete: (
     typeName: string,
     primaryFieldValue: any,
-    accessingRoleId: string,
+    accessingRoleId?: string,
   ) => Promise<boolean>;
 
   /**
    * List items matching the configuration.
-   *
-   * @param typeName - Type name to list.
-   * @param config - List configuration.
-   * @param accessingRoleId - Root role ID of the accessing principal.
-   * @param selectedFields - Optional fields to project.
-   * @returns List results.
    */
   list: (
     typeName: string,
     config: ListItemsConfig,
-    accessingRoleId: string,
     selectedFields?: (keyof TypeInfoDataItem)[],
+    accessingRoleId?: string,
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 };
 ```
