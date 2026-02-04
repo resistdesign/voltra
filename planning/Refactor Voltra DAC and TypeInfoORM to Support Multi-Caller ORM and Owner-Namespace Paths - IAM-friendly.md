@@ -210,13 +210,24 @@ Default: **both endpoints required**, deny-wins.
 
 ### Phase 0 — Inventory + Plan Anchors
 
-- [ ] Locate current DAC config usage in `getTypeInfoORMRouteMap` and confirm where `accessingRole` / per-request
+- [x] Locate current DAC config usage in `getTypeInfoORMRouteMap` and confirm where `accessingRole` / per-request
   binding is happening.
-- [ ] Locate TypeInfoORM service entrypoints (CRUD + list + relationship ops) and map where DAC checks are performed.
-- [ ] Locate current relationship DAC validation function(s) and how relationship resource paths are built/checked.
-- [ ] Identify existing DBX/spec tests that assume request-bound ORM.
+- [x] Locate TypeInfoORM service entrypoints (CRUD + list + relationship ops) and map where DAC checks are performed.
+- [x] Locate current relationship DAC validation function(s) and how relationship resource paths are built/checked.
+- [x] Identify existing DBX/spec tests that assume request-bound ORM.
 
 Deliverable: notes in this plan file with exact file paths and function names found.
+
+Phase 0 notes (file paths + functions):
+
+- `src/api/ORM/ORMRouteMap.ts`: `getTypeInfoORMRouteMap` constructs a new `TypeInfoORMService` per request when DAC is enabled; it injects `accessingRole` into `dacConfig` inside `handlerFactory` and throws `TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER` or `MISSING_ACCESSING_ROLE` when missing.
+- `src/api/ORM/TypeInfoORMService.ts`:
+  - DAC checks: `getItemDACValidation` (uses `getDACRoleHasAccessToDataItem` with `itemResourcePathPrefix`, `accessingRole`, `getDACRoleById`), `getRelationshipDACValidation` (uses `getResourceAccessByDACRole` + `getItemRelationshipDACResourcePath` with `relationshipResourcePathPrefix`, `accessingRole`, `getDACRoleById`).
+  - Entry points: `create`, `read`, `update`, `delete`, `list` call `getItemDACValidation`; relationship methods `createRelationship`, `deleteRelationship`, `listRelationships`, `listRelatedItems` call `getRelationshipDACValidation` and `read`/`listRelationships`.
+- `src/api/ORM/DACUtils.ts`: relationship path builders `getItemRelationshipDACResourcePath`, `getItemRelationshipOriginDACResourcePath`, and item builders `getDataItemDACResourcePath`, `getItemTypeDACResourcePath`.
+- Tests/specs assuming request-bound ORM:
+  - `src/api/ORM/ORMRouteMap.test-utils.ts` builds route maps with DAC and injects `accessingRole` via `getAccessingRole` per request (asserts missing getter and missing role errors).
+  - `src/api/ORM/TypeInfoORMService.test-utils.ts` constructs `TypeInfoORMService` with `dacConfig.accessingRole` in `runTypeInfoORMServiceDACScenario`.
 
 ---
 
