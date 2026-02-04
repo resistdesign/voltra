@@ -346,3 +346,138 @@ Goal: reflect new API in docs and update demo wiring.
 
 Next: Phase 0 — locate exact current DAC wiring in `getTypeInfoORMRouteMap` and enumerate the current per-request
 binding points.
+
+---
+
+## Footnotes / Clarifications
+
+### 1. Security Semantics of `accessingRoleId` (IMPORTANT)
+
+The `accessingRoleId` parameter on ORM methods is **optional at the type level only**, but **not optional at runtime
+when DAC is enabled**.
+
+Rules:
+
+- If **DAC is NOT configured** on the ORM instance:
+  - `accessingRoleId` is ignored.
+  - The ORM behaves as it historically has (no DAC enforcement).
+- If **DAC IS configured** on the ORM instance:
+  - A missing `accessingRoleId` **MUST cause the operation to throw**.
+  - Proceeding without an explicit access context is considered a security error.
+
+This is an intentional “fail closed” design to:
+
+- prevent silent authorization bypass
+- avoid foot-guns where access context is accidentally omitted
+- make security failures obvious and debuggable
+
+In short: **If the ORM expects DAC, it requires an explicit `accessingRoleId`.**
+
+**IMPORTANT: SECURITY: This functionality should probably be centralized where the DAC privelages are calculated so that
+all methods using the DAC will **AUTOMATICALLY THROW** if the `accessingRoleId` is missing.**
+
+---
+
+### 2. Purpose and Correct Usage of `getOwnerPrefix`
+
+`getOwnerPrefix` exists to support **owner / tenant / namespace scoping** in DAC **without embedding ownership fields
+into data models**.
+
+Key properties:
+
+- `getOwnerPrefix` is **static configuration**, not request-scoped.
+- The same item must always resolve to the same owner prefix, regardless of who is accessing it.
+- The function may be **async** and may perform external IO.
+- Ownership resolution may come from:
+  - AWS IAM
+  - Cognito
+  - a side table
+  - an external service
+  - any other authoritative system
+
+Behavior:
+
+- If provided, the returned prefix is prepended to the canonical resource path:
+
+  `fullPath = [...ownerPrefix, ...basePath]`
+
+- This enables compact DAC constraints such as:
+
+  `ALLOW ["own", "user:123"] (pathIsPrefix: true)`
+
+  meaning “this role may access all resources owned by `user:123`”.
+
+Non-goals:
+
+- `getOwnerPrefix` does **not** determine who is accessing.
+- It does **not** bypass relationship permissions.
+- It does **not** alter canonical resource path construction.
+- Ownership alone does **not** imply permission.
+
+Ownership is treated as **context**, not authority.
+
+---
+
+### 3. Relationship Operations: Ownership ≠ Permission
+
+Relationship create/delete operations are intentionally gated by **two independent checks**:
+
+1. **Relationship Permission (existing behavior)**  
+   The acting role must be allowed to perform the relationship operation itself
+   (for example: “is allowed to create a `MemberOf` relationship”).
+
+2. **Endpoint Ownership / Namespace Validation (new behavior)**  
+   The acting role must be allowed — via prefixed resource paths — to access:
+
+- the `from` item
+- **and** the `to` item
+
+Both checks must pass.
+
+This prevents cases where:
+
+- a role owns both items but is not allowed to semantically connect them
+- ownership alone implies unintended business meaning
+
+Default behavior:
+
+- **both endpoints required**
+- **deny always wins**
+
+---
+
+### 4. IAM Integration Is a First-Class Design Goal
+
+This refactor is intentionally designed to integrate cleanly with external policy engines such as **AWS IAM**.
+
+Expected integration pattern:
+
+- IAM (or similar) is responsible for:
+  - mapping caller identity → `accessingRoleId`
+  - defining role membership and constraints
+- `getDACRoleById` acts as the primary adapter:
+  - fetches role definitions
+  - translates IAM policy into `DACRole` structures
+- `getOwnerPrefix` may also be backed by IAM:
+  - resource ARN ownership
+  - tag-based ownership
+  - policy simulation or lookup results
+
+IAM-specific helpers or drivers are expected to live in the **API layer**, outside of `getTypeInfoORMRouteMap`.
+
+The route map should consume already-resolved role IDs and helpers, not embed IAM logic itself.
+
+---
+
+### 5. Intentional Non-Features (By Design)
+
+The following are explicitly **not** part of this design:
+
+- No implicit “public” role
+- No default access context
+- No automatic ownership inference
+- No dynamic per-request ownership semantics
+- No coupling between user identity and data schema
+
+All of these concerns are intentionally left to **explicit application policy**, where they can be reasoned about,
+tested, and audited.
