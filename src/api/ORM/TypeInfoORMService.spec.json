@@ -57,6 +57,61 @@
         "deleteRelationshipError": "INVALID_OPERATION",
         "deleteRelationshipErrorExpected": "INVALID_OPERATION"
       }
+    },
+    {
+      "export": "runTypeInfoORMServiceContextScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "seedResults": {
+          "seedBook": true,
+          "seedAuthor": true
+        },
+        "readAuthorSelected": {
+          "id": "author-1",
+          "name": "Alice"
+        },
+        "listBookIds": ["book-1"],
+        "listBookTitles": ["Alpha"]
+      }
+    },
+    {
+      "export": "runTypeInfoORMServiceOwnerPrefixScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "readAuthorSelected": {
+          "id": "author-1",
+          "name": "Alice"
+        },
+        "listBookIds": ["book-1", "book-2"],
+        "listBookTitles": ["Alpha", "Beta"]
+      }
+    },
+    {
+      "export": "runTypeInfoORMServiceOwnerPrefixDenyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "readError": "INVALID_OPERATION",
+        "readErrorExpected": "INVALID_OPERATION"
+      }
+    },
+    {
+      "export": "runTypeInfoORMServiceRelationshipGateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "endpointDeniedError": "INVALID_OPERATION",
+        "endpointDeniedErrorExpected": "INVALID_OPERATION",
+        "permissionDeniedError": "INVALID_OPERATION",
+        "permissionDeniedErrorExpected": "INVALID_OPERATION",
+        "relationshipAllowed": true,
+        "relationshipDeleted": {
+          "success": true,
+          "remainingItemsExist": false
+        }
+      }
     }
   ]
 }
