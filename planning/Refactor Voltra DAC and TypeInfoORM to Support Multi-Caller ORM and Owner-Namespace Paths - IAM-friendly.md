@@ -75,10 +75,10 @@ export type TypeInfoORMDACConfig = {
    *
    * Implementations may call IAM/Cognito/etc to resolve ownership.
    */
-  getOwnerPrefix?: (input: {
-    typeName: string;
-    primaryFieldValue: string;
-  }) => Promise<LiteralValue[] | undefined>;
+  getOwnerPrefix?: (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+  ) => Promise<LiteralValue[] | undefined>;
 };
 ```
 
@@ -273,7 +273,7 @@ Goal: keep relationship permission checks, add endpoint checks using `getOwnerPr
 - [ ] Identify relationship operation validation entrypoint(s).
 - [ ] Preserve Gate A: relationship resource path check as it exists today.
 - [ ] Implement Gate B:
-  - [ ] For `from` endpoint: call `getOwnerPrefix({fromTypeName, fromId})` and evaluate against *relationship base path*
+  - [ ] For `from` endpoint: call `getOwnerPrefix(fromTypeName, fromId)` and evaluate against *relationship base path*
     prefixed with fromPrefix.
   - [ ] For `to` endpoint: same with toPrefix.
   - [ ] Require BOTH endpoint checks to allow (default).
