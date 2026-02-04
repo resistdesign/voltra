@@ -20,7 +20,7 @@ We also want a scalable “ownership” model where:
 
 We converged on:
 
-- Role-per-principal (root role per user/principal) as the primary entry point: `rootRoleId = user:{id}`.
+- Role-per-principal (role per user/principal) as the primary entry point: `accessingRoleId = user:{id}`.
 - Keep DAC as “evaluate ALLOW/DENY constraints against resource paths”.
 - Allow an optional async “owner namespace prefix” for a given `{typeName, primaryFieldValue}` so that constraints like
   `["app-namespace-related-prefix", "own", "user:123"]` with `pathIsPrefix: true` can express “everything owned by this
@@ -233,10 +233,10 @@ Phase 0 notes (file paths + functions):
 
 ### Phase 1 — Introduce Per-Call Access Context (No Behavior Change Yet)
 
-Goal: Add the `TypeInfoORMAccess` parameter to ORM entrypoints, but keep existing behavior working via adapters.
+Goal: Add the `TypeInfoORMContext` parameter to ORM entrypoints, but keep existing behavior working via adapters.
 
-- [x] Define `TypeInfoORMAccess` type in the appropriate API module location (near ORM types).
-- [x] Update TypeInfoORM public methods to accept `access: TypeInfoORMAccess` (choose consistent arg position; prefer
+- [x] Define `TypeInfoORMContext` type in the appropriate API module location (near ORM types).
+- [x] Update TypeInfoORM public methods to accept `context: TypeInfoORMContext` (choose consistent arg position; prefer
   last arg for minimal churn).
   - [x] createItem
   - [x] readItem
@@ -244,12 +244,12 @@ Goal: Add the `TypeInfoORMAccess` parameter to ORM entrypoints, but keep existin
   - [x] deleteItem
   - [x] listItems
   - [x] relationship operations (create/delete/listRelated/etc)
-- [x] Add an internal helper that resolves the effective root role:
-  - [x] `const rootRole = await dacConfig.getDACRoleById(access.rootRoleId)`
+- [x] Add an internal helper that resolves the effective role:
+  - [x] `const role = await dacConfig.getDACRoleById(context.accessingRoleId)`
   - [x] produce clear error if undefined (or treat as no permissions)
 - [x] Provide a backward-compat adapter for existing call sites (route map / legacy callers) that currently pass or
   embed accessing role:
-  - [ ] Option A: update call sites immediately to pass `TypeInfoORMAccess`
+  - [ ] Option A: update call sites immediately to pass `TypeInfoORMContext`
   - [x] Option B: keep legacy overloads temporarily (prefer A if feasible)
 
 Success: everything compiles, tests may still fail until Phase 2+.
@@ -300,10 +300,10 @@ Goal: keep relationship permission checks, add endpoint checks using `getOwnerPr
 
 Goal: `getTypeInfoORMRouteMap` (and any other API wiring) must pass access context per call.
 
-- [ ] Update route map handlers so that for each request:
-  - [ ] Resolve `rootRoleId` externally (from auth/JWT/IAM mapping).
-  - [ ] Pass `TypeInfoORMAccess` into ORM method calls instead of constructing an ORM bound to accessing role.
-- [ ] Ensure the route map can support “assume user” semantics by swapping `rootRoleId` (authorization for impersonation
+- [x] Update route map handlers so that for each request:
+  - [x] Resolve `accessingRoleId` externally (from auth/JWT/IAM mapping).
+  - [x] Pass `TypeInfoORMContext` into ORM method calls instead of constructing an ORM bound to accessing role.
+- [x] Ensure the route map can support “assume user” semantics by swapping `accessingRoleId` (authorization for impersonation
   remains outside ORM).
 
 ---
@@ -314,7 +314,7 @@ Goal: update existing tests and add new specs validating the refactor.
 
 - [ ] Update failing specs due to signature changes (per-call access arg).
 - [ ] Add specs:
-  - [ ] CRUD with rootRoleId allowing base paths (no owner prefix)
+  - [ ] CRUD with accessingRoleId allowing base paths (no owner prefix)
   - [ ] CRUD with owner prefix injection (single prefix allow grants access)
   - [ ] DENY overrides with owner prefix applied (ensure deny wins at equal specificity)
   - [ ] Relationship create/delete:
@@ -331,12 +331,12 @@ Goal: reflect new API in docs and update demo wiring.
 
 - [ ] Update TypeDoc comments for:
   - [ ] `TypeInfoORMDACConfig`
-  - [ ] `TypeInfoORMAccess`
+  - [ ] `TypeInfoORMContext`
   - [ ] owner prefix semantics
   - [ ] relationship two-gate semantics
-- [ ] Update docs site usage examples (where ORM access is shown) to pass `TypeInfoORMAccess`.
+- [ ] Update docs site usage examples (where ORM access is shown) to pass `TypeInfoORMContext`.
 - [ ] Update demo app/API setup (route map or equivalent) to:
-  - [ ] provide rootRoleId per request
+  - [ ] provide accessingRoleId per request
   - [ ] optionally provide `getOwnerPrefix` example (even if simple)
 - [ ] Verify docs build steps still work (`yarn doc`, `yarn site:build:app` if required by CI expectations).
 
@@ -351,7 +351,7 @@ Goal: reflect new API in docs and update demo wiring.
 
 ## Acceptance Criteria
 
-- ORM instance is reusable across multiple callers; per-call access provided via `TypeInfoORMAccess`.
+- ORM instance is reusable across multiple callers; per-call access provided via `TypeInfoORMContext`.
 - `getDACRoleById` remains the single required external “policy backend” hook.
 - Optional `getOwnerPrefix` enables owner/tenant namespace prefixing for item resource paths.
 - Relationship ops enforce two-gate rule (relationship permission + endpoint validation).
