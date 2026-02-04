@@ -12,7 +12,6 @@ import type {
   TypeInfoORMDACConfig,
   TypeInfoORMIndexingConfig,
 } from "../ORM/TypeInfoORMService";
-import type { DACRole } from "../DataAccessControl";
 
 /**
  * Overrides for building in-memory item drivers per type.
@@ -80,9 +79,9 @@ export type DBXRuntimeConfig = {
    */
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">;
   /**
-   * Optional accessor to resolve the accessing DAC role from auth info.
+   * Optional accessor to resolve the accessing role id from auth info.
    */
-  getAccessingRole?: (authInfo: AuthInfo) => DACRole;
+  getAccessingRoleId?: (authInfo: AuthInfo) => string;
   /**
    * Optional predicate to decide whether errors are exposed.
    */
@@ -134,9 +133,9 @@ export type DBXRuntime = {
    */
   dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">;
   /**
-   * Optional accessor to resolve the accessing DAC role from auth info.
+   * Optional accessor to resolve the accessing role id from auth info.
    */
-  getAccessingRole?: (authInfo: AuthInfo) => DACRole;
+  getAccessingRoleId?: (authInfo: AuthInfo) => string;
   /**
    * Optional predicate to decide whether errors are exposed.
    */

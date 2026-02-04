@@ -1,5 +1,4 @@
 import type { NormalizedCloudFunctionEventData, Route } from "../Router/Types";
-import type { DACRole } from "../DataAccessControl";
 import type {
   BaseTypeInfoORMServiceConfig,
   TypeInfoORMDACConfig,
@@ -78,7 +77,7 @@ export const runORMRouteMapScenario = () => {
   const routeMapWithMissingRole = getTypeInfoORMRouteMap(
     config,
     dacConfig,
-    () => undefined as unknown as DACRole,
+    () => undefined as unknown as string,
   );
   let missingRoleError: string | undefined;
   try {
@@ -87,11 +86,10 @@ export const runORMRouteMapScenario = () => {
     missingRoleError = error?.message ?? String(error);
   }
 
-  const validRole: DACRole = { id: "role-1", constraints: [] };
   const routeMapWithRole = getTypeInfoORMRouteMap(
     config,
     dacConfig,
-    () => validRole,
+    () => "role-1",
   );
   const handlerWithRole = getHandlerFactory(routeMapWithRole[createPath])(
     eventData,
