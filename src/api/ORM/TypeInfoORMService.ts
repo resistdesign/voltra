@@ -164,21 +164,30 @@ export const getDriverMethodWithModifiedError = <
 export type TypeInfoORMDACConfig = {
   /**
    * DAC path prefix for item resources.
+   *
+   * This prefix is prepended to canonical item paths before evaluating
+   * DAC constraints.
    */
   itemResourcePathPrefix: LiteralValue[];
   /**
    * DAC path prefix for relationship resources.
+   *
+   * This prefix is prepended to canonical relationship paths before
+   * evaluating DAC constraints.
    */
   relationshipResourcePathPrefix: LiteralValue[];
   /**
    * Optional resolver for owner/tenant prefix applied to item resource paths.
+   *
+   * When present, the returned prefix is inserted after
+   * `itemResourcePathPrefix` and before the canonical item path segments.
    */
   getOwnerPrefix?: (
     typeName: string,
     primaryFieldValue: LiteralValue,
   ) => Promise<LiteralValue[] | undefined>;
   /**
-   * Role used to evaluate access.
+   * Role used to evaluate access when no per-call context is provided.
    */
   accessingRole: DACRole;
   /**

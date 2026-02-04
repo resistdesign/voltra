@@ -193,6 +193,8 @@ export type DeleteRelationshipResults = {
 export type TypeInfoORMContext = {
   /**
    * Role identifier for the caller.
+   *
+   * Required when DAC is enabled; ignored when DAC is disabled.
    */
   accessingRoleId: string;
 };
