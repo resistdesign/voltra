@@ -171,6 +171,13 @@ export type TypeInfoORMDACConfig = {
    */
   relationshipResourcePathPrefix: LiteralValue[];
   /**
+   * Optional resolver for owner/tenant prefix applied to item resource paths.
+   */
+  getOwnerPrefix?: (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+  ) => Promise<LiteralValue[] | undefined>;
+  /**
    * Role used to evaluate access.
    */
   accessingRole: DACRole;
@@ -366,8 +373,24 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (useDAC) {
       const typeInfo = this.getTypeInfo(typeName);
       const { dacConfig } = this.config;
-      const { itemResourcePathPrefix, getDACRoleById } = dacConfig;
+      const { itemResourcePathPrefix, getDACRoleById, getOwnerPrefix } =
+        dacConfig;
       const accessingRole = await this.resolveAccessingRole(context);
+      const { primaryField } = typeInfo;
+      const primaryFieldValue =
+        typeof primaryField === "string" &&
+        typeof item === "object" &&
+        item !== null
+          ? (item[primaryField as keyof TypeInfoDataItem] as LiteralValue)
+          : undefined;
+      const ownerPrefix =
+        getOwnerPrefix && typeof primaryFieldValue !== "undefined"
+          ? await getOwnerPrefix(typeName, primaryFieldValue)
+          : undefined;
+      const itemPrefix = [
+        ...itemResourcePathPrefix,
+        ...(ownerPrefix ?? []),
+      ];
 
       const [
         typeOperationAccess,
@@ -375,7 +398,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         allOperationsAccess,
       ] = await Promise.all([
         getDACRoleHasAccessToDataItem(
-          itemResourcePathPrefix,
+          itemPrefix,
           typeOperation,
           typeName,
           item,
@@ -385,7 +408,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           this.dacRoleCache,
         ),
         getDACRoleHasAccessToDataItem(
-          itemResourcePathPrefix,
+          itemPrefix,
           OperationGroup.ALL_ITEM_OPERATIONS,
           typeName,
           item,
@@ -395,7 +418,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           this.dacRoleCache,
         ),
         getDACRoleHasAccessToDataItem(
-          itemResourcePathPrefix,
+          itemPrefix,
           OperationGroup.ALL_OPERATIONS,
           typeName,
           item,
