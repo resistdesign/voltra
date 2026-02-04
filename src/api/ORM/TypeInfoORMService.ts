@@ -456,12 +456,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      * Optional access context for the call.
      */
     context?: TypeInfoORMContext,
+    /**
+     * Optional relationship resource path prefix override.
+     */
+    relationshipPrefixOverride?: LiteralValue[],
   ): Promise<DACAccessResult> => {
     const { useDAC } = this.config;
 
     if (useDAC) {
       const { dacConfig } = this.config;
       const { relationshipResourcePathPrefix, getDACRoleById } = dacConfig;
+      const effectivePrefix =
+        relationshipPrefixOverride ?? relationshipResourcePathPrefix;
       const accessingRole = await this.resolveAccessingRole(context);
 
       const [
@@ -471,7 +477,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       ] = await Promise.all([
         getResourceAccessByDACRole(
           getItemRelationshipDACResourcePath(
-            relationshipResourcePathPrefix,
+            effectivePrefix,
             relationshipOperation,
             itemRelationship,
           ),
@@ -481,7 +487,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         ),
         getResourceAccessByDACRole(
           getItemRelationshipDACResourcePath(
-            relationshipResourcePathPrefix,
+            effectivePrefix,
             OperationGroup.ALL_RELATIONSHIP_OPERATIONS,
             itemRelationship,
           ),
@@ -491,7 +497,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         ),
         getResourceAccessByDACRole(
           getItemRelationshipDACResourcePath(
-            relationshipResourcePathPrefix,
+            effectivePrefix,
             OperationGroup.ALL_OPERATIONS,
             itemRelationship,
           ),
@@ -512,6 +518,60 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         denied: false,
       };
     }
+  };
+
+  protected getRelationshipEndpointDACValidation = async (
+    relationshipItem: BaseItemRelationshipInfo,
+    relationshipOperation: RelationshipOperation,
+    relatedTypeName: string,
+    context?: TypeInfoORMContext,
+  ): Promise<DACAccessResult> => {
+    const { useDAC } = this.config;
+
+    if (!useDAC) {
+      return {
+        allowed: true,
+        denied: false,
+      };
+    }
+
+    const { dacConfig } = this.config;
+    const { relationshipResourcePathPrefix, getOwnerPrefix } = dacConfig;
+
+    if (!getOwnerPrefix) {
+      return {
+        allowed: true,
+        denied: false,
+      };
+    }
+
+    const {
+      fromTypeName,
+      fromTypePrimaryFieldValue,
+      toTypePrimaryFieldValue,
+    } = relationshipItem;
+    const [fromPrefix, toPrefix] = await Promise.all([
+      getOwnerPrefix(fromTypeName, fromTypePrimaryFieldValue),
+      getOwnerPrefix(relatedTypeName, toTypePrimaryFieldValue),
+    ]);
+
+    const fromAccess = await this.getRelationshipDACValidation(
+      relationshipItem,
+      relationshipOperation,
+      context,
+      [...relationshipResourcePathPrefix, ...(fromPrefix ?? [])],
+    );
+    const toAccess = await this.getRelationshipDACValidation(
+      relationshipItem,
+      relationshipOperation,
+      context,
+      [...relationshipResourcePathPrefix, ...(toPrefix ?? [])],
+    );
+
+    return {
+      allowed: fromAccess.allowed && toAccess.allowed,
+      denied: fromAccess.denied || toAccess.denied,
+    };
   };
 
   protected getWrappedDriverWithExtendedErrorData = <
@@ -1239,38 +1299,46 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     this.validateRelationshipItem(relationshipItem, []);
 
+    const cleanedItem = cleanRelationshipItem(relationshipItem);
+    const { fromTypeName, fromTypeFieldName } = cleanedItem;
+    const {
+      fields: {
+        [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
+      } = {},
+    } = this.getTypeInfo(fromTypeName);
+    const {
+      fields: {
+        [fromTypeFieldName]: { typeReference = undefined } = {},
+      } = {},
+    } = this.getTypeInfo(fromTypeName);
+    const relatedTypeName =
+      typeof typeReference === "string" ? typeReference : undefined;
+
+    if (!relatedTypeName) {
+      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
+    }
+
     const { allowed: createAllowed, denied: createDenied } =
       await this.getRelationshipDACValidation(
-        relationshipItem,
+        cleanedItem,
         RelationshipOperation.SET,
         context,
       );
 
-    if (createDenied || !createAllowed) {
+    const { allowed: endpointsAllowed, denied: endpointsDenied } =
+      await this.getRelationshipEndpointDACValidation(
+        cleanedItem,
+        RelationshipOperation.SET,
+        relatedTypeName,
+        context,
+      );
+
+    if (createDenied || !createAllowed || endpointsDenied || !endpointsAllowed) {
       throw {
         message: TypeInfoORMServiceError.INVALID_OPERATION,
         relationshipItem,
       };
     } else {
-      const cleanedItem = cleanRelationshipItem(relationshipItem);
-      const { fromTypeName, fromTypeFieldName } = cleanedItem;
-      const {
-        fields: {
-          [fromTypeFieldName]: { array: relationshipIsMultiple = false } = {},
-        } = {},
-      } = this.getTypeInfo(fromTypeName);
-      const {
-        fields: {
-          [fromTypeFieldName]: { typeReference = undefined } = {},
-        } = {},
-      } = this.getTypeInfo(fromTypeName);
-      const relatedTypeName =
-        typeof typeReference === "string" ? typeReference : undefined;
-
-      if (!relatedTypeName) {
-        throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
-      }
-
       if (this.config.indexing?.relations) {
         const driver = this.getIndexingRelationshipDriverInternal();
 
@@ -1340,40 +1408,47 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<DeleteRelationshipResults> => {
     this.validateRelationshipItem(relationshipItem, []);
 
+    const cleanedItem = cleanRelationshipItem(relationshipItem);
+    const {
+      fromTypeName,
+      fromTypeFieldName,
+      fromTypePrimaryFieldValue,
+      toTypePrimaryFieldValue,
+    } = cleanedItem;
+    const {
+      fields: {
+        [fromTypeFieldName]: { typeReference = undefined } = {},
+      } = {},
+    } = this.getTypeInfo(fromTypeName);
+    const relatedTypeName =
+      typeof typeReference === "string" ? typeReference : undefined;
+
+    if (!relatedTypeName) {
+      throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
+    }
+
     const { allowed: deleteAllowed, denied: deleteDenied } =
       await this.getRelationshipDACValidation(
-        relationshipItem,
+        cleanedItem,
         RelationshipOperation.UNSET,
         context,
       );
 
-    if (deleteDenied || !deleteAllowed) {
+    const { allowed: endpointsAllowed, denied: endpointsDenied } =
+      await this.getRelationshipEndpointDACValidation(
+        cleanedItem,
+        RelationshipOperation.UNSET,
+        relatedTypeName,
+        context,
+      );
+
+    if (deleteDenied || !deleteAllowed || endpointsDenied || !endpointsAllowed) {
       throw {
         message: TypeInfoORMServiceError.INVALID_OPERATION,
         relationshipItem,
       };
     } else {
-      const cleanedItem = cleanRelationshipItem(relationshipItem);
-      const {
-        fromTypeName,
-        fromTypeFieldName,
-        fromTypePrimaryFieldValue,
-        toTypePrimaryFieldValue,
-      } = cleanedItem;
-
       if (this.config.indexing?.relations) {
-        const {
-          fields: {
-            [fromTypeFieldName]: { typeReference = undefined } = {},
-          } = {},
-        } = this.getTypeInfo(fromTypeName);
-        const relatedTypeName =
-          typeof typeReference === "string" ? typeReference : undefined;
-
-        if (!relatedTypeName) {
-          throw new Error(TypeInfoORMServiceError.INVALID_RELATIONSHIP);
-        }
-
         const driver = this.getIndexingRelationshipDriverInternal();
         await driver.deleteRelationship(cleanedItem, relatedTypeName);
 

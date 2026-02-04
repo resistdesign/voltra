@@ -281,17 +281,17 @@ Notes:
 
 Goal: keep relationship permission checks, add endpoint checks using `getOwnerPrefix` calls.
 
-- [ ] Identify relationship operation validation entrypoint(s).
-- [ ] Preserve Gate A: relationship resource path check as it exists today.
-- [ ] Implement Gate B:
-  - [ ] For `from` endpoint: get a fromPrefix by calling `getOwnerPrefix(fromTypeName, fromId)` and evaluate constraints
+- [x] Identify relationship operation validation entrypoint(s).
+- [x] Preserve Gate A: relationship resource path check as it exists today.
+- [x] Implement Gate B:
+  - [x] For `from` endpoint: get a fromPrefix by calling `getOwnerPrefix(fromTypeName, fromId)` and evaluate constraints
     against *relationship base path*
     prefixed with fromPrefix (fromPrefix being included in the path *after* the app level
     `relationshipResourcePathPrefix`).
-  - [ ] For `to` endpoint: same with toPrefix.
-  - [ ] Require BOTH endpoint checks to allow (default).
-  - [ ] Deny wins if any check yields deny.
-- [ ] Ensure that Gate B is only applied when `getOwnerPrefix` is present; otherwise behavior remains as close to
+  - [x] For `to` endpoint: same with toPrefix.
+  - [x] Require BOTH endpoint checks to allow (default).
+  - [x] Deny wins if any check yields deny.
+- [x] Ensure that Gate B is only applied when `getOwnerPrefix` is present; otherwise behavior remains as close to
   current as possible.
 
 ---
