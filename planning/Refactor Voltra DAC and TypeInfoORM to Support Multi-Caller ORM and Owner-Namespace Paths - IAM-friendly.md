@@ -312,16 +312,16 @@ Goal: `getTypeInfoORMRouteMap` (and any other API wiring) must pass access conte
 
 Goal: update existing tests and add new specs validating the refactor.
 
-- [ ] Update failing specs due to signature changes (per-call access arg).
+- [x] Update failing specs due to signature changes (per-call context arg).
 - [ ] Add specs:
-  - [ ] CRUD with accessingRoleId allowing base paths (no owner prefix)
-  - [ ] CRUD with owner prefix injection (single prefix allow grants access)
-  - [ ] DENY overrides with owner prefix applied (ensure deny wins at equal specificity)
-  - [ ] Relationship create/delete:
-    - [ ] allowed by relationship permission but denied by endpoint ownership -> denied
-    - [ ] allowed by endpoint ownership but denied by relationship permission -> denied
-    - [ ] allowed by both -> allowed
-- [ ] Run `yarn test`; use `yarn test:gen` only when fixtures need regeneration.
+  - [x] CRUD with accessingRoleId allowing base paths (no owner prefix)
+  - [x] CRUD with owner prefix injection (single prefix allow grants access)
+  - [x] DENY overrides with owner prefix applied (ensure deny wins at equal specificity)
+  - [x] Relationship create/delete:
+    - [x] allowed by relationship permission but denied by endpoint ownership -> denied
+    - [x] allowed by endpoint ownership but denied by relationship permission -> denied
+    - [x] allowed by both -> allowed
+- [x] Run `yarn test`; use `yarn test:gen` only when fixtures need regeneration.
 
 ---
 
