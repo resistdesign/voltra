@@ -390,8 +390,9 @@ into data models**.
 Key properties:
 
 - `getOwnerPrefix` is **static configuration**, not request-scoped.
-- The same item must always resolve to the same owner prefix, regardless of who is accessing it.
-- The function may be **async** and may perform external IO.
+- The same item is assumed always resolve to the same owner prefix, regardless of who is accessing it. Although, the
+  specific application may make decisions about dynamic ownership on its own.
+- The function will be **async** so that it may perform external IO.
 - Ownership resolution may come from:
   - AWS IAM
   - Cognito
@@ -401,9 +402,13 @@ Key properties:
 
 Behavior:
 
-- If provided, the returned prefix is prepended to the canonical resource path:
+- If provided, the returned prefix is inserted **after** the application resource path prefix:
 
-  `fullPath = [...ownerPrefix, ...basePath]`
+  `fullPath = [...appResourcePathPrefix, ...ownerPrefix, ...basePathRemainder]`
+
+  Where:
+  - `appResourcePathPrefix` is `itemResourcePathPrefix` or `relationshipResourcePathPrefix`
+  - `basePathRemainder` is the canonical resource path content that follows the app prefix
 
 - This enables compact DAC constraints such as:
 
