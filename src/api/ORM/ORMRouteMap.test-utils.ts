@@ -27,7 +27,7 @@ const buildConfig = (): BaseTypeInfoORMServiceConfig => ({
     }),
 });
 
-const buildDacConfig = (): Omit<TypeInfoORMDACConfig, "accessingRole"> => ({
+const buildDacConfig = (): TypeInfoORMDACConfig => ({
   itemResourcePathPrefix: ["items"],
   relationshipResourcePathPrefix: ["relationships"],
   getDACRoleById: async (id: string) => ({ id, constraints: [] }),

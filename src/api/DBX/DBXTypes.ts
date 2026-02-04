@@ -77,7 +77,7 @@ export type DBXRuntimeConfig = {
   /**
    * Optional DAC configuration (excluding accessing role).
    */
-  dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">;
+  dacConfig?: TypeInfoORMDACConfig;
   /**
    * Optional accessor to resolve the accessing role id from auth info.
    */
@@ -131,7 +131,7 @@ export type DBXRuntime = {
   /**
    * Optional DAC configuration excluding accessing role.
    */
-  dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">;
+  dacConfig?: TypeInfoORMDACConfig;
   /**
    * Optional accessor to resolve the accessing role id from auth info.
    */

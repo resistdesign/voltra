@@ -72,7 +72,7 @@ export const getTypeInfoORMRouteMap = (
   /**
    * Optional DAC configuration excluding the accessing role.
    */
-  dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
+  dacConfig?: TypeInfoORMDACConfig,
   /**
    * Optional getter to resolve the accessing role id from auth info.
    */
@@ -97,13 +97,7 @@ export const getTypeInfoORMRouteMap = (
       ? new TypeInfoORMService({
           ...config,
           useDAC: true,
-          dacConfig: {
-            ...dacConfig,
-            accessingRole: {
-              id: "",
-              constraints: [],
-            },
-          },
+          dacConfig,
         })
       : undefined;
     const ormMethodFactory = (

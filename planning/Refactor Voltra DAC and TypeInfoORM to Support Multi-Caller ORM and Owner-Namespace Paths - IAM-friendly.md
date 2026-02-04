@@ -249,8 +249,7 @@ Goal: Add the `TypeInfoORMContext` parameter to ORM entrypoints, but keep existi
   - [x] produce clear error if undefined (or treat as no permissions)
 - [x] Provide a backward-compat adapter for existing call sites (route map / legacy callers) that currently pass or
   embed accessing role:
-  - [~] Option A: update call sites immediately to pass `TypeInfoORMContext` (skipped in favor of Option B for now)
-  - [x] Option B: keep legacy overloads temporarily (prefer A if feasible)
+  - [x] Option A: update call sites immediately to pass `TypeInfoORMContext`
 
 Success: everything compiles, tests may still fail until Phase 2+.
 

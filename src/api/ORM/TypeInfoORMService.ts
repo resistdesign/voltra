@@ -190,10 +190,6 @@ export type TypeInfoORMDACConfig = {
     primaryFieldValue: LiteralValue,
   ) => Promise<LiteralValue[] | undefined>;
   /**
-   * Role used to evaluate access when no per-call context is provided.
-   */
-  accessingRole: DACRole;
-  /**
    * Lookup helper used to resolve roles by id.
    */
   getDACRoleById: (id: string) => Promise<DACRole>;
@@ -348,7 +344,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { dacConfig } = this.config;
 
     if (!context) {
-      return dacConfig.accessingRole;
+      throw new Error(TypeInfoORMServiceError.MISSING_ACCESSING_ROLE);
     }
 
     const rootRole = await dacConfig.getDACRoleById(

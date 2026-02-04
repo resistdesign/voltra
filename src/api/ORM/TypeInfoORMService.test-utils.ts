@@ -278,7 +278,6 @@ export const runTypeInfoORMServiceDACScenario = async () => {
     dacConfig: {
       itemResourcePathPrefix: ["ORM"],
       relationshipResourcePathPrefix: ["REL"],
-      accessingRole: accessRole,
       getDACRoleById: async () => accessRole,
     },
   });
@@ -287,20 +286,43 @@ export const runTypeInfoORMServiceDACScenario = async () => {
   const bookId2 = "book-2";
   const authorId = "author-1";
 
-  const seedBook1 = await orm.update("Book", { id: bookId1, title: "Alpha" });
-  const seedBook2 = await orm.update("Book", { id: bookId2, title: "Beta" });
-  const seedAuthor = await orm.update("Author", {
-    id: authorId,
-    name: "Alice",
-  });
+  const context = { accessingRoleId: "dac-role" };
+  const seedBook1 = await orm.update(
+    "Book",
+    { id: bookId1, title: "Alpha" },
+    context,
+  );
+  const seedBook2 = await orm.update(
+    "Book",
+    { id: bookId2, title: "Beta" },
+    context,
+  );
+  const seedAuthor = await orm.update(
+    "Author",
+    {
+      id: authorId,
+      name: "Alice",
+    },
+    context,
+  );
 
-  const readAuthorSelected = await orm.read("Author", authorId, ["name"]);
+  const readAuthorSelected = await orm.read(
+    "Author",
+    authorId,
+    ["name"],
+    context,
+  );
 
   const listConfig: ListItemsConfig = {
     itemsPerPage: 10,
     sortFields: [{ field: "title" }],
   };
-  const listBooks = await orm.list("Book", listConfig, ["id", "title"]);
+  const listBooks = await orm.list(
+    "Book",
+    listConfig,
+    ["id", "title"],
+    context,
+  );
 
   const relationshipItemBase = {
     fromTypeName: "Author",
@@ -312,19 +334,28 @@ export const runTypeInfoORMServiceDACScenario = async () => {
     toTypePrimaryFieldValue: _omittedToTypePrimaryFieldValue,
     ...relationshipOriginItem
   } = relationshipItemBase;
-  await orm.createRelationship({
-    ...relationshipItemBase,
-    toTypePrimaryFieldValue: bookId1,
-  });
-  await orm.createRelationship({
-    ...relationshipItemBase,
-    toTypePrimaryFieldValue: bookId2,
-  });
+  await orm.createRelationship(
+    {
+      ...relationshipItemBase,
+      toTypePrimaryFieldValue: bookId1,
+    },
+    context,
+  );
+  await orm.createRelationship(
+    {
+      ...relationshipItemBase,
+      toTypePrimaryFieldValue: bookId2,
+    },
+    context,
+  );
 
-  const listRelationships = await orm.listRelationships({
-    relationshipItemOrigin: relationshipOriginItem,
-    itemsPerPage: 10,
-  });
+  const listRelationships = await orm.listRelationships(
+    {
+      relationshipItemOrigin: relationshipOriginItem,
+      itemsPerPage: 10,
+    },
+    context,
+  );
 
   const relatedItems = await orm.listRelatedItems(
     {
@@ -332,14 +363,18 @@ export const runTypeInfoORMServiceDACScenario = async () => {
       itemsPerPage: 10,
     },
     ["title"],
+    context,
   );
 
   let deleteRelationshipError: string | undefined;
   try {
-    await orm.deleteRelationship({
-      ...relationshipItemBase,
-      toTypePrimaryFieldValue: bookId1,
-    });
+    await orm.deleteRelationship(
+      {
+        ...relationshipItemBase,
+        toTypePrimaryFieldValue: bookId1,
+      },
+      context,
+    );
   } catch (error: any) {
     deleteRelationshipError = error?.message ?? String(error);
   }
@@ -400,7 +435,6 @@ export const runTypeInfoORMServiceContextScenario = async () => {
     dacConfig: {
       itemResourcePathPrefix: ["ORM"],
       relationshipResourcePathPrefix: ["REL"],
-      accessingRole: { id: "unused", constraints: [] },
       getDACRoleById: async () => roleAllow,
     },
   });
@@ -488,7 +522,6 @@ export const runTypeInfoORMServiceOwnerPrefixScenario = async () => {
     dacConfig: {
       itemResourcePathPrefix: ["ORM"],
       relationshipResourcePathPrefix: ["REL"],
-      accessingRole: { id: "unused", constraints: [] },
       getDACRoleById: async () => roleAllow,
       getOwnerPrefix: async () => ["own", "user-1"],
     },
@@ -567,7 +600,6 @@ export const runTypeInfoORMServiceOwnerPrefixDenyScenario = async () => {
     dacConfig: {
       itemResourcePathPrefix: ["ORM"],
       relationshipResourcePathPrefix: ["REL"],
-      accessingRole: { id: "unused", constraints: [] },
       getDACRoleById: async () => roleDenyRead,
       getOwnerPrefix: async () => ["own", "user-1"],
     },
@@ -784,7 +816,6 @@ export const runTypeInfoORMServiceRelationshipGateScenario = async () => {
       dacConfig: {
         itemResourcePathPrefix: ["ORM"],
         relationshipResourcePathPrefix: ["REL"],
-        accessingRole: { id: "unused", constraints: [] },
         getDACRoleById: async (id: string) => rolesById[id],
         getOwnerPrefix: async (
           typeName: string,
