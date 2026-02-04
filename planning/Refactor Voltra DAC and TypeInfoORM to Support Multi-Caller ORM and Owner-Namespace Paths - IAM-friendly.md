@@ -1,5 +1,7 @@
 # Plan: Refactor Voltra DAC + TypeInfoORM to Support Multi-Caller ORM + Owner-Namespace Paths (IAM-friendly)
 
+NOTES: This plan is a marathon, not a sprint. SECURITY and correctness are the primary objectives.
+
 ## Context / Problem
 
 Today, TypeInfoORM + DAC usage effectively binds “who is accessing” at the ORM instance / route-map wiring layer. That
@@ -185,8 +187,9 @@ export type TypeInfoORMAPI = {
 
 - Existing canonical path building (do not remove): `DACUtils.getDataItemDACResourcePath(...)` and relationship
   equivalents.
-- NEW behavior: before evaluating DAC constraints, prepend `ownerPrefix` if available:
-  - `fullPath = [...(ownerPrefix ?? []), ...basePath]`
+- NEW behavior: before evaluating DAC constraints, prepend `ownerPrefix`, if available, *after* `itemResourcePathPrefix`
+  or `relationshipResourcePathPrefix`.:
+  - Example: `fullPath = [itemResourcePathPrefix, ...(ownerPrefix ?? []), ...basePath]`
 
 ### Relationship enforcement (merged rule)
 
