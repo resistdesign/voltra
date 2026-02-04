@@ -374,7 +374,7 @@ This is an intentional “fail closed” design to:
 In short: **If the ORM expects DAC, it requires an explicit `accessingRoleId`.**
 
 **IMPORTANT: SECURITY: This functionality should probably be centralized where the DAC privelages are calculated so that
-all methods using the DAC will **AUTOMATICALLY THROW** if the `accessingRoleId` is missing.**
+all methods using the DAC will **AUTOMATICALLY THROW** if the `accessingRoleId` is missing when DAC is expected.**
 
 ---
 
