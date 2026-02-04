@@ -235,22 +235,22 @@ Phase 0 notes (file paths + functions):
 
 Goal: Add the `TypeInfoORMAccess` parameter to ORM entrypoints, but keep existing behavior working via adapters.
 
-- [ ] Define `TypeInfoORMAccess` type in the appropriate API module location (near ORM types).
-- [ ] Update TypeInfoORM public methods to accept `access: TypeInfoORMAccess` (choose consistent arg position; prefer
+- [x] Define `TypeInfoORMAccess` type in the appropriate API module location (near ORM types).
+- [x] Update TypeInfoORM public methods to accept `access: TypeInfoORMAccess` (choose consistent arg position; prefer
   last arg for minimal churn).
-  - [ ] createItem
-  - [ ] readItem
-  - [ ] updateItem
-  - [ ] deleteItem
-  - [ ] listItems
-  - [ ] relationship operations (create/delete/listRelated/etc)
-- [ ] Add an internal helper that resolves the effective root role:
-  - [ ] `const rootRole = await dacConfig.getDACRoleById(access.rootRoleId)`
-  - [ ] produce clear error if undefined (or treat as no permissions)
-- [ ] Provide a backward-compat adapter for existing call sites (route map / legacy callers) that currently pass or
+  - [x] createItem
+  - [x] readItem
+  - [x] updateItem
+  - [x] deleteItem
+  - [x] listItems
+  - [x] relationship operations (create/delete/listRelated/etc)
+- [x] Add an internal helper that resolves the effective root role:
+  - [x] `const rootRole = await dacConfig.getDACRoleById(access.rootRoleId)`
+  - [x] produce clear error if undefined (or treat as no permissions)
+- [x] Provide a backward-compat adapter for existing call sites (route map / legacy callers) that currently pass or
   embed accessing role:
   - [ ] Option A: update call sites immediately to pass `TypeInfoORMAccess`
-  - [ ] Option B: keep legacy overloads temporarily (prefer A if feasible)
+  - [x] Option B: keep legacy overloads temporarily (prefer A if feasible)
 
 Success: everything compiles, tests may still fail until Phase 2+.
 
