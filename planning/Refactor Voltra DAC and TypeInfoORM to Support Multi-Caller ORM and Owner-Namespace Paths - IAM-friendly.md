@@ -65,7 +65,7 @@ export type TypeInfoORMDACConfig = {
 
   /**
    * OPTIONAL: Asynchronously returns an ownership/tenant prefix that should be
-   * prepended to the canonical resource path for an item, *after* the application resource path prefix.
+   * prepended to the canonical resource path for an item, *after* the item or relationship resource path prefix.
    *
    * If present, this enables constraints like:
    *   [itemResourcePathPrefix, "own", "user:abc"] (prefix allow)
