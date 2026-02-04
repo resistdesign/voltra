@@ -49,9 +49,11 @@ We converged on:
 ### Static DAC config (instance-level)
 
 ```ts
+import {LiteralValue} from "./TypeInfo";
+
 export type TypeInfoORMDACConfig = {
-  itemResourcePathPrefix: string[];
-  relationshipResourcePathPrefix: string[];
+  itemResourcePathPrefix: LiteralValue[];
+  relationshipResourcePathPrefix: LiteralValue[];
 
   /**
    * Fetch a role by ID from an external system.
@@ -71,7 +73,7 @@ export type TypeInfoORMDACConfig = {
   getOwnerPrefix?: (input: {
     typeName: string;
     primaryFieldValue: string;
-  }) => Promise<string[] | undefined>;
+  }) => Promise<LiteralValue[] | undefined>;
 };
 ```
 
@@ -81,6 +83,8 @@ export type TypeInfoORMDACConfig = {
 documentation, but are not intended to be definitive.)
 
 ```ts
+import {LiteralValue} from "./TypeInfo";
+
 /**
  * The API type for TypeInfoORM providers to implement.
  *
@@ -100,7 +104,7 @@ export type TypeInfoORMAPI = {
    */
   createRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<boolean>;
 
   /**
@@ -108,7 +112,7 @@ export type TypeInfoORMAPI = {
    */
   deleteRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<DeleteRelationshipResults>;
 
   /**
@@ -116,7 +120,7 @@ export type TypeInfoORMAPI = {
    */
   listRelationships: (
     config: ListRelationshipsConfig,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<ListItemsResults<ItemRelationshipInfo>>;
 
   /**
@@ -124,7 +128,7 @@ export type TypeInfoORMAPI = {
    */
   listRelatedItems: (
     config: ListRelationshipsConfig,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 
@@ -134,7 +138,7 @@ export type TypeInfoORMAPI = {
   create: (
     typeName: string,
     item: TypeInfoDataItem,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<any>;
 
   /**
@@ -143,7 +147,7 @@ export type TypeInfoORMAPI = {
   read: (
     typeName: string,
     primaryFieldValue: any,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
     selectedFields?: (keyof TypeInfoDataItem)[],
   ) => Promise<Partial<TypeInfoDataItem>>;
 
@@ -153,7 +157,7 @@ export type TypeInfoORMAPI = {
   update: (
     typeName: string,
     item: TypeInfoDataItem,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<boolean>;
 
   /**
@@ -162,7 +166,7 @@ export type TypeInfoORMAPI = {
   delete: (
     typeName: string,
     primaryFieldValue: any,
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<boolean>;
 
   /**
@@ -172,7 +176,7 @@ export type TypeInfoORMAPI = {
     typeName: string,
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
-    accessingRoleId?: string,
+    accessingRoleId?: LiteralValue,
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 };
 ```
