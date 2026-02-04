@@ -23,7 +23,8 @@ We converged on:
 - Role-per-principal (root role per user/principal) as the primary entry point: `rootRoleId = user:{id}`.
 - Keep DAC as “evaluate ALLOW/DENY constraints against resource paths”.
 - Allow an optional async “owner namespace prefix” for a given `{typeName, primaryFieldValue}` so that constraints like
-  `["own", "user:123"]` with `pathIsPrefix: true` can express “everything owned by this principal” as a single rule.
+  `["app-namespace-related-prefix", "own", "user:123"]` with `pathIsPrefix: true` can express “everything owned by this
+  principal” as a single rule.
 - Relationship ops must have two gates:
   1) existing relationship-type permission check (business logic / semantics)
   2) endpoint ownership/namespace validation for from/to items (ownership alone is not sufficient to create arbitrary
@@ -417,7 +418,7 @@ Behavior:
 
 - This enables compact DAC constraints such as:
 
-  `ALLOW ["own", "user:123"] (pathIsPrefix: true)`
+  `ALLOW ["app-namespace-related-prefix", "own", "user:123"] (pathIsPrefix: true)`
 
   meaning “this role may access all resources owned by `user:123`”.
 
