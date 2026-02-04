@@ -1,8 +1,5 @@
 # Plan: Refactor Voltra DAC + TypeInfoORM to Support Multi-Caller ORM + Owner-Namespace Paths (IAM-friendly)
 
-This plan is written for Codex to execute in the Voltra repo, following the agent workflow in `AGENTS.md` and project
-conventions in `CONTRIBUTORS.md`.
-
 ## Context / Problem
 
 Today, TypeInfoORM + DAC usage effectively binds “who is accessing” at the ORM instance / route-map wiring layer. That
