@@ -484,8 +484,7 @@ The following are explicitly **not** part of this design:
 
 - No implicit “public” role
 - No default access context
-- No automatic ownership inference
-- No dynamic per-request ownership semantics
+- No in-built, automatic ownership inference (External methods are expected to provide this)
 - No coupling between user identity and data schema
 
 All of these concerns are intentionally left to **explicit application policy**, where they can be reasoned about,
