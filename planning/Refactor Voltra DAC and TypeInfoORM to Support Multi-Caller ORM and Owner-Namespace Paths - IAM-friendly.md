@@ -68,7 +68,9 @@ export type TypeInfoORMDACConfig = {
    * prepended to the canonical resource path for an item.
    *
    * If present, this enables constraints like:
-   *   ["own", "user:abc"] (prefix allow)
+   *   [itemResourcePathPrefix, "own", "user:abc"] (prefix allow)
+   *   or
+   *   [relationshipResourcePathPrefix, "own", "user:abc"] (prefix allow)
    *
    * Implementations may call IAM/Cognito/etc to resolve ownership.
    */
