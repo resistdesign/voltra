@@ -204,25 +204,25 @@ Goal: add a native suite without touching Engine/core logic.
 Goal: clean, stable imports for consumers.
 
 ### 5A — Renderer Factory
-- [ ] Implement `createFormRenderer({ fallbackSuite, suite? })`
-  - [ ] returns `{ AutoField, Form, ... }` (include only what exists today; don’t invent extras)
-  - [ ] uses `resolveSuite()` internally
+- [x] Implement `createFormRenderer({ fallbackSuite, suite? })`
+  - [x] returns `{ AutoField, Form, ... }` (include only what exists today; don’t invent extras)
+  - [x] uses `resolveSuite()` internally
 
 ### 5B — Web/Native Convenience APIs
 - [ ] Export helpers:
-  - [ ] `createWebFormRenderer({ suite? })`
-  - [ ] `createNativeFormRenderer({ suite? })`
+  - [x] `createWebFormRenderer({ suite? })`
+  - [x] `createNativeFormRenderer({ suite? })`
 - [ ] Ensure BYOCS works by passing partial overrides
 
 ### 5C — Package Exports + Build
 - [ ] Add web/native entrypoint barrels:
-  - [ ] `src/web/index.ts` (or `src/web/forms/index.ts` depending on patterns)
-  - [ ] `src/native/index.ts` (or `src/native/forms/index.ts` depending on patterns)
-- [ ] Update `tsup.config.ts` to build the new entrypoint
-- [ ] Update `package.json`:
-  - [ ] add `exports["./web"]`
-  - [ ] add `exports["./native"]`
-  - [ ] add `files` entries for emitted native output
+  - [x] `src/web/index.ts` (or `src/web/forms/index.ts` depending on patterns)
+  - [x] `src/native/index.ts` (or `src/native/forms/index.ts` depending on patterns)
+- [x] Update `tsup.config.ts` to build the new entrypoint
+- [x] Update `package.json`:
+  - [x] add `exports["./web"]`
+  - [x] add `exports["./native"]`
+  - [x] add `files` entries for emitted native output
 
 ### 5D — Export Consistency Tests
 - [ ] Add a spec that asserts the expected export surface exists (pattern used elsewhere in repo)
