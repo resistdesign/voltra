@@ -42,7 +42,7 @@ Goal: understand what exists today so the refactor is precise and avoids regress
   - [x] web-only primitives/components
   - [x] implicit platform assumptions (DOM events, HTML ids, etc.)
 - [x] Confirm Engine separation:
-  - [ ] Engine does not import React
+  - [x] Engine may import React hooks (acceptable), but must not import React DOM or render JSX
   - [x] Engine does not render JSX
   - [x] Engine exposes normalized field state + change handlers
 
@@ -65,13 +65,17 @@ Mapping table (AutoField hard-coded UI):
 | `<ErrorMessage>` | Field validation feedback | `error` prop |
 
 Core vs web-only notes:
-- Core logic currently in `src/app/forms/Engine.ts`, but it imports React hooks (`useState`, `useMemo`, `useCallback`), so it is not platform-agnostic yet.
+- Core logic currently in `src/app/forms/Engine.ts` and uses React hooks (`useState`, `useMemo`, `useCallback`). This is acceptable as long as it does not import React DOM or render JSX.
 - UI primitives in `src/app/forms/Primitives.ts` are web-only (styled DOM elements).
 - `AutoField`/`AutoForm` in `src/app/forms/UI.tsx` are web-only (DOM inputs, labels, buttons, datalist/select, HTML ids).
+- Additional web-only candidates in `src/app` (for later `src/web` refactor):
+  - `src/app/forms/UI.tsx`, `src/app/forms/Primitives.ts` (DOM-based form UI).
+  - `src/app/utils/Route.tsx` (uses `window` + `document` + anchor click handling).
+  - `src/app/**/test-utils.ts(x)` that import `react-dom/server` (web-only test helpers).
 
 Engine separation check:
 - Engine does not render JSX.
-- Engine *does* import React hooks, so separation is partial; it is tied to React runtime.
+- Engine imports React hooks and should avoid React DOM; this keeps it renderer-agnostic while still React-based.
 
 ---
 
@@ -80,14 +84,15 @@ Engine separation check:
 Goal: create the **shared types + glue** that make renderers/suites possible.
 
 ### 1A — Core Types
-- [ ] Add core types in a platform-agnostic location (prefer `src/forms/core/` or equivalent):
-  - [ ] `FieldKind`
-  - [ ] `FieldRenderContext`
-  - [ ] `FieldRenderer`
-  - [ ] `ComponentSuite`
-  - [ ] `ResolvedSuite`
-  - [ ] Optional: minimal primitive components contract (Label, FieldWrapper, ErrorMessage, Button)
-- [ ] Add TypeDoc comments for all public types.
+- [~] Add core types in a platform-agnostic location under `src/app/forms/core` (shared, non-DOM):
+  - [x] `FieldKind`
+  - [x] `FieldRenderContext`
+  - [x] `FieldRenderer`
+  - [x] `ComponentSuite`
+  - [x] `ResolvedSuite`
+  - [x] Optional: minimal primitive components contract (Label, FieldWrapper, ErrorMessage, Button)
+- [x] Add TypeDoc comments for all public types.
+- [ ] Relocate core types from `src/forms/core` to `src/app/forms/core` and update imports/barrels accordingly.
 
 ### 1B — Field Kind Resolution
 - [ ] Implement `getFieldKind(field: TypeInfoField): FieldKind`
@@ -136,8 +141,8 @@ Goal: `AutoField` must contain **no hard-coded UI**.
 Goal: ship a coherent default Web suite that matches current behavior, but now lives behind the suite API.
 
 ### 3A — Web Suite Structure
-- [ ] Create `src/app/forms/suite.ts` exporting `webSuite: ComponentSuite`
-- [ ] Move/organize web primitives into `src/app/forms/primitives/` (or keep current files but adapt cleanly)
+- [ ] Create `src/web/forms/suite.ts` exporting `webSuite: ComponentSuite`
+- [ ] Move/organize web primitives into `src/web/forms/primitives/` (or keep current files but adapt cleanly)
 - [ ] Implement renderers for all `FieldKind` values using web primitives:
   - [ ] string
   - [ ] number
@@ -207,10 +212,12 @@ Goal: clean, stable imports for consumers.
 - [ ] Ensure BYOCS works by passing partial overrides
 
 ### 5C — Package Exports + Build
-- [ ] Add native entrypoint barrel:
-  - [ ] `src/native/index.ts` (or `src/native/forms/index.ts` depending on existing patterns)
+- [ ] Add web/native entrypoint barrels:
+  - [ ] `src/web/index.ts` (or `src/web/forms/index.ts` depending on patterns)
+  - [ ] `src/native/index.ts` (or `src/native/forms/index.ts` depending on patterns)
 - [ ] Update `tsup.config.ts` to build the new entrypoint
 - [ ] Update `package.json`:
+  - [ ] add `exports["./web"]`
   - [ ] add `exports["./native"]`
   - [ ] add `files` entries for emitted native output
 
@@ -245,6 +252,11 @@ Goal: remove dead paths and keep repo tidy.
 - [ ] Remove or deprecate old direct-web-only exports if they conflict
 - [ ] Update internal imports to use new core layer consistently
 - [ ] Ensure no duplicated logic between web/native suites beyond necessary UI differences
+- [ ] Move DOM-specific utilities out of `src/app` into `src/web`:
+  - [ ] `src/app/forms/UI.tsx` -> `src/web/forms/UI.tsx` (or replaced by suite-based entrypoint)
+  - [ ] `src/app/forms/Primitives.ts` -> `src/web/forms/Primitives.ts` (or renamed into primitives folder)
+  - [ ] `src/app/utils/Route.tsx` -> `src/web/utils/Route.tsx`
+  - [ ] Any `src/app/**/test-utils.ts(x)` that import `react-dom/server` -> `src/web/**/test-utils.ts(x)`
 - [ ] Run:
   - [ ] `yarn build`
   - [ ] `yarn test`
