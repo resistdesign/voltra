@@ -212,7 +212,7 @@ Goal: clean, stable imports for consumers.
 - [ ] Export helpers:
   - [x] `createWebFormRenderer({ suite? })`
   - [x] `createNativeFormRenderer({ suite? })`
-- [ ] Ensure BYOCS works by passing partial overrides
+- [x] Ensure BYOCS works by passing partial overrides
 
 ### 5C — Package Exports + Build
 - [ ] Add web/native entrypoint barrels:
@@ -225,7 +225,7 @@ Goal: clean, stable imports for consumers.
   - [x] add `files` entries for emitted native output
 
 ### 5D — Export Consistency Tests
-- [ ] Add a spec that asserts the expected export surface exists (pattern used elsewhere in repo)
+- [x] Add a spec that asserts the expected export surface exists (pattern used elsewhere in repo)
 
 ---
 

@@ -1,0 +1,13 @@
+{
+  "file": "./createNativeFormRenderer.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCreateNativeFormRendererOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringKind": "override"
+      }
+    }
+  ]
+}

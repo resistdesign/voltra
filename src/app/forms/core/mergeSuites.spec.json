@@ -1,0 +1,24 @@
+{
+  "file": "./mergeSuites.test-utils.ts",
+  "tests": [
+    {
+      "export": "runMergeSuitesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringRenderer": "override",
+        "numberRenderer": "number",
+        "buttonPrimitive": "override_button"
+      }
+    },
+    {
+      "export": "runWithRendererOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringRenderer": "override",
+        "numberRenderer": "number"
+      }
+    }
+  ]
+}

@@ -15,6 +15,15 @@ export type {
   PrimitiveComponents,
   ResolvedSuite,
 } from "./core";
-export { getFieldKind } from "./core";
+export {
+  createAutoField,
+  createFormRenderer,
+  createNativeFormRenderer,
+  createWebFormRenderer,
+  getFieldKind,
+  mergeSuites,
+  resolveSuite,
+  withRendererOverride,
+} from "./core";
 export * from "./Engine";
 export * from "./UI";
