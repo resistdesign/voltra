@@ -107,14 +107,14 @@ Goal: create the **shared types + glue** that make renderers/suites possible.
     - [x] custom types
 
 ### 1C — Suite Resolution
-- [ ] Implement `resolveSuite(overrides, fallback): ResolvedSuite`
-  - [ ] Merge override renderers/components over fallback
-  - [ ] Throw if any `FieldKind` renderer is missing after merge
-  - [ ] Optionally: provide a helpful error listing missing kinds
-- [ ] Add JSON spec tests for suite resolution:
-  - [ ] override a single renderer
-  - [ ] override primitives only
-  - [ ] missing renderer throws with clear message
+- [x] Implement `resolveSuite(overrides, fallback): ResolvedSuite`
+  - [x] Merge override renderers/components over fallback
+  - [x] Throw if any `FieldKind` renderer is missing after merge
+  - [x] Optionally: provide a helpful error listing missing kinds
+- [x] Add JSON spec tests for suite resolution:
+  - [x] override a single renderer
+  - [x] override primitives only
+  - [x] missing renderer throws with clear message
 
 ---
 
