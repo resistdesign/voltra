@@ -7,3 +7,4 @@
 export * from "./types";
 export * from "./getFieldKind";
 export * from "./resolveSuite";
+export * from "./createAutoField";
