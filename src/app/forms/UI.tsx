@@ -5,6 +5,7 @@
  */
 
 import { FC, FormEvent, useEffect } from "react";
+import type { ReactElement } from "react";
 import type {
   LiteralValue,
   TypeInfo,
@@ -18,6 +19,10 @@ import type {
   FormValues,
   RelationActionPayload,
 } from "./types";
+import type {
+  ComponentSuite,
+  FieldRenderContext,
+} from "./core";
 import { useFormEngine } from "./Engine";
 import {
   ArrayContainer,
@@ -25,6 +30,7 @@ import {
   ErrorMessage,
   FieldWrapper,
 } from "./Primitives";
+import { createAutoField, resolveSuite } from "./core";
 import styled from "../helpers/styled";
 
 /**
@@ -60,327 +66,352 @@ const toOptionValue = (val: LiteralValue): string | undefined => {
  * @param props - AutoField props describing the field and handlers.
  * @returns Rendered field UI.
  */
-export const AutoField: FC<AutoFieldProps> = ({
-  field,
-  fieldKey,
-  value,
-  onChange,
-  error,
-  onRelationAction,
-  disabled,
-  onCustomTypeAction,
-}) => {
-  const { tags } = field;
-  const label = tags?.label ?? fieldKey;
-  const id = `field-${fieldKey}`;
-  const isRequired = !field.optional;
-  const { possibleValues } = field;
-  const allowCustom = tags?.allowCustomSelection;
-  const constraints = tags?.constraints;
-  const format = tags?.format;
-  const customType = tags?.customType;
+const parseNumberValue = (raw: string) => (raw === "" ? null : Number(raw));
 
-  const parseNumberValue = (raw: string) => (raw === "" ? null : Number(raw));
-
-  // Filter out boolean and null values for select options
-  const selectableValues = possibleValues?.filter(
+const getSelectableValues = (possibleValues: LiteralValue[] | undefined) => {
+  return possibleValues?.filter(
     (v): v is string | number => typeof v === "string" || typeof v === "number",
   );
+};
 
-  const emitRelationAction = (payload: RelationActionPayload) => {
-    if (onRelationAction) {
-      onRelationAction(payload);
-    }
-  };
+const formatCustomValue = (val: unknown) => {
+  if (val === null || val === undefined) return "None";
+  if (typeof val === "string" || typeof val === "number") return String(val);
+  return JSON.stringify(val, null, 2);
+};
 
-  const emitCustomTypeAction = (payload: CustomTypeActionPayload) => {
-    if (onCustomTypeAction) {
-      onCustomTypeAction(payload);
-    }
-  };
+const renderRelationSingle = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+    context;
+  const id = `field-${fieldKey}`;
 
-  const formatCustomValue = (val: unknown) => {
-    if (val === null || val === undefined) return "None";
-    if (typeof val === "string" || typeof val === "number") return String(val);
-    return JSON.stringify(val, null, 2);
-  };
-
-  if (field.typeReference) {
-    if (field.array) {
-      return (
-        <FieldWrapper>
-          <label htmlFor={id}>
-            {label} {isRequired && "*"}
-          </label>
-          {onRelationAction ? (
-            <button
-              data-signifier="manage-related"
-              type="button"
-              disabled={disabled}
-              onClick={() =>
-                emitRelationAction({
-                  action: "open",
-                  fieldKey,
-                  field,
-                  value: undefined,
-                  fullPaging: tags?.fullPaging,
-                  onChange,
-                })
-              }
-            >
-              Manage
-            </button>
-          ) : undefined}
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-        </FieldWrapper>
-      );
-    }
-
-    return (
-      <FieldWrapper>
-        <label htmlFor={id}>
-          {label} {isRequired && "*"}
-        </label>
-        {onRelationAction ? (
-          <button
-            data-signifier="manage"
-            type="button"
-            disabled={disabled}
-            onClick={() =>
-              emitRelationAction({
-                action: "open",
-                fieldKey,
-                field,
-                value: undefined,
-                fullPaging: tags?.fullPaging,
-                onChange,
-              })
-            }
-          >
-            Manage
-          </button>
-        ) : undefined}
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-      </FieldWrapper>
-    );
-  }
-
-  if (customType && onCustomTypeAction) {
-    if (field.array) {
-      const arrayValue = Array.isArray(value) ? value : [];
-
-      return (
-        <FieldWrapper>
-          <label htmlFor={id}>
-            {label} {isRequired && "*"}
-          </label>
-          <RelationList>
-            {arrayValue.length === 0 && (
-              <RelationValue>No items yet.</RelationValue>
-            )}
-            {arrayValue.map((item, index) => (
-              <RelationItem key={`${fieldKey}-${index}`}>
-                <RelationValue>{formatCustomValue(item)}</RelationValue>
-                <RelationActions>
-                  <button
-                    data-signifier="manage"
-                    type="button"
-                    disabled={disabled}
-                    onClick={() =>
-                      emitCustomTypeAction({
-                        action: "edit",
-                        fieldKey,
-                        field,
-                        customType,
-                        value,
-                        index,
-                        onChange,
-                      })
-                    }
-                  >
-                    Manage
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() =>
-                      emitCustomTypeAction({
-                        action: "remove",
-                        fieldKey,
-                        field,
-                        customType,
-                        value,
-                        index,
-                        onChange,
-                      })
-                    }
-                  >
-                    Remove
-                  </button>
-                </RelationActions>
-              </RelationItem>
-            ))}
-          </RelationList>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() =>
-              emitCustomTypeAction({
-                action: "add",
-                fieldKey,
-                field,
-                customType,
-                value,
-                onChange,
-              })
-            }
-          >
-            Add Item
-          </button>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-        </FieldWrapper>
-      );
-    }
-
-    return (
-      <FieldWrapper>
-        <label htmlFor={id}>
-          {label} {isRequired && "*"}
-        </label>
-        <RelationValue>{formatCustomValue(value)}</RelationValue>
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      {onRelationAction ? (
         <button
           data-signifier="manage"
           type="button"
           disabled={disabled}
           onClick={() =>
-            emitCustomTypeAction({
+            onRelationAction({
               action: "open",
               fieldKey,
               field,
-              customType,
-              value,
-              onChange,
+              value: undefined,
+              fullPaging: field.tags?.fullPaging,
+              onChange: context.onChange,
             })
           }
         >
           Manage
         </button>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-      </FieldWrapper>
-    );
-  }
+      ) : undefined}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
 
-  // Handle array fields
-  if (field.array) {
-    const itemField = createArrayItemField(field);
-    const arrayValue = Array.isArray(value)
-      ? [...(value as LiteralValue[])]
-      : [];
+const renderRelationArray = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+    context;
+  const id = `field-${fieldKey}`;
 
-    return (
-      <FieldWrapper>
-        <label htmlFor={id}>
-          {label} {isRequired && "*"}
-        </label>
-        <ArrayContainer>
-          {arrayValue.map((item, index) => (
-            <ArrayItemWrapper key={index}>
-              <div style={{ flex: 1 }}>
-                <AutoField
-                  field={itemField}
-                  fieldKey={`${fieldKey}[${index}]`}
-                  value={item}
-                  onChange={(newItem) => {
-                    const newValue = [...arrayValue];
-                    newValue[index] = newItem as LiteralValue;
-                    onChange(newValue);
-                  }}
-                  disabled={disabled}
-                />
-              </div>
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => {
-                  const newValue = [...arrayValue];
-                  newValue.splice(index, 1);
-                  onChange(newValue);
-                }}
-              >
-                Remove
-              </button>
-            </ArrayItemWrapper>
-          ))}
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => {
-              const baseValue = Array.isArray(value) ? value : [];
-              const newValue = [...baseValue];
-              const newItem =
-                field.type === "number"
-                  ? 0
-                  : field.type === "boolean"
-                    ? false
-                    : "";
-              newValue.push(newItem);
-              onChange(newValue);
-            }}
-          >
-            Add Item
-          </button>
-        </ArrayContainer>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-      </FieldWrapper>
-    );
-  }
-
-  // Handle scalar fields
   return (
     <FieldWrapper>
-      {field.type !== "boolean" && (
-        <label htmlFor={id}>
-          {label} {isRequired && "*"}
-        </label>
-      )}
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      {onRelationAction ? (
+        <button
+          data-signifier="manage-related"
+          type="button"
+          disabled={disabled}
+          onClick={() =>
+            onRelationAction({
+              action: "open",
+              fieldKey,
+              field,
+              value: undefined,
+              fullPaging: field.tags?.fullPaging,
+              onChange: context.onChange,
+            })
+          }
+        >
+          Manage
+        </button>
+      ) : undefined}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
 
-      {field.type === "string" && !selectableValues && (
+const renderCustomSingle = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+  const customType = field.tags?.customType;
+  const onCustomTypeAction = context.onCustomTypeAction;
+
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      <RelationValue>{formatCustomValue(context.value)}</RelationValue>
+      {customType && onCustomTypeAction ? (
+        <button
+          data-signifier="manage"
+          type="button"
+          disabled={disabled}
+          onClick={() =>
+            onCustomTypeAction({
+              action: "open",
+              fieldKey,
+              field,
+              customType,
+              value: context.value,
+              onChange: context.onChange,
+            })
+          }
+        >
+          Manage
+        </button>
+      ) : undefined}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
+
+const renderCustomArray = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+  const customType = field.tags?.customType;
+  const onCustomTypeAction = context.onCustomTypeAction;
+  const arrayValue = Array.isArray(context.value) ? context.value : [];
+
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      <RelationList>
+        {arrayValue.length === 0 && (
+          <RelationValue>No items yet.</RelationValue>
+        )}
+        {arrayValue.map((item, index) => (
+          <RelationItem key={`${fieldKey}-${index}`}>
+            <RelationValue>{formatCustomValue(item)}</RelationValue>
+            <RelationActions>
+              {customType && onCustomTypeAction ? (
+                <button
+                  data-signifier="manage"
+                  type="button"
+                  disabled={disabled}
+                  onClick={() =>
+                    onCustomTypeAction({
+                      action: "edit",
+                      fieldKey,
+                      field,
+                      customType,
+                      value: context.value,
+                      index,
+                      onChange: context.onChange,
+                    })
+                  }
+                >
+                  Manage
+                </button>
+              ) : undefined}
+              {customType && onCustomTypeAction ? (
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() =>
+                    onCustomTypeAction({
+                      action: "remove",
+                      fieldKey,
+                      field,
+                      customType,
+                      value: context.value,
+                      index,
+                      onChange: context.onChange,
+                    })
+                  }
+                >
+                  Remove
+                </button>
+              ) : undefined}
+            </RelationActions>
+          </RelationItem>
+        ))}
+      </RelationList>
+      {customType && onCustomTypeAction ? (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() =>
+            onCustomTypeAction({
+              action: "add",
+              fieldKey,
+              field,
+              customType,
+              value: context.value,
+              onChange: context.onChange,
+            })
+          }
+        >
+          Add Item
+        </button>
+      ) : undefined}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
+
+let autoFieldRenderer: ReturnType<typeof createAutoField<ReactElement>>;
+
+const renderArray = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+  const itemField = createArrayItemField(field);
+  const arrayValue = Array.isArray(context.value)
+    ? [...(context.value as LiteralValue[])]
+    : [];
+
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      <ArrayContainer>
+        {arrayValue.map((item, index) => (
+          <ArrayItemWrapper key={index}>
+            <div style={{ flex: 1 }}>
+              {autoFieldRenderer({
+                field: itemField,
+                fieldKey: `${fieldKey}[${index}]`,
+                value: item,
+                onChange: (newItem) => {
+                  const newValue = [...arrayValue];
+                  newValue[index] = newItem as LiteralValue;
+                  context.onChange(newValue);
+                },
+                disabled,
+              })}
+            </div>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                const newValue = [...arrayValue];
+                newValue.splice(index, 1);
+                context.onChange(newValue);
+              }}
+            >
+              Remove
+            </button>
+          </ArrayItemWrapper>
+        ))}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            const baseValue = Array.isArray(context.value) ? context.value : [];
+            const newValue = [...baseValue];
+            const newItem =
+              field.type === "number" ? 0 : field.type === "boolean" ? false : "";
+            newValue.push(newItem);
+            context.onChange(newValue);
+          }}
+        >
+          Add Item
+        </button>
+      </ArrayContainer>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
+
+const renderString = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      <input
+        id={id}
+        type={context.format || "text"}
+        value={(context.value as string) || ""}
+        onChange={(e: any) => context.onChange(e.target.value)}
+        disabled={disabled}
+        pattern={context.constraints?.pattern}
+      />
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
+
+const renderNumber = (context: FieldRenderContext) => {
+  const { fieldKey, label, required, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
+      <input
+        id={id}
+        type="number"
+        value={(context.value as number) ?? ""}
+        onChange={(e: any) => context.onChange(parseNumberValue(e.target.value))}
+        disabled={disabled}
+        min={context.constraints?.min}
+        max={context.constraints?.max}
+        step={context.constraints?.step}
+      />
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
+
+const renderBoolean = (context: FieldRenderContext) => {
+  const { fieldKey, label, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+
+  return (
+    <FieldWrapper>
+      <div>
         <input
           id={id}
-          type={format || "text"}
-          value={(value as string) || ""}
-          onChange={(e: any) => onChange(e.target.value)}
+          type="checkbox"
+          checked={!!context.value}
+          onChange={(e: any) => context.onChange(e.target.checked)}
           disabled={disabled}
-          pattern={constraints?.pattern}
         />
-      )}
+        <label htmlFor={id}> {label} </label>
+      </div>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </FieldWrapper>
+  );
+};
 
-      {field.type === "number" && !selectableValues && (
-        <input
-          id={id}
-          type="number"
-          value={(value as number) ?? ""}
-          onChange={(e: any) => onChange(parseNumberValue(e.target.value))}
-          disabled={disabled}
-          min={constraints?.min}
-          max={constraints?.max}
-          step={constraints?.step}
-        />
-      )}
+const renderEnumSelect = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, error } = context;
+  const id = `field-${fieldKey}`;
+  const selectableValues = getSelectableValues(context.possibleValues);
+  const allowCustom = context.allowCustomSelection;
 
-      {field.type === "boolean" && (
-        <div>
-          <input
-            id={id}
-            type="checkbox"
-            checked={!!value}
-            onChange={(e: any) => onChange(e.target.checked)}
-            disabled={disabled}
-          />
-          <label htmlFor={id}> {label} </label>
-        </div>
-      )}
-
+  return (
+    <FieldWrapper>
+      <label htmlFor={id}>
+        {label} {required && "*"}
+      </label>
       {(field.type === "string" || field.type === "number") &&
         selectableValues &&
         allowCustom && (
@@ -389,9 +420,9 @@ export const AutoField: FC<AutoFieldProps> = ({
               id={id}
               type="text"
               list={`list-${id}`}
-              value={(value as string | number) ?? ""}
+              value={(context.value as string | number) ?? ""}
               onChange={(e: any) =>
-                onChange(
+                context.onChange(
                   field.type === "number"
                     ? parseNumberValue(e.target.value)
                     : e.target.value,
@@ -407,15 +438,14 @@ export const AutoField: FC<AutoFieldProps> = ({
             </datalist>
           </>
         )}
-
       {(field.type === "string" || field.type === "number") &&
         selectableValues &&
         !allowCustom && (
           <select
             id={id}
-            value={(value as string | number) ?? ""}
+            value={(context.value as string | number) ?? ""}
             onChange={(e: any) =>
-              onChange(
+              context.onChange(
                 field.type === "number"
                   ? parseNumberValue(e.target.value)
                   : e.target.value,
@@ -431,10 +461,39 @@ export const AutoField: FC<AutoFieldProps> = ({
             ))}
           </select>
         )}
-
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </FieldWrapper>
   );
+};
+
+const webSuite: ComponentSuite<ReactElement> = {
+  renderers: {
+    string: renderString,
+    number: renderNumber,
+    boolean: renderBoolean,
+    enum_select: renderEnumSelect,
+    array: renderArray,
+    relation_single: renderRelationSingle,
+    relation_array: renderRelationArray,
+    custom_single: renderCustomSingle,
+    custom_array: renderCustomArray,
+  },
+};
+
+const resolvedWebSuite = resolveSuite(undefined, webSuite);
+autoFieldRenderer = createAutoField(resolvedWebSuite);
+
+export const AutoField: FC<AutoFieldProps> = (props) => {
+  return autoFieldRenderer({
+    field: props.field,
+    fieldKey: props.fieldKey,
+    value: props.value,
+    onChange: props.onChange,
+    error: props.error,
+    disabled: props.disabled,
+    onRelationAction: props.onRelationAction,
+    onCustomTypeAction: props.onCustomTypeAction,
+  });
 };
 
 /**
