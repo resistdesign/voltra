@@ -1,228 +1,168 @@
 /**
  * @packageDocumentation
  *
- * Lightweight client-side routing helpers with nested Route contexts.
- * Uses the History API and intercepts anchor clicks for SPA navigation.
+ * Web (DOM) routing helpers that wire the app-level Route to browser history.
  */
-import React, {
-  createContext,
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { PropsWithChildren, useEffect, useMemo, useRef } from "react";
+import { resolvePath } from "../../common/Routing";
 import {
-  getParamsAndTestPath,
-  mergeStringPaths,
-  resolvePath,
-} from "../../common/Routing";
+  Route as CoreRoute,
+  type RouteAdapter,
+  RouteProvider as CoreRouteProvider,
+  type RouteProps,
+  useRouteContext,
+} from "../../app/utils/Route";
 
-const WINDOW: (Window & typeof globalThis) | undefined =
-  typeof globalThis !== "undefined" && "window" in (globalThis as any)
-    ? ((globalThis as any).window as any)
-    : undefined;
+const getWindow = (): (Window & typeof globalThis) | undefined => {
+  if (typeof globalThis === "undefined") {
+    return undefined;
+  }
 
-if (WINDOW?.history) {
-  ((history) => {
-    const pushState = history.pushState;
+  if ("window" in (globalThis as any)) {
+    return (globalThis as any).window as Window & typeof globalThis;
+  }
 
-    history.pushState = function (state, ...remainingArguments) {
-      // @ts-ignore
-      if (typeof history.onpushstate == "function") {
-        // @ts-ignore
-        history.onpushstate({ state: state });
+  return undefined;
+};
+
+/**
+ * Create a browser RouteAdapter backed by the History API.
+ */
+export const createBrowserRouteAdapter = (): RouteAdapter => {
+  const WINDOW = getWindow();
+  const listeners = new Set<(path: string) => void>();
+
+  const notify = () => {
+    const path = WINDOW?.location?.pathname ?? "";
+    listeners.forEach((listener) => listener(path));
+  };
+
+  const handlePopState = () => {
+    notify();
+  };
+
+  const subscribe = (listener: (path: string) => void) => {
+    listeners.add(listener);
+
+    if (WINDOW) {
+      WINDOW.addEventListener("popstate", handlePopState);
+      WINDOW.addEventListener("statechanged", handlePopState);
+    }
+
+    return () => {
+      listeners.delete(listener);
+      if (WINDOW) {
+        WINDOW.removeEventListener("popstate", handlePopState);
+        WINDOW.removeEventListener("statechanged", handlePopState);
+      }
+    };
+  };
+
+  return {
+    getPath: () => WINDOW?.location?.pathname ?? "",
+    subscribe,
+    push: (path: string, title: string = "") => {
+      if (!WINDOW?.history) {
+        return;
+      }
+      WINDOW.history.pushState({}, title, path);
+      notify();
+    },
+    replace: (path: string, title: string = "") => {
+      if (!WINDOW?.history?.replaceState) {
+        return;
+      }
+      WINDOW.history.replaceState({}, title, path);
+      notify();
+    },
+  };
+};
+
+const useBrowserLinkInterceptor = (adapter: RouteAdapter | undefined) => {
+  useEffect(() => {
+    const WINDOW = getWindow();
+
+    if (!WINDOW || !adapter?.push) {
+      return undefined;
+    }
+
+    const handleAnchorClick = (event: MouseEvent) => {
+      let target: Node | ParentNode | null = event.target as Node;
+
+      while (target && (target as HTMLElement).nodeName !== "A") {
+        target = target.parentNode;
       }
 
-      // @ts-ignore
-      const result = pushState.apply(history, [state, ...remainingArguments]);
+      if (!target || (target as HTMLElement).nodeName !== "A") {
+        return;
+      }
 
-      // Dispatch a custom event 'statechanged'
-      WINDOW.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
+      const anchor = target as HTMLAnchorElement;
+      const href = anchor.getAttribute("href");
+      const title = anchor.getAttribute("title") ?? "";
 
-      return result;
+      if (!href) {
+        return;
+      }
+
+      try {
+        new URL(href);
+        return;
+      } catch (error) {
+        const nextPath = resolvePath(WINDOW.location?.pathname ?? "", href);
+        event.preventDefault();
+        adapter.push?.(nextPath, title);
+      }
     };
-  })(WINDOW.history);
-}
 
-const CURRENT_PATH: string = WINDOW?.location?.pathname ?? "";
+    WINDOW.document.addEventListener("click", handleAnchorClick);
 
-/**
- * Access values for the current Route.
- * */
-export type RouteContextType = {
-  /**
-   * Current window pathname (top-level) or inherited path (nested).
-   * */
-  currentWindowPath: string;
-  /**
-   * The parent path for this route level.
-   * */
-  parentPath: string;
-  /**
-   * Aggregated route params from parent and current routes.
-   * */
-  params: Record<string, any>;
-  /**
-   * Whether this route is the top-level router.
-   * */
-  isTopLevel: boolean;
+    return () => {
+      WINDOW.document.removeEventListener("click", handleAnchorClick);
+    };
+  }, [adapter]);
 };
 
 /**
- * React context for route state and parameters.
+ * Web RouteProvider using the browser adapter.
  */
-export const RouteContext = createContext<RouteContextType>({
-  currentWindowPath: CURRENT_PATH,
-  parentPath: "",
-  params: {},
-  isTopLevel: true,
-});
+export const RouteProvider = ({ children }: PropsWithChildren) => {
+  const adapterRef = useRef<RouteAdapter | null>(null);
 
-export const {
-  /**
-   * @ignore
-   * */
-  Provider: RouteContextProvider,
-  /**
-   * @ignore
-   * */
-  Consumer: RouteContextConsumer,
-} = RouteContext;
+  if (!adapterRef.current) {
+    adapterRef.current = createBrowserRouteAdapter();
+  }
 
-/**
- * Access Route path and parameter information.
- *
- * @returns The current route context.
- * */
-export const useRouteContext = () => useContext(RouteContext);
+  useBrowserLinkInterceptor(adapterRef.current);
 
-/**
- * Configure the Route.
- * */
-export type RouteProps<ParamsType extends Record<string, any>> = {
-  /**
-   * Route path pattern, using `:` for params.
-   * */
-  path?: string;
-  /**
-   * Callback when params update for this route.
-   *
-   * @param params - Resolved params for this route.
-   * */
-  onParamsChange?: (params: ParamsType) => void;
-  /**
-   * Require an exact match for the route path.
-   * */
-  exact?: boolean;
-};
-
-/**
- * Organize nested routes with parameters and integrate with the browser history.
- *
- * @typeParam ParamsType - Param shape for this route.
- * @param props - Route props including path, params handler, and children.
- * */
-export const Route = <ParamsType extends Record<string, any>>({
-  /**
-   * Use `:` as the first character to denote a parameter in the path.
-   * */
-  path = "",
-  onParamsChange,
-  exact = false,
-  children,
-}: PropsWithChildren<RouteProps<ParamsType>>) => {
-  const [currentPath = "", setCurrentPath] = useState<string>(CURRENT_PATH);
-  const {
-    currentWindowPath = "",
-    parentPath = "",
-    params: parentParams = {},
-    isTopLevel,
-  } = useRouteContext();
-  const targetCurrentPath = useMemo(
-    () => (isTopLevel ? currentPath : currentWindowPath),
-    [isTopLevel, currentPath, currentWindowPath],
-  );
-  const fullPath = useMemo(
-    () => mergeStringPaths(parentPath, path),
-    [parentPath, path],
-  );
-  const newParams = useMemo(
-    () => getParamsAndTestPath(targetCurrentPath, fullPath, exact),
-    [targetCurrentPath, fullPath, exact],
-  );
-  const params = useMemo(
-    () => ({
-      ...parentParams,
-      ...(newParams ? newParams : {}),
-    }),
-    [parentParams, newParams],
-  );
-  const newRouteContext = useMemo(
-    () => ({
-      currentWindowPath: targetCurrentPath,
-      parentPath: fullPath,
-      params,
-      isTopLevel: false,
-    }),
-    [targetCurrentPath, fullPath, params],
-  );
-
-  useEffect(() => {
-    if (onParamsChange) {
-      onParamsChange(params as ParamsType);
-    }
-  }, [params, onParamsChange]);
-
-  useEffect(() => {
-    if (WINDOW && isTopLevel) {
-      const handleAnchorClick = (event: MouseEvent) => {
-        let target: Node | ParentNode | null = event.target as Node;
-
-        while (target && target.nodeName !== "A") {
-          target = target.parentNode;
-        }
-
-        if (target && target.nodeName === "A") {
-          const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
-          const href = aTarget.getAttribute("href");
-          const title = aTarget.getAttribute("title") ?? "";
-
-          try {
-            new URL(href ? href : "");
-            // Full URL
-          } catch (error) {
-            // Partial URL
-            const newPath = resolvePath(
-              WINDOW.location?.pathname ?? "",
-              href ? href : "",
-            );
-
-            event.preventDefault();
-            WINDOW.history.pushState({}, title, newPath);
-            setCurrentPath(newPath);
-          }
-        }
-      };
-      const handlePopOrReplaceState = () => {
-        setCurrentPath(WINDOW.location?.pathname ?? "");
-      };
-
-      WINDOW.document.addEventListener("click", handleAnchorClick);
-      WINDOW.addEventListener("popstate", handlePopOrReplaceState);
-      WINDOW.addEventListener("statechanged", handlePopOrReplaceState);
-
-      return () => {
-        WINDOW.document.removeEventListener("click", handleAnchorClick);
-        WINDOW.removeEventListener("popstate", handlePopOrReplaceState);
-        WINDOW.removeEventListener("statechanged", handlePopOrReplaceState);
-      };
-    }
-  }, [isTopLevel]);
-
-  return newParams ? (
-    <RouteContextProvider value={newRouteContext}>
+  return (
+    <CoreRouteProvider adapter={adapterRef.current}>
       {children}
-    </RouteContextProvider>
-  ) : null;
+    </CoreRouteProvider>
+  );
 };
+
+/**
+ * Web Route component that auto-provides the browser adapter at the top level.
+ */
+export const Route = <ParamsType extends Record<string, any>>(
+  props: PropsWithChildren<RouteProps<ParamsType>>,
+) => {
+  const routeContext = useRouteContext();
+  const hasAdapter = useMemo(
+    () => typeof routeContext.adapter !== "undefined",
+    [routeContext.adapter],
+  );
+
+  if (hasAdapter) {
+    return <CoreRoute {...props} />;
+  }
+
+  return (
+    <RouteProvider>
+      <CoreRoute {...props} />
+    </RouteProvider>
+  );
+};
+
+export { useRouteContext };
