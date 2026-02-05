@@ -18,7 +18,6 @@ import {
   BaseTypeInfoORMServiceConfig,
   TypeInfoORMDACConfig,
   TypeInfoORMService,
-  TypeInfoORMServiceDACOptions,
 } from "./TypeInfoORMService";
 import {
   AuthInfo,
@@ -30,7 +29,6 @@ import {
 } from "../Router/Types";
 import { addRouteToRouteMap } from "../Router";
 import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
-import { DACRole } from "../DataAccessControl";
 
 /**
  * A collection of errors that can occur when creating or using a Type Info ORM Route Map.
@@ -61,8 +59,8 @@ export const TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP: Record<
 /**
  * Get a route map for a Type Info ORM service.
  *
- * When DAC is enabled, `getAccessingRole` is required so each request can
- * resolve the accessing {@link DACRole}. If omitted, the route map throws
+ * When DAC is enabled, `getAccessingRoleId` is required so each request can
+ * resolve the accessing role id. If omitted, the route map throws
  * {@link TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER}.
  * @returns Route map binding API paths to ORM handlers.
  */
@@ -74,17 +72,17 @@ export const getTypeInfoORMRouteMap = (
   /**
    * Optional DAC configuration excluding the accessing role.
    */
-  dacConfig?: Omit<TypeInfoORMDACConfig, "accessingRole">,
+  dacConfig?: TypeInfoORMDACConfig,
   /**
-   * Optional getter to resolve the accessing role from auth info.
+   * Optional getter to resolve the accessing role id from auth info.
    */
-  getAccessingRole?: (authInfo: AuthInfo) => DACRole,
+  getAccessingRoleId?: (authInfo: AuthInfo) => string,
   /**
    * Optional route-level auth configuration.
    */
   authConfig?: RouteAuthConfig,
 ): RouteMap => {
-  if (dacConfig && !getAccessingRole) {
+  if (dacConfig && !getAccessingRoleId) {
     throw {
       message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER,
     };
@@ -93,6 +91,13 @@ export const getTypeInfoORMRouteMap = (
       ? new TypeInfoORMService({
           ...config,
           useDAC: false,
+        })
+      : undefined;
+    const ormWithDAC = dacConfig
+      ? new TypeInfoORMService({
+          ...config,
+          useDAC: true,
+          dacConfig,
         })
       : undefined;
     const ormMethodFactory = (
@@ -104,33 +109,25 @@ export const getTypeInfoORMRouteMap = (
       }
 
       const { authInfo } = eventData;
-      const accessingRole = getAccessingRole
-        ? getAccessingRole(authInfo)
+      const accessingRoleId = getAccessingRoleId
+        ? getAccessingRoleId(authInfo)
         : undefined;
 
-      if (dacConfig && !accessingRole) {
+      if (dacConfig && !accessingRoleId) {
         throw {
           message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE,
         };
-      } else {
-        const dacOptions: TypeInfoORMServiceDACOptions = dacConfig
-          ? {
-              useDAC: true,
-              dacConfig: {
-                ...dacConfig,
-                accessingRole: accessingRole as DACRole,
-              },
-            }
-          : {
-              useDAC: false,
-            };
-        const orm = new TypeInfoORMService({
-          ...config,
-          ...dacOptions,
-        });
-
-        return orm[methodName];
       }
+
+      const context = accessingRoleId
+        ? { accessingRoleId }
+        : undefined;
+
+      const method = (ormWithDAC as TypeInfoORMService)[
+        methodName
+      ] as (...args: any[]) => Promise<any>;
+
+      return ((...args: any[]) => method(...args, context)) as RouteHandler;
     };
     const getRoute = (
       path: string,
