@@ -86,7 +86,7 @@ Engine separation check:
 Goal: create the **shared types + glue** that make renderers/suites possible.
 
 ### 1A — Core Types
-- [~] Add core types in a platform-agnostic location under `src/app/forms/core` (shared, non-DOM):
+- [x] Add core types in a platform-agnostic location under `src/app/forms/core` (shared, non-DOM):
   - [x] `FieldKind`
   - [x] `FieldRenderContext`
   - [x] `FieldRenderer`
@@ -94,17 +94,17 @@ Goal: create the **shared types + glue** that make renderers/suites possible.
   - [x] `ResolvedSuite`
   - [x] Optional: minimal primitive components contract (Label, FieldWrapper, ErrorMessage, Button)
 - [x] Add TypeDoc comments for all public types.
-- [ ] Relocate core types from `src/forms/core` to `src/app/forms/core` and update imports/barrels accordingly.
+- [x] Relocate core types from `src/forms/core` to `src/app/forms/core` and update imports/barrels accordingly.
 
 ### 1B — Field Kind Resolution
-- [ ] Implement `getFieldKind(field: TypeInfoField): FieldKind`
-  - [ ] Ensure it is the **only** semantic-to-kind mapping location
-  - [ ] Add tests for kind resolution across:
-    - [ ] primitives (string/number/boolean)
-    - [ ] enum/selectable fields
-    - [ ] arrays
-    - [ ] type references (relations)
-    - [ ] custom types
+- [x] Implement `getFieldKind(field: TypeInfoField): FieldKind`
+  - [x] Ensure it is the **only** semantic-to-kind mapping location
+  - [x] Add tests for kind resolution across:
+    - [x] primitives (string/number/boolean)
+    - [x] enum/selectable fields
+    - [x] arrays
+    - [x] type references (relations)
+    - [x] custom types
 
 ### 1C — Suite Resolution
 - [ ] Implement `resolveSuite(overrides, fallback): ResolvedSuite`
