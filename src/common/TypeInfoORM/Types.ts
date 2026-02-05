@@ -106,6 +106,10 @@ export enum TypeInfoORMServiceError {
    * */
   INVALID_OPERATION = "INVALID_OPERATION",
   /**
+   * Accessing role is missing when DAC is required.
+   * */
+  MISSING_ACCESSING_ROLE = "MISSING_ACCESSING_ROLE",
+  /**
    * Indexing criteria is not supported.
    * */
   INDEXING_UNSUPPORTED_CRITERIA = "INDEXING_UNSUPPORTED_CRITERIA",
@@ -184,6 +188,18 @@ export type DeleteRelationshipResults = {
 };
 
 /**
+ * Access context for a single ORM call.
+ */
+export type TypeInfoORMContext = {
+  /**
+   * Role identifier for the caller.
+   *
+   * Required when DAC is enabled; ignored when DAC is disabled.
+   */
+  accessingRoleId: string;
+};
+
+/**
  * The API type for TypeInfoORM providers to implement.
  * */
 export type TypeInfoORMAPI = {
@@ -195,6 +211,7 @@ export type TypeInfoORMAPI = {
    */
   createRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
+    context?: TypeInfoORMContext,
   ) => Promise<boolean>;
   /**
    * Delete a relationship record.
@@ -204,6 +221,7 @@ export type TypeInfoORMAPI = {
    */
   deleteRelationship: (
     relationshipItem: BaseItemRelationshipInfo,
+    context?: TypeInfoORMContext,
   ) => Promise<DeleteRelationshipResults>;
   /**
    * List relationships matching the query.
@@ -213,6 +231,7 @@ export type TypeInfoORMAPI = {
    */
   listRelationships: (
     config: ListRelationshipsConfig,
+    context?: TypeInfoORMContext,
   ) => Promise<ListItemsResults<ItemRelationshipInfo>>;
   /**
    * List related items for a relationship query.
@@ -224,6 +243,7 @@ export type TypeInfoORMAPI = {
   listRelatedItems: (
     config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
+    context?: TypeInfoORMContext,
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
   /**
    * Create an item.
@@ -232,7 +252,11 @@ export type TypeInfoORMAPI = {
    * @param item - Item payload to create.
    * @returns The created item result.
    */
-  create: (typeName: string, item: TypeInfoDataItem) => Promise<any>;
+  create: (
+    typeName: string,
+    item: TypeInfoDataItem,
+    context?: TypeInfoORMContext,
+  ) => Promise<any>;
   /**
    * Read an item by primary field value.
    *
@@ -245,6 +269,7 @@ export type TypeInfoORMAPI = {
     typeName: string,
     primaryFieldValue: any,
     selectedFields?: (keyof TypeInfoDataItem)[],
+    context?: TypeInfoORMContext,
   ) => Promise<Partial<TypeInfoDataItem>>;
   /**
    * Update an item.
@@ -253,7 +278,11 @@ export type TypeInfoORMAPI = {
    * @param item - Updated item payload.
    * @returns Whether the update succeeded.
    */
-  update: (typeName: string, item: TypeInfoDataItem) => Promise<boolean>;
+  update: (
+    typeName: string,
+    item: TypeInfoDataItem,
+    context?: TypeInfoORMContext,
+  ) => Promise<boolean>;
   /**
    * Delete an item by primary field value.
    *
@@ -261,7 +290,11 @@ export type TypeInfoORMAPI = {
    * @param primaryFieldValue - Primary field value to delete.
    * @returns Whether the delete succeeded.
    */
-  delete: (typeName: string, primaryFieldValue: any) => Promise<boolean>;
+  delete: (
+    typeName: string,
+    primaryFieldValue: any,
+    context?: TypeInfoORMContext,
+  ) => Promise<boolean>;
   /**
    * List items matching the configuration.
    *
@@ -274,5 +307,6 @@ export type TypeInfoORMAPI = {
     typeName: string,
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
+    context?: TypeInfoORMContext,
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 };

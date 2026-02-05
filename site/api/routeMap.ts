@@ -9,6 +9,10 @@ import { TypeInfo } from "../../src/common/TypeParsing/TypeInfo";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import {
+  DACConstraintType,
+  type DACRole,
+} from "../../src/api/DataAccessControl";
+import {
   fullTextBackend,
   relationalBackend,
   structuredReader,
@@ -82,8 +86,27 @@ export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
         },
       },
     },
-    undefined,
-    undefined,
+    {
+      itemResourcePathPrefix: ["ORM"],
+      relationshipResourcePathPrefix: ["REL"],
+      getDACRoleById: async (id: string): Promise<DACRole> => ({
+        id,
+        constraints: [
+          {
+            type: DACConstraintType.ALLOW,
+            pathIsPrefix: true,
+            resourcePath: ["ORM"],
+          },
+          {
+            type: DACConstraintType.ALLOW,
+            pathIsPrefix: true,
+            resourcePath: ["REL"],
+          },
+        ],
+      }),
+      getOwnerPrefix: async () => ["owner", "demo"],
+    },
+    (authInfo) => authInfo?.userId ?? "demo-role",
     {
       public: true,
     },

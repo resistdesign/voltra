@@ -111,7 +111,7 @@ export const createDbxRuntime = (config: DBXRuntimeConfig): DBXRuntime => {
     authConfig,
     allowedOrigins = DEFAULT_ALLOWED_ORIGINS,
     dacConfig,
-    getAccessingRole,
+    getAccessingRoleId,
     errorShouldBeExposedToClient,
   } = config;
 
@@ -175,7 +175,7 @@ export const createDbxRuntime = (config: DBXRuntimeConfig): DBXRuntime => {
       indexing,
     },
     dacConfig,
-    getAccessingRole,
+    getAccessingRoleId,
     authConfig,
   );
 
@@ -192,7 +192,7 @@ export const createDbxRuntime = (config: DBXRuntimeConfig): DBXRuntime => {
     indexing,
     authConfig,
     dacConfig,
-    getAccessingRole,
+    getAccessingRoleId,
     errorShouldBeExposedToClient,
   };
 };
