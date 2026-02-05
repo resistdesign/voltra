@@ -181,21 +181,21 @@ Goal: ship a coherent default Web suite that matches current behavior, but now l
 Goal: add a native suite without touching Engine/core logic.
 
 ### 4A — Native Suite Files
-- [ ] Create `src/native/forms/suite.ts` exporting `nativeSuite: ComponentSuite`
-- [ ] Create native primitives folder `src/native/forms/primitives/`
+- [x] Create `src/native/forms/suite.ts` exporting `nativeSuite: ComponentSuite`
+- [x] Create native primitives folder `src/native/forms/primitives/`
 
 ### 4B — Native Renderers
-- [ ] Implement renderers for the full `FieldKind` set.
-  - [ ] Use RN primitives: `TextInput`, `Switch`, `Pressable`, etc.
-  - [ ] Keep layout simple and reliable
-  - [ ] Avoid assuming any third-party UI kit
+- [x] Implement renderers for the full `FieldKind` set.
+  - [x] Use RN primitives: `TextInput`, `Switch`, `Pressable`, etc.
+  - [x] Keep layout simple and reliable
+  - [x] Avoid assuming any third-party UI kit
 
 ### 4C — Native Action Hooks
-- [ ] Use the same `onRelationAction` / `onCustomTypeAction` payloads
-- [ ] Ensure parity with web actions at the contract level
+- [x] Use the same `onRelationAction` / `onCustomTypeAction` payloads
+- [x] Ensure parity with web actions at the contract level
 
 ### 4D — Native Suite Tests
-- [ ] Add JSON spec tests verifying suite completeness + basic wiring
+- [x] Add JSON spec tests verifying suite completeness + basic wiring
 
 ---
 
