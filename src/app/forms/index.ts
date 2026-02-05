@@ -16,6 +16,5 @@ export type {
   ResolvedSuite,
 } from "./core";
 export { getFieldKind } from "./core";
-export * from "./Primitives";
 export * from "./Engine";
 export * from "./UI";
