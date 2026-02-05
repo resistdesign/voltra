@@ -1,0 +1,13 @@
+{
+  "file": "./createWebFormRenderer.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCreateWebFormRendererOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringKind": "override"
+      }
+    }
+  ]
+}

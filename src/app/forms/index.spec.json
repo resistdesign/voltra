@@ -1,0 +1,16 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runAppFormsIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasCreateFormRenderer": true,
+        "hasCreateWebFormRenderer": true,
+        "hasCreateNativeFormRenderer": true,
+        "hasMergeSuites": true
+      }
+    }
+  ]
+}
