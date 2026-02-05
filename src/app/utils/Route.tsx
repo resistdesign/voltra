@@ -29,6 +29,41 @@ export type RouteAdapter = {
 };
 
 /**
+ * Native routing state representation.
+ */
+/**
+ * Create a manual adapter for non-DOM runtimes (e.g., React Native).
+ *
+ * Call {@link updatePath} when navigation changes.
+ */
+export const createManualRouteAdapter = (initialPath: string = "/") => {
+  let currentPath = initialPath;
+  const listeners = new Set<(path: string) => void>();
+
+  const updatePath = (nextPath: string) => {
+    currentPath = nextPath;
+    listeners.forEach((listener) => listener(nextPath));
+  };
+
+  const adapter: RouteAdapter = {
+    getPath: () => currentPath,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    push: (path: string) => updatePath(path),
+    replace: (path: string) => updatePath(path),
+  };
+
+  return {
+    adapter,
+    updatePath,
+  };
+};
+
+/**
  * Access values for the current Route.
  */
 export type RouteContextType = {

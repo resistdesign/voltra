@@ -12,5 +12,6 @@ import * as Native from "./index";
 export const runNativeIndexScenario = () => {
   return {
     hasForms: "Forms" in Native,
+    hasUtils: "Utils" in Native,
   };
 };

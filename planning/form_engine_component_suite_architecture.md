@@ -321,16 +321,15 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
   - [x] Custom event handling if needed (no global mutation in app layer)
   - [x] Web-only convenience export that wires `Route` to the DOM adapter
   - [x] Ensure adapter is tree-shakeable for non-web environments
-- [ ] Native adapter (production-quality):
-- [ ] Define a first-class native routing solution:
-  - [ ] Provide a native `RouteAdapter` implementation (or adapter factory) with a stable API
-  - [ ] Support initial path + deep link hydration
-  - [ ] Support navigation updates (push/replace equivalents) without DOM APIs
+- [~] Native adapter (production-quality):
+  - [x] Provide a native `RouteAdapter` implementation (or adapter factory) with a stable API
+  - [x] Support initial path + deep link hydration
+  - [x] Support navigation updates (push/replace equivalents) without DOM APIs
   - [ ] Define path serialization strategy for native routes (segments, params, query)
-- [ ] Integration guidance:
+- [~] Integration guidance:
   - [ ] Document how to connect to common native navigation libs (e.g., react-navigation)
   - [ ] Provide mapping examples (navigation state -> path, path -> navigation action)
-  - [ ] Clarify how to disable/override link interception for native
+  - [x] Clarify how to disable/override link interception for native
 - [ ] Native-specific tests:
   - [ ] Adapter unit tests (path updates, subscriptions, push/replace semantics)
   - [ ] Route behavior tests with a mock native adapter
