@@ -18,6 +18,14 @@
         "initialPath": "/home",
         "afterNavigatePath": "/home"
       }
+    },
+    {
+      "export": "runNativeRouteChainScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "path": "/home/books/42?view=summary&debug=true"
+      }
     }
   ]
 }
