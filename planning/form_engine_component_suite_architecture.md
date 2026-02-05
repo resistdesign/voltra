@@ -304,23 +304,23 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
 - `src/app/utils/Route.tsx` and `src/app/utils/EasyLayout.tsx` are legacy re-exports of web implementations.
 
 ### 8B — Route Core Design (Render-Agnostic)
-- [ ] Define a render-agnostic routing contract in `src/app`:
-  - [ ] Adapter interface for location state + navigation (`getPath`, `listen`, `push`, `replace`)
-  - [ ] Optional link interception hook abstraction (for web only)
-  - [ ] No direct access to `window`, `document`, or `history` in app layer
-- [ ] Refactor Route core to accept an adapter or provider:
-  - [ ] `RouteProvider` (or equivalent) that injects adapter
-  - [ ] `Route`/`useRouteContext` rely only on adapter and core path utils
-- [ ] Ensure SSR-safe behavior (no global access during module init).
-- [ ] Keep core logic in app for path merge/params computation; use `src/common/Routing` as the canonical path utility layer.
+- [x] Define a render-agnostic routing contract in `src/app`:
+  - [x] Adapter interface for location state + navigation (`getPath`, `listen`, `push`, `replace`)
+  - [x] Optional link interception hook abstraction (for web only)
+  - [x] No direct access to `window`, `document`, or `history` in app layer
+- [x] Refactor Route core to accept an adapter or provider:
+  - [x] `RouteProvider` (or equivalent) that injects adapter
+  - [x] `Route`/`useRouteContext` rely only on adapter and core path utils
+- [x] Ensure SSR-safe behavior (no global access during module init).
+- [x] Keep core logic in app for path merge/params computation; use `src/common/Routing` as the canonical path utility layer.
 
 ### 8C — Web Adapter Implementation
-- [ ] Implement a DOM adapter in `src/web`:
-  - [ ] History API integration (`pushState`, `replaceState`, `popstate`)
-  - [ ] Optional anchor click interception and `resolvePath`
-  - [ ] Custom event handling if needed (no global mutation in app layer)
-- [ ] Provide a web-only convenience export that wires `Route` to the DOM adapter.
-- [ ] Ensure adapter is tree-shakeable for non-web environments.
+- [x] Implement a DOM adapter in `src/web`:
+  - [x] History API integration (`pushState`, `replaceState`, `popstate`)
+  - [x] Optional anchor click interception and `resolvePath`
+  - [x] Custom event handling if needed (no global mutation in app layer)
+- [x] Provide a web-only convenience export that wires `Route` to the DOM adapter.
+- [x] Ensure adapter is tree-shakeable for non-web environments.
 
 ### 8D — EasyLayout Core Design (Render-Agnostic)
 - [ ] Move parsing utilities to app:
