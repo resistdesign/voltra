@@ -321,22 +321,22 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
   - [x] Custom event handling if needed (no global mutation in app layer)
   - [x] Web-only convenience export that wires `Route` to the DOM adapter
   - [x] Ensure adapter is tree-shakeable for non-web environments
-- [~] Native adapter (production-quality, sensible defaults):
+- [x] Native adapter (production-quality, sensible defaults):
   - [x] Provide a native `RouteAdapter` implementation (or adapter factory) with a stable API
   - [x] Support initial path + deep link hydration
   - [x] Support navigation updates (push/replace equivalents) without DOM APIs
-  - [ ] Define path serialization strategy for native routes (segments, params, query)
-  - [ ] Provide a drop-in adapter for primary native navigation (react-navigation):
+  - [x] Define path serialization strategy for native routes (segments, params, query)
+  - [x] Provide a drop-in adapter for primary native navigation (react-navigation):
     - [x] Adapter helper that binds to navigation state listeners (generic navigation-state adapter)
-    - [ ] Path ↔ navigation state mapping utilities
-    - [ ] Optional `linking` config guidance to keep URLs in sync for RN web targets
+    - [x] Path ↔ navigation state mapping utilities
+    - [x] Optional `linking` config guidance to keep URLs in sync for RN web targets
   - [x] Provide a fallback adapter for apps without a navigation library (manual `updatePath`)
-- [~] Integration guidance (docs-first):
-  - [ ] Document react-navigation integration as the primary/native default
-  - [ ] Provide mapping examples (navigation state -> path, path -> navigation action)
-  - [ ] Add guidance for RN-web builds (linking config + RouteProvider)
+- [x] Integration guidance (docs-first):
+  - [x] Document react-navigation integration as the primary/native default
+  - [x] Provide mapping examples (navigation state -> path, path -> navigation action)
+  - [x] Add guidance for RN-web builds (linking config + RouteProvider)
   - [x] Clarify how to disable/override link interception for native
-- [ ] Native-specific tests:
+- [x] Native-specific tests:
   - [x] Adapter unit tests (path updates, subscriptions, push/replace semantics)
   - [x] Route behavior tests with a mock native adapter
   - [x] Deep link / initial state scenarios

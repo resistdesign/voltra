@@ -12,7 +12,11 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { getParamsAndTestPath, mergeStringPaths } from "../../common/Routing";
+import {
+  getParamsAndTestPath,
+  getPathString,
+  mergeStringPaths,
+} from "../../common/Routing";
 
 /**
  * Platform adapter that supplies the current path and change notifications.
@@ -29,8 +33,21 @@ export type RouteAdapter = {
 };
 
 /**
- * Native routing state representation.
+ * Supported query value types for route serialization.
  */
+export type RouteQueryValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean | null | undefined>;
+
+/**
+ * Query string map for route serialization.
+ */
+export type RouteQuery = Record<string, RouteQueryValue>;
+
 /**
  * Create a manual adapter for non-DOM runtimes (e.g., React Native).
  *
@@ -61,6 +78,55 @@ export const createManualRouteAdapter = (initialPath: string = "/") => {
     adapter,
     updatePath,
   };
+};
+
+/**
+ * Build a query string from a query object.
+ *
+ * @param query - Query string map.
+ * @returns Encoded query string without the leading `?`.
+ */
+export const buildQueryString = (query: RouteQuery = {}): string => {
+  const parts: string[] = [];
+
+  for (const [key, rawValue] of Object.entries(query)) {
+    if (rawValue === undefined) {
+      continue;
+    }
+
+    const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+
+    for (const value of values) {
+      if (value === undefined) {
+        continue;
+      }
+
+      const encodedKey = encodeURIComponent(key);
+      const encodedValue =
+        value === null ? "" : encodeURIComponent(String(value));
+      parts.push(`${encodedKey}=${encodedValue}`);
+    }
+  }
+
+  return parts.join("&");
+};
+
+/**
+ * Build a path string from segments and optional query params.
+ *
+ * @param segments - Ordered route segments.
+ * @param query - Optional query parameters.
+ * @returns Path string with optional query string.
+ */
+export const buildRoutePath = (
+  segments: Array<string | number>,
+  query?: RouteQuery,
+): string => {
+  const normalizedSegments = segments.map((segment) => String(segment));
+  const basePath = "/" + getPathString(normalizedSegments, "/", true, false, true);
+  const queryString = query ? buildQueryString(query) : "";
+
+  return queryString ? `${basePath}?${queryString}` : basePath;
 };
 
 /**

@@ -115,7 +115,37 @@ const { Route, RouteProvider, createManualRouteAdapter } = NativeUtils;
 const { adapter, updatePath } = createManualRouteAdapter("/home");
 ```
 
-For React Native navigation libraries (e.g., react-navigation), provide a RouteAdapter that maps navigation state to a path and call `RouteProvider`.
+For React Native navigation libraries, Voltra is optimized for react-navigation as the primary native default. Provide a RouteAdapter that maps navigation state to a path and call `RouteProvider`.
+
+Native navigation mapping example:
+
+```tsx
+import { Utils as NativeUtils } from "@resistdesign/voltra/native";
+
+const { createNavigationStateRouteAdapter, buildPathFromRouteChain } = NativeUtils;
+
+const adapter = createNavigationStateRouteAdapter({
+  getState: () => navigationRef.getRootState(),
+  subscribe: (listener) => navigationRef.addListener("state", listener),
+  toPath: (state) =>
+    buildPathFromRouteChain(
+      state.routes.map((route) => ({
+        name: route.name,
+        params: route.params as Record<string, any>,
+      })),
+      {
+        Home: "home",
+        Book: "books/:id",
+      },
+    ),
+  navigate: (path) => {
+    const routeName = path === "/home" ? "Home" : "Book";
+    navigationRef.navigate(routeName);
+  },
+});
+```
+
+For RN web builds, keep your navigation library linking config in sync with the same route patterns used in `buildPathFromRouteChain`.
 
 ## Form Suites (Web + Native + BYOCS)
 

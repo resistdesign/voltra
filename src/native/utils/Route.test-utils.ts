@@ -5,7 +5,10 @@ import {
   RouteProvider,
   createManualRouteAdapter,
 } from "../../app/utils/Route";
-import { createNavigationStateRouteAdapter } from "./Route";
+import {
+  buildPathFromRouteChain,
+  createNavigationStateRouteAdapter,
+} from "./Route";
 
 const renderNestedRoute = (adapter: ReturnType<typeof createManualRouteAdapter>) =>
   renderToString(
@@ -60,5 +63,23 @@ export const runNativeNavigationStateAdapterScenario = () => {
   return {
     initialPath,
     afterNavigatePath,
+  };
+};
+
+export const runNativeRouteChainScenario = () => {
+  const path = buildPathFromRouteChain(
+    [
+      { name: "Home" },
+      { name: "Book", params: { id: 42 } },
+    ],
+    {
+      Home: "home",
+      Book: "books/:id",
+    },
+    { view: "summary", debug: true },
+  );
+
+  return {
+    path,
   };
 };
