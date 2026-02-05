@@ -94,6 +94,79 @@ App features include form generation via TypeInfo-driven AutoForm/AutoField with
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships | Form Generation: AutoForm/AutoField + constraints/relations     | Typed Build Spec Creation                                     |
 |                                                                             | Form Engine: validation, defaults, denied ops, custom type flow | Typed Resource Parameters                                     |
 
+## Form Suites (Web + Native + BYOCS)
+
+Voltra's form system is split into a platform-agnostic core and platform suites:
+
+- Core contracts live under `src/app/forms/core` (field kinds, suite resolution, renderer factories).
+- Web DOM suite lives under `src/web/forms`.
+- React Native suite lives under `src/native/forms`.
+
+### Web Usage
+
+```tsx
+import { Forms } from "@resistdesign/voltra/app";
+
+const { AutoField } = Forms.createWebFormRenderer();
+```
+
+Override a single renderer:
+
+```tsx
+import { Forms } from "@resistdesign/voltra/app";
+
+const { AutoField } = Forms.createWebFormRenderer({
+  suite: Forms.withRendererOverride("string", (ctx) => {
+    return <input value={(ctx.value as string) || ""} onChange={(e) => ctx.onChange(e.target.value)} />;
+  }),
+});
+```
+
+### Native Usage
+
+```tsx
+import { Forms } from "@resistdesign/voltra/app";
+
+const { AutoField } = Forms.createNativeFormRenderer();
+```
+
+### BYOCS (Bring Your Own Component Suite)
+
+Provide partial overrides (renderers and/or primitives). Missing renderers are filled from the default suite and validated.
+
+```tsx
+import { Forms } from "@resistdesign/voltra/app";
+
+const { AutoField } = Forms.createWebFormRenderer({
+  suite: {
+    primitives: {
+      Button: ({ children }) => <button className="my-button">{children}</button>,
+    },
+    renderers: {
+      boolean: (ctx) => (
+        <label>
+          <input
+            type="checkbox"
+            checked={!!ctx.value}
+            onChange={(e) => ctx.onChange(e.target.checked)}
+          />
+          {ctx.label}
+        </label>
+      ),
+    },
+  },
+});
+```
+
+### Relation + Custom Type Hooks
+
+Renderers emit actions via:
+
+- `onRelationAction(payload)` for relation fields
+- `onCustomTypeAction(payload)` for custom types
+
+Use these to wire modals, selectors, or editors without baking UI into the core engine.
+
 ## Docs Site
 
 The docs site is both reference documentation and a canonical usage example.
