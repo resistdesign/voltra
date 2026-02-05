@@ -5,3 +5,4 @@
  */
 
 export * from "../../app/utils/Route";
+export * from "./Route";

@@ -94,6 +94,29 @@ App features include form generation via TypeInfo-driven AutoForm/AutoField with
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships | Form Generation: AutoForm/AutoField + constraints/relations     | Typed Build Spec Creation                                     |
 |                                                                             | Form Engine: validation, defaults, denied ops, custom type flow | Typed Resource Parameters                                     |
 
+## Routing (Web + Native)
+
+Voltra ships a render-agnostic Route core in `@resistdesign/voltra/app` plus platform adapters.
+
+Web usage (auto-wires `window.history`):
+
+```tsx
+import { Utils as WebUtils } from "@resistdesign/voltra/web";
+
+const { Route } = WebUtils;
+```
+
+Native usage (adapter-driven):
+
+```tsx
+import { Utils as NativeUtils } from "@resistdesign/voltra/native";
+
+const { Route, RouteProvider, createManualRouteAdapter } = NativeUtils;
+const { adapter, updatePath } = createManualRouteAdapter("/home");
+```
+
+For React Native navigation libraries (e.g., react-navigation), provide a RouteAdapter that maps navigation state to a path and call `RouteProvider`.
+
 ## Form Suites (Web + Native + BYOCS)
 
 Voltra's form system is split into a platform-agnostic core and platform suites:
