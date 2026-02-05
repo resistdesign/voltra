@@ -28,27 +28,50 @@ Non-goals:
 
 Goal: understand what exists today so the refactor is precise and avoids regressions.
 
-- [ ] Locate and review the current form subsystem files:
-  - [ ] `src/app/forms/UI.tsx`
-  - [ ] `src/app/forms/Primitives.ts`
-  - [ ] `Engine` and any related controller/types
-  - [ ] `AutoField` and any relational/custom UI helpers it uses
-- [ ] Produce an internal mapping table (in this plan, under “Audit Notes”) of:
-  - [ ] every hard-coded UI element in `AutoField`
-  - [ ] what semantic intent it represents (candidate `FieldKind`)
-  - [ ] what additional actions/callbacks it needs (relation management, custom type editor, etc.)
-- [ ] Identify what is truly “core” vs “web-only”:
-  - [ ] core (platform-agnostic) logic
-  - [ ] web-only primitives/components
-  - [ ] implicit platform assumptions (DOM events, HTML ids, etc.)
-- [ ] Confirm Engine separation:
+- [x] Locate and review the current form subsystem files:
+  - [x] `src/app/forms/UI.tsx`
+  - [x] `src/app/forms/Primitives.ts`
+  - [x] `Engine` and any related controller/types
+  - [x] `AutoField` and any relational/custom UI helpers it uses
+- [x] Produce an internal mapping table (in this plan, under “Audit Notes”) of:
+  - [x] every hard-coded UI element in `AutoField`
+  - [x] what semantic intent it represents (candidate `FieldKind`)
+  - [x] what additional actions/callbacks it needs (relation management, custom type editor, etc.)
+- [x] Identify what is truly “core” vs “web-only”:
+  - [x] core (platform-agnostic) logic
+  - [x] web-only primitives/components
+  - [x] implicit platform assumptions (DOM events, HTML ids, etc.)
+- [x] Confirm Engine separation:
   - [ ] Engine does not import React
-  - [ ] Engine does not render JSX
-  - [ ] Engine exposes normalized field state + change handlers
+  - [x] Engine does not render JSX
+  - [x] Engine exposes normalized field state + change handlers
 
 ### Audit Notes
 
-(Add the mapping table here during execution.)
+Mapping table (AutoField hard-coded UI):
+
+| Hard-coded UI element | Semantic intent (candidate FieldKind) | Actions/callbacks |
+| --- | --- | --- |
+| `FieldWrapper` + `<label>` + `Manage` button for `field.typeReference && field.array` | `relation_array` | `onRelationAction({ action: "open", fieldKey, field, fullPaging, onChange })` |
+| `FieldWrapper` + `<label>` + `Manage` button for `field.typeReference && !field.array` | `relation_single` | `onRelationAction({ action: "open", fieldKey, field, fullPaging, onChange })` |
+| `FieldWrapper` + `<label>` + list of items + `Manage`/`Remove` + `Add Item` for `customType && field.array` | `custom_array` | `onCustomTypeAction({ action: "edit" | "remove" | "add", fieldKey, field, customType, value, index, onChange })` |
+| `FieldWrapper` + `<label>` + value preview + `Manage` for `customType && !field.array` | `custom_single` | `onCustomTypeAction({ action: "open", fieldKey, field, customType, value, onChange })` |
+| `FieldWrapper` + `<label>` + `ArrayContainer` with nested `AutoField` + `Remove`/`Add Item` for `field.array` primitives | `array` | `onChange` with updated array values |
+| `FieldWrapper` + `<label>` + `<input type="text">` for `string` | `string` | `onChange(e.target.value)` |
+| `FieldWrapper` + `<label>` + `<input type="number">` for `number` | `number` | `onChange(parseNumberValue)` |
+| Checkbox + label for `boolean` | `boolean` | `onChange(e.target.checked)` |
+| `<input list>` + `<datalist>` for selectable values with `allowCustomSelection` | `enum_select` (custom allowed) | `onChange` with string/number |
+| `<select>` with options for selectable values without custom | `enum_select` | `onChange` with string/number |
+| `<ErrorMessage>` | Field validation feedback | `error` prop |
+
+Core vs web-only notes:
+- Core logic currently in `src/app/forms/Engine.ts`, but it imports React hooks (`useState`, `useMemo`, `useCallback`), so it is not platform-agnostic yet.
+- UI primitives in `src/app/forms/Primitives.ts` are web-only (styled DOM elements).
+- `AutoField`/`AutoForm` in `src/app/forms/UI.tsx` are web-only (DOM inputs, labels, buttons, datalist/select, HTML ids).
+
+Engine separation check:
+- Engine does not render JSX.
+- Engine *does* import React hooks, so separation is partial; it is tied to React runtime.
 
 ---
 
@@ -250,4 +273,3 @@ Goal: remove dead paths and keep repo tidy.
 ---
 
 Next: Phase 0 — Audit & Inventory (locate current Engine/AutoField files and build the mapping table).
-
