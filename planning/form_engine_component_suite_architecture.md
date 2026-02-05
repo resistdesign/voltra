@@ -72,6 +72,8 @@ Core vs web-only notes:
   - `src/app/forms/UI.tsx`, `src/app/forms/Primitives.ts` (DOM-based form UI).
   - `src/app/utils/Route.tsx` (uses `window` + `document` + anchor click handling).
   - `src/app/**/test-utils.ts(x)` that import `react-dom/server` (web-only test helpers).
+  - `src/app/utils/EasyLayout.tsx` (styled-components DOM grid helpers).
+  - `src/app/index.ts` should avoid re-exporting web-only modules once `src/web` is introduced.
 
 Engine separation check:
 - Engine does not render JSX.
