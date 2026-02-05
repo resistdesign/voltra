@@ -279,13 +279,29 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
 - Route is web-centric today (window/history/anchor interception). Native will need a different adapter or a no-op strategy; we must decide how to expose routing state without DOM assumptions.
 
 ### 8A — Audit & Impact Analysis
-- [ ] Inventory current usages:
-  - [ ] `Route` usage in `site/` and anywhere else under `src/`
-  - [ ] `EasyLayout` usage in `site/` and anywhere else under `src/`
-  - [ ] Any direct dependency on DOM globals (`window`, `document`, `history`, `CustomEvent`)
-  - [ ] Any direct dependency on `styled-components`
-- [ ] Identify which parts are truly core (path matching, param merging, layout parsing) vs render adapters (DOM events, link interception, styled component creation).
-- [ ] Document current behavior to preserve (URL resolution, anchor interception, history updates, params behavior, layout template parsing).
+- [x] Inventory current usages:
+  - [x] `Route` usage in `site/` and anywhere else under `src/`
+  - [x] `EasyLayout` usage in `site/` and anywhere else under `src/`
+  - [x] Any direct dependency on DOM globals (`window`, `document`, `history`, `CustomEvent`)
+  - [x] Any direct dependency on `styled-components`
+- [x] Identify which parts are truly core (path matching, param merging, layout parsing) vs render adapters (DOM events, link interception, styled component creation).
+- [x] Document current behavior to preserve (URL resolution, anchor interception, history updates, params behavior, layout template parsing).
+
+#### Phase 8A Audit Notes
+- Route implementation lives in `src/web/utils/Route.tsx` and:
+  - Uses `window`, `document`, `history`, `CustomEvent`, `location.pathname`.
+  - Mutates `history.pushState` at module load to emit a custom `statechanged` event.
+  - Intercepts anchor clicks (`document.addEventListener("click", ...)`) and resolves relative URLs via `resolvePath`.
+  - Updates internal state on `popstate` and custom `statechanged`.
+  - Uses React context + hooks for nested routing and params.
+- Route tests are web-only (`src/web/utils/Route.test-utils.tsx`) and mock window/history.
+- EasyLayout implementation lives in `src/web/utils/EasyLayout.tsx` and:
+  - Uses `styled-components` and CSS Grid (`grid-template-areas`, rows, columns).
+  - Core parsing helpers are pure: `getEasyLayoutTemplateDetails`, `getPascalCaseAreaName`.
+  - The layout factory (`getEasyLayout`) produces styled components and thus is web-only.
+- EasyLayout tests currently live under web utils and only exercise parsing helpers.
+- `site/app/src/client/App.tsx` imports `Route` from `src/web/utils`.
+- `src/app/utils/Route.tsx` and `src/app/utils/EasyLayout.tsx` are legacy re-exports of web implementations.
 
 ### 8B — Route Core Design (Render-Agnostic)
 - [ ] Define a render-agnostic routing contract in `src/app`:
