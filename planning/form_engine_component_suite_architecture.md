@@ -346,40 +346,40 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
   - [x] Tests for react-navigation mapping helpers (if added)
 
 ### 8D — EasyLayout Core Design (Render-Agnostic)
-- [ ] Move parsing utilities to app:
-  - [ ] `getEasyLayoutTemplateDetails` stays in `src/app`
-  - [ ] Ensure it is pure and does not depend on `styled-components`
-- [ ] Define a render-agnostic layout factory:
-  - [ ] Accept injected `createComponent` or `styleAdapter`
-  - [ ] Return typed `layout` + `areas` with minimal assumptions
-- [ ] Keep any styled-components usage in `src/web` wrapper utilities.
+- [x] Move parsing utilities to app:
+  - [x] `getEasyLayoutTemplateDetails` stays in `src/app`
+  - [x] Ensure it is pure and does not depend on `styled-components`
+- [x] Define a render-agnostic layout factory:
+  - [x] Accept injected `createComponent` or `styleAdapter`
+  - [x] Return typed `layout` + `areas` with minimal assumptions
+- [x] Keep any styled-components usage in `src/web` wrapper utilities.
 
 ### 8E — Migration & Exports
-- [ ] Move `Route.tsx` and `EasyLayout.tsx` back to `src/app/utils`:
-  - [ ] App exports are render-agnostic only
-  - [ ] Web exports re-export with DOM/styled adapters
-- [ ] Update imports across `site/` and `src/` to use web adapters where needed.
-- [ ] Update entrypoint export tests for app/web to reflect new locations.
-- [ ] Update docs/readme examples for routing/layout usage (app core vs web adapter).
+- [x] Move `Route.tsx` and `EasyLayout.tsx` back to `src/app/utils`:
+  - [x] App exports are render-agnostic only
+  - [x] Web exports re-export with DOM/styled adapters
+- [x] Update imports across `site/` and `src/` to use web adapters where needed.
+- [x] Update entrypoint export tests for app/web to reflect new locations.
+- [x] Update docs/readme examples for routing/layout usage (app core vs web adapter).
 
 ### 8F — Tests
-- [ ] App-level tests for core Route behavior (params, nested routing, path merge) without DOM
-- [ ] Web-level tests for adapter behavior (history updates, anchor interception)
-- [ ] App-level tests for EasyLayout parsing and factory behavior
-- [ ] Web-level tests for styled-components wrapper (if present)
+- [x] App-level tests for core Route behavior (params, nested routing, path merge) without DOM
+- [x] Web-level tests for adapter behavior (history updates, anchor interception)
+- [x] App-level tests for EasyLayout parsing and factory behavior
+- [x] Web-level tests for styled-components wrapper (if present)
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] Engine remains platform-agnostic and does not render UI
-- [ ] `AutoField` contains **no hard-coded UI** and only delegates to suite renderers
-- [ ] Default Web suite covers all `FieldKind` values and works out-of-the-box
-- [ ] Default Native suite covers all `FieldKind` values and works out-of-the-box
-- [ ] BYOCS supports partial overrides with strict completeness enforcement
-- [ ] `package.json` exports allow clean imports for web and native
-- [ ] Tests cover kind resolution, suite resolution, and core glue behavior
-- [ ] Documentation explains the model and usage patterns clearly
+- [x] Engine remains platform-agnostic and does not render UI
+- [x] `AutoField` contains **no hard-coded UI** and only delegates to suite renderers
+- [x] Default Web suite covers all `FieldKind` values and works out-of-the-box
+- [x] Default Native suite covers all `FieldKind` values and works out-of-the-box
+- [x] BYOCS supports partial overrides with strict completeness enforcement
+- [x] `package.json` exports allow clean imports for web and native
+- [x] Tests cover kind resolution, suite resolution, and core glue behavior
+- [x] Documentation explains the model and usage patterns clearly
 
 ---
 
@@ -391,4 +391,4 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
 
 ---
 
-Next: Phase 0 — Audit & Inventory (locate current Engine/AutoField files and build the mapping table).
+Next: Confirm with the user that all phases are complete and move the plan to `planning/complete/`.
