@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import type { RelationActionPayload } from "../../../../../../src/app/forms";
-import { AutoFormView, useFormEngine } from "../../../../../../src/app/forms";
+import { AutoFormView } from "../../../../../../src/web/forms";
+import { useFormEngine } from "../../../../../../src/app/forms";
 import { ERROR_MESSAGE_CONSTANTS } from "../../../../../../src/common/TypeParsing/Validation";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";

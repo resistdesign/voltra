@@ -18,6 +18,7 @@ export default defineConfig([
     bundle: true,
     splitting: false,
     treeshake: true,
+    external: ["react-native"],
     dts: true,
     clean: true,
     outDir: "dist",

@@ -1,0 +1,13 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasForms": true
+      }
+    }
+  ]
+}

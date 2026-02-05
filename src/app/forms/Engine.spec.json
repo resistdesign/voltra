@@ -223,13 +223,10 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "values": {
-          "name": "Ada",
-          "age": 42,
-          "active": true,
-          "note": null
-        },
-        "validationPassed": true
+        "strings": ["a", "b"],
+        "numbers": [1, 2],
+        "booleans": [true, false],
+        "nulls": [null]
       }
     },
     {
@@ -237,9 +234,12 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "scalarValue": "Nova",
-        "arrayValue": ["alpha", "beta"],
-        "arrayIsArray": true
+        "dataItem": {
+          "name": "Ada",
+          "count": 3,
+          "active": false,
+          "tags": ["a", "b"]
+        }
       }
     },
     {
@@ -247,7 +247,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "hasSetErrors": true
+        "errors": {
+          "name": "Bad"
+        }
       }
     }
   ]

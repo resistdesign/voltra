@@ -1,0 +1,14 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runWebIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasForms": true,
+        "hasUtils": true
+      }
+    }
+  ]
+}
