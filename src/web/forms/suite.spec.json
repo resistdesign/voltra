@@ -1,0 +1,22 @@
+{
+  "file": "./suite.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runWebSuiteCompletenessScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "missingKinds": []
+      }
+    },
+    {
+      "export": "runWebSuiteStringRendererScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasLabel": true,
+        "hasInput": true
+      }
+    }
+  ]
+}
