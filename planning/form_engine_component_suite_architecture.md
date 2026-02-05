@@ -252,17 +252,21 @@ Goal: make this understandable and usable for engineers.
 
 Goal: remove dead paths and keep repo tidy.
 
-- [ ] Remove or deprecate old direct-web-only exports if they conflict
+- [x] Remove or deprecate old direct-web-only exports if they conflict
+  - [x] Remove `src/app/forms/Primitives.ts` web re-export from the app surface (or relocate to `src/web/forms/Primitives.ts`)
+  - [x] Keep app-level stub re-exports for internal tests only (not part of public exports)
 - [ ] Update internal imports to use new core layer consistently
 - [ ] Ensure no duplicated logic between web/native suites beyond necessary UI differences
-- [ ] Move DOM-specific utilities out of `src/app` into `src/web`:
-  - [ ] `src/app/forms/UI.tsx` -> `src/web/forms/UI.tsx` (or replaced by suite-based entrypoint)
-  - [ ] `src/app/forms/Primitives.ts` -> `src/web/forms/Primitives.ts` (or renamed into primitives folder)
-  - [ ] `src/app/utils/Route.tsx` -> `src/web/utils/Route.tsx`
-  - [ ] Any `src/app/**/test-utils.ts(x)` that import `react-dom/server` -> `src/web/**/test-utils.ts(x)`
-- [ ] Run:
-  - [ ] `yarn build`
-  - [ ] `yarn test`
+- [~] Move DOM-specific utilities out of `src/app` into `src/web`:
+  - [x] `src/app/forms/UI.tsx` -> `src/web/forms/UI.tsx` (or replaced by suite-based entrypoint)
+  - [x] `src/app/forms/Primitives.ts` -> `src/web/forms/Primitives.ts` (or renamed into primitives folder)
+  - [x] `src/app/utils/Route.tsx` -> `src/web/utils/Route.tsx`
+  - [~] Any `src/app/**/test-utils.ts(x)` that import `react-dom/server` -> `src/web/**/test-utils.ts(x)`
+  - [~] Keep `ApplicationStateLoader.test-utils` and `Controller.test-utils` in `src/app/utils` (universal per guidance)
+  - [x] Keep `Engine` tests in `src/app/forms` only (no web/native Engine specs)
+- [x] Run:
+  - [x] `yarn build`
+  - [x] `yarn test`
 
 ---
 

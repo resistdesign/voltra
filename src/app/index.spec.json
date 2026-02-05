@@ -10,7 +10,7 @@
         "hasUtilsNamespace": true,
         "hasUseController": true,
         "hasTypeInfoORMClient": true,
-        "hasRoute": true,
+        "hasRoute": false,
         "hasApplicationState": true,
         "hasApplicationStateLoader": true,
         "hasService": true,
