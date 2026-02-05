@@ -327,20 +327,20 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
   - [x] Support navigation updates (push/replace equivalents) without DOM APIs
   - [ ] Define path serialization strategy for native routes (segments, params, query)
   - [ ] Provide a drop-in adapter for primary native navigation (react-navigation):
-    - [ ] Adapter helper that binds to navigation state listeners
+    - [x] Adapter helper that binds to navigation state listeners (generic navigation-state adapter)
     - [ ] Path ↔ navigation state mapping utilities
     - [ ] Optional `linking` config guidance to keep URLs in sync for RN web targets
-  - [ ] Provide a fallback adapter for apps without a navigation library (manual `updatePath`)
+  - [x] Provide a fallback adapter for apps without a navigation library (manual `updatePath`)
 - [~] Integration guidance (docs-first):
   - [ ] Document react-navigation integration as the primary/native default
   - [ ] Provide mapping examples (navigation state -> path, path -> navigation action)
   - [ ] Add guidance for RN-web builds (linking config + RouteProvider)
   - [x] Clarify how to disable/override link interception for native
 - [ ] Native-specific tests:
-  - [ ] Adapter unit tests (path updates, subscriptions, push/replace semantics)
-  - [ ] Route behavior tests with a mock native adapter
-  - [ ] Deep link / initial state scenarios
-  - [ ] Tests for react-navigation mapping helpers (if added)
+  - [x] Adapter unit tests (path updates, subscriptions, push/replace semantics)
+  - [x] Route behavior tests with a mock native adapter
+  - [x] Deep link / initial state scenarios
+  - [x] Tests for react-navigation mapping helpers (if added)
 
 ### 8D — EasyLayout Core Design (Render-Agnostic)
 - [ ] Move parsing utilities to app:
