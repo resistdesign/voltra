@@ -143,18 +143,18 @@ Goal: `AutoField` must contain **no hard-coded UI**.
 Goal: ship a coherent default Web suite that matches current behavior, but now lives behind the suite API.
 
 ### 3A — Web Suite Structure
-- [ ] Create `src/web/forms/suite.ts` exporting `webSuite: ComponentSuite`
-- [ ] Move/organize web primitives into `src/web/forms/primitives/` (or keep current files but adapt cleanly)
-- [ ] Implement renderers for all `FieldKind` values using web primitives:
-  - [ ] string
-  - [ ] number
-  - [ ] boolean
-  - [ ] enum_select
-  - [ ] array
-  - [ ] relation_single
-  - [ ] relation_array
-  - [ ] custom_single
-  - [ ] custom_array
+- [x] Create `src/web/forms/suite.ts` exporting `webSuite: ComponentSuite`
+- [x] Move/organize web primitives into `src/web/forms/primitives/` (or keep current files but adapt cleanly)
+- [x] Implement renderers for all `FieldKind` values using web primitives:
+  - [x] string
+  - [x] number
+  - [x] boolean
+  - [x] enum_select
+  - [x] array
+  - [x] relation_single
+  - [x] relation_array
+  - [x] custom_single
+  - [x] custom_array
 
 ### 3B — Relational & Custom Rendering Hooks
 - [ ] Replace any embedded relation-management UI with suite-driven behavior:
