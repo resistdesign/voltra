@@ -74,6 +74,7 @@ Core vs web-only notes:
   - `src/app/**/test-utils.ts(x)` that import `react-dom/server` (web-only test helpers).
   - `src/app/utils/EasyLayout.tsx` (styled-components DOM grid helpers).
   - `src/app/index.ts` should avoid re-exporting web-only modules once `src/web` is introduced.
+  - `src/app/forms/Primitives.ts` now re-exports web primitives; remove or relocate in Phase 7 cleanup.
 
 Engine separation check:
 - Engine does not render JSX.
@@ -157,21 +158,21 @@ Goal: ship a coherent default Web suite that matches current behavior, but now l
   - [x] custom_array
 
 ### 3B — Relational & Custom Rendering Hooks
-- [ ] Replace any embedded relation-management UI with suite-driven behavior:
-  - [ ] relation renderers emit actions via `onRelationAction(payload)`
-  - [ ] custom renderers emit actions via `onCustomTypeAction(payload)`
-- [ ] Define payload types (core, not web-specific):
-  - [ ] `RelationActionPayload` (add/remove/select/open/search/etc.)
-  - [ ] `CustomTypeActionPayload` (open editor, add/remove item, etc.)
-- [ ] Ensure the defaults provide a sane UX:
-  - [ ] minimal buttons/controls
-  - [ ] predictable behavior
-  - [ ] no hidden side effects
+- [x] Replace any embedded relation-management UI with suite-driven behavior:
+  - [x] relation renderers emit actions via `onRelationAction(payload)`
+  - [x] custom renderers emit actions via `onCustomTypeAction(payload)`
+- [x] Define payload types (core, not web-specific):
+  - [x] `RelationActionPayload` (add/remove/select/open/search/etc.)
+  - [x] `CustomTypeActionPayload` (open editor, add/remove item, etc.)
+- [x] Ensure the defaults provide a sane UX:
+  - [x] minimal buttons/controls
+  - [x] predictable behavior
+  - [x] no hidden side effects
 
 ### 3C — Web Suite Tests
-- [ ] Add JSON spec tests for:
-  - [ ] renderer exists for every kind
-  - [ ] a few representative renderers produce expected props/callback usage patterns (component-level tests can be minimal; focus on contract correctness)
+- [x] Add JSON spec tests for:
+  - [x] renderer exists for every kind
+  - [x] a few representative renderers produce expected props/callback usage patterns (component-level tests can be minimal; focus on contract correctness)
 
 ---
 
