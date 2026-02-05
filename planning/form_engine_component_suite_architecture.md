@@ -233,18 +233,18 @@ Goal: clean, stable imports for consumers.
 
 Goal: make this understandable and usable for engineers.
 
-- [ ] Add/expand TypeDoc on:
-  - [ ] core types
-  - [ ] suite resolution
-  - [ ] renderer factory
-  - [ ] action payloads
-- [ ] Add a docs page (or update existing docs) that covers:
-  - [ ] the mental model (Engine vs Suite)
-  - [ ] web usage example
-  - [ ] native usage example
-  - [ ] BYOCS example (override 1 renderer + 1 primitive)
-  - [ ] how to implement relations/custom editors via action hooks
-- [ ] Run `yarn doc` and ensure docs generation is clean.
+- [x] Add/expand TypeDoc on:
+  - [x] core types
+  - [x] suite resolution
+  - [x] renderer factory
+  - [x] action payloads
+- [x] Add a docs page (or update existing docs) that covers:
+  - [x] the mental model (Engine vs Suite)
+  - [x] web usage example
+  - [x] native usage example
+  - [x] BYOCS example (override 1 renderer + 1 primitive)
+  - [x] how to implement relations/custom editors via action hooks
+- [x] Run `yarn doc` and ensure docs generation is clean.
 
 ---
 
