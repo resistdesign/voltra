@@ -6,7 +6,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "hasForms": true
+        "hasForms": true,
+        "hasUtils": true
       }
     }
   ]
