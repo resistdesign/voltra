@@ -270,6 +270,63 @@ Goal: remove dead paths and keep repo tidy.
 
 ---
 
+## Phase 8 — Render-Agnostic Routing + Layout (Route/EasyLayout)
+
+Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `src/app`.
+
+### 8A — Audit & Impact Analysis
+- [ ] Inventory current usages:
+  - [ ] `Route` usage in `site/` and anywhere else under `src/`
+  - [ ] `EasyLayout` usage in `site/` and anywhere else under `src/`
+  - [ ] Any direct dependency on DOM globals (`window`, `document`, `history`, `CustomEvent`)
+  - [ ] Any direct dependency on `styled-components`
+- [ ] Identify which parts are truly core (path matching, param merging, layout parsing) vs render adapters (DOM events, link interception, styled component creation).
+- [ ] Document current behavior to preserve (URL resolution, anchor interception, history updates, params behavior, layout template parsing).
+
+### 8B — Route Core Design (Render-Agnostic)
+- [ ] Define a render-agnostic routing contract in `src/app`:
+  - [ ] Adapter interface for location state + navigation (`getPath`, `listen`, `push`, `replace`)
+  - [ ] Optional link interception hook abstraction (for web only)
+  - [ ] No direct access to `window`, `document`, or `history` in app layer
+- [ ] Refactor Route core to accept an adapter or provider:
+  - [ ] `RouteProvider` (or equivalent) that injects adapter
+  - [ ] `Route`/`useRouteContext` rely only on adapter and core path utils
+- [ ] Ensure SSR-safe behavior (no global access during module init).
+- [ ] Keep core logic in app for path merge/params computation; use `src/common/Routing` as the canonical path utility layer.
+
+### 8C — Web Adapter Implementation
+- [ ] Implement a DOM adapter in `src/web`:
+  - [ ] History API integration (`pushState`, `replaceState`, `popstate`)
+  - [ ] Optional anchor click interception and `resolvePath`
+  - [ ] Custom event handling if needed (no global mutation in app layer)
+- [ ] Provide a web-only convenience export that wires `Route` to the DOM adapter.
+- [ ] Ensure adapter is tree-shakeable for non-web environments.
+
+### 8D — EasyLayout Core Design (Render-Agnostic)
+- [ ] Move parsing utilities to app:
+  - [ ] `getEasyLayoutTemplateDetails` stays in `src/app`
+  - [ ] Ensure it is pure and does not depend on `styled-components`
+- [ ] Define a render-agnostic layout factory:
+  - [ ] Accept injected `createComponent` or `styleAdapter`
+  - [ ] Return typed `layout` + `areas` with minimal assumptions
+- [ ] Keep any styled-components usage in `src/web` wrapper utilities.
+
+### 8E — Migration & Exports
+- [ ] Move `Route.tsx` and `EasyLayout.tsx` back to `src/app/utils`:
+  - [ ] App exports are render-agnostic only
+  - [ ] Web exports re-export with DOM/styled adapters
+- [ ] Update imports across `site/` and `src/` to use web adapters where needed.
+- [ ] Update entrypoint export tests for app/web to reflect new locations.
+- [ ] Update docs/readme examples for routing/layout usage (app core vs web adapter).
+
+### 8F — Tests
+- [ ] App-level tests for core Route behavior (params, nested routing, path merge) without DOM
+- [ ] Web-level tests for adapter behavior (history updates, anchor interception)
+- [ ] App-level tests for EasyLayout parsing and factory behavior
+- [ ] Web-level tests for styled-components wrapper (if present)
+
+---
+
 ## Acceptance Criteria
 
 - [ ] Engine remains platform-agnostic and does not render UI
