@@ -1,0 +1,21 @@
+{
+  "file": "./getFieldKind.test-utils.ts",
+  "tests": [
+    {
+      "export": "runGetFieldKindScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringKind": "string",
+        "numberKind": "number",
+        "booleanKind": "boolean",
+        "enumKind": "enum_select",
+        "arrayKind": "array",
+        "relationSingleKind": "relation_single",
+        "relationArrayKind": "relation_array",
+        "customSingleKind": "custom_single",
+        "customArrayKind": "custom_array"
+      }
+    }
+  ]
+}

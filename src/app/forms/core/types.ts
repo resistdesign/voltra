@@ -8,8 +8,8 @@ import type {
   LiteralValue,
   TypeInfoDataItem,
   TypeInfoField,
-} from "../../common/TypeParsing/TypeInfo";
-import type { ItemRelationshipInfoType } from "../../common/ItemRelationshipInfoTypes";
+} from "../../../common/TypeParsing/TypeInfo";
+import type { ItemRelationshipInfoType } from "../../../common/ItemRelationshipInfoTypes";
 
 /**
  * Supported field kinds for renderer selection.
