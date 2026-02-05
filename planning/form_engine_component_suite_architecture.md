@@ -123,11 +123,11 @@ Goal: create the **shared types + glue** that make renderers/suites possible.
 Goal: `AutoField` must contain **no hard-coded UI**.
 
 ### 2A — Create the AutoField Factory
-- [ ] Implement `createAutoField(resolvedSuite)`
-  - [ ] It builds `FieldRenderContext`
-  - [ ] It computes `kind = getFieldKind(field)`
-  - [ ] It calls `suite.renderers[kind](ctx)`
-  - [ ] It has no UI imports (no web/native primitives)
+- [x] Implement `createAutoField(resolvedSuite)`
+  - [x] It builds `FieldRenderContext`
+  - [x] It computes `kind = getFieldKind(field)`
+  - [x] It calls `suite.renderers[kind](ctx)`
+  - [x] It has no UI imports (no web/native primitives)
 
 ### 2B — Replace Existing AutoField Usage
 - [ ] Update existing web form renderer wiring so it uses the new `createAutoField`
