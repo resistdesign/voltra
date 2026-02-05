@@ -169,7 +169,6 @@ export const Route = <ParamsType extends Record<string, any>>({
     currentWindowPath = "",
     parentPath = "",
     params: parentParams = {},
-    isTopLevel,
     adapter,
   } = useRouteContext();
 
