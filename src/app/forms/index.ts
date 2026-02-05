@@ -5,7 +5,17 @@
  */
 
 export * from "./types";
-export * from "./core";
+export type {
+  ComponentSuite,
+  FieldKind,
+  FieldRenderContext,
+  FieldRenderer,
+  FieldValue,
+  PrimitiveComponent,
+  PrimitiveComponents,
+  ResolvedSuite,
+} from "./core";
+export { getFieldKind } from "./core";
 export * from "./Primitives";
 export * from "./Engine";
 export * from "./UI";
