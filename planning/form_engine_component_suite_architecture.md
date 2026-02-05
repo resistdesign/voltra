@@ -314,16 +314,14 @@ Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `sr
 - [x] Ensure SSR-safe behavior (no global access during module init).
 - [x] Keep core logic in app for path merge/params computation; use `src/common/Routing` as the canonical path utility layer.
 
-### 8C — Web Adapter Implementation
-- [x] Implement a DOM adapter in `src/web`:
+### 8C — Adapter Implementations
+- [x] Web adapter:
   - [x] History API integration (`pushState`, `replaceState`, `popstate`)
   - [x] Optional anchor click interception and `resolvePath`
   - [x] Custom event handling if needed (no global mutation in app layer)
-- [x] Provide a web-only convenience export that wires `Route` to the DOM adapter.
-- [x] Ensure adapter is tree-shakeable for non-web environments.
-
-### 8C.1 — Native Adapter Strategy
-### 8C.1 — Native Route Support (Production-Quality)
+  - [x] Web-only convenience export that wires `Route` to the DOM adapter
+  - [x] Ensure adapter is tree-shakeable for non-web environments
+- [ ] Native adapter (production-quality):
 - [ ] Define a first-class native routing solution:
   - [ ] Provide a native `RouteAdapter` implementation (or adapter factory) with a stable API
   - [ ] Support initial path + deep link hydration
