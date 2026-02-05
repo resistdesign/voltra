@@ -130,11 +130,11 @@ Goal: `AutoField` must contain **no hard-coded UI**.
   - [x] It has no UI imports (no web/native primitives)
 
 ### 2B — Replace Existing AutoField Usage
-- [ ] Update existing web form renderer wiring so it uses the new `createAutoField`
-- [ ] Ensure no old hard-coded UI remains reachable
-- [ ] Update tests to validate:
-  - [ ] correct renderer selection by kind
-  - [ ] context values (label, required, disabled, error, value)
+- [x] Update existing web form renderer wiring so it uses the new `createAutoField`
+- [x] Ensure no old hard-coded UI remains reachable
+- [x] Update tests to validate:
+  - [x] correct renderer selection by kind
+  - [x] context values (label, required, disabled, error, value)
 
 ---
 
