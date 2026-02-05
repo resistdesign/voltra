@@ -209,13 +209,13 @@ Goal: clean, stable imports for consumers.
   - [x] uses `resolveSuite()` internally
 
 ### 5B — Web/Native Convenience APIs
-- [ ] Export helpers:
+- [x] Export helpers:
   - [x] `createWebFormRenderer({ suite? })`
   - [x] `createNativeFormRenderer({ suite? })`
 - [x] Ensure BYOCS works by passing partial overrides
 
 ### 5C — Package Exports + Build
-- [ ] Add web/native entrypoint barrels:
+- [x] Add web/native entrypoint barrels:
   - [x] `src/web/index.ts` (or `src/web/forms/index.ts` depending on patterns)
   - [x] `src/native/index.ts` (or `src/native/forms/index.ts` depending on patterns)
 - [x] Update `tsup.config.ts` to build the new entrypoint
