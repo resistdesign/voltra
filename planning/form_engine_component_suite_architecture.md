@@ -274,6 +274,10 @@ Goal: remove dead paths and keep repo tidy.
 
 Goal: make `Route` and `EasyLayout` render-agnostic and move them back under `src/app`.
 
+### Phase 8 Notes (Known Challenges)
+- EasyLayout currently relies on web CSS concepts (CSS Grid and `styled-components`). RN uses Flexbox and has no CSS Grid, so an adapter or alternative layout strategy will be required.
+- Route is web-centric today (window/history/anchor interception). Native will need a different adapter or a no-op strategy; we must decide how to expose routing state without DOM assumptions.
+
 ### 8A — Audit & Impact Analysis
 - [ ] Inventory current usages:
   - [ ] `Route` usage in `site/` and anywhere else under `src/`
