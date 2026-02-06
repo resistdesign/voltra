@@ -1,7 +1,19 @@
 /**
  * @packageDocumentation
  *
- * Common module exports for shared utilities, types, and helpers.
+ * Common module exports for shared utilities, types, and helpers used across
+ * app, API, and IaC layers.
+ *
+ * Import from the common subpath only:
+ * ```ts
+ * import * as Common from "@resistdesign/voltra/common";
+ *
+ * const path = Common.Routing.getPathString(["users", 42], "/", true, false);
+ * const id = Common.IDGeneration.getSimpleId();
+ * ```
+ *
+ * See also: `@resistdesign/voltra/app`, `@resistdesign/voltra/api`, and
+ * `@resistdesign/voltra/iac`.
  */
 
 export * as CommandLine from "./CommandLine";
