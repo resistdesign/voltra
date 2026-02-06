@@ -8,8 +8,6 @@
 import styled from "styled-components";
 import {
   createEasyLayout,
-  getEasyLayoutTemplateDetails,
-  getPascalCaseAreaName,
   type EasyLayoutFactoryConfig,
   type EasyLayoutSpacing,
   type FCWithChildren,
