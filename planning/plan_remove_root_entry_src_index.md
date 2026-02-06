@@ -3,7 +3,7 @@
 This plan removes the root barrel entry (`src/index.ts`) to prevent cross-runtime bundling issues, while preserving its documentation content in the correct sub-entrypoints.
 
 Goal:
-- Consumers should import **only** via explicit subpath entrypoints (e.g. `@voltra/app`, `@voltra/web`, `@voltra/native`, `@voltra/api`).
+- Consumers should import **only** via explicit subpath entrypoints (e.g. `@resistdesign/voltra/app`, `@resistdesign/voltra/web`, `@resistdesign/voltra/native`, `@resistdesign/voltra/api`).
 - The package should not ship a root runtime entry that can accidentally pull web/native-only code into the wrong runtime.
 
 Non-goals:
@@ -144,4 +144,3 @@ Goal: prevent regressions and ensure runtime safety.
 ---
 
 Next: Phase 0 — Audit current `src/index.ts` and populate “Audit Notes”.
-
