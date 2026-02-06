@@ -1,0 +1,61 @@
+{
+  "file": "./EasyLayout.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeEasyLayoutRepresentativeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "header": { "left": 10, "top": 10, "width": 280, "height": 100 },
+        "side": { "left": 10, "top": 118, "width": 90.667, "height": 112 },
+        "main": { "left": 108.667, "top": 118, "width": 181.333, "height": 112 }
+      }
+    },
+    {
+      "export": "runNativeEasyLayoutMixedTrackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "a": { "left": 0, "top": 0, "width": 100, "height": 100 },
+        "b": { "left": 110, "top": 0, "width": 120, "height": 100 },
+        "c": { "left": 240, "top": 0, "width": 260, "height": 100 }
+      }
+    },
+    {
+      "export": "runNativeEasyLayoutInvalidTemplateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": false,
+        "message": "Area \"a\" must be a rectangle. Missing \"a\" at row 2, col 2."
+      }
+    },
+    {
+      "export": "runNativeEasyLayoutStabilityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stable": true,
+        "first": {
+          "nav": { "left": 20, "top": 20, "width": 187.5, "height": 360 },
+          "main": { "left": 217.5, "top": 20, "width": 562.5, "height": 360 }
+        },
+        "second": {
+          "nav": { "left": 20, "top": 20, "width": 187.5, "height": 360 },
+          "main": { "left": 217.5, "top": 20, "width": 562.5, "height": 360 }
+        }
+      }
+    },
+    {
+      "export": "runNativeEasyLayoutViewScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasHeader": true,
+        "hasMain": true,
+        "hasAbsolute": true,
+        "hasRelative": true
+      }
+    }
+  ]
+}

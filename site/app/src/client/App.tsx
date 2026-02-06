@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { ApplicationStateProvider } from "../../../../src/app/utils";
 import { Route } from "../../../../src/web/utils";
 import { AdvancedDemo } from "./AdvancedDemo";
+import { EasyLayoutDemo } from "./EasyLayoutDemo";
 import { EndToEndDemo } from "./EndToEndDemo";
 
 const NavBar = styled.nav`
@@ -96,6 +97,9 @@ export const App: FC = () => {
               <li>
                 <a href="/end-to-end-demo">End-to-End Demo</a>
               </li>
+              <li>
+                <a href="/easy-layout-demo">EasyLayout Demo</a>
+              </li>
             </ul>
           </NavBar>
           <h3>
@@ -105,6 +109,9 @@ export const App: FC = () => {
             </Route>
             <Route path="end-to-end-demo" exact>
               End-to-End Demo
+            </Route>
+            <Route path="easy-layout-demo" exact>
+              EasyLayout Demo
             </Route>
           </h3>
           <Route exact>
@@ -221,6 +228,9 @@ export const App: FC = () => {
           </Route>
           <Route path="end-to-end-demo" exact>
             <EndToEndDemo />
+          </Route>
+          <Route path="easy-layout-demo" exact>
+            <EasyLayoutDemo />
           </Route>
         </Content>
       </Route>

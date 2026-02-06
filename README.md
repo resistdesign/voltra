@@ -18,10 +18,13 @@ yarn add @resistdesign/voltra
 
 Prefer the public entrypoints below to keep imports stable and IDE auto-imports clean.
 
+The root import `@resistdesign/voltra` is intentionally unsupported to avoid
+cross-runtime bundling issues.
+
 Preferred:
 
 ```ts
-import {IaC} from "@resistdesign/voltra";
+import * as IaC from "@resistdesign/voltra/iac";
 import {Packs} from "@resistdesign/voltra/iac";
 import {addDNS} from "@resistdesign/voltra/iac/packs";
 ```
@@ -34,12 +37,14 @@ import addDNS from "@resistdesign/voltra/iac/packs/dns";
 
 Public entrypoints:
 
-- `@resistdesign/voltra`
 - `@resistdesign/voltra/api`
 - `@resistdesign/voltra/app`
 - `@resistdesign/voltra/common`
+- `@resistdesign/voltra/web`
+- `@resistdesign/voltra/native`
 - `@resistdesign/voltra/iac`
 - `@resistdesign/voltra/iac/packs`
+- `@resistdesign/voltra/build`
 
 ------------
 
@@ -93,6 +98,68 @@ App features include form generation via TypeInfo-driven AutoForm/AutoField with
 | Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks                   | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships | Form Generation: AutoForm/AutoField + constraints/relations     | Typed Build Spec Creation                                     |
 |                                                                             | Form Engine: validation, defaults, denied ops, custom type flow | Typed Resource Parameters                                     |
+
+## EasyLayout (Web + Native + Core)
+
+EasyLayout now has:
+
+- Shared core parsing/math in `@resistdesign/voltra/app` (`Utils.parseTemplate`, `Utils.computeTrackPixels`, etc.).
+- Web rendering via CSS Grid in `@resistdesign/voltra/web`.
+- Native coordinate computation in `@resistdesign/voltra/native`.
+
+### Template syntax
+
+```text
+header header, 1fr
+side main, 2fr
+\ 100px 1fr
+```
+
+- Row lines: `<areas>, <row-track>` (row track optional)
+- Column line: `\ <col-track> <col-track> ...`
+- Supported units: `fr`, `px`, `%`
+- Named areas must form rectangles
+
+### Web usage
+
+```tsx
+import { Utils as WebUtils } from "@resistdesign/voltra/web";
+
+const { layout: Layout, areas } = WebUtils.getEasyLayout(undefined, undefined, {
+  gap: 12,
+  padding: 16,
+})`
+  header header, 1fr
+  side main, 2fr
+  \ 1fr 2fr
+`;
+```
+
+### Native usage
+
+```tsx
+import { Utils as NativeUtils } from "@resistdesign/voltra/native";
+
+const layout = NativeUtils.makeNativeEasyLayout(`
+  header header, 100px
+  side main, 1fr
+  \\ 1fr 2fr
+`);
+
+const coords = layout.computeNativeCoords({
+  width: 320,
+  height: 240,
+  padding: 12,
+  gap: 8,
+});
+```
+
+### Web vs Native
+
+| Runtime | Rendering model | Output |
+|---------|------------------|--------|
+| Web | CSS Grid (browser layout engine) | CSS template strings |
+| Native | Computed absolute layout | `{ left, top, width, height }` per area |
 
 ## Routing (Web + Native)
 

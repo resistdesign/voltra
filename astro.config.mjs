@@ -10,6 +10,7 @@ export default defineConfig({
   redirects: {
     "/form-generation": "/",
     "/end-to-end-demo": "/",
+    "/easy-layout-demo": "/",
   },
   integrations: [react()],
   srcDir: "./site/app/src",

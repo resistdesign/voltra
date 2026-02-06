@@ -11,6 +11,7 @@ import {
   getEasyLayoutTemplateDetails,
   getPascalCaseAreaName,
   type EasyLayoutFactoryConfig,
+  type EasyLayoutSpacing,
   type FCWithChildren,
   type LayoutComponents,
 } from "../../app/utils/EasyLayout";
@@ -36,6 +37,14 @@ const styledFactory: EasyLayoutFactoryConfig<FCWithChildren> = {
 
 /**
  * Quickly express advanced, extensible grid layouts with styled-components.
+ * Template syntax:
+ * - Row lines: `<area area ...>, <track>`
+ * - Optional column line: `\\ <track> <track> ...`
+ *
+ * Supported track units are `fr`, `px`, and `%`.
+ * Parsing and area-shape validation are shared from the app EasyLayout core.
+ * On web, final pixel distribution is resolved by the browser CSS Grid engine.
+ * Optional spacing (`gap`, `padding`) can be provided in `options`.
  *
  * @example
  * ```tsx
@@ -68,14 +77,16 @@ const styledFactory: EasyLayoutFactoryConfig<FCWithChildren> = {
  *
  * @param extendFrom - Base component to extend for the layout container.
  * @param areasExtendFrom - Base component to extend for each area component.
+ * @param options - Optional layout spacing (`gap`, `padding`).
  * @returns Tagged template function that builds layout components.
  * */
 export const getEasyLayout = (
   extendFrom?: FCWithChildren,
   areasExtendFrom?: FCWithChildren,
+  options: EasyLayoutSpacing = {},
 ): ((
   layoutTemplate: TemplateStringsArray,
   ...expressions: any[]
 ) => LayoutComponents) => {
-  return createEasyLayout(styledFactory, extendFrom, areasExtendFrom);
+  return createEasyLayout(styledFactory, extendFrom, areasExtendFrom, options);
 };
