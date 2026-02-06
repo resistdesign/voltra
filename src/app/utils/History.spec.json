@@ -1,0 +1,95 @@
+{
+  "file": "./History.test-utils.ts",
+  "tests": [
+    {
+      "export": "runMemoryHistoryNavigationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initial": {
+          "path": "/app/books?view=list#top",
+          "length": 1,
+          "index": 0,
+          "key": "h0"
+        },
+        "afterPush": {
+          "path": "/app/books/42?view=list",
+          "length": 2,
+          "index": 1,
+          "key": "h1",
+          "state": {
+            "from": "list"
+          }
+        },
+        "afterReplace": {
+          "path": "/app/books/42?view=detail",
+          "length": 2,
+          "index": 1,
+          "key": "h2",
+          "state": {
+            "from": "detail"
+          }
+        },
+        "afterBack": {
+          "path": "/app/books?view=list#top",
+          "length": 2,
+          "index": 0,
+          "key": "h0"
+        },
+        "afterForward": {
+          "path": "/app/books/42?view=detail",
+          "length": 2,
+          "index": 1,
+          "key": "h2"
+        },
+        "afterGo": {
+          "path": "/app/books?view=list#top",
+          "length": 2,
+          "index": 0,
+          "key": "h0"
+        },
+        "events": [
+          "/app/books/42?view=list",
+          "/app/books/42?view=detail",
+          "/app/books?view=list#top",
+          "/app/books/42?view=detail",
+          "/app/books?view=list#top"
+        ],
+        "eventCount": 5
+      }
+    },
+    {
+      "export": "runMemoryHistoryReplaceSearchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "afterPushPreserve": "/catalog/books?lang=en",
+        "afterPushReplace": "/catalog/movies",
+        "afterReplaceWithSearch": "/catalog/music?genre=jazz",
+        "afterPushPreserveNewSearch": "/catalog/albums?genre=jazz"
+      }
+    },
+    {
+      "export": "runHistoryPathParsingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "relative": {
+          "path": "/books/42",
+          "search": "?tab=info",
+          "hash": "#top"
+        },
+        "absolute": {
+          "path": "/app/books/7",
+          "search": "?view=grid",
+          "hash": "#section-1"
+        },
+        "empty": {
+          "path": "/"
+        },
+        "built1": "/books/42?tab=info#top",
+        "built2": "/catalog?lang=en#overview"
+      }
+    }
+  ]
+}
