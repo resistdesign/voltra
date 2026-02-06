@@ -1,34 +1,31 @@
 /**
  * @packageDocumentation
  *
- * Helper to define grid layouts with a concise template string and generated
- * area components. Use {@link getEasyLayout} to produce a layout container and
- * area components for each named grid area.
+ * Render-agnostic EasyLayout helpers (template parsing + component wiring).
  */
-import { FC, PropsWithChildren } from "react";
-import styled from "styled-components";
+import type { ComponentType, PropsWithChildren } from "react";
 
 /**
  * FC With Children
- * */
-export type FCWithChildren = FC<PropsWithChildren>;
+ */
+export type FCWithChildren = ComponentType<PropsWithChildren>;
 
 /**
  * Component Map
- * */
+ */
 export type ComponentMap = Record<string, FCWithChildren>;
 
 /**
  * Layout Components
- * */
+ */
 export type LayoutComponents = {
   /**
    * The generated layout container component.
-   * */
+   */
   layout: FCWithChildren;
   /**
    * Map of PascalCase area components keyed by area name.
-   * */
+   */
   areas: ComponentMap;
 };
 
@@ -37,7 +34,7 @@ export type LayoutComponents = {
  *
  * @param area - Area name from the layout template.
  * @returns PascalCase version of the area name.
- * */
+ */
 export const getPascalCaseAreaName = (area: string): string => {
   return area
     .split("-")
@@ -113,7 +110,7 @@ const convertLayoutToCSS = (
  *
  * @param layout - Raw layout template string.
  * @returns Area names and CSS for the grid template.
- * */
+ */
 export const getEasyLayoutTemplateDetails = (
   layout: string = "",
 ): {
@@ -122,44 +119,37 @@ export const getEasyLayoutTemplateDetails = (
 } => convertLayoutToCSS(layout);
 
 /**
- * Quickly express advanced, extensible grid layouts with styled-components.
+ * Configuration for building EasyLayout components.
+ */
+export type EasyLayoutFactoryConfig<TComponent> = {
+  /**
+   * Create a layout component with optional base component + css string.
+   */
+  createLayout: (options: {
+    base?: TComponent;
+    css: string;
+  }) => FCWithChildren;
+  /**
+   * Create an area component with optional base component + grid area name.
+   */
+  createArea: (options: {
+    base?: TComponent;
+    area: string;
+  }) => FCWithChildren;
+};
+
+/**
+ * Build layout and area components from a template using a provided factory.
  *
- * @example
- * ```tsx
- * const {
- *   layout: Container,
- *   areas: {
- *     Header,
- *     Side,
- *     Main,
- *     Footer,
- *   },
- * } = getEasyLayout(styled.div)`
- *   header header header, 1fr
- *   side main main, 5fr
- *   footer footer footer, 1fr
- *   \\ 1fr 1fr 1fr
- * `;
- *
- * const App = () => {
- *   return (
- *     <Container>
- *       <Header>Header Content</Header>
- *       <Side>Side Content</Side>
- *       <Main>Main Content</Main>
- *       <Footer>Footer Content</Footer>
- *     </Container>
- *   );
- * };
- * ```
- *
- * @param extendFrom - Base component to extend for the layout container.
- * @param areasExtendFrom - Base component to extend for each area component.
- * @returns Tagged template function that builds layout components.
- * */
-export const getEasyLayout = (
-  extendFrom?: FCWithChildren,
-  areasExtendFrom?: FCWithChildren,
+ * @param config - Factory implementations for layout and areas.
+ * @param extendFrom - Optional base component for the layout container.
+ * @param areasExtendFrom - Optional base component for area components.
+ * @returns Tagged template helper that builds layout components.
+ */
+export const createEasyLayout = <TComponent,>(
+  config: EasyLayoutFactoryConfig<TComponent>,
+  extendFrom?: TComponent,
+  areasExtendFrom?: TComponent,
 ): ((
   layoutTemplate: TemplateStringsArray,
   ...expressions: any[]
@@ -172,19 +162,10 @@ export const getEasyLayout = (
       return `${acc}${l}${exprStr}`;
     }, "");
     const { areasList, css } = convertLayoutToCSS(mergedTemplate);
-    const baseLayoutComp = extendFrom ? styled(extendFrom) : styled.div;
-    const layout = baseLayoutComp`
-    display: grid;
-    ${css}
-  `;
+    const layout = config.createLayout({ base: extendFrom, css });
     const areas: ComponentMap = areasList.reduce((acc, area) => {
       const pascalCaseAreaName = getPascalCaseAreaName(area);
-      const baseCompFunc = areasExtendFrom
-        ? styled(areasExtendFrom)
-        : styled.div;
-      const component = baseCompFunc`
-      grid-area: ${area};
-    `;
+      const component = config.createArea({ base: areasExtendFrom, area });
 
       return {
         ...acc,

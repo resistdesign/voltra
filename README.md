@@ -94,6 +94,132 @@ App features include form generation via TypeInfo-driven AutoForm/AutoField with
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships | Form Generation: AutoForm/AutoField + constraints/relations     | Typed Build Spec Creation                                     |
 |                                                                             | Form Engine: validation, defaults, denied ops, custom type flow | Typed Resource Parameters                                     |
 
+## Routing (Web + Native)
+
+Voltra ships a render-agnostic Route core in `@resistdesign/voltra/app` plus platform adapters.
+
+Web usage (auto-wires `window.history`):
+
+```tsx
+import { Utils as WebUtils } from "@resistdesign/voltra/web";
+
+const { Route } = WebUtils;
+```
+
+Native usage (adapter-driven):
+
+```tsx
+import { Utils as NativeUtils } from "@resistdesign/voltra/native";
+
+const { Route, RouteProvider, createManualRouteAdapter } = NativeUtils;
+const { adapter, updatePath } = createManualRouteAdapter("/home");
+```
+
+For React Native navigation libraries, Voltra is optimized for react-navigation as the primary native default. Provide a RouteAdapter that maps navigation state to a path and call `RouteProvider`.
+
+Native navigation mapping example:
+
+```tsx
+import { Utils as NativeUtils } from "@resistdesign/voltra/native";
+
+const { createNavigationStateRouteAdapter, buildPathFromRouteChain } = NativeUtils;
+
+const adapter = createNavigationStateRouteAdapter({
+  getState: () => navigationRef.getRootState(),
+  subscribe: (listener) => navigationRef.addListener("state", listener),
+  toPath: (state) =>
+    buildPathFromRouteChain(
+      state.routes.map((route) => ({
+        name: route.name,
+        params: route.params as Record<string, any>,
+      })),
+      {
+        Home: "home",
+        Book: "books/:id",
+      },
+    ),
+  navigate: (path) => {
+    const routeName = path === "/home" ? "Home" : "Book";
+    navigationRef.navigate(routeName);
+  },
+});
+```
+
+For RN web builds, keep your navigation library linking config in sync with the same route patterns used in `buildPathFromRouteChain`.
+
+## Form Suites (Web + Native + BYOCS)
+
+Voltra's form system is split into a platform-agnostic core and platform suites:
+
+- Core contracts live under `src/app/forms/core` (field kinds, suite resolution, renderer factories).
+- Web DOM suite lives under `src/web/forms`.
+- React Native suite lives under `src/native/forms`.
+
+### Web Usage
+
+```tsx
+import { Forms } from "@resistdesign/voltra/web";
+
+const { AutoField } = Forms.createWebFormRenderer();
+```
+
+Override a single renderer:
+
+```tsx
+import { Forms } from "@resistdesign/voltra/web";
+
+const { AutoField } = Forms.createWebFormRenderer({
+  suite: Forms.withRendererOverride("string", (ctx) => {
+    return <input value={(ctx.value as string) || ""} onChange={(e) => ctx.onChange(e.target.value)} />;
+  }),
+});
+```
+
+### Native Usage
+
+```tsx
+import { Forms } from "@resistdesign/voltra/native";
+
+const { AutoField } = Forms.createNativeFormRenderer();
+```
+
+### BYOCS (Bring Your Own Component Suite)
+
+Provide partial overrides (renderers and/or primitives). Missing renderers are filled from the default suite and validated.
+
+```tsx
+import { Forms } from "@resistdesign/voltra/web";
+
+const { AutoField } = Forms.createWebFormRenderer({
+  suite: {
+    primitives: {
+      Button: ({ children }) => <button className="my-button">{children}</button>,
+    },
+    renderers: {
+      boolean: (ctx) => (
+        <label>
+          <input
+            type="checkbox"
+            checked={!!ctx.value}
+            onChange={(e) => ctx.onChange(e.target.checked)}
+          />
+          {ctx.label}
+        </label>
+      ),
+    },
+  },
+});
+```
+
+### Relation + Custom Type Hooks
+
+Renderers emit actions via:
+
+- `onRelationAction(payload)` for relation fields
+- `onCustomTypeAction(payload)` for custom types
+
+Use these to wire modals, selectors, or editors without baking UI into the core engine.
+
 ## Docs Site
 
 The docs site is both reference documentation and a canonical usage example.

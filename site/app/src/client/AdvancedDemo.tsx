@@ -3,8 +3,8 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/theme-twilight";
+import { AutoFormView } from "../../../../src/web/forms";
 import {
-  AutoFormView,
   CustomTypeAction,
   type CustomTypeActionPayload,
   RelationAction,

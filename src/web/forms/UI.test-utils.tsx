@@ -13,7 +13,7 @@ import type {
   CustomTypeActionPayload,
   FormController,
   RelationActionPayload,
-} from "./types";
+} from "../../app/forms/types";
 import { AutoField, AutoFormView } from "./UI";
 
 /**

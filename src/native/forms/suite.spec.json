@@ -1,0 +1,13 @@
+{
+  "file": "./suite.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeSuiteCompletenessScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "missingKinds": []
+      }
+    }
+  ]
+}

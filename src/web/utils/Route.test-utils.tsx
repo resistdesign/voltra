@@ -67,14 +67,16 @@ export const runRouteScenario = async () => {
     }
   };
 
-  const { Route, useRouteContext } = await loadRouteModule();
+  const { Route, RouteProvider, useRouteContext } = await loadRouteModule();
 
   const ContextProbe = () => {
     const context = useRouteContext();
     return createElement("span", null, JSON.stringify(context));
   };
 
-  const defaultContextRender = renderToString(createElement(ContextProbe));
+  const defaultContextRender = renderToString(
+    createElement(RouteProvider, null, createElement(ContextProbe)),
+  );
 
   const nestedRouteRender = renderToString(
     createElement(
