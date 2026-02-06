@@ -1,0 +1,27 @@
+{
+  "file": "./RouteHistory.test-utils.ts",
+  "tests": [
+    {
+      "export": "runRouteHistoryBridgeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialAdapterPath": "/app/books/42",
+        "initialHistoryPath": "/app/books/42?tab=summary",
+        "afterAdapterPush": {
+          "adapterPath": "/app/books/99",
+          "historyPath": "/app/books/99"
+        },
+        "afterHistoryPush": {
+          "adapterPath": "/app/books/100",
+          "historyPath": "/app/books/100?tab=debug"
+        },
+        "afterAdapterReplace": {
+          "adapterPath": "/app/books/101",
+          "historyPath": "/app/books/101"
+        },
+        "events": ["/app/books/99", "/app/books/100", "/app/books/101"]
+      }
+    }
+  ]
+}

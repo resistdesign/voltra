@@ -5,4 +5,7 @@
  */
 
 export * from "../../app/utils/Route";
+export * from "../../app/utils/History";
+export * from "./History";
+export * from "./NativeRoute";
 export * from "./Route";

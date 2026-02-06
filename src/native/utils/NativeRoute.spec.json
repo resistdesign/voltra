@@ -1,0 +1,18 @@
+{
+  "file": "./NativeRoute.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runNativeRouteProviderHistoryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialHasPath": true,
+        "initialHasId": true,
+        "initialIsNested": true,
+        "updatedHasPath": true,
+        "updatedHasId": true,
+        "updatedIsNested": true
+      }
+    }
+  ]
+}
