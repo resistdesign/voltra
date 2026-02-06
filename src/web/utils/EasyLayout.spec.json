@@ -38,6 +38,31 @@
         "areasList": ["header", "side", "main"],
         "css": "grid-template-columns: 1fr 2fr;\ngrid-template-areas:\n  \"header header\"\n  \"side main\";\ngrid-template-rows: 1fr 2fr;\ngap: 12px;\npadding: 1rem;"
       }
+    },
+    {
+      "export": "runWebEasyLayoutBaseForwardingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "layoutUsesBase": true,
+        "layoutContainsGap": true,
+        "layoutContainsPadding": true,
+        "headerUsesBase": true,
+        "headerAreaName": "header",
+        "mainUsesBase": true,
+        "mainAreaName": "main"
+      }
+    },
+    {
+      "export": "runWebEasyLayoutDefaultBaseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "layoutUsesDefaultBase": true,
+        "areaUsesDefaultBase": true,
+        "layoutHasTemplateAreas": true,
+        "titleAreaName": "title"
+      }
     }
   ]
 }
