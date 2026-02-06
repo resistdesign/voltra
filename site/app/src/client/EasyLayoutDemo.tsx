@@ -1,91 +1,154 @@
-import { FC } from "react";
-import styled from "styled-components";
+import { CSSProperties, FC, useMemo, useState } from "react";
+import {
+  ComponentMap,
+  getEasyLayoutTemplateDetails,
+  getPascalCaseAreaName,
+} from "../../../../src/app/utils";
 import { makeNativeEasyLayout } from "../../../../src/native/utils";
 import { getEasyLayout } from "../../../../src/web/utils";
 
-const TEMPLATE = `
-  header header, 64px
-  sidebar content, 1fr
-  footer footer, 48px
-  \\ 220px 1fr
+const DEFAULT_TEMPLATE = `
+header header header, 64px
+sidebar content right, 1fr
+footer footer right, 48px
+\\\\ 320px 4fr 1fr
 `;
 
-const {
-  layout: WebLayout,
-  areas: { Header, Sidebar, Content, Footer },
-} = getEasyLayout(undefined, undefined, {
-  gap: 12,
-  padding: 12,
-})`${TEMPLATE}`;
-
-const nativeLayout = makeNativeEasyLayout(TEMPLATE);
-
-export const EasyLayoutDemo: FC = () => {
-  const nativeCoords = nativeLayout.computeNativeCoords({
-    width: 720,
-    height: 360,
-    padding: 12,
-    gap: 12,
-  });
-
-  return (
-    <Root>
-      <DemoPane>
-        <h4>Web (CSS Grid)</h4>
-        <WebPreview>
-          <Header>Header</Header>
-          <Sidebar>Sidebar</Sidebar>
-          <Content>Main Content</Content>
-          <Footer>Footer</Footer>
-        </WebPreview>
-      </DemoPane>
-      <DemoPane>
-        <h4>Native (Computed Coords)</h4>
-        <CodeBlock>{JSON.stringify(nativeCoords, null, 2)}</CodeBlock>
-      </DemoPane>
-    </Root>
-  );
+const areaBoxStyle: CSSProperties = {
+  border: "1px solid var(--pico-muted-border-color)",
+  borderRadius: "var(--pico-border-radius)",
+  padding: "0.75rem",
+  height: "100%",
 };
 
-const Root = styled.section`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+const nativeViewport = {
+  width: 720,
+  height: 360,
+  padding: 12,
+  gap: 12,
+};
 
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-`;
+export const EasyLayoutDemo: FC = () => {
+  const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
+  const {
+    web: { layout: WebLayout, areas = {} as ComponentMap } = {},
+    native,
+    error,
+    webDetails,
+  } = useMemo(() => {
+    try {
+      const webDetails = getEasyLayoutTemplateDetails(template, {
+        gap: nativeViewport.gap,
+        padding: nativeViewport.padding,
+      });
+      const web = getEasyLayout(undefined, undefined, {
+        gap: nativeViewport.gap,
+        padding: nativeViewport.padding,
+      })([template] as unknown as TemplateStringsArray);
+      const native = makeNativeEasyLayout(template);
 
-const DemoPane = styled.article`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.75);
-`;
+      return {
+        webDetails,
+        web,
+        native,
+        error: "",
+      };
+    } catch (error) {
+      return {
+        webDetails: null,
+        web: {
+          layout: undefined,
+          areas: undefined,
+        },
+        native: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to parse layout template.",
+      };
+    }
+  }, [template]);
+  const nativeCoords = useMemo(() => {
+    if (!native) {
+      return null;
+    }
 
-const WebPreview = styled(WebLayout)`
-  height: 360px;
-  border-radius: 0.5rem;
-  background: linear-gradient(140deg, #f4f8ff 0%, #f7fafc 100%);
+    try {
+      return native.computeNativeCoords(nativeViewport);
+    } catch (error) {
+      return null;
+    }
+  }, [native]);
 
-  & > * {
-    border-radius: 0.4rem;
-    padding: 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-  }
-`;
+  return (
+    <section>
+      <article>
+        <h4>Template</h4>
+        <textarea
+          aria-label="EasyLayout template"
+          name="easy-layout-template"
+          rows={6}
+          value={template}
+          onChange={(event) => setTemplate(event.target.value)}
+        />
+      </article>
 
-const CodeBlock = styled.pre`
-  margin: 0;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  font-size: 0.8rem;
-  line-height: 1.35;
-  overflow-x: auto;
-  background: #0f172a;
-  color: #e2e8f0;
-`;
+      <div>
+        <article>
+          <h4>Web (CSS Grid)</h4>
+          {error || !WebLayout ? (
+            <pre>
+              <code>{error}</code>
+            </pre>
+          ) : (
+            <WebLayout>
+              {webDetails?.areasList?.map((areaName) => {
+                const areaComponentName = getPascalCaseAreaName(areaName);
+                const Area = areas[areaComponentName];
+
+                if (!Area) {
+                  return null;
+                }
+
+                return (
+                  <Area key={areaName}>
+                    <div style={areaBoxStyle}>{areaName}</div>
+                  </Area>
+                );
+              })}
+            </WebLayout>
+          )}
+        </article>
+
+        <article>
+          <h4>Web (Generated CSS)</h4>
+          <pre>
+            <code>
+              {webDetails
+                ? JSON.stringify(
+                    {
+                      areas: webDetails.areasList,
+                      css: webDetails.css.trim(),
+                    },
+                    null,
+                    2,
+                  )
+                : error || "Unable to compute web details."}
+            </code>
+          </pre>
+        </article>
+
+        <article>
+          <h4>Native (Computed Coords)</h4>
+          <pre>
+            <code>
+              {nativeCoords
+                ? JSON.stringify(nativeCoords, null, 2)
+                : error || "Unable to compute coordinates."}
+            </code>
+          </pre>
+        </article>
+      </div>
+    </section>
+  );
+};
