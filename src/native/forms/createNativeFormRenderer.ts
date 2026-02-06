@@ -5,9 +5,9 @@
  */
 
 import type { ReactElement } from "react";
-import type { ComponentSuite } from "./types";
-import { createFormRenderer } from "./createFormRenderer";
-import { nativeSuite } from "../../../native/forms/suite";
+import type { ComponentSuite } from "../../app/forms/core/types";
+import { createFormRenderer } from "../../app/forms/core/createFormRenderer";
+import { nativeSuite } from "./suite";
 
 /**
  * Create a native form renderer using the default native suite.

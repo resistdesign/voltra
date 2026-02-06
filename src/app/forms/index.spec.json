@@ -7,8 +7,8 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "hasCreateFormRenderer": true,
-        "hasCreateWebFormRenderer": true,
-        "hasCreateNativeFormRenderer": true,
+        "hasCreateWebFormRenderer": false,
+        "hasCreateNativeFormRenderer": false,
         "hasMergeSuites": true
       }
     }

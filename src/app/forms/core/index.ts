@@ -9,6 +9,4 @@ export * from "./getFieldKind";
 export * from "./resolveSuite";
 export * from "./createAutoField";
 export * from "./createFormRenderer";
-export * from "./createWebFormRenderer";
-export * from "./createNativeFormRenderer";
 export * from "./mergeSuites";

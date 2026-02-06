@@ -213,6 +213,8 @@ Goal: clean, stable imports for consumers.
   - [x] `createWebFormRenderer({ suite? })`
   - [x] `createNativeFormRenderer({ suite? })`
 - [x] Ensure BYOCS works by passing partial overrides
+- [x] Ensure native convenience helpers do not force `react-native` resolution in web tooling (lazy-load native suite)
+- [x] Ensure `src/app/forms` exports remain platform-agnostic (no web/native convenience exports)
 
 ### 5C — Package Exports + Build
 - [x] Add web/native entrypoint barrels:

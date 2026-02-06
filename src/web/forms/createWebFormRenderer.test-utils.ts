@@ -1,17 +1,17 @@
 /**
  * @packageDocumentation
  *
- * Test utilities for createNativeFormRenderer.
+ * Test utilities for createWebFormRenderer.
  */
 
-import { createNativeFormRenderer } from "./createNativeFormRenderer";
-import { withRendererOverride } from "./mergeSuites";
+import { withRendererOverride } from "../../app/forms/core/mergeSuites";
+import { createWebFormRenderer } from "./createWebFormRenderer";
 
 /**
- * Validate that native renderer honors overrides.
+ * Validate that web renderer honors overrides.
  */
-export const runCreateNativeFormRendererOverrideScenario = () => {
-  const renderer = createNativeFormRenderer({
+export const runCreateWebFormRendererOverrideScenario = () => {
+  const renderer = createWebFormRenderer({
     suite: withRendererOverride("string", () => "override" as any),
   });
 
