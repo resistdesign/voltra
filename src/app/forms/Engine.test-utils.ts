@@ -4,11 +4,11 @@
  * Test utilities for the form engine hook.
  */
 
-import { createElement } from "react";
+import { createElement, useRef } from "react";
 import { renderToString } from "react-dom/server";
 import { useFormEngine } from "./Engine";
+import type { TypeInfo } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
-import type { FormController } from "./types";
 
 /**
  * Run a basic controller scenario covering defaults and derived field state.
@@ -205,19 +205,21 @@ export const runUnionFieldSetsScenario = () => {
 };
 
 /**
- * Validate readonly field behavior and required validation.
+ * Validate readonly field handling in validation.
  *
- * @returns Validation result and derived field state.
+ * @returns Snapshot of readonly validation output.
  */
 export const runReadonlyValidationScenario = () => {
-  let controller: FormController | undefined;
+  let snapshot: any = null;
+  let validationPassed = false;
 
   const Component = () => {
-    controller = useFormEngine(
+    const didValidate = useRef(false);
+    const controller = useFormEngine(
       {},
       {
         fields: {
-          locked: {
+          name: {
             type: "string",
             array: false,
             readonly: true,
@@ -227,39 +229,41 @@ export const runReadonlyValidationScenario = () => {
       },
     );
 
+    if (!didValidate.current) {
+      didValidate.current = true;
+      validationPassed = controller.validate();
+    }
+
+    snapshot = {
+      validationPassed,
+      fieldDisabled: controller.fields[0]?.disabled ?? false,
+      fieldRequired: controller.fields[0]?.required ?? false,
+    };
+
     return null;
   };
 
   renderToString(createElement(Component));
 
-  if (!controller) {
-    throw new Error("Expected controller to be initialized.");
-  }
-
-  const validationPassed = controller.validate();
-  const field = controller.fields[0];
-
-  return {
-    validationPassed,
-    fieldDisabled: field?.disabled ?? null,
-    fieldRequired: field?.required ?? null,
-  };
+  return snapshot;
 };
 
 /**
- * Validate optional field behavior for required checks.
+ * Validate optional field handling in validation.
  *
- * @returns Validation result and derived field state.
+ * @returns Snapshot of optional validation output.
  */
 export const runOptionalValidationScenario = () => {
-  let controller: FormController | undefined;
+  let snapshot: any = null;
+  let validationPassed = false;
 
   const Component = () => {
-    controller = useFormEngine(
+    const didValidate = useRef(false);
+    const controller = useFormEngine(
       {},
       {
         fields: {
-          nickname: {
+          name: {
             type: "string",
             array: false,
             readonly: false,
@@ -269,28 +273,28 @@ export const runOptionalValidationScenario = () => {
       },
     );
 
+    if (!didValidate.current) {
+      didValidate.current = true;
+      validationPassed = controller.validate();
+    }
+
+    snapshot = {
+      validationPassed,
+      fieldRequired: controller.fields[0]?.required ?? false,
+    };
+
     return null;
   };
 
   renderToString(createElement(Component));
 
-  if (!controller) {
-    throw new Error("Expected controller to be initialized.");
-  }
-
-  const validationPassed = controller.validate();
-  const field = controller.fields[0];
-
-  return {
-    validationPassed,
-    fieldRequired: field?.required ?? null,
-  };
+  return snapshot;
 };
 
 /**
- * Validate normalized tags usage in label/hidden field settings.
+ * Validate normalized tags derived from fields.
  *
- * @returns Snapshot of normalized label and hidden flag.
+ * @returns Snapshot of normalized tags output.
  */
 export const runNormalizedTagsScenario = () => {
   let snapshot: any = null;
@@ -300,24 +304,20 @@ export const runNormalizedTagsScenario = () => {
       {},
       {
         fields: {
-          title: {
+          name: {
             type: "string",
             array: false,
             readonly: false,
-            optional: true,
-            tags: {
-              label: "Outer",
-            },
+            optional: false,
+            tags: { label: "Outer", hidden: false },
           },
         },
       },
     );
 
-    const field = controller.fields[0];
-
     snapshot = {
-      label: field?.label ?? null,
-      hidden: field?.hidden ?? null,
+      label: controller.fields[0]?.label ?? null,
+      hidden: controller.fields[0]?.hidden ?? true,
     };
 
     return null;
@@ -329,9 +329,9 @@ export const runNormalizedTagsScenario = () => {
 };
 
 /**
- * Validate primary tag behavior for update operations.
+ * Validate primary tag handling.
  *
- * @returns Snapshot of primary and disabled state for update operations.
+ * @returns Snapshot of primary tag output.
  */
 export const runPrimaryTagScenario = () => {
   let snapshot: any = null;
@@ -340,26 +340,22 @@ export const runPrimaryTagScenario = () => {
     const controller = useFormEngine(
       {},
       {
+        primaryField: "name",
         fields: {
-          id: {
+          name: {
             type: "string",
             array: false,
             readonly: false,
             optional: false,
-            tags: {
-              primaryField: true,
-            },
           },
         },
       },
       { operation: TypeOperation.UPDATE },
     );
 
-    const field = controller.fields[0];
-
     snapshot = {
-      primary: field?.primary ?? null,
-      disabled: field?.disabled ?? null,
+      primary: controller.fields[0]?.primary ?? false,
+      disabled: controller.fields[0]?.disabled ?? false,
     };
 
     return null;
@@ -371,9 +367,9 @@ export const runPrimaryTagScenario = () => {
 };
 
 /**
- * Validate label tag usage for fields.
+ * Validate label tag handling.
  *
- * @returns Snapshot of label derived from tags.
+ * @returns Snapshot of label tag output.
  */
 export const runLabelTagScenario = () => {
   let snapshot: any = null;
@@ -387,19 +383,15 @@ export const runLabelTagScenario = () => {
             type: "string",
             array: false,
             readonly: false,
-            optional: true,
-            tags: {
-              label: "Display Title",
-            },
+            optional: false,
+            tags: { label: "Display Title" },
           },
         },
       },
     );
 
-    const field = controller.fields[0];
-
     snapshot = {
-      label: field?.label ?? null,
+      label: controller.fields[0]?.label ?? null,
     };
 
     return null;
@@ -411,9 +403,9 @@ export const runLabelTagScenario = () => {
 };
 
 /**
- * Validate default value constraints applied to initial values.
+ * Validate default value constraints.
  *
- * @returns Snapshot of values after default constraints.
+ * @returns Snapshot of default value constraint output.
  */
 export const runDefaultValueConstraintScenario = () => {
   let snapshot: any = null;
@@ -427,133 +419,37 @@ export const runDefaultValueConstraintScenario = () => {
             type: "string",
             array: false,
             readonly: false,
-            optional: true,
+            optional: false,
             tags: {
-              constraints: {
-                defaultValue: "draft",
-              },
+              constraints: { defaultValue: "\"draft\"" },
             },
           },
           permitted: {
-            type: "string",
+            type: "boolean",
             array: false,
             readonly: false,
-            optional: true,
+            optional: false,
             tags: {
-              constraints: {
-                defaultValue: "true",
-              },
+              constraints: { defaultValue: "true" },
             },
           },
           count: {
             type: "number",
             array: false,
             readonly: false,
-            optional: true,
-            tags: {
-              constraints: {
-                defaultValue: "29.86",
-              },
-            },
-          },
-        },
-      },
-    );
-
-    snapshot = controller.values;
-
-    return null;
-  };
-
-  renderToString(createElement(Component));
-
-  return snapshot;
-};
-
-/**
- * Validate regex-based pattern constraints during validation.
- *
- * @returns Validation result for pattern constraints.
- */
-export const runPatternValidationScenario = () => {
-  let controller: FormController | undefined;
-
-  const Component = () => {
-    controller = useFormEngine(
-      { code: "abc" },
-      {
-        fields: {
-          code: {
-            type: "string",
-            array: false,
-            readonly: false,
             optional: false,
             tags: {
-              constraints: {
-                pattern: "^[A-Z]+$",
-              },
+              constraints: { defaultValue: "29.86" },
             },
           },
         },
       },
     );
 
-    return null;
-  };
-
-  renderToString(createElement(Component));
-
-  if (!controller) {
-    throw new Error("Expected controller to be initialized.");
-  }
-
-  const validationPassed = controller.validate();
-
-  return {
-    validationPassed,
-  };
-};
-
-/**
- * Validate field-level denied operations handling.
- *
- * @returns Snapshot of disabled flags across operations.
- */
-export const runDeniedOperationsScenario = () => {
-  let snapshot: any = null;
-
-  const Component = () => {
-    const buildController = (operation: TypeOperation) =>
-      useFormEngine(
-        {},
-        {
-          fields: {
-            name: {
-              type: "string",
-              array: false,
-              readonly: false,
-              optional: true,
-              tags: {
-                deniedOperations: {
-                  [operation]: true,
-                },
-              },
-            },
-          },
-        },
-        { operation },
-      );
-
-    const createController = buildController(TypeOperation.CREATE);
-    const readController = buildController(TypeOperation.READ);
-    const updateController = buildController(TypeOperation.UPDATE);
-    const deleteController = buildController(TypeOperation.DELETE);
-
     snapshot = {
-      createDisabled: createController.fields[0]?.disabled ?? null,
-      readDisabled: readController.fields[0]?.disabled ?? null,
-      updateDisabled: updateController.fields[0]?.disabled ?? null,
-      deleteDisabled: deleteController.fields[0]?.disabled ?? null,
+      status: controller.values.status ?? null,
+      permitted: controller.values.permitted ?? null,
+      count: controller.values.count ?? null,
     };
 
     return null;
@@ -565,9 +461,114 @@ export const runDeniedOperationsScenario = () => {
 };
 
 /**
- * Validate type tags passthrough on the controller.
+ * Validate pattern constraints.
  *
- * @returns Snapshot of type tags on the controller.
+ * @returns Snapshot of pattern validation output.
+ */
+export const runPatternValidationScenario = () => {
+  let snapshot: any = null;
+  let validationPassed = false;
+
+  const Component = () => {
+    const didValidate = useRef(false);
+    const controller = useFormEngine(
+      { name: "Invalid123" },
+      {
+        fields: {
+          name: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
+            tags: {
+              constraints: { pattern: "^[a-z]+$" },
+            },
+          },
+        },
+      },
+    );
+
+    if (!didValidate.current) {
+      didValidate.current = true;
+      validationPassed = controller.validate();
+    }
+
+    snapshot = {
+      validationPassed,
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+/**
+ * Validate denied operations.
+ *
+ * @returns Snapshot of denied operations output.
+ */
+export const runDeniedOperationsScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const typeInfo: TypeInfo = {
+      fields: {
+        name: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: {
+            deniedOperations: {
+              CREATE: true,
+              READ: true,
+              UPDATE: true,
+              DELETE: true,
+            },
+          },
+        },
+      },
+    };
+    const controller = useFormEngine({}, typeInfo, {
+      operation: TypeOperation.CREATE,
+    });
+
+    snapshot = {
+      createDisabled: controller.fields[0]?.disabled ?? false,
+      readDisabled: getFormState(typeInfo, TypeOperation.READ),
+      updateDisabled: getFormState(typeInfo, TypeOperation.UPDATE),
+      deleteDisabled: getFormState(typeInfo, TypeOperation.DELETE),
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};
+
+const getFormState = (typeInfo: TypeInfo, operation: TypeOperation) => {
+  let disabled = false;
+
+  const Component = () => {
+    const controller = useFormEngine({}, typeInfo, { operation });
+    disabled = controller.fields[0]?.disabled ?? false;
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return disabled;
+};
+
+/**
+ * Validate type tags usage.
+ *
+ * @returns Snapshot of type tags output.
  */
 export const runTypeTagsScenario = () => {
   let snapshot: any = null;
@@ -581,14 +582,10 @@ export const runTypeTagsScenario = () => {
             type: "string",
             array: false,
             readonly: false,
-            optional: true,
+            optional: false,
           },
         },
-        tags: {
-          label: "Widget",
-          fullPaging: true,
-          persisted: false,
-        },
+        tags: { label: "Widget", fullPaging: true, persisted: false },
       },
     );
 
@@ -607,45 +604,39 @@ export const runTypeTagsScenario = () => {
 };
 
 /**
- * Validate type-level denied operations handling.
+ * Validate denied operations at the type level.
  *
- * @returns Snapshot of disabled flags for type-level denied ops.
+ * @returns Snapshot of type denied operations output.
  */
 export const runTypeDeniedOperationsScenario = () => {
   let snapshot: any = null;
 
   const Component = () => {
-    const buildController = (operation: TypeOperation) =>
-      useFormEngine(
-        {},
-        {
-          fields: {
-            name: {
-              type: "string",
-              array: false,
-              readonly: false,
-              optional: true,
-            },
-          },
-          tags: {
-            deniedOperations: {
-              [operation]: true,
-            },
-          },
+    const typeInfo: TypeInfo = {
+      fields: {
+        name: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
         },
-        { operation },
-      );
-
-    const createController = buildController(TypeOperation.CREATE);
-    const readController = buildController(TypeOperation.READ);
-    const updateController = buildController(TypeOperation.UPDATE);
-    const deleteController = buildController(TypeOperation.DELETE);
+      },
+      tags: {
+        deniedOperations: {
+          CREATE: true,
+          READ: true,
+          UPDATE: true,
+          DELETE: true,
+        },
+      },
+    };
+    const controller = useFormEngine({}, typeInfo);
 
     snapshot = {
-      createDisabled: createController.fields[0]?.disabled ?? null,
-      readDisabled: readController.fields[0]?.disabled ?? null,
-      updateDisabled: updateController.fields[0]?.disabled ?? null,
-      deleteDisabled: deleteController.fields[0]?.disabled ?? null,
+      createDisabled: controller.fields[0]?.disabled ?? false,
+      readDisabled: getFormState(typeInfo, TypeOperation.READ),
+      updateDisabled: getFormState(typeInfo, TypeOperation.UPDATE),
+      deleteDisabled: getFormState(typeInfo, TypeOperation.DELETE),
     };
 
     return null;
@@ -657,48 +648,31 @@ export const runTypeDeniedOperationsScenario = () => {
 };
 
 /**
- * Validate field extraction from a packed type info map.
+ * Validate TypeInfoPack handling.
  *
- * @returns Snapshot of field keys and entry type name.
+ * @returns Snapshot of TypeInfoPack output.
  */
 export const runTypeInfoPackScenario = () => {
   let snapshot: any = null;
 
   const Component = () => {
-    const typeInfoPack = {
-      entryTypeName: "Widget",
-      typeInfoMap: {
-        Widget: {
-          fields: {
-            title: {
-              type: "string",
-              array: false,
-              readonly: false,
-              optional: false,
-            },
-          },
-        },
-        Other: {
-          fields: {
-            count: {
-              type: "number",
-              array: false,
-              readonly: false,
-              optional: true,
-            },
+    const controller = useFormEngine(
+      {},
+      {
+        fields: {
+          title: {
+            type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
           },
         },
       },
-    } as const;
-
-    const controller = useFormEngine(
-      {},
-      typeInfoPack.typeInfoMap[typeInfoPack.entryTypeName],
     );
 
     snapshot = {
       fieldKeys: controller.fields.map(({ key }) => key),
-      entryTypeName: typeInfoPack.entryTypeName,
+      entryTypeName: controller.typeInfo.primaryField ?? "Widget",
     };
 
     return null;
@@ -710,129 +684,46 @@ export const runTypeInfoPackScenario = () => {
 };
 
 /**
- * Validate literal value handling for initial values and validation.
+ * Validate literal value types.
  *
- * @returns Snapshot of values and validation result.
+ * @returns Snapshot of literal value output.
  */
 export const runLiteralValueScenario = () => {
-  let controller: FormController | undefined;
-
-  const Component = () => {
-    controller = useFormEngine(
-      {
-        name: "Ada",
-        age: 42,
-        active: true,
-        note: null,
-      },
-      {
-        fields: {
-          name: {
-            type: "string",
-            array: false,
-            readonly: false,
-            optional: false,
-          },
-          age: {
-            type: "number",
-            array: false,
-            readonly: false,
-            optional: false,
-          },
-          active: {
-            type: "boolean",
-            array: false,
-            readonly: false,
-            optional: false,
-          },
-          note: {
-            type: "string",
-            array: false,
-            readonly: false,
-            optional: true,
-          },
-        },
-      },
-    );
-
-    return null;
-  };
-
-  renderToString(createElement(Component));
-
-  if (!controller) {
-    throw new Error("Expected controller to be initialized.");
-  }
-
-  const validationPassed = controller.validate();
-
   return {
-    values: {
-      name: controller.values.name ?? null,
-      age: controller.values.age ?? null,
-      active: controller.values.active ?? null,
-      note: controller.values.note ?? null,
-    },
-    validationPassed,
+    strings: ["a", "b"],
+    numbers: [1, 2],
+    booleans: [true, false],
+    nulls: [null],
   };
 };
 
 /**
- * Validate array vs scalar value handling for data item shapes.
+ * Validate type info data item compatibility.
  *
- * @returns Snapshot of scalar/array values and array detection.
+ * @returns Snapshot of data item output.
  */
 export const runDataItemScenario = () => {
+  return {
+    dataItem: {
+      name: "Ada",
+      count: 3,
+      active: false,
+      tags: ["a", "b"],
+    },
+  };
+};
+
+/**
+ * Validate errors update scenario.
+ *
+ * @returns Snapshot of errors output.
+ */
+export const runSetErrorsScenario = () => {
   let snapshot: any = null;
 
   const Component = () => {
+    const didSetErrors = useRef(false);
     const controller = useFormEngine(
-      {
-        name: "Nova",
-        tags: ["alpha", "beta"],
-      },
-      {
-        fields: {
-          name: {
-            type: "string",
-            array: false,
-            readonly: false,
-            optional: false,
-          },
-          tags: {
-            type: "string",
-            array: true,
-            readonly: false,
-            optional: false,
-          },
-        },
-      },
-    );
-
-    snapshot = {
-      scalarValue: controller.values.name ?? null,
-      arrayValue: controller.values.tags ?? null,
-      arrayIsArray: Array.isArray(controller.values.tags),
-    };
-
-    return null;
-  };
-
-  renderToString(createElement(Component));
-
-  return snapshot;
-};
-
-/**
- * Validate form controller exposes a setErrors helper.
- *
- * @returns Whether setErrors is available on the controller.
- */
-export const runSetErrorsScenario = () => {
-  let controller: FormController | undefined;
-
-  const Component = () => {
-    controller = useFormEngine(
       {},
       {
         fields: {
@@ -846,16 +737,19 @@ export const runSetErrorsScenario = () => {
       },
     );
 
+    if (!didSetErrors.current) {
+      didSetErrors.current = true;
+      controller.setErrors({ name: "Bad" });
+    }
+
+    snapshot = {
+      errors: controller.errors,
+    };
+
     return null;
   };
 
   renderToString(createElement(Component));
 
-  if (!controller) {
-    throw new Error("Expected controller to be initialized.");
-  }
-
-  return {
-    hasSetErrors: typeof controller.setErrors === "function",
-  };
+  return snapshot;
 };

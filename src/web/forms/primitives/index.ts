@@ -1,10 +1,10 @@
 /**
  * @packageDocumentation
  *
- * Tier 1 primitives for the form generation system.
+ * Web primitives for the form generation system.
  */
 
-import styled from "../helpers/styled";
+import styled from "../../../app/helpers/styled";
 
 /**
  * Wrapper for grouped field content.

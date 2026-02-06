@@ -1,8 +1,8 @@
 /**
  * @packageDocumentation
  *
- * Lightweight client-side routing helpers with nested Route contexts.
- * Uses the History API and intercepts anchor clicks for SPA navigation.
+ * Render-agnostic routing helpers with nested Route contexts.
+ * Supply a RouteAdapter via RouteProvider or a platform-specific wrapper.
  */
 import React, {
   createContext,
@@ -14,66 +14,152 @@ import React, {
 } from "react";
 import {
   getParamsAndTestPath,
+  getPathString,
   mergeStringPaths,
-  resolvePath,
 } from "../../common/Routing";
 
-const WINDOW: (Window & typeof globalThis) | undefined =
-  typeof globalThis !== "undefined" && "window" in (globalThis as any)
-    ? ((globalThis as any).window as any)
-    : undefined;
+/**
+ * Platform adapter that supplies the current path and change notifications.
+ */
+export type RouteAdapter = {
+  /** Read the current path. */
+  getPath: () => string;
+  /** Subscribe to path changes. */
+  subscribe: (listener: (path: string) => void) => () => void;
+  /** Optional navigation helper for adapters that can push state. */
+  push?: (path: string, title?: string) => void;
+  /** Optional navigation helper for adapters that can replace state. */
+  replace?: (path: string, title?: string) => void;
+};
 
-if (WINDOW?.history) {
-  ((history) => {
-    const pushState = history.pushState;
+/**
+ * Supported query value types for route serialization.
+ */
+export type RouteQueryValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<string | number | boolean | null | undefined>;
 
-    history.pushState = function (state, ...remainingArguments) {
-      // @ts-ignore
-      if (typeof history.onpushstate == "function") {
-        // @ts-ignore
-        history.onpushstate({ state: state });
+/**
+ * Query string map for route serialization.
+ */
+export type RouteQuery = Record<string, RouteQueryValue>;
+
+/**
+ * Create a manual adapter for non-DOM runtimes (e.g., React Native).
+ *
+ * Call {@link updatePath} when navigation changes.
+ */
+export const createManualRouteAdapter = (initialPath: string = "/") => {
+  let currentPath = initialPath;
+  const listeners = new Set<(path: string) => void>();
+
+  const updatePath = (nextPath: string) => {
+    currentPath = nextPath;
+    listeners.forEach((listener) => listener(nextPath));
+  };
+
+  const adapter: RouteAdapter = {
+    getPath: () => currentPath,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    push: (path: string) => updatePath(path),
+    replace: (path: string) => updatePath(path),
+  };
+
+  return {
+    adapter,
+    updatePath,
+  };
+};
+
+/**
+ * Build a query string from a query object.
+ *
+ * @param query - Query string map.
+ * @returns Encoded query string without the leading `?`.
+ */
+export const buildQueryString = (query: RouteQuery = {}): string => {
+  const parts: string[] = [];
+
+  for (const [key, rawValue] of Object.entries(query)) {
+    if (rawValue === undefined) {
+      continue;
+    }
+
+    const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+
+    for (const value of values) {
+      if (value === undefined) {
+        continue;
       }
 
-      // @ts-ignore
-      const result = pushState.apply(history, [state, ...remainingArguments]);
+      const encodedKey = encodeURIComponent(key);
+      const encodedValue =
+        value === null ? "" : encodeURIComponent(String(value));
+      parts.push(`${encodedKey}=${encodedValue}`);
+    }
+  }
 
-      // Dispatch a custom event 'statechanged'
-      WINDOW.dispatchEvent(new CustomEvent("statechanged", { detail: state }));
+  return parts.join("&");
+};
 
-      return result;
-    };
-  })(WINDOW.history);
-}
+/**
+ * Build a path string from segments and optional query params.
+ *
+ * @param segments - Ordered route segments.
+ * @param query - Optional query parameters.
+ * @returns Path string with optional query string.
+ */
+export const buildRoutePath = (
+  segments: Array<string | number>,
+  query?: RouteQuery,
+): string => {
+  const normalizedSegments = segments.map((segment) => String(segment));
+  const basePath = "/" + getPathString(normalizedSegments, "/", true, false, true);
+  const queryString = query ? buildQueryString(query) : "";
 
-const CURRENT_PATH: string = WINDOW?.location?.pathname ?? "";
+  return queryString ? `${basePath}?${queryString}` : basePath;
+};
 
 /**
  * Access values for the current Route.
- * */
+ */
 export type RouteContextType = {
   /**
    * Current window pathname (top-level) or inherited path (nested).
-   * */
+   */
   currentWindowPath: string;
   /**
    * The parent path for this route level.
-   * */
+   */
   parentPath: string;
   /**
    * Aggregated route params from parent and current routes.
-   * */
+   */
   params: Record<string, any>;
   /**
    * Whether this route is the top-level router.
-   * */
+   */
   isTopLevel: boolean;
+  /**
+   * Adapter driving route updates.
+   */
+  adapter?: RouteAdapter;
 };
 
 /**
  * React context for route state and parameters.
  */
 export const RouteContext = createContext<RouteContextType>({
-  currentWindowPath: CURRENT_PATH,
+  currentWindowPath: "",
   parentPath: "",
   params: {},
   isTopLevel: true,
@@ -82,11 +168,11 @@ export const RouteContext = createContext<RouteContextType>({
 export const {
   /**
    * @ignore
-   * */
+   */
   Provider: RouteContextProvider,
   /**
    * @ignore
-   * */
+   */
   Consumer: RouteContextConsumer,
 } = RouteContext;
 
@@ -94,54 +180,102 @@ export const {
  * Access Route path and parameter information.
  *
  * @returns The current route context.
- * */
+ */
 export const useRouteContext = () => useContext(RouteContext);
 
 /**
+ * RouteProvider props.
+ */
+export type RouteProviderProps = PropsWithChildren<{
+  /** Adapter that supplies path updates. */
+  adapter: RouteAdapter;
+  /** Optional initial path override. */
+  initialPath?: string;
+}>;
+
+/**
+ * Provide a RouteAdapter to the routing context.
+ *
+ * @param props - Provider props with adapter and children.
+ */
+export const RouteProvider = ({
+  adapter,
+  initialPath,
+  children,
+}: RouteProviderProps) => {
+  const [currentPath, setCurrentPath] = useState<string>(
+    initialPath ?? adapter.getPath(),
+  );
+
+  useEffect(() => {
+    return adapter.subscribe((nextPath) => {
+      setCurrentPath(nextPath);
+    });
+  }, [adapter]);
+
+  const contextValue = useMemo(
+    () => ({
+      currentWindowPath: currentPath,
+      parentPath: "",
+      params: {},
+      isTopLevel: true,
+      adapter,
+    }),
+    [currentPath, adapter],
+  );
+
+  return (
+    <RouteContextProvider value={contextValue}>
+      {children}
+    </RouteContextProvider>
+  );
+};
+
+/**
  * Configure the Route.
- * */
+ */
 export type RouteProps<ParamsType extends Record<string, any>> = {
   /**
    * Route path pattern, using `:` for params.
-   * */
+   */
   path?: string;
   /**
    * Callback when params update for this route.
    *
    * @param params - Resolved params for this route.
-   * */
+   */
   onParamsChange?: (params: ParamsType) => void;
   /**
    * Require an exact match for the route path.
-   * */
+   */
   exact?: boolean;
 };
 
 /**
- * Organize nested routes with parameters and integrate with the browser history.
+ * Organize nested routes with parameters.
  *
  * @typeParam ParamsType - Param shape for this route.
  * @param props - Route props including path, params handler, and children.
- * */
+ */
 export const Route = <ParamsType extends Record<string, any>>({
   /**
    * Use `:` as the first character to denote a parameter in the path.
-   * */
+   */
   path = "",
   onParamsChange,
   exact = false,
   children,
 }: PropsWithChildren<RouteProps<ParamsType>>) => {
-  const [currentPath = "", setCurrentPath] = useState<string>(CURRENT_PATH);
   const {
     currentWindowPath = "",
     parentPath = "",
     params: parentParams = {},
-    isTopLevel,
+    adapter,
   } = useRouteContext();
+
   const targetCurrentPath = useMemo(
-    () => (isTopLevel ? currentPath : currentWindowPath),
-    [isTopLevel, currentPath, currentWindowPath],
+    () => currentWindowPath,
+    [currentWindowPath],
   );
   const fullPath = useMemo(
     () => mergeStringPaths(parentPath, path),
@@ -164,8 +298,9 @@ export const Route = <ParamsType extends Record<string, any>>({
       parentPath: fullPath,
       params,
       isTopLevel: false,
+      adapter,
     }),
-    [targetCurrentPath, fullPath, params],
+    [targetCurrentPath, fullPath, params, adapter],
   );
 
   useEffect(() => {
@@ -173,52 +308,6 @@ export const Route = <ParamsType extends Record<string, any>>({
       onParamsChange(params as ParamsType);
     }
   }, [params, onParamsChange]);
-
-  useEffect(() => {
-    if (WINDOW && isTopLevel) {
-      const handleAnchorClick = (event: MouseEvent) => {
-        let target: Node | ParentNode | null = event.target as Node;
-
-        while (target && target.nodeName !== "A") {
-          target = target.parentNode;
-        }
-
-        if (target && target.nodeName === "A") {
-          const aTarget: HTMLAnchorElement = target as HTMLAnchorElement;
-          const href = aTarget.getAttribute("href");
-          const title = aTarget.getAttribute("title") ?? "";
-
-          try {
-            new URL(href ? href : "");
-            // Full URL
-          } catch (error) {
-            // Partial URL
-            const newPath = resolvePath(
-              WINDOW.location?.pathname ?? "",
-              href ? href : "",
-            );
-
-            event.preventDefault();
-            WINDOW.history.pushState({}, title, newPath);
-            setCurrentPath(newPath);
-          }
-        }
-      };
-      const handlePopOrReplaceState = () => {
-        setCurrentPath(WINDOW.location?.pathname ?? "");
-      };
-
-      WINDOW.document.addEventListener("click", handleAnchorClick);
-      WINDOW.addEventListener("popstate", handlePopOrReplaceState);
-      WINDOW.addEventListener("statechanged", handlePopOrReplaceState);
-
-      return () => {
-        WINDOW.document.removeEventListener("click", handleAnchorClick);
-        WINDOW.removeEventListener("popstate", handlePopOrReplaceState);
-        WINDOW.removeEventListener("statechanged", handlePopOrReplaceState);
-      };
-    }
-  }, [isTopLevel]);
 
   return newParams ? (
     <RouteContextProvider value={newRouteContext}>

@@ -1,0 +1,31 @@
+{
+  "file": "./resolveSuite.test-utils.ts",
+  "tests": [
+    {
+      "export": "runResolveSuiteOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringRenderer": "override_string",
+        "numberRenderer": "number"
+      }
+    },
+    {
+      "export": "runResolveSuitePrimitiveScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "buttonPrimitive": "override_button",
+        "stringRenderer": "string"
+      }
+    },
+    {
+      "export": "runResolveSuiteMissingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "message": "Missing renderers for field kinds: number, boolean, enum_select, array, relation_single, relation_array, custom_single, custom_array"
+      }
+    }
+  ]
+}

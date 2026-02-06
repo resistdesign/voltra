@@ -1,0 +1,21 @@
+{
+  "file": "./createFormRenderer.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCreateFormRendererFallbackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringKind": "string"
+      }
+    },
+    {
+      "export": "runCreateFormRendererOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringKind": "override"
+      }
+    }
+  ]
+}

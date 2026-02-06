@@ -1,4 +1,4 @@
-import { buildWindowMock } from "./utils/Route.test-utils";
+import { buildWindowMock } from "../web/utils/Route.test-utils";
 
 const loadAppModule = async (specifier: string) => {
   const moduleUrl = new URL(specifier, import.meta.url);

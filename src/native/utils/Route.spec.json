@@ -1,0 +1,31 @@
+{
+  "file": "./Route.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeManualAdapterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialRender": "ok",
+        "updatedRender": "ok"
+      }
+    },
+    {
+      "export": "runNativeNavigationStateAdapterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialPath": "/home",
+        "afterNavigatePath": "/home"
+      }
+    },
+    {
+      "export": "runNativeRouteChainScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "path": "/home/books/42?view=summary&debug=true"
+      }
+    }
+  ]
+}
