@@ -1,0 +1,75 @@
+{
+  "file": "./History.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeHistoryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "beforeStart": {
+          "path": "/fallback",
+          "fullPath": "/fallback",
+          "length": 1,
+          "index": 0
+        },
+        "afterStart": {
+          "path": "/app/books/42",
+          "fullPath": "/app/books/42?tab=summary#top",
+          "length": 1,
+          "index": 0
+        },
+        "afterIncomingReplace": {
+          "path": "/app/books/99",
+          "fullPath": "/app/books/99?tab=detail",
+          "length": 1,
+          "index": 0
+        },
+        "afterManualPush": {
+          "path": "/manual/path",
+          "fullPath": "/manual/path?tab=detail",
+          "length": 2,
+          "index": 1
+        },
+        "unsubscribeCallCount": 1,
+        "listenerActiveAfterStop": false
+      }
+    },
+    {
+      "export": "runNativeHistoryPushModeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "afterIncomingPush": {
+          "fullPath": "/b?x=1",
+          "length": 3,
+          "index": 2
+        },
+        "afterBack": {
+          "fullPath": "/a",
+          "length": 3,
+          "index": 1
+        }
+      }
+    },
+    {
+      "export": "runNativeBackHandlerScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstHandle": true,
+        "secondHandle": false,
+        "finalPath": "/home",
+        "finalIndex": 0
+      }
+    },
+    {
+      "export": "runNativeURLMappingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "absolute": "/app/books/7?tab=grid#section",
+        "relative": "/app/books/7?tab=grid#section"
+      }
+    }
+  ]
+}

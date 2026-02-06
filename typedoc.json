@@ -1,6 +1,15 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["./src/index.ts", "./src/build/index.ts"],
+  "entryPoints": [
+    "./src/api/index.ts",
+    "./src/app/index.ts",
+    "./src/web/index.ts",
+    "./src/native/index.ts",
+    "./src/build/index.ts",
+    "./src/common/index.ts",
+    "./src/iac/index.ts",
+    "./src/iac/packs/index.ts"
+  ],
   "out": "docs",
   "exclude": ["**/src/api/DBX/**"],
   "excludeExternals": true,

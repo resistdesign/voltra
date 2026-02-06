@@ -4,6 +4,9 @@
  * Render-agnostic EasyLayout helpers (template parsing + component wiring).
  */
 import type { ComponentType, PropsWithChildren } from "react";
+import { parseTemplate } from "./easy-layout/parseTemplate";
+import type { TrackSpec } from "./easy-layout/types";
+import { validateAreas } from "./easy-layout/validateAreas";
 
 /**
  * FC With Children
@@ -30,6 +33,22 @@ export type LayoutComponents = {
 };
 
 /**
+ * Optional spacing controls for generated layout CSS.
+ */
+export type EasyLayoutSpacing = {
+  /**
+   * CSS gap value for grid tracks.
+   * If a number is provided, `px` is assumed.
+   */
+  gap?: number | string;
+  /**
+   * CSS padding value for the layout container.
+   * If a number is provided, `px` is assumed.
+   */
+  padding?: number | string;
+};
+
+/**
  * Convert a kebab-cased area name into PascalCase.
  *
  * @param area - Area name from the layout template.
@@ -44,63 +63,52 @@ export const getPascalCaseAreaName = (area: string): string => {
 
 const convertLayoutToCSS = (
   layout: string = "",
+  spacing: EasyLayoutSpacing = {},
 ): {
   areasList: string[];
   css: string;
 } => {
-  const lines = layout.split("\n");
+  const parsed = parseTemplate(layout);
+  validateAreas(parsed);
 
-  let areaRows: string[] = [];
-  let rows: string[] = [];
+  const renderTrack = (track: TrackSpec): string => {
+    if (track.kind === "px") {
+      return `${track.value}px`;
+    }
+
+    if (track.kind === "pct") {
+      return `${track.value}%`;
+    }
+
+    return `${track.value}fr`;
+  };
+
+  const areaRows = parsed.areaGrid.map((row) => row.join(" "));
+  const rows = parsed.rowTracks.map(renderTrack);
   let css = "";
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-
-    if (line.indexOf("\\") === 0) {
-      // Column Widths
-      css += `\ngrid-template-columns: ${line.split("\\").join("").trim()};`;
-    } else {
-      const parts = line.split(",").map((p) => p && p.trim());
-
-      if (parts[0]) {
-        areaRows = [...areaRows, parts[0]];
-
-        if (parts[1]) {
-          rows = [...rows, parts[1]];
-        }
-      }
-    }
+  if (parsed.colTracks.length) {
+    css += `\ngrid-template-columns: ${parsed.colTracks.map(renderTrack).join(" ")};`;
   }
 
-  css += `\ngrid-template-areas:\n${areaRows
-    .filter((a) => !!(a && a.trim()))
-    .map((a) => `  "${a}"`)
-    .join("\n")};`;
+  css += `\ngrid-template-areas:\n${areaRows.map((a) => `  "${a}"`).join("\n")};`;
 
   if (rows.length) {
-    css += `\ngrid-template-rows: ${rows
-      .filter((r) => !!(r && r.trim()))
-      .join(" ")};`;
+    css += `\ngrid-template-rows: ${rows.join(" ")};`;
   }
 
-  const areasList: string[] = Object.keys(
-    areaRows
-      .reduce(
-        (acc, a) => [
-          ...acc,
-          ...a
-            .split(" ")
-            .map((a) => a && a.trim())
-            .filter((a) => !!a),
-        ],
-        [] as string[],
-      )
-      .reduce((acc, a) => ({ ...acc, [a]: true }), {}),
-  );
+  if (typeof spacing.gap !== "undefined") {
+    css += `\ngap: ${typeof spacing.gap === "number" ? `${spacing.gap}px` : spacing.gap};`;
+  }
+
+  if (typeof spacing.padding !== "undefined") {
+    css += `\npadding: ${
+      typeof spacing.padding === "number" ? `${spacing.padding}px` : spacing.padding
+    };`;
+  }
 
   return {
-    areasList,
+    areasList: parsed.areaNames,
     css,
   };
 };
@@ -109,14 +117,16 @@ const convertLayoutToCSS = (
  * Parse a layout template string into area names and CSS.
  *
  * @param layout - Raw layout template string.
+ * @param spacing - Optional gap/padding CSS settings.
  * @returns Area names and CSS for the grid template.
  */
 export const getEasyLayoutTemplateDetails = (
   layout: string = "",
+  spacing: EasyLayoutSpacing = {},
 ): {
   areasList: string[];
   css: string;
-} => convertLayoutToCSS(layout);
+} => convertLayoutToCSS(layout, spacing);
 
 /**
  * Configuration for building EasyLayout components.
@@ -144,12 +154,14 @@ export type EasyLayoutFactoryConfig<TComponent> = {
  * @param config - Factory implementations for layout and areas.
  * @param extendFrom - Optional base component for the layout container.
  * @param areasExtendFrom - Optional base component for area components.
+ * @param spacing - Optional gap/padding CSS settings for generated layout styles.
  * @returns Tagged template helper that builds layout components.
  */
 export const createEasyLayout = <TComponent,>(
   config: EasyLayoutFactoryConfig<TComponent>,
   extendFrom?: TComponent,
   areasExtendFrom?: TComponent,
+  spacing: EasyLayoutSpacing = {},
 ): ((
   layoutTemplate: TemplateStringsArray,
   ...expressions: any[]
@@ -161,7 +173,7 @@ export const createEasyLayout = <TComponent,>(
 
       return `${acc}${l}${exprStr}`;
     }, "");
-    const { areasList, css } = convertLayoutToCSS(mergedTemplate);
+    const { areasList, css } = convertLayoutToCSS(mergedTemplate, spacing);
     const layout = config.createLayout({ base: extendFrom, css });
     const areas: ComponentMap = areasList.reduce((acc, area) => {
       const pascalCaseAreaName = getPascalCaseAreaName(area);

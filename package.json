@@ -7,16 +7,10 @@
   "author": "Resist Design",
   "license": "MIT",
   "type": "module",
-  "main": "./index.js",
-  "types": "./index.d.ts",
   "bin": {
     "vest": "common/Testing/CLI.js"
   },
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js"
-    },
     "./api": {
       "types": "./api/index.d.ts",
       "import": "./api/index.js"
@@ -53,7 +47,6 @@
   "files": [
     "*.d.ts",
     "*.d.ts.map",
-    "index.js",
     "api/**",
     "app/**",
     "web/**",
@@ -71,6 +64,7 @@
     "test:dbx:med": "tsx src/common/Testing/CLI.ts \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:dbx:med:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:consumer": "node ./scripts/consumer-smoke.mjs",
+    "test:exports": "node ./scripts/check-package-exports.mjs",
     "doc": "typedoc",
     "doc:dev": "typedoc --watch",
     "doc-to-site": "cp -r ./docs site-dist/app/",

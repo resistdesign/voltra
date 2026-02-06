@@ -11,6 +11,33 @@
         "pascalCaseHeader": "Header",
         "pascalCaseMainContent": "MainContent"
       }
+    },
+    {
+      "export": "runEasyLayoutRowsOptionalScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "areasList": ["header", "side", "main"],
+        "css": "grid-template-columns: 1fr 2fr;\ngrid-template-areas:\n  \"header header\"\n  \"side main\";"
+      }
+    },
+    {
+      "export": "runEasyLayoutInvalidShapeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": false,
+        "message": "Area \"a\" must be a rectangle. Missing \"a\" at row 2, col 2."
+      }
+    },
+    {
+      "export": "runEasyLayoutSpacingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "areasList": ["header", "side", "main"],
+        "css": "grid-template-columns: 1fr 2fr;\ngrid-template-areas:\n  \"header header\"\n  \"side main\";\ngrid-template-rows: 1fr 2fr;\ngap: 12px;\npadding: 1rem;"
+      }
     }
   ]
 }
