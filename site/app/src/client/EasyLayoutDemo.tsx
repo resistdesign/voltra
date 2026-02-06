@@ -10,7 +10,7 @@ const DEFAULT_TEMPLATE = `
 header header, 64px
 sidebar content, 1fr
 footer footer, 48px
-\\ 220px 1fr
+\\\\ 220px 1fr
 `;
 
 const areaBoxStyle: CSSProperties = {
@@ -79,7 +79,7 @@ export const EasyLayoutDemo: FC = () => {
         />
       </article>
 
-      <div className="grid">
+      <div>
         <article>
           <h4>Web (CSS Grid)</h4>
           {generated.error || !generated.web ? (
