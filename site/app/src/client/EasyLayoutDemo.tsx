@@ -1,5 +1,6 @@
 import { CSSProperties, FC, useMemo, useState } from "react";
 import {
+  ComponentMap,
   getEasyLayoutTemplateDetails,
   getPascalCaseAreaName,
 } from "../../../../src/app/utils";
@@ -29,7 +30,12 @@ const nativeViewport = {
 
 export const EasyLayoutDemo: FC = () => {
   const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
-  const generated = useMemo(() => {
+  const {
+    web: { layout: WebLayout, areas = {} as ComponentMap } = {},
+    native,
+    error,
+    webDetails,
+  } = useMemo(() => {
     try {
       const webDetails = getEasyLayoutTemplateDetails(template, {
         gap: nativeViewport.gap,
@@ -50,7 +56,10 @@ export const EasyLayoutDemo: FC = () => {
     } catch (error) {
       return {
         webDetails: null,
-        web: null,
+        web: {
+          layout: undefined,
+          areas: undefined,
+        },
         native: null,
         error:
           error instanceof Error
@@ -60,16 +69,16 @@ export const EasyLayoutDemo: FC = () => {
     }
   }, [template]);
   const nativeCoords = useMemo(() => {
-    if (!generated.native) {
+    if (!native) {
       return null;
     }
 
     try {
-      return generated.native.computeNativeCoords(nativeViewport);
+      return native.computeNativeCoords(nativeViewport);
     } catch (error) {
       return null;
     }
-  }, [generated?.native]);
+  }, [native]);
 
   return (
     <section>
@@ -87,15 +96,15 @@ export const EasyLayoutDemo: FC = () => {
       <div>
         <article>
           <h4>Web (CSS Grid)</h4>
-          {generated.error || !generated.web ? (
+          {error || !WebLayout ? (
             <pre>
-              <code>{generated.error}</code>
+              <code>{error}</code>
             </pre>
           ) : (
-            <generated.web.layout>
-              {generated.webDetails?.areasList?.map((areaName) => {
+            <WebLayout>
+              {webDetails?.areasList?.map((areaName) => {
                 const areaComponentName = getPascalCaseAreaName(areaName);
-                const Area = generated.web?.areas[areaComponentName];
+                const Area = areas[areaComponentName];
 
                 if (!Area) {
                   return null;
@@ -107,7 +116,7 @@ export const EasyLayoutDemo: FC = () => {
                   </Area>
                 );
               })}
-            </generated.web.layout>
+            </WebLayout>
           )}
         </article>
 
@@ -115,16 +124,16 @@ export const EasyLayoutDemo: FC = () => {
           <h4>Web (Generated CSS)</h4>
           <pre>
             <code>
-              {generated.webDetails
+              {webDetails
                 ? JSON.stringify(
                     {
-                      areas: generated.webDetails.areasList,
-                      css: generated.webDetails.css.trim(),
+                      areas: webDetails.areasList,
+                      css: webDetails.css.trim(),
                     },
                     null,
                     2,
                   )
-                : generated.error || "Unable to compute web details."}
+                : error || "Unable to compute web details."}
             </code>
           </pre>
         </article>
@@ -135,7 +144,7 @@ export const EasyLayoutDemo: FC = () => {
             <code>
               {nativeCoords
                 ? JSON.stringify(nativeCoords, null, 2)
-                : generated.error || "Unable to compute coordinates."}
+                : error || "Unable to compute coordinates."}
             </code>
           </pre>
         </article>
