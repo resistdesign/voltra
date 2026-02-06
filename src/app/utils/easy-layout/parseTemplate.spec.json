@@ -1,0 +1,60 @@
+{
+  "file": "./parseTemplate.test-utils.ts",
+  "tests": [
+    {
+      "export": "runParseTemplateHappyPath",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "areaGrid": [
+          ["header", "header"],
+          ["side", "main"]
+        ],
+        "rowTracks": [
+          { "kind": "fr", "value": 1 },
+          { "kind": "fr", "value": 2 }
+        ],
+        "colTracks": [
+          { "kind": "px", "value": 100 },
+          { "kind": "fr", "value": 1 }
+        ],
+        "areaNames": ["header", "side", "main"]
+      }
+    },
+    {
+      "export": "runParseTemplateInconsistentWidths",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": false,
+        "message": "All area rows must have the same width. Expected 2, received 3 at row 2."
+      }
+    },
+    {
+      "export": "runParseTemplateUnknownTrack",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": false,
+        "message": "Invalid track token \"1foo\". Supported units are fr, px, and %."
+      }
+    },
+    {
+      "export": "runParseTemplateMissingRowTracks",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "areaGrid": [
+          ["header", "header"],
+          ["side", "main"]
+        ],
+        "rowTracks": [],
+        "colTracks": [
+          { "kind": "fr", "value": 1 },
+          { "kind": "fr", "value": 1 }
+        ],
+        "areaNames": ["header", "side", "main"]
+      }
+    }
+  ]
+}

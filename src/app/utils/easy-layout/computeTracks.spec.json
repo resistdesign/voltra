@@ -1,0 +1,23 @@
+{
+  "file": "./computeTracks.test-utils.ts",
+  "tests": [
+    {
+      "export": "runComputeTrackPixelsMixedUnits",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [50, 107.5, 68.125, 204.375]
+    },
+    {
+      "export": "runComputeTrackPixelsRemainderDistribution",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [100, 200]
+    },
+    {
+      "export": "runComputeTrackPixelsSmallContainer",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [200, 0]
+    }
+  ]
+}

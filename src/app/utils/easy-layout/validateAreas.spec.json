@@ -1,0 +1,49 @@
+{
+  "file": "./validateAreas.test-utils.ts",
+  "tests": [
+    {
+      "export": "runComputeAreaBoundsRectangle",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "header": {
+          "name": "header",
+          "rowStart": 1,
+          "rowEnd": 1,
+          "colStart": 1,
+          "colEnd": 2
+        },
+        "side": {
+          "name": "side",
+          "rowStart": 2,
+          "rowEnd": 3,
+          "colStart": 1,
+          "colEnd": 1
+        },
+        "main": {
+          "name": "main",
+          "rowStart": 2,
+          "rowEnd": 2,
+          "colStart": 2,
+          "colEnd": 2
+        },
+        "footer": {
+          "name": "footer",
+          "rowStart": 3,
+          "rowEnd": 3,
+          "colStart": 2,
+          "colEnd": 2
+        }
+      }
+    },
+    {
+      "export": "runValidateAreasNonRectangle",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": false,
+        "message": "Area \"a\" must be a rectangle. Missing \"a\" at row 2, col 2."
+      }
+    }
+  ]
+}
