@@ -8,10 +8,10 @@ import { makeNativeEasyLayout } from "../../../../src/native/utils";
 import { getEasyLayout } from "../../../../src/web/utils";
 
 const DEFAULT_TEMPLATE = `
-header header, 64px
-sidebar content, 1fr
-footer footer, 48px
-\\\\ 220px 1fr
+header header header, 64px
+sidebar content right, 1fr
+footer footer right, 48px
+\\\\ 320px 4fr 1fr
 `;
 
 const areaBoxStyle: CSSProperties = {
