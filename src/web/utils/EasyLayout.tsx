@@ -5,7 +5,8 @@
  * area components. Use {@link getEasyLayout} to produce a layout container and
  * area components for each named grid area.
  */
-import styled from "styled-components";
+import type { PropsWithChildren } from "react";
+import styled from "../../app/helpers/styled";
 import {
   createEasyLayout,
   type EasyLayoutFactoryConfig,
@@ -14,22 +15,69 @@ import {
   type LayoutComponents,
 } from "../../app/utils/EasyLayout";
 
+type EasyLayoutStyledProps = PropsWithChildren<{
+  as?: FCWithChildren;
+  /** Precomputed CSS template injected into the static layout base component. */
+  $layoutCss: string;
+}>;
+
+type EasyAreaStyledProps = PropsWithChildren<{
+  as?: FCWithChildren;
+  /** Grid area token assigned to the static area base component. */
+  $area: string;
+}>;
+
 /**
- * Web factory for EasyLayout using styled-components.
+ * Static base layout component to avoid creating styled-components per render.
+ */
+const EasyLayoutBase = styled("div")<{ $layoutCss: string }>`
+  display: grid;
+  ${({ $layoutCss }: { $layoutCss: string }) => $layoutCss}
+`;
+
+/**
+ * Static base area component to avoid creating styled-components per render.
+ */
+const EasyAreaBase = styled("div")<{ $area: string }>`
+  grid-area: ${({ $area }: { $area: string }) => $area};
+`;
+
+/**
+ * Web factory for EasyLayout using static styled-components + transient props.
+ * This avoids runtime warnings from dynamically creating styled components.
  */
 const styledFactory: EasyLayoutFactoryConfig<FCWithChildren> = {
   createLayout: ({ base, css }) => {
-    const baseLayoutComp = base ? styled(base) : styled.div;
-    return baseLayoutComp`
-      display: grid;
-      ${css}
-    `;
+    const LayoutComponent: FCWithChildren = ({ children }) => {
+      const layoutProps: EasyLayoutStyledProps = {
+        $layoutCss: css,
+        children,
+      };
+
+      if (base) {
+        layoutProps.as = base;
+      }
+
+      return <EasyLayoutBase {...layoutProps} />;
+    };
+
+    return LayoutComponent;
   },
   createArea: ({ base, area }) => {
-    const baseAreaComp = base ? styled(base) : styled.div;
-    return baseAreaComp`
-      grid-area: ${area};
-    `;
+    const AreaComponent: FCWithChildren = ({ children }) => {
+      const areaProps: EasyAreaStyledProps = {
+        $area: area,
+        children,
+      };
+
+      if (base) {
+        areaProps.as = base;
+      }
+
+      return <EasyAreaBase {...areaProps} />;
+    };
+
+    return AreaComponent;
   },
 };
 
