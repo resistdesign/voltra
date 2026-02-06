@@ -29,7 +29,6 @@ const nativeViewport = {
 
 export const EasyLayoutDemo: FC = () => {
   const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
-
   const generated = useMemo(() => {
     try {
       const webDetails = getEasyLayoutTemplateDetails(template, {
@@ -53,18 +52,24 @@ export const EasyLayoutDemo: FC = () => {
         webDetails: null,
         web: null,
         native: null,
-        error: error instanceof Error ? error.message : "Unable to parse layout template.",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to parse layout template.",
       };
     }
   }, [template]);
-
   const nativeCoords = useMemo(() => {
     if (!generated.native) {
       return null;
     }
 
-    return generated.native.computeNativeCoords(nativeViewport);
-  }, [generated.native]);
+    try {
+      return generated.native.computeNativeCoords(nativeViewport);
+    } catch (error) {
+      return null;
+    }
+  }, [generated?.native]);
 
   return (
     <section>
@@ -88,7 +93,7 @@ export const EasyLayoutDemo: FC = () => {
             </pre>
           ) : (
             <generated.web.layout>
-              {generated.webDetails?.areasList.map((areaName) => {
+              {generated.webDetails?.areasList?.map((areaName) => {
                 const areaComponentName = getPascalCaseAreaName(areaName);
                 const Area = generated.web?.areas[areaComponentName];
 
