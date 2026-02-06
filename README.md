@@ -158,7 +158,7 @@ Voltra's form system is split into a platform-agnostic core and platform suites:
 ### Web Usage
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/app";
+import { Forms } from "@resistdesign/voltra/web";
 
 const { AutoField } = Forms.createWebFormRenderer();
 ```
@@ -166,7 +166,7 @@ const { AutoField } = Forms.createWebFormRenderer();
 Override a single renderer:
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/app";
+import { Forms } from "@resistdesign/voltra/web";
 
 const { AutoField } = Forms.createWebFormRenderer({
   suite: Forms.withRendererOverride("string", (ctx) => {
@@ -178,7 +178,7 @@ const { AutoField } = Forms.createWebFormRenderer({
 ### Native Usage
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/app";
+import { Forms } from "@resistdesign/voltra/native";
 
 const { AutoField } = Forms.createNativeFormRenderer();
 ```
@@ -188,7 +188,7 @@ const { AutoField } = Forms.createNativeFormRenderer();
 Provide partial overrides (renderers and/or primitives). Missing renderers are filled from the default suite and validated.
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/app";
+import { Forms } from "@resistdesign/voltra/web";
 
 const { AutoField } = Forms.createWebFormRenderer({
   suite: {

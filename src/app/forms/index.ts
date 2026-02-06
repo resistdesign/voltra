@@ -18,8 +18,6 @@ export type {
 export {
   createAutoField,
   createFormRenderer,
-  createNativeFormRenderer,
-  createWebFormRenderer,
   getFieldKind,
   mergeSuites,
   resolveSuite,

@@ -5,9 +5,9 @@
  */
 
 import type { ReactElement } from "react";
-import type { ComponentSuite } from "./types";
-import { createFormRenderer } from "./createFormRenderer";
-import { webSuite } from "../../../web/forms/suite";
+import type { ComponentSuite } from "../../app/forms/core/types";
+import { createFormRenderer } from "../../app/forms/core/createFormRenderer";
+import { webSuite } from "./suite";
 
 /**
  * Create a web form renderer using the default web suite.
