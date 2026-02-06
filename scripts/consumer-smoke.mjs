@@ -78,7 +78,7 @@ const run = async () => {
     await fs.writeFile(
       path.join(consumerDir, "valid-imports.ts"),
       [
-        'import { IaC } from "@resistdesign/voltra";',
+        'import * as IaC from "@resistdesign/voltra/iac";',
         'import { Packs } from "@resistdesign/voltra/iac";',
         'import { addDNS } from "@resistdesign/voltra/iac/packs";',
         "",

@@ -18,10 +18,13 @@ yarn add @resistdesign/voltra
 
 Prefer the public entrypoints below to keep imports stable and IDE auto-imports clean.
 
+The root import `@resistdesign/voltra` is intentionally unsupported to avoid
+cross-runtime bundling issues.
+
 Preferred:
 
 ```ts
-import {IaC} from "@resistdesign/voltra";
+import * as IaC from "@resistdesign/voltra/iac";
 import {Packs} from "@resistdesign/voltra/iac";
 import {addDNS} from "@resistdesign/voltra/iac/packs";
 ```
@@ -34,12 +37,14 @@ import addDNS from "@resistdesign/voltra/iac/packs/dns";
 
 Public entrypoints:
 
-- `@resistdesign/voltra`
 - `@resistdesign/voltra/api`
 - `@resistdesign/voltra/app`
 - `@resistdesign/voltra/common`
+- `@resistdesign/voltra/web`
+- `@resistdesign/voltra/native`
 - `@resistdesign/voltra/iac`
 - `@resistdesign/voltra/iac/packs`
+- `@resistdesign/voltra/build`
 
 ------------
 
