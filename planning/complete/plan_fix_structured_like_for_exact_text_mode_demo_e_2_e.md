@@ -1,8 +1,8 @@
-- [~] **Goal**: In the demo site E2E, structured filter operator **Like** must work when **Text Mode = Exact** (and generally), e.g. `Car.model Like "Hon"` should match `"Honda"`.
+- [x] **Goal**: In the demo site E2E, structured filter operator **Like** must work when **Text Mode = Exact** (and generally), e.g. `Car.model Like "Hon"` should match `"Honda"`.
 
-- [~] **Repro (baseline)**
-  - [ ] In demo site: Search Cars → Structured Filters → field `model` → operator `Like` → value `Hon` → Run Search → observe 0 results.
-  - [ ] Confirm that `model = "Honda"` exists in seeded data.
+- [x] **Repro (baseline)**
+  - [x] In demo site: Search Cars → Structured Filters → field `model` → operator `Like` → value `Hon` → Run Search → observe 0 results.
+  - [x] Confirm that `model = "Honda"` exists in seeded data.
 
 - [x] **Root cause confirmation**
   - [x] Locate conversion from criteria → structured where (likely `criteriaToStructuredWhere`).
@@ -10,7 +10,7 @@
   - [x] Inspect structured indexing writer: verify **strings do not emit any "contains" tokens**, only `eq` (or exact) entries.
   - [x] Confirm the structured query is asking for tokens that never exist → guaranteed miss.
 
-- [~] **Design decision (non-negotiable)**
+- [x] **Design decision (non-negotiable)**
   - [x] Implement **SQL-style LIKE semantics** for structured string fields, without surprises:
     - [x] Case-insensitive by default (matching existing Voltra search normalization).
     - [x] Treat the filter value as a **substring match** unless it contains explicit wildcards.
@@ -18,14 +18,14 @@
     - [x] If no wildcard is provided by the caller, behave like: `LIKE "%<value>%"` (contains).
     - [x] Do **not** reinterpret LIKE as full-text search ranking; it must be deterministic boolean filtering.
     - [x] Arrays retain existing semantics (match any element; consistent with prior behavior).
-  - [~] Implementation must preserve consumer expectations across ORMs/clients.
+  - [x] Implementation must preserve consumer expectations across ORMs/clients.
 
-- [~] **Implementation plan (required)**
+- [x] **Implementation plan (required)**
   - [x] **Tokenization rules (minimal + predictable)**
     - [x] Normalize: lowercase, trim, collapse internal whitespace to single space.
     - [x] Token strategy: choose one and document it:
       - [x] **Trigrams** over normalized string (recommended for contains)
-      - [ ] OR **prefix tokens** (simpler; better for starts-with, worse for true contains)
+      - [x] OR **prefix tokens** (simpler; better for starts-with, worse for true contains) — not selected; intentionally rejected in favor of trigram-style contains coverage.
     - [x] Decide max length / guardrails (e.g., do not generate tokens for strings shorter than N; handle N<3 sensibly).
 
   - [x] **Write-side: structured indexing**
@@ -46,10 +46,10 @@
         - [x] For token-based contains, query must require **ALL tokens** (AND) for one field value to match.
     - [x] Preserve existing behavior for arrays.
 
-  - [~] **Compatibility: Text Mode = Exact**
-    - [ ] Ensure the UI “Text Mode” affects only the free-text portion, not structured filters.
-    - [ ] If current code wrongly couples text mode into structured behavior:
-      - [ ] Decouple so structured Like always uses structured tokens.
+  - [x] **Compatibility: Text Mode = Exact**
+    - [x] Ensure the UI “Text Mode” affects only the free-text portion, not structured filters.
+    - [x] If current code wrongly couples text mode into structured behavior:
+      - [x] Decouple so structured Like always uses structured tokens.
 
 - [x] **Tests (must be added/updated)**
   - [x] Add/extend unit tests for criteria conversion:
@@ -61,19 +61,19 @@
     - [x] Negative control: query `Like "Toy"` does not return Honda.
   - [x] If there are DBX/e2e tests: add a small scenario for structured Like on a string field.
 
-- [ ] **Migration / demo data**
-  - [ ] Note: existing demo DB/indexes won’t have new `contains` tokens for strings.
-  - [ ] Update seeding/reindex instructions used by CI or local dev (do not wipe automatically unless project conventions already do).
-  - [ ] If the demo pipeline already recreates DB, ensure it triggers a fresh index build.
+- [x] **Migration / demo data**
+  - [x] Note: existing demo DB/indexes won’t have new `contains` tokens for strings.
+  - [x] Update seeding/reindex instructions used by CI or local dev (do not wipe automatically unless project conventions already do).
+  - [x] If the demo pipeline already recreates DB, ensure it triggers a fresh index build.
 
-- [~] **Performance + cost guardrails**
+- [x] **Performance + cost guardrails**
   - [x] Token explosion check:
     - [x] Cap tokens per string (e.g., max trigrams) or cap indexed string length.
     - [x] Deduplicate tokens.
-  - [ ] Ensure write path doesn’t exceed DynamoDB item size limits for pathological strings.
+  - [x] Ensure write path doesn’t exceed DynamoDB item size limits for pathological strings.
 
-- [~] **Acceptance criteria**
-  - [ ] Demo site: `Car.model Like "Hon"` returns Honda(s) regardless of Text Mode setting.
+- [x] **Acceptance criteria**
+  - [x] Demo site: `Car.model Like "Hon"` returns Honda(s) regardless of Text Mode setting.
   - [x] All unit/in-memory/DBX tests pass.
   - [x] Clear inline doc/comments explaining chosen token strategy and any caps.
 
