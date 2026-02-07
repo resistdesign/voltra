@@ -6,8 +6,7 @@
  */
 import {
   DeleteRelationshipResults,
-  TypeInfoORMContext,
-  TypeInfoORMAPI,
+  TypeInfoORMClientAPI,
   TypeInfoORMAPIRoutePaths,
 } from "../../common/TypeInfoORM";
 import { sendServiceRequest, ServiceConfig } from "./Service";
@@ -23,11 +22,11 @@ import {
 } from "../../common/ItemRelationshipInfoTypes";
 
 /**
- * A client for a TypeInfoORM API or service.
+ * Client implementation of the client-safe TypeInfoORMClientAPI contract.
  *
  * @param config - The configuration pointing to the Type Info ORM `RouteMap`.
  * */
-export class TypeInfoORMClient implements TypeInfoORMAPI {
+export class TypeInfoORMClient implements TypeInfoORMClientAPI {
   /**
    * Create a client for TypeInfoORM routes.
    *
@@ -88,13 +87,11 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     typeName: string,
     primaryFieldValue: any,
     selectedFields?: (keyof TypeInfoDataItem)[],
-    context?: TypeInfoORMContext,
   ): Promise<TypeInfoDataItem> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.READ, [
       typeName,
       primaryFieldValue,
       selectedFields,
-      context,
     ]);
   };
 
@@ -108,12 +105,10 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   update = async (
     typeName: string,
     item: TypeInfoDataItem,
-    context?: TypeInfoORMContext,
   ): Promise<boolean> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.UPDATE, [
       typeName,
       item,
-      context,
     ]);
   };
 
@@ -127,12 +122,10 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   delete = async (
     typeName: string,
     primaryFieldValue: any,
-    context?: TypeInfoORMContext,
   ): Promise<boolean> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.DELETE, [
       typeName,
       primaryFieldValue,
-      context,
     ]);
   };
 
@@ -148,13 +141,11 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
     typeName: string,
     config: ListItemsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
-    context?: TypeInfoORMContext,
   ): Promise<ListItemsResults<TypeInfoDataItem>> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST, [
       typeName,
       config,
       selectedFields,
-      context,
     ]);
   };
 
@@ -166,11 +157,10 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
    */
   createRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
-    context?: TypeInfoORMContext,
   ): Promise<boolean> => {
     return await this.makeRequest(
       TypeInfoORMAPIRoutePaths.CREATE_RELATIONSHIP,
-      [relationshipItem, context],
+      [relationshipItem],
     );
   };
 
@@ -182,11 +172,10 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
    */
   deleteRelationship = async (
     relationshipItem: BaseItemRelationshipInfo,
-    context?: TypeInfoORMContext,
   ): Promise<DeleteRelationshipResults> => {
     return await this.makeRequest(
       TypeInfoORMAPIRoutePaths.DELETE_RELATIONSHIP,
-      [relationshipItem, context],
+      [relationshipItem],
     );
   };
 
@@ -198,11 +187,9 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
    */
   listRelationships = async (
     config: ListRelationshipsConfig,
-    context?: TypeInfoORMContext,
   ): Promise<ListItemsResults<ItemRelationshipInfo>> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST_RELATIONSHIPS, [
       config,
-      context,
     ]);
   };
 
@@ -216,12 +203,10 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   listRelatedItems = async (
     config: ListRelationshipsConfig,
     selectedFields?: (keyof TypeInfoDataItem)[],
-    context?: TypeInfoORMContext,
   ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.LIST_RELATED_ITEMS, [
       config,
       selectedFields,
-      context,
     ]);
   };
 }

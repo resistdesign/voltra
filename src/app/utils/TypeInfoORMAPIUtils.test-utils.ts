@@ -1,4 +1,5 @@
-import type { TypeInfoORMAPI } from "../../common/TypeInfoORM";
+import type { TypeInfoORMClientAPI } from "../../common/TypeInfoORM";
+import type { TypeInfoORMServiceAPI } from "./TypeInfoORMAPIUtils";
 import { handleRequest, requestHandlerFactory } from "./TypeInfoORMAPIUtils";
 
 type RequestStateSummary = {
@@ -9,7 +10,7 @@ type RequestStateSummary = {
   error: any;
 };
 
-const buildApi = (): TypeInfoORMAPI =>
+const buildApi = (): TypeInfoORMClientAPI =>
   ({
     createRelationship: async () => true,
     deleteRelationship: async () => ({
@@ -25,7 +26,14 @@ const buildApi = (): TypeInfoORMAPI =>
     },
     delete: async () => true,
     list: async () => ({ items: [], cursor: undefined }),
-  }) as TypeInfoORMAPI;
+  }) as TypeInfoORMClientAPI;
+
+const assertWrappedAPIRejectsContext = (api: TypeInfoORMServiceAPI) => {
+  // @ts-expect-error Wrapped client API must not accept server context args.
+  api.read("book-type", "book-1", undefined, { accessingRoleId: "role-1" });
+  // @ts-expect-error Wrapped client API must not accept server context args.
+  api.listRelationships({ relationshipItemOrigin: {} as any }, { accessingRoleId: "role-1" });
+};
 
 export const runTypeInfoORMAPIUtilsScenario = async () => {
   const api = buildApi();
