@@ -43,7 +43,7 @@ const buildConfig = (): BaseTypeInfoORMServiceConfig => ({
         },
         friend: {
           type: "string",
-          array: false,
+          array: true,
           readonly: false,
           optional: true,
           typeReference: "Person",
@@ -346,5 +346,141 @@ export const runORMRouteMapDacSelectedFieldsPaddingScenario = async () => {
     listRelationshipsCount,
     hasPersonAId: !!personAId,
     hasPersonBId: !!personBId,
+  };
+};
+
+export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
+  const buildRouteMaps = () => {
+    const baseTypeInfoMap = buildConfig().typeInfoMap;
+    const personTypeInfo = baseTypeInfoMap.Person;
+
+    if (!personTypeInfo) {
+      throw new Error("Missing Person type info.");
+    }
+
+    const personFields = personTypeInfo.fields;
+
+    if (!personFields?.name) {
+      throw new Error("Missing Person.name field.");
+    }
+
+    const personNameField = personFields.name;
+    const typeInfoMap = {
+      ...baseTypeInfoMap,
+      Person: {
+        ...personTypeInfo,
+        fields: {
+          ...personFields,
+          name: {
+            ...personNameField,
+            optional: true,
+          },
+        },
+      },
+    };
+    const itemDriver = new InMemoryDataItemDBDriver({
+      tableName: "ExplicitHandlerItems",
+      uniquelyIdentifyingFieldName: "id",
+    });
+    const relationshipDriver = new InMemoryItemRelationshipDBDriver({
+      tableName: "ExplicitHandlerRelationships",
+      uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
+    });
+    const config: BaseTypeInfoORMServiceConfig = {
+      typeInfoMap,
+      getDriver: () => itemDriver as DataItemDBDriver<any, any>,
+      getRelationshipDriver: () => relationshipDriver,
+    };
+    const routeMapWithoutDAC = getTypeInfoORMRouteMap(config);
+    const routeMapWithRole = getTypeInfoORMRouteMap(
+      config,
+      buildDacConfig(),
+      () => "role-1",
+    );
+
+    return {
+      routeMapWithoutDAC,
+      routeMapWithRole,
+    };
+  };
+  const runFlow = async (routeMap: Record<string, Route>) => {
+    const createPath = mergeStringPaths("", "create");
+    const readPath = mergeStringPaths("", "read");
+    const updatePath = mergeStringPaths("", "update");
+    const deletePath = mergeStringPaths("", "delete");
+    const listPath = mergeStringPaths("", "list");
+    const createRelationshipPath = mergeStringPaths("", "create-relationship");
+    const deleteRelationshipPath = mergeStringPaths("", "delete-relationship");
+    const listRelationshipsPath = mergeStringPaths("", "list-relationships");
+    const createHandler = getHandlerFactory(routeMap[createPath])(eventData);
+    const readHandler = getHandlerFactory(routeMap[readPath])(eventData);
+    const updateHandler = getHandlerFactory(routeMap[updatePath])(eventData);
+    const deleteHandler = getHandlerFactory(routeMap[deletePath])(eventData);
+    const listHandler = getHandlerFactory(routeMap[listPath])(eventData);
+    const createRelationshipHandler = getHandlerFactory(
+      routeMap[createRelationshipPath],
+    )(eventData);
+    const deleteRelationshipHandler = getHandlerFactory(
+      routeMap[deleteRelationshipPath],
+    )(eventData);
+    const listRelationshipsHandler = getHandlerFactory(
+      routeMap[listRelationshipsPath],
+    )(eventData);
+    const personAId = await createHandler("Person", { name: "Alice" });
+    const personBId = await createHandler("Person", { name: "Bob" });
+    const relationshipItem = {
+      fromTypeName: "Person",
+      fromTypeFieldName: "friend",
+      fromTypePrimaryFieldValue: personAId,
+      toTypePrimaryFieldValue: personBId,
+    };
+    const updateResult = await updateHandler("Person", {
+      id: personAId,
+      name: "Alice Updated",
+    });
+    const updatedPerson = await readHandler("Person", personAId, ["name"]);
+    const createRelationshipResult =
+      await createRelationshipHandler(relationshipItem);
+    const listRelationshipsBeforeDelete = await listRelationshipsHandler({
+      relationshipItemOrigin: {
+        fromTypeName: "Person",
+        fromTypeFieldName: "friend",
+        fromTypePrimaryFieldValue: personAId,
+      },
+      itemsPerPage: 5,
+    });
+    const deleteRelationshipResult =
+      await deleteRelationshipHandler(relationshipItem);
+    const listRelationshipsAfterDelete = await listRelationshipsHandler({
+      relationshipItemOrigin: {
+        fromTypeName: "Person",
+        fromTypeFieldName: "friend",
+        fromTypePrimaryFieldValue: personAId,
+      },
+      itemsPerPage: 5,
+    });
+    const deletePersonResult = await deleteHandler("Person", personBId);
+
+    return {
+      hasPersonAId: !!personAId,
+      hasPersonBId: !!personBId,
+      updateResult,
+      updatedName: updatedPerson.name,
+      createRelationshipResult,
+      listRelationshipsBeforeDeleteCount:
+        listRelationshipsBeforeDelete.items.length,
+      deleteRelationshipResult,
+      listRelationshipsAfterDeleteCount: listRelationshipsAfterDelete.items.length,
+      deletePersonResult,
+    };
+  };
+  const { routeMapWithoutDAC, routeMapWithRole } = buildRouteMaps();
+  const withoutDAC = await runFlow(routeMapWithoutDAC);
+  const withDAC = await runFlow(routeMapWithRole);
+
+  return {
+    withoutDAC,
+    withDAC,
+    parity: JSON.stringify(withoutDAC) === JSON.stringify(withDAC),
   };
 };

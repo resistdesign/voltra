@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
 import { TypeInfoORMAPIRoutePaths } from "../../../../../../src/common/TypeInfoORM";
-import type { TypeInfoORMAPI } from "../../../../../../src/common/TypeInfoORM";
+import type { TypeInfoORMClientAPI } from "../../../../../../src/common/TypeInfoORM";
 import { getSimpleId } from "../../../../../../src/common/IdGeneration";
 
 export type RequestLogEntry = {
   id: string;
-  methodName: keyof TypeInfoORMAPI;
+  methodName: keyof TypeInfoORMClientAPI;
   path: TypeInfoORMAPIRoutePaths;
   args: any[];
   status: "pending" | "success" | "error";
@@ -14,7 +14,10 @@ export type RequestLogEntry = {
   timestamp: string;
 };
 
-const ORM_METHOD_PATHS: Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRoutePaths> =
+const ORM_METHOD_PATHS: Record<
+  keyof TypeInfoORMClientAPI,
+  TypeInfoORMAPIRoutePaths
+> =
   {
     create: TypeInfoORMAPIRoutePaths.CREATE,
     read: TypeInfoORMAPIRoutePaths.READ,
@@ -32,7 +35,7 @@ export const useDemoLogger = () => {
 
   const logRequest = useCallback(
     async <T,>(
-      methodName: keyof TypeInfoORMAPI,
+      methodName: keyof TypeInfoORMClientAPI,
       args: any[],
       request: () => Promise<T>,
     ): Promise<T> => {
