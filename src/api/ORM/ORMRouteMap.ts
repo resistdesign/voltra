@@ -127,6 +127,27 @@ export const getTypeInfoORMRouteMap = (
         methodName
       ] as (...args: any[]) => Promise<any>;
 
+      if (methodName === "list") {
+        return ((...args: any[]) =>
+          args.length === 2
+            ? method(args[0], args[1], undefined, context)
+            : method(args[0], args[1], args[2], context)) as RouteHandler;
+      }
+
+      if (methodName === "read") {
+        return ((...args: any[]) =>
+          args.length === 2
+            ? method(args[0], args[1], undefined, context)
+            : method(args[0], args[1], args[2], context)) as RouteHandler;
+      }
+
+      if (methodName === "listRelatedItems") {
+        return ((...args: any[]) =>
+          args.length === 1
+            ? method(args[0], undefined, context)
+            : method(args[0], args[1], context)) as RouteHandler;
+      }
+
       return ((...args: any[]) => method(...args, context)) as RouteHandler;
     };
     const getRoute = (
