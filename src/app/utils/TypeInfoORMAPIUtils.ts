@@ -1,11 +1,12 @@
 /**
  * @packageDocumentation
  *
- * Hook utilities that wrap a {@link TypeInfoORMAPI} with request state tracking.
+ * Hook utilities that wrap a {@link TypeInfoORMClientAPI} with request state
+ * tracking.
  * Each method returns a request id and updates loading/data/error state per method.
  */
 import {
-  TypeInfoORMAPI,
+  TypeInfoORMClientAPI,
   TypeInfoORMServiceError,
 } from "../../common/TypeInfoORM";
 import type { ExpandComplexType } from "../../common/HelperTypes";
@@ -28,11 +29,11 @@ export type SyncRequestHandler<ArgsType extends any[]> = (
  * Synchronous wrapper API that returns a request id for each method.
  * */
 export type TypeInfoORMServiceAPI = ExpandComplexType<{
-  [K in keyof TypeInfoORMAPI]: TypeInfoORMAPI[K] extends (
+  [K in keyof TypeInfoORMClientAPI]: TypeInfoORMClientAPI[K] extends (
     ...args: infer A
   ) => Promise<any>
     ? SyncRequestHandler<A>
-    : TypeInfoORMAPI[K];
+    : TypeInfoORMClientAPI[K];
 }>;
 
 /**
@@ -66,7 +67,7 @@ export type TypeInfoORMAPIRequestState = ExpandComplexType<
 >;
 
 type RequestStateChangeHandler = (
-  methodName: keyof TypeInfoORMAPI,
+  methodName: keyof TypeInfoORMClientAPI,
   requestId: string,
   requestState: BaseTypeInfoORMAPIRequestState,
 ) => void;
@@ -75,7 +76,7 @@ type RequestStateChangeHandler = (
  * Request state keyed by TypeInfoORM API method.
  */
 export type TypeInfoORMAPIState = Partial<
-  Record<keyof TypeInfoORMAPI, TypeInfoORMAPIRequestState>
+  Record<keyof TypeInfoORMClientAPI, TypeInfoORMAPIRequestState>
 >;
 
 /**
@@ -105,8 +106,8 @@ export type TypeInfoORMAPIController = {
 export const handleRequest = async (
   requestId: string,
   args: any[],
-  typeInfoORMAPI: TypeInfoORMAPI,
-  methodName: keyof TypeInfoORMAPI,
+  typeInfoORMAPI: TypeInfoORMClientAPI,
+  methodName: keyof TypeInfoORMClientAPI,
   onRequestStateChange: RequestStateChangeHandler,
 ): Promise<void> => {
   onRequestStateChange(methodName, requestId, { loading: true });
@@ -140,8 +141,8 @@ export const handleRequest = async (
  * */
 export const requestHandlerFactory =
   (
-    typeInfoORMAPI: TypeInfoORMAPI,
-    methodName: keyof TypeInfoORMAPI,
+    typeInfoORMAPI: TypeInfoORMClientAPI,
+    methodName: keyof TypeInfoORMClientAPI,
     onRequestStateChange: RequestStateChangeHandler,
   ): SyncRequestHandler<any> =>
   (...args: any[]): string => {
@@ -165,7 +166,7 @@ export const requestHandlerFactory =
  * @returns Controller with request state and wrapped API methods.
  * */
 export const useTypeInfoORMAPI = (
-  typeInfoORMAPI: TypeInfoORMAPI,
+  typeInfoORMAPI: TypeInfoORMClientAPI,
 ): TypeInfoORMAPIController => {
   const [state, setState] = useState<TypeInfoORMAPIState>({});
   const onRequestStateChange = useCallback<RequestStateChangeHandler>(
@@ -202,7 +203,7 @@ export const useTypeInfoORMAPI = (
     const apiBase: Partial<TypeInfoORMServiceAPI> = {};
 
     for (const aM in typeInfoORMAPI) {
-      const methodName = aM as keyof TypeInfoORMAPI;
+      const methodName = aM as keyof TypeInfoORMClientAPI;
 
       apiBase[methodName] = requestHandlerFactory(
         typeInfoORMAPI,

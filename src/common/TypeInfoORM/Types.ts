@@ -200,8 +200,11 @@ export type TypeInfoORMContext = {
 };
 
 /**
- * The API type for TypeInfoORM providers to implement.
- * */
+ * Server-side TypeInfoORM API contract.
+ *
+ * Methods that perform DAC-sensitive work may accept
+ * `context?: TypeInfoORMContext`.
+ */
 export type TypeInfoORMAPI = {
   /**
    * Create a relationship record.
@@ -308,4 +311,25 @@ export type TypeInfoORMAPI = {
     selectedFields?: (keyof TypeInfoDataItem)[],
     context?: TypeInfoORMContext,
   ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
+};
+
+/**
+ * Removes an optional trailing ORM context argument from an API method.
+ */
+type StripContextArg<TMethod> = TMethod extends (
+  ...args: infer TArgs
+) => infer TResult
+  ? TArgs extends [...infer TBaseArgs, TypeInfoORMContext?]
+    ? (...args: TBaseArgs) => TResult
+    : TMethod
+  : TMethod;
+
+/**
+ * Client-safe TypeInfoORM API shape derived from {@link TypeInfoORMAPI}.
+ *
+ * Any trailing `context?: TypeInfoORMContext` argument is removed so app-side
+ * callers cannot pass server DAC context.
+ */
+export type TypeInfoORMClientAPI = {
+  [TKey in keyof TypeInfoORMAPI]: StripContextArg<TypeInfoORMAPI[TKey]>;
 };

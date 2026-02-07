@@ -3,6 +3,20 @@ import type { ServiceConfig } from "./Service";
 import type { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
 import type { ListItemsConfig } from "../../common/SearchTypes";
 import type { BaseItemRelationshipInfo } from "../../common/ItemRelationshipInfoTypes";
+import type { TypeInfoORMClientAPI } from "../../common/TypeInfoORM";
+
+const assertTypeInfoORMClientAPIRejectsContext = (
+  clientAPI: TypeInfoORMClientAPI,
+) => {
+  // @ts-expect-error Client API must not accept server context arguments.
+  clientAPI.read("Book", "book-1", undefined, { accessingRoleId: "role-1" });
+  // @ts-expect-error Client API must not accept server context arguments.
+  clientAPI.update("Book", { id: "book-1", title: "Beta" }, {
+    accessingRoleId: "role-1",
+  });
+  // @ts-expect-error Client API must not accept server context arguments.
+  clientAPI.createRelationship({} as BaseItemRelationshipInfo, { accessingRoleId: "role-1" });
+};
 
 export const runTypeInfoORMClientScenario = async () => {
   const calls: Array<{ path: string; args: any[] }> = [];
