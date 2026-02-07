@@ -3,6 +3,7 @@ import type {
   BaseTypeInfoORMServiceConfig,
   TypeInfoORMDACConfig,
 } from "./TypeInfoORMService";
+import type { DataItemDBDriver } from "./drivers/common/Types";
 import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import { InMemoryItemRelationshipDBDriver } from "./drivers/InMemoryItemRelationshipDBDriver";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfoTypes";
@@ -221,7 +222,7 @@ export const runORMRouteMapDacSelectedFieldsPaddingScenario = async () => {
   });
   const config: BaseTypeInfoORMServiceConfig = {
     typeInfoMap,
-    getDriver: () => itemDriver,
+    getDriver: () => itemDriver as DataItemDBDriver<any, any>,
     getRelationshipDriver: () => relationshipDriver,
   };
   const dacConfig = buildDacConfig();
