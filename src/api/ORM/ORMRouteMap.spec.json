@@ -42,6 +42,27 @@
         "missingGetterErrorExpected": "MISSING_ACCESSING_ROLE_GETTER",
         "handlerWithRoleIsFunction": true
       }
+    },
+    {
+      "export": "runORMRouteMapDacSelectedFieldsPaddingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "setupError": null,
+        "listOmittedSelectedFieldsError": null,
+        "listWithSelectedFieldsError": null,
+        "readOmittedSelectedFieldsError": null,
+        "readWithSelectedFieldsError": null,
+        "listRelatedItemsOmittedSelectedFieldsError": null,
+        "listRelatedItemsWithSelectedFieldsError": null,
+        "listCount": 2,
+        "readMatchesPersonAId": true,
+        "listRelatedItemsCount": 0,
+        "listRelatedItemsId": null,
+        "listRelationshipsCount": 0,
+        "hasPersonAId": true,
+        "hasPersonBId": true
+      }
     }
   ]
 }
