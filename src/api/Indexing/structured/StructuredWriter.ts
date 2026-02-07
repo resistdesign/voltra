@@ -11,6 +11,7 @@ import {
   buildStructuredRangeItem,
   buildStructuredTermItem,
 } from "./StructuredDdb";
+import { buildStructuredStringContainsTokens } from "./StructuredStringLike";
 
 /**
  * Dependencies required to persist structured index entries.
@@ -90,6 +91,11 @@ function buildTermEntries(
       }
     } else {
       entries.push(buildStructuredTermItem(field, value, "eq", docId));
+      if (typeof value === "string") {
+        for (const token of buildStructuredStringContainsTokens(value)) {
+          entries.push(buildStructuredTermItem(field, token, "contains", docId));
+        }
+      }
     }
   }
 
