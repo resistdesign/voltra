@@ -21,7 +21,7 @@
         "denseOrWideIds": ["post-1", "post-2", "post-3", "post-4"],
         "denseOrDeltaOnlyIds": ["post-4"],
         "denseAndWithInIds": ["post-2"],
-        "denseAndWithLikeIds": [],
+        "denseAndWithLikeIds": ["post-1"],
         "denseOrAlphaGammaIds": ["post-1", "post-3"],
         "denseAndAlphaDraftIds": ["post-1"],
         "denseAndBetaExactIds": ["post-2"],

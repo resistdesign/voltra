@@ -6,6 +6,7 @@
 import { decodeStructuredCursor, encodeStructuredCursor } from "./Cursor";
 import type { DocId } from "../Types";
 import { compareDocId } from "../docId";
+import { buildStructuredStringContainsTokens } from "./StructuredStringLike";
 import type {
   CandidatePage,
   StructuredQueryOptions,
@@ -215,6 +216,11 @@ export class StructuredInMemoryIndex {
       }
 
       addPosting(this.eqIndex, field, value, docId);
+      if (typeof value === "string") {
+        for (const token of buildStructuredStringContainsTokens(value)) {
+          addPosting(this.containsIndex, field, token, docId);
+        }
+      }
       const entries = this.rangeIndex.get(field) ?? [];
       insertRangeEntry(entries, value, docId);
       this.rangeIndex.set(field, entries);
