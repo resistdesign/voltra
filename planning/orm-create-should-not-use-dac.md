@@ -17,3 +17,10 @@ Which I believe is already being checked. But you can verify that.
 - [x] Update `TypeInfoORMService.create` to avoid `getItemDACValidation`.
 - [x] Add/update JSON spec test coverage for create without item DAC validation.
 - [x] Run targeted tests and confirm passing behavior.
+
+## Phase 2 - Remove Orphaned Create Context Argument
+
+- [x] Remove `context` from ORM `create` method signatures/contracts.
+- [x] Update `getTypeInfoORMRouteMap` so `create` no longer receives appended context.
+- [x] Update client/helpers/tests for the new `create` argument shape.
+- [x] Run targeted ORM/API specs and confirm passing behavior.

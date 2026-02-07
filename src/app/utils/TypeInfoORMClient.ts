@@ -70,12 +70,10 @@ export class TypeInfoORMClient implements TypeInfoORMAPI {
   create = async (
     typeName: string,
     item: TypeInfoDataItem,
-    context?: TypeInfoORMContext,
   ): Promise<any> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.CREATE, [
       typeName,
       item,
-      context,
     ]);
   };
 

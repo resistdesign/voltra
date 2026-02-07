@@ -1680,7 +1680,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   create = async (
     typeName: string,
     item: TypeInfoDataItem,
-    context?: TypeInfoORMContext,
   ): Promise<any> => {
     this.validate(typeName, item, TypeOperation.CREATE);
     const driver = this.getDriverInternal(typeName);

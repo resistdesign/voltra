@@ -431,7 +431,6 @@ export const runTypeInfoORMServiceCreateWithoutItemDACScenario = async () => {
   const createId = await orm.create(
     "Book",
     { title: "Alpha" },
-    { accessingRoleId: "role-create-denied" },
   );
 
   const { drivers: deniedDrivers, relationshipDriver: deniedRelationshipDriver } =
