@@ -255,7 +255,6 @@ export type TypeInfoORMAPI = {
   create: (
     typeName: string,
     item: TypeInfoDataItem,
-    context?: TypeInfoORMContext,
   ) => Promise<any>;
   /**
    * Read an item by primary field value.

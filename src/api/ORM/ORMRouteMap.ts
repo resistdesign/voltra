@@ -148,6 +148,10 @@ export const getTypeInfoORMRouteMap = (
             : method(args[0], args[1], context)) as RouteHandler;
       }
 
+      if (methodName === "create") {
+        return ((...args: any[]) => method(...args)) as RouteHandler;
+      }
+
       return ((...args: any[]) => method(...args, context)) as RouteHandler;
     };
     const getRoute = (
