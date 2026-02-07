@@ -63,6 +63,42 @@
         "hasPersonAId": true,
         "hasPersonBId": true
       }
+    },
+    {
+      "export": "runORMRouteMapExplicitHandlerArgumentScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "withoutDAC": {
+          "hasPersonAId": true,
+          "hasPersonBId": true,
+          "updateResult": true,
+          "updatedName": "Alice Updated",
+          "createRelationshipResult": true,
+          "listRelationshipsBeforeDeleteCount": 1,
+          "deleteRelationshipResult": {
+            "success": true,
+            "remainingItemsExist": false
+          },
+          "listRelationshipsAfterDeleteCount": 0,
+          "deletePersonResult": true
+        },
+        "withDAC": {
+          "hasPersonAId": true,
+          "hasPersonBId": true,
+          "updateResult": true,
+          "updatedName": "Alice Updated",
+          "createRelationshipResult": true,
+          "listRelationshipsBeforeDeleteCount": 1,
+          "deleteRelationshipResult": {
+            "success": true,
+            "remainingItemsExist": false
+          },
+          "listRelationshipsAfterDeleteCount": 0,
+          "deletePersonResult": true
+        },
+        "parity": true
+      }
     }
   ]
 }

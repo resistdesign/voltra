@@ -86,89 +86,198 @@ export const getTypeInfoORMRouteMap = (
     throw {
       message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE_GETTER,
     };
-  } else {
-    const ormWithoutDAC = !dacConfig
-      ? new TypeInfoORMService({
+  }
+
+  const orm = new TypeInfoORMService({
+    ...(dacConfig
+      ? {
           ...config,
-          useDAC: false,
-        })
-      : undefined;
-    const ormWithDAC = dacConfig
-      ? new TypeInfoORMService({
-          ...config,
-          useDAC: true,
+          useDAC: true as const,
           dacConfig,
-        })
-      : undefined;
-    const ormMethodFactory = (
-      methodName: keyof TypeInfoORMAPI,
-      eventData: NormalizedCloudFunctionEventData,
-    ): RouteHandler => {
-      if (ormWithoutDAC) {
-        return ormWithoutDAC[methodName];
-      }
+        }
+      : {
+          ...config,
+          useDAC: false as const,
+        }),
+  });
+  const defaultAuthConfig: RouteAuthConfig = authConfig ?? {
+    anyAuthorized: true,
+  };
+  const resolveContext = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): ReturnType<typeof getContextFromEventData> =>
+    getContextFromEventData(eventData, dacConfig, getAccessingRoleId);
 
-      const { authInfo } = eventData;
-      const accessingRoleId = getAccessingRoleId
-        ? getAccessingRoleId(authInfo)
-        : undefined;
+  const createRoute = (
+    path: string,
+    handlerFactory: (eventData: NormalizedCloudFunctionEventData) => RouteHandler,
+  ): Route => ({
+    path,
+    authConfig: defaultAuthConfig,
+    handlerFactory,
+  });
 
-      if (dacConfig && !accessingRoleId) {
-        throw {
-          message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE,
-        };
-      }
+  const createHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => orm.create;
+  const createHandlerFactoryWithDAC = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    resolveContext(eventData);
 
-      const context = accessingRoleId
-        ? { accessingRoleId }
-        : undefined;
-
-      const method = (ormWithDAC as TypeInfoORMService)[
-        methodName
-      ] as (...args: any[]) => Promise<any>;
-
-      if (methodName === "list") {
-        return ((...args: any[]) =>
-          args.length === 2
-            ? method(args[0], args[1], undefined, context)
-            : method(args[0], args[1], args[2], context)) as RouteHandler;
-      }
-
-      if (methodName === "read") {
-        return ((...args: any[]) =>
-          args.length === 2
-            ? method(args[0], args[1], undefined, context)
-            : method(args[0], args[1], args[2], context)) as RouteHandler;
-      }
-
-      if (methodName === "listRelatedItems") {
-        return ((...args: any[]) =>
-          args.length === 1
-            ? method(args[0], undefined, context)
-            : method(args[0], args[1], context)) as RouteHandler;
-      }
-
-      return ((...args: any[]) => method(...args, context)) as RouteHandler;
-    };
-    const getRoute = (
-      path: string,
-      methodName: keyof TypeInfoORMAPI,
-    ): Route => ({
-      path,
-      authConfig: authConfig ?? {
-        anyAuthorized: true,
-      },
-      handlerFactory: (eventData) => ormMethodFactory(methodName, eventData),
-    });
-
-    let routeMap: RouteMap = {};
-
-    for (const p in TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP) {
-      const m = TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP[p];
-
-      routeMap = addRouteToRouteMap(routeMap, getRoute(p, m));
+    return orm.create;
+  };
+  const readHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.read;
     }
 
-    return routeMap;
+    const context = resolveContext(eventData);
+
+    return ((
+      typeName: string,
+      primaryFieldValue: any,
+      selectedFields?: string[],
+    ) => orm.read(typeName, primaryFieldValue, selectedFields, context)) as RouteHandler;
+  };
+  const updateHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.update;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((typeName: string, item: any) => orm.update(typeName, item, context)) as RouteHandler;
+  };
+  const deleteHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.delete;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((
+      typeName: string,
+      primaryFieldValue: any,
+    ) => orm.delete(typeName, primaryFieldValue, context)) as RouteHandler;
+  };
+  const listHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.list;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((
+      typeName: string,
+      listConfig: any,
+      selectedFields?: string[],
+    ) => orm.list(typeName, listConfig, selectedFields, context)) as RouteHandler;
+  };
+  const createRelationshipHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.createRelationship;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((relationshipItem: any) => orm.createRelationship(relationshipItem, context)) as RouteHandler;
+  };
+  const deleteRelationshipHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.deleteRelationship;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((relationshipItem: any) => orm.deleteRelationship(relationshipItem, context)) as RouteHandler;
+  };
+  const listRelationshipsHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.listRelationships;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((listRelationshipsConfig: any) => orm.listRelationships(listRelationshipsConfig, context)) as RouteHandler;
+  };
+  const listRelatedItemsHandlerFactory = (
+    eventData: NormalizedCloudFunctionEventData,
+  ): RouteHandler => {
+    if (!dacConfig) {
+      return orm.listRelatedItems;
+    }
+
+    const context = resolveContext(eventData);
+
+    return ((
+      listRelationshipsConfig: any,
+      selectedFields?: string[],
+    ) => orm.listRelatedItems(listRelationshipsConfig, selectedFields, context)) as RouteHandler;
+  };
+
+  let routeMap: RouteMap = {};
+  routeMap = addRouteToRouteMap(
+    routeMap,
+    createRoute("create-relationship", createRelationshipHandlerFactory),
+  );
+  routeMap = addRouteToRouteMap(
+    routeMap,
+    createRoute("delete-relationship", deleteRelationshipHandlerFactory),
+  );
+  routeMap = addRouteToRouteMap(
+    routeMap,
+    createRoute("list-relationships", listRelationshipsHandlerFactory),
+  );
+  routeMap = addRouteToRouteMap(
+    routeMap,
+    createRoute("list-related-items", listRelatedItemsHandlerFactory),
+  );
+  routeMap = addRouteToRouteMap(
+    routeMap,
+    createRoute("create", dacConfig ? createHandlerFactoryWithDAC : createHandlerFactory),
+  );
+  routeMap = addRouteToRouteMap(routeMap, createRoute("read", readHandlerFactory));
+  routeMap = addRouteToRouteMap(routeMap, createRoute("update", updateHandlerFactory));
+  routeMap = addRouteToRouteMap(routeMap, createRoute("delete", deleteHandlerFactory));
+  routeMap = addRouteToRouteMap(routeMap, createRoute("list", listHandlerFactory));
+
+  return routeMap;
+};
+
+const getContextFromEventData = (
+  eventData: NormalizedCloudFunctionEventData,
+  dacConfig?: TypeInfoORMDACConfig,
+  getAccessingRoleId?: (authInfo: AuthInfo) => string,
+) => {
+  if (!dacConfig) {
+    return undefined;
   }
+
+  const { authInfo } = eventData;
+  const accessingRoleId = getAccessingRoleId
+    ? getAccessingRoleId(authInfo)
+    : undefined;
+
+  if (!accessingRoleId) {
+    throw {
+      message: TYPE_INFO_ORM_ROUTE_MAP_ERRORS.MISSING_ACCESSING_ROLE,
+    };
+  }
+
+  return { accessingRoleId };
 };

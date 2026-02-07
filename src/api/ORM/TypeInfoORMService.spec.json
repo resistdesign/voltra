@@ -59,6 +59,15 @@
       }
     },
     {
+      "export": "runTypeInfoORMServiceCreateWithoutItemDACScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createId": "book-1",
+        "createDeniedByType": true
+      }
+    },
+    {
       "export": "runTypeInfoORMServiceContextScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

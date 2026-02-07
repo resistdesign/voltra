@@ -402,6 +402,73 @@ export const runTypeInfoORMServiceDACScenario = async () => {
   };
 };
 
+export const runTypeInfoORMServiceCreateWithoutItemDACScenario = async () => {
+  const { drivers, relationshipDriver } = buildDrivers();
+  const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE;
+  const roleCreateDenied: DACRole = {
+    id: "role-create-denied",
+    constraints: [
+      {
+        type: DACConstraintType.DENY,
+        pathIsPrefix: true,
+        resourcePath: ["ORM", TypeOperation.CREATE, "Book", wildcard],
+      },
+    ],
+  };
+
+  const orm = new TypeInfoORMService({
+    typeInfoMap,
+    getDriver: (typeName) =>
+      drivers[typeName as keyof typeof drivers] as DataItemDBDriver<any, any>,
+    getRelationshipDriver: () => relationshipDriver,
+    useDAC: true,
+    dacConfig: {
+      itemResourcePathPrefix: ["ORM"],
+      relationshipResourcePathPrefix: ["REL"],
+      getDACRoleById: async () => roleCreateDenied,
+    },
+  });
+  const createId = await orm.create(
+    "Book",
+    { title: "Alpha" },
+  );
+
+  const { drivers: deniedDrivers, relationshipDriver: deniedRelationshipDriver } =
+    buildDrivers();
+  const ormCreateDeniedByType = new TypeInfoORMService({
+    typeInfoMap: {
+      ...typeInfoMap,
+      Book: {
+        ...typeInfoMap.Book,
+        tags: {
+          deniedOperations: {
+            [TypeOperation.CREATE]: true,
+          },
+        },
+      },
+    },
+    getDriver: (typeName) =>
+      deniedDrivers[typeName as keyof typeof deniedDrivers] as DataItemDBDriver<
+        any,
+        any
+      >,
+    getRelationshipDriver: () => deniedRelationshipDriver,
+    useDAC: false,
+  });
+
+  let createDeniedByType = false;
+  try {
+    await ormCreateDeniedByType.create("Book", { title: "Blocked" });
+  } catch (error) {
+    createDeniedByType = Boolean(error);
+  }
+
+  return {
+    createId,
+    createDeniedByType,
+  };
+};
+
 export const runTypeInfoORMServiceContextScenario = async () => {
   const { drivers, relationshipDriver } = buildDrivers();
   const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE;
