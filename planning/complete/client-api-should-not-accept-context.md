@@ -18,3 +18,9 @@
 - [x] Update app/demo examples to reference the client-safe ORM API type.
 - [x] Add compile-time test assertions proving client APIs reject `context`.
 - [x] Verify targeted specs and `yarn doc` pass after alignment updates.
+
+## Phase 3 - Explicit Client API Type
+
+- [x] Replace mapped `StripContextArg` client API derivation with explicit method declarations.
+- [x] Add full doc comments for each `TypeInfoORMClientAPI` method.
+- [x] Run targeted app utils specs and `yarn doc` to verify no regressions.

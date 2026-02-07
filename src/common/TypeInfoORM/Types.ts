@@ -314,22 +314,108 @@ export type TypeInfoORMAPI = {
 };
 
 /**
- * Removes an optional trailing ORM context argument from an API method.
- */
-type StripContextArg<TMethod> = TMethod extends (
-  ...args: infer TArgs
-) => infer TResult
-  ? TArgs extends [...infer TBaseArgs, TypeInfoORMContext?]
-    ? (...args: TBaseArgs) => TResult
-    : TMethod
-  : TMethod;
-
-/**
  * Client-safe TypeInfoORM API shape derived from {@link TypeInfoORMAPI}.
  *
- * Any trailing `context?: TypeInfoORMContext` argument is removed so app-side
- * callers cannot pass server DAC context.
+ * This type is intentionally explicit and does not include any
+ * `context?: TypeInfoORMContext` arguments so app-side callers cannot pass
+ * server DAC context.
  */
 export type TypeInfoORMClientAPI = {
-  [TKey in keyof TypeInfoORMAPI]: StripContextArg<TypeInfoORMAPI[TKey]>;
+  /**
+   * Create a relationship record.
+   *
+   * @param relationshipItem - Relationship payload to create.
+   * @returns Whether the create succeeded.
+   */
+  createRelationship: (
+    relationshipItem: BaseItemRelationshipInfo,
+  ) => Promise<boolean>;
+  /**
+   * Delete a relationship record.
+   *
+   * @param relationshipItem - Relationship payload to delete.
+   * @returns Results describing deletion outcome.
+   */
+  deleteRelationship: (
+    relationshipItem: BaseItemRelationshipInfo,
+  ) => Promise<DeleteRelationshipResults>;
+  /**
+   * List relationships matching the query.
+   *
+   * @param config - Relationship list configuration.
+   * @returns Relationship list results.
+   */
+  listRelationships: (
+    config: ListRelationshipsConfig,
+  ) => Promise<ListItemsResults<ItemRelationshipInfo>>;
+  /**
+   * List related items for a relationship query.
+   *
+   * @param config - Relationship list configuration.
+   * @param selectedFields - Optional fields to project.
+   * @returns Related item list results.
+   */
+  listRelatedItems: (
+    config: ListRelationshipsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
+  /**
+   * Create an item.
+   *
+   * @param typeName - Type name to create.
+   * @param item - Item payload to create.
+   * @returns The created item result.
+   */
+  create: (
+    typeName: string,
+    item: TypeInfoDataItem,
+  ) => Promise<any>;
+  /**
+   * Read an item by primary field value.
+   *
+   * @param typeName - Type name to read.
+   * @param primaryFieldValue - Primary field value to lookup.
+   * @param selectedFields - Optional fields to project.
+   * @returns Retrieved item data.
+   */
+  read: (
+    typeName: string,
+    primaryFieldValue: any,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => Promise<Partial<TypeInfoDataItem>>;
+  /**
+   * Update an item.
+   *
+   * @param typeName - Type name to update.
+   * @param item - Updated item payload.
+   * @returns Whether the update succeeded.
+   */
+  update: (
+    typeName: string,
+    item: TypeInfoDataItem,
+  ) => Promise<boolean>;
+  /**
+   * Delete an item by primary field value.
+   *
+   * @param typeName - Type name to delete.
+   * @param primaryFieldValue - Primary field value to delete.
+   * @returns Whether the delete succeeded.
+   */
+  delete: (
+    typeName: string,
+    primaryFieldValue: any,
+  ) => Promise<boolean>;
+  /**
+   * List items matching the configuration.
+   *
+   * @param typeName - Type name to list.
+   * @param config - List configuration.
+   * @param selectedFields - Optional fields to project.
+   * @returns List results.
+   */
+  list: (
+    typeName: string,
+    config: ListItemsConfig,
+    selectedFields?: (keyof TypeInfoDataItem)[],
+  ) => Promise<ListItemsResults<Partial<TypeInfoDataItem>>>;
 };
