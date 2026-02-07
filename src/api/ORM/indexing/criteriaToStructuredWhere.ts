@@ -12,6 +12,7 @@ import {
 } from "../../../common/SearchTypes";
 import type { Where } from "../../Indexing/structured/Types";
 import { TypeInfoORMServiceError } from "../../../common/TypeInfoORM";
+import { buildStructuredLikePatternTokens } from "../../Indexing/structured/StructuredStringLike";
 
 const resolveBetweenBounds = (
   criterion: FieldCriterion,
@@ -50,8 +51,27 @@ const buildWhereForCriterion = (criterion: FieldCriterion): Where => {
     case ComparisonOperators.EQUALS:
       return buildTerm(fieldName, "eq", value);
     case ComparisonOperators.CONTAINS:
-    case ComparisonOperators.LIKE:
       return buildTerm(fieldName, "contains", value);
+    case ComparisonOperators.LIKE: {
+      if (typeof value !== "string") {
+        return buildTerm(fieldName, "contains", value);
+      }
+
+      const tokens = buildStructuredLikePatternTokens(value);
+      const tokenClauses = tokens.map((token) =>
+        buildTerm(fieldName, "contains", token),
+      );
+
+      if (tokenClauses.length === 0) {
+        return buildTerm(fieldName, "contains", value);
+      }
+
+      if (tokenClauses.length === 1) {
+        return tokenClauses[0];
+      }
+
+      return { and: tokenClauses };
+    }
     case ComparisonOperators.GREATER_THAN_OR_EQUAL:
       return { type: "gte", field: fieldName, value: value as any };
     case ComparisonOperators.LESS_THAN_OR_EQUAL:

@@ -10,6 +10,8 @@
         "tagsBIds": ["1", "2"],
         "scoreGte10Ids": ["1", "2"],
         "scoreBetweenIds": ["1"],
+        "modelLikeHonIds": ["2"],
+        "modelLikeToyIds": [],
         "page1Ids": ["1"],
         "page2Ids": ["2"],
         "afterUpdateIds": ["2"],
