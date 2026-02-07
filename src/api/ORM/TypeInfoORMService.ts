@@ -1683,39 +1683,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     context?: TypeInfoORMContext,
   ): Promise<any> => {
     this.validate(typeName, item, TypeOperation.CREATE);
+    const driver = this.getDriverInternal(typeName);
+    const cleanItem = this.getCleanItem(typeName, item);
+    const newIdentifier = await driver.createItem(cleanItem);
+    const { primaryField } = this.getTypeInfo(typeName);
+    const indexedItem = {
+      ...cleanItem,
+      [primaryField as keyof TypeInfoDataItem]: newIdentifier,
+    };
 
-    const {
-      allowed: createAllowed,
-      denied: createDenied,
-      fieldsResources = {},
-    } = await this.getItemDACValidation(
-      item,
-      typeName,
-      TypeOperation.CREATE,
-      context,
-    );
+    await this.indexFullTextDocument(typeName, indexedItem);
+    await this.indexStructuredDocument(typeName, indexedItem);
 
-    if (createDenied || !createAllowed) {
-      throw {
-        message: TypeInfoORMServiceError.INVALID_OPERATION,
-        typeName,
-        item,
-      };
-    } else {
-      const driver = this.getDriverInternal(typeName);
-      const cleanItem = this.getCleanItem(typeName, item, fieldsResources);
-      const newIdentifier = await driver.createItem(cleanItem);
-      const { primaryField } = this.getTypeInfo(typeName);
-      const indexedItem = {
-        ...cleanItem,
-        [primaryField as keyof TypeInfoDataItem]: newIdentifier,
-      };
-
-      await this.indexFullTextDocument(typeName, indexedItem);
-      await this.indexStructuredDocument(typeName, indexedItem);
-
-      return newIdentifier;
-    }
+    return newIdentifier;
   };
 
   /**
