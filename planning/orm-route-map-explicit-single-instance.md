@@ -15,3 +15,9 @@
 - [x] Replace dynamic method dispatch with explicit handler factories for each public route.
 - [x] Pass arguments explicitly by position/name for each method (no dynamic arg spreading).
 - [x] Run targeted ORM route-map and ORM service specs to verify unchanged behavior.
+
+## Phase 2 - Route Handler Argument Coverage
+
+- [x] Add route-map tests that exercise explicit handler argument forwarding for remaining CRUD/relationship methods.
+- [x] Validate DAC-enabled and non-DAC handler paths continue to return equivalent outcomes.
+- [x] Run targeted ORM route-map specs and confirm passing behavior.
