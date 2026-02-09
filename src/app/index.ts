@@ -86,17 +86,13 @@
  * See also: `@resistdesign/voltra/web` and `@resistdesign/voltra/native` for
  * runtime-specific UI helpers.
  */
-
 /**
- * @deprecated Prefer domain-flat imports such as
- * `import { parseTemplate } from "@resistdesign/voltra/app"`.
+ * @category app
+ * @group State and Services
  */
-export * as Utils from "./utils";
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { createFormRenderer } from "@resistdesign/voltra/app"`.
- */
-export * as Forms from "./forms";
-
 export * from "./utils";
+/**
+ * @category app
+ * @group Forms
+ */
 export * from "./forms";

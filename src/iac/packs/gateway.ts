@@ -82,6 +82,8 @@ export type AddGatewayConfig = {
  * */
 /**
  * Add API Gateway resources with optional authorizer and DNS.
+ *
+ * @group Resource Packs
  */
 export const addGateway = createResourcePack(
   ({

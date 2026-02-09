@@ -47,27 +47,22 @@
  * See also: `@resistdesign/voltra/app` for client-side app helpers.
  */
 /**
- * @deprecated Prefer domain-flat imports such as
- * `import { RouteMap } from "@resistdesign/voltra/api"`.
+ * @category api
+ * @group Indexing
  */
-export * as Indexing from "./Indexing";
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { getTypeInfoORMRouteMap } from "@resistdesign/voltra/api"`.
- */
-export * as ORM from "./ORM";
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { RouteMap } from "@resistdesign/voltra/api"`.
- */
-export * as Routing from "./Router";
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { DACConstraintType } from "@resistdesign/voltra/api"`.
- */
-export * as DAC from "./DataAccessControl";
-
 export * from "./Indexing";
+/**
+ * @category api
+ * @group ORM
+ */
 export * from "./ORM";
+/**
+ * @category api
+ * @group Routing
+ */
 export * from "./Router";
+/**
+ * @category api
+ * @group Data Access Control
+ */
 export * from "./DataAccessControl";

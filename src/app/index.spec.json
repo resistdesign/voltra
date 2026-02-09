@@ -6,8 +6,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "hasUtilsNamespace": true,
-        "hasFormsNamespace": true,
+        "hasUtilsNamespace": false,
+        "hasFormsNamespace": false,
         "hasParseTemplateTopLevel": true,
         "hasComputeTrackPixelsTopLevel": true,
         "hasCreateFormRendererTopLevel": true,

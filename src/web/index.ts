@@ -3,17 +3,13 @@
  *
  * Web (DOM) entrypoint exports.
  */
-
 /**
- * @deprecated Prefer domain-flat imports such as
- * `import { createWebFormRenderer } from "@resistdesign/voltra/web"`.
+ * @category web
+ * @group Forms
  */
-export * as Forms from "./forms";
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { getEasyLayout } from "@resistdesign/voltra/web"`.
- */
-export * as Utils from "./utils";
-
 export * from "./forms";
+/**
+ * @category web
+ * @group Layout and Navigation
+ */
 export * from "./utils";

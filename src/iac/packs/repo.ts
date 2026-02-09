@@ -32,6 +32,7 @@ export type AddRepoConfig = {
  * Add repository related parameters for reference in other resources like a build pipeline (CI/CD).
  *
  * @param config - Repository parameter configuration.
+ * @group Resource Packs
  * */
 export const addRepo = createResourcePack(
   ({
