@@ -16,8 +16,8 @@ Keep the existing public entrypoints:
 …but make each entrypoint **domain-flat**, so consumers can import commonly used symbols directly:
 
 ```ts
-import { RouteMap } from "@resistdesign/voltra/api";
-import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";
+import {RouteMap} from "@resistdesign/voltra/api";
+import {TypeInfo, TypeInfoORMServiceError} from "@resistdesign/voltra/common";
 ```
 
 No more `API.Routing.RouteMap`, `Common.TypeParsing.TypeInfo`, etc.
@@ -26,10 +26,14 @@ No more `API.Routing.RouteMap`, `Common.TypeParsing.TypeInfo`, etc.
 
 ## Root Causes Observed
 
-- **Hashed declaration artifacts** are being generated (e.g. `ItemRelationshipInfoTypes-<hash>.d.ts`, `index-<hash>.d.ts`). These leak into IDE auto-import and create invalid/unstable suggestions.
-- Several high-value symbols exist in `src/` but are **not reachable from the domain entrypoints** (e.g. `TypeInfoORMServiceError` lives under `src/common/TypeInfoORM`, but `src/common/index.ts` does not export it).
-- Some symbols are **exported only as nested namespaces**, so a consumer can’t cleanly do `import { TypeInfo } from "@resistdesign/voltra/common";`.
-- `@resistdesign/voltra/build` is documented as public, but build output/config has historically been inconsistent (must verify it is actually built and shipped).
+- **Hashed declaration artifacts** are being generated (e.g. `ItemRelationshipInfoTypes-<hash>.d.ts`,
+  `index-<hash>.d.ts`). These leak into IDE auto-import and create invalid/unstable suggestions.
+- Several high-value symbols exist in `src/` but are **not reachable from the domain entrypoints** (e.g.
+  `TypeInfoORMServiceError` lives under `src/common/TypeInfoORM`, but `src/common/index.ts` does not export it).
+- Some symbols are **exported only as nested namespaces**, so a consumer can’t cleanly do
+  `import { TypeInfo } from "@resistdesign/voltra/common";`.
+- `@resistdesign/voltra/build` is documented as public, but build output/config has historically been inconsistent (must
+  verify it is actually built and shipped).
 
 ---
 
@@ -39,7 +43,8 @@ No more `API.Routing.RouteMap`, `Common.TypeParsing.TypeInfo`, etc.
 
 - Consumers are struggling to import anything reliably from Voltra.
 - Common symbols are hidden behind nested namespace exports.
-  - Example pain: `RouteMap` requires going through `Routing` instead of `import { RouteMap } from "@resistdesign/voltra/api";`.
+  - Example pain: `RouteMap` requires going through `Routing` instead of
+    `import { RouteMap } from "@resistdesign/voltra/api";`.
   - Example pain: `TypeInfo` is not reachable as `import type { TypeInfo } from "@resistdesign/voltra/common";`.
 - Symbols used by the demo site (for example, `TypeInfoORMServiceError`) are not importable from public entrypoints.
 - IDE auto-import is producing invalid suggestions, including imports referencing hash-named `.d.ts` siblings.
@@ -65,9 +70,9 @@ No more `API.Routing.RouteMap`, `Common.TypeParsing.TypeInfo`, etc.
 ### Desired import contract
 
 ```ts
-import { RouteMap } from "@resistdesign/voltra/api";
-import type { TypeInfo } from "@resistdesign/voltra/common";
-import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";
+import {RouteMap} from "@resistdesign/voltra/api";
+import type {TypeInfo} from "@resistdesign/voltra/common";
+import {TypeInfoORMServiceError} from "@resistdesign/voltra/common";
 ```
 
 ### Technical decision considerations
@@ -230,7 +235,6 @@ Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable pa
   - [x] Ensure IDE/TS resolves only from `exports`-allowed paths
   - [x] Ensure no suggestions appear from hash files or deep internal folders
 
-
 ### Goal
 
 Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable paths), not bundled/hashed declarations.
@@ -260,7 +264,8 @@ Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable pa
   - [x] Confirm `dist/api/index.d.ts`, `dist/common/index.d.ts`, etc. exist and **do not import from hashed filenames**
 
 - [x] Validate: IDE auto-import stabilizes
-  - [x] Update `scripts/consumer-smoke.mjs` (or add a new consumer fixture) to compile a small ESM TS project importing from only the allowed subpaths
+  - [x] Update `scripts/consumer-smoke.mjs` (or add a new consumer fixture) to compile a small ESM TS project importing
+    from only the allowed subpaths
   - [x] Ensure TS does not “discover” random `.d.ts` siblings and propose them as module specifiers
 
 ---
@@ -312,7 +317,8 @@ Make Node + TS resolution deterministic and prevent deep imports.
 - [x] In `src/api/index.ts`
   - [x] Re-export routing types and helpers directly from `./Router`:
     - [x] `export type { RouteMap, Route, RouteHandler, CloudFunctionResponse, ... } from "./Router";`
-    - [x] `export { addRouteToRouteMap, addRoutesToRouteMap, addRouteMapToRouteMap, handleCloudFunctionEvent, ... } from "./Router";`
+    - [x] 
+      `export { addRouteToRouteMap, addRoutesToRouteMap, addRouteMapToRouteMap, handleCloudFunctionEvent, ... } from "./Router";`
     - [x] `export * as AWS from "./Router/AWS";` (or keep under `AWS` if desired)
   - [x] Keep existing grouped exports for compatibility (optional but recommended initially):
     - [x] `export * as Routing from "./Router";` (can be deprecated later)
@@ -325,12 +331,14 @@ Make Node + TS resolution deterministic and prevent deep imports.
 
 - [x] In `src/common/index.ts`
   - [x] Add flat exports for TypeInfo core:
-    - [x] `export type { TypeInfo, TypeInfoMap, TypeInfoField, SupportedTags, SupportedFieldTags, DeniedOperations, TypeOperation } from "./TypeParsing/TypeInfo";`
+    - [x] 
+      `export type { TypeInfo, TypeInfoMap, TypeInfoField, SupportedTags, SupportedFieldTags, DeniedOperations, TypeOperation } from "./TypeParsing/TypeInfo";`
     - [x] `export { TypeOperation } from "./TypeParsing/TypeInfo";` (if consumers need the enum at runtime)
   - [x] Add flat exports for ORM-related shared types/errors (currently missing from common root):
     - [x] Export `TypeInfoORMServiceError` from `./TypeInfoORM/Types`
     - [x] If other `TypeInfoORM/*` symbols are commonly used, export them too (types first)
-  - [x] Keep existing `export * as TypeParsing from "./TypeParsing";` for compatibility (optional but recommended initially)
+  - [x] Keep existing `export * as TypeParsing from "./TypeParsing";` for compatibility (optional but recommended
+    initially)
 
 - [x] Verify the new desired imports:
   - [x] `import type { TypeInfo } from "@resistdesign/voltra/common";`
@@ -400,7 +408,8 @@ After export changes, the library must remain understandable and usable:
 
 - [~] Update any additional markdown docs under `docs/`, `site/`, `planning/complete/` that contain import snippets
   - Remaining:
-    - Evaluate and update historical `planning/complete/*.md` references where outdated import snippets should remain canonical instead of historical.
+    - Evaluate and update historical `planning/complete/*.md` references where outdated import snippets should remain
+      canonical instead of historical.
 
 ### 5B: Site demo code (must be canonical)
 
@@ -448,7 +457,8 @@ Domain-flat exports are good DX, but the generated docs must still present struc
     - [x] Adjust TypeDoc settings to prefer categories
     - [~] Consider hiding barrel-only pages if they reduce clarity
       - Remaining:
-        - Current category grouping is improved and acceptable; hide-barrel tuning can be revisited if docs noise increases.
+        - Current category grouping is improved and acceptable; hide-barrel tuning can be revisited if docs noise
+          increases.
 
 - [x] Regenerate docs and verify readability
   - [x] `yarn doc`
@@ -466,7 +476,6 @@ Domain-flat exports are good DX, but the generated docs must still present struc
 ---
 
 ## Phase 6: Export Contract Tests (Prevent Regression)
-
 
 ### 5A: Demo site
 
@@ -525,17 +534,34 @@ Make it impossible to reintroduce “can’t import X” problems.
 ## Phase 7: Optional Cleanup (After Everything Works)
 
 - [x] Deprecate namespace exports (soft)
-  - [x] Keep them for now, but add doc comments like `@deprecated Prefer importing {RouteMap} from "@resistdesign/voltra/api"`
+  - [x] Keep them for now, but add doc comments like
+    `@deprecated Prefer importing {RouteMap} from "@resistdesign/voltra/api"`
 
 - [x] Decide what stays grouped (namespaces) vs what stays flat
   - [x] Rule of thumb: if it’s used in README/site demos, it should be flat
+
+## Phase 8:
+
+- [ ] Optimize demo site imports to reflect the latest export contract.
+- [ ] Verify that all existing test have been updated.
+- [ ] Update existing docs to reflect the latest export contract.
+- [ ] Add new tests if it helps to ensure that the changes have not regressed anything.
+- [ ] Add new documentation and examples if they are required to clarify export usage and structure.
+- [ ] Find all existing examples and references in all documentation and update them to reflect the latest export
+  contract.
+- [ ] Finalize all tasks in this plan. If items will be left partially check or unchecked intentionally, then mark them
+  complete with a note. Otherwise, do the outstanding work and then mark the item complete.
+- [ ] Use this phase as a means to be thorough and make sure that there are no loose ends and that all work has been
+  performed holistically and professionally.
+- [ ] Verify that what this package now outputs is in the right condition for consuming projects.
 
 ---
 
 ## Deliverables Checklist
 
 - [x] `@resistdesign/voltra/api` supports `import { RouteMap } from "@resistdesign/voltra/api";`
-- [x] `@resistdesign/voltra/common` supports `import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";`
+- [x] `@resistdesign/voltra/common` supports
+  `import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";`
 - [x] `@resistdesign/voltra/build` works and remains explicit opt-in
 - [x] No hashed `.d.ts` files in published output
 - [x] IDE auto-import suggests only valid public subpaths
