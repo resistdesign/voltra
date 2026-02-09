@@ -81,7 +81,7 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 
 ### 3A — Sidebar organization
 
-- [ ] Apply `@category` consistently across domains:
+- [x] Apply `@category` consistently across domains:
   - api
   - app
   - common
@@ -89,17 +89,17 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
   - native
   - iac
   - build
-- [ ] Enable category-based navigation in TypeDoc config
-- [ ] Define explicit `categoryOrder`
+- [x] Enable category-based navigation in TypeDoc config
+- [x] Define explicit `categoryOrder`
 
 ### 3B — In-page structure
 
-- [ ] Use `@group` to break large domain pages into logical sections
-- [ ] Define `groupOrder` so pages read intentionally
+- [x] Use `@group` to break large domain pages into logical sections
+- [x] Define `groupOrder` so pages read intentionally
 
 ### 3C — Prevent mega-pages
 
-- [ ] If a domain entrypoint renders as a single massive page:
+- [x] If a domain entrypoint renders as a single massive page:
   - split internal modules
   - keep domain-flat exports
   - let TypeDoc render multiple grouped sections instead of one list
@@ -109,8 +109,8 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 ## Phase 4 — Verification gates
 
 - [x] `yarn build`
-- [ ] `yarn doc`
-- [ ] Confirm:
+- [x] `yarn doc`
+- [x] Confirm:
   - no deprecated badges or sections
   - no legacy namespace objects in docs
   - sidebar reflects domain structure
@@ -120,10 +120,7 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 
 ## Run Status
 
-- [~] In progress
-- Remaining:
-  - Phase 3 documentation structure work (`@category`, `@group`, and ordering)
-  - Phase 4 docs build/validation (`yarn doc` and docs output verification)
+- [x] Complete (awaiting user approval to move this plan to `planning/complete/`)
 
 ---
 

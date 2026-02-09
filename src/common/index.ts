@@ -18,14 +18,29 @@
  * See also: `@resistdesign/voltra/app`, `@resistdesign/voltra/api`, and
  * `@resistdesign/voltra/iac`.
  */
-
+/**
+ * @category common
+ * @group Shared Types
+ */
 export type * from "./HelperTypes";
 
+/**
+ * @category common
+ * @group Command Line
+ */
 export * from "./CommandLine";
 
+/**
+ * @category common
+ * @group Type Parsing
+ */
 export {
   TypeOperation,
 } from "./TypeParsing/TypeInfo";
+/**
+ * @category common
+ * @group Type Parsing
+ */
 export type {
   DeniedOperations,
   SupportedFieldTags,
@@ -35,8 +50,16 @@ export type {
   TypeInfoMap,
 } from "./TypeParsing/TypeInfo";
 
+/**
+ * @category common
+ * @group Shared Types
+ */
 export {
   TypeInfoORMServiceError,
 } from "./TypeInfoORM/Types";
 
+/**
+ * @category common
+ * @group Type Parsing
+ */
 export * from "./TypeParsing/Validation";

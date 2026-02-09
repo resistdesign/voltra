@@ -26,6 +26,18 @@
  *
  * See also: `@resistdesign/voltra/iac/packs` for direct pack imports.
  */
+/**
+ * @category iac
+ * @group Core
+ */
 export * from "./SimpleCFT";
+/**
+ * @category iac
+ * @group Resource Packs
+ */
 export * from "./packs";
+/**
+ * @category iac
+ * @group Utilities
+ */
 export * from "./utils";

@@ -46,7 +46,23 @@
  *
  * See also: `@resistdesign/voltra/app` for client-side app helpers.
  */
+/**
+ * @category api
+ * @group Indexing
+ */
 export * from "./Indexing";
+/**
+ * @category api
+ * @group ORM
+ */
 export * from "./ORM";
+/**
+ * @category api
+ * @group Routing
+ */
 export * from "./Router";
+/**
+ * @category api
+ * @group Data Access Control
+ */
 export * from "./DataAccessControl";
