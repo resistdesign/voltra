@@ -6,7 +6,7 @@ import {
   TypeReferenceNode,
   UnionTypeNode,
 } from "typescript";
-import { convertASTToMap } from "../TypeMapping";
+import { convertASTToMap } from "../../../build/TypeMapping";
 import { extractCommentTags } from "./extractCommentTags";
 import { extractLiteralValues } from "./extractLiteralValues";
 import { extractTypeDetails } from "./extractTypeDetails";

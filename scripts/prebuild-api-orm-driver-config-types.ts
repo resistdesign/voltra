@@ -1,6 +1,6 @@
 import Path from "path";
 import FS from "fs";
-import { getTypeInfoMapFromTypeScript } from "../src/common/TypeParsing/TypeParsing";
+import { getTypeInfoMapFromTypeScript } from "../src/build";
 
 const CURRENT_DIR = Path.dirname(new URL(import.meta.url).pathname);
 const API_ORM_DRIVERS_DIR = Path.join(
