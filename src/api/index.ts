@@ -5,14 +5,24 @@
  *
  * Import from the API subpath only:
  * ```ts
- * import * as API from "@resistdesign/voltra/api";
+ * import {
+ *   AWS,
+ *   addRoutesToRouteMap,
+ *   handleCloudFunctionEvent,
+ *   type CloudFunctionResponse,
+ * } from "@resistdesign/voltra/api";
  * ```
  *
  * @example
  * ```ts
- * import * as API from "@resistdesign/voltra/api";
+ * import {
+ *   AWS,
+ *   addRoutesToRouteMap,
+ *   handleCloudFunctionEvent,
+ *   type CloudFunctionResponse,
+ * } from "@resistdesign/voltra/api";
  *
- * const routes = API.Routing.addRoutesToRouteMap({}, [
+ * const routes = addRoutesToRouteMap({}, [
  *   {
  *     path: "",
  *     authConfig: { anyAuthorized: true },
@@ -22,10 +32,10 @@
  *
  * export const handler = async (
  *   event: any,
- * ): Promise<API.Routing.CloudFunctionResponse> =>
- *   API.Routing.handleCloudFunctionEvent(
+ * ): Promise<CloudFunctionResponse> =>
+ *   handleCloudFunctionEvent(
  *     event,
- *     API.Routing.AWS.normalizeCloudFunctionEvent,
+ *     AWS.normalizeCloudFunctionEvent,
  *     routes,
  *     [
  *       process.env.CLIENT_ORIGIN as string,
@@ -36,7 +46,28 @@
  *
  * See also: `@resistdesign/voltra/app` for client-side app helpers.
  */
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { RouteMap } from "@resistdesign/voltra/api"`.
+ */
 export * as Indexing from "./Indexing";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { getTypeInfoORMRouteMap } from "@resistdesign/voltra/api"`.
+ */
 export * as ORM from "./ORM";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { RouteMap } from "@resistdesign/voltra/api"`.
+ */
 export * as Routing from "./Router";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { DACConstraintType } from "@resistdesign/voltra/api"`.
+ */
 export * as DAC from "./DataAccessControl";
+
+export * from "./Indexing";
+export * from "./ORM";
+export * from "./Router";
+export * from "./DataAccessControl";

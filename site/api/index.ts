@@ -1,10 +1,13 @@
-import { AWS, handleCloudFunctionEvent } from "../../src/api/Router";
-import { type CloudFunctionResponse } from "../../src/api/Router/Types";
+import {
+  AWS,
+  handleCloudFunctionEvent,
+  type CloudFunctionResponse,
+} from "../../src/api";
 import {
   ERROR_MESSAGE_CONSTANTS,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
-} from "../../src/common/TypeParsing/Validation";
-import { TypeInfoORMServiceError } from "../../src/common/TypeInfoORM";
+  TypeInfoORMServiceError,
+} from "../../src/common";
 import { ROUTE_MAP_WITH_DB } from "./routeMap";
 
 const allowedErrors = new Set<string>([

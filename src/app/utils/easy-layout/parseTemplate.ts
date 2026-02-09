@@ -43,6 +43,8 @@ const normalizeAreas = (areaPart: string): string[] => {
 /**
  * Parse an EasyLayout template into rows, tracks, and area names.
  *
+ * @category EasyLayout
+ *
  * Supported syntax:
  * - row lines: `<area area ...>, <row-track>`
  * - column line: `\\ <col-track> <col-track> ...`

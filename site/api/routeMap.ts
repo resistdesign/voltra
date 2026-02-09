@@ -1,17 +1,15 @@
 import {
+  DACConstraintType,
+  DynamoDBDataItemDBDriver,
   addRouteMapToRouteMap,
   addRoutesToRouteMap,
+  getTypeInfoORMRouteMap,
   type RouteMap,
-} from "../../src/api/Router";
-import { getTypeInfoORMRouteMap } from "../../src/api/ORM";
-import { DynamoDBDataItemDBDriver } from "../../src/api/ORM/drivers";
-import { TypeInfo } from "../../src/common/TypeParsing/TypeInfo";
+  type DACRole,
+} from "../../src/api";
+import type { TypeInfo } from "../../src/common";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
-import {
-  DACConstraintType,
-  type DACRole,
-} from "../../src/api/DataAccessControl";
 import {
   fullTextBackend,
   relationalBackend,

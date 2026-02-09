@@ -24,9 +24,8 @@ cross-runtime bundling issues.
 Preferred:
 
 ```ts
-import * as IaC from "@resistdesign/voltra/iac";
-import {Packs} from "@resistdesign/voltra/iac";
-import {addDNS} from "@resistdesign/voltra/iac/packs";
+import { SimpleCFT, Packs } from "@resistdesign/voltra/iac";
+import { addDNS } from "@resistdesign/voltra/iac/packs";
 ```
 
 Not supported:
@@ -45,6 +44,19 @@ Public entrypoints:
 - `@resistdesign/voltra/iac`
 - `@resistdesign/voltra/iac/packs`
 - `@resistdesign/voltra/build`
+
+Common imports by domain:
+
+```ts
+import { addRoutesToRouteMap, handleCloudFunctionEvent } from "@resistdesign/voltra/api";
+import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";
+import { parseTemplate, computeTrackPixels } from "@resistdesign/voltra/app";
+import { AutoField, AutoForm, createWebFormRenderer, getEasyLayout } from "@resistdesign/voltra/web";
+import { createNativeFormRenderer, makeNativeEasyLayout } from "@resistdesign/voltra/native";
+import { SimpleCFT, Packs } from "@resistdesign/voltra/iac";
+import { addDNS } from "@resistdesign/voltra/iac/packs";
+import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
+```
 
 ------------
 
@@ -103,9 +115,17 @@ App features include form generation via TypeInfo-driven AutoForm/AutoField with
 
 EasyLayout now has:
 
-- Shared core parsing/math in `@resistdesign/voltra/app` (`Utils.parseTemplate`, `Utils.computeTrackPixels`, etc.).
+- Shared core parsing/math in `@resistdesign/voltra/app` (`parseTemplate`, `computeTrackPixels`, etc.).
 - Web rendering via CSS Grid in `@resistdesign/voltra/web`.
 - Native coordinate computation in `@resistdesign/voltra/native`.
+
+### Examples
+
+- `examples/api.ts`
+- `examples/common.ts`
+- `examples/web.ts`
+- `examples/native.ts`
+- `examples/build.ts`
 
 ### Template syntax
 
@@ -123,9 +143,9 @@ side main, 2fr
 ### Web usage
 
 ```tsx
-import { Utils as WebUtils } from "@resistdesign/voltra/web";
+import { getEasyLayout } from "@resistdesign/voltra/web";
 
-const { layout: Layout, areas } = WebUtils.getEasyLayout(undefined, undefined, {
+const { layout: Layout, areas } = getEasyLayout(undefined, undefined, {
   gap: 12,
   padding: 16,
 })`
@@ -138,9 +158,9 @@ const { layout: Layout, areas } = WebUtils.getEasyLayout(undefined, undefined, {
 ### Native usage
 
 ```tsx
-import { Utils as NativeUtils } from "@resistdesign/voltra/native";
+import { makeNativeEasyLayout } from "@resistdesign/voltra/native";
 
-const layout = NativeUtils.makeNativeEasyLayout(`
+const layout = makeNativeEasyLayout(`
   header header, 100px
   side main, 1fr
   \\ 1fr 2fr
@@ -168,17 +188,13 @@ Voltra ships a render-agnostic Route core in `@resistdesign/voltra/app` plus pla
 Web usage (auto-wires `window.history`):
 
 ```tsx
-import { Utils as WebUtils } from "@resistdesign/voltra/web";
-
-const { Route } = WebUtils;
+import { Route } from "@resistdesign/voltra/web";
 ```
 
 Native usage (adapter-driven):
 
 ```tsx
-import { Utils as NativeUtils } from "@resistdesign/voltra/native";
-
-const { Route, RouteProvider, createManualRouteAdapter } = NativeUtils;
+import { Route, RouteProvider, createManualRouteAdapter } from "@resistdesign/voltra/native";
 const { adapter, updatePath } = createManualRouteAdapter("/home");
 ```
 
@@ -187,9 +203,7 @@ For React Native navigation libraries, Voltra is optimized for react-navigation 
 Native navigation mapping example:
 
 ```tsx
-import { Utils as NativeUtils } from "@resistdesign/voltra/native";
-
-const { createNavigationStateRouteAdapter, buildPathFromRouteChain } = NativeUtils;
+import { buildPathFromRouteChain, createNavigationStateRouteAdapter } from "@resistdesign/voltra/native";
 
 const adapter = createNavigationStateRouteAdapter({
   getState: () => navigationRef.getRootState(),
@@ -225,18 +239,19 @@ Voltra's form system is split into a platform-agnostic core and platform suites:
 ### Web Usage
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/web";
+import { createWebFormRenderer } from "@resistdesign/voltra/web";
 
-const { AutoField } = Forms.createWebFormRenderer();
+const { AutoField } = createWebFormRenderer();
 ```
 
 Override a single renderer:
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/web";
+import { withRendererOverride } from "@resistdesign/voltra/app";
+import { createWebFormRenderer } from "@resistdesign/voltra/web";
 
-const { AutoField } = Forms.createWebFormRenderer({
-  suite: Forms.withRendererOverride("string", (ctx) => {
+const { AutoField } = createWebFormRenderer({
+  suite: withRendererOverride("string", (ctx) => {
     return <input value={(ctx.value as string) || ""} onChange={(e) => ctx.onChange(e.target.value)} />;
   }),
 });
@@ -245,9 +260,9 @@ const { AutoField } = Forms.createWebFormRenderer({
 ### Native Usage
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/native";
+import { createNativeFormRenderer } from "@resistdesign/voltra/native";
 
-const { AutoField } = Forms.createNativeFormRenderer();
+const { AutoField } = createNativeFormRenderer();
 ```
 
 ### BYOCS (Bring Your Own Component Suite)
@@ -255,9 +270,9 @@ const { AutoField } = Forms.createNativeFormRenderer();
 Provide partial overrides (renderers and/or primitives). Missing renderers are filled from the default suite and validated.
 
 ```tsx
-import { Forms } from "@resistdesign/voltra/web";
+import { createWebFormRenderer } from "@resistdesign/voltra/web";
 
-const { AutoField } = Forms.createWebFormRenderer({
+const { AutoField } = createWebFormRenderer({
   suite: {
     primitives: {
       Button: ({ children }) => <button className="my-button">{children}</button>,

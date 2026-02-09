@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": false
   },
   "include": [
     "src/**/*.js",
@@ -17,6 +17,8 @@
     "**/*.spec.js",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "**/*.test-utils.ts",
+    "**/*.test-utils.tsx",
     "site/**"
   ]
 }
