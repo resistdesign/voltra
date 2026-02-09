@@ -87,16 +87,5 @@
  * runtime-specific UI helpers.
  */
 
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { parseTemplate } from "@resistdesign/voltra/app"`.
- */
-export * as Utils from "./utils";
-/**
- * @deprecated Prefer domain-flat imports such as
- * `import { createFormRenderer } from "@resistdesign/voltra/app"`.
- */
-export * as Forms from "./forms";
-
 export * from "./utils";
 export * from "./forms";
