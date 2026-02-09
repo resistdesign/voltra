@@ -5,12 +5,14 @@
  *
  * Import from the IaC subpath only:
  * ```ts
- * import { SimpleCFT, addDNS } from "@resistdesign/voltra/iac";
+ * import { SimpleCFT } from "@resistdesign/voltra/iac";
+ * import { addDNS } from "@resistdesign/voltra/iac/packs";
  * ```
  *
  * @example
  * ```ts
- * import { SimpleCFT, addDNS } from "@resistdesign/voltra/iac";
+ * import { SimpleCFT } from "@resistdesign/voltra/iac";
+ * import { addDNS } from "@resistdesign/voltra/iac/packs";
  *
  * const cft = new SimpleCFT().applyPack(addDNS, {
  *   hostedZoneIdParameterName: "<YOUR_INFO_HERE>",
@@ -31,11 +33,6 @@
  * @group Core
  */
 export * from "./SimpleCFT";
-/**
- * @category iac
- * @group Resource Packs
- */
-export * from "./packs";
 /**
  * @category iac
  * @group Utilities
