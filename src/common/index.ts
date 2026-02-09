@@ -6,28 +6,77 @@
  *
  * Import from the common subpath only:
  * ```ts
- * import * as Common from "@resistdesign/voltra/common";
+ * import {
+ *   getPathString,
+ *   getSimpleId,
+ * } from "@resistdesign/voltra/common";
  *
- * const path = Common.Routing.getPathString(["users", 42], "/", true, false);
- * const id = Common.IDGeneration.getSimpleId();
+ * const path = getPathString(["users", 42], "/", true, false);
+ * const id = getSimpleId();
  * ```
  *
  * See also: `@resistdesign/voltra/app`, `@resistdesign/voltra/api`, and
  * `@resistdesign/voltra/iac`.
  */
 
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { collectRequiredEnvironmentVariables } from "@resistdesign/voltra/common"`.
+ */
 export * as CommandLine from "./CommandLine";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { TypeInfo } from "@resistdesign/voltra/common"`.
+ */
 export * as TypeParsing from "./TypeParsing";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { getPathString } from "@resistdesign/voltra/common"`.
+ */
 export * as Routing from "./Routing";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { getSimpleId } from "@resistdesign/voltra/common"`.
+ */
 export * as IDGeneration from "./IdGeneration";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { ListItemsConfig } from "@resistdesign/voltra/common"`.
+ */
 export * as SearchTypes from "./SearchTypes";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { getSearchTypeInfoFieldName } from "@resistdesign/voltra/common"`.
+ */
 export * as SearchUtils from "./SearchUtils";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { toCamelCase } from "@resistdesign/voltra/common"`.
+ */
 export * as StringTransformers from "./StringTransformers";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { ItemRelationshipInfo } from "@resistdesign/voltra/common"`.
+ */
 export * as ItemRelationshipInfoTypes from "./ItemRelationshipInfoTypes";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { getItemRelationshipIsValid } from "@resistdesign/voltra/common"`.
+ */
 export * as ItemRelationships from "./ItemRelationships";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { runSpecs } from "@resistdesign/voltra/common"`.
+ */
 export * as Testing from "./Testing";
 export type * as HelperTypes from "./HelperTypes";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { logFunctionCall } from "@resistdesign/voltra/common"`.
+ */
 export * as Logging from "./Logging";
+
+export * from "./CommandLine";
 
 export {
   TypeOperation,
@@ -44,3 +93,5 @@ export type {
 export {
   TypeInfoORMServiceError,
 } from "./TypeInfoORM/Types";
+
+export * from "./TypeParsing/Validation";

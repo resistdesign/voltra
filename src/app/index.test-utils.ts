@@ -7,7 +7,6 @@ const loadAppModule = async (specifier: string) => {
 };
 
 export const runAppIndexScenario = async () => {
-  const appKeys: string[] = [];
   const originalWindow = (globalThis as any).window;
   const originalCustomEvent = (globalThis as any).CustomEvent;
   const { windowMock } = buildWindowMock("/app");
@@ -23,15 +22,18 @@ export const runAppIndexScenario = async () => {
   };
 
   const App = await loadAppModule("./index.ts");
-  appKeys.push(...Object.keys(App));
   const AppUtils = await loadAppModule("./utils/index.ts");
 
   (globalThis as any).window = originalWindow;
   (globalThis as any).CustomEvent = originalCustomEvent;
 
   return {
-    appKeys,
     hasUtilsNamespace: "Utils" in App,
+    hasFormsNamespace: "Forms" in App,
+    hasParseTemplateTopLevel: "parseTemplate" in App,
+    hasComputeTrackPixelsTopLevel: "computeTrackPixels" in App,
+    hasCreateFormRendererTopLevel: "createFormRenderer" in App,
+    hasUseApplicationStateLoaderTopLevel: "useApplicationStateLoader" in App,
     hasUseController: "useController" in AppUtils,
     hasTypeInfoORMClient: "TypeInfoORMClient" in AppUtils,
     hasRoute: "Route" in AppUtils,

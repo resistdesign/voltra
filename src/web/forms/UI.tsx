@@ -20,6 +20,8 @@ import styled from "../../app/helpers/styled";
 /**
  * Render a form field based on TypeInfo metadata.
  *
+ * @category Forms
+ *
  * @param props - AutoField props describing the field and handlers.
  * @returns Rendered field UI.
  */

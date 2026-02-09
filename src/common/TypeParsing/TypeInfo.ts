@@ -3,6 +3,8 @@
  */
 /**
  * A set of possible operations for a type or field value.
+ *
+ * @category TypeInfo
  */
 export enum TypeOperation {
   /**
@@ -161,6 +163,8 @@ export type TypeInfoField = {
 
 /**
  * Information about a type definition.
+ *
+ * @category TypeInfo
  */
 export type TypeInfo = {
   /**
@@ -183,6 +187,8 @@ export type TypeInfo = {
 
 /**
  * A map of type information maps.
+ *
+ * @category TypeInfo
  */
 export type TypeInfoMap = Record<string, TypeInfo>;
 

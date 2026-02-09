@@ -13,6 +13,8 @@ import { getPrimaryFieldForTypeInfo } from "./ParsingUtils/getPrimaryFieldForTyp
 /**
  * Extracts type information from TypeScript content.
  *
+ * @category TypeInfo
+ *
  * @param source - TypeScript source text to parse.
  * @returns Map of exported type info definitions.
  */

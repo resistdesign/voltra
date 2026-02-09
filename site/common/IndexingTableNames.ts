@@ -2,7 +2,7 @@ import type {
   FullTextTableNames,
   RelationsTableNames,
   StructuredTableNames,
-} from "../../src/api/Indexing";
+} from "../../src/api";
 
 export type IndexingTableNames = {
   fullText: FullTextTableNames;
