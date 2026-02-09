@@ -67,6 +67,8 @@ export type ORMOperation =
 
 /**
  * Error types for a TypeInfoORM service.
+ *
+ * @category ORM
  * */
 export enum TypeInfoORMServiceError {
   /**

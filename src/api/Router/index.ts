@@ -75,6 +75,8 @@ export const addRouteToRouteMap = (
 
 /**
  * Add multiple routes to a {@link RouteMap} by path.
+ *
+ * @category Routing
  * @returns New route map with all routes appended.
  * */
 export const addRoutesToRouteMap = (
@@ -135,6 +137,8 @@ export const addRouteMapToRouteMap = (
 
 /**
  * A Cloud Function event router.
+ *
+ * @category Routing
  * @returns Cloud function response for the routed request.
  * */
 export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (

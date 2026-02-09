@@ -13,7 +13,7 @@ import {
 import Path from "path";
 import FS from "fs";
 import { fileURLToPath } from "url";
-import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine";
+import { collectRequiredEnvironmentVariables } from "../../src/common";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import { indexingTableEnvVars } from "../common/IndexingTableNames";

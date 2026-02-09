@@ -6,9 +6,12 @@
  *
  * Import from the app subpath only:
  * ```ts
- * import * as App from "@resistdesign/voltra/app";
- *
- * const { Utils, Forms } = App;
+ * import {
+ *   createFormRenderer,
+ *   useApplicationStateLoader,
+ *   useApplicationStateValueStructure,
+ *   type RemoteProcedureCall,
+ * } from "@resistdesign/voltra/app";
  * ```
  *
  * @see {@link useApplicationStateValueStructure} and
@@ -16,7 +19,11 @@
  *
  * @example
  * ```tsx
- * import * as App from "@resistdesign/voltra/app";
+ * import {
+ *   useApplicationStateLoader,
+ *   useApplicationStateValueStructure,
+ *   type RemoteProcedureCall,
+ * } from "@resistdesign/voltra/app";
  * import { useCallback } from "react";
  *
  * const APP_STATE_IDENTIFIERS = {
@@ -33,7 +40,7 @@
  *   basePath: "/api",
  * };
  *
- * const LOGIN_RPC: App.Utils.RemoteProcedureCall = {
+ * const LOGIN_RPC: RemoteProcedureCall = {
  *   serviceConfig: LOGIN_SERVICE_CONFIG,
  *   path: "/login",
  *   args: [],
@@ -51,7 +58,7 @@
  *       password: setPassword,
  *       loggedIn: setLoggedIn,
  *     },
- *   } = App.Utils.useApplicationStateValueStructure<{
+ *   } = useApplicationStateValueStructure<{
  *     username: string;
  *     password: string;
  *     loggedIn: boolean;
@@ -62,7 +69,7 @@
  *   });
  *
  *   const { loading: loadingLogin, makeRemoteProcedureCall } =
- *     App.Utils.useApplicationStateLoader({
+ *     useApplicationStateLoader({
  *       identifier: APP_STATE_IDENTIFIERS.LOGIN.LOGGED_IN,
  *       remoteProcedureCall: LOGIN_RPC,
  *       manual: true,
@@ -80,5 +87,16 @@
  * runtime-specific UI helpers.
  */
 
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { parseTemplate } from "@resistdesign/voltra/app"`.
+ */
 export * as Utils from "./utils";
+/**
+ * @deprecated Prefer domain-flat imports such as
+ * `import { createFormRenderer } from "@resistdesign/voltra/app"`.
+ */
 export * as Forms from "./forms";
+
+export * from "./utils";
+export * from "./forms";

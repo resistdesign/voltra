@@ -217,7 +217,7 @@ Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable pa
 
 - [x] Confirm `tsc` output does not introduce `.js` extension imports for `.ts` sources
 - [x] Confirm the `.d.ts` files reference only stable, existing `.d.ts` siblings
-- [ ] If `.d.ts.map` causes IDE noise, disable it and re-validate
+- [x] If `.d.ts.map` causes IDE noise, disable it and re-validate
 
 - [x] Validate: no hashed `.d.ts` output
   - [x] After `yarn build`, confirm `dist/` does **not** contain `index-<hash>.d.ts`, `Types-<hash>.d.ts`, etc.
@@ -246,7 +246,7 @@ Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable pa
   - [x] Ensure `tsconfig.build.json` has:
     - [x] `declaration: true`
     - [x] `emitDeclarationOnly: true` (can live either in tsconfig or CLI)
-    - [x] `declarationMap: true` (optional; if it reintroduces noise, disable)
+    - [x] `declarationMap: false` (disabled to avoid IDE noise)
     - [x] `outDir: dist`
 
 - [x] Update `yarn build` pipeline
@@ -338,22 +338,22 @@ Make Node + TS resolution deterministic and prevent deep imports.
 
 ### 3C: `@resistdesign/voltra/web` and `/native` (Forms + EasyLayout)
 
-- [ ] In `src/web/index.ts`
-  - [ ] Export form primitives directly:
-    - [ ] `export { createWebFormRenderer, withRendererOverride } from "./forms";` (or the correct module)
-    - [ ] `export { AutoField, AutoForm } from "./forms";` (where applicable)
-  - [ ] Export layout utilities directly:
-    - [ ] `export { getEasyLayout } from "./Utils";` (or correct path)
+- [x] In `src/web/index.ts`
+  - [x] Export form primitives directly:
+    - [x] `export { createWebFormRenderer, withRendererOverride } from "./forms";` (or the correct module)
+    - [x] `export { AutoField, AutoForm } from "./forms";` (where applicable)
+  - [x] Export layout utilities directly:
+    - [x] `export { getEasyLayout } from "./Utils";` (or correct path)
 
-- [ ] In `src/native/index.ts`
-  - [ ] Export native form renderer directly
-  - [ ] Export native easy-layout functions directly (`makeNativeEasyLayout`, etc.)
+- [x] In `src/native/index.ts`
+  - [x] Export native form renderer directly
+  - [x] Export native easy-layout functions directly (`makeNativeEasyLayout`, etc.)
 
 ### 3D: `@resistdesign/voltra/app` (shared EasyLayout core)
 
-- [ ] In `src/app/index.ts`
-  - [ ] Export `parseTemplate`, `computeTrackPixels` directly (and any other “core” utilities)
-  - [ ] Keep `export * as Utils` as a grouping if desired
+- [x] In `src/app/index.ts`
+  - [x] Export `parseTemplate`, `computeTrackPixels` directly (and any other “core” utilities)
+  - [x] Keep `export * as Utils` as a grouping if desired
 
 ### 3E: `@resistdesign/voltra/build` (explicit opt-in)
 
@@ -370,13 +370,13 @@ Make Node + TS resolution deterministic and prevent deep imports.
 
 No symbol should be “declared but unreachable” due to namespace-only exporting.
 
-- [ ] Identify symbols used by the demo site that are not importable from public entrypoints
-  - [ ] Start with `site/api/index.ts` imports/usage
-  - [ ] For each symbol:
-    - [ ] Locate source file under `src/`
-    - [ ] Decide target domain entrypoint (`api`, `common`, etc.)
-    - [ ] Export it from that domain `index.ts`
-    - [ ] Add consumer smoke test line importing it
+- [x] Identify symbols used by the demo site that are not importable from public entrypoints
+  - [x] Start with `site/api/index.ts` imports/usage
+  - [x] For each symbol:
+    - [x] Locate source file under `src/`
+    - [x] Decide target domain entrypoint (`api`, `common`, etc.)
+    - [x] Export it from that domain `index.ts`
+    - [x] Add consumer smoke test line importing it
 
 ---
 
@@ -392,28 +392,32 @@ After export changes, the library must remain understandable and usable:
 
 ### 5A: README and human-written docs
 
-- [ ] Update `README.md`
-  - [ ] Ensure it continues to emphasize stable public entrypoints (domain subpaths)【49†source】
-  - [ ] Replace any nested-namespace examples with domain-flat imports
-  - [ ] Add a “Common Imports” section per domain (api/common/web/native/build)
-  - [ ] Ensure all code snippets compile under ESM (`type: module`) and TS ESNext
+- [x] Update `README.md`
+  - [x] Ensure it continues to emphasize stable public entrypoints (domain subpaths)【49†source】
+  - [x] Replace any nested-namespace examples with domain-flat imports
+  - [x] Add a “Common Imports” section per domain (api/common/web/native/build)
+  - [x] Ensure all code snippets compile under ESM (`type: module`) and TS ESNext
 
-- [ ] Update any additional markdown docs under `docs/`, `site/`, `planning/complete/` that contain import snippets
+- [~] Update any additional markdown docs under `docs/`, `site/`, `planning/complete/` that contain import snippets
+  - Remaining:
+    - Evaluate and update historical `planning/complete/*.md` references where outdated import snippets should remain canonical instead of historical.
 
 ### 5B: Site demo code (must be canonical)
 
-- [ ] Refactor `site/api/index.ts`
-  - [ ] Replace namespace patterns with domain-flat imports
-  - [ ] Ensure `TypeInfoORMServiceError`, `TypeInfo`, `RouteMap` are imported from their intended domains
+- [x] Refactor `site/api/index.ts`
+  - [x] Replace namespace patterns with domain-flat imports
+  - [x] Ensure `TypeInfoORMServiceError`, `TypeInfo`, `RouteMap` are imported from their intended domains
 
-- [ ] Search/replace across `site/`
-  - [ ] Replace `API.Routing.` usage
-  - [ ] Replace `Common.TypeParsing.` usage
-  - [ ] Replace `WebUtils.Utils`-style access where it is no longer needed
+- [x] Search/replace across `site/`
+  - [x] Replace `API.Routing.` usage
+  - [x] Replace `Common.TypeParsing.` usage
+  - [x] Replace `WebUtils.Utils`-style access where it is no longer needed
 
-- [ ] Run the site build locally to confirm:
+- [~] Run the site build locally to confirm:
   - [ ] `yarn start`
-  - [ ] `yarn site:build:app`
+  - [x] `yarn site:build:app`
+  - Remaining:
+    - `yarn start` currently fails in this environment with `getaddrinfo ENOTFOUND docs-local.voltra.app`.
 
 ### 5C: Generated API docs (TypeDoc) must stay readable
 
@@ -423,39 +427,41 @@ Domain-flat exports are good DX, but the generated docs must still present struc
 
 #### Tasks
 
-- [ ] Audit current TypeDoc configuration
-  - [ ] Locate TypeDoc config (typedoc.json / package.json config / build script)
-  - [ ] Document how TypeDoc currently groups modules and exports
+- [x] Audit current TypeDoc configuration
+  - [x] Locate TypeDoc config (typedoc.json / package.json config / build script)
+  - [x] Document how TypeDoc currently groups modules and exports
 
-- [ ] Establish a documentation grouping strategy
-  - [ ] Decide categories that should appear in docs (example set):
-    - [ ] API: Routing, ORM, Indexing, Auth/DAC, RPC
-    - [ ] Common: TypeParsing/TypeInfo, SearchTypes, StringTransformers, Logging
-    - [ ] Web/Native: Forms, EasyLayout, Routing adapters
-  - [ ] Document these categories in `exports-impact-notes.md` so future contributors follow the same scheme
+- [x] Establish a documentation grouping strategy
+  - [x] Decide categories that should appear in docs (example set):
+    - [x] API: Routing, ORM, Indexing, Auth/DAC, RPC
+    - [x] Common: TypeParsing/TypeInfo, SearchTypes, StringTransformers, Logging
+    - [x] Web/Native: Forms, EasyLayout, Routing adapters
+  - [x] Document these categories in `exports-impact-notes.md` so future contributors follow the same scheme
 
-- [ ] Add doc grouping tags to underlying source declarations (not just barrels)
-  - [ ] Add `@category <Name>` (or the project’s preferred tag) to the **actual** declarations
-  - [ ] Ensure commonly browsed modules are grouped and not one giant list
+- [x] Add doc grouping tags to underlying source declarations (not just barrels)
+  - [x] Add `@category <Name>` (or the project’s preferred tag) to the **actual** declarations
+  - [x] Ensure commonly browsed modules are grouped and not one giant list
 
-- [ ] Ensure barrels do not become the only documented surface
-  - [ ] Confirm TypeDoc links re-exported symbols back to their original source pages
-  - [ ] If TypeDoc renders barrel pages too noisily:
-    - [ ] Adjust TypeDoc settings to prefer categories
-    - [ ] Consider hiding barrel-only pages if they reduce clarity
+- [~] Ensure barrels do not become the only documented surface
+  - [x] Confirm TypeDoc links re-exported symbols back to their original source pages
+  - [~] If TypeDoc renders barrel pages too noisily:
+    - [x] Adjust TypeDoc settings to prefer categories
+    - [~] Consider hiding barrel-only pages if they reduce clarity
+      - Remaining:
+        - Current category grouping is improved and acceptable; hide-barrel tuning can be revisited if docs noise increases.
 
-- [ ] Regenerate docs and verify readability
-  - [ ] `yarn doc`
-  - [ ] `yarn doc-to-site`
-  - [ ] `yarn site:build:app`
-  - [ ] Spot check: verify docs pages for each domain remain navigable and grouped
+- [x] Regenerate docs and verify readability
+  - [x] `yarn doc`
+  - [x] `yarn doc-to-site`
+  - [x] `yarn site:build:app`
+  - [x] Spot check: verify docs pages for each domain remain navigable and grouped
 
 ### 5D: Tests + examples stay in sync
 
-- [ ] Update specs that embed import snippets
-- [ ] Add a small example file per domain under `site/` or `examples/` (whichever is preferred)
-  - [ ] Each example uses only domain-flat imports
-  - [ ] Each example is referenced from README
+- [x] Update specs that embed import snippets
+- [x] Add a small example file per domain under `site/` or `examples/` (whichever is preferred)
+  - [x] Each example uses only domain-flat imports
+  - [x] Each example is referenced from README
 
 ---
 
@@ -464,35 +470,35 @@ Domain-flat exports are good DX, but the generated docs must still present struc
 
 ### 5A: Demo site
 
-- [ ] Refactor `site/api/index.ts`
-  - [ ] Replace namespace access patterns:
-    - [ ] `API.Routing.RouteMap` -> `import type { RouteMap } from "@resistdesign/voltra/api"`
-    - [ ] `Common.TypeParsing.TypeInfo` -> `import type { TypeInfo } from "@resistdesign/voltra/common"`
-    - [ ] `TypeInfoORMServiceError` -> import from `@resistdesign/voltra/common`
+- [x] Refactor `site/api/index.ts`
+  - [x] Replace namespace access patterns:
+    - [x] `API.Routing.RouteMap` -> `import type { RouteMap } from "@resistdesign/voltra/api"`
+    - [x] `Common.TypeParsing.TypeInfo` -> `import type { TypeInfo } from "@resistdesign/voltra/common"`
+    - [x] `TypeInfoORMServiceError` -> import from `@resistdesign/voltra/common`
 
-- [ ] Search/replace across `site/`:
-  - [ ] Replace `import * as API from "@resistdesign/voltra/api"` patterns where they cause nesting pain
-  - [ ] Replace `API.Routing.` and `Common.TypeParsing.` usage with direct imports
+- [x] Search/replace across `site/`:
+  - [x] Replace `import * as API from "@resistdesign/voltra/api"` patterns where they cause nesting pain
+  - [x] Replace `API.Routing.` and `Common.TypeParsing.` usage with direct imports
 
 ### 5B: README + docs
 
-- [ ] Update `README.md` import examples to match the new contract (domain-flat)
-  - [ ] Keep the “root import unsupported” note intact【49†source】
+- [x] Update `README.md` import examples to match the new contract (domain-flat)
+  - [x] Keep the “root import unsupported” note intact【49†source】
 
-- [ ] Regenerate TypeDoc and site artifacts
-  - [ ] `yarn doc`
-  - [ ] `yarn doc-to-site`
-  - [ ] `yarn site:build:app`
+- [x] Regenerate TypeDoc and site artifacts
+  - [x] `yarn doc`
+  - [x] `yarn doc-to-site`
+  - [x] `yarn site:build:app`
 
 ### 5C: Tests
 
-- [ ] Update any specs that rely on `* as API/Common` patterns, where it now obscures missing exports
-- [ ] Add spec(s) that compile a consumer file using only:
-  - [ ] `@resistdesign/voltra/api`
-  - [ ] `@resistdesign/voltra/common`
-  - [ ] `@resistdesign/voltra/web`
-  - [ ] `@resistdesign/voltra/native`
-  - [ ] `@resistdesign/voltra/build` (in a build-only test)
+- [x] Update any specs that rely on `* as API/Common` patterns, where it now obscures missing exports
+- [x] Add spec(s) that compile a consumer file using only:
+  - [x] `@resistdesign/voltra/api`
+  - [x] `@resistdesign/voltra/common`
+  - [x] `@resistdesign/voltra/web`
+  - [x] `@resistdesign/voltra/native`
+  - [x] `@resistdesign/voltra/build` (in a build-only test)
 
 ---
 
@@ -502,35 +508,35 @@ Domain-flat exports are good DX, but the generated docs must still present struc
 
 Make it impossible to reintroduce “can’t import X” problems.
 
-- [ ] Expand `scripts/check-package-exports.mjs` and/or add `scripts/export-contract.mjs`
-  - [ ] Hardcode a list of required imports:
-    - [ ] `@resistdesign/voltra/api` exports: `RouteMap`, `addRoutesToRouteMap`, `handleCloudFunctionEvent`
-    - [ ] `@resistdesign/voltra/common` exports: `TypeInfo`, `TypeInfoMap`, `TypeInfoORMServiceError`
-    - [ ] `@resistdesign/voltra/web` exports: `createWebFormRenderer`, `AutoField`
-    - [ ] `@resistdesign/voltra/native` exports: `createNativeFormRenderer`
-    - [ ] `@resistdesign/voltra/build` exports: `getTypeInfoMapFromTypeScript`
-  - [ ] Run it in CI and locally via `yarn test:exports`
+- [x] Expand `scripts/check-package-exports.mjs` and/or add `scripts/export-contract.mjs`
+  - [x] Hardcode a list of required imports:
+    - [x] `@resistdesign/voltra/api` exports: `RouteMap`, `addRoutesToRouteMap`, `handleCloudFunctionEvent`
+    - [x] `@resistdesign/voltra/common` exports: `TypeInfo`, `TypeInfoMap`, `TypeInfoORMServiceError`
+    - [x] `@resistdesign/voltra/web` exports: `createWebFormRenderer`, `AutoField`
+    - [x] `@resistdesign/voltra/native` exports: `createNativeFormRenderer`
+    - [x] `@resistdesign/voltra/build` exports: `getTypeInfoMapFromTypeScript`
+  - [x] Run it in CI and locally via `yarn test:exports`
 
-- [ ] Add a “no hash files” assertion
-  - [ ] Fail if `dist/` contains `*-???????.d.ts` or similar hashed patterns
+- [x] Add a “no hash files” assertion
+  - [x] Fail if `dist/` contains `*-???????.d.ts` or similar hashed patterns
 
 ---
 
 ## Phase 7: Optional Cleanup (After Everything Works)
 
-- [ ] Deprecate namespace exports (soft)
-  - [ ] Keep them for now, but add doc comments like `@deprecated Prefer importing {RouteMap} from "@resistdesign/voltra/api"`
+- [x] Deprecate namespace exports (soft)
+  - [x] Keep them for now, but add doc comments like `@deprecated Prefer importing {RouteMap} from "@resistdesign/voltra/api"`
 
-- [ ] Decide what stays grouped (namespaces) vs what stays flat
-  - [ ] Rule of thumb: if it’s used in README/site demos, it should be flat
+- [x] Decide what stays grouped (namespaces) vs what stays flat
+  - [x] Rule of thumb: if it’s used in README/site demos, it should be flat
 
 ---
 
 ## Deliverables Checklist
 
-- [ ] `@resistdesign/voltra/api` supports `import { RouteMap } from "@resistdesign/voltra/api";`
-- [ ] `@resistdesign/voltra/common` supports `import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";`
-- [ ] `@resistdesign/voltra/build` works and remains explicit opt-in
-- [ ] No hashed `.d.ts` files in published output
-- [ ] IDE auto-import suggests only valid public subpaths
-- [ ] Site + docs + tests updated to the new domain-flat import contract
+- [x] `@resistdesign/voltra/api` supports `import { RouteMap } from "@resistdesign/voltra/api";`
+- [x] `@resistdesign/voltra/common` supports `import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";`
+- [x] `@resistdesign/voltra/build` works and remains explicit opt-in
+- [x] No hashed `.d.ts` files in published output
+- [x] IDE auto-import suggests only valid public subpaths
+- [x] Site + docs + tests updated to the new domain-flat import contract

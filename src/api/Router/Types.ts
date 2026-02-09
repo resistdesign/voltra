@@ -127,6 +127,8 @@ export type Route = {
 
 /**
  * A collection of {@link Route} objects, indexed by their path.
+ *
+ * @category Routing
  * */
 export type RouteMap = Record<string, Route>;
 

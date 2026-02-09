@@ -1,5 +1,5 @@
 import { getTypeInfoMapFromTypeScript } from "../src/build";
-import { TypeInfoMap } from "../src/common/TypeParsing/TypeInfo";
+import { TypeInfoMap } from "../src/common";
 import Path from "path";
 import FS from "fs";
 import { fileURLToPath } from "url";

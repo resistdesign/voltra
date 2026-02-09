@@ -196,3 +196,194 @@ Hash-suffixed declaration files are produced by `tsup` declaration output, not b
   - `yarn build`: pass
   - `yarn test:exports`: pass
   - `yarn test:consumer` (with temp npm cache): pass
+
+## Domain-Flat Export Progress (Phase 3C/3D)
+- `src/web/index.ts` now includes flat re-exports from both `./forms` and `./utils`, while preserving `Forms`/`Utils` namespaces.
+  - This exposes `createWebFormRenderer`, `AutoField`, `AutoForm`, `getEasyLayout`, and related utilities at `@resistdesign/voltra/web` top level.
+- `src/native/index.ts` now includes flat re-exports from both `./forms` and `./utils`, while preserving namespace exports.
+  - This exposes `createNativeFormRenderer`, `makeNativeEasyLayout`, and related native utilities at `@resistdesign/voltra/native` top level.
+- `src/app/index.ts` now includes flat re-exports from both `./utils` and `./forms`, while preserving namespace exports.
+  - This exposes `parseTemplate`, `computeTrackPixels`, and other app-core utilities at `@resistdesign/voltra/app` top level.
+- `scripts/consumer-smoke.mjs` was expanded to compile-import these top-level symbols and validate the contract in CI/local checks.
+  - Added `@types/react` to the fixture dev dependencies so native declaration types compile in the smoke consumer.
+- Verification after changes:
+  - `yarn build`: pass
+  - `yarn test:exports`: pass
+  - `yarn test:consumer` (with temp npm cache): pass
+
+## Site-Driven Gap Closure (Phase 4 Initial Pass)
+- Audited `site/api/index.ts` imports/usage first.
+- Identified missing common-root symbols used there:
+  - `ERROR_MESSAGE_CONSTANTS`
+  - `PRIMITIVE_ERROR_MESSAGE_CONSTANTS`
+- Source location: `src/common/TypeParsing/Validation.ts`.
+- Target public domain entrypoint: `@resistdesign/voltra/common`.
+- Implemented by adding `export * from "./TypeParsing/Validation";` in `src/common/index.ts`.
+- Added consumer smoke import coverage for both constants to prevent regression.
+- Validation after this pass:
+  - `yarn build`: pass
+  - `yarn test:exports`: pass
+  - `yarn test:consumer` (with temp npm cache): pass
+
+## Site-Driven Gap Closure (Phase 4 Complete Coverage)
+- Audited all direct `site/** -> src/**` imports and ensured corresponding symbols are reachable from public domain entrypoints.
+- Additional API domain-flat exports added:
+  - `src/api/index.ts`: `export * from "./Indexing";`, `export * from "./ORM";`, `export * from "./DataAccessControl";`
+  - `src/api/ORM/index.ts`: `export * from "./drivers";` in addition to existing `Drivers` namespace export.
+- Additional Common domain-flat exports added:
+  - `src/common/index.ts`: `export * from "./CommandLine";` and `export * from "./TypeParsing/Validation";`
+- Consumer smoke contract expanded to include representative symbols used in site code:
+  - API: `getTypeInfoORMRouteMap`, `DynamoDBDataItemDBDriver`, `createAwsSdkV3DynamoClient`, `FullTextDdbBackend`, `DACConstraintType`
+  - Common: `collectRequiredEnvironmentVariables`, `ERROR_MESSAGE_CONSTANTS`, `PRIMITIVE_ERROR_MESSAGE_CONSTANTS`
+- Validation after complete pass:
+  - `yarn build`: pass
+  - `yarn test:exports`: pass
+  - `yarn test:consumer` (with temp npm cache): pass
+
+## Docs and Site Canonicalization (Phase 5 Partial)
+- `README.md` updated to domain-flat imports:
+  - Added a domain-oriented "Common imports by domain" section.
+  - Replaced nested namespace examples (`Utils`, `Forms`) with top-level imports from domain entrypoints.
+  - Kept root import unsupported guidance intact.
+- Site demo source files were refactored from deep nested source imports to domain entrypoint imports within `src/*`:
+  - `site/api/index.ts`
+  - `site/api/routeMap.ts`
+  - `site/api/indexing.ts`
+  - `site/common/IndexingTableNames.ts`
+  - `site/common/DemoTypeInfoMap.ts`
+  - `site/build-demo-types.ts`
+  - `site/iac/index.ts`
+- Verification:
+  - `yarn site:build:api`: pass
+  - `yarn site:build:app`: pass
+  - Includes successful `yarn doc` and `yarn doc-to-site` via finalize-site.
+- Noted warnings:
+  - TypeDoc completed with warnings (no hard errors); warnings are tracked for later doc-structure/readability phases.
+
+## TypeDoc Audit and Grouping Strategy (Phase 5C)
+### Current TypeDoc Configuration
+- Config file: `typedoc.json`.
+- Entry points:
+  - `src/api/index.ts`
+  - `src/app/index.ts`
+  - `src/web/index.ts`
+  - `src/native/index.ts`
+  - `src/build/index.ts`
+  - `src/common/index.ts`
+  - `src/iac/index.ts`
+  - `src/iac/packs/index.ts`
+- Build script: `yarn doc` (`typedoc`), followed by `yarn doc-to-site`.
+- Current behavior:
+  - Domain entrypoint pages are generated and navigable.
+  - Re-exported symbols generally link back to concrete source definitions (`Defined in .../src/...`).
+  - `excludeNotDocumented: true` plus broad flat exports produces a noisy mixed surface without explicit category organization.
+
+### Documentation Grouping Strategy
+- API categories:
+  - `API/Routing`
+  - `API/ORM`
+  - `API/Indexing`
+  - `API/Auth-DAC`
+  - `API/RPC`
+- Common categories:
+  - `Common/TypeParsing`
+  - `Common/TypeInfo`
+  - `Common/Search`
+  - `Common/StringTransformers`
+  - `Common/Logging`
+  - `Common/CommandLine`
+- Web/Native/App categories:
+  - `Forms/Core`
+  - `Forms/Web`
+  - `Forms/Native`
+  - `EasyLayout/Core`
+  - `EasyLayout/Web`
+  - `EasyLayout/Native`
+  - `Routing/Web`
+  - `Routing/Native`
+- IaC/Build categories:
+  - `IaC/Core`
+  - `IaC/Packs`
+  - `Build/TypeParsing`
+
+### Remaining Doc-Readability Work
+- Add `@category` tags to key source declarations (not only barrels) using the strategy above.
+- Re-run TypeDoc and verify domain pages remain navigable with reduced barrel noise.
+- Optionally tune TypeDoc settings for category-first presentation if needed after tags are added.
+
+## Phase 5/6 Progress Update (Current Run)
+### Declaration maps and hash/noise controls
+- Disabled declaration maps in `tsconfig.build.json` (`declarationMap: false`) to avoid IDE `.d.ts.map` noise.
+- Rebuilt and verified:
+  - `yarn build`: pass
+  - `find dist -type f -name '*.d.ts.map' | wc -l`: `0`
+- Added explicit no-hash assertion logic in `scripts/check-package-exports.mjs`:
+  - Fails if `dist/**/*.d.ts` includes hash-like suffixes (e.g., `*-ABC123.d.ts`).
+  - Current dist check result: `0` hash-like declaration files.
+
+### Export contract hardening (`yarn test:exports`)
+- Extended `scripts/check-package-exports.mjs` to enforce:
+  - required export subpaths include `./build`,
+  - required built artifacts include `build/index.js` and `common/index.js`,
+  - required runtime exports by subpath:
+    - api: `addRoutesToRouteMap`, `handleCloudFunctionEvent`
+    - common: `TypeInfoORMServiceError`
+    - web: `createWebFormRenderer`, `AutoField`
+    - native: `createNativeFormRenderer`
+    - build: `getTypeInfoMapFromTypeScript`
+  - type-contract compile probe for:
+    - `RouteMap`
+    - `TypeInfo`, `TypeInfoMap`
+    - plus the runtime symbols above through public subpaths.
+- Validation:
+  - `yarn test:exports`: pass
+
+### TypeDoc grouping tags added in source declarations
+- Added `@category` tags on underlying declarations (not just barrels), including:
+  - Routing: `RouteMap`, `addRoutesToRouteMap`, `handleCloudFunctionEvent`
+  - TypeInfo: `TypeOperation`, `TypeInfo`, `TypeInfoMap`, `getTypeInfoMapFromTypeScript`
+  - ORM: `TypeInfoORMServiceError`
+  - Forms: `createWebFormRenderer`, `AutoField`, `createNativeFormRenderer`
+  - EasyLayout: `parseTemplate`, `computeTrackPixels`, `makeNativeEasyLayout`
+- Re-generated docs/site and spot-checked category grouping:
+  - `yarn doc`: pass (warnings only)
+  - `yarn site:build:app`: pass
+  - Spot check confirms category sections now appear on domain pages (examples seen: `Routing`, `ORM`, `Forms`, `EasyLayout`).
+
+### README/examples/spec alignment
+- README cleanup:
+  - removed stale `Utils.*` wording in EasyLayout section,
+  - maintained root-import unsupported guidance,
+  - kept unsupported deep-import example.
+- Added `examples/` domain files:
+  - `examples/api.ts`
+  - `examples/common.ts`
+  - `examples/web.ts`
+  - `examples/native.ts`
+  - `examples/build.ts`
+- README now references all example files.
+- Spec/import sweep result:
+  - no `src/**/*.spec.json` entries required import-snippet rewrites for this contract.
+
+### End-to-end verification in this run
+- `yarn build`: pass
+- `yarn test:exports`: pass
+- `yarn test:consumer` (temp npm cache): pass
+- `yarn doc`: pass (warnings only)
+- `yarn site:build:app`: pass
+
+### Remaining blocker
+- `yarn start` remains blocked in this environment:
+  - `getaddrinfo ENOTFOUND docs-local.voltra.app`
+
+## Optional Cleanup Decisions (Phase 7)
+- Soft deprecation added for namespace exports in:
+  - `src/api/index.ts`
+  - `src/common/index.ts`
+  - `src/web/index.ts`
+  - `src/native/index.ts`
+  - `src/app/index.ts`
+- Decision recorded:
+  - Keep namespaces for compatibility for now.
+  - Prefer flat domain exports for all README/site/demo usage and consumer-facing “first-choice” imports.
+  - Treat namespace exports as legacy convenience and document them with `@deprecated` guidance to flat imports.

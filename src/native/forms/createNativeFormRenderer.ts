@@ -12,6 +12,8 @@ import { nativeSuite } from "./suite";
 /**
  * Create a native form renderer using the default native suite.
  *
+ * @category Forms
+ *
  * @param options - Optional suite overrides.
  * @returns Native form renderers.
  */
