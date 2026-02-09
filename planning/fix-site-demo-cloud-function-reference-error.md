@@ -34,8 +34,16 @@ There is an error in the CloudWatch logs for the site demo API cloud function:
 
 ## SOLUTION:
 
-1. Move those 2 files to the `src/build` barrel and export them from there, ONLY. (Bring their tests with them.)
-2. Fix the `src/build` index.
-3. Update all docs, tests, examples, supporting files, references, usages in scripts and/or demo site assets.
-4. Evaluate if the script `site/build-api.mjs` is still required after this change. (It feels like a hack, but keep it
-   if we have to.)
+- [x] Move `TypeParsing` and `TypeMapping` (plus their spec and test-utils files) from `src/common/TypeParsing` into `src/build`.
+- [x] Export parser utilities only from `src/build/index.ts` and stop exporting `TypeMapping` from `src/common/TypeParsing/index.ts`.
+- [x] Update impacted imports/usages:
+  - [x] `src/common/TypeParsing/ParsingUtils/*` imports of `TypeMap` now use `import type` from `src/build/TypeMapping`.
+  - [x] `src/common/TypeParsing/ParsingUtils/ParsingUtils.test-utils.ts` now imports `convertASTToMap` from `src/build/TypeMapping`.
+  - [x] `scripts/prebuild-api-orm-driver-config-types.ts` now imports `getTypeInfoMapFromTypeScript` from `src/build`.
+- [x] Evaluate `site/build-api.mjs`:
+  - [x] Confirmed the API bundle no longer references `typescript/lib/typescript.js`.
+  - [x] Removed the `createRequire` banner hack because generated bundle has no `__require(...)` callsites.
+  - [x] Kept `site/build-api.mjs` itself because it is still the site API bundling entrypoint.
+- [x] Verification:
+  - [x] `yarn test "./src/build/TypeMapping.spec.json" "./src/build/TypeParsing.spec.json" "./src/common/TypeParsing/ParsingUtils/ParsingUtils.spec.json"` (passes; this runner also executes the full suite)
+  - [x] `yarn site:build:api` (passes)

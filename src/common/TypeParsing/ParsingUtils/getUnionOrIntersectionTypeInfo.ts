@@ -5,7 +5,7 @@ import {
   TypeReferenceNode,
   UnionTypeNode,
 } from "typescript";
-import { TypeMap } from "../TypeMapping";
+import type { TypeMap } from "../../../build/TypeMapping";
 import { TypeInfo } from "../TypeInfo";
 import { getTypeInfoFromTypeAlias } from "./getTypeInfoFromTypeAlias";
 import { getTypeInfo } from "./getTypeInfo";

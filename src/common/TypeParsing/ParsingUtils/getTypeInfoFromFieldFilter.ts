@@ -1,5 +1,5 @@
 import { SyntaxKind, TypeReferenceNode } from "typescript";
-import { TypeMap } from "../TypeMapping";
+import type { TypeMap } from "../../../build/TypeMapping";
 import { TypeInfo } from "../TypeInfo";
 import { FIELD_FILTERS } from "./Constants";
 import { getUnionOrLiteralStringValues } from "./getUnionOrLiteralStringValues";

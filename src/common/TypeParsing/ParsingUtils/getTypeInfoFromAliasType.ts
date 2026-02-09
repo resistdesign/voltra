@@ -6,7 +6,7 @@ import {
   UnionTypeNode,
 } from "typescript";
 import { getTypeInfo } from "./getTypeInfo";
-import { TypeMap } from "../TypeMapping";
+import type { TypeMap } from "../../../build/TypeMapping";
 import { getUnionOrIntersectionTypeInfo } from "./getUnionOrIntersectionTypeInfo";
 import { getTypeInfoFromFieldFilter } from "./getTypeInfoFromFieldFilter";
 import { TypeInfo } from "../TypeInfo";

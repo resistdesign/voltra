@@ -1,5 +1,5 @@
 import { TypeAliasDeclaration } from "typescript";
-import { TypeMap } from "../TypeMapping";
+import type { TypeMap } from "../../../build/TypeMapping";
 import { TypeInfo } from "../TypeInfo";
 import { extractCommentTags } from "./extractCommentTags";
 import { getTypeInfoFromAliasType } from "./getTypeInfoFromAliasType";
