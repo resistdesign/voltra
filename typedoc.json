@@ -14,6 +14,9 @@
   "exclude": ["**/src/api/DBX/**"],
   "excludeExternals": true,
   "excludeNotDocumented": true,
+  "validation": {
+    "notExported": false
+  },
   "categorizeByGroup": true,
   "defaultCategory": "other",
   "categoryOrder": ["api", "app", "common", "web", "native", "iac", "build", "*"],

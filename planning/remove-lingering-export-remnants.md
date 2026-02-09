@@ -130,6 +130,14 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 
 ---
 
+## Phase 6 — TypeDoc warning policy tuning
+
+- [x] Revert in-progress export-surface changes from post-plan follow-up work
+- [x] Disable only TypeDoc `notExported` validation warnings
+- [x] Re-run `yarn doc` and confirm referenced-but-not-included warnings are suppressed
+
+---
+
 ## Run Status
 
 - [x] Complete (awaiting user approval to move this plan to `planning/complete/`)
