@@ -39,6 +39,7 @@ export type AddDatabaseConfig = {
  * Add a highly available key-value database with global scale performance.
  *
  * @param config - Database configuration.
+ * @group Resource Packs
  * */
 export const addDatabase = createResourcePack(
   ({

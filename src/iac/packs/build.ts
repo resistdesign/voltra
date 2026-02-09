@@ -114,6 +114,7 @@ export type AddBuildPipelineConfig = {
  * Add a build pipeline with full permissions.
  *
  * @param config - Build pipeline configuration.
+ * @group Resource Packs
  */
 export const addBuildPipeline = createResourcePack(
   ({

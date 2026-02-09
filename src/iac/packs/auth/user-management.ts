@@ -61,6 +61,7 @@ export type AddUserManagementConfig = {
  *
  * @param config - User management configuration.
  * @returns CloudFormation template fragment.
+ * @group Resource Packs
  */
 export const addUserManagement = createResourcePack(
   ({

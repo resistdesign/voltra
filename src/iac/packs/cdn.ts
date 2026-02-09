@@ -36,6 +36,7 @@ export type AddCDNConfig = {
  * Includes a DNS record for the domain.
  *
  * @param config - CDN configuration.
+ * @group Resource Packs
  * */
 export const addCDN = createResourcePack(
   ({
