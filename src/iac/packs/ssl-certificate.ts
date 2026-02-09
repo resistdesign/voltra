@@ -31,6 +31,7 @@ export type AddSSLCertificateConfig = {
  * Add an automatic SSL Certificate for a domain and all of it's subdomains.
  *
  * @param config - SSL certificate configuration.
+ * @group Resource Packs
  * */
 export const addSSLCertificate = createResourcePack(
   ({

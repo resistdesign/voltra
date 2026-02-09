@@ -24,7 +24,7 @@ cross-runtime bundling issues.
 Preferred:
 
 ```ts
-import { SimpleCFT, Packs } from "@resistdesign/voltra/iac";
+import { SimpleCFT } from "@resistdesign/voltra/iac";
 import { addDNS } from "@resistdesign/voltra/iac/packs";
 ```
 
@@ -53,7 +53,7 @@ import { TypeInfo, TypeInfoORMServiceError } from "@resistdesign/voltra/common";
 import { parseTemplate, computeTrackPixels } from "@resistdesign/voltra/app";
 import { AutoField, AutoForm, createWebFormRenderer, getEasyLayout } from "@resistdesign/voltra/web";
 import { createNativeFormRenderer, makeNativeEasyLayout } from "@resistdesign/voltra/native";
-import { SimpleCFT, Packs } from "@resistdesign/voltra/iac";
+import { SimpleCFT } from "@resistdesign/voltra/iac";
 import { addDNS } from "@resistdesign/voltra/iac/packs";
 import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
 ```

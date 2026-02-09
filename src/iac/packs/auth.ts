@@ -73,6 +73,8 @@ export type AddAuthConfig = {
  * */
 /**
  * Add auth resources including user management and an admin group.
+ *
+ * @group Resource Packs
  */
 export const addAuth = createResourcePack(
   ({

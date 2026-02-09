@@ -51,7 +51,7 @@ export type RouteQuery = Record<string, RouteQueryValue>;
 /**
  * Create a manual adapter for non-DOM runtimes (e.g., React Native).
  *
- * Call {@link updatePath} when navigation changes.
+ * Call `updatePath` when navigation changes.
  */
 export const createManualRouteAdapter = (initialPath: string = "/") => {
   let currentPath = initialPath;
