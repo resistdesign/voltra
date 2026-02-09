@@ -113,6 +113,8 @@ export type AddCloudFunctionConfig = {
  * */
 /**
  * Add a cloud function resource with IAM role and configuration.
+ *
+ * @group Resource Packs
  */
 export const addCloudFunction = createResourcePack(
   ({

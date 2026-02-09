@@ -19,7 +19,16 @@
   },
   "categorizeByGroup": true,
   "defaultCategory": "other",
-  "categoryOrder": ["api", "app", "common", "web", "native", "iac", "build", "*"],
+  "categoryOrder": [
+    "api",
+    "app",
+    "common",
+    "web",
+    "native",
+    "iac",
+    "build",
+    "*"
+  ],
   "groupOrder": [
     "Core",
     "Routing",

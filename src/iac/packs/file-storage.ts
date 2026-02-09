@@ -44,6 +44,7 @@ export type AddSecureFileStorageConfig = {
  * Add a secure S3 Bucket with an optional parameter to set the bucket name.
  *
  * @param config - File storage configuration.
+ * @group Resource Packs
  * */
 export const addSecureFileStorage = createResourcePack(
   ({

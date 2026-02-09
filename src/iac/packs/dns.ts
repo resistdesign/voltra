@@ -38,6 +38,7 @@ export type AddDNSConfig = {
  * Optionally includes a front-end live development subdomain.
  *
  * @param config - DNS configuration.
+ * @group Resource Packs
  * */
 export const addDNS = createResourcePack(
   ({
