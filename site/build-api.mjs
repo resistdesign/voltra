@@ -17,12 +17,6 @@ await build({
   sourcemap: true,
   conditions: ["node", "import", "default"],
   mainFields: ["module", "main"],
-  banner: {
-    js: [
-      'import { createRequire } from "node:module";',
-      "const require = createRequire(import.meta.url);",
-    ].join("\n"),
-  },
   plugins: [
     {
       name: "source-prefix",
