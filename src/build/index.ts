@@ -3,4 +3,5 @@
  *
  * Various build tools like a dynamic TypeScript to {@link TypeInfo} parser.
  */
-export * from "../common/TypeParsing/TypeParsing";
+export * from "./TypeMapping";
+export * from "./TypeParsing";

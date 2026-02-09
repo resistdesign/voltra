@@ -6,9 +6,9 @@
  */
 import { createSourceFile, Node, ScriptTarget, SyntaxKind } from "typescript";
 import { convertASTToMap, TypeMap } from "./TypeMapping";
-import { TypeInfoMap } from "./TypeInfo";
-import { getTypeInfoFromTypeAlias } from "./ParsingUtils/getTypeInfoFromTypeAlias";
-import { getPrimaryFieldForTypeInfo } from "./ParsingUtils/getPrimaryFieldForTypeInfo";
+import { TypeInfoMap } from "../common/TypeParsing/TypeInfo";
+import { getTypeInfoFromTypeAlias } from "../common/TypeParsing/ParsingUtils/getTypeInfoFromTypeAlias";
+import { getPrimaryFieldForTypeInfo } from "../common/TypeParsing/ParsingUtils/getPrimaryFieldForTypeInfo";
 
 /**
  * Extracts type information from TypeScript content.

@@ -1,5 +1,5 @@
 import { getTypeInfoMapFromTypeScript } from "./TypeParsing";
-import { TypeInfoMap } from "./TypeInfo";
+import { TypeInfoMap } from "../common/TypeParsing/TypeInfo";
 
 export const runTypeParsingScenario = () => {
   const source = `
