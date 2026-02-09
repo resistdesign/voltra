@@ -58,7 +58,7 @@ export class SimpleCFT {
 
   /**
    * Apply a pack with configuration to the stack template.
-   * @see {@link IaC} for an example.
+   * @see `@resistdesign/voltra/iac` and `@resistdesign/voltra/iac/packs` for examples.
    * */
   public applyPack = <ParamsType>(
     pack: ResourcePackApplier<ParamsType>,

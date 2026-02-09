@@ -138,6 +138,14 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 
 ---
 
+## Phase 7 — TSDoc signature/link alignment
+
+- [x] Align API function comments with destructured input signatures (remove invalid extra `@param` tags)
+- [x] Fix unresolved TSDoc links in build/app/iac comments
+- [x] Re-run `yarn doc` and confirm warning-free output
+
+---
+
 ## Run Status
 
 - [x] Complete (awaiting user approval to move this plan to `planning/complete/`)
