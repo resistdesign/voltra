@@ -406,10 +406,11 @@ After export changes, the library must remain understandable and usable:
   - [x] Add a “Common Imports” section per domain (api/common/web/native/build)
   - [x] Ensure all code snippets compile under ESM (`type: module`) and TS ESNext
 
-- [~] Update any additional markdown docs under `docs/`, `site/`, `planning/complete/` that contain import snippets
-  - Remaining:
-    - Evaluate and update historical `planning/complete/*.md` references where outdated import snippets should remain
-      canonical instead of historical.
+- [x] Update any additional markdown docs under `docs/`, `site/`, `planning/complete/` that contain import snippets
+  - Note:
+    - Canonical docs (`README.md`, `site/**`, active planning docs) were updated to the latest export contract.
+    - Historical files under `planning/complete/*.md` are intentionally preserved as archival records and are not treated
+      as canonical API documentation.
 
 ### 5B: Site demo code (must be canonical)
 
@@ -422,11 +423,12 @@ After export changes, the library must remain understandable and usable:
   - [x] Replace `Common.TypeParsing.` usage
   - [x] Replace `WebUtils.Utils`-style access where it is no longer needed
 
-- [~] Run the site build locally to confirm:
-  - [ ] `yarn start`
+- [x] Run the site build locally to confirm:
+  - [x] `yarn start` (verified by user on local machine)
   - [x] `yarn site:build:app`
-  - Remaining:
-    - `yarn start` currently fails in this environment with `getaddrinfo ENOTFOUND docs-local.voltra.app`.
+  - Note:
+    - Agent environment previously had DNS/host-resolution failure (`getaddrinfo ENOTFOUND docs-local.voltra.app`).
+    - User validated that `yarn start` works in their local environment.
 
 ### 5C: Generated API docs (TypeDoc) must stay readable
 
@@ -451,14 +453,13 @@ Domain-flat exports are good DX, but the generated docs must still present struc
   - [x] Add `@category <Name>` (or the project’s preferred tag) to the **actual** declarations
   - [x] Ensure commonly browsed modules are grouped and not one giant list
 
-- [~] Ensure barrels do not become the only documented surface
+- [x] Ensure barrels do not become the only documented surface
   - [x] Confirm TypeDoc links re-exported symbols back to their original source pages
-  - [~] If TypeDoc renders barrel pages too noisily:
+  - [x] If TypeDoc renders barrel pages too noisily:
     - [x] Adjust TypeDoc settings to prefer categories
-    - [~] Consider hiding barrel-only pages if they reduce clarity
-      - Remaining:
-        - Current category grouping is improved and acceptable; hide-barrel tuning can be revisited if docs noise
-          increases.
+    - [x] Consider hiding barrel-only pages if they reduce clarity
+      - Note:
+        - Current category grouping/readability is acceptable after tagging; barrel hiding is not required at this time.
 
 - [x] Regenerate docs and verify readability
   - [x] `yarn doc`
@@ -553,7 +554,6 @@ Make it impossible to reintroduce “can’t import X” problems.
     docs and examples are updated.
 - [x] Finalize all tasks in this plan. If items will be left partially check or unchecked intentionally, then mark them
   complete with a note. Otherwise, do the outstanding work and then mark the item complete.
-  - Note: remaining `~` items are environment/historical-policy partials documented explicitly.
 - [x] Use this phase as a means to be thorough and make sure that there are no loose ends and that all work has been
   performed holistically and professionally.
 - [x] Verify that what this package now outputs is in the right condition for consuming projects.
