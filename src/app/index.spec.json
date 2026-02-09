@@ -6,8 +6,12 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "appKeys": ["Forms", "Utils"],
         "hasUtilsNamespace": true,
+        "hasFormsNamespace": true,
+        "hasParseTemplateTopLevel": true,
+        "hasComputeTrackPixelsTopLevel": true,
+        "hasCreateFormRendererTopLevel": true,
+        "hasUseApplicationStateLoaderTopLevel": true,
         "hasUseController": true,
         "hasTypeInfoORMClient": true,
         "hasRoute": true,

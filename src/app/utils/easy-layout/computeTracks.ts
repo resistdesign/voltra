@@ -12,6 +12,8 @@ export type ComputeTrackPixelsInput = {
 
 /**
  * Compute pixel sizes for track specs.
+ *
+ * @category EasyLayout
  */
 export const computeTrackPixels = ({
   tracks,

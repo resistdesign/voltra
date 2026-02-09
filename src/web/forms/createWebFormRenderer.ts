@@ -12,6 +12,8 @@ import { webSuite } from "./suite";
 /**
  * Create a web form renderer using the default web suite.
  *
+ * @category Forms
+ *
  * @param options - Optional suite overrides.
  * @returns Web form renderers.
  */

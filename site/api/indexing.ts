@@ -4,13 +4,13 @@ import {
   FullTextDdbBackend,
   RelationalDdbBackend,
   StructuredDdbBackend,
-} from "../../src/api/Indexing";
+} from "../../src/api";
 import {
   indexingTableEnvVars,
   readIndexingTablesFromEnv,
 } from "../common/IndexingTableNames";
 import { ddbClient } from "./ddbClient";
-import { collectRequiredEnvironmentVariables } from "../../src/common/CommandLine";
+import { collectRequiredEnvironmentVariables } from "../../src/common";
 
 const ddbAdapter = createAwsSdkV3DynamoClient(ddbClient);
 

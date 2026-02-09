@@ -181,6 +181,8 @@ const computeCoords = (
 
 /**
  * Create a native EasyLayout instance from a template.
+ *
+ * @category EasyLayout
  */
 export const makeNativeEasyLayout = (
   template: EasyLayoutTemplate,
