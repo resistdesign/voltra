@@ -542,18 +542,21 @@ Make it impossible to reintroduce “can’t import X” problems.
 
 ## Phase 8:
 
-- [ ] Optimize demo site imports to reflect the latest export contract.
-- [ ] Verify that all existing test have been updated.
-- [ ] Update existing docs to reflect the latest export contract.
-- [ ] Add new tests if it helps to ensure that the changes have not regressed anything.
-- [ ] Add new documentation and examples if they are required to clarify export usage and structure.
-- [ ] Find all existing examples and references in all documentation and update them to reflect the latest export
+- [x] Optimize demo site imports to reflect the latest export contract.
+- [x] Verify that all existing test have been updated.
+- [x] Update existing docs to reflect the latest export contract.
+- [x] Add new tests if it helps to ensure that the changes have not regressed anything.
+- [x] Add new documentation and examples if they are required to clarify export usage and structure.
+- [x] Find all existing examples and references in all documentation and update them to reflect the latest export
   contract.
-- [ ] Finalize all tasks in this plan. If items will be left partially check or unchecked intentionally, then mark them
+  - Note: archival docs under `planning/complete/` are intentionally retained as historical records; canonical current
+    docs and examples are updated.
+- [x] Finalize all tasks in this plan. If items will be left partially check or unchecked intentionally, then mark them
   complete with a note. Otherwise, do the outstanding work and then mark the item complete.
-- [ ] Use this phase as a means to be thorough and make sure that there are no loose ends and that all work has been
+  - Note: remaining `~` items are environment/historical-policy partials documented explicitly.
+- [x] Use this phase as a means to be thorough and make sure that there are no loose ends and that all work has been
   performed holistically and professionally.
-- [ ] Verify that what this package now outputs is in the right condition for consuming projects.
+- [x] Verify that what this package now outputs is in the right condition for consuming projects.
 
 ---
 

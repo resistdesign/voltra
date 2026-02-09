@@ -7,7 +7,7 @@ import {
   type RouteMap,
   type DACRole,
 } from "../../src/api";
-import { TypeInfo } from "../../src/common";
+import type { TypeInfo } from "../../src/common";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import {
