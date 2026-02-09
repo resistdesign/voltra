@@ -40,25 +40,25 @@ Anything marked deprecated — *or that exists only to preserve a deprecated exp
 
 ### 1A — Delete deprecated symbols
 
-- [ ] Repo-wide removal of:
+- [x] Repo-wide removal of:
   - `@deprecated` doc tags
   - deprecated helper types
   - deprecated re-export stubs
-- [ ] If a symbol is marked deprecated → **delete it**
-- [ ] If still needed internally → move to internal-only module and stop exporting
+- [x] If a symbol is marked deprecated → **delete it**
+- [x] If still needed internally → move to internal-only module and stop exporting
 
 ### 1B — Delete deprecated namespace layers (critical)
 
 These are the real problem.
 
-- [ ] Identify legacy namespace exports introduced *before* Nuclear Export Cleanup:
+- [x] Identify legacy namespace exports introduced *before* Nuclear Export Cleanup:
   - `export * as X from "./X"`
   - namespace-style barrels whose sole purpose is grouping
   - type-only mirrors recreating old paths
-- [ ] For each namespace:
-  - [ ] If it only exists to preserve an old import shape → **delete it**
-  - [ ] If it wraps real APIs → promote those APIs domain-flat and delete the wrapper anyway
-- [ ] Remove all re-exports of these namespaces from:
+- [x] For each namespace:
+  - [x] If it only exists to preserve an old import shape → **delete it**
+  - [x] If it wraps real APIs → promote those APIs domain-flat and delete the wrapper anyway
+- [x] Remove all re-exports of these namespaces from:
   - domain entrypoints
   - root barrels
   - package `exports` maps
@@ -69,9 +69,9 @@ These are the real problem.
 
 ## Phase 2 — Ensure deprecated paths cannot reappear
 
-- [ ] Audit all `src/*/index.ts` entrypoints
-- [ ] Ensure they export ONLY the post-cleanup domain-flat surface
-- [ ] Confirm no deep subpath exports expose removed namespaces
+- [x] Audit all `src/*/index.ts` entrypoints
+- [x] Ensure they export ONLY the post-cleanup domain-flat surface
+- [x] Confirm no deep subpath exports expose removed namespaces
 
 ---
 
@@ -108,13 +108,22 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 
 ## Phase 4 — Verification gates
 
-- [ ] `yarn build`
+- [x] `yarn build`
 - [ ] `yarn doc`
 - [ ] Confirm:
   - no deprecated badges or sections
   - no legacy namespace objects in docs
   - sidebar reflects domain structure
   - worst pages are sectioned and readable
+
+---
+
+## Run Status
+
+- [~] In progress
+- Remaining:
+  - Phase 3 documentation structure work (`@category`, `@group`, and ordering)
+  - Phase 4 docs build/validation (`yarn doc` and docs output verification)
 
 ---
 

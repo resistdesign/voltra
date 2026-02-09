@@ -6,11 +6,12 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "hasPacks": true,
-        "hasUtils": true,
+        "hasPackFunction": true,
+        "hasUtilFunction": true,
         "hasSimpleCFT": true,
         "simpleCFTInstance": true,
-        "packFunctionMatches": true
+        "packFunctionMatches": true,
+        "utilFunctionMatches": true
       }
     }
   ]
