@@ -387,3 +387,24 @@ Hash-suffixed declaration files are produced by `tsup` declaration output, not b
   - Keep namespaces for compatibility for now.
   - Prefer flat domain exports for all README/site/demo usage and consumer-facing “first-choice” imports.
   - Treat namespace exports as legacy convenience and document them with `@deprecated` guidance to flat imports.
+
+## Phase 8 Completion Evidence
+- Demo-site import cleanup:
+  - tightened type-only imports and consolidated duplicate imports in:
+    - `site/build-demo-types.ts`
+    - `site/common/DemoTypeInfoMap.ts`
+    - `site/api/routeMap.ts`
+    - `site/api/index.ts`
+- Full verification matrix:
+  - `yarn build`: pass
+  - `yarn test`: pass (`PASSES: 186`, `FAILURES: 0`)
+  - `yarn test:exports`: pass
+  - `yarn test:consumer` (temp npm cache): pass
+  - `npm pack --dry-run` with temp npm cache: pass
+  - `find dist -type f -name '*.d.ts.map' | wc -l`: `0`
+- Consumer-condition check:
+  - published tarball dry-run succeeds and contains expected domain entry artifacts.
+  - export contract and consumer smoke both pass after final import/test updates.
+- Documentation/reference sweep:
+  - canonical docs/examples reflect latest contract.
+  - `planning/complete/` files intentionally remain historical; not canonical API usage guidance.
