@@ -28,3 +28,19 @@ export * as ItemRelationships from "./ItemRelationships";
 export * as Testing from "./Testing";
 export type * as HelperTypes from "./HelperTypes";
 export * as Logging from "./Logging";
+
+export {
+  TypeOperation,
+} from "./TypeParsing/TypeInfo";
+export type {
+  DeniedOperations,
+  SupportedFieldTags,
+  SupportedTags,
+  TypeInfo,
+  TypeInfoField,
+  TypeInfoMap,
+} from "./TypeParsing/TypeInfo";
+
+export {
+  TypeInfoORMServiceError,
+} from "./TypeInfoORM/Types";

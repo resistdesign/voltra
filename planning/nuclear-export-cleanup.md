@@ -98,46 +98,46 @@ The executing agent must make deliberate choices and capture rationale, specific
 
 ### 0A: Impact Review Notes (Required)
 
-- [ ] Create `planning/exports-impact-notes.md` (or update if it exists)
-  - [ ] Summarize what will change for consumers
-    - [ ] New ability: named imports from each domain
-    - [ ] What remains: namespaces may still exist, but become optional
-    - [ ] What stays prohibited: root import remains unsupported
-  - [ ] Summarize risk areas
-    - [ ] Declaration pipeline changes may affect downstream TS toolchains
-    - [ ] Export surface changes may break any code relying on namespace objects
-    - [ ] If `tsc` emits different path references, it may expose unintended `.d.ts` imports
-  - [ ] Summarize mitigation strategies
-    - [ ] Contract tests
-    - [ ] CI checks for hashed dts
-    - [ ] Controlled site/demo refactor
+- [x] Create `planning/exports-impact-notes.md` (or update if it exists)
+  - [x] Summarize what will change for consumers
+    - [x] New ability: named imports from each domain
+    - [x] What remains: namespaces may still exist, but become optional
+    - [x] What stays prohibited: root import remains unsupported
+  - [x] Summarize risk areas
+    - [x] Declaration pipeline changes may affect downstream TS toolchains
+    - [x] Export surface changes may break any code relying on namespace objects
+    - [x] If `tsc` emits different path references, it may expose unintended `.d.ts` imports
+  - [x] Summarize mitigation strategies
+    - [x] Contract tests
+    - [x] CI checks for hashed dts
+    - [x] Controlled site/demo refactor
 
 ### 0B: Safety Rails (Baseline)
 
-- [ ] Run existing export checks
-  - [ ] `yarn test:exports`
-  - [ ] `yarn test:consumer`
+- [x] Run existing export checks
+  - [x] `yarn test:exports`
+  - [x] `yarn test:consumer`
 
-- [ ] Capture current dist/package shape
-  - [ ] `yarn build`
-  - [ ] Record `ls -la dist/` summary
-  - [ ] Record whether hashed `.d.ts` files exist in the built artifact output
+- [x] Capture current dist/package shape
+  - [x] `yarn build`
+  - [x] Record `ls -la dist/` summary
+  - [x] Record whether hashed `.d.ts` files exist in the built artifact output
 
-- [ ] Create an “import contract” list (temporary but authoritative)
-  - [ ] Create or update `planning/exports-contract.md` listing the exact imports we require to work (see Phase 6)
+- [x] Create an “import contract” list (temporary but authoritative)
+  - [x] Create or update `planning/exports-contract.md` listing the exact imports we require to work (see Phase 6)
 
 
-- [ ] Run existing export checks
-  - [ ] `yarn test:exports`
-  - [ ] `yarn test:consumer`
+- [x] Run existing export checks
+  - [x] `yarn test:exports`
+  - [x] `yarn test:consumer`
 
-- [ ] Capture current dist/package shape
-  - [ ] `yarn build`
-  - [ ] Record `ls -la dist/` summary
-  - [ ] Record whether hashed `.d.ts` files exist in the published artifact output
+- [x] Capture current dist/package shape
+  - [x] `yarn build`
+  - [x] Record `ls -la dist/` summary
+  - [x] Record whether hashed `.d.ts` files exist in the published artifact output
 
-- [ ] Add/confirm a single “import contract” doc snippet (temporary, internal)
-  - [ ] Create `planning/exports-contract.md` (or similar) listing the exact imports we require to work (see Phase 6)
+- [x] Add/confirm a single “import contract” doc snippet (temporary, internal)
+  - [x] Create `planning/exports-contract.md` (or similar) listing the exact imports we require to work (see Phase 6)
 
 ---
 
@@ -156,54 +156,54 @@ Confirm the build configuration is correct and then adjust it so the published p
 
 #### 1A: Identify the hash source (Required Notes)
 
-- [ ] Add a section to `planning/exports-impact-notes.md`:
-  - [ ] "Where are the hashes coming from?"
-  - [ ] Capture evidence:
-    - [ ] Which tool created the hashed `.d.ts` files (tsup dts bundling vs other)
-    - [ ] Which config flag enables it
-    - [ ] The exact filenames observed
+- [x] Add a section to `planning/exports-impact-notes.md`:
+  - [x] "Where are the hashes coming from?"
+  - [x] Capture evidence:
+    - [x] Which tool created the hashed `.d.ts` files (tsup dts bundling vs other)
+    - [x] Which config flag enables it
+    - [x] The exact filenames observed
 
 #### 1B: Audit the actual build chain
 
-- [ ] Inspect and summarize these configs (notes go into `exports-impact-notes.md`):
-  - [ ] `package.json` scripts (`build`, `prepack`, any `prep-dist`)
-  - [ ] `tsup.config.ts`
-  - [ ] `tsconfig.json`
-  - [ ] `tsconfig.build.json`
-  - [ ] any `.npmignore` / `files` field / packing scripts
+- [x] Inspect and summarize these configs (notes go into `exports-impact-notes.md`):
+  - [x] `package.json` scripts (`build`, `prepack`, any `prep-dist`)
+  - [x] `tsup.config.ts`
+  - [x] `tsconfig.json`
+  - [x] `tsconfig.build.json`
+  - [x] any `.npmignore` / `files` field / packing scripts
 
-- [ ] Decide and document:
-  - [ ] "Which tool emits JS?" (tsup)
-  - [ ] "Which tool emits DTS?" (tsc)
-  - [ ] "Which step assembles dist/package.json?" (prep script)
+- [x] Decide and document:
+  - [x] "Which tool emits JS?" (tsup)
+  - [x] "Which tool emits DTS?" (tsc)
+  - [x] "Which step assembles dist/package.json?" (prep script)
 
 #### 1C: Implement the correct build pipeline (No hash output)
 
-- [ ] Update `tsup.config.ts` to emit **JS only**
-  - [ ] Disable `dts` output (so it cannot generate hashed declaration bundles)
+- [x] Update `tsup.config.ts` to emit **JS only**
+  - [x] Disable `dts` output (so it cannot generate hashed declaration bundles)
 
-- [ ] Add a declaration-only build step via TypeScript
-  - [ ] Add script: `build:types`: `tsc -p tsconfig.build.json --emitDeclarationOnly`
-  - [ ] Confirm output writes `.d.ts` into the same `dist/` structure expected by `exports`
+- [x] Add a declaration-only build step via TypeScript
+  - [x] Add script: `build:types`: `tsc -p tsconfig.build.json --emitDeclarationOnly`
+  - [x] Confirm output writes `.d.ts` into the same `dist/` structure expected by `exports`
 
-- [ ] Update `yarn build` to:
-  - [ ] run `tsup` (JS)
-  - [ ] run `yarn build:types` (DTS)
-  - [ ] run the existing dist assembly step (`prep-dist` or equivalent)
+- [x] Update `yarn build` to:
+  - [x] run `tsup` (JS)
+  - [x] run `yarn build:types` (DTS)
+  - [x] run the existing dist assembly step (`prep-dist` or equivalent)
 
 #### 1D: Validate dist/package contents
 
-- [ ] After `yarn build`, verify in `dist/`:
-  - [ ] No files matching `*-<hash>.d.ts` in the package root
-  - [ ] No extra unexpected folders
-  - [ ] Each entrypoint has:
-    - [ ] `dist/api/index.js` + `dist/api/index.d.ts`
-    - [ ] `dist/common/index.js` + `dist/common/index.d.ts`
-    - [ ] etc.
+- [x] After `yarn build`, verify in `dist/`:
+  - [x] No files matching `*-<hash>.d.ts` in the package root
+  - [x] No extra unexpected folders
+  - [x] Each entrypoint has:
+    - [x] `dist/api/index.js` + `dist/api/index.d.ts`
+    - [x] `dist/common/index.js` + `dist/common/index.d.ts`
+    - [x] etc.
 
-- [ ] Validate publish packing
-  - [ ] Run `npm pack --dry-run` (or yarn equivalent) and confirm only intended files are included
-  - [ ] Ensure `src/` and test specs are not shipped (unless intentionally)
+- [x] Validate publish packing
+  - [x] Run `npm pack --dry-run` (or yarn equivalent) and confirm only intended files are included
+  - [x] Ensure `src/` and test specs are not shipped (unless intentionally)
 
 ---
 
@@ -215,20 +215,20 @@ Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable pa
 
 ### Tasks
 
-- [ ] Confirm `tsc` output does not introduce `.js` extension imports for `.ts` sources
-- [ ] Confirm the `.d.ts` files reference only stable, existing `.d.ts` siblings
+- [x] Confirm `tsc` output does not introduce `.js` extension imports for `.ts` sources
+- [x] Confirm the `.d.ts` files reference only stable, existing `.d.ts` siblings
 - [ ] If `.d.ts.map` causes IDE noise, disable it and re-validate
 
-- [ ] Validate: no hashed `.d.ts` output
-  - [ ] After `yarn build`, confirm `dist/` does **not** contain `index-<hash>.d.ts`, `Types-<hash>.d.ts`, etc.
+- [x] Validate: no hashed `.d.ts` output
+  - [x] After `yarn build`, confirm `dist/` does **not** contain `index-<hash>.d.ts`, `Types-<hash>.d.ts`, etc.
 
-- [ ] Validate: IDE auto-import stabilizes
-  - [ ] Add/extend a consumer fixture project:
-    - [ ] `type: module`
-    - [ ] TS `module: ESNext`
-    - [ ] TS `moduleResolution: bundler` (or `nodenext` if required)
-  - [ ] Ensure IDE/TS resolves only from `exports`-allowed paths
-  - [ ] Ensure no suggestions appear from hash files or deep internal folders
+- [x] Validate: IDE auto-import stabilizes
+  - [x] Add/extend a consumer fixture project:
+    - [x] `type: module`
+    - [x] TS `module: ESNext`
+    - [x] TS `moduleResolution: bundler` (or `nodenext` if required)
+  - [x] Ensure IDE/TS resolves only from `exports`-allowed paths
+  - [x] Ensure no suggestions appear from hash files or deep internal folders
 
 
 ### Goal
@@ -237,31 +237,31 @@ Emit `.d.ts` files using **TypeScript `tsc` emit** (stable file names, stable pa
 
 ### Tasks
 
-- [ ] Update `tsup.config.ts` to **stop producing declaration bundles**
-  - [ ] Ensure `dts` is disabled (or removed), so `tsup` outputs **JS only**
-  - [ ] Keep ESM output as-is
+- [x] Update `tsup.config.ts` to **stop producing declaration bundles**
+  - [x] Ensure `dts` is disabled (or removed), so `tsup` outputs **JS only**
+  - [x] Keep ESM output as-is
 
-- [ ] Add a declaration-only build step using `tsc`
-  - [ ] Add script: `build:types`: `tsc -p tsconfig.build.json --emitDeclarationOnly`
-  - [ ] Ensure `tsconfig.build.json` has:
-    - [ ] `declaration: true`
-    - [ ] `emitDeclarationOnly: true` (can live either in tsconfig or CLI)
-    - [ ] `declarationMap: true` (optional; if it reintroduces noise, disable)
-    - [ ] `outDir: dist`
+- [x] Add a declaration-only build step using `tsc`
+  - [x] Add script: `build:types`: `tsc -p tsconfig.build.json --emitDeclarationOnly`
+  - [x] Ensure `tsconfig.build.json` has:
+    - [x] `declaration: true`
+    - [x] `emitDeclarationOnly: true` (can live either in tsconfig or CLI)
+    - [x] `declarationMap: true` (optional; if it reintroduces noise, disable)
+    - [x] `outDir: dist`
 
-- [ ] Update `yarn build` pipeline
-  - [ ] Change build script from `tsup && yarn prep-dist` to:
-    - [ ] `tsup` (JS)
-    - [ ] `yarn build:types` (DTS)
-    - [ ] `yarn prep-dist`
+- [x] Update `yarn build` pipeline
+  - [x] Change build script from `tsup && yarn prep-dist` to:
+    - [x] `tsup` (JS)
+    - [x] `yarn build:types` (DTS)
+    - [x] `yarn prep-dist`
 
-- [ ] Validate: no hashed `.d.ts` output
-  - [ ] After `yarn build`, confirm `dist/` does **not** contain `*-<hash>.d.ts` files at the package root
-  - [ ] Confirm `dist/api/index.d.ts`, `dist/common/index.d.ts`, etc. exist and **do not import from hashed filenames**
+- [x] Validate: no hashed `.d.ts` output
+  - [x] After `yarn build`, confirm `dist/` does **not** contain `*-<hash>.d.ts` files at the package root
+  - [x] Confirm `dist/api/index.d.ts`, `dist/common/index.d.ts`, etc. exist and **do not import from hashed filenames**
 
-- [ ] Validate: IDE auto-import stabilizes
-  - [ ] Update `scripts/consumer-smoke.mjs` (or add a new consumer fixture) to compile a small ESM TS project importing from only the allowed subpaths
-  - [ ] Ensure TS does not “discover” random `.d.ts` siblings and propose them as module specifiers
+- [x] Validate: IDE auto-import stabilizes
+  - [x] Update `scripts/consumer-smoke.mjs` (or add a new consumer fixture) to compile a small ESM TS project importing from only the allowed subpaths
+  - [x] Ensure TS does not “discover” random `.d.ts` siblings and propose them as module specifiers
 
 ---
 
@@ -273,29 +273,29 @@ Make Node + TS resolution deterministic and prevent deep imports.
 
 ### Tasks
 
-- [ ] Verify `package.json` `exports` includes only the intended public subpaths (it already does)
-  - [ ] Confirm each of these exists in `dist/` after build:
-    - [ ] `api/index.js` + `api/index.d.ts`
-    - [ ] `app/index.js` + `app/index.d.ts`
-    - [ ] `web/index.js` + `web/index.d.ts`
-    - [ ] `native/index.js` + `native/index.d.ts`
-    - [ ] `common/index.js` + `common/index.d.ts`
-    - [ ] `iac/index.js` + `iac/index.d.ts`
-    - [ ] `iac/packs/index.js` + `iac/packs/index.d.ts`
-    - [ ] `build/index.js` + `build/index.d.ts`
+- [x] Verify `package.json` `exports` includes only the intended public subpaths (it already does)
+  - [x] Confirm each of these exists in `dist/` after build:
+    - [x] `api/index.js` + `api/index.d.ts`
+    - [x] `app/index.js` + `app/index.d.ts`
+    - [x] `web/index.js` + `web/index.d.ts`
+    - [x] `native/index.js` + `native/index.d.ts`
+    - [x] `common/index.js` + `common/index.d.ts`
+    - [x] `iac/index.js` + `iac/index.d.ts`
+    - [x] `iac/packs/index.js` + `iac/packs/index.d.ts`
+    - [x] `build/index.js` + `build/index.d.ts`
 
-- [ ] Add `typesVersions` to reduce TS/IDE confusion with subpath exports
-  - [ ] Add to `package.json`:
-    - [ ] `api -> api/index.d.ts`
-    - [ ] `app -> app/index.d.ts`
-    - [ ] `web -> web/index.d.ts`
-    - [ ] `native -> native/index.d.ts`
-    - [ ] `common -> common/index.d.ts`
-    - [ ] `iac -> iac/index.d.ts`
-    - [ ] `iac/packs -> iac/packs/index.d.ts`
-    - [ ] `build -> build/index.d.ts`
+- [x] Add `typesVersions` to reduce TS/IDE confusion with subpath exports
+  - [x] Add to `package.json`:
+    - [x] `api -> api/index.d.ts`
+    - [x] `app -> app/index.d.ts`
+    - [x] `web -> web/index.d.ts`
+    - [x] `native -> native/index.d.ts`
+    - [x] `common -> common/index.d.ts`
+    - [x] `iac -> iac/index.d.ts`
+    - [x] `iac/packs -> iac/packs/index.d.ts`
+    - [x] `build -> build/index.d.ts`
 
-- [ ] Confirm that `exports["./build"]` remains the explicit opt-in for TS-compiler-powered tooling (as documented)
+- [x] Confirm that `exports["./build"]` remains the explicit opt-in for TS-compiler-powered tooling (as documented)
 
 ---
 
@@ -309,32 +309,32 @@ Make Node + TS resolution deterministic and prevent deep imports.
 
 ### 3A: `@resistdesign/voltra/api` (Flatten routing + high-frequency types)
 
-- [ ] In `src/api/index.ts`
-  - [ ] Re-export routing types and helpers directly from `./Router`:
-    - [ ] `export type { RouteMap, Route, RouteHandler, CloudFunctionResponse, ... } from "./Router";`
-    - [ ] `export { addRouteToRouteMap, addRoutesToRouteMap, addRouteMapToRouteMap, handleCloudFunctionEvent, ... } from "./Router";`
-    - [ ] `export * as AWS from "./Router/AWS";` (or keep under `AWS` if desired)
-  - [ ] Keep existing grouped exports for compatibility (optional but recommended initially):
-    - [ ] `export * as Routing from "./Router";` (can be deprecated later)
+- [x] In `src/api/index.ts`
+  - [x] Re-export routing types and helpers directly from `./Router`:
+    - [x] `export type { RouteMap, Route, RouteHandler, CloudFunctionResponse, ... } from "./Router";`
+    - [x] `export { addRouteToRouteMap, addRoutesToRouteMap, addRouteMapToRouteMap, handleCloudFunctionEvent, ... } from "./Router";`
+    - [x] `export * as AWS from "./Router/AWS";` (or keep under `AWS` if desired)
+  - [x] Keep existing grouped exports for compatibility (optional but recommended initially):
+    - [x] `export * as Routing from "./Router";` (can be deprecated later)
 
-- [ ] Verify the new desired import works:
-  - [ ] `import type { RouteMap } from "@resistdesign/voltra/api";`
-  - [ ] `import { addRoutesToRouteMap } from "@resistdesign/voltra/api";`
+- [x] Verify the new desired import works:
+  - [x] `import type { RouteMap } from "@resistdesign/voltra/api";`
+  - [x] `import { addRoutesToRouteMap } from "@resistdesign/voltra/api";`
 
 ### 3B: `@resistdesign/voltra/common` (Expose `TypeInfo` and ORM errors)
 
-- [ ] In `src/common/index.ts`
-  - [ ] Add flat exports for TypeInfo core:
-    - [ ] `export type { TypeInfo, TypeInfoMap, TypeInfoField, SupportedTags, SupportedFieldTags, DeniedOperations, TypeOperation } from "./TypeParsing/TypeInfo";`
-    - [ ] `export { TypeOperation } from "./TypeParsing/TypeInfo";` (if consumers need the enum at runtime)
-  - [ ] Add flat exports for ORM-related shared types/errors (currently missing from common root):
-    - [ ] Export `TypeInfoORMServiceError` from `./TypeInfoORM/Types`
-    - [ ] If other `TypeInfoORM/*` symbols are commonly used, export them too (types first)
-  - [ ] Keep existing `export * as TypeParsing from "./TypeParsing";` for compatibility (optional but recommended initially)
+- [x] In `src/common/index.ts`
+  - [x] Add flat exports for TypeInfo core:
+    - [x] `export type { TypeInfo, TypeInfoMap, TypeInfoField, SupportedTags, SupportedFieldTags, DeniedOperations, TypeOperation } from "./TypeParsing/TypeInfo";`
+    - [x] `export { TypeOperation } from "./TypeParsing/TypeInfo";` (if consumers need the enum at runtime)
+  - [x] Add flat exports for ORM-related shared types/errors (currently missing from common root):
+    - [x] Export `TypeInfoORMServiceError` from `./TypeInfoORM/Types`
+    - [x] If other `TypeInfoORM/*` symbols are commonly used, export them too (types first)
+  - [x] Keep existing `export * as TypeParsing from "./TypeParsing";` for compatibility (optional but recommended initially)
 
-- [ ] Verify the new desired imports:
-  - [ ] `import type { TypeInfo } from "@resistdesign/voltra/common";`
-  - [ ] `import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";`
+- [x] Verify the new desired imports:
+  - [x] `import type { TypeInfo } from "@resistdesign/voltra/common";`
+  - [x] `import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";`
 
 ### 3C: `@resistdesign/voltra/web` and `/native` (Forms + EasyLayout)
 
@@ -357,10 +357,10 @@ Make Node + TS resolution deterministic and prevent deep imports.
 
 ### 3E: `@resistdesign/voltra/build` (explicit opt-in)
 
-- [ ] Verify `src/build/index.ts` exists and exports the TS-compiler-powered functions used in docs
-  - [ ] Ensure it re-exports `getTypeInfoMapFromTypeScript` and friends
+- [x] Verify `src/build/index.ts` exists and exports the TS-compiler-powered functions used in docs
+  - [x] Ensure it re-exports `getTypeInfoMapFromTypeScript` and friends
 
-- [ ] Ensure build output includes `dist/build/index.js` and `dist/build/index.d.ts`
+- [x] Ensure build output includes `dist/build/index.js` and `dist/build/index.d.ts`
 
 ---
 
