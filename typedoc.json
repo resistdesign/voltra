@@ -8,7 +8,7 @@
     "./src/build/index.ts",
     "./src/common/index.ts",
     "./src/iac/index.ts",
-    "./src/iac/packs/index.ts"
+    "./src/iac-packs/index.ts"
   ],
   "out": "docs",
   "exclude": ["**/src/api/DBX/**"],
