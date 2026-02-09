@@ -26,3 +26,16 @@ There is an error in the CloudWatch logs for the site demo API cloud function:
   }
 ]
 ```
+
+## CAUSE INFO:
+
+`src/common/TypeParsing/TypeParsing.ts` and `src/common/TypeParsing/TypeMapping.js` import `typescript` and therefore
+`src/common` exports `typescript` and will cause it to be included in a bundle.
+
+## SOLUTION:
+
+1. Move those 2 files to the `src/build` barrel and export them from there, ONLY. (Bring their tests with them.)
+2. Fix the `src/build` index.
+3. Update all docs, tests, examples, supporting files, references, usages in scripts and/or demo site assets.
+4. Evaluate if the script `site/build-api.mjs` is still required after this change. (It feels like a hack, but keep it
+   if we have to.)
