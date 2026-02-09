@@ -44,6 +44,34 @@
       "import": "./iac/packs/index.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "api": [
+        "api/index.d.ts"
+      ],
+      "app": [
+        "app/index.d.ts"
+      ],
+      "web": [
+        "web/index.d.ts"
+      ],
+      "native": [
+        "native/index.d.ts"
+      ],
+      "common": [
+        "common/index.d.ts"
+      ],
+      "iac": [
+        "iac/index.d.ts"
+      ],
+      "iac/packs": [
+        "iac/packs/index.d.ts"
+      ],
+      "build": [
+        "build/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "*.d.ts",
     "*.d.ts.map",
@@ -58,7 +86,8 @@
     "package.json"
   ],
   "scripts": {
-    "build": "tsup && yarn prep-dist",
+    "build": "tsup && yarn build:types && yarn prep-dist",
+    "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
     "test": "tsx src/common/Testing/CLI.ts \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:dbx:med": "tsx src/common/Testing/CLI.ts \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",

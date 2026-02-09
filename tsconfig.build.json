@@ -17,6 +17,8 @@
     "**/*.spec.js",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "**/*.test-utils.ts",
+    "**/*.test-utils.tsx",
     "site/**"
   ]
 }

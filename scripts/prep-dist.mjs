@@ -33,6 +33,7 @@ const run = async () => {
     types,
     bin,
     exports,
+    typesVersions,
     files,
     dependencies,
   } = packageJson;
@@ -50,11 +51,14 @@ const run = async () => {
     types,
     bin,
     exports,
+    typesVersions,
     files,
     dependencies,
   };
 
   await fs.mkdir(distDir, { recursive: true });
+  await fs.rm(path.join(distDir, "src"), { recursive: true, force: true });
+  await fs.rm(path.join(distDir, "site"), { recursive: true, force: true });
   await fs.writeFile(
     path.join(distDir, "package.json"),
     JSON.stringify(distPackageJson, null, 2),
