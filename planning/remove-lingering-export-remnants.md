@@ -118,6 +118,18 @@ The scroll issue is a *secondary symptom* of correct exports with no structure.
 
 ---
 
+## Phase 5 — IaC pack export boundary hardening
+
+- [x] Remove pack re-exports from `@resistdesign/voltra/iac`
+- [x] Keep pack exports only under `@resistdesign/voltra/iac/packs`
+- [x] Update docs/examples/tests/scripts to import packs from `@resistdesign/voltra/iac/packs`
+- [x] Re-run verification:
+  - [x] `yarn build`
+  - [x] `yarn test:exports`
+  - [x] `yarn test`
+
+---
+
 ## Run Status
 
 - [x] Complete (awaiting user approval to move this plan to `planning/complete/`)
