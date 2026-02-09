@@ -661,10 +661,9 @@ function resolveIndexText(
 
 /**
  * Index a document using exact and lossy backends.
- * @param document Document record to index.
- * @param primaryField Field name used as the document id.
- * @param indexField Field name containing the text to index.
- * @param backend Optional backend override (defaults to configured backend).
+ *
+ * Accepts {@link IndexDocumentInput} with document data, field configuration,
+ * and an optional backend override.
  * @returns Promise resolved once indexing is complete.
  * */
 export async function indexDocument({
@@ -703,10 +702,9 @@ export async function indexDocument({
 
 /**
  * Remove a document from exact and lossy backends.
- * @param document Document record to remove.
- * @param primaryField Field name used as the document id.
- * @param indexField Field name containing the text to remove from the index.
- * @param backend Optional backend override (defaults to configured backend).
+ *
+ * Accepts {@link RemoveDocumentInput} with document data, field configuration,
+ * and an optional backend override.
  * @returns Promise resolved once removal is complete.
  * */
 export async function removeDocument({
@@ -745,11 +743,9 @@ export async function removeDocument({
 
 /**
  * Replace a document in exact and lossy backends.
- * @param previousDocument Document record to remove.
- * @param nextDocument Document record to index.
- * @param primaryField Field name used as the document id.
- * @param indexField Field name containing the text to index.
- * @param backend Optional backend override (defaults to configured backend).
+ *
+ * Accepts {@link ReplaceDocumentInput} with previous/next documents, field
+ * configuration, and an optional backend override.
  * @returns Promise resolved once replacement is complete.
  * @remarks Replacement is remove-then-add; a failure between steps can
  * temporarily hide the document until retried.
@@ -780,13 +776,9 @@ export async function replaceFullTextDocument({
 
 /**
  * Perform a lossy search and return matching document ids.
- * @param query Search query string.
- * @param indexField Field name containing the indexed text.
- * @param limit Optional maximum number of results to return.
- * @param cursor Optional cursor string for pagination.
- * @param backend Optional backend override (defaults to configured backend).
- * @param limits Optional limits override for search execution.
- * @param trace Optional trace instance for metrics collection.
+ *
+ * Accepts {@link SearchLossyInput} with query text, paging/limit options,
+ * optional execution limits, and an optional trace collector.
  * @returns Search results with doc ids and optional next cursor.
  * */
 export async function searchLossy({
@@ -1026,13 +1018,9 @@ async function hasExactPhrase(
 
 /**
  * Perform an exact search, optionally using a lossy pre-pass for candidates.
- * @param query Search query string.
- * @param indexField Field name containing the indexed text.
- * @param limit Optional maximum number of results to return.
- * @param cursor Optional cursor string for pagination.
- * @param backend Optional backend override (defaults to configured backend).
- * @param limits Optional limits override for search execution.
- * @param trace Optional trace instance for metrics collection.
+ *
+ * Accepts {@link SearchExactInput} with query text, paging/limit options,
+ * optional execution limits, and an optional trace collector.
  * @returns Search results with doc ids and optional next cursor.
  * */
 export async function searchExact({

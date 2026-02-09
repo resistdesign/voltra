@@ -1,7 +1,7 @@
 /**
  * @packageDocumentation
  *
- * Various build tools like a dynamic TypeScript to {@link TypeInfo} parser.
+ * Various build tools like a dynamic TypeScript-to-TypeInfo parser.
  */
 /**
  * @category build
