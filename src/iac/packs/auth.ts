@@ -11,7 +11,7 @@ import { SimpleCFT } from "../SimpleCFT";
 /**
  * Configuration for the auth pack.
  */
-export type AddAuthConfig = {
+type AddAuthConfigBase = {
   /**
    * Cognito user pool resource id.
    */
@@ -24,22 +24,6 @@ export type AddAuthConfig = {
    * IAM role name for unauthenticated users.
    */
   unauthRoleName: string;
-  /**
-   * Parameter name for Route53 hosted zone id.
-   */
-  hostedZoneIdParameterName: string;
-  /**
-   * Parameter name for base domain.
-   */
-  domainNameParameterName: string;
-  /**
-   * SSL certificate resource id for the user pool domain.
-   */
-  sslCertificateId: string;
-  /**
-   * CloudFront distribution id for the main CDN.
-   */
-  mainCDNCloudFrontId: string;
   /**
    * API Gateway REST API id for the backend.
    */
@@ -66,56 +50,98 @@ export type AddAuthConfig = {
   logoutUrls: any[];
 };
 
+type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
+  /**
+   * Enable a custom Cognito user pool domain and associated Route53 records.
+   *
+   * Defaults to `true`.
+   */
+  enableUserPoolDomain?: true;
+  /**
+   * Parameter name for Route53 hosted zone id.
+   */
+  hostedZoneIdParameterName: string;
+  /**
+   * Parameter name for base domain.
+   */
+  domainNameParameterName: string;
+  /**
+   * SSL certificate resource id for the user pool domain.
+   */
+  sslCertificateId: string;
+  /**
+   * CloudFront distribution id for the main CDN.
+   */
+  mainCDNCloudFrontId: string;
+};
+
+type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
+  /**
+   * Disable custom Cognito user pool domain resources.
+   */
+  enableUserPoolDomain: false;
+  hostedZoneIdParameterName?: never;
+  domainNameParameterName?: never;
+  sslCertificateId?: never;
+  mainCDNCloudFrontId?: never;
+};
+
 /**
- * Add a user management system.
- *
- * @param config - Auth pack configuration.
- * */
+ * Configuration for {@link addAuth}.
+ */
+export type AddAuthConfig =
+  | AddAuthConfigWithUserPoolDomain
+  | AddAuthConfigWithoutUserPoolDomain;
+
 /**
  * Add auth resources including user management and an admin group.
  *
  * @group Resource Packs
  */
-export const addAuth = createResourcePack(
-  ({
+export const addAuth = createResourcePack((config: AddAuthConfig) => {
+  const {
     userManagementId,
     authRoleName,
     unauthRoleName,
-    hostedZoneIdParameterName,
-    domainNameParameterName,
-    sslCertificateId,
     callbackUrls,
     logoutUrls,
-    mainCDNCloudFrontId,
     apiCloudFunctionGatewayId,
     apiStageName,
     adminGroupId,
     userManagementAdminGroupName,
-  }: AddAuthConfig) =>
-    new SimpleCFT()
-      .applyPack(addUserManagement, {
-        id: userManagementId,
-        authRoleName,
-        unauthRoleName,
-        domainName: {
-          Ref: domainNameParameterName,
-        },
-        hostedZoneId: {
-          Ref: hostedZoneIdParameterName,
-        },
-        sslCertificateArn: {
-          Ref: sslCertificateId,
-        },
-        callbackUrls: callbackUrls,
-        logoutUrls: logoutUrls,
-        baseDomainRecordAliasTargetDNSName: {
-          "Fn::GetAtt": [mainCDNCloudFrontId, "DomainName"],
-        },
-        apiGatewayRESTAPIId: {
-          Ref: apiCloudFunctionGatewayId,
-        },
-        apiStageName,
-      })
+  } = config;
+
+  return new SimpleCFT()
+    .applyPack(addUserManagement, {
+      id: userManagementId,
+      authRoleName,
+      unauthRoleName,
+      callbackUrls: callbackUrls,
+      logoutUrls: logoutUrls,
+      apiGatewayRESTAPIId: {
+        Ref: apiCloudFunctionGatewayId,
+      },
+      apiStageName,
+      ...(config.enableUserPoolDomain === false
+        ? {
+            enableUserPoolDomain: false as const,
+          }
+        : {
+            enableUserPoolDomain: true as const,
+            domainName: {
+              Ref: config.domainNameParameterName,
+            },
+            hostedZoneId: {
+              Ref: config.hostedZoneIdParameterName,
+            },
+            sslCertificateArn: {
+              Ref: config.sslCertificateId,
+            },
+            baseDomainRecordAliasTargetDNSName: {
+              "Fn::GetAtt": [config.mainCDNCloudFrontId, "DomainName"],
+            },
+          }),
+    })
       .patch({
         Resources: {
           [adminGroupId]: {
@@ -129,5 +155,5 @@ export const addAuth = createResourcePack(
             },
           },
         },
-      }).template,
-);
+      }).template;
+});
