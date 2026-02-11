@@ -23,6 +23,17 @@
           "hasIdentityPoolRoles": true,
           "authRoleName": "AuthRole",
           "unauthRoleName": "UnauthRole"
+        },
+        "noDomainSummary": {
+          "resourceKeys": [
+            "UserPool",
+            "UserPoolClient",
+            "UserPoolIdentityPool"
+          ],
+          "hasBaseDomainRecord": false,
+          "hasDomain": false,
+          "hasDomainRecord": false,
+          "hasIdentityPoolRoles": false
         }
       }
     }

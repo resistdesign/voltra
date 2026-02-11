@@ -9,7 +9,7 @@ import { createResourcePack } from "../../utils";
 /**
  * Configuration for adding Cognito user management resources.
  */
-export type AddUserManagementConfig = {
+type AddUserManagementConfigBase = {
   /**
    * Base id for Cognito resources.
    */
@@ -22,18 +22,6 @@ export type AddUserManagementConfig = {
    * IAM role name for unauthenticated users.
    */
   unauthRoleName: string;
-  /**
-   * Base domain name for the user pool.
-   */
-  domainName: any;
-  /**
-   * Hosted zone id for DNS records.
-   */
-  hostedZoneId: any;
-  /**
-   * SSL certificate ARN for the user pool domain.
-   */
-  sslCertificateArn: any;
   /**
    * OAuth callback URLs.
    */
@@ -56,6 +44,45 @@ export type AddUserManagementConfig = {
   apiStageName?: any;
 };
 
+type AddUserManagementConfigWithDomain = AddUserManagementConfigBase & {
+  /**
+   * Enable a custom Cognito user pool domain and associated Route53 records.
+   *
+   * Defaults to `true`.
+   */
+  enableUserPoolDomain?: true;
+  /**
+   * Base domain name for the user pool.
+   */
+  domainName: any;
+  /**
+   * Hosted zone id for DNS records.
+   */
+  hostedZoneId: any;
+  /**
+   * SSL certificate ARN for the user pool domain.
+   */
+  sslCertificateArn: any;
+};
+
+type AddUserManagementConfigWithoutDomain = AddUserManagementConfigBase & {
+  /**
+   * Disable custom Cognito user pool domain resources.
+   */
+  enableUserPoolDomain: false;
+  domainName?: never;
+  hostedZoneId?: never;
+  sslCertificateArn?: never;
+  baseDomainRecordAliasTargetDNSName?: never;
+};
+
+/**
+ * Configuration for {@link addUserManagement}.
+ */
+export type AddUserManagementConfig =
+  | AddUserManagementConfigWithDomain
+  | AddUserManagementConfigWithoutDomain;
+
 /**
  * Add Cognito user management resources to a template.
  *
@@ -64,19 +91,16 @@ export type AddUserManagementConfig = {
  * @group Resource Packs
  */
 export const addUserManagement = createResourcePack(
-  ({
-    id,
-    authRoleName,
-    unauthRoleName,
-    domainName,
-    hostedZoneId,
-    sslCertificateArn,
-    callbackUrls,
-    logoutUrls,
-    baseDomainRecordAliasTargetDNSName,
-    apiGatewayRESTAPIId,
-    apiStageName,
-  }: AddUserManagementConfig) => {
+  (config: AddUserManagementConfig) => {
+    const {
+      id,
+      authRoleName,
+      unauthRoleName,
+      callbackUrls,
+      logoutUrls,
+      apiGatewayRESTAPIId,
+      apiStageName,
+    } = config;
     const apiRoleConfig =
       apiGatewayRESTAPIId && apiStageName
         ? {
@@ -216,6 +240,71 @@ export const addUserManagement = createResourcePack(
           }
         : {};
 
+    const userPoolDomainConfig =
+      config.enableUserPoolDomain === false
+        ? {}
+        : {
+            [`${id}BaseDomainRecord`]: !!config.baseDomainRecordAliasTargetDNSName
+              ? {
+                  Type: "AWS::Route53::RecordSet",
+                  DeletionPolicy: "Delete",
+                  Properties: {
+                    HostedZoneId: config.hostedZoneId,
+                    Type: "A",
+                    Name: config.domainName,
+                    AliasTarget: {
+                      HostedZoneId: "Z2FDTNDATAQYW2",
+                      DNSName: config.baseDomainRecordAliasTargetDNSName,
+                    },
+                  },
+                }
+              : (undefined as any),
+            [`${id}DomainRecord`]: {
+              Type: "AWS::Route53::RecordSet",
+              DeletionPolicy: "Delete",
+              Properties: {
+                HostedZoneId: config.hostedZoneId,
+                Type: "A",
+                Name: {
+                  "Fn::Sub": [
+                    "auth.${BaseDomainName}",
+                    {
+                      BaseDomainName: config.domainName,
+                    },
+                  ],
+                },
+                AliasTarget: {
+                  HostedZoneId: "Z2FDTNDATAQYW2",
+                  DNSName: {
+                    "Fn::GetAtt": [`${id}Domain`, "CloudFrontDistribution"],
+                  },
+                },
+              },
+            },
+            [`${id}Domain`]: {
+              Type: "AWS::Cognito::UserPoolDomain",
+              DependsOn: !!config.baseDomainRecordAliasTargetDNSName
+                ? `${id}BaseDomainRecord`
+                : undefined,
+              Properties: {
+                Domain: {
+                  "Fn::Sub": [
+                    "auth.${BaseDomainName}",
+                    {
+                      BaseDomainName: config.domainName,
+                    },
+                  ],
+                },
+                UserPoolId: {
+                  Ref: id,
+                },
+                CustomDomainConfig: {
+                  CertificateArn: config.sslCertificateArn,
+                },
+              },
+            },
+          };
+
     return {
       Resources: {
         [id]: {
@@ -269,65 +358,6 @@ export const addUserManagement = createResourcePack(
             },
           },
         },
-        [`${id}BaseDomainRecord`]: !!baseDomainRecordAliasTargetDNSName
-          ? {
-              Type: "AWS::Route53::RecordSet",
-              DeletionPolicy: "Delete",
-              Properties: {
-                HostedZoneId: hostedZoneId,
-                Type: "A",
-                Name: domainName,
-                AliasTarget: {
-                  HostedZoneId: "Z2FDTNDATAQYW2",
-                  DNSName: baseDomainRecordAliasTargetDNSName,
-                },
-              },
-            }
-          : (undefined as any),
-        [`${id}DomainRecord`]: {
-          Type: "AWS::Route53::RecordSet",
-          DeletionPolicy: "Delete",
-          Properties: {
-            HostedZoneId: hostedZoneId,
-            Type: "A",
-            Name: {
-              "Fn::Sub": [
-                "auth.${BaseDomainName}",
-                {
-                  BaseDomainName: domainName,
-                },
-              ],
-            },
-            AliasTarget: {
-              HostedZoneId: "Z2FDTNDATAQYW2",
-              DNSName: {
-                "Fn::GetAtt": [`${id}Domain`, "CloudFrontDistribution"],
-              },
-            },
-          },
-        },
-        [`${id}Domain`]: {
-          Type: "AWS::Cognito::UserPoolDomain",
-          DependsOn: !!baseDomainRecordAliasTargetDNSName
-            ? `${id}BaseDomainRecord`
-            : undefined,
-          Properties: {
-            Domain: {
-              "Fn::Sub": [
-                "auth.${BaseDomainName}",
-                {
-                  BaseDomainName: domainName,
-                },
-              ],
-            },
-            UserPoolId: {
-              Ref: id,
-            },
-            CustomDomainConfig: {
-              CertificateArn: sslCertificateArn,
-            },
-          },
-        },
         [`${id}Client`]: {
           Type: "AWS::Cognito::UserPoolClient",
           Properties: {
@@ -373,6 +403,7 @@ export const addUserManagement = createResourcePack(
             ],
           },
         },
+        ...userPoolDomainConfig,
         ...apiRoleConfig,
       },
     };

@@ -6,23 +6,42 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "resourceKeys": [
-          "AdminGroup",
-          "UserPool",
-          "UserPoolAuthRole",
-          "UserPoolBaseDomainRecord",
-          "UserPoolClient",
-          "UserPoolDomain",
-          "UserPoolDomainRecord",
-          "UserPoolIdentityPool",
-          "UserPoolIdentityPoolRoles",
-          "UserPoolUnauthRole"
-        ],
-        "adminGroupName": "admins",
-        "authRoleName": "AuthRole",
-        "unauthRoleName": "UnauthRole",
-        "hasBaseDomainRecord": true,
-        "hasIdentityPoolRoles": true
+        "withDomainSummary": {
+          "resourceKeys": [
+            "AdminGroup",
+            "UserPool",
+            "UserPoolAuthRole",
+            "UserPoolBaseDomainRecord",
+            "UserPoolClient",
+            "UserPoolDomain",
+            "UserPoolDomainRecord",
+            "UserPoolIdentityPool",
+            "UserPoolIdentityPoolRoles",
+            "UserPoolUnauthRole"
+          ],
+          "adminGroupName": "admins",
+          "authRoleName": "AuthRole",
+          "unauthRoleName": "UnauthRole",
+          "hasBaseDomainRecord": true,
+          "hasDomain": true,
+          "hasDomainRecord": true,
+          "hasIdentityPoolRoles": true
+        },
+        "withoutDomainSummary": {
+          "resourceKeys": [
+            "AdminGroup",
+            "UserPool",
+            "UserPoolAuthRole",
+            "UserPoolClient",
+            "UserPoolIdentityPool",
+            "UserPoolIdentityPoolRoles",
+            "UserPoolUnauthRole"
+          ],
+          "hasBaseDomainRecord": false,
+          "hasDomain": false,
+          "hasDomainRecord": false,
+          "hasIdentityPoolRoles": true
+        }
       }
     }
   ]
