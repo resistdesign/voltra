@@ -50,8 +50,30 @@ export const runUserManagementPackScenario = () => {
     unauthRoleName: unauthRole?.Properties?.RoleName,
   };
 
+  const noDomainTemplate = new SimpleCFT()
+    .applyPack(addUserManagement, {
+      id: "UserPool",
+      authRoleName: "AuthRole",
+      unauthRoleName: "UnauthRole",
+      enableUserPoolDomain: false,
+      callbackUrls: ["https://example.com/callback"],
+      logoutUrls: ["https://example.com/logout"],
+    })
+    .toJSON();
+
+  const noDomainResources = noDomainTemplate.Resources || {};
+
+  const noDomainSummary = {
+    resourceKeys: Object.keys(noDomainResources).sort(),
+    hasBaseDomainRecord: "UserPoolBaseDomainRecord" in noDomainResources,
+    hasDomain: "UserPoolDomain" in noDomainResources,
+    hasDomainRecord: "UserPoolDomainRecord" in noDomainResources,
+    hasIdentityPoolRoles: "UserPoolIdentityPoolRoles" in noDomainResources,
+  };
+
   return {
     minimalSummary,
     apiSummary,
+    noDomainSummary,
   };
 };
