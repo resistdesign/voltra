@@ -195,7 +195,7 @@ Applying the same path twice must be a no-op.
 - [x] Phase 3 — Link ingress + `initialPath`
 - [x] Phase 4 — Delete old routing surfaces
 - [x] Phase 5 — Test coverage
-- [~] Phase 6 — Docs + examples + demo
+- [x] Phase 6 — Docs + examples + demo
 - [x] Phase 7 — Cleanup
 
 ## Phase 1 — Root `<Route>` Becomes Provider
@@ -345,8 +345,8 @@ Site demo:
 Progress:
 
 - [x] README updated to unified `@resistdesign/voltra/app` routing usage.
-- [ ] Examples updated.
-- [ ] Site demo updated and verified.
+- [x] Examples updated.
+- [x] Site demo updated and verified.
 
 ---
 
