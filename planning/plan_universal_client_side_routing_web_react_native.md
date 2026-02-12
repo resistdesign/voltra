@@ -255,7 +255,11 @@ Notes:
 
 - DOM detection must be **100% safe** in SSR / Node test env.
 - Metro + package `exports` interactions: avoid introducing conditional exports that Metro can’t resolve.
-- Avoid accidental inclusion of web-only code in native bundles (no top-level `window` references).
+- Avoid accidental inclusion of web-only code in native bundles (no top-level `window` references). It *CAN* be
+  included, but only if it doesn't break anything.
+
+IMPERATIVE: All code that *CAN* be bundled together MUST be bundled together. We just don't want to break things. But we
+MUST keep things simple.
 
 ### Cross-Platform Code Risks
 
