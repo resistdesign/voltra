@@ -70,6 +70,23 @@
         "absolute": "/app/books/7?tab=grid#section",
         "relative": "/app/books/7?tab=grid#section"
       }
+    },
+    {
+      "export": "runNativeHistoryLateInitialURLDoesNotOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "afterLateInitialURLWithNavigation": {
+          "fullPath": "/login",
+          "length": 2,
+          "index": 1
+        },
+        "afterLateInitialURLWithoutNavigation": {
+          "fullPath": "/deep/link?tab=1",
+          "length": 1,
+          "index": 0
+        }
+      }
     }
   ]
 }

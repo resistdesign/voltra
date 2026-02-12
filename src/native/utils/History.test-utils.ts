@@ -131,3 +131,71 @@ export const runNativeURLMappingScenario = () => {
     relative: mapNativeURLToPath("/app/books/7?tab=grid#section"),
   };
 };
+
+export const runNativeHistoryLateInitialURLDoesNotOverrideScenario = async () => {
+  let incomingListener: ((url: string) => void) | undefined;
+
+  const createDelayedInitialURLAdapter = () => {
+    let resolveInitialURL: ((url: string | null) => void) | undefined;
+
+    return {
+      resolveInitialURL: (url: string | null) => {
+        resolveInitialURL?.(url);
+      },
+      adapter: {
+        getInitialURL: async () =>
+          new Promise<string | null>((resolve) => {
+            resolveInitialURL = resolve;
+          }),
+        subscribe: (listener: (url: string) => void) => {
+          incomingListener = listener;
+          return () => {
+            incomingListener = undefined;
+          };
+        },
+      },
+    };
+  };
+
+  const lateInitialURLContext = createDelayedInitialURLAdapter();
+  const historyWithPreStartNavigation = createNativeHistory({
+    initialPath: "/",
+    adapter: lateInitialURLContext.adapter,
+  });
+
+  const startPromiseBeforeManualNavigation = historyWithPreStartNavigation.start();
+  historyWithPreStartNavigation.push("/login");
+  lateInitialURLContext.resolveInitialURL("voltra://host/");
+  await startPromiseBeforeManualNavigation;
+
+  const afterLateInitialURLWithNavigation = {
+    fullPath: `${historyWithPreStartNavigation.location.path}${historyWithPreStartNavigation.location.search ?? ""}${historyWithPreStartNavigation.location.hash ?? ""}`,
+    length: historyWithPreStartNavigation.length,
+    index: historyWithPreStartNavigation.index,
+  };
+
+  historyWithPreStartNavigation.stop();
+
+  const noNavigationContext = createDelayedInitialURLAdapter();
+  const historyWithoutPreStartNavigation = createNativeHistory({
+    initialPath: "/fallback",
+    adapter: noNavigationContext.adapter,
+  });
+
+  const startPromiseWithoutManualNavigation = historyWithoutPreStartNavigation.start();
+  noNavigationContext.resolveInitialURL("voltra://host/deep/link?tab=1");
+  await startPromiseWithoutManualNavigation;
+
+  const afterLateInitialURLWithoutNavigation = {
+    fullPath: `${historyWithoutPreStartNavigation.location.path}${historyWithoutPreStartNavigation.location.search ?? ""}${historyWithoutPreStartNavigation.location.hash ?? ""}`,
+    length: historyWithoutPreStartNavigation.length,
+    index: historyWithoutPreStartNavigation.index,
+  };
+
+  historyWithoutPreStartNavigation.stop();
+
+  return {
+    afterLateInitialURLWithNavigation,
+    afterLateInitialURLWithoutNavigation,
+  };
+};

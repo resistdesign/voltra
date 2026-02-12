@@ -34,11 +34,11 @@ So:
 ---
 
 ## Phase 1 — Reproduce + lock-in the failure with a spec test
-- [ ] Add a new test helper scenario in `src/native/utils/History.test-utils.ts` that simulates:
+- [x] Add a new test helper scenario in `src/native/utils/History.test-utils.ts` that simulates:
   - `adapter.getInitialURL()` resolves **after a delay**
   - user navigates (history.push) **before** the promise resolves
   - current behavior: route ends up overwritten by initialURL
-- [ ] Add a corresponding entry in `src/native/utils/History.spec.json` capturing the *expected* fixed behavior.
+- [x] Add a corresponding entry in `src/native/utils/History.spec.json` capturing the *expected* fixed behavior.
 
 ### Suggested new test scenario (shape)
 Create a new exported function, e.g. `runNativeHistoryLateInitialURLDoesNotOverrideScenario`:
@@ -55,7 +55,7 @@ Also include a variant where:
 ---
 
 ## Phase 2 — Implement the fix in native history startup
-- [ ] Edit `src/native/utils/History.ts` `start()` lifecycle to avoid overwriting navigation that happens after start begins.
+- [x] Edit `src/native/utils/History.ts` `start()` lifecycle to avoid overwriting navigation that happens after start begins.
 
 ### Implementation constraints
 - Must not require consumers to change their app.
@@ -89,14 +89,14 @@ If you do this:
 ---
 
 ## Phase 3 — Update/extend specs and verify
-- [ ] Run `yarn test` and confirm the new spec passes.
-- [ ] If fixtures are generated rather than hand-authored, run `yarn test:gen` and commit updated expectations.
-- [ ] Sanity-check the existing `History.spec.json` expectations still pass (no regressions).
+- [x] Run `yarn test` and confirm the new spec passes.
+- [x] If fixtures are generated rather than hand-authored, run `yarn test:gen` and commit updated expectations.
+- [x] Sanity-check the existing `History.spec.json` expectations still pass (no regressions).
 
 ---
 
 ## Phase 4 — Documentation / behavior notes
-- [ ] Update doc comments in `src/native/utils/History.ts` (near `start()` behavior) to mention:
+- [x] Update doc comments in `src/native/utils/History.ts` (near `start()` behavior) to mention:
   - initialURL is applied only if no navigation occurred during startup
   - this prevents late initialURL overriding user navigation
 - [ ] Optional: add a short note in docs/site if there is a section on native routing.
@@ -115,4 +115,3 @@ If you do this:
 - The repro is easiest when `getInitialURL()` is delayed (simulate with a promise + `setTimeout`).
 - The overwrite tends to look like a “flash” because it’s a replace on the same history controller.
 - The provider (`NativeRouteProvider`) starts history on mount; you don’t need to add additional effects in app code.
-
