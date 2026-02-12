@@ -1,0 +1,26 @@
+{
+  "file": "./Route.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runAppRouteProviderScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "rootProvidesAdapter": true,
+        "rootIsTopLevel": true,
+        "nestedMatchHasPath": true,
+        "nestedMatchHasParam": true,
+        "nestedMatchIsNested": true
+      }
+    },
+    {
+      "export": "runAppRouteNoDOMScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "defaultPathIsSlash": true,
+        "rootProvidesAdapter": true
+      }
+    }
+  ]
+}

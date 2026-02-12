@@ -189,50 +189,37 @@ const coords = layout.computeNativeCoords({
 
 ## Routing (Web + Native)
 
-Voltra ships a render-agnostic Route core in `@resistdesign/voltra/app` plus platform adapters.
-
-Web usage (auto-wires `window.history`):
+Voltra routing is unified under `@resistdesign/voltra/app`.
 
 ```tsx
-import { Route } from "@resistdesign/voltra/web";
+import { Route } from "@resistdesign/voltra/app";
+
+<Route>
+  <Route path="/" exact>
+    <HomeScreen />
+  </Route>
+  <Route path="/login" exact>
+    <LoginScreen />
+  </Route>
+  <Route path="/signup" exact>
+    <SignUpScreen />
+  </Route>
+</Route>;
 ```
 
-Native usage (adapter-driven):
+How it works:
 
-```tsx
-import { Route, RouteProvider, createManualRouteAdapter } from "@resistdesign/voltra/native";
-const { adapter, updatePath } = createManualRouteAdapter("/home");
-```
+- Root `<Route>` (no `path`) is provider mode.
+- Nested `<Route path="...">` entries are matcher mode.
+- Strategy is auto-selected:
+  - DOM + History API => browser history strategy.
+  - Otherwise => in-memory native strategy.
 
-For React Native navigation libraries, Voltra is optimized for react-navigation as the primary native default. Provide a RouteAdapter that maps navigation state to a path and call `RouteProvider`.
+Escape hatches (root-only):
 
-Native navigation mapping example:
-
-```tsx
-import { buildPathFromRouteChain, createNavigationStateRouteAdapter } from "@resistdesign/voltra/native";
-
-const adapter = createNavigationStateRouteAdapter({
-  getState: () => navigationRef.getRootState(),
-  subscribe: (listener) => navigationRef.addListener("state", listener),
-  toPath: (state) =>
-    buildPathFromRouteChain(
-      state.routes.map((route) => ({
-        name: route.name,
-        params: route.params as Record<string, any>,
-      })),
-      {
-        Home: "home",
-        Book: "books/:id",
-      },
-    ),
-  navigate: (path) => {
-    const routeName = path === "/home" ? "Home" : "Book";
-    navigationRef.navigate(routeName);
-  },
-});
-```
-
-For RN web builds, keep your navigation library linking config in sync with the same route patterns used in `buildPathFromRouteChain`.
+- `initialPath` sets fallback startup path when no ingress URL exists.
+- `adapter` allows full custom adapter control.
+- `ingress` supports deep-link ingress wiring (`getInitialURL`, `subscribe`, URL mapping, push/replace mode).
 
 ## Form Suites (Web + Native + BYOCS)
 

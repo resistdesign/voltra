@@ -5,4 +5,3 @@
  */
 
 export * from "./EasyLayout";
-export * from "./Route";
