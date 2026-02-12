@@ -197,6 +197,7 @@ Applying the same path twice must be a no-op.
 - [x] Phase 5 — Test coverage
 - [x] Phase 6 — Docs + examples + demo
 - [x] Phase 7 — Cleanup
+- [x] Phase 8 — Examples Curation and Discoverability
 
 ## Phase 1 — Root `<Route>` Becomes Provider
 
@@ -361,6 +362,44 @@ Progress:
 
 ---
 
+## Phase 8 — Examples Curation and Discoverability
+
+Intent:
+
+- Treat `examples/` as intentional reference material for consumers.
+- Examples do not need to compile or run as integration tests.
+- They must be correctly classified, organized, and easy to discover.
+
+Work:
+
+- Reorganize `examples/` by domain (for example: `examples/routing/`, `examples/api/`, `examples/forms/`, `examples/layout/`, `examples/build/`, `examples/common/`).
+- Ensure each example file has a clear purpose and naming convention.
+- Separate client routing examples from backend API request-routing examples.
+- Add a top-level examples index doc (for example `examples/README.md`) with:
+  - What each folder covers.
+  - Audience (app client, backend API, forms, layout, etc.).
+  - Expected usage style (reference snippet vs runnable app).
+- Update consumer-facing docs to link to the examples index:
+  - Root `README.md`.
+  - Relevant TypeDoc-facing module docs/comments where appropriate.
+- Ensure routing docs point to routing examples directly (not generic examples list).
+- Remove or rewrite low-signal placeholder snippets.
+
+Deliverable:
+
+- Examples are classified and navigable by topic.
+- Consumers can find the right examples from top-level docs without guesswork.
+- API/backend routing examples are clearly distinct from app/client routing examples.
+
+Progress:
+
+- [x] Examples reorganized by domain folders.
+- [x] Top-level examples index added (`examples/README.md`).
+- [x] Routing and backend API routing examples separated and documented.
+- [x] Consumer-facing docs updated with direct examples links.
+
+---
+
 # Done Means
 
 - The sample app can be rewritten with:
@@ -373,3 +412,4 @@ Progress:
   - SPA Web
 - Documentation matches implementation.
 - No split routing story remains.
+- Examples are organized by domain and linked from consumer-facing docs.
