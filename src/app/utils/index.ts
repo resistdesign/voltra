@@ -18,6 +18,7 @@ export * from "./easy-layout";
 export * from "./History";
 export * from "./Route";
 export * from "./RouteHistory";
+export * from "./UniversalRouteAdapter";
 export * from "./Service";
 export * from "./TypeInfoORMAPIUtils";
 export * from "./TypeInfoORMClient";

@@ -47,13 +47,8 @@ Rules:
 - A `Route` without `path` is the provider (root only).
 - A `Route` with `path` is a matcher (existing behavior preserved).
 - Root auto-detects runtime strategy.
-- Optional root-only override:
-
-```tsx
-<Route native>
-```
-
-`native` defaults to false. It forces native strategy even in browser.
+- No platform flags required in normal usage.
+- Keep escape hatches available for non-ideal environments, but make auto mode the default and expected path.
 
 ---
 
@@ -168,9 +163,10 @@ Root `<Route>` chooses strategy:
 
 RN Web should follow Web Strategy by default.
 
-Optional override:
+Escape hatch policy:
 
-- `<Route native>` forces Native Strategy even if DOM exists.
+- No explicit `native` prop on `Route`.
+- Expose only minimal advanced configuration for exceptional environments (for example custom ingress/history wiring), without requiring platform switching in consumer component trees.
 
 No platform switching in user code.
 
@@ -192,6 +188,16 @@ Applying the same path twice must be a no-op.
 
 ---
 
+## Progress Checklist
+
+- [x] Phase 1 — Root `<Route>` becomes provider
+- [x] Phase 2 — Unified internal adapter
+- [x] Phase 3 — Link ingress + `initialPath`
+- [x] Phase 4 — Delete old routing surfaces
+- [x] Phase 5 — Test coverage
+- [~] Phase 6 — Docs + examples + demo
+- [x] Phase 7 — Cleanup
+
 ## Phase 1 — Root `<Route>` Becomes Provider
 
 - Convert `src/app` Route to dual-role component:
@@ -201,10 +207,6 @@ Applying the same path twice must be a no-op.
   - Create routing adapter via runtime selection.
   - Create context.
   - Provide context to children.
-- Add root-only prop:
-  - `native?: boolean`
-- Add development guard:
-  - Throw if `native` used on non-root Route.
 - Ensure nested matching behavior is unchanged.
 
 Deliverable:
@@ -218,7 +220,7 @@ Deliverable:
 
 Create a single internal adapter factory:
 
-    createUniversalAdapter({ native?: boolean })
+    createUniversalAdapter()
 
 It must:
 
@@ -328,7 +330,7 @@ README:
 - Only show nested `<Route>` usage.
 - Explain provider behavior clearly.
 - Document strategy detection.
-- Document `native` override.
+- Document available escape hatches and when they are appropriate.
 
 Examples:
 
@@ -339,6 +341,12 @@ Site demo:
 
 - Load nested routes directly via URL.
 - Ensure browser back/forward works.
+
+Progress:
+
+- [x] README updated to unified `@resistdesign/voltra/app` routing usage.
+- [ ] Examples updated.
+- [ ] Site demo updated and verified.
 
 ---
 

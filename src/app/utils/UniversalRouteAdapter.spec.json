@@ -1,0 +1,37 @@
+{
+  "file": "./UniversalRouteAdapter.test-utils.ts",
+  "tests": [
+    {
+      "export": "runUniversalAdapterWebScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialPathFromWindow": true,
+        "pushUpdatesPath": true,
+        "replaceUpdatesPath": true,
+        "popstateUpdatesPath": true
+      }
+    },
+    {
+      "export": "runUniversalAdapterNativeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialPathFromMemory": true,
+        "pushUpdatesPath": true,
+        "replaceUpdatesPath": true
+      }
+    },
+    {
+      "export": "runUniversalAdapterIngressPrecedenceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "initialURLWins": true,
+        "fallbackToInitialPath": true,
+        "fallbackToSlash": true,
+        "noOpOnIdenticalPath": true
+      }
+    }
+  ]
+}
