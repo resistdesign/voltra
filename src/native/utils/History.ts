@@ -165,9 +165,27 @@ export const createNativeHistory = (
 
       const startKey = history.location.key;
       const startIndex = history.index;
+
       unsubscribe = adapter.subscribe((url) => {
-        applyIncomingURL(url);
+        const targetPath = mapURLToPath(url);
+        if (!targetPath) {
+          return;
+        }
+
+        const userNavigated =
+          history.location.key !== startKey || history.index !== startIndex;
+
+        if (userNavigated && targetPath === initialPath) {
+          return;
+        }
+
+        if (onIncomingURL === "push") {
+          history.push(targetPath, { replaceSearch: true });
+        } else {
+          history.replace(targetPath, { replaceSearch: true });
+        }
       });
+
       const initialURL = await adapter.getInitialURL();
       if (history.location.key === startKey && history.index === startIndex) {
         applyIncomingURL(initialURL);
