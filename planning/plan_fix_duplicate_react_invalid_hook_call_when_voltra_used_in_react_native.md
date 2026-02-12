@@ -21,24 +21,24 @@ Eliminate "Invalid hook call" / `dispatcher is null` crashes by ensuring Voltra 
 ## 1) Package.json dependency model
 **File:** `package.json`
 
-- [ ] Move `react` and `react-dom` **out of** `dependencies`.
-- [ ] Add `peerDependencies`:
+- [x] Move `react` and `react-dom` **out of** `dependencies`.
+- [x] Add `peerDependencies`:
   - `react: ">=18"` (required)
   - `react-dom: ">=18"` (web-only)
   - `react-native: ">=0.7"` (native-only)
-- [ ] Add `peerDependenciesMeta`:
+- [x] Add `peerDependenciesMeta`:
   - `react-dom: { optional: true }`
   - `react-native: { optional: true }`
-- [ ] Ensure demo tooling still works by keeping runtime React available during repo builds:
-  - [ ] Add `react` + `react-dom` to **devDependencies** (if not already present there)
-  - [ ] Add `@types/react` to **devDependencies** (currently `@types/react-dom` exists but `@types/react` does not)
+- [x] Ensure demo tooling still works by keeping runtime React available during repo builds:
+  - [x] Add `react` + `react-dom` to **devDependencies** (if not already present there)
+  - [x] Add `@types/react` to **devDependencies** (currently `@types/react-dom` exists but `@types/react` does not)
 
 **Acceptance:** After install, `node_modules/@resistdesign/voltra/node_modules/react` must not exist in consumers.
 
 ## 2) Ensure build output does not bundle React
 **File:** `tsup.config.ts`
 
-- [ ] Update the main build config `external` list to include:
+- [x] Update the main build config `external` list to include:
   - `react`
   - `react-dom`
   - `react-native`
@@ -49,31 +49,34 @@ Eliminate "Invalid hook call" / `dispatcher is null` crashes by ensuring Voltra 
 
 ## 3) Repo-level verification steps
 **Local commands (repo):**
-- [ ] `rm -rf node_modules dist` (and any lock artifacts if needed)
-- [ ] `yarn install`
-- [ ] `yarn test:exports`
-- [ ] `yarn build`
-- [ ] `yarn site:build:app` (ensures Astro demo site still compiles with root devDeps)
+- [x] `rm -rf node_modules dist` (and any lock artifacts if needed)
+- [x] `yarn install`
+- [x] `yarn test:exports`
+- [x] `yarn build`
+- [x] `yarn site:build:app` (ensures Astro demo site still compiles with root devDeps)
 
 **Dependency sanity:**
-- [ ] `yarn why react`
+- [x] `yarn why react`
   - Expect one resolved React version in the repo install.
 
 ## 4) Consumer reproduction + validation
 **In a React Native app consuming Voltra:**
-- [ ] Reinstall deps (`rm -rf node_modules && yarn install`)
-- [ ] Confirm no nested React:
+- [~] Reinstall deps (`rm -rf node_modules && yarn install`)
+- [~] Confirm no nested React:
   - `ls node_modules/@resistdesign/voltra/node_modules` should not contain `react`
-- [ ] Launch app and verify the hook crash is gone.
+- [~] Launch app and verify the hook crash is gone.
 
 ## 5) Guardrails so this doesn’t regress
-- [ ] Add a small CI/consumer smoke check (or extend existing `scripts/consumer-smoke.mjs`) to assert:
+- [x] Add a small CI/consumer smoke check (or extend existing `scripts/consumer-smoke.mjs`) to assert:
   - no nested `@resistdesign/voltra/node_modules/react`
   - `react` is a peerDependency
-- [ ] Add a brief doc note (README or docs) stating:
+- [x] Add a brief doc note (README or docs) stating:
   - consumers must provide `react`
   - web consumers provide `react-dom`
   - native consumers provide `react-native`
+
+## Remaining
+- RN consumer validation from section 4 is still pending in an actual React Native app environment.
 
 # Implementation Notes
 - `peerDependenciesMeta.optional` is correct for `react-dom`/`react-native` because Voltra supports both environments but any given consumer typically installs only one renderer.
@@ -83,4 +86,3 @@ Eliminate "Invalid hook call" / `dispatcher is null` crashes by ensuring Voltra 
 - RN consumer no longer crashes with hook dispatcher errors.
 - Voltra build + docs site build succeed.
 - React is not nested under Voltra in consumer installs.
-

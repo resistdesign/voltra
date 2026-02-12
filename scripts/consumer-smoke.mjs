@@ -182,6 +182,39 @@ const run = async () => {
       stdio: "inherit",
     });
 
+    const installedVoltraRoot = path.join(
+      consumerDir,
+      "node_modules",
+      "@resistdesign",
+      "voltra",
+    );
+    const installedVoltraPackageJsonPath = path.join(
+      installedVoltraRoot,
+      "package.json",
+    );
+    const installedVoltraPackageJson = JSON.parse(
+      await fs.readFile(installedVoltraPackageJsonPath, "utf8"),
+    );
+    const installedPeerDependencies =
+      installedVoltraPackageJson.peerDependencies ?? {};
+
+    if (!installedPeerDependencies.react) {
+      throw new Error(
+        "Installed @resistdesign/voltra package is missing peerDependency `react`.",
+      );
+    }
+
+    try {
+      await fs.access(path.join(installedVoltraRoot, "node_modules", "react"));
+      throw new Error(
+        "Installed @resistdesign/voltra package unexpectedly contains a nested React copy.",
+      );
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        throw error;
+      }
+    }
+
     const validResult = runTsc(path.join(consumerDir, "tsconfig.valid.json"));
     if (!validResult.ok) {
       throw new Error(
