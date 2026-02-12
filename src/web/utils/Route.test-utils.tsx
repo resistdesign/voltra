@@ -81,11 +81,15 @@ export const runRouteScenario = async () => {
   const nestedRouteRender = renderToString(
     createElement(
       Route,
-      { path: "/app" },
+      null,
       createElement(
         Route,
-        { path: "books/:id", exact: true },
-        createElement(ContextProbe),
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: "books/:id", exact: true },
+          createElement(ContextProbe),
+        ),
       ),
     ),
   );
@@ -93,8 +97,12 @@ export const runRouteScenario = async () => {
   const exactMismatchRender = renderToString(
     createElement(
       Route,
-      { path: "/app/books", exact: true },
-      createElement("span", null, "nope"),
+      null,
+      createElement(
+        Route,
+        { path: "/app/books", exact: true },
+        createElement("span", null, "nope"),
+      ),
     ),
   );
 
