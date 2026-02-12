@@ -125,13 +125,15 @@ EasyLayout now has:
 - Web rendering via CSS Grid in `@resistdesign/voltra/web`.
 - Native coordinate computation in `@resistdesign/voltra/native`.
 
-### Examples
+### Reference Examples
 
-- `examples/api.ts`
-- `examples/common.ts`
-- `examples/web.ts`
-- `examples/native.ts`
-- `examples/build.ts`
+- Index: `examples/README.md`
+- Client routing: `examples/routing/app-routing.ts`
+- Backend API routing: `examples/api/backend-routing.ts`
+- Forms: `examples/forms/`
+- Layout: `examples/layout/`
+- Common types: `examples/common/types.ts`
+- Build-time parsing: `examples/build/type-parsing.ts`
 
 ### Template syntax
 
@@ -189,50 +191,43 @@ const coords = layout.computeNativeCoords({
 
 ## Routing (Web + Native)
 
-Voltra ships a render-agnostic Route core in `@resistdesign/voltra/app` plus platform adapters.
+Voltra routing is unified under `@resistdesign/voltra/app`.
 
-Web usage (auto-wires `window.history`):
-
-```tsx
-import { Route } from "@resistdesign/voltra/web";
-```
-
-Native usage (adapter-driven):
+Reference example: `examples/routing/app-routing.ts`
 
 ```tsx
-import { Route, RouteProvider, createManualRouteAdapter } from "@resistdesign/voltra/native";
-const { adapter, updatePath } = createManualRouteAdapter("/home");
+import { Route } from "@resistdesign/voltra/app";
+
+<Route>
+  <Route path="/" exact>
+    <HomeScreen />
+  </Route>
+  <Route path="/login" exact>
+    <LoginScreen />
+  </Route>
+  <Route path="/signup" exact>
+    <SignUpScreen />
+  </Route>
+</Route>;
 ```
 
-For React Native navigation libraries, Voltra is optimized for react-navigation as the primary native default. Provide a RouteAdapter that maps navigation state to a path and call `RouteProvider`.
+How it works:
 
-Native navigation mapping example:
+- Root `<Route>` (no `path`) is provider mode.
+- Nested `<Route path="...">` entries are matcher mode.
+- Strategy is auto-selected:
+  - DOM + History API => browser history strategy.
+  - Otherwise => in-memory native strategy.
 
-```tsx
-import { buildPathFromRouteChain, createNavigationStateRouteAdapter } from "@resistdesign/voltra/native";
+Escape hatches (root-only):
 
-const adapter = createNavigationStateRouteAdapter({
-  getState: () => navigationRef.getRootState(),
-  subscribe: (listener) => navigationRef.addListener("state", listener),
-  toPath: (state) =>
-    buildPathFromRouteChain(
-      state.routes.map((route) => ({
-        name: route.name,
-        params: route.params as Record<string, any>,
-      })),
-      {
-        Home: "home",
-        Book: "books/:id",
-      },
-    ),
-  navigate: (path) => {
-    const routeName = path === "/home" ? "Home" : "Book";
-    navigationRef.navigate(routeName);
-  },
-});
-```
+- `initialPath` sets fallback startup path when no ingress URL exists.
+- `adapter` allows full custom adapter control.
+- `ingress` supports deep-link ingress wiring (`getInitialURL`, `subscribe`, URL mapping, push/replace mode).
 
-For RN web builds, keep your navigation library linking config in sync with the same route patterns used in `buildPathFromRouteChain`.
+If you are looking for backend request routing (Cloud Function/API event routing), see:
+
+- `examples/api/backend-routing.ts`
 
 ## Form Suites (Web + Native + BYOCS)
 

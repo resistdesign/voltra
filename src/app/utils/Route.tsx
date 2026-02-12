@@ -2,7 +2,7 @@
  * @packageDocumentation
  *
  * Render-agnostic routing helpers with nested Route contexts.
- * Supply a RouteAdapter via RouteProvider or a platform-specific wrapper.
+ * Supply a RouteAdapter via RouteProvider or use root Route provider mode.
  */
 import React, {
   createContext,
@@ -10,13 +10,19 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   getParamsAndTestPath,
   getPathString,
   mergeStringPaths,
+  resolvePath,
 } from "../../common/Routing";
+import {
+  createUniversalAdapter,
+  type UniversalRouteIngress,
+} from "./UniversalRouteAdapter";
 
 /**
  * Platform adapter that supplies the current path and change notifications.
@@ -78,6 +84,11 @@ export const createManualRouteAdapter = (initialPath: string = "/") => {
     adapter,
     updatePath,
   };
+};
+
+const isDevelopmentMode = (): boolean => {
+  const env = (globalThis as any)?.process?.env?.NODE_ENV;
+  return env !== "production";
 };
 
 /**
@@ -183,6 +194,63 @@ export const {
  */
 export const useRouteContext = () => useContext(RouteContext);
 
+const getWindow = (): (Window & typeof globalThis) | undefined => {
+  if (typeof globalThis === "undefined") {
+    return undefined;
+  }
+
+  if ("window" in (globalThis as any)) {
+    return (globalThis as any).window as Window & typeof globalThis;
+  }
+
+  return undefined;
+};
+
+const useBrowserLinkInterceptor = (adapter: RouteAdapter | undefined) => {
+  useEffect(() => {
+    const WINDOW = getWindow();
+
+    if (!WINDOW || !adapter?.push) {
+      return undefined;
+    }
+
+    const handleAnchorClick = (event: MouseEvent) => {
+      let target: Node | ParentNode | null = event.target as Node;
+
+      while (target && (target as HTMLElement).nodeName !== "A") {
+        target = target.parentNode;
+      }
+
+      if (!target || (target as HTMLElement).nodeName !== "A") {
+        return;
+      }
+
+      const anchor = target as HTMLAnchorElement;
+      const href = anchor.getAttribute("href");
+      const title = anchor.getAttribute("title") ?? "";
+
+      if (!href) {
+        return;
+      }
+
+      try {
+        new URL(href);
+        return;
+      } catch (error) {
+        const nextPath = resolvePath(WINDOW.location?.pathname ?? "", href);
+        event.preventDefault();
+        adapter.push?.(nextPath, title);
+      }
+    };
+
+    WINDOW.document?.addEventListener("click", handleAnchorClick);
+
+    return () => {
+      WINDOW.document?.removeEventListener("click", handleAnchorClick);
+    };
+  }, [adapter]);
+};
+
 /**
  * RouteProvider props.
  */
@@ -249,6 +317,18 @@ export type RouteProps<ParamsType extends Record<string, any>> = {
    * Require an exact match for the route path.
    */
   exact?: boolean;
+  /**
+   * Optional initial path override for root provider mode only.
+   */
+  initialPath?: string;
+  /**
+   * Optional adapter override for root provider mode only.
+   */
+  adapter?: RouteAdapter;
+  /**
+   * Optional external URL ingress for root provider mode only.
+   */
+  ingress?: UniversalRouteIngress;
 };
 
 /**
@@ -257,15 +337,19 @@ export type RouteProps<ParamsType extends Record<string, any>> = {
  * @typeParam ParamsType - Param shape for this route.
  * @param props - Route props including path, params handler, and children.
  */
-export const Route = <ParamsType extends Record<string, any>>({
+const RouteMatcher = <ParamsType extends Record<string, any>>({
   /**
    * Use `:` as the first character to denote a parameter in the path.
    */
-  path = "",
+  path,
   onParamsChange,
   exact = false,
   children,
-}: PropsWithChildren<RouteProps<ParamsType>>) => {
+}: PropsWithChildren<
+  Omit<RouteProps<ParamsType>, "path" | "initialPath" | "adapter"> & {
+    path: string;
+  }
+>) => {
   const {
     currentWindowPath = "",
     parentPath = "",
@@ -314,4 +398,83 @@ export const Route = <ParamsType extends Record<string, any>>({
       {children}
     </RouteContextProvider>
   ) : null;
+};
+
+const RouteRootProvider = ({
+  children,
+  adapter,
+  initialPath,
+  ingress,
+}: PropsWithChildren<{
+  adapter?: RouteAdapter;
+  initialPath?: string;
+  ingress?: UniversalRouteIngress;
+}>) => {
+  const routeContext = useRouteContext();
+  const autoAdapterRef = useRef<RouteAdapter | null>(null);
+
+  if (typeof routeContext.adapter !== "undefined" && isDevelopmentMode()) {
+    throw new Error(
+      "Route provider mode is root-only. Nested Route requires a path.",
+    );
+  }
+
+  if (!autoAdapterRef.current) {
+    autoAdapterRef.current =
+      adapter ?? createUniversalAdapter({ initialPath, ingress });
+  }
+  useBrowserLinkInterceptor(autoAdapterRef.current);
+
+  return (
+    <RouteProvider adapter={autoAdapterRef.current} initialPath={initialPath}>
+      {children}
+    </RouteProvider>
+  );
+};
+
+export const Route = <ParamsType extends Record<string, any>>(
+  props: PropsWithChildren<RouteProps<ParamsType>>,
+) => {
+  if (typeof props.path === "undefined") {
+    if (
+      (typeof props.exact !== "undefined" ||
+        typeof props.onParamsChange !== "undefined") &&
+      isDevelopmentMode()
+    ) {
+      throw new Error(
+        "Route provider mode does not support matcher props. Set a path to use matcher behavior.",
+      );
+    }
+
+    return (
+      <RouteRootProvider
+        adapter={props.adapter}
+        initialPath={props.initialPath}
+        ingress={props.ingress}
+      >
+        {props.children}
+      </RouteRootProvider>
+    );
+  }
+
+  if (
+    (typeof props.initialPath !== "undefined" ||
+      typeof props.adapter !== "undefined" ||
+      typeof props.ingress !== "undefined") &&
+    isDevelopmentMode()
+  ) {
+    throw new Error(
+      "Route matcher mode does not support provider props. Remove initialPath/adapter/ingress or use a root Route without path.",
+    );
+  }
+
+  return (
+    <RouteMatcher
+      path={props.path}
+      onParamsChange={props.onParamsChange}
+      exact={props.exact}
+    >
+      {props.children}
+    </RouteMatcher>
+  );
 };

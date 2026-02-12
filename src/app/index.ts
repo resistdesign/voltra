@@ -17,6 +17,10 @@
  * @see {@link useApplicationStateValueStructure} and
  * {@link useApplicationStateLoader} for good starting points.
  *
+ * Reference examples:
+ * - `examples/README.md`
+ * - `examples/routing/app-routing.ts`
+ *
  * @example
  * ```tsx
  * import {
