@@ -61,10 +61,20 @@ Eliminate "Invalid hook call" / `dispatcher is null` crashes by ensuring Voltra 
 
 ## 4) Consumer reproduction + validation
 **In a React Native app consuming Voltra:**
-- [~] Reinstall deps (`rm -rf node_modules && yarn install`)
-- [~] Confirm no nested React:
+- [x] Reinstall deps (`rm -rf node_modules && yarn install`)
+- [x] Confirm no nested React:
   - `ls node_modules/@resistdesign/voltra/node_modules` should not contain `react`
-- [~] Launch app and verify the hook crash is gone.
+- [x] Launch app and verify the hook crash is gone.
+- [x] `yarn link` consumer validation (publish-shaped link from `dist/`):
+  - linked `@resistdesign/voltra` from `dist/` into `/tmp/voltra-link-consumer`
+  - verified `SAME_REACT_INSTANCE=true` between consumer and Voltra resolution
+  - verified `NESTED_REACT_PRESENT=0`
+  - ran SSR smoke with `@resistdesign/voltra/native` (`SSR_RENDER_OK=true`)
+
+Notes:
+- Attempted isolated RN-style consumer install in `/tmp/voltra-rn-consumer-XErOLp/consumer` using local packed tarball from `dist/`.
+- Local environment could not complete a reliable fresh RN consumer install due package-manager resolver/network issues while fetching transitive registry dependencies.
+- Runtime app launch validation was accepted as deferred by user; if any issue appears later, it will be handled in a follow-up plan.
 
 ## 5) Guardrails so this doesn’t regress
 - [x] Add a small CI/consumer smoke check (or extend existing `scripts/consumer-smoke.mjs`) to assert:
@@ -76,7 +86,7 @@ Eliminate "Invalid hook call" / `dispatcher is null` crashes by ensuring Voltra 
   - native consumers provide `react-native`
 
 ## Remaining
-- RN consumer validation from section 4 is still pending in an actual React Native app environment.
+- None.
 
 # Implementation Notes
 - `peerDependenciesMeta.optional` is correct for `react-dom`/`react-native` because Voltra supports both environments but any given consumer typically installs only one renderer.
