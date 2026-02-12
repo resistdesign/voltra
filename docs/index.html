@@ -162,6 +162,12 @@
 <h2 id="usage" class="tsd-anchor-link">Usage<a href="#usage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2><h3 id="install" class="tsd-anchor-link">Install<a href="#install" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><pre><code class="bash"><span class="hl-0">yarn</span><span class="hl-1"> </span><span class="hl-2">add</span><span class="hl-1"> </span><span class="hl-2">@resistdesign/voltra</span>
 </code><button type="button">Copy</button></pre>
 
+<p>Runtime peer dependencies:</p>
+<ul>
+<li>Consumers must provide <code>react</code> (required).</li>
+<li>Web consumers must provide <code>react-dom</code>.</li>
+<li>Native consumers must provide <code>react-native</code>.</li>
+</ul>
 <h3 id="imports" class="tsd-anchor-link">Imports<a href="#imports" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h3><p>Prefer the public entrypoints below to keep imports stable and IDE auto-imports clean.</p>
 <p>The root import <code>@resistdesign/voltra</code> is intentionally unsupported to avoid
 cross-runtime bundling issues.</p>
