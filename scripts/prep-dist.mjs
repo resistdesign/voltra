@@ -36,6 +36,8 @@ const run = async () => {
     typesVersions,
     files,
     dependencies,
+    peerDependencies,
+    peerDependenciesMeta,
   } = packageJson;
 
   const distPackageJson = {
@@ -54,6 +56,8 @@ const run = async () => {
     typesVersions,
     files,
     dependencies,
+    peerDependencies,
+    peerDependenciesMeta,
   };
 
   await fs.mkdir(distDir, { recursive: true });

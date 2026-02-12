@@ -14,6 +14,12 @@
 yarn add @resistdesign/voltra
 ```
 
+Runtime peer dependencies:
+
+- Consumers must provide `react` (required).
+- Web consumers must provide `react-dom`.
+- Native consumers must provide `react-native`.
+
 ### Imports
 
 Prefer the public entrypoints below to keep imports stable and IDE auto-imports clean.
