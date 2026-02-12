@@ -45,6 +45,10 @@
  * ```
  *
  * See also: `@resistdesign/voltra/app` for client-side app helpers.
+ *
+ * Reference examples:
+ * - `examples/README.md`
+ * - `examples/api/backend-routing.ts`
  */
 /**
  * @category api

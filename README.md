@@ -125,13 +125,15 @@ EasyLayout now has:
 - Web rendering via CSS Grid in `@resistdesign/voltra/web`.
 - Native coordinate computation in `@resistdesign/voltra/native`.
 
-### Examples
+### Reference Examples
 
-- `examples/api.ts`
-- `examples/common.ts`
-- `examples/web.ts`
-- `examples/native.ts`
-- `examples/build.ts`
+- Index: `examples/README.md`
+- Client routing: `examples/routing/app-routing.ts`
+- Backend API routing: `examples/api/backend-routing.ts`
+- Forms: `examples/forms/`
+- Layout: `examples/layout/`
+- Common types: `examples/common/types.ts`
+- Build-time parsing: `examples/build/type-parsing.ts`
 
 ### Template syntax
 
@@ -191,6 +193,8 @@ const coords = layout.computeNativeCoords({
 
 Voltra routing is unified under `@resistdesign/voltra/app`.
 
+Reference example: `examples/routing/app-routing.ts`
+
 ```tsx
 import { Route } from "@resistdesign/voltra/app";
 
@@ -220,6 +224,10 @@ Escape hatches (root-only):
 - `initialPath` sets fallback startup path when no ingress URL exists.
 - `adapter` allows full custom adapter control.
 - `ingress` supports deep-link ingress wiring (`getInitialURL`, `subscribe`, URL mapping, push/replace mode).
+
+If you are looking for backend request routing (Cloud Function/API event routing), see:
+
+- `examples/api/backend-routing.ts`
 
 ## Form Suites (Web + Native + BYOCS)
 
