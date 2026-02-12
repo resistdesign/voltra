@@ -87,7 +87,10 @@ export const mapNativeURLToPath = (url: string): string =>
  * Lifecycle behavior:
  * - `start()` is idempotent.
  * - `stop()` is idempotent.
- * - `start()` applies `getInitialURL()` once per start cycle.
+ * - `start()` applies `getInitialURL()` once per start cycle only if
+ *   navigation state has not changed since startup began.
+ * - This prevents late `getInitialURL()` resolution from overriding
+ *   user navigation that happened during startup.
  *
  * Incoming URL behavior:
  * - `"replace"` updates current entry (default).
@@ -160,11 +163,15 @@ export const createNativeHistory = (
         return;
       }
 
-      const initialURL = await adapter.getInitialURL();
-      applyIncomingURL(initialURL);
+      const startKey = history.location.key;
+      const startIndex = history.index;
       unsubscribe = adapter.subscribe((url) => {
         applyIncomingURL(url);
       });
+      const initialURL = await adapter.getInitialURL();
+      if (history.location.key === startKey && history.index === startIndex) {
+        applyIncomingURL(initialURL);
+      }
     },
     stop: () => {
       if (!started) {
