@@ -435,16 +435,34 @@ const RouteRootProvider = ({
 export const Route = <ParamsType extends Record<string, any>>(
   props: PropsWithChildren<RouteProps<ParamsType>>,
 ) => {
-  if (typeof props.path === "undefined") {
-    if (
-      (typeof props.exact !== "undefined" ||
-        typeof props.onParamsChange !== "undefined") &&
-      isDevelopmentMode()
-    ) {
+  const hasMatcherProps =
+    typeof props.path !== "undefined" ||
+    typeof props.exact !== "undefined" ||
+    typeof props.onParamsChange !== "undefined";
+  const hasProviderProps =
+    typeof props.initialPath !== "undefined" ||
+    typeof props.adapter !== "undefined" ||
+    typeof props.ingress !== "undefined";
+
+  if (hasMatcherProps) {
+    if (hasProviderProps && isDevelopmentMode()) {
       throw new Error(
-        "Route provider mode does not support matcher props. Set a path to use matcher behavior.",
+        "Route matcher mode does not support provider props. Remove initialPath/adapter/ingress or use a root Route without path.",
       );
     }
+
+    return (
+      <RouteMatcher
+        path={props.path ?? ""}
+        onParamsChange={props.onParamsChange}
+        exact={props.exact}
+      >
+        {props.children}
+      </RouteMatcher>
+    );
+  }
+
+  if (typeof props.path === "undefined") {
 
     return (
       <RouteRootProvider
@@ -457,24 +475,5 @@ export const Route = <ParamsType extends Record<string, any>>(
     );
   }
 
-  if (
-    (typeof props.initialPath !== "undefined" ||
-      typeof props.adapter !== "undefined" ||
-      typeof props.ingress !== "undefined") &&
-    isDevelopmentMode()
-  ) {
-    throw new Error(
-      "Route matcher mode does not support provider props. Remove initialPath/adapter/ingress or use a root Route without path.",
-    );
-  }
-
-  return (
-    <RouteMatcher
-      path={props.path}
-      onParamsChange={props.onParamsChange}
-      exact={props.exact}
-    >
-      {props.children}
-    </RouteMatcher>
-  );
+  return null;
 };

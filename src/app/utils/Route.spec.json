@@ -21,6 +21,15 @@
         "defaultPathIsSlash": true,
         "rootProvidesAdapter": true
       }
+    },
+    {
+      "export": "runAppRouteExactWithoutPathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "exactWithoutPathRenders": true,
+        "exactWithoutPathHasAdapter": true
+      }
     }
   ]
 }

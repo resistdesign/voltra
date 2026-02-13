@@ -106,3 +106,27 @@ export const runAppRouteNoDOMScenario = () => {
     rootProvidesAdapter: render.includes("&quot;hasAdapter&quot;:true"),
   };
 };
+
+export const runAppRouteExactWithoutPathScenario = () => {
+  const originalWindow = (globalThis as any).window;
+  (globalThis as any).window = buildWindowMock("/");
+
+  const render = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { exact: true },
+        createElement(ContextProbe),
+      ),
+    ),
+  );
+
+  (globalThis as any).window = originalWindow;
+
+  return {
+    exactWithoutPathRenders: render.includes("&quot;isTopLevel&quot;:false"),
+    exactWithoutPathHasAdapter: render.includes("&quot;hasAdapter&quot;:true"),
+  };
+};
