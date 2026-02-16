@@ -8,7 +8,7 @@ And so are any other types that exported types refer to.
 
 In all barrels.
 
-We need to make absolute certain that we are not missing important types to be exported for consumers.
+We need to make absolutely certain that we are not missing important types to be exported for consumers.
 
 ## Phase 1: Report Missing Types
 
