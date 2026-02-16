@@ -5,14 +5,12 @@
  */
 
 import { createElement } from "react";
-
-const getNative = () => require("react-native") as any;
+import { Pressable, Text, View } from "react-native";
 
 /**
  * Wrapper for grouped field content.
  */
 export const FieldWrapper = (props: { children?: React.ReactNode }) => {
-  const { View } = getNative();
   return createElement(View, null, props.children);
 };
 
@@ -20,7 +18,6 @@ export const FieldWrapper = (props: { children?: React.ReactNode }) => {
  * Inline error message renderer.
  */
 export const ErrorMessage = ({ children }: { children: React.ReactNode }) => {
-  const { Text } = getNative();
   return createElement(Text, { style: { color: "#AA0000" } }, children);
 };
 
@@ -28,7 +25,6 @@ export const ErrorMessage = ({ children }: { children: React.ReactNode }) => {
  * Container for array field items.
  */
 export const ArrayContainer = (props: { children?: React.ReactNode }) => {
-  const { View } = getNative();
   return createElement(View, null, props.children);
 };
 
@@ -36,7 +32,6 @@ export const ArrayContainer = (props: { children?: React.ReactNode }) => {
  * Wrapper for an individual array item row.
  */
 export const ArrayItemWrapper = (props: { children?: React.ReactNode }) => {
-  const { View } = getNative();
   return createElement(View, null, props.children);
 };
 
@@ -52,7 +47,6 @@ export const Button = ({
   disabled?: boolean;
   onPress?: () => void;
 }) => {
-  const { Pressable, Text } = getNative();
   return createElement(
     Pressable,
     { onPress, disabled },
