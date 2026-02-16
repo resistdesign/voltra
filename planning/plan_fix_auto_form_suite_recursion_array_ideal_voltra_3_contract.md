@@ -66,7 +66,22 @@ renderArray(ctx) {
 
 ## Goals
 
--
+- Move recursion ownership into the core AutoField contract.
+- Remove suite-level engine bootstrapping from array renderers.
+- Preserve suite override behavior across nested field rendering.
+- Add regression coverage for recursion and context contract.
+- Reconcile build/test/doc generation with the breaking contract change.
+
+## Live Checklist
+
+- [x] Phase 1 — Locate and map the current AutoForm core contract
+- [x] Phase 2 — Add `renderField` to `FieldRenderContext`
+- [x] Phase 3 — Inject recursion in the core dispatcher
+- [x] Phase 4 — Rewrite array rendering to use `ctx.renderField`
+- [x] Phase 5 — Ensure BYOCS overrides remain consistent
+- [x] Phase 6 — Tests: add JSON specs covering recursion contract
+- [x] Phase 7 — Web + Native suites: reconcile implementation
+- [x] Phase 8 — Final reconciliation pass (docs/comments/examples/demo/CI scope applicable to this change)
 
 ---
 
@@ -74,12 +89,15 @@ renderArray(ctx) {
 
 **Outcome:** Codex understands exactly where to make the contract change and where recursion/dispatch currently lives.
 
--
+- [x] Located contract and dispatch points:
+  - `src/app/forms/core/types.ts` (`FieldRenderContext`, renderer contract)
+  - `src/app/forms/core/createAutoField.ts` (dispatcher and context construction)
+  - `src/web/forms/suite.tsx` and `src/native/forms/suite.ts` (array recursion path using local bootstrapping)
 
 Deliverable notes (for Codex to capture while working):
 
-- File paths of the contract types and dispatch function(s).
-- The minimum set of public types that need a breaking change.
+- [x] File paths of the contract types and dispatch function(s) captured.
+- [x] Breaking public contract identified: `FieldRenderContext` requires `renderField`.
 
 ---
 
@@ -87,17 +105,18 @@ Deliverable notes (for Codex to capture while working):
 
 **Outcome:** All renderers (core + suite) can recurse without bootstrapping.
 
--
+- [x] Added `renderField` to `FieldRenderContext<RenderOutput>`.
 
 ```ts
 renderField: (input: AutoFieldInput) => RenderOutput;
 ```
 
--
+- [x] Implemented with required behavior.
 
 **Design requirement:**
 
 - `renderField` must call the **same dispatcher** used at the top-level, with the **same resolved suite**.
+- [x] Confirmed by implementation and recursion spec.
 
 ---
 
@@ -105,13 +124,14 @@ renderField: (input: AutoFieldInput) => RenderOutput;
 
 **Outcome:** The engine owns recursion; suites are no longer mini-engines.
 
--
+- [x] `createAutoField` now creates a `renderField` closure and injects it into every render context.
 
 Implementation notes:
 
 - Avoid introducing hidden differences between “top-level dispatch” and “nested dispatch”.
 - Prefer closure over passing around resolvers.
 - Make sure any defaulting logic (labels, required, disabled, touched/dirty, etc.) is consistent.
+- [x] Nested calls share the same context-construction/defaulting path.
 
 ---
 
@@ -119,11 +139,13 @@ Implementation notes:
 
 **Outcome:** The array renderer no longer needs engine imports and always recurses correctly.
 
--
+- [x] Web array renderer uses `context.renderField(...)`.
+- [x] Native array renderer uses `context.renderField(...)`.
+- [x] Removed suite-local dispatcher bootstrapping (`resolveSuite` + `createAutoField`) from suite files.
 
 Stretch (optional but aligned with spec):
 
--
+- [ ] Not required in this pass.
 
 ---
 
@@ -131,7 +153,7 @@ Stretch (optional but aligned with spec):
 
 **Outcome:** `renderField` always uses the same resolved suite; overrides apply identically at all depths.
 
--
+- [x] Nested renderer dispatch stays within the same `createAutoField` closure and resolved suite instance.
 
 ---
 
@@ -141,7 +163,9 @@ Stretch (optional but aligned with spec):
 
 Add tests close to the relevant core forms area (where the dispatcher lives):
 
--
+- [x] Added recursion contract test in `src/app/forms/core/createAutoField.test-utils.ts`.
+- [x] Updated expectations in `src/app/forms/core/createAutoField.spec.json`.
+- [x] Updated web suite test context fixture for required `renderField` typing.
 
 **Notes:**
 
@@ -149,7 +173,9 @@ Add tests close to the relevant core forms area (where the dispatcher lives):
 
 Commands:
 
--
+- [x] `yarn test`
+- [x] `yarn build`
+- [x] `yarn doc`
 
 ---
 
@@ -157,7 +183,8 @@ Commands:
 
 **Outcome:** platform suites compile and behave.
 
--
+- [x] Web suite reconciled and passing tests.
+- [x] Native suite reconciled and included in successful build/test runs.
 
 ---
 
@@ -167,7 +194,7 @@ Commands:
 
 This phase is mandatory.
 
--
+- [x] Final pass complete for this scope (contract, suites, tests, build, docs generation).
 
 ---
 
@@ -178,4 +205,3 @@ This phase is mandatory.
 - Overrides + defaults apply identically at any nesting level.
 - Tests prove recursion works and overrides propagate.
 - Docs/examples/demo all match the new contract and builds/tests pass.
-

@@ -175,5 +175,56 @@ export const runCreateAutoFieldContextScenario = () => {
     hasConstraints: !!capturedContext?.constraints,
     hasPossibleValues: Array.isArray(capturedContext?.possibleValues),
     customType: capturedContext?.customType ?? null,
+    hasRenderField: typeof capturedContext?.renderField === "function",
+  };
+};
+
+/**
+ * Validate that renderField recurses through the same dispatcher.
+ */
+export const runCreateAutoFieldRecursionScenario = () => {
+  const suite: ComponentSuite<string> = {
+    renderers: {
+      string: (context) => `string:${context.fieldKey}`,
+      number: () => {
+        throw new Error("Unexpected renderer");
+      },
+      boolean: () => {
+        throw new Error("Unexpected renderer");
+      },
+      enum_select: () => {
+        throw new Error("Unexpected renderer");
+      },
+      array: (context) =>
+        context.renderField({
+          field: { ...context.field, array: false, tags: undefined },
+          fieldKey: `${context.fieldKey}[0]`,
+          value: "nested",
+          onChange: () => undefined,
+        }),
+      relation_single: () => {
+        throw new Error("Unexpected renderer");
+      },
+      relation_array: () => {
+        throw new Error("Unexpected renderer");
+      },
+      custom_single: () => {
+        throw new Error("Unexpected renderer");
+      },
+      custom_array: () => {
+        throw new Error("Unexpected renderer");
+      },
+    },
+  };
+
+  const autoField = createAutoField(suite as any);
+
+  return {
+    nestedResult: autoField({
+      field: { ...baseField, type: "string", array: true },
+      fieldKey: "tags",
+      value: ["nested"],
+      onChange: () => undefined,
+    }),
   };
 };

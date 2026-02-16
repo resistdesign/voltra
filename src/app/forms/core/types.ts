@@ -88,7 +88,7 @@ export type CustomTypeActionPayload = {
 /**
  * Context passed to field renderers.
  */
-export type FieldRenderContext = {
+export type FieldRenderContext<RenderOutput = unknown> = {
   /** Type info describing the field to render. */
   field: TypeInfoField;
   /** Key that identifies the field in the form values. */
@@ -119,13 +119,24 @@ export type FieldRenderContext = {
   onRelationAction?: (payload: RelationActionPayload) => void;
   /** Optional callback for custom type actions. */
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
+  /** Render any field with the same dispatch rules as the parent AutoField call. */
+  renderField: (input: {
+    field: TypeInfoField;
+    fieldKey: string;
+    value: FieldValue | undefined;
+    onChange: (value: FieldValue) => void;
+    error?: string;
+    disabled?: boolean;
+    onRelationAction?: (payload: RelationActionPayload) => void;
+    onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
+  }) => RenderOutput;
 };
 
 /**
  * Renderer function for a single field kind.
  */
 export type FieldRenderer<RenderOutput = unknown> = (
-  context: FieldRenderContext,
+  context: FieldRenderContext<RenderOutput>,
 ) => RenderOutput;
 
 /**
