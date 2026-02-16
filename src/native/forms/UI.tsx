@@ -1,23 +1,23 @@
 /**
  * @packageDocumentation
  *
- * Web AutoForm wrappers backed by the default web renderer.
+ * Native AutoForm wrappers backed by the default native renderer.
  */
 
 import type { FC } from "react";
 import type {
   AutoFieldProps,
   CustomTypeActionPayload,
+  FormController,
   FormValues,
   RelationActionPayload,
 } from "../../app/forms/types";
-import { AutoForm as SharedAutoForm, AutoFormView as SharedAutoFormView } from "../../app/forms/UI";
-import { webAutoField } from "./suite";
-import { createWebFormRenderer } from "./createWebFormRenderer";
 import type { TypeInfo, TypeOperation } from "../../common/TypeParsing/TypeInfo";
-import type { FormController } from "../../app/forms/types";
+import { AutoForm as SharedAutoForm, AutoFormView as SharedAutoFormView } from "../../app/forms/UI";
+import { createNativeFormRenderer } from "./createNativeFormRenderer";
+import { nativeAutoField } from "./suite";
 
-const defaultWebRenderer = createWebFormRenderer();
+const defaultNativeRenderer = createNativeFormRenderer();
 
 /**
  * Render a form field based on TypeInfo metadata.
@@ -28,7 +28,7 @@ const defaultWebRenderer = createWebFormRenderer();
  * @returns Rendered field UI.
  */
 export const AutoField: FC<AutoFieldProps> = (props) => {
-  return webAutoField({
+  return nativeAutoField({
     field: props.field,
     fieldKey: props.fieldKey,
     value: props.value,
@@ -57,13 +57,13 @@ export interface AutoFormViewProps {
 }
 
 /**
- * Render a web form UI from a prepared form controller.
+ * Render a native form UI from a prepared form controller.
  *
  * @param props - View props including controller and callbacks.
  * @returns Rendered form view.
  */
 export const AutoFormView: FC<AutoFormViewProps> = (props) => {
-  return <SharedAutoFormView {...props} renderer={defaultWebRenderer} />;
+  return <SharedAutoFormView {...props} renderer={defaultNativeRenderer} />;
 };
 
 /**
@@ -89,11 +89,11 @@ export interface AutoFormProps {
 }
 
 /**
- * Build a controller from type metadata and render a web auto form.
+ * Build a controller from type metadata and render a native auto form.
  *
  * @param props - Auto form props including type info and callbacks.
- * @returns Rendered web form.
+ * @returns Rendered native form.
  */
 export const AutoForm: FC<AutoFormProps> = (props) => {
-  return <SharedAutoForm {...props} renderer={defaultWebRenderer} />;
+  return <SharedAutoForm {...props} renderer={defaultNativeRenderer} />;
 };
