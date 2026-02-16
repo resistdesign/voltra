@@ -43,10 +43,6 @@ const requiredRuntimeExports = [
     names: ["createWebFormRenderer", "AutoField"],
   },
   {
-    distFilePath: "native/index.js",
-    names: ["createNativeFormRenderer"],
-  },
-  {
     distFilePath: "build/index.js",
     names: ["getTypeInfoMapFromTypeScript"],
   },

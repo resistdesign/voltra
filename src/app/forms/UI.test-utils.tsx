@@ -33,6 +33,7 @@ const createController = (
 
 const createRenderer = (options?: {
   autoClickSubmit?: boolean;
+  onFormRootProps?: (props: { onSubmit?: () => void }) => void;
   onButtonProps?: (props: {
     disabled?: boolean;
     onClick?: () => void;
@@ -47,7 +48,10 @@ const createRenderer = (options?: {
     suite: {
       renderers: {} as any,
       primitives: {
-        FormRoot: ({ children }) => createElement("div", null, children),
+        FormRoot: (props) => {
+          options?.onFormRootProps?.({ onSubmit: props.onSubmit });
+          return createElement("div", null, props.children);
+        },
         Button: (props) => {
           options?.onButtonProps?.({
             disabled: props.disabled,
@@ -208,5 +212,50 @@ export const runSharedSubmitDisabledScenario = () => {
 
   return {
     submitDisabledPropagated: capturedDisabled ?? false,
+  };
+};
+
+/**
+ * Validate AutoFormView uses suite FormRoot and suite Button primitives.
+ *
+ * @returns Primitive usage and submit wiring assertions.
+ */
+export const runSharedSuitePrimitiveUsageScenario = () => {
+  let capturedFormRootSubmit: (() => void) | undefined;
+  let capturedButtonType: "button" | "submit" | undefined;
+  let capturedButtonOnClick: (() => void) | undefined;
+  let submitCalls = 0;
+
+  const controller = createController({
+    validate: () => true,
+    values: { title: "Hello" },
+  });
+
+  renderToString(
+    createElement(AutoFormView, {
+      controller,
+      onSubmit: () => {
+        submitCalls += 1;
+      },
+      renderer: createRenderer({
+        onFormRootProps: (props) => {
+          capturedFormRootSubmit = props.onSubmit;
+        },
+        onButtonProps: (props) => {
+          capturedButtonType = props.type;
+          capturedButtonOnClick = props.onClick;
+        },
+      }),
+    }),
+  );
+
+  capturedFormRootSubmit?.();
+  capturedButtonOnClick?.();
+
+  return {
+    hasFormRootSubmit: typeof capturedFormRootSubmit === "function",
+    buttonTypeIsSubmit: capturedButtonType === "submit",
+    hasButtonOnClick: typeof capturedButtonOnClick === "function",
+    submitCalls,
   };
 };

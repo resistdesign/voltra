@@ -6,6 +6,7 @@
 
 import { createElement } from "react";
 import type { ReactElement } from "react";
+import { Platform, Switch, Text, TextInput, View } from "react-native";
 import type {
   LiteralValue,
   TypeInfoField,
@@ -22,8 +23,6 @@ import {
   ErrorMessage,
   FieldWrapper,
 } from "./primitives";
-
-const getNative = () => require("react-native") as any;
 
 /**
  * Creates a non-array version of a field for use as array item metadata.
@@ -55,7 +54,6 @@ const formatCustomValue = (val: unknown) => {
 };
 
 const renderRelationSingle = (context: FieldRenderContext) => {
-  const { Text } = getNative();
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
 
@@ -86,7 +84,6 @@ const renderRelationSingle = (context: FieldRenderContext) => {
 };
 
 const renderRelationArray = (context: FieldRenderContext) => {
-  const { Text } = getNative();
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
 
@@ -117,7 +114,6 @@ const renderRelationArray = (context: FieldRenderContext) => {
 };
 
 const renderCustomSingle = (context: FieldRenderContext) => {
-  const { Text } = getNative();
   const { field, fieldKey, label, required, disabled, error } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
@@ -150,7 +146,6 @@ const renderCustomSingle = (context: FieldRenderContext) => {
 };
 
 const renderCustomArray = (context: FieldRenderContext) => {
-  const { Text, View } = getNative();
   const { field, fieldKey, label, required, disabled, error } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
@@ -240,7 +235,6 @@ const renderCustomArray = (context: FieldRenderContext) => {
 let autoFieldRenderer: ReturnType<typeof createAutoField<ReactElement>>;
 
 const renderArray = (context: FieldRenderContext) => {
-  const { Text, View } = getNative();
   const { field, fieldKey, label, required, disabled, error } = context;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
@@ -308,7 +302,6 @@ const renderArray = (context: FieldRenderContext) => {
 };
 
 const renderString = (context: FieldRenderContext) => {
-  const { Text, TextInput } = getNative();
   const { label, required, disabled, error } = context;
 
   return createElement(
@@ -326,7 +319,6 @@ const renderString = (context: FieldRenderContext) => {
 };
 
 const renderNumber = (context: FieldRenderContext) => {
-  const { Text, TextInput } = getNative();
   const { label, required, disabled, error } = context;
 
   return createElement(
@@ -346,7 +338,6 @@ const renderNumber = (context: FieldRenderContext) => {
 };
 
 const renderBoolean = (context: FieldRenderContext) => {
-  const { Text, View, Switch } = getNative();
   const { label, disabled, error } = context;
 
   return createElement(
@@ -367,7 +358,6 @@ const renderBoolean = (context: FieldRenderContext) => {
 };
 
 const renderEnumSelect = (context: FieldRenderContext) => {
-  const { Text, View } = getNative();
   const { field, label, required, disabled, error } = context;
   const selectableValues = getSelectableValues(context.possibleValues) ?? [];
 
@@ -404,7 +394,6 @@ const FormRoot = ({
   children: ReactElement;
   onSubmit?: () => void;
 }) => {
-  const { Platform, View } = getNative();
   if (Platform?.OS === "web") {
     return createElement(
       "form",
@@ -451,10 +440,7 @@ export const nativeSuite: ComponentSuite<ReactElement> = {
     FormRoot,
     FieldWrapper,
     ErrorMessage,
-    Label: ({ children }) => {
-      const { Text } = getNative();
-      return createElement(Text, null, children);
-    },
+    Label: ({ children }) => createElement(Text, null, children),
     Button: SuiteButton,
   },
 };
