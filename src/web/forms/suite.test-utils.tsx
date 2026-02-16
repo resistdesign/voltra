@@ -4,6 +4,7 @@
  * Test utilities for the default web form suite.
  */
 
+import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import type { FieldRenderContext, FieldKind } from "../../app/forms/core";
 import { webSuite } from "./suite";
@@ -37,7 +38,7 @@ export const runWebSuiteCompletenessScenario = () => {
  * Validate a representative renderer output for the web suite.
  */
 export const runWebSuiteStringRendererScenario = () => {
-  const context: FieldRenderContext = {
+  const context: FieldRenderContext<ReactElement> = {
     field: {
       type: "string",
       array: false,
@@ -51,6 +52,7 @@ export const runWebSuiteStringRendererScenario = () => {
     disabled: false,
     value: "Hello",
     onChange: () => undefined,
+    renderField: () => <></>,
   };
 
   const element = webSuite.renderers.string?.(context);
