@@ -15,23 +15,23 @@ import {
 } from "../../../common/Constants";
 import { DemoTypeInfoMap } from "../../../common/DemoTypeInfoMap";
 import { BaseItemRelationshipInfo } from "../../../../src/common/ItemRelationshipInfoTypes";
-import { DebugLogPanel } from "./endToEndDemo/components/DebugLogPanel";
-import { ContextBar } from "./endToEndDemo/components/ContextBar";
-import { CarRelateScreen } from "./endToEndDemo/screens/CarRelateScreen";
-import { CreatePersonScreen } from "./endToEndDemo/screens/CreatePersonScreen";
-import { PeopleHomeScreen } from "./endToEndDemo/screens/PeopleHomeScreen";
-import { PersonDetailScreen } from "./endToEndDemo/screens/PersonDetailScreen";
-import { Stack } from "./endToEndDemo/layout";
+import { DebugLogPanel } from "./EndToEndDemo/components/DebugLogPanel";
+import { ContextBar } from "./EndToEndDemo/components/ContextBar";
+import { CarRelateScreen } from "./EndToEndDemo/screens/CarRelateScreen";
+import { CreatePersonScreen } from "./EndToEndDemo/screens/CreatePersonScreen";
+import { PeopleHomeScreen } from "./EndToEndDemo/screens/PeopleHomeScreen";
+import { PersonDetailScreen } from "./EndToEndDemo/screens/PersonDetailScreen";
+import { Stack } from "./EndToEndDemo/layout";
 import {
   demoAppReducer,
   demoInitialState,
   getActiveScreen,
-} from "./endToEndDemo/demoState";
-import { formatPersonLabel } from "./endToEndDemo/utils";
-import { useDemoLogger } from "./endToEndDemo/logging/demoLogger";
-import { usePeople } from "./endToEndDemo/hooks/usePeople";
-import { useCars } from "./endToEndDemo/hooks/useCars";
-import { useRelationship } from "./endToEndDemo/hooks/useRelationship";
+} from "./EndToEndDemo/demoState";
+import { formatPersonLabel } from "./EndToEndDemo/utils";
+import { useDemoLogger } from "./EndToEndDemo/logging/demoLogger";
+import { usePeople } from "./EndToEndDemo/hooks/usePeople";
+import { useCars } from "./EndToEndDemo/hooks/useCars";
+import { useRelationship } from "./EndToEndDemo/hooks/useRelationship";
 
 type SearchFilter = {
   id: string;

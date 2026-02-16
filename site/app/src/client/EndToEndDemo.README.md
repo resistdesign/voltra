@@ -23,20 +23,20 @@ Screens (single active screen at a time)
   - Log list with request/response payloads + clear
 
 State sources in `EndToEndDemo.tsx`
-- App state (reducer): `demoState` from `endToEndDemo/demoState.ts`
+- App state (reducer): `demoState` from `EndToEndDemo/demoState.ts`
 - Selection: `selectedPersonId`, `selectedPerson`, `selectedCarCandidate`
 - Relationship: `relatedCarId`, `relatedCar`, `relatedCarSummary`
 - Person list: `personList`, `personListCursor`, `personItemsPerPage`
 - Car search: `carSearchQuery`, `carSearchMode`, `filters`, `filtersOperator`,
   `carSearchCursor`, `carSearchResults`, `carItemsPerPage`
 - Form resets: `personCreateKey`, `carCreateKey`
-- Logging: `requestLog` from `endToEndDemo/logging/demoLogger.ts`
+- Logging: `requestLog` from `EndToEndDemo/logging/demoLogger.ts`
 
 Notes
 - The demo renders only the active screen via `getActiveScreen`.
 
 How to add a new entity type screen
-1. Extend the demo state in `endToEndDemo/demoState.ts` (add type/mode/screen).
-2. Create a screen in `endToEndDemo/screens/` using the existing layout helpers.
-3. Add hooks or extend existing hooks under `endToEndDemo/hooks/` as needed.
+1. Extend the demo state in `EndToEndDemo/demoState.ts` (add type/mode/screen).
+2. Create a screen in `EndToEndDemo/screens/` using the existing layout helpers.
+3. Add hooks or extend existing hooks under `EndToEndDemo/hooks/` as needed.
 4. Wire the screen into `EndToEndDemo.tsx` and update transitions.
