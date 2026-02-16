@@ -1,4 +1,4 @@
-import type { AuthInfo, CORSPatter, RouteAuthConfig, RouteMap } from "../Router/Types";
+import type { AuthInfo, CORSPattern, RouteAuthConfig, RouteMap } from "../Router/Types";
 import type {
   DataItemDBDriver,
   DataItemDBDriverConfig,
@@ -73,7 +73,7 @@ export type DBXRuntimeConfig = {
   /**
    * Allowed origins used to generate CORS headers.
    */
-  allowedOrigins?: CORSPatter[];
+  allowedOrigins?: CORSPattern[];
   /**
    * Optional DAC configuration (excluding accessing role).
    */
@@ -107,7 +107,7 @@ export type DBXRuntime = {
   /**
    * Allowed origins for CORS headers.
    */
-  allowedOrigins: CORSPatter[];
+  allowedOrigins: CORSPattern[];
   /**
    * Driver resolver for item types.
    */

@@ -31,16 +31,7 @@ export * from "./fulltext/FullTextMemoryBackend";
 export {
   FullTextDdbBackend,
   FullTextDdbWriter,
-  type BatchGetItemInput,
-  type BatchGetItemOutput,
-  type BatchWriteItemInput,
-  type BatchWriteItemOutput,
   type FullTextTableNames,
-  type GetItemInput,
-  type GetItemOutput,
-  type KeysAndAttributes,
-  type QueryInput,
-  type QueryOutput,
 } from "./fulltext/FullTextDdbBackend";
 export * from "./fulltext/Schema";
 export * from "./lossy/LossyDdb";

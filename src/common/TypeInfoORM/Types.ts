@@ -22,7 +22,7 @@ export const ITEM_RELATIONSHIP_DAC_RESOURCE_NAME =
   "TYPE_INFO_ORM_ITEM_RELATIONSHIP";
 
 /**
- * A set of possible operations for a {@link ItemRelationshipInfo}.
+ * A set of possible operations for an item relationship record.
  * */
 export enum RelationshipOperation {
   /**
