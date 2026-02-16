@@ -288,3 +288,31 @@ error Command failed with exit code 3.
 info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
 Error: Process completed with exit code 3.
 ```
+
+---
+
+## Goals
+
+- Eliminate TypeScript casing collisions (`TS1149`, `TS1261`) in site demo sources.
+- Ensure only one canonical `EndToEndDemo` path casing exists in git and imports.
+- Re-verify the site pipeline command used in CI.
+
+## Live Checklist
+
+- [x] Phase 1 — Confirm casing collision in tracked files and map required rename steps
+- [x] Phase 2 — Normalize folder/file tracking to `EndToEndDemo` casing only
+- [x] Phase 3 — Verify imports/references and run `yarn site:build:app`
+- [x] Phase 4 — Reconcile and capture verification evidence in this plan
+
+## Execution Notes
+
+- Confirmed collision was in git index tracking both:
+  - `site/app/src/client/EndToEndDemo/**`
+  - `site/app/src/client/endToEndDemo/**`
+- Removed stale lowercase index entries with:
+  - `git rm --cached site/app/src/client/endToEndDemo/...` (14 files)
+- Re-validated tracked paths:
+  - `git ls-files` now includes only `site/app/src/client/EndToEndDemo/**`
+- Verification command:
+  - `yarn site:build:app`
+  - Result: success (`astro build`, `yarn doc`, `yarn doc-to-site`, and final copy all completed)
