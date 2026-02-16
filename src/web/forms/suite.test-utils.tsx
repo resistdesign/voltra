@@ -61,3 +61,43 @@ export const runWebSuiteStringRendererScenario = () => {
     hasInput: html.includes("type=\"text\""),
   };
 };
+
+/**
+ * Validate web suite form root and submit button semantics.
+ */
+export const runWebSuiteFormSubmitScenario = () => {
+  const primitives = webSuite.primitives as NonNullable<typeof webSuite.primitives>;
+  let submitCalls = 0;
+  let preventDefaultCalls = 0;
+  let buttonClickCalls = 0;
+
+  const rootElement = primitives.FormRoot?.({
+    children: <div>Child</div>,
+    onSubmit: () => {
+      submitCalls += 1;
+    },
+  }) as any;
+
+  rootElement.props.onSubmit({
+    preventDefault: () => {
+      preventDefaultCalls += 1;
+    },
+  });
+
+  const submitButton = primitives.Button?.({
+    children: <>Submit</>,
+    type: "submit",
+    onClick: () => {
+      buttonClickCalls += 1;
+    },
+  }) as any;
+
+  return {
+    hasFormRoot: rootElement.type === "form",
+    preventDefaultCalls,
+    submitCalls,
+    submitButtonType: submitButton.props.type ?? null,
+    submitButtonOnClickIsUndefined: submitButton.props.onClick === undefined,
+    buttonClickCalls,
+  };
+};

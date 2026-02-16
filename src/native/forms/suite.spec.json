@@ -8,6 +8,18 @@
       "expectation": {
         "missingKinds": []
       }
+    },
+    {
+      "export": "runNativeSuitePrimitiveSubmitScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "webRootType": "form",
+        "webSubmitCalls": 1,
+        "nativeRootType": "View",
+        "buttonTypeIsFunction": true,
+        "buttonPressCalls": 1
+      }
     }
   ]
 }
