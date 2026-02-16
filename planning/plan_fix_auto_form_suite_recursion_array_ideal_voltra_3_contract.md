@@ -71,6 +71,8 @@ renderArray(ctx) {
 - Preserve suite override behavior across nested field rendering.
 - Add regression coverage for recursion and context contract.
 - Reconcile build/test/doc generation with the breaking contract change.
+- Add a site demo showing a toggleable, extensive custom component suite.
+- Refine the advanced demo to use Pico-default controls and split custom suite implementation into a dedicated file.
 
 ## Live Checklist
 
@@ -82,6 +84,8 @@ renderArray(ctx) {
 - [x] Phase 6 — Tests: add JSON specs covering recursion contract
 - [x] Phase 7 — Web + Native suites: reconcile implementation
 - [x] Phase 8 — Final reconciliation pass (docs/comments/examples/demo/CI scope applicable to this change)
+- [x] Phase 9 — Site advanced demo: toggleable custom suite showcase
+- [x] Phase 10 — Demo polish: Pico-first styling + demo folder naming consistency
 
 ---
 
@@ -195,6 +199,33 @@ Commands:
 This phase is mandatory.
 
 - [x] Final pass complete for this scope (contract, suites, tests, build, docs generation).
+
+---
+
+# Phase 9 — Site advanced demo: toggleable custom suite showcase
+
+**Outcome:** Viewers can clearly compare default suite rendering and a more extensive custom suite in the same demo.
+
+- [x] Added a toggle in `site/app/src/client/AdvancedDemo.tsx` to switch between default and custom suites.
+- [x] Implemented an extensive showcase suite override:
+  - Custom `FormRoot` and `Button` primitives.
+  - Renderer wrappers for all field kinds (`string`, `number`, `boolean`, `enum_select`, `array`, relation/custom variants).
+  - Visual field-kind badges/frames to make suite differences obvious.
+- [x] Routed the demo through shared `AutoFormView` with explicit renderer selection.
+- [x] Verified with `yarn site:build:app` (includes docs + site finalization).
+
+---
+
+# Phase 10 — Demo polish: Pico-first styling + demo folder naming consistency
+
+**Outcome:** The advanced demo remains clearly different in custom-suite mode without heavy custom styling, and demo folder naming matches component names.
+
+- [x] Reduced heavy styling from the advanced demo toggle/UI and relied on Pico defaults for the toggle button.
+- [x] Renamed toggle label to `Custom Component Suite`.
+- [x] Moved custom suite implementation into `site/app/src/client/AdvancedDemo/CustomComponentSuite.tsx`.
+- [x] Kept visual suite differentiation subtle (field-kind frames/labels and light hover behavior only).
+- [x] Renamed `site/app/src/client/endToEndDemo/` to `site/app/src/client/EndToEndDemo/`.
+- [x] Updated all imports/docs references to the renamed `EndToEndDemo` folder casing.
 
 ---
 

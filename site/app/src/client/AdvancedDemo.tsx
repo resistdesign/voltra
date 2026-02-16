@@ -1,9 +1,15 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-typescript";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/theme-twilight";
-import { AutoFormView } from "../../../../src/web/forms";
+import { AutoFormView as SharedAutoFormView } from "../../../../src/app/forms/UI";
 import {
   CustomTypeAction,
   type CustomTypeActionPayload,
@@ -16,6 +22,8 @@ import type {
 } from "../../../../src/common/TypeParsing/TypeInfo";
 import styled from "styled-components";
 import { getTypeInfoMapFromTypeScript } from "../../../../src/build";
+import { createWebFormRenderer } from "../../../../src/web/forms";
+import { customComponentSuite } from "./AdvancedDemo/CustomComponentSuite";
 
 const DEFAULT_CODE = `
 /**
@@ -120,6 +128,7 @@ export const AdvancedDemo = () => {
   const [types, setTypes] = useState<any>({});
   const [selectedType, setSelectedType] = useState("");
   const [editorTheme, setEditorTheme] = useState("github");
+  const [useCustomSuite, setUseCustomSuite] = useState(false);
   const getTypeInfo = useCallback(() => {
     try {
       const types: TypeInfoMap = getTypeInfoMapFromTypeScript(code);
@@ -162,12 +171,28 @@ export const AdvancedDemo = () => {
   const currentTypeInfo =
     selectedType && types[selectedType] ? types[selectedType] : null;
 
-  const FormPreview = ({ typeInfo }: { typeInfo: TypeInfo }) => {
+  const defaultRenderer = useMemo(() => createWebFormRenderer(), []);
+  const customRenderer = useMemo(
+    () =>
+      createWebFormRenderer({
+        suite: customComponentSuite,
+      }),
+    [],
+  );
+
+  const FormPreview = ({
+    typeInfo,
+    useCustomSuite,
+  }: {
+    typeInfo: TypeInfo;
+    useCustomSuite: boolean;
+  }) => {
     const controller = useFormEngine({}, typeInfo);
     const [lastAction, setLastAction] = useState<string | null>(null);
     const [lastActionType, setLastActionType] = useState<
       CustomTypeAction | RelationAction
     >("open");
+    const renderer = useCustomSuite ? customRenderer : defaultRenderer;
 
     const handleRelationAction = ({
       action,
@@ -218,9 +243,15 @@ export const AdvancedDemo = () => {
 
     return (
       <>
-        <AutoFormView
+        <SuiteStatus>
+          {useCustomSuite
+            ? "Custom component suite enabled."
+            : "Default component suite enabled."}
+        </SuiteStatus>
+        <SharedAutoFormView
           controller={controller}
           onSubmit={() => {}}
+          renderer={renderer}
           onRelationAction={handleRelationAction}
           onCustomTypeAction={handleCustomTypeAction}
         />
@@ -314,23 +345,37 @@ return (
 
       <Pane>
         <PaneHeader>
-          Generated Form
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            disabled={Object.keys(types).length === 0}
-          >
-            <option value="">Select Type...</option>
-            {Object.keys(types).map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+          <div>Generated Form</div>
+          <PaneControls>
+            <button
+              type="button"
+              className={useCustomSuite ? "secondary" : undefined}
+              aria-pressed={useCustomSuite}
+              onClick={() => setUseCustomSuite((value) => !value)}
+            >
+              Custom Component Suite
+            </button>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              disabled={Object.keys(types).length === 0}
+            >
+              <option value="">Select Type...</option>
+              {Object.keys(types).map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </PaneControls>
         </PaneHeader>
         <PreviewContainer>
           {currentTypeInfo ? (
-            <FormPreview typeInfo={currentTypeInfo} key={selectedType} />
+            <FormPreview
+              typeInfo={currentTypeInfo}
+              useCustomSuite={useCustomSuite}
+              key={`${selectedType}-${useCustomSuite ? "custom" : "default"}`}
+            />
           ) : (
             <EmptyState>
               Parse code and select a type to generate form.
@@ -367,6 +412,14 @@ const PaneHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+`;
+
+const PaneControls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 `;
 
 const EditorContainer = styled.div`
@@ -408,6 +461,13 @@ const ControllerCode = styled.pre`
   font-size: 0.85rem;
   overflow-x: auto;
   margin-top: 0.5rem;
+`;
+
+const SuiteStatus = styled.small`
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #475569;
+  font-size: 0.85rem;
 `;
 
 const ALERT_COLORS: Record<
