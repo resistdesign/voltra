@@ -1,0 +1,34 @@
+{
+  "file": "./UI.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runSharedSubmitValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "invalidValidateCalls": 1,
+        "invalidSubmitCalls": 0,
+        "validValidateCalls": 1,
+        "validSubmitCalls": 1,
+        "submittedName": "valid"
+      }
+    },
+    {
+      "export": "runSharedHiddenFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasVisibleField": true,
+        "hasHiddenField": false
+      }
+    },
+    {
+      "export": "runSharedSubmitDisabledScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "submitDisabledPropagated": true
+      }
+    }
+  ]
+}
