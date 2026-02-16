@@ -17,6 +17,19 @@
         "hasLabel": true,
         "hasInput": true
       }
+    },
+    {
+      "export": "runWebSuiteFormSubmitScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasFormRoot": true,
+        "preventDefaultCalls": 1,
+        "submitCalls": 1,
+        "submitButtonType": "submit",
+        "submitButtonOnClickIsUndefined": true,
+        "buttonClickCalls": 0
+      }
     }
   ]
 }

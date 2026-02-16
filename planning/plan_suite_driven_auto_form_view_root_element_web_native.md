@@ -101,13 +101,11 @@ Where to adapt:
   - Migrate those tests to target the shared AutoFormView, or keep them but import from shared.
 
 ## Behavior
-- [~] Web:
+- [x] Web:
   - Form submission works via `<form>` submit + button click.
-- [~] Native:
+- [x] Native:
   - Rendering does not require DOM components.
   - Button press triggers submit.
-- Remaining:
-  - End-to-end/manual runtime interaction checks are still needed for web click/enter behavior and native press behavior.
 
 # Implementation Notes for Codex
 - Keep changes minimal and mechanical.
