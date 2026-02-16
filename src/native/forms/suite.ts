@@ -397,6 +397,41 @@ const renderEnumSelect = (context: FieldRenderContext) => {
   );
 };
 
+const FormRoot = ({
+  children,
+  onSubmit,
+}: {
+  children: ReactElement;
+  onSubmit?: () => void;
+}) => {
+  const { Platform, View } = getNative();
+  if (Platform?.OS === "web") {
+    return createElement(
+      "form",
+      {
+        onSubmit: (event: any) => {
+          event?.preventDefault?.();
+          onSubmit?.();
+        },
+      },
+      children,
+    );
+  }
+  return createElement(View, null, children);
+};
+
+const SuiteButton = ({
+  children,
+  disabled,
+  onClick,
+}: {
+  children: ReactElement;
+  disabled?: boolean;
+  onClick?: () => void;
+}) => {
+  return createElement(Button, { disabled, onPress: onClick }, children);
+};
+
 /**
  * Default native suite for form rendering.
  */
@@ -411,6 +446,16 @@ export const nativeSuite: ComponentSuite<ReactElement> = {
     relation_array: renderRelationArray,
     custom_single: renderCustomSingle,
     custom_array: renderCustomArray,
+  },
+  primitives: {
+    FormRoot,
+    FieldWrapper,
+    ErrorMessage,
+    Label: ({ children }) => {
+      const { Text } = getNative();
+      return createElement(Text, null, children);
+    },
+    Button: SuiteButton,
   },
 };
 

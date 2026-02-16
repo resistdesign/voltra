@@ -139,6 +139,11 @@ export type PrimitiveComponent<Props, RenderOutput = unknown> = (
  * Primitive components that suites may override.
  */
 export type PrimitiveComponents<RenderOutput = unknown> = {
+  /** Root container for the form view. */
+  FormRoot: PrimitiveComponent<
+    { children: RenderOutput; onSubmit?: () => void },
+    RenderOutput
+  >;
   /** Wrapper for grouped field content. */
   FieldWrapper: PrimitiveComponent<{ children: RenderOutput }, RenderOutput>;
   /** Inline error message renderer. */

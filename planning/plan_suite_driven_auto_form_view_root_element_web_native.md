@@ -80,18 +80,18 @@ Fallbacks:
 - Update `src/native/forms/index.ts` to `export * from "./UI";`
 
 # Files to Touch
-- [ ] `src/app/forms/core/types.ts` (add `FormRoot` primitive)
-- [ ] `src/app/forms/UI.tsx` (new shared AutoFormView/AutoForm)
-- [ ] `src/app/forms/index.ts` (export the shared UI)
-- [ ] `src/web/forms/suite.tsx` (add `primitives.FormRoot` + `primitives.Button`)
-- [ ] `src/web/forms/UI.tsx` (replace with wrapper or re-export shared UI; delete hardcoded form)
-- [ ] `src/native/forms/suite.ts` (add `primitives.FormRoot` + `primitives.Button`)
-- [ ] `src/native/forms/UI.tsx` (new wrapper/re-export)
-- [ ] `src/native/forms/index.ts` (export UI)
+- [x] `src/app/forms/core/types.ts` (add `FormRoot` primitive)
+- [x] `src/app/forms/UI.tsx` (new shared AutoFormView/AutoForm)
+- [x] `src/app/forms/index.ts` (export the shared UI)
+- [x] `src/web/forms/suite.tsx` (add `primitives.FormRoot` + `primitives.Button`)
+- [x] `src/web/forms/UI.tsx` (replace with wrapper or re-export shared UI; delete hardcoded form)
+- [x] `src/native/forms/suite.ts` (add `primitives.FormRoot` + `primitives.Button`)
+- [x] `src/native/forms/UI.tsx` (new wrapper/re-export)
+- [x] `src/native/forms/index.ts` (export UI)
 
 # Tests / Acceptance
 ## Unit
-- [ ] Update/add tests to ensure:
+- [x] Update/add tests to ensure:
   - Shared AutoFormView calls `controller.validate()` and only forwards values when valid.
   - Shared AutoFormView omits `hidden` fields.
   - Submit disabled passes to suite Button.
@@ -101,11 +101,13 @@ Where to adapt:
   - Migrate those tests to target the shared AutoFormView, or keep them but import from shared.
 
 ## Behavior
-- [ ] Web:
+- [~] Web:
   - Form submission works via `<form>` submit + button click.
-- [ ] Native:
+- [~] Native:
   - Rendering does not require DOM components.
   - Button press triggers submit.
+- Remaining:
+  - End-to-end/manual runtime interaction checks are still needed for web click/enter behavior and native press behavior.
 
 # Implementation Notes for Codex
 - Keep changes minimal and mechanical.
@@ -133,15 +135,14 @@ Where to adapt:
 - `FormRoot` should provide only structural containment (no spacing/colors). Keyboard/scroll wrappers are optional, but any layout/styling should be minimal and not opinionated.
 
 # Updated Plan Changes
-- [ ] Ensure AutoFormView uses suite primitives for:
+- [x] Ensure AutoFormView uses suite primitives for:
   - Root container (`FormRoot`)
   - Submit control (`Button`)
-- [ ] Add `FormRoot` primitive to the suite contract.
-- [ ] Web suite: implement `FormRoot` as `<form>`.
-- [ ] Native suite: implement `FormRoot` as platform-aware (`<form>` on web, RN container otherwise).
-- [ ] Export `nativeSuite` (default) from the `native` barrel explicitly as the recommended default suite for AutoForm.
+- [x] Add `FormRoot` primitive to the suite contract.
+- [x] Web suite: implement `FormRoot` as `<form>`.
+- [x] Native suite: implement `FormRoot` as platform-aware (`<form>` on web, RN container otherwise).
+- [x] Export `nativeSuite` (default) from the `native` barrel explicitly as the recommended default suite for AutoForm.
 
 # Out of Scope (explicit)
 - Any new opinionated styling system for AutoForm.
 - Advanced RN focus management beyond basic Enter-to-submit on web via `<form>`.
-

@@ -4,7 +4,8 @@
  * Default web component suite for form rendering.
  */
 
-import type { ReactElement } from "react";
+import { createElement } from "react";
+import type { FormEvent, ReactElement } from "react";
 import type {
   LiteralValue,
   TypeInfoField,
@@ -449,6 +450,46 @@ const renderEnumSelect = (context: FieldRenderContext) => {
   );
 };
 
+const FormRoot = ({
+  children,
+  onSubmit,
+}: {
+  children: ReactElement;
+  onSubmit?: () => void;
+}) => {
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    onSubmit?.();
+  };
+
+  return <form onSubmit={handleSubmit}>{children}</form>;
+};
+
+const SuiteButton = ({
+  children,
+  disabled,
+  type,
+  onClick,
+  "data-signifier": dataSignifier,
+}: {
+  children: ReactElement;
+  disabled?: boolean;
+  type?: "button" | "submit";
+  onClick?: () => void;
+  "data-signifier"?: string;
+}) => {
+  return createElement(
+    "button",
+    {
+      type: type ?? "button",
+      disabled,
+      onClick: type === "submit" ? undefined : onClick,
+      "data-signifier": dataSignifier,
+    },
+    children,
+  );
+};
+
 /**
  * Default web suite for form rendering.
  */
@@ -463,6 +504,14 @@ export const webSuite: ComponentSuite<ReactElement> = {
     relation_array: renderRelationArray,
     custom_single: renderCustomSingle,
     custom_array: renderCustomArray,
+  },
+  primitives: {
+    FormRoot,
+    FieldWrapper,
+    ErrorMessage,
+    Label: ({ children, htmlFor }) =>
+      createElement("label", { htmlFor }, children),
+    Button: SuiteButton,
   },
 };
 
