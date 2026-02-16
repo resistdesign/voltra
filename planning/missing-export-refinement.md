@@ -12,10 +12,17 @@ We need to make absolutely certain that we are not missing important types to be
 
 ## Phase 1: Report Missing Types
 
-1. Collect and list all types not exported for approval to export.
-
-- Skip the generated AWS IaC Resource types. (We might export that, but no need to list.)
+- [x] Collect and list all types not exported for approval to export.
+- [x] Skip generated AWS IaC resource types from this reporting pass.
+- [x] Generate and persist report artifacts:
+  - `planning/missing-export-refinement-report.md`
+  - `planning/missing-export-refinement-report.json`
+- [x] Summary of current report:
+  - 21 barrels with missing type references
+  - 168 barrel-scoped missing type entries
+  - 73 unique missing type names
 
 ## Phase 2: Export Missing Types
 
-1. All types that have been approved will be exported.
+- [ ] Export all approved missing types from their relevant barrels.
+- [ ] Validate exports with tests/build checks after updates.
