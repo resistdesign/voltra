@@ -30,6 +30,12 @@ jobs:
       - name: Run tests
         run: yarn test
 
+      - name: Build dist artifacts
+        run: yarn build
+
+      - name: Run export checks
+        run: yarn test:exports
+
   test-dbx-scale-med:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest

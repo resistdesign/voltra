@@ -29,6 +29,17 @@
       "expectation": {
         "submitDisabledPropagated": true
       }
+    },
+    {
+      "export": "runSharedSuitePrimitiveUsageScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasFormRootSubmit": true,
+        "buttonTypeIsSubmit": true,
+        "hasButtonOnClick": true,
+        "submitCalls": 2
+      }
     }
   ]
 }
