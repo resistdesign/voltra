@@ -1,7 +1,9 @@
 /**
  * A pattern for a CORS origin.
  * */
-export type CORSPatter = string | RegExp;
+export type CORSPattern = string | RegExp;
+
+export type CORSPatter = CORSPattern;
 
 /**
  * User authentication information.
@@ -155,7 +157,7 @@ export type CloudFunctionEventRouter = (
   event: any,
   eventTransformer: CloudFunctionEventTransformer,
   routeMap: RouteMap,
-  allowedOrigins: CORSPatter[],
+  allowedOrigins: CORSPattern[],
   errorShouldBeExposedToClient?: (error: unknown) => boolean,
   debug?: boolean,
 ) => Promise<CloudFunctionResponse>;
