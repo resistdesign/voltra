@@ -1,4 +1,4 @@
-import { CORSPatter } from "./Types";
+import { CORSPattern } from "./Types";
 
 /**
  * Check origin equality against an allowed string.
@@ -42,7 +42,7 @@ export const originMatches = (
   /**
    * Allowed origin matcher (string equality or regex test).
    */
-  corsPattern: CORSPatter = "",
+  corsPattern: CORSPattern = "",
 ): boolean => {
   if (typeof corsPattern === "string") {
     return originMatchesString(origin, corsPattern);
@@ -63,7 +63,7 @@ export const getAllowedCORSOrigin = (
   /**
    * Allowed origin matchers to check.
    */
-  corsPatterns: CORSPatter[] = [],
+  corsPatterns: CORSPattern[] = [],
 ): string =>
   !!corsPatterns.find((cP) => originMatches(origin, cP)) ? origin : "";
 
@@ -79,7 +79,7 @@ export const getHeadersWithCORS = (
   /**
    * Allowed origin matchers to check.
    */
-  corsPatterns: CORSPatter[] = [],
+  corsPatterns: CORSPattern[] = [],
 ): Record<string, string> => {
   return {
     "Access-Control-Allow-Origin": getAllowedCORSOrigin(origin, corsPatterns),

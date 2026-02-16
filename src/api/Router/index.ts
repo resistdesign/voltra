@@ -28,7 +28,7 @@ import {
   CloudFunctionEventRouter,
   CloudFunctionEventTransformer,
   CloudFunctionResponse,
-  CORSPatter,
+  CORSPattern,
   NormalizedCloudFunctionEventData,
   Route,
   RouteHandler,
@@ -157,7 +157,7 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
   /**
    * Allowed origins list used to build CORS headers.
    */
-  allowedOrigins: CORSPatter[],
+  allowedOrigins: CORSPattern[],
   /**
    * Optional predicate to decide whether error details are exposed.
    */

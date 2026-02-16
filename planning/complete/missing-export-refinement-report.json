@@ -1,0 +1,1527 @@
+[
+  {
+    "barrel": "src/api/Indexing/index.ts",
+    "missing": [
+      {
+        "name": "StructuredDdbWriter",
+        "sourcePath": "src/api/Indexing/structured/StructuredWriter.ts",
+        "referencedBy": [
+          "StructuredDdbBackend"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/api/ORM/drivers/common/index.ts",
+    "missing": [
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "ItemRelationshipDBDriver"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver"
+        ]
+      },
+      {
+        "name": "SupportedDataItemDBDriverEntry",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "SUPPORTED_TYPE_INFO_ORM_DB_DRIVERS"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DataItemDBDriverConfig"
+        ]
+      },
+      {
+        "name": "TypeInfoPack",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "SupportedDataItemDBDriverEntry"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/api/ORM/drivers/index.ts",
+    "missing": [
+      {
+        "name": "BaseFile",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "BaseFileItem",
+          "ListFilesResult"
+        ]
+      },
+      {
+        "name": "BaseFileLocationInfo",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "BaseFile",
+          "CloudFileServiceDriver",
+          "S3FileItemDBDriver"
+        ]
+      },
+      {
+        "name": "BaseItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver"
+        ]
+      },
+      {
+        "name": "CloudFileServiceDriver",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "S3FileItemDBDriver"
+        ]
+      },
+      {
+        "name": "DataItemDBDriver",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "DynamoDBDataItemDBDriver",
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "ItemRelationshipDBDriver",
+          "S3FileItemDBDriver",
+          "S3SupportedFileItemDBDriverEntry",
+          "SupportedDataItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "DataItemDBDriverConfig",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "DynamoDBDataItemDBDriver",
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemoryItemRelationshipDBDriverConfig",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "S3FileItemDBDriver",
+          "S3SupportedFileItemDBDriverEntry",
+          "SupportedDataItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "InMemoryDataItemDBDriver",
+        "sourcePath": "src/api/ORM/drivers/InMemoryDataItemDBDriver.ts",
+        "referencedBy": [
+          "InMemoryItemRelationshipDBDriver"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "InMemoryItemRelationshipDBDriver",
+          "InMemoryItemRelationshipDBDriverConfig",
+          "IndexingRelationshipDriver",
+          "ItemRelationshipDBDriver"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginItemInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "S3FileItemDBDriver"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "IndexingRelationshipDriver"
+        ]
+      },
+      {
+        "name": "ListRelationshipsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver"
+        ]
+      },
+      {
+        "name": "S3SpecificConfig",
+        "sourcePath": "src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts",
+        "referencedBy": [
+          "S3FileItemDBDriver"
+        ]
+      },
+      {
+        "name": "SearchCriteria",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DynamoDBDataItemDBDriver"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DataItemDBDriverConfig",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver"
+        ]
+      },
+      {
+        "name": "TypeInfoMap",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "S3SupportedFileItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "TypeInfoPack",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "SupportedDataItemDBDriverEntry"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/api/ORM/index.ts",
+    "missing": [
+      {
+        "name": "AuthInfo",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "BaseDACRole",
+        "sourcePath": "src/api/DataAccessControl.ts",
+        "referencedBy": [
+          "getFullORMDACRole",
+          "getItemRelationshipOriginDACRole",
+          "getItemTypeDACRole"
+        ]
+      },
+      {
+        "name": "BaseItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver",
+          "TypeInfoORMService",
+          "cleanRelationshipItem",
+          "getItemRelationshipDACResourcePath"
+        ]
+      },
+      {
+        "name": "BaseTypeInfoORMServiceConfig",
+        "sourcePath": "src/api/ORM/TypeInfoORMService.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "CustomTypeInfoFieldValidatorMap",
+        "sourcePath": "src/common/TypeParsing/Validation.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig"
+        ]
+      },
+      {
+        "name": "DACAccessResult",
+        "sourcePath": "src/api/DataAccessControl.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "DACConstraint",
+        "sourcePath": "src/api/DataAccessControl.ts",
+        "referencedBy": [
+          "getItemRelationshipOriginDACConstraint",
+          "getItemTypeDACConstraint"
+        ]
+      },
+      {
+        "name": "DACConstraintType",
+        "sourcePath": "src/api/DataAccessControl.ts",
+        "referencedBy": [
+          "getFullORMDACRole",
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACRole",
+          "getItemTypeDACConstraint",
+          "getItemTypeDACRole"
+        ]
+      },
+      {
+        "name": "DACDataItemResourceAccessResultMap",
+        "sourcePath": "src/api/DataAccessControl.ts",
+        "referencedBy": [
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem",
+          "mergeDACDataItemResourceAccessResultMaps"
+        ]
+      },
+      {
+        "name": "DACRole",
+        "sourcePath": "src/api/DataAccessControl.ts",
+        "referencedBy": [
+          "TypeInfoORMDACConfig",
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem"
+        ]
+      },
+      {
+        "name": "DeleteRelationshipResults",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "IndexingRelationshipDriver",
+        "sourcePath": "src/api/ORM/drivers/IndexingRelationshipDriver.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipDBDriver",
+        "sourcePath": "src/api/ORM/drivers/common/Types.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "InMemoryItemRelationshipDBDriver",
+          "InMemoryItemRelationshipDBDriverConfig",
+          "IndexingRelationshipDriver",
+          "ItemRelationshipDBDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfoKeys",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfoType",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginatingItemInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACResourcePath",
+          "getItemRelationshipOriginDACRole"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginItemInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "S3FileItemDBDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "IndexingRelationshipDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ListRelationshipsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "LiteralValue",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMDACConfig",
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem",
+          "getDataItemDACResourcePath",
+          "getDataItemFieldValueDACResourcePath",
+          "getFullORMDACRole",
+          "getItemRelationshipDACResourcePath",
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACResourcePath",
+          "getItemRelationshipOriginDACRole",
+          "getItemTypeDACConstraint",
+          "getItemTypeDACResourcePath",
+          "getItemTypeDACRole",
+          "getORMDACResourcePath"
+        ]
+      },
+      {
+        "name": "NormalizedCloudFunctionEventData",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "ORMOperation",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "getDACRoleHasAccessToDataItem",
+          "getDataItemDACResourcePath",
+          "getItemRelationshipDACResourcePath",
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACResourcePath",
+          "getItemRelationshipOriginDACRole",
+          "getItemTypeDACConstraint",
+          "getItemTypeDACResourcePath",
+          "getItemTypeDACRole",
+          "getORMDACResourcePath"
+        ]
+      },
+      {
+        "name": "RelationshipOperation",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "Route",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "RouteAuthConfig",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "RouteHandler",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "RouteMap",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "S3SpecificConfig",
+        "sourcePath": "src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts",
+        "referencedBy": [
+          "S3FileItemDBDriver"
+        ]
+      },
+      {
+        "name": "SearchCriteria",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DynamoDBDataItemDBDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DataItemDBDriverConfig",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem",
+          "getDriverMethodWithModifiedError"
+        ]
+      },
+      {
+        "name": "TypeInfoField",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfoMap",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig",
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "S3SupportedFileItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "TypeInfoORMAPI",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfoORMContext",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfoORMDACConfig",
+        "sourcePath": "src/api/ORM/TypeInfoORMService.ts",
+        "referencedBy": [
+          "getTypeInfoORMRouteMap"
+        ]
+      },
+      {
+        "name": "TypeInfoPack",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "SupportedDataItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "TypeInfoValidationResults",
+        "sourcePath": "src/common/TypeParsing/Validation.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/api/Router/index.ts",
+    "missing": [
+      {
+        "name": "CloudFunctionEventRouter",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "handleCloudFunctionEvent"
+        ]
+      },
+      {
+        "name": "CloudFunctionEventTransformer",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "AWS",
+          "CloudFunctionEventRouter",
+          "handleCloudFunctionEvent"
+        ]
+      },
+      {
+        "name": "CloudFunctionResponse",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "CloudFunctionEventRouter",
+          "handleCloudFunctionEvent"
+        ]
+      },
+      {
+        "name": "CORSPattern",
+        "sourcePath": "src/api/Router/Types.ts",
+        "referencedBy": [
+          "CloudFunctionEventRouter",
+          "handleCloudFunctionEvent"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/api/index.ts",
+    "missing": [
+      {
+        "name": "BaseItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver",
+          "TypeInfoORMService",
+          "cleanRelationshipItem",
+          "getItemRelationshipDACResourcePath"
+        ]
+      },
+      {
+        "name": "CustomTypeInfoFieldValidatorMap",
+        "sourcePath": "src/common/TypeParsing/Validation.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig"
+        ]
+      },
+      {
+        "name": "DeleteRelationshipResults",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "InMemoryItemRelationshipDBDriver",
+          "InMemoryItemRelationshipDBDriverConfig",
+          "IndexingRelationshipDriver",
+          "ItemRelationshipDBDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfoKeys",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfoType",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginatingItemInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACResourcePath",
+          "getItemRelationshipOriginDACRole"
+        ]
+      },
+      {
+        "name": "ItemRelationshipOriginItemInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "S3FileItemDBDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "InMemoryFileItemDBDriver",
+          "IndexingRelationshipDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "ListRelationshipsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "IndexingRelationshipDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "LiteralValue",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DACResourcePathPart",
+          "TypeInfoORMDACConfig",
+          "TypeInfoORMService",
+          "getDACPathsMatch",
+          "getDACRoleHasAccessToDataItem",
+          "getDataItemDACResourcePath",
+          "getDataItemFieldValueDACResourcePath",
+          "getFullORMDACRole",
+          "getItemRelationshipDACResourcePath",
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACResourcePath",
+          "getItemRelationshipOriginDACRole",
+          "getItemTypeDACConstraint",
+          "getItemTypeDACResourcePath",
+          "getItemTypeDACRole",
+          "getORMDACResourcePath",
+          "getResourceAccessByDACRole"
+        ]
+      },
+      {
+        "name": "ORMOperation",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "getDACRoleHasAccessToDataItem",
+          "getDataItemDACResourcePath",
+          "getItemRelationshipDACResourcePath",
+          "getItemRelationshipOriginDACConstraint",
+          "getItemRelationshipOriginDACResourcePath",
+          "getItemRelationshipOriginDACRole",
+          "getItemTypeDACConstraint",
+          "getItemTypeDACResourcePath",
+          "getItemTypeDACRole",
+          "getORMDACResourcePath"
+        ]
+      },
+      {
+        "name": "RelationshipOperation",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "S3SpecificConfig",
+        "sourcePath": "src/api/ORM/drivers/S3FileItemDBDriver/ConfigTypes.ts",
+        "referencedBy": [
+          "S3FileItemDBDriver"
+        ]
+      },
+      {
+        "name": "SearchCriteria",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "DynamoDBDataItemDBDriver",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DataItemDBDriver",
+          "DataItemDBDriverConfig",
+          "DynamoDBDataItemDBDriver",
+          "InMemoryDataItemDBDriver",
+          "TypeInfoORMService",
+          "getDACRoleHasAccessToDataItem",
+          "getDriverMethodWithModifiedError"
+        ]
+      },
+      {
+        "name": "TypeInfoField",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfoMap",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMServiceConfig",
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "S3SupportedFileItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "TypeInfoORMAPI",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TYPE_INFO_ORM_API_PATH_METHOD_NAME_MAP",
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfoORMContext",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeInfoPack",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "DynamoDBSupportedDataItemDBDriverEntry",
+          "InMemoryFileSupportedDataItemDBDriverEntry",
+          "InMemorySupportedDataItemDBDriverEntry",
+          "SupportedDataItemDBDriverEntry"
+        ]
+      },
+      {
+        "name": "TypeInfoValidationResults",
+        "sourcePath": "src/common/TypeParsing/Validation.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMService"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/app/forms/core/index.ts",
+    "missing": [
+      {
+        "name": "ItemRelationshipInfoType",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "RelationActionPayload"
+        ]
+      },
+      {
+        "name": "LiteralValue",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "FieldRenderContext"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "FieldValue"
+        ]
+      },
+      {
+        "name": "TypeInfoField",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFieldInput",
+          "CustomTypeActionPayload",
+          "FieldRenderContext",
+          "RelationActionPayload",
+          "getFieldKind"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/app/forms/index.ts",
+    "missing": [
+      {
+        "name": "ItemRelationshipInfoType",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "RelationActionPayload"
+        ]
+      },
+      {
+        "name": "LiteralValue",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "FieldRenderContext"
+        ]
+      },
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps",
+          "FormController",
+          "useFormEngine"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "FieldValue",
+          "FormValue",
+          "FormValues"
+        ]
+      },
+      {
+        "name": "TypeInfoField",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFieldProps",
+          "CustomTypeActionPayload",
+          "FieldRenderContext",
+          "FormFieldController",
+          "RelationActionPayload",
+          "getFieldKind"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps",
+          "FormController",
+          "useFormEngine"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/app/index.ts",
+    "missing": [
+      {
+        "name": "ApplicationStateIdentifier",
+        "sourcePath": "src/app/utils/ApplicationState.tsx",
+        "referencedBy": [
+          "ApplicationStateLoaderConfig"
+        ]
+      },
+      {
+        "name": "BaseItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "DeleteRelationshipResults",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfoType",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "RelationActionPayload"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ListRelationshipsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "LiteralValue",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "FieldRenderContext"
+        ]
+      },
+      {
+        "name": "ServiceConfig",
+        "sourcePath": "src/app/utils/Service.ts",
+        "referencedBy": [
+          "RemoteProcedureCall",
+          "TypeInfoORMClient",
+          "sendServiceRequest"
+        ]
+      },
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps",
+          "FormController",
+          "useFormEngine"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "FieldValue",
+          "FormValue",
+          "FormValues",
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "TypeInfoField",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFieldProps",
+          "CustomTypeActionPayload",
+          "FieldRenderContext",
+          "FormFieldController",
+          "RelationActionPayload",
+          "getFieldKind"
+        ]
+      },
+      {
+        "name": "TypeInfoORMAPIRoutePaths",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "TypeInfoORMClientAPI",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMAPIState",
+          "TypeInfoORMClient",
+          "TypeInfoORMServiceAPI",
+          "handleRequest",
+          "requestHandlerFactory",
+          "useTypeInfoORMAPI"
+        ]
+      },
+      {
+        "name": "TypeInfoORMServiceError",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMAPIRequestState",
+          "handleRequest"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps",
+          "FormController",
+          "useFormEngine"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/app/utils/index.ts",
+    "missing": [
+      {
+        "name": "BaseItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "DeleteRelationshipResults",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "ListRelationshipsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "TypeInfoORMAPIRoutePaths",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMClient"
+        ]
+      },
+      {
+        "name": "TypeInfoORMClientAPI",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "TypeInfoORMAPIState",
+          "TypeInfoORMClient",
+          "TypeInfoORMServiceAPI",
+          "handleRequest",
+          "requestHandlerFactory",
+          "useTypeInfoORMAPI"
+        ]
+      },
+      {
+        "name": "TypeInfoORMServiceError",
+        "sourcePath": "src/common/TypeInfoORM/Types.ts",
+        "referencedBy": [
+          "BaseTypeInfoORMAPIRequestState",
+          "handleRequest"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/build/index.ts",
+    "missing": [
+      {
+        "name": "TypeInfoMap",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "getTypeInfoMapFromTypeScript"
+        ]
+      },
+      {
+        "name": "TypeMap",
+        "sourcePath": "src/build/TypeMapping.ts",
+        "referencedBy": [
+          "getTypeInfoMapFromTypeScript"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/common/ItemRelationships/index.ts",
+    "missing": [
+      {
+        "name": "ItemRelationshipInfoKeys",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "validateRelationshipItem"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfoType",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "validateRelationshipItem"
+        ]
+      },
+      {
+        "name": "TypeInfoValidationResults",
+        "sourcePath": "src/common/TypeParsing/Validation.ts",
+        "referencedBy": [
+          "validateRelationshipItem"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/common/Testing/index.ts",
+    "missing": [
+      {
+        "name": "ConditionConfig",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "getResolvedConditions"
+        ]
+      },
+      {
+        "name": "EXTRegexExpectation",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "OPERATIONS"
+        ]
+      },
+      {
+        "name": "PatternElement",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "OPERATIONS"
+        ]
+      },
+      {
+        "name": "RegexExpectation",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "OPERATIONS"
+        ]
+      },
+      {
+        "name": "ResolvedTestConfig",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "getResolvedTestConfig"
+        ]
+      },
+      {
+        "name": "Test",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "generateTestsForFile",
+          "getSetupInstance",
+          "getTestFunction",
+          "runTest"
+        ]
+      },
+      {
+        "name": "TestComparisonOperation",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "compare"
+        ]
+      },
+      {
+        "name": "TestConfig",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "getTestConfig"
+        ]
+      },
+      {
+        "name": "TestResults",
+        "sourcePath": "src/common/Testing/Types.ts",
+        "referencedBy": [
+          "executeTestingCommand",
+          "generateTestsForFile",
+          "mergeTestResults",
+          "runTest",
+          "runTestsForFile"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/common/TypeInfoORM/index.ts",
+    "missing": [
+      {
+        "name": "BaseItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMAPI",
+          "TypeInfoORMClientAPI"
+        ]
+      },
+      {
+        "name": "ItemRelationshipInfo",
+        "sourcePath": "src/common/ItemRelationshipInfoTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMAPI",
+          "TypeInfoORMClientAPI"
+        ]
+      },
+      {
+        "name": "ListItemsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMAPI",
+          "TypeInfoORMClientAPI"
+        ]
+      },
+      {
+        "name": "ListItemsResults",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMAPI",
+          "TypeInfoORMClientAPI"
+        ]
+      },
+      {
+        "name": "ListRelationshipsConfig",
+        "sourcePath": "src/common/SearchTypes.ts",
+        "referencedBy": [
+          "TypeInfoORMAPI",
+          "TypeInfoORMClientAPI"
+        ]
+      },
+      {
+        "name": "TypeInfoDataItem",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoORMAPI",
+          "TypeInfoORMClientAPI"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "ORMOperation"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/common/TypeParsing/index.ts",
+    "missing": [
+      {
+        "name": "TypeKeyword",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "PRIMITIVE_ERROR_MESSAGE_CONSTANTS",
+          "TYPE_KEYWORD_VALIDATORS",
+          "TypeInfoField",
+          "validateKeywordType",
+          "validateTypeInfoFieldValue"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/common/index.ts",
+    "missing": [
+      {
+        "name": "LiteralValue",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "TypeInfoField"
+        ]
+      },
+      {
+        "name": "TypeKeyword",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "PRIMITIVE_ERROR_MESSAGE_CONSTANTS",
+          "TYPE_KEYWORD_VALIDATORS",
+          "TypeInfoField",
+          "validateKeywordType",
+          "validateTypeInfoFieldValue"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/iac/index.ts",
+    "missing": [
+      {
+        "name": "ParameterGroup",
+        "sourcePath": "src/iac/utils/index.ts",
+        "referencedBy": [
+          "SimpleCFT"
+        ]
+      },
+      {
+        "name": "ParameterInfo",
+        "sourcePath": "src/iac/utils/index.ts",
+        "referencedBy": [
+          "SimpleCFT",
+          "addParameter",
+          "addParameters"
+        ]
+      },
+      {
+        "name": "ResourcePackApplier",
+        "sourcePath": "src/iac/utils/index.ts",
+        "referencedBy": [
+          "SimpleCFT",
+          "createResourcePack"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/native/forms/index.ts",
+    "missing": [
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/native/index.ts",
+    "missing": [
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/web/forms/index.ts",
+    "missing": [
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      }
+    ]
+  },
+  {
+    "barrel": "src/web/index.ts",
+    "missing": [
+      {
+        "name": "TypeInfo",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      },
+      {
+        "name": "TypeOperation",
+        "sourcePath": "src/common/TypeParsing/TypeInfo.ts",
+        "referencedBy": [
+          "AutoFormProps"
+        ]
+      }
+    ]
+  }
+]
