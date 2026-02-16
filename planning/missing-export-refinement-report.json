@@ -622,7 +622,7 @@
         ]
       },
       {
-        "name": "CORSPatter",
+        "name": "CORSPattern",
         "sourcePath": "src/api/Router/Types.ts",
         "referencedBy": [
           "CloudFunctionEventRouter",
