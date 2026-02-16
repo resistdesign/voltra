@@ -45,11 +45,11 @@ export type AutoFieldInput = {
 export const createAutoField = <RenderOutput = unknown>(
   suite: ResolvedSuite<RenderOutput>,
 ) => {
-  return (props: AutoFieldInput): RenderOutput => {
+  const renderField = (props: AutoFieldInput): RenderOutput => {
     const { field, fieldKey, value, onChange, error, disabled } = props;
     const { tags } = field;
 
-    const context: FieldRenderContext = {
+    const context: FieldRenderContext<RenderOutput> = {
       field,
       fieldKey,
       label: tags?.label ?? fieldKey,
@@ -65,9 +65,12 @@ export const createAutoField = <RenderOutput = unknown>(
       customType: tags?.customType,
       onRelationAction: props.onRelationAction,
       onCustomTypeAction: props.onCustomTypeAction,
+      renderField,
     };
 
     const kind = getFieldKind(field);
     return suite.renderers[kind](context);
   };
+
+  return renderField;
 };

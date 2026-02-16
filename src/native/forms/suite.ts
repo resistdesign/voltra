@@ -15,7 +15,7 @@ import type {
   ComponentSuite,
   FieldRenderContext,
 } from "../../app/forms/core";
-import { createAutoField, resolveSuite } from "../../app/forms/core";
+import { createFormRenderer } from "../../app/forms/core/createFormRenderer";
 import {
   ArrayContainer,
   ArrayItemWrapper,
@@ -232,9 +232,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
   );
 };
 
-let autoFieldRenderer: ReturnType<typeof createAutoField<ReactElement>>;
-
-const renderArray = (context: FieldRenderContext) => {
+const renderArray = (context: FieldRenderContext<ReactElement>) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
@@ -255,7 +253,7 @@ const renderArray = (context: FieldRenderContext) => {
           createElement(
             View,
             { style: { flex: 1 } },
-            autoFieldRenderer({
+            context.renderField({
               field: itemField,
               fieldKey: `${fieldKey}[${index}]`,
               value: item,
@@ -445,11 +443,9 @@ export const nativeSuite: ComponentSuite<ReactElement> = {
   },
 };
 
-const resolvedNativeSuite = resolveSuite(undefined, nativeSuite);
-
-autoFieldRenderer = createAutoField(resolvedNativeSuite);
-
 /**
  * AutoField renderer backed by the default native suite.
  */
-export const nativeAutoField = autoFieldRenderer;
+export const nativeAutoField = createFormRenderer({
+  fallbackSuite: nativeSuite,
+}).AutoField;

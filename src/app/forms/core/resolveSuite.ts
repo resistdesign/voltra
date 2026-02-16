@@ -18,8 +18,8 @@ const fieldKinds: FieldKind[] = [
   "custom_array",
 ];
 
-const getMissingKinds = (
-  renderers: Partial<ResolvedSuite["renderers"]>,
+const getMissingKinds = <RenderOutput = unknown>(
+  renderers: Partial<ResolvedSuite<RenderOutput>["renderers"]>,
 ): FieldKind[] => {
   return fieldKinds.filter((kind) => !renderers[kind]);
 };

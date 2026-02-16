@@ -31,7 +31,16 @@
         "format": "email",
         "hasConstraints": true,
         "hasPossibleValues": false,
-        "customType": null
+        "customType": null,
+        "hasRenderField": true
+      }
+    },
+    {
+      "export": "runCreateAutoFieldRecursionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "nestedResult": "string:tags[0]"
       }
     }
   ]

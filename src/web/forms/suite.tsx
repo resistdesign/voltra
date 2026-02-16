@@ -14,7 +14,7 @@ import type {
   ComponentSuite,
   FieldRenderContext,
 } from "../../app/forms/core";
-import { createAutoField, resolveSuite } from "../../app/forms/core";
+import { createFormRenderer } from "../../app/forms/core/createFormRenderer";
 import {
   ArrayContainer,
   ArrayItemWrapper,
@@ -254,9 +254,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
   );
 };
 
-let autoFieldRenderer: ReturnType<typeof createAutoField<ReactElement>>;
-
-const renderArray = (context: FieldRenderContext) => {
+const renderArray = (context: FieldRenderContext<ReactElement>) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
   const itemField = createArrayItemField(field);
@@ -273,7 +271,7 @@ const renderArray = (context: FieldRenderContext) => {
         {arrayValue.map((item, index) => (
           <ArrayItemWrapper key={index}>
             <div style={{ flex: 1 }}>
-              {autoFieldRenderer({
+              {context.renderField({
                 field: itemField,
                 fieldKey: `${fieldKey}[${index}]`,
                 value: item,
@@ -515,14 +513,12 @@ export const webSuite: ComponentSuite<ReactElement> = {
   },
 };
 
-const resolvedWebSuite = resolveSuite(undefined, webSuite);
-
-autoFieldRenderer = createAutoField(resolvedWebSuite);
-
 /**
  * AutoField renderer backed by the default web suite.
  */
-export const webAutoField = autoFieldRenderer;
+export const webAutoField = createFormRenderer({
+  fallbackSuite: webSuite,
+}).AutoField;
 
 /**
  * Wrapper for relation items list.
