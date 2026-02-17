@@ -68,9 +68,9 @@ We need an implementation that:
 ## Phase 1 — Move the “back consumption” logic to the correct layer
 The logic in `src/native/utils/History.ts#createNativeBackHandler` is not RN-specific; it’s purely `HistoryController`.
 
-- [ ] Move `createNativeBackHandler(history)` from `src/native/utils/History.ts` to `src/app/utils/History.ts` (rename to something platform-agnostic, e.g. `createHistoryBackHandler`).
-  - [ ] Keep old export in `src/native/utils/History.ts` as a **re-export** (or alias) for compatibility.
-  - [ ] Update any internal imports accordingly.
+- [x] Move `createNativeBackHandler(history)` from `src/native/utils/History.ts` to `src/app/utils/History.ts` (rename to something platform-agnostic, e.g. `createHistoryBackHandler`).
+  - [x] Keep old export in `src/native/utils/History.ts` as a **re-export** (or alias) for compatibility.
+  - [x] Update any internal imports accordingly.
 
 **Result:** `app` layer can use the helper without importing from `native`.
 
@@ -79,7 +79,7 @@ The logic in `src/native/utils/History.ts#createNativeBackHandler` is not RN-spe
 Edit `src/app/utils/UniversalRouteAdapter.ts` in `createNativeRouteAdapter`.
 
 ### 2A. Add a tiny runtime probe + dynamic import
-- [ ] Add helper `tryGetReactNativeBackHandler()`:
+- [x] Add helper `tryGetReactNativeBackHandler()`:
   - Must be safe in non-RN environments.
   - Implementation shape:
     - `try { const rn = require('react-native'); ... } catch { return undefined; }`
@@ -89,39 +89,39 @@ Edit `src/app/utils/UniversalRouteAdapter.ts` in `createNativeRouteAdapter`.
 ### 2B. Start/stop lifecycle tied to adapter subscriptions
 `createNativeRouteAdapter` already tracks `subscribers` to start/stop ingress.
 
-- [ ] Add `stopBackHandler` similar to `stopIngress`.
-- [ ] When `subscribers === 1`:
-  - [ ] register `hardwareBackPress` listener.
-  - [ ] listener should:
-    - call `createHistoryBackHandler(history).handle()` (or inline equivalent)
-    - return that boolean.
-- [ ] When `subscribers === 0`:
-  - [ ] remove the listener.
+- [x] Add `stopBackHandler` similar to `stopIngress`.
+- [x] When `subscribers === 1`:
+  - [x] register `hardwareBackPress` listener.
+  - [x] listener should:
+    - [x] call `createHistoryBackHandler(history).handle()` (or inline equivalent)
+    - [x] return that boolean.
+- [x] When `subscribers === 0`:
+  - [x] remove the listener.
 
 ### 2C. Ensure no duplication / no regressions
-- [ ] Make sure multiple `<Route />` roots in the same app don’t register multiple handlers unexpectedly.
+- [x] Make sure multiple `<Route />` roots in the same app don’t register multiple handlers unexpectedly.
   - **Rule:** in typical apps there is one root.
   - If multiple roots exist, each one may register; mitigate by:
-    - [ ] tying lifecycle to active subscription count (already done)
-    - [ ] ensuring handler is removed on unmount/unsubscribe
+    - [x] tying lifecycle to active subscription count (already done)
+    - [x] ensuring handler is removed on unmount/unsubscribe
 
 
 ## Phase 3 — Provide programmatic back affordance (optional but recommended)
 To enable on-screen back buttons in a Voltra-style component suite:
 
-- [ ] Extend `RouteAdapter` type in `src/app/utils/Route.tsx` to include optional navigation helpers:
-  - [ ] `back?: () => void`
-  - [ ] `canGoBack?: () => boolean`
+- [x] Extend `RouteAdapter` type in `src/app/utils/Route.tsx` to include optional navigation helpers:
+  - [x] `back?: () => void`
+  - [x] `canGoBack?: () => boolean`
 
-- [ ] Update `createRouteAdapterFromHistory(history)` in `src/app/utils/RouteHistory.ts` to include:
-  - [ ] `back: history.back`
-  - [ ] `canGoBack: () => history.index > 0`
+- [x] Update `createRouteAdapterFromHistory(history)` in `src/app/utils/RouteHistory.ts` to include:
+  - [x] `back: history.back`
+  - [x] `canGoBack: () => history.index > 0`
 
-- [ ] Update `createBrowserRouteAdapter()` to include:
-  - [ ] `back: () => window.history.back()`
-  - [ ] `canGoBack: () => window.history.length > 1`
+- [x] Update `createBrowserRouteAdapter()` to include:
+  - [x] `back: () => window.history.back()`
+  - [x] `canGoBack: () => window.history.length > 1`
 
-- [ ] Update `createNativeRouteAdapter()` to passthrough these extras from its internal history adapter.
+- [x] Update `createNativeRouteAdapter()` to passthrough these extras from its internal history adapter.
 
 **Why:**
 - Improves ergonomics for custom back buttons.
@@ -131,7 +131,7 @@ To enable on-screen back buttons in a Voltra-style component suite:
 ## Phase 4 — Tests
 
 ### 4A. Unit tests for history back consumption helper
-- [ ] Add test coverage in existing history test harness:
+- [x] Add test coverage in existing history test harness:
   - Create memory history with multiple pushes.
   - Verify handler returns `true` and history moves back when `index > 0`.
   - Verify handler returns `false` at index 0.
@@ -139,40 +139,40 @@ To enable on-screen back buttons in a Voltra-style component suite:
 ### 4B. Unit tests for BackHandler registration lifecycle (mock RN)
 In `src/app/utils/UniversalRouteAdapter.test-utils.ts` add a scenario that:
 
-- [ ] Temporarily defines a global `require` shim or injects a `globalThis.__voltra_require__` hook (preferred) so the adapter can dynamically import a mocked `react-native` module.
+- [x] Temporarily defines a global `require` shim or injects a `globalThis.__voltra_require__` hook (preferred) so the adapter can dynamically import a mocked `react-native` module.
   - If dynamic import is implemented with `require('react-native')`, tests need a way to provide that module.
 
-- [ ] Mock shape:
+- [x] Mock shape:
   - `Platform: { OS: 'android' }`
   - `BackHandler.addEventListener(event, cb)` returns `{ remove() {} }` (or compat API)
   - Capture the callback.
 
-- [ ] Steps:
-  - Create native adapter (`strategy: 'native'`).
-  - Subscribe once → assert listener registered.
-  - Push a few routes.
-  - Invoke captured callback → assert path changes to previous route.
-  - Unsubscribe → assert listener removed.
+- [x] Steps:
+  - [x] Create native adapter (`strategy: 'native'`).
+  - [x] Subscribe once → assert listener registered.
+  - [x] Push a few routes.
+  - [x] Invoke captured callback → assert path changes to previous route.
+  - [x] Unsubscribe → assert listener removed.
 
 **Note:** If mocking `require` is too messy in the current test harness, implement a tiny injectable hook inside `UniversalRouteAdapter.ts` for tests only:
 - e.g. `setUniversalAdapterRuntime({ reactNative: ... })` in `*.test-utils.ts` builds.
 
 
 ## Phase 5 — Docs + examples
-- [ ] Update `examples/routing/*` (or add one) showing:
-  - Root `<Route />` works with Android hardware back automatically.
-  - Optional UI back button using `useRouteContext().adapter?.back?.()`.
+- [x] Update `examples/routing/*` (or add one) showing:
+  - [x] Root `<Route />` works with Android hardware back automatically.
+  - [x] Optional UI back button using `useRouteContext().adapter?.back?.()`.
 
-- [ ] Update any README/API docs that mention `createNativeRouteAdapter` / universal routing.
+- [x] Update any README/API docs that mention `createNativeRouteAdapter` / universal routing.
 
 ---
 
 # Acceptance criteria
-- [ ] Android hardware back navigates Voltra route history when possible.
-- [ ] When Voltra cannot go back, OS handles back (exits app or pops native screen).
-- [ ] iOS build does not regress; no crashes; routing still works.
-- [ ] Web build does not regress; browser back continues to work as before.
-- [ ] No required consumer config for the default case.
+- [x] Android hardware back navigates Voltra route history when possible.
+- [x] When Voltra cannot go back, OS handles back (exits app or pops native screen).
+- [x] iOS build does not regress; no crashes; routing still works.
+- [x] Web build does not regress; browser back continues to work as before.
+- [x] No required consumer config for the default case.
 
 ---
 
@@ -184,4 +184,3 @@ In `src/app/utils/UniversalRouteAdapter.test-utils.ts` add a scenario that:
 - `src/app/utils/RouteHistory.ts`
 - `src/app/utils/UniversalRouteAdapter.test-utils.ts` (+ any needed harness helpers)
 - (docs/examples) `examples/routing/*`, `README.md` if applicable
-

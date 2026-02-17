@@ -5,6 +5,7 @@
  */
 import {
   buildHistoryPath,
+  createHistoryBackHandler,
   createMemoryHistory,
   parseHistoryPath,
 } from "./History";
@@ -82,6 +83,62 @@ const getWindow = (): (Window & typeof globalThis) | undefined => {
   return undefined;
 };
 
+type ReactNativeBackHandler = {
+  addEventListener: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => { remove?: () => void } | void;
+  removeEventListener?: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => void;
+};
+
+const getRuntimeRequire = ():
+  | ((moduleName: string) => Record<string, any>)
+  | undefined => {
+  const runtimeRequire = (globalThis as any).__voltra_require__;
+  if (typeof runtimeRequire === "function") {
+    return runtimeRequire;
+  }
+
+  try {
+    return (0, eval)("require") as (moduleName: string) => Record<string, any>;
+  } catch (error) {
+    return undefined;
+  }
+};
+
+/**
+ * Safely resolve React Native BackHandler for Android runtimes only.
+ */
+export const tryGetReactNativeBackHandler = ():
+  | ReactNativeBackHandler
+  | undefined => {
+  const runtimeRequire = getRuntimeRequire();
+  if (!runtimeRequire) {
+    return undefined;
+  }
+
+  try {
+    const reactNativeModule = runtimeRequire("react-native");
+    const platform = reactNativeModule?.Platform;
+    const backHandler = reactNativeModule?.BackHandler;
+
+    if (platform?.OS !== "android") {
+      return undefined;
+    }
+
+    if (typeof backHandler?.addEventListener !== "function") {
+      return undefined;
+    }
+
+    return backHandler as ReactNativeBackHandler;
+  } catch (error) {
+    return undefined;
+  }
+};
+
 /**
  * Detect whether browser history is available at runtime.
  */
@@ -155,6 +212,8 @@ export const createBrowserRouteAdapter = (): RouteAdapter => {
       WINDOW.history.replaceState({}, title, path);
       notify();
     },
+    back: () => WINDOW?.history?.back(),
+    canGoBack: () => (WINDOW?.history?.length ?? 0) > 1,
   };
 };
 
@@ -172,7 +231,8 @@ export const createNativeRouteAdapter = (
   const history = createMemoryHistory(initialPath);
   const adapter = createRouteAdapterFromHistory(history);
   let stopIngress: (() => void) | undefined;
-  let started = false;
+  let stopBackHandler: (() => void) | undefined;
+  let ingressStarted = false;
   let subscribers = 0;
 
   const applyPath = (path: string, mode: "push" | "replace") => {
@@ -190,11 +250,11 @@ export const createNativeRouteAdapter = (
   };
 
   const startIngress = async () => {
-    if (started || !ingress) {
+    if (ingressStarted || !ingress) {
       return;
     }
 
-    started = true;
+    ingressStarted = true;
     const startKey = history.location.key;
     const startIndex = history.index;
 
@@ -220,6 +280,36 @@ export const createNativeRouteAdapter = (
     }
   };
 
+  const startBackHandler = () => {
+    if (stopBackHandler) {
+      return;
+    }
+
+    const reactNativeBackHandler = tryGetReactNativeBackHandler();
+    if (!reactNativeBackHandler) {
+      return;
+    }
+
+    const historyBackHandler = createHistoryBackHandler(history);
+    const handleHardwareBackPress = () => historyBackHandler.handle();
+    const subscription = reactNativeBackHandler.addEventListener(
+      "hardwareBackPress",
+      handleHardwareBackPress,
+    );
+
+    stopBackHandler = () => {
+      if (typeof subscription?.remove === "function") {
+        subscription.remove();
+        return;
+      }
+
+      reactNativeBackHandler.removeEventListener?.(
+        "hardwareBackPress",
+        handleHardwareBackPress,
+      );
+    };
+  };
+
   return {
     ...adapter,
     push: (path: string, title?: string) => {
@@ -238,19 +328,24 @@ export const createNativeRouteAdapter = (
       subscribers += 1;
       if (subscribers === 1) {
         void startIngress();
+        startBackHandler();
       }
 
       const unlisten = adapter.subscribe(listener);
       return () => {
         unlisten();
         subscribers = Math.max(0, subscribers - 1);
-        if (subscribers === 0 && stopIngress) {
-          stopIngress();
+        if (subscribers === 0) {
+          stopIngress?.();
           stopIngress = undefined;
-          started = false;
+          ingressStarted = false;
+          stopBackHandler?.();
+          stopBackHandler = undefined;
         }
       };
     },
+    back: adapter.back,
+    canGoBack: adapter.canGoBack,
   };
 };
 

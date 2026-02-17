@@ -1,5 +1,6 @@
 import {
   buildHistoryPath,
+  createHistoryBackHandler,
   createMemoryHistory,
   parseHistoryPath,
 } from "./History";
@@ -117,5 +118,24 @@ export const runHistoryPathParsingScenario = () => {
     empty,
     built1,
     built2,
+  };
+};
+
+export const runHistoryBackHandlerScenario = () => {
+  const history = createMemoryHistory("/home");
+  history.push("/details");
+  history.push("/details/more");
+
+  const backHandler = createHistoryBackHandler(history);
+  const firstHandle = backHandler.handle();
+  const secondHandle = backHandler.handle();
+  const thirdHandle = backHandler.handle();
+
+  return {
+    firstHandle,
+    secondHandle,
+    thirdHandle,
+    finalPath: buildHistoryPath(history.location),
+    finalIndex: history.index,
   };
 };

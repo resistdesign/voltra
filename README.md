@@ -218,6 +218,14 @@ How it works:
 - Strategy is auto-selected:
   - DOM + History API => browser history strategy.
   - Otherwise => in-memory native strategy.
+- Native strategy automatically wires Android hardware back to route history.
+  - If Voltra can go back (`history.index > 0`), it consumes the event and navigates back.
+  - If Voltra cannot go back, the event is not consumed so OS/native container behavior continues.
+
+Optional back affordances:
+
+- `adapter.back?.()` navigates backward when supported.
+- `adapter.canGoBack?.()` reports whether back navigation is currently possible.
 
 Escape hatches (root-only):
 

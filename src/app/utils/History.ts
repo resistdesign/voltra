@@ -111,6 +111,32 @@ export type HistoryController = {
   listen: (listener: HistoryListener) => () => void;
 };
 
+/**
+ * Back-navigation consumption helper for shared history controllers.
+ *
+ * Returns `true` only when history consumed the back action.
+ *
+ * Example:
+ * ```ts
+ * const handler = createHistoryBackHandler(history);
+ * const consumed = handler.handle();
+ * ```
+ */
+export const createHistoryBackHandler = (history: HistoryController) => {
+  return {
+    /**
+     * @returns True when back navigation was handled by history.
+     */
+    handle: (): boolean => {
+      if (history.index > 0) {
+        history.back();
+        return true;
+      }
+      return false;
+    },
+  };
+};
+
 const ensurePrefix = (value: string, prefix: string): string =>
   value ? (value.startsWith(prefix) ? value : `${prefix}${value}`) : "";
 

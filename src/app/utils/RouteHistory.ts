@@ -40,5 +40,7 @@ export const createRouteAdapterFromHistory = (
     replace: (path: string) => {
       history.replace(path, { replaceSearch: true });
     },
+    back: history.back,
+    canGoBack: () => history.index > 0,
   };
 };

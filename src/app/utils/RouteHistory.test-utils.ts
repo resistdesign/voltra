@@ -22,12 +22,20 @@ export const runRouteHistoryBridgeScenario = () => {
   const afterHistoryPush = {
     adapterPath: adapter.getPath(),
     historyPath: buildHistoryPath(history.location),
+    canGoBack: adapter.canGoBack?.(),
   };
 
   adapter.replace?.("/app/books/101");
   const afterAdapterReplace = {
     adapterPath: adapter.getPath(),
     historyPath: buildHistoryPath(history.location),
+  };
+
+  adapter.back?.();
+  const afterAdapterBack = {
+    adapterPath: adapter.getPath(),
+    historyPath: buildHistoryPath(history.location),
+    canGoBack: adapter.canGoBack?.(),
   };
 
   unlisten();
@@ -39,6 +47,7 @@ export const runRouteHistoryBridgeScenario = () => {
     afterAdapterPush,
     afterHistoryPush,
     afterAdapterReplace,
-    events,
+    afterAdapterBack,
+    events: events,
   };
 };
