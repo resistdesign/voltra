@@ -8,6 +8,28 @@ import { Route, createUniversalAdapter } from "@resistdesign/voltra/app";
 export const appRouteComponentExample = Route;
 
 /**
+ * Native default behavior:
+ * - In native strategy, Android hardware back is auto-wired to route history.
+ * - If route history cannot go back, the OS/native container handles the event.
+ */
+export const appRouteNativeAdapterExample = createUniversalAdapter({
+  strategy: "native",
+  initialPath: "/",
+});
+
+/**
+ * Optional UI back-button helper using adapter affordances.
+ */
+export const runAppRouteBackAction = () => {
+  if (appRouteNativeAdapterExample.canGoBack?.()) {
+    appRouteNativeAdapterExample.back?.();
+    return true;
+  }
+
+  return false;
+};
+
+/**
  * Escape-hatch reference for advanced environments.
  */
 export const appRouteIngressAdapterExample = createUniversalAdapter({

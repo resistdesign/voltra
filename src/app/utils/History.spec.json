@@ -90,6 +90,18 @@
         "built1": "/books/42?tab=info#top",
         "built2": "/catalog?lang=en#overview"
       }
+    },
+    {
+      "export": "runHistoryBackHandlerScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstHandle": true,
+        "secondHandle": true,
+        "thirdHandle": false,
+        "finalPath": "/home",
+        "finalIndex": 0
+      }
     }
   ]
 }
