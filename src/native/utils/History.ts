@@ -6,6 +6,7 @@
 import type { HistoryController } from "../../app/utils/History";
 import {
   buildHistoryPath,
+  createHistoryBackHandler,
   createMemoryHistory,
   parseHistoryPath,
 } from "../../app/utils/History";
@@ -204,27 +205,7 @@ export const createNativeHistory = (
 };
 
 /**
- * Create an Android back-handler helper for native history.
- *
- * Returns `true` only when history consumed the back action.
- *
- * Example:
- * ```ts
- * const handler = createNativeBackHandler(history);
- * const consumed = handler.handle();
- * ```
+ * @deprecated Use {@link createHistoryBackHandler} from `app/utils/History`.
  */
-export const createNativeBackHandler = (history: HistoryController) => {
-  return {
-    /**
-     * @returns True when back navigation was handled by history.
-     */
-    handle: (): boolean => {
-      if (history.index > 0) {
-        history.back();
-        return true;
-      }
-      return false;
-    },
-  };
-};
+export const createNativeBackHandler = (history: HistoryController) =>
+  createHistoryBackHandler(history);

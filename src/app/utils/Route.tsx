@@ -36,6 +36,10 @@ export type RouteAdapter = {
   push?: (path: string, title?: string) => void;
   /** Optional navigation helper for adapters that can replace state. */
   replace?: (path: string, title?: string) => void;
+  /** Optional navigation helper for adapters that can go backward. */
+  back?: () => void;
+  /** Optional capability check for backward navigation. */
+  canGoBack?: () => boolean;
 };
 
 /**
