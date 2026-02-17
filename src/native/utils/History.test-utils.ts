@@ -1,6 +1,8 @@
-import { createMemoryHistory } from "../../app/utils/History";
 import {
-  createNativeBackHandler,
+  createHistoryBackHandler,
+  createMemoryHistory,
+} from "../../app/utils/History";
+import {
   createNativeHistory,
   mapNativeURLToPath,
 } from "./History";
@@ -113,7 +115,7 @@ export const runNativeBackHandlerScenario = () => {
   const history = createMemoryHistory("/home");
   history.push("/details");
 
-  const backHandler = createNativeBackHandler(history);
+  const backHandler = createHistoryBackHandler(history);
   const firstHandle = backHandler.handle();
   const secondHandle = backHandler.handle();
 

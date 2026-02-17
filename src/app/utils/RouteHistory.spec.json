@@ -14,13 +14,24 @@
         },
         "afterHistoryPush": {
           "adapterPath": "/app/books/100",
-          "historyPath": "/app/books/100?tab=debug"
+          "historyPath": "/app/books/100?tab=debug",
+          "canGoBack": true
         },
         "afterAdapterReplace": {
           "adapterPath": "/app/books/101",
           "historyPath": "/app/books/101"
         },
-        "events": ["/app/books/99", "/app/books/100", "/app/books/101"]
+        "afterAdapterBack": {
+          "adapterPath": "/app/books/99",
+          "historyPath": "/app/books/99",
+          "canGoBack": true
+        },
+        "events": [
+          "/app/books/99",
+          "/app/books/100",
+          "/app/books/101",
+          "/app/books/99"
+        ]
       }
     }
   ]
