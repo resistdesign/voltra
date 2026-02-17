@@ -329,6 +329,17 @@ side main, 2fr
 <li>Otherwise =&gt; in-memory native strategy.</li>
 </ul>
 </li>
+<li>Native strategy automatically wires Android hardware back to route history.
+<ul>
+<li>If Voltra can go back (<code>history.index &gt; 0</code>), it consumes the event and navigates back.</li>
+<li>If Voltra cannot go back, the event is not consumed so OS/native container behavior continues.</li>
+</ul>
+</li>
+</ul>
+<p>Optional back affordances:</p>
+<ul>
+<li><code>adapter.back?.()</code> navigates backward when supported.</li>
+<li><code>adapter.canGoBack?.()</code> reports whether back navigation is currently possible.</li>
 </ul>
 <p>Escape hatches (root-only):</p>
 <ul>
