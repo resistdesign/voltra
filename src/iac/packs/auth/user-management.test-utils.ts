@@ -56,8 +56,6 @@ export const runUserManagementPackScenario = () => {
       authRoleName: "AuthRole",
       unauthRoleName: "UnauthRole",
       enableUserPoolDomain: false,
-      callbackUrls: ["https://example.com/callback"],
-      logoutUrls: ["https://example.com/logout"],
     })
     .toJSON();
 

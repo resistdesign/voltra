@@ -23,14 +23,6 @@ type AddUserManagementConfigBase = {
    */
   unauthRoleName: string;
   /**
-   * OAuth callback URLs.
-   */
-  callbackUrls?: any[];
-  /**
-   * OAuth logout URLs.
-   */
-  logoutUrls?: any[];
-  /**
    * Alias target DNS name for the base domain record.
    */
   baseDomainRecordAliasTargetDNSName?: any;
@@ -63,6 +55,14 @@ type AddUserManagementConfigWithDomain = AddUserManagementConfigBase & {
    * SSL certificate ARN for the user pool domain.
    */
   sslCertificateArn: any;
+  /**
+   * OAuth callback URLs.
+   */
+  callbackUrls?: any[];
+  /**
+   * OAuth logout URLs.
+   */
+  logoutUrls?: any[];
 };
 
 type AddUserManagementConfigWithoutDomain = AddUserManagementConfigBase & {
@@ -74,6 +74,8 @@ type AddUserManagementConfigWithoutDomain = AddUserManagementConfigBase & {
   hostedZoneId?: never;
   sslCertificateArn?: never;
   baseDomainRecordAliasTargetDNSName?: never;
+  callbackUrls?: never;
+  logoutUrls?: never;
 };
 
 /**
@@ -244,21 +246,22 @@ export const addUserManagement = createResourcePack(
       config.enableUserPoolDomain === false
         ? {}
         : {
-            [`${id}BaseDomainRecord`]: !!config.baseDomainRecordAliasTargetDNSName
-              ? {
-                  Type: "AWS::Route53::RecordSet",
-                  DeletionPolicy: "Delete",
-                  Properties: {
-                    HostedZoneId: config.hostedZoneId,
-                    Type: "A",
-                    Name: config.domainName,
-                    AliasTarget: {
-                      HostedZoneId: "Z2FDTNDATAQYW2",
-                      DNSName: config.baseDomainRecordAliasTargetDNSName,
+            [`${id}BaseDomainRecord`]:
+              !!config.baseDomainRecordAliasTargetDNSName
+                ? {
+                    Type: "AWS::Route53::RecordSet",
+                    DeletionPolicy: "Delete",
+                    Properties: {
+                      HostedZoneId: config.hostedZoneId,
+                      Type: "A",
+                      Name: config.domainName,
+                      AliasTarget: {
+                        HostedZoneId: "Z2FDTNDATAQYW2",
+                        DNSName: config.baseDomainRecordAliasTargetDNSName,
+                      },
                     },
-                  },
-                }
-              : (undefined as any),
+                  }
+                : (undefined as any),
             [`${id}DomainRecord`]: {
               Type: "AWS::Route53::RecordSet",
               DeletionPolicy: "Delete",
@@ -376,11 +379,15 @@ export const addUserManagement = createResourcePack(
               "profile",
               "aws.cognito.signin.user.admin",
             ],
-            CallbackURLs: callbackUrls,
-            LogoutURLs: logoutUrls,
             EnableTokenRevocation: true,
             PreventUserExistenceErrors: "ENABLED",
             SupportedIdentityProviders: ["COGNITO"],
+            ...(callbackUrls && callbackUrls.length > 0
+              ? { CallbackURLs: callbackUrls }
+              : {}),
+            ...(logoutUrls && logoutUrls.length > 0
+              ? { LogoutURLs: logoutUrls }
+              : {}),
           },
         },
         [`${id}IdentityPool`]: {
