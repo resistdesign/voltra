@@ -3,10 +3,7 @@
  *
  * Native routing helpers that adapt common navigation state to RouteAdapter.
  */
-import React, {
-  type PropsWithChildren,
-  createElement,
-} from "react";
+import React, { type PropsWithChildren } from "react";
 import { BackHandler, Platform } from "react-native";
 import type {
   RouteAdapter,
@@ -75,7 +72,7 @@ export type NavigationRouteConfig = Record<string, string>;
  * @param options - Adapter options for accessing and observing navigation state.
  * @returns RouteAdapter bound to the navigation state.
  */
-export const createNavigationStateRouteAdapter = <TState>(
+export const createNavigationStateRouteAdapter = <TState,>(
   options: NavigationStateAdapterOptions<TState>,
 ): RouteAdapter => {
   const getPath = () => options.toPath(options.getState());
@@ -151,7 +148,7 @@ type NativeRuntimeEnvironment = {
  * - On mobile native runtimes, injects back-handler integration into app Route.
  * - On web runtimes, passes no integration so app Route uses browser behavior.
  */
-export const Route = <ParamsType extends Record<string, any>>(
+export const Route = <ParamsType extends Record<string, any>,>(
   props: PropsWithChildren<RouteProps<ParamsType>>,
 ) => {
   const hasMatcherProps =
@@ -175,12 +172,11 @@ export const Route = <ParamsType extends Record<string, any>>(
     return createNativeRouteBackIntegration(backHandler);
   })();
 
-  return createElement(
-    CoreRoute as unknown as React.ComponentType<RouteProps<Record<string, any>>>,
-    {
-      ...(props as RouteProps<Record<string, any>>),
-      runtimeIntegration,
-    },
+  return (
+    <CoreRoute
+      {...(props as RouteProps<ParamsType>)}
+      runtimeIntegration={runtimeIntegration}
+    />
   );
 };
 
