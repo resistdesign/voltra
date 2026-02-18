@@ -72,19 +72,6 @@
       ]
     }
   },
-  "files": [
-    "*.d.ts",
-    "*.d.ts.map",
-    "api/**",
-    "app/**",
-    "web/**",
-    "native/**",
-    "build/**",
-    "common/**",
-    "iac/**",
-    "README.md",
-    "package.json"
-  ],
   "scripts": {
     "build": "tsup && yarn build:types && yarn prep-dist",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
