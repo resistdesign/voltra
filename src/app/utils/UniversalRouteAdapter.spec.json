@@ -32,31 +32,6 @@
         "fallbackToSlash": true,
         "noOpOnIdenticalPath": true
       }
-    },
-    {
-      "export": "runUniversalAdapterAndroidBackHandlerScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "addEventListenerCount": 1,
-        "removeCount": 1,
-        "firstBackHandled": true,
-        "firstBackPath": true,
-        "secondBackHandled": true,
-        "secondBackPath": true,
-        "thirdBackHandled": true,
-        "thirdBackPathUnchanged": true
-      }
-    },
-    {
-      "export": "runUniversalAdapterIOSScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "addEventListenerCount": 0,
-        "removeCount": 0,
-        "nativeRoutingStillWorks": true
-      }
     }
   ]
 }

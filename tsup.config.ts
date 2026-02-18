@@ -16,7 +16,7 @@ export default defineConfig([
     platform: "node",
     target: "es2022",
     bundle: true,
-    splitting: false,
+    splitting: true,
     treeshake: true,
     external: ["react", "react-dom", "react-native"],
     dts: false,
