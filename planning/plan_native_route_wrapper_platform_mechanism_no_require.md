@@ -40,3 +40,8 @@ Remove `require` runtime hacks from app universal routing and move native/mobile
 - [x] Rename `test:all` -> `test`.
 - [x] Rename `test:gen` -> `test:core:gen`.
 - [x] Verify renamed `yarn test:core` command executes successfully.
+
+## Native Route TSX Cleanup
+- [x] Convert `src/native/utils/Route.ts` to a normal TSX component module.
+- [x] Remove `createElement` usage in native `Route` wrapper in favor of JSX.
+- [x] Verify `yarn test:native` and `yarn test:core` after conversion.
