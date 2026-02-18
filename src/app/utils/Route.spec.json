@@ -30,6 +30,15 @@
         "exactWithoutPathRenders": true,
         "exactWithoutPathHasAdapter": true
       }
+    },
+    {
+      "export": "runAppRouteRuntimeIntegrationMatcherGuardScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "threw": true,
+        "messageIncludesRuntimeIntegration": true
+      }
     }
   ]
 }

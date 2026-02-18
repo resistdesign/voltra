@@ -43,6 +43,21 @@ export type RouteAdapter = {
 };
 
 /**
+ * Optional runtime integration for root Route provider mode.
+ *
+ * Use this to layer platform-specific side effects (for example, native
+ * hardware back wiring) without coupling core app routing to a platform API.
+ */
+export type RouteRuntimeIntegration = {
+  /**
+   * Start integration against the active adapter.
+   *
+   * Return a cleanup function when teardown is required.
+   */
+  setup: (adapter: RouteAdapter) => void | (() => void);
+};
+
+/**
  * Supported query value types for route serialization.
  */
 export type RouteQueryValue =
@@ -333,6 +348,10 @@ export type RouteProps<ParamsType extends Record<string, any>> = {
    * Optional external URL ingress for root provider mode only.
    */
   ingress?: UniversalRouteIngress;
+  /**
+   * Optional runtime integration hook for root provider mode only.
+   */
+  runtimeIntegration?: RouteRuntimeIntegration;
 };
 
 /**
@@ -351,6 +370,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
   children,
 }: PropsWithChildren<
   Omit<RouteProps<ParamsType>, "path" | "initialPath" | "adapter"> & {
+    runtimeIntegration?: never;
     path: string;
   }
 >) => {
@@ -409,10 +429,12 @@ const RouteRootProvider = ({
   adapter,
   initialPath,
   ingress,
+  runtimeIntegration,
 }: PropsWithChildren<{
   adapter?: RouteAdapter;
   initialPath?: string;
   ingress?: UniversalRouteIngress;
+  runtimeIntegration?: RouteRuntimeIntegration;
 }>) => {
   const routeContext = useRouteContext();
   const autoAdapterRef = useRef<RouteAdapter | null>(null);
@@ -428,6 +450,13 @@ const RouteRootProvider = ({
       adapter ?? createUniversalAdapter({ initialPath, ingress });
   }
   useBrowserLinkInterceptor(autoAdapterRef.current);
+  useEffect(() => {
+    if (!runtimeIntegration || !autoAdapterRef.current) {
+      return undefined;
+    }
+
+    return runtimeIntegration.setup(autoAdapterRef.current);
+  }, [runtimeIntegration]);
 
   return (
     <RouteProvider adapter={autoAdapterRef.current} initialPath={initialPath}>
@@ -446,12 +475,13 @@ export const Route = <ParamsType extends Record<string, any>>(
   const hasProviderProps =
     typeof props.initialPath !== "undefined" ||
     typeof props.adapter !== "undefined" ||
-    typeof props.ingress !== "undefined";
+    typeof props.ingress !== "undefined" ||
+    typeof props.runtimeIntegration !== "undefined";
 
   if (hasMatcherProps) {
     if (hasProviderProps && isDevelopmentMode()) {
       throw new Error(
-        "Route matcher mode does not support provider props. Remove initialPath/adapter/ingress or use a root Route without path.",
+        "Route matcher mode does not support provider props. Remove initialPath/adapter/ingress/runtimeIntegration or use a root Route without path.",
       );
     }
 
@@ -473,6 +503,7 @@ export const Route = <ParamsType extends Record<string, any>>(
         adapter={props.adapter}
         initialPath={props.initialPath}
         ingress={props.ingress}
+        runtimeIntegration={props.runtimeIntegration}
       >
         {props.children}
       </RouteRootProvider>

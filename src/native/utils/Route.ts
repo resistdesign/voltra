@@ -3,8 +3,25 @@
  *
  * Native routing helpers that adapt common navigation state to RouteAdapter.
  */
-import type { RouteAdapter, RouteQuery } from "../../app/utils/Route";
-import { buildRoutePath } from "../../app/utils/Route";
+import React, {
+  type PropsWithChildren,
+  createElement,
+} from "react";
+import { BackHandler, Platform } from "react-native";
+import type {
+  RouteAdapter,
+  RouteContextType,
+  RouteProps,
+  RouteProviderProps,
+  RouteQuery,
+  RouteQueryValue,
+  RouteRuntimeIntegration,
+} from "../../app/utils/Route";
+import {
+  Route as CoreRoute,
+  buildRoutePath,
+  useRouteContext,
+} from "../../app/utils/Route";
 import { getPathArray } from "../../common/Routing";
 
 /**
@@ -21,6 +38,20 @@ export type NavigationStateAdapterOptions<TState> = {
   navigate?: (path: string) => void;
   /** Optional navigation handler used for replace-style transitions. */
   replace?: (path: string) => void;
+};
+
+/**
+ * Contract for React Native BackHandler-like integrations.
+ */
+export type NativeBackHandlerLike = {
+  addEventListener: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => { remove?: () => void } | void;
+  removeEventListener?: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => void;
 };
 
 /**
@@ -58,6 +89,90 @@ export const createNavigationStateRouteAdapter = <TState>(
     push: options.navigate ? (path: string) => options.navigate?.(path) : undefined,
     replace: options.replace ? (path: string) => options.replace?.(path) : undefined,
   };
+};
+
+/**
+ * Create a hardware-back listener from a route adapter.
+ */
+export const createNativeHardwareBackHandler = (adapter: RouteAdapter) => {
+  return () => {
+    if (adapter.canGoBack?.()) {
+      adapter.back?.();
+      return true;
+    }
+
+    return false;
+  };
+};
+
+/**
+ * Register hardware-back handling against a BackHandler-like runtime.
+ */
+export const registerNativeHardwareBackHandler = (
+  adapter: RouteAdapter,
+  backHandler: NativeBackHandlerLike,
+) => {
+  const listener = createNativeHardwareBackHandler(adapter);
+  const subscription = backHandler.addEventListener(
+    "hardwareBackPress",
+    listener,
+  );
+
+  return () => {
+    if (typeof subscription?.remove === "function") {
+      subscription.remove();
+      return;
+    }
+
+    backHandler.removeEventListener?.("hardwareBackPress", listener);
+  };
+};
+
+/**
+ * Build a core Route runtime integration using a native BackHandler.
+ */
+export const createNativeRouteBackIntegration = (
+  backHandler: NativeBackHandlerLike,
+): RouteRuntimeIntegration => {
+  return {
+    setup: (adapter) => registerNativeHardwareBackHandler(adapter, backHandler),
+  };
+};
+
+type NativeRuntimeEnvironment = {
+  platformOS: string;
+  backHandler: NativeBackHandlerLike | undefined;
+};
+
+/**
+ * Native Route wrapper for root/provider mode.
+ *
+ * Behavior:
+ * - On mobile native runtimes, injects back-handler integration into app Route.
+ * - On web runtimes, passes no integration so app Route uses browser behavior.
+ */
+export const Route = <ParamsType extends Record<string, any>>(
+  props: PropsWithChildren<RouteProps<ParamsType>>,
+) => {
+  const hasMatcherProps =
+    typeof props.path !== "undefined" ||
+    typeof props.exact !== "undefined" ||
+    typeof props.onParamsChange !== "undefined";
+  const nativeRuntime: NativeRuntimeEnvironment = {
+    platformOS: String(Platform?.OS ?? ""),
+    backHandler: BackHandler as NativeBackHandlerLike,
+  };
+  const runtimeIntegration =
+    hasMatcherProps || nativeRuntime.platformOS === "web"
+      ? undefined
+      : createNativeRouteBackIntegration(nativeRuntime.backHandler);
+
+  return createElement(CoreRoute, {
+    ...(props as RouteProps<ParamsType>),
+    ...(typeof runtimeIntegration !== "undefined"
+      ? { runtimeIntegration }
+      : {}),
+  });
 };
 
 const expandPattern = (pattern: string, params: Record<string, any> = {}) => {
@@ -100,4 +215,15 @@ export const buildPathFromRouteChain = (
   });
 
   return buildRoutePath(segments, query);
+};
+
+export { useRouteContext };
+export type {
+  RouteAdapter,
+  RouteContextType,
+  RouteProps,
+  RouteProviderProps,
+  RouteQuery,
+  RouteQueryValue,
+  RouteRuntimeIntegration,
 };

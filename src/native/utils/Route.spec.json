@@ -26,6 +26,20 @@
       "expectation": {
         "path": "/home/books/42?view=summary&debug=true"
       }
+    },
+    {
+      "export": "runNativeBackIntegrationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "backEvents": [
+          "consumed",
+          "removed",
+          "ignored"
+        ],
+        "finalPath": "/a",
+        "removeFallbackCalls": 1
+      }
     }
   ]
 }

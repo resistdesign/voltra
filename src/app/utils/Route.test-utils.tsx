@@ -130,3 +130,38 @@ export const runAppRouteExactWithoutPathScenario = () => {
     exactWithoutPathHasAdapter: render.includes("&quot;hasAdapter&quot;:true"),
   };
 };
+
+export const runAppRouteRuntimeIntegrationMatcherGuardScenario = () => {
+  const originalWindow = (globalThis as any).window;
+  (globalThis as any).window = buildWindowMock("/app");
+
+  let threw = false;
+  let messageIncludesRuntimeIntegration = false;
+
+  try {
+    renderToString(
+      createElement(
+        Route,
+        {
+          path: "/app",
+          runtimeIntegration: {
+            setup: () => () => {},
+          },
+        },
+        createElement("div", null, "x"),
+      ),
+    );
+  } catch (error) {
+    threw = true;
+    messageIncludesRuntimeIntegration = String(error).includes(
+      "runtimeIntegration",
+    );
+  }
+
+  (globalThis as any).window = originalWindow;
+
+  return {
+    threw,
+    messageIncludesRuntimeIntegration,
+  };
+};
