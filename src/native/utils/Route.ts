@@ -162,17 +162,26 @@ export const Route = <ParamsType extends Record<string, any>>(
     platformOS: String(Platform?.OS ?? ""),
     backHandler: BackHandler as NativeBackHandlerLike,
   };
-  const runtimeIntegration =
-    hasMatcherProps || nativeRuntime.platformOS === "web"
-      ? undefined
-      : createNativeRouteBackIntegration(nativeRuntime.backHandler);
+  const runtimeIntegration = (() => {
+    if (hasMatcherProps || nativeRuntime.platformOS === "web") {
+      return undefined;
+    }
 
-  return createElement(CoreRoute, {
-    ...(props as RouteProps<ParamsType>),
-    ...(typeof runtimeIntegration !== "undefined"
-      ? { runtimeIntegration }
-      : {}),
-  });
+    const backHandler = nativeRuntime.backHandler;
+    if (!backHandler) {
+      return undefined;
+    }
+
+    return createNativeRouteBackIntegration(backHandler);
+  })();
+
+  return createElement(
+    CoreRoute as unknown as React.ComponentType<RouteProps<Record<string, any>>>,
+    {
+      ...(props as RouteProps<Record<string, any>>),
+      runtimeIntegration,
+    },
+  );
 };
 
 const expandPattern = (pattern: string, params: Record<string, any> = {}) => {
