@@ -88,8 +88,11 @@
   "scripts": {
     "build": "tsup && yarn build:types && yarn prep-dist",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
-    "test": "tsx src/common/Testing/CLI.ts \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
-    "test:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
+    "test:core": "tsx src/common/Testing/CLI.ts \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\" \"!./src/native/**/*.spec.json\"",
+    "test:native": "tsx --tsconfig tsconfig.test.native.json src/common/Testing/CLI.ts \"./src/native/**/*.spec.json\"",
+    "test": "yarn test:core && yarn test:native",
+    "test:core:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/*.spec.json\" \"!./src/**/DBX_SCALE_E2E_MED.spec.json\"",
+    "test:native:gen": "tsx --tsconfig tsconfig.test.native.json src/common/Testing/CLI.ts --generate \"./src/native/**/*.spec.json\"",
     "test:dbx:med": "tsx src/common/Testing/CLI.ts \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:dbx:med:gen": "tsx src/common/Testing/CLI.ts --generate \"./src/**/DBX_SCALE_E2E_MED.spec.json\"",
     "test:consumer": "node ./scripts/consumer-smoke.mjs",
