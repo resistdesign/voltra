@@ -40,14 +40,6 @@ type AddAuthConfigBase = {
    * Cognito group name for admins.
    */
   userManagementAdminGroupName: string;
-  /**
-   * OAuth callback URLs.
-   */
-  callbackUrls: any[];
-  /**
-   * OAuth logout URLs.
-   */
-  logoutUrls: any[];
 };
 
 type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
@@ -73,6 +65,14 @@ type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
    * CloudFront distribution id for the main CDN.
    */
   mainCDNCloudFrontId: string;
+  /**
+   * OAuth callback URLs.
+   */
+  callbackUrls: any[];
+  /**
+   * OAuth logout URLs.
+   */
+  logoutUrls: any[];
 };
 
 type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
@@ -84,6 +84,8 @@ type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
   domainNameParameterName?: never;
   sslCertificateId?: never;
   mainCDNCloudFrontId?: never;
+  callbackUrls: never;
+  logoutUrls: never;
 };
 
 /**
@@ -116,8 +118,6 @@ export const addAuth = createResourcePack((config: AddAuthConfig) => {
       id: userManagementId,
       authRoleName,
       unauthRoleName,
-      callbackUrls: callbackUrls,
-      logoutUrls: logoutUrls,
       apiGatewayRESTAPIId: {
         Ref: apiCloudFunctionGatewayId,
       },
@@ -140,20 +140,22 @@ export const addAuth = createResourcePack((config: AddAuthConfig) => {
             baseDomainRecordAliasTargetDNSName: {
               "Fn::GetAtt": [config.mainCDNCloudFrontId, "DomainName"],
             },
+            callbackUrls: callbackUrls,
+            logoutUrls: logoutUrls,
           }),
     })
-      .patch({
-        Resources: {
-          [adminGroupId]: {
-            Type: "AWS::Cognito::UserPoolGroup",
-            Properties: {
-              GroupName: userManagementAdminGroupName,
-              UserPoolId: {
-                Ref: userManagementId,
-              },
-              Description: "Application admin group.",
+    .patch({
+      Resources: {
+        [adminGroupId]: {
+          Type: "AWS::Cognito::UserPoolGroup",
+          Properties: {
+            GroupName: userManagementAdminGroupName,
+            UserPoolId: {
+              Ref: userManagementId,
             },
+            Description: "Application admin group.",
           },
         },
-      }).template;
+      },
+    }).template;
 });
