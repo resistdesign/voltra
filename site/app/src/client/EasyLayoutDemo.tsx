@@ -4,7 +4,7 @@ import {
   getEasyLayoutTemplateDetails,
   getPascalCaseAreaName,
 } from "../../../../src/app/utils";
-import { makeNativeEasyLayout } from "../../../../src/native/utils";
+import { makeNativeEasyLayout } from "../../../../src/native/utils/EasyLayout";
 import { getEasyLayout } from "../../../../src/web/utils";
 
 const DEFAULT_TEMPLATE = `
