@@ -84,8 +84,8 @@ type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
   domainNameParameterName?: never;
   sslCertificateId?: never;
   mainCDNCloudFrontId?: never;
-  callbackUrls: never;
-  logoutUrls: never;
+  callbackUrls?: never;
+  logoutUrls?: never;
 };
 
 /**

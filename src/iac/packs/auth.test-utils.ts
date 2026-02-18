@@ -35,8 +35,6 @@ export const runAuthPackScenario = () => {
       apiStageName: "prod",
       adminGroupId: "AdminGroup",
       userManagementAdminGroupName: "admins",
-      callbackUrls: ["https://example.com/callback"],
-      logoutUrls: ["https://example.com/logout"],
     })
     .toJSON();
 
@@ -55,8 +53,7 @@ export const runAuthPackScenario = () => {
     },
     withoutDomainSummary: {
       resourceKeys: Object.keys(withoutDomainResources).sort(),
-      hasBaseDomainRecord:
-        "UserPoolBaseDomainRecord" in withoutDomainResources,
+      hasBaseDomainRecord: "UserPoolBaseDomainRecord" in withoutDomainResources,
       hasDomain: "UserPoolDomain" in withoutDomainResources,
       hasDomainRecord: "UserPoolDomainRecord" in withoutDomainResources,
       hasIdentityPoolRoles:
