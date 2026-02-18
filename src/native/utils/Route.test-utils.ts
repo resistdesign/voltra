@@ -1,13 +1,15 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import {
-  Route,
   RouteProvider,
   createManualRouteAdapter,
 } from "../../app/utils/Route";
 import {
+  Route,
   buildPathFromRouteChain,
+  createNativeRouteBackIntegration,
   createNavigationStateRouteAdapter,
+  registerNativeHardwareBackHandler,
 } from "./Route";
 
 const renderNestedRoute = (adapter: ReturnType<typeof createManualRouteAdapter>) =>
@@ -81,5 +83,51 @@ export const runNativeRouteChainScenario = () => {
 
   return {
     path,
+  };
+};
+
+export const runNativeBackIntegrationScenario = () => {
+  const backEvents: string[] = [];
+  let currentPath = "/a/b";
+
+  const adapter = {
+    getPath: () => currentPath,
+    subscribe: () => () => {},
+    back: () => {
+      currentPath = "/a";
+    },
+    canGoBack: () => currentPath !== "/a",
+  };
+
+  const integration = createNativeRouteBackIntegration({
+    addEventListener: (_eventName, listener) => {
+      backEvents.push(listener() ? "consumed" : "ignored");
+      return {
+        remove: () => {
+          backEvents.push("removed");
+        },
+      };
+    },
+  });
+
+  const stop = integration.setup(adapter);
+  stop?.();
+
+  let removeFallbackCalls = 0;
+  const stopFallback = registerNativeHardwareBackHandler(adapter, {
+    addEventListener: (_eventName, listener) => {
+      backEvents.push(listener() ? "consumed" : "ignored");
+      return {};
+    },
+    removeEventListener: () => {
+      removeFallbackCalls += 1;
+    },
+  });
+  stopFallback();
+
+  return {
+    backEvents,
+    finalPath: currentPath,
+    removeFallbackCalls,
   };
 };
