@@ -28,3 +28,15 @@ Remove `require` runtime hacks from app universal routing and move native/mobile
 ## Follow-up
 - [x] Replace native wrapper dynamic `import("react-native")` with normal static `react-native` imports.
 - [x] Add explicit note in `src/native/index.ts` that direct `react-native` imports are expected in native barrel code.
+
+## Native VEST Lane
+- [x] Add dedicated native VEST scripts that run native barrel specs without Jest/Metro.
+- [x] Add native test tsconfig path mapping for `react-native`.
+- [x] Add minimal `react-native` test shim for native barrel test execution in Node.
+- [x] Verify `yarn test`, `yarn test:native`, and `yarn test:all`.
+
+## Script Rename Follow-up
+- [x] Rename `test` -> `test:core`.
+- [x] Rename `test:all` -> `test`.
+- [x] Rename `test:gen` -> `test:core:gen`.
+- [x] Verify renamed `yarn test:core` command executes successfully.
