@@ -12,7 +12,9 @@ import type {
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import {
   ERROR_MESSAGE_CONSTANTS,
+  getArrayItemErrorMap,
   getErrorDescriptor,
+  getErrorDescriptors,
   getNoErrorDescriptor,
   type FieldValueValidatorMap,
   type ErrorDescriptor,
@@ -126,14 +128,60 @@ export const useFormEngine = (
   );
   const [errors, setErrorsState] = useState<FormErrorMap>({});
 
+  const normalizeErrorEntries = useCallback(
+    (value: FormErrorInputMap[string]): FormErrorMap[string] => {
+      if (typeof value === "string") {
+        return [getErrorDescriptor(value)];
+      }
+
+      if (Array.isArray(value)) {
+        return value;
+      }
+
+      if (value && typeof value === "object") {
+        if ("code" in value && typeof value.code === "string") {
+          return [value as ErrorDescriptor];
+        }
+
+        const itemErrorMap = value as Record<string, unknown>;
+        const numericKeys = Object.keys(itemErrorMap).filter((key) =>
+          /^\d+$/.test(key),
+        );
+
+        if (numericKeys.length) {
+          const normalizedItemErrorMap: Record<number, ErrorDescriptor[]> = {};
+
+          for (const key of numericKeys) {
+            const index = Number(key);
+            const rawValue = itemErrorMap[key];
+            if (!Array.isArray(rawValue)) {
+              continue;
+            }
+            normalizedItemErrorMap[index] = rawValue.filter(
+              (descriptor): descriptor is ErrorDescriptor =>
+                !!descriptor &&
+                typeof descriptor === "object" &&
+                "code" in descriptor &&
+                typeof descriptor.code === "string",
+            );
+          }
+
+          return [{ itemErrorMap: normalizedItemErrorMap }];
+        }
+      }
+
+      return [getNoErrorDescriptor()];
+    },
+    [],
+  );
+
   const normalizeErrorMap = useCallback(
     (pendingErrors: FormErrorInputMap): FormErrorMap =>
       Object.entries(pendingErrors).reduce((acc, [key, value]) => {
-        acc[key] =
-          typeof value === "string" ? getErrorDescriptor(value) : value;
+        acc[key] = normalizeErrorEntries(value);
         return acc;
       }, {} as FormErrorMap),
-    [],
+    [normalizeErrorEntries],
   );
 
   const setErrors = useCallback(
@@ -166,10 +214,7 @@ export const useFormEngine = (
 
     const newErrors: FormErrorMap = {};
     for (const key of Object.keys(fields)) {
-      newErrors[key] =
-        (validationResults.errorMap[key] ?? []).find(
-          (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
-        ) ?? getNoErrorDescriptor();
+      newErrors[key] = validationResults.errorMap[key] ?? [getNoErrorDescriptor()];
     }
 
     setErrorsState(newErrors);
@@ -197,7 +242,12 @@ export const useFormEngine = (
         constraints: tags?.constraints,
         value: values[key],
         onChange: (value: FormValue) => setFieldValue(key, value),
-        error: errors[key],
+        error:
+          getErrorDescriptors(errors[key] ?? []).find(
+            (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+          ) ?? getNoErrorDescriptor(),
+        errors: getErrorDescriptors(errors[key] ?? []),
+        arrayItemErrorMap: getArrayItemErrorMap(errors[key] ?? []),
       };
     });
   }, [typeInfo, values, errors, setFieldValue, operation]);

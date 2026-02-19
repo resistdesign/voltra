@@ -3,6 +3,7 @@ import {
   DENIED_TYPE_OPERATIONS,
   ERROR_MESSAGE_CONSTANTS,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptors,
   getErrorDescriptor,
   validateTypeInfoDataItem,
 } from "./Validation";
@@ -102,14 +103,18 @@ export const runTypeInfoDataItemValidationScenario = () => {
 
   return {
     hiddenDefaultValid: hiddenDefault.valid,
-    hiddenValidatedCode: hiddenValidated.errorMap.secret?.[0]?.code ?? null,
+    hiddenValidatedCode:
+      getErrorDescriptors(hiddenValidated.errorMap.secret ?? [])[0]?.code ?? null,
     readonlyDefaultValid: readonlyDefault.valid,
-    readonlyValidatedCode: readonlyValidated.errorMap.token?.[0]?.code ?? null,
-    emptyArrayInvalidCode: emptyArrayInvalid.errorMap.tags?.[0]?.code ?? null,
+    readonlyValidatedCode:
+      getErrorDescriptors(readonlyValidated.errorMap.token ?? [])[0]?.code ?? null,
+    emptyArrayInvalidCode:
+      getErrorDescriptors(emptyArrayInvalid.errorMap.tags ?? [])[0]?.code ?? null,
     emptyArrayValid: emptyArrayValid.valid,
     customValidatorInvalidCode:
-      customValidatorInvalid.errorMap.nickname?.find((e) => e.code !== "NONE")
-        ?.code ?? null,
+      getErrorDescriptors(customValidatorInvalid.errorMap.nickname ?? []).find(
+        (e) => e.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+      )?.code ?? null,
     customValidatorValid: customValidatorValid.valid,
   };
 };
@@ -150,5 +155,38 @@ export const runValidationErrorConstantsScenario = () => {
     hasLowercasePrimitiveStringProperty: hasOwn("string"),
     hasLowercasePrimitiveNumberProperty: hasOwn("number"),
     hasLowercasePrimitiveBooleanProperty: hasOwn("boolean"),
+  };
+};
+
+export const runArrayItemErrorMapScenario = () => {
+  const results = validateTypeInfoDataItem(
+    {
+      tags: ["ok", 2 as any],
+    },
+    {
+      fields: {
+        tags: {
+          type: "string",
+          array: true,
+          readonly: false,
+          optional: false,
+        },
+      },
+    },
+  );
+
+  const entries = results.errorMap.tags ?? [];
+  const itemCollection = entries.find(
+    (entry): entry is { itemErrorMap: Record<number, Array<{ code: string }>> } =>
+      !!entry && typeof entry === "object" && "itemErrorMap" in entry,
+  );
+
+  return {
+    valid: results.valid,
+    topLevelCode: results.error.code,
+    fieldCode:
+      entries.find((entry): entry is { code: string } => "code" in (entry as any))
+        ?.code ?? null,
+    index1Codes: itemCollection?.itemErrorMap?.[1]?.map((d) => d.code) ?? [],
   };
 };

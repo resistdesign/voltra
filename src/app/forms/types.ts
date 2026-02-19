@@ -11,6 +11,8 @@ import type {
   TypeOperation,
 } from "../../common/TypeParsing/TypeInfo";
 import type {
+  ArrayErrorDescriptorCollection,
+  ArrayItemErrorMap,
   ErrorDescriptor,
   FieldValueValidatorMap,
   TypeInfoValidationResults,
@@ -79,8 +81,12 @@ export interface AutoFieldProps {
   value: FormValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FormValue) => void;
-  /** Optional error descriptor to display under the field. */
+  /** Optional primary error descriptor for convenience/backward compatibility. */
   error?: ErrorDescriptor;
+  /** Optional list of value-level errors for the field. */
+  errors?: ErrorDescriptor[];
+  /** Optional per-index errors for array fields. */
+  arrayItemErrorMap?: ArrayItemErrorMap;
   /** Optional translator from error descriptor to user-facing message. */
   translateValidationErrorCode?: TranslateValidationErrorCode;
   /** Disables the field UI when true. */
@@ -117,19 +123,33 @@ export type FormFieldController = {
   value: FormValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FormValue) => void;
-  /** Optional error descriptor for the field. */
+  /** Optional primary error descriptor for the field. */
   error?: ErrorDescriptor;
+  /** Optional list of value-level errors for the field. */
+  errors?: ErrorDescriptor[];
+  /** Optional per-index errors for array fields. */
+  arrayItemErrorMap?: ArrayItemErrorMap;
 };
 
 /**
  * Validation errors keyed by field and represented as descriptors/codes.
  */
-export type FormErrorMap = Record<string, ErrorDescriptor>;
+export type FormErrorMap = Record<
+  string,
+  (ErrorDescriptor | ArrayErrorDescriptorCollection)[]
+>;
 
 /**
  * Input map used to set form errors, accepting descriptors or raw codes.
  */
-export type FormErrorInputMap = Record<string, ErrorDescriptor | string>;
+export type FormErrorInputMap = Record<
+  string,
+  | ErrorDescriptor
+  | string
+  | ErrorDescriptor[]
+  | ArrayItemErrorMap
+  | (ErrorDescriptor | ArrayErrorDescriptorCollection)[]
+>;
 
 /**
  * Controller for a form instance and its fields.

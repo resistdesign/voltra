@@ -121,6 +121,24 @@
         "hasVisibleField": true,
         "hasHiddenField": false
       }
+    },
+    {
+      "export": "runMultipleValueErrorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasFirstError": true,
+        "hasSecondError": true
+      }
+    },
+    {
+      "export": "runArrayItemErrorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasItemFirstError": true,
+        "hasItemSecondError": true
+      }
     }
   ]
 }

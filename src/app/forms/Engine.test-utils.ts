@@ -753,3 +753,57 @@ export const runSetErrorsScenario = () => {
 
   return snapshot;
 };
+
+/**
+ * Validate array item error map propagation from controller errors.
+ *
+ * @returns Snapshot of array item error mapping output.
+ */
+export const runArrayItemErrorMappingScenario = () => {
+  let snapshot: any = null;
+
+  const Component = () => {
+    const didSetErrors = useRef(false);
+    const controller = useFormEngine(
+      { tags: ["alpha", "beta", "gamma"] },
+      {
+        fields: {
+          tags: {
+            type: "string",
+            array: true,
+            readonly: false,
+            optional: false,
+          },
+        },
+      },
+    );
+
+    if (!didSetErrors.current) {
+      didSetErrors.current = true;
+      controller.setErrors({
+        tags: {
+          0: [{ code: "TAG_INVALID_0" }],
+          2: [{ code: "TAG_INVALID_2A" }, { code: "TAG_INVALID_2B" }],
+        },
+      });
+    }
+
+    const tagsField = controller.fields[0];
+
+    snapshot = {
+      tagsErrors: controller.errors.tags,
+      fieldErrorCode: tagsField?.error?.code ?? null,
+      fieldErrorsCount: tagsField?.errors?.length ?? 0,
+      index0FirstCode: tagsField?.arrayItemErrorMap?.[0]?.[0]?.code ?? null,
+      index2Codes:
+        tagsField?.arrayItemErrorMap?.[2]?.map((descriptor) => descriptor.code) ??
+        [],
+    };
+
+    return null;
+  };
+
+  renderToString(createElement(Component));
+
+  return snapshot;
+};

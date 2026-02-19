@@ -143,11 +143,30 @@ export type ErrorDescriptor = {
 };
 
 /**
+ * A map of errors for an array of items.
+ */
+export type ArrayItemErrorMap = {
+  [index: number]: ErrorDescriptor[];
+};
+
+/**
+ * A descriptor for an array of errors.
+ */
+export type ArrayErrorDescriptorCollection = {
+  itemErrorMap: ArrayItemErrorMap;
+};
+
+/**
  * A map of errors.
  */
 export type ErrorMap = {
-  [key: string]: ErrorDescriptor[];
+  [key: string]: (ErrorDescriptor | ArrayErrorDescriptorCollection)[];
 };
+
+/**
+ * Internal error map key used by array validators to carry per-index errors.
+ */
+const ARRAY_ITEM_ERROR_MAP_KEY = "__arrayItemErrors__";
 
 /**
  * The validation results for type info fields.
@@ -187,6 +206,43 @@ export const getErrorDescriptor = (
  */
 export const getNoErrorDescriptor = (): ErrorDescriptor =>
   getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.NONE);
+
+/**
+ * Type guard for array-item error collection entries.
+ */
+export const isArrayErrorDescriptorCollection = (
+  value: ErrorDescriptor | ArrayErrorDescriptorCollection,
+): value is ArrayErrorDescriptorCollection =>
+  typeof value === "object" && value !== null && "itemErrorMap" in value;
+
+/**
+ * Returns only descriptor entries from a mixed error entry list.
+ */
+export const getErrorDescriptors = (
+  values: (ErrorDescriptor | ArrayErrorDescriptorCollection)[] = [],
+): ErrorDescriptor[] =>
+  values.filter(
+    (value): value is ErrorDescriptor => !isArrayErrorDescriptorCollection(value),
+  );
+
+/**
+ * Merges all array-item error maps from a mixed entry list.
+ */
+export const getArrayItemErrorMap = (
+  values: (ErrorDescriptor | ArrayErrorDescriptorCollection)[] = [],
+): ArrayItemErrorMap =>
+  values.reduce<ArrayItemErrorMap>((acc, value) => {
+    if (isArrayErrorDescriptorCollection(value)) {
+      for (const [indexKey, descriptors] of Object.entries(value.itemErrorMap)) {
+        const index = Number(indexKey);
+        if (!Number.isFinite(index)) {
+          continue;
+        }
+        acc[index] = [...(acc[index] ?? []), ...descriptors];
+      }
+    }
+    return acc;
+  }, {});
 
 /**
  * Validates a value against a pattern.
@@ -547,6 +603,7 @@ export const validateArrayOfTypeInfoFieldValues = (
     error: getNoErrorDescriptor(),
     errorMap: {},
   };
+  const itemErrorMap: ArrayItemErrorMap = {};
 
   for (let i = 0; i < values.length; i++) {
     const v = values[i];
@@ -567,12 +624,32 @@ export const validateArrayOfTypeInfoFieldValues = (
     );
 
     results.valid = getValidityValue(results.valid, indexValid);
-    results.errorMap[getPathString([i])] = [indexError];
 
-    for (const er in indexErrorMap) {
-      results.errorMap[getPathString([i, er])] = indexErrorMap[er];
+    const indexErrors = [
+      ...(indexError.code !== ERROR_MESSAGE_CONSTANTS.NONE ? [indexError] : []),
+      ...getErrorDescriptors(indexErrorMap[ARRAY_ITEM_ERROR_MAP_KEY] ?? []),
+      ...Object.entries(indexErrorMap)
+        .filter(([key]) => key !== ARRAY_ITEM_ERROR_MAP_KEY)
+        .flatMap(([, entries]) => getErrorDescriptors(entries))
+        .filter((descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE),
+    ];
+
+    if (indexErrors.length) {
+      itemErrorMap[i] = indexErrors;
+      if (results.error.code === ERROR_MESSAGE_CONSTANTS.NONE) {
+        results.error = indexErrors[0];
+      }
+    }
+
+    for (const [er, entries] of Object.entries(indexErrorMap)) {
+      if (er === ARRAY_ITEM_ERROR_MAP_KEY) {
+        continue;
+      }
+      results.errorMap[getPathString([i, er])] = entries;
     }
   }
+
+  results.errorMap[ARRAY_ITEM_ERROR_MAP_KEY] = [{ itemErrorMap }];
 
   return results;
 };
@@ -932,10 +1009,24 @@ export const validateTypeInfoValue = (
           );
 
           results.valid = getValidityValue(results.valid, fieldValid);
-          results.errorMap[key] = [fieldError];
+          const fieldEntries: (ErrorDescriptor | ArrayErrorDescriptorCollection)[] =
+            [fieldError];
+          const arrayItemErrorMap = getArrayItemErrorMap(
+            fieldErrorMap[ARRAY_ITEM_ERROR_MAP_KEY],
+          );
 
-          for (const fE in fieldErrorMap) {
-            results.errorMap[getPathString([key, fE])] = fieldErrorMap[fE];
+          if (Object.keys(arrayItemErrorMap).length) {
+            fieldEntries.push({ itemErrorMap: arrayItemErrorMap });
+          }
+
+          results.errorMap[key] = fieldEntries;
+
+          for (const [fE, entries] of Object.entries(fieldErrorMap)) {
+            if (fE === ARRAY_ITEM_ERROR_MAP_KEY) {
+              continue;
+            }
+
+            results.errorMap[getPathString([key, fE])] = entries;
           }
         }
       }

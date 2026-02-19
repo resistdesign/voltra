@@ -2,7 +2,11 @@ import type { FC } from "react";
 import type { RelationActionPayload } from "../../../../../../src/app/forms";
 import { AutoFormView } from "../../../../../../src/web/forms";
 import { useFormEngine } from "../../../../../../src/app/forms";
-import type { ErrorDescriptor } from "../../../../../../src/common/TypeParsing/Validation";
+import type { FormErrorInputMap } from "../../../../../../src/app/forms";
+import type {
+  ArrayErrorDescriptorCollection,
+  ErrorDescriptor,
+} from "../../../../../../src/common/TypeParsing/Validation";
 import { ERROR_MESSAGE_CONSTANTS } from "../../../../../../src/common/TypeParsing/Validation";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
@@ -55,7 +59,7 @@ export const FormBlock: FC<FormBlockProps> = ({
 
 const extractValidationErrors = (
   error: unknown,
-): Record<string, ErrorDescriptor> | null => {
+): FormErrorInputMap | null => {
   if (!error || typeof error !== "object") {
     return null;
   }
@@ -69,46 +73,58 @@ const extractValidationErrors = (
     return null;
   }
 
-  const fieldErrors: Record<string, ErrorDescriptor> = {};
+  const fieldErrors: FormErrorInputMap = {};
 
   for (const [key, value] of Object.entries(errorMap)) {
     const fieldKey = getTopLevelFieldKey(key);
-    const descriptor = getFirstErrorDescriptor(value);
+    const entries = getErrorEntries(value);
 
     if (
       fieldKey &&
-      descriptor &&
-      descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE &&
+      entries.length &&
       !fieldErrors[fieldKey]
     ) {
-      fieldErrors[fieldKey] = descriptor;
+      fieldErrors[fieldKey] = entries;
     }
   }
 
   return Object.keys(fieldErrors).length ? fieldErrors : null;
 };
 
-const getFirstErrorDescriptor = (value: unknown): ErrorDescriptor | null => {
+const getErrorEntries = (
+  value: unknown,
+): (ErrorDescriptor | ArrayErrorDescriptorCollection)[] => {
   if (!Array.isArray(value)) {
-    return null;
+    return [];
   }
 
-  for (const entry of value) {
-    if (typeof entry === "string") {
-      return { code: entry };
-    }
+  const entries: (ErrorDescriptor | ArrayErrorDescriptorCollection)[] = [];
 
+  for (const entry of value) {
     if (
       entry &&
       typeof entry === "object" &&
       "code" in entry &&
       typeof entry.code === "string"
     ) {
-      return entry as ErrorDescriptor;
+      const descriptor = entry as ErrorDescriptor;
+      if (descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE) {
+        entries.push(descriptor);
+      }
+      continue;
+    }
+
+    if (
+      entry &&
+      typeof entry === "object" &&
+      "itemErrorMap" in entry &&
+      typeof (entry as any).itemErrorMap === "object"
+    ) {
+      entries.push(entry as ArrayErrorDescriptorCollection);
     }
   }
 
-  return null;
+  return entries;
 };
 
 const getTopLevelFieldKey = (path: string): string => {

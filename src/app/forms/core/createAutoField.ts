@@ -9,6 +9,7 @@ import {
   ERROR_MESSAGE_CONSTANTS,
   getErrorDescriptor,
   type ErrorDescriptor,
+  type ArrayItemErrorMap,
 } from "../../../common/TypeParsing/Validation";
 import { getFieldKind } from "./getFieldKind";
 import type {
@@ -33,6 +34,10 @@ export type AutoFieldInput = {
   onChange: (value: FieldValue) => void;
   /** Optional error descriptor to display under the field. */
   error?: ErrorDescriptor;
+  /** Optional value-level errors for the field. */
+  errors?: ErrorDescriptor[];
+  /** Optional per-index errors for array fields. */
+  arrayItemErrorMap?: ArrayItemErrorMap;
   /** Optional translator for validation error descriptors. */
   translateValidationErrorCode?: (error: ErrorDescriptor) => string;
   /** Disables the field UI when true. */
@@ -58,6 +63,10 @@ export const createAutoField = <RenderOutput = unknown>(
   const renderField = (props: AutoFieldInput): RenderOutput => {
     const { field, fieldKey, value, onChange, error, disabled } = props;
     const { tags } = field;
+    const resolvedErrors = props.errors ?? (error ? [error] : []);
+    const resolvedError =
+      resolvedErrors.find((descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE) ??
+      getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.NONE);
 
     const context: FieldRenderContext<RenderOutput> = {
       field,
@@ -65,7 +74,9 @@ export const createAutoField = <RenderOutput = unknown>(
       label: tags?.label ?? fieldKey,
       required: !field.optional,
       disabled: !!disabled,
-      error: error ?? getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.NONE),
+      error: resolvedError,
+      errors: resolvedErrors,
+      arrayItemErrorMap: props.arrayItemErrorMap,
       translateValidationErrorCode:
         props.translateValidationErrorCode ?? defaultTranslateValidationErrorCode,
       value,
