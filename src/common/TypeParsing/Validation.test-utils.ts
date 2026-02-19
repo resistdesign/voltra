@@ -1,4 +1,5 @@
 import { validateTypeInfoValue } from "./Validation";
+import { TypeOperation } from "./TypeInfo";
 
 export const runValidateTypeInfoValueCreateScenario = () =>
   validateTypeInfoValue(
@@ -11,14 +12,17 @@ export const runValidateTypeInfoValueCreateScenario = () =>
         fields: {
           name: {
             type: "string",
+            array: false,
+            readonly: false,
+            optional: false,
           },
         },
       },
     },
     true,
-    null,
-    "CREATE",
-    null,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
     false,
   );
 
