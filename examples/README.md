@@ -10,7 +10,10 @@ These files are curated **reference snippets** for consumers.
 
 - `examples/routing/app-routing.ts`
 
-Use this when you need app-side route matching/navigation behavior via `@resistdesign/voltra/app`.
+Use this for client route usage via platform barrels:
+- `@resistdesign/voltra/web` for web Route roots/matchers
+- `@resistdesign/voltra/native` for native Route roots/matchers
+- `@resistdesign/voltra/app` only for adapter escape hatches (`createUniversalAdapter`)
 
 ## API Routing (Backend)
 
