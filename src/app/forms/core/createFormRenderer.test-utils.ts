@@ -4,20 +4,24 @@
  * Test utilities for createFormRenderer.
  */
 
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { ComponentSuite } from "./types";
 import { createFormRenderer } from "./createFormRenderer";
 
-const fallbackSuite: ComponentSuite<string> = {
+const fallbackSuite: ComponentSuite = {
   renderers: {
-    string: () => "string",
-    number: () => "number",
-    boolean: () => "boolean",
-    enum_select: () => "enum",
-    array: () => "array",
-    relation_single: () => "relation_single",
-    relation_array: () => "relation_array",
-    custom_single: () => "custom_single",
-    custom_array: () => "custom_array",
+    string: () => createElement("span", { "data-kind": "string" }),
+    number: () => createElement("span", { "data-kind": "number" }),
+    boolean: () => createElement("span", { "data-kind": "boolean" }),
+    enum_select: () => createElement("span", { "data-kind": "enum" }),
+    array: () => createElement("span", { "data-kind": "array" }),
+    relation_single: () =>
+      createElement("span", { "data-kind": "relation_single" }),
+    relation_array: () =>
+      createElement("span", { "data-kind": "relation_array" }),
+    custom_single: () => createElement("span", { "data-kind": "custom_single" }),
+    custom_array: () => createElement("span", { "data-kind": "custom_array" }),
   },
 };
 
@@ -26,9 +30,8 @@ const fallbackSuite: ComponentSuite<string> = {
  */
 export const runCreateFormRendererFallbackScenario = () => {
   const renderer = createFormRenderer({ fallbackSuite });
-
-  return {
-    stringKind: renderer.AutoField({
+  const html = renderToStaticMarkup(
+    createElement(renderer.AutoField, {
       field: {
         type: "string",
         array: false,
@@ -39,6 +42,10 @@ export const runCreateFormRendererFallbackScenario = () => {
       value: "Hello",
       onChange: () => undefined,
     }),
+  );
+
+  return {
+    stringKind: html.includes("data-kind=\"string\""),
   };
 };
 
@@ -50,13 +57,12 @@ export const runCreateFormRendererOverrideScenario = () => {
     fallbackSuite,
     suite: {
       renderers: {
-        string: () => "override",
+        string: () => createElement("span", { "data-kind": "override" }),
       },
     },
   });
-
-  return {
-    stringKind: renderer.AutoField({
+  const html = renderToStaticMarkup(
+    createElement(renderer.AutoField, {
       field: {
         type: "string",
         array: false,
@@ -67,5 +73,9 @@ export const runCreateFormRendererOverrideScenario = () => {
       value: "Hello",
       onChange: () => undefined,
     }),
+  );
+
+  return {
+    stringKind: html.includes("data-kind=\"override\""),
   };
 };

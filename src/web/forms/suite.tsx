@@ -4,7 +4,7 @@
  * Default web component suite for form rendering.
  */
 
-import { createElement } from "react";
+import { createElement, useCallback } from "react";
 import type {
   ChangeEvent,
   FormEvent,
@@ -93,11 +93,11 @@ const renderErrorMessage = (context: FieldRenderContext) => {
   );
 };
 
-const renderRelationSingle = (context: FieldRenderContext) => {
+const RelationSingleField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
-  const handleManageRelation = () => {
+  const handleManageRelation = useCallback(() => {
     onRelationAction?.({
       action: "open",
       fieldKey,
@@ -106,7 +106,7 @@ const renderRelationSingle = (context: FieldRenderContext) => {
       fullPaging: field.tags?.fullPaging,
       onChange: context.onChange,
     });
-  };
+  }, [context.onChange, field, fieldKey, onRelationAction]);
 
   return (
     <FieldWrapper>
@@ -128,11 +128,11 @@ const renderRelationSingle = (context: FieldRenderContext) => {
   );
 };
 
-const renderRelationArray = (context: FieldRenderContext) => {
+const RelationArrayField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
-  const handleManageRelation = () => {
+  const handleManageRelation = useCallback(() => {
     onRelationAction?.({
       action: "open",
       fieldKey,
@@ -141,7 +141,7 @@ const renderRelationArray = (context: FieldRenderContext) => {
       fullPaging: field.tags?.fullPaging,
       onChange: context.onChange,
     });
-  };
+  }, [context.onChange, field, fieldKey, onRelationAction]);
 
   return (
     <FieldWrapper>
@@ -163,12 +163,12 @@ const renderRelationArray = (context: FieldRenderContext) => {
   );
 };
 
-const renderCustomSingle = (context: FieldRenderContext) => {
+const CustomSingleField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
-  const handleManageCustomType = () => {
+  const handleManageCustomType = useCallback(() => {
     if (!customType) {
       return;
     }
@@ -180,7 +180,7 @@ const renderCustomSingle = (context: FieldRenderContext) => {
       value: context.value,
       onChange: context.onChange,
     });
-  };
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
 
   return (
     <FieldWrapper>
@@ -203,13 +203,13 @@ const renderCustomSingle = (context: FieldRenderContext) => {
   );
 };
 
-const renderCustomArray = (context: FieldRenderContext) => {
+const CustomArrayField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
   const arrayValue = Array.isArray(context.value) ? context.value : [];
-  const handleEditItem = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleEditItem = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     if (!customType) {
       return;
     }
@@ -230,8 +230,8 @@ const renderCustomArray = (context: FieldRenderContext) => {
       index,
       onChange: context.onChange,
     });
-  };
-  const handleRemoveItem = (event: MouseEvent<HTMLButtonElement>) => {
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
+  const handleRemoveItem = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     if (!customType) {
       return;
     }
@@ -252,8 +252,8 @@ const renderCustomArray = (context: FieldRenderContext) => {
       index,
       onChange: context.onChange,
     });
-  };
-  const handleAddItem = () => {
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
+  const handleAddItem = useCallback(() => {
     if (!customType) {
       return;
     }
@@ -265,7 +265,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
       value: context.value,
       onChange: context.onChange,
     });
-  };
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
 
   return (
     <FieldWrapper>
@@ -319,14 +319,14 @@ const renderCustomArray = (context: FieldRenderContext) => {
   );
 };
 
-const renderArray = (context: FieldRenderContext<ReactElement>) => {
+const ArrayField = (context: FieldRenderContext<ReactElement>) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
     ? [...(context.value as LiteralValue[])]
     : [];
-  const handleRemoveArrayItem = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleRemoveArrayItem = useCallback((event: MouseEvent<HTMLButtonElement>) => {
     const indexRaw = event.currentTarget.getAttribute("data-array-index");
     if (!indexRaw) {
       return;
@@ -338,15 +338,15 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
     const newValue = [...arrayValue];
     newValue.splice(index, 1);
     context.onChange(newValue);
-  };
-  const handleAddArrayItem = () => {
+  }, [arrayValue, context]);
+  const handleAddArrayItem = useCallback(() => {
     const baseValue = Array.isArray(context.value) ? context.value : [];
     const newValue = [...baseValue];
     const newItem =
       field.type === "number" ? 0 : field.type === "boolean" ? false : "";
     newValue.push(newItem);
     context.onChange(newValue);
-  };
+  }, [context, field.type]);
 
   return (
     <FieldWrapper>
@@ -399,12 +399,12 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
   );
 };
 
-const renderString = (context: FieldRenderContext) => {
+const StringField = (context: FieldRenderContext) => {
   const { fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     context.onChange(event.target.value);
-  };
+  }, [context]);
 
   return (
     <FieldWrapper>
@@ -424,12 +424,12 @@ const renderString = (context: FieldRenderContext) => {
   );
 };
 
-const renderNumber = (context: FieldRenderContext) => {
+const NumberField = (context: FieldRenderContext) => {
   const { fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     context.onChange(parseNumberValue(event.target.value));
-  };
+  }, [context]);
 
   return (
     <FieldWrapper>
@@ -451,12 +451,12 @@ const renderNumber = (context: FieldRenderContext) => {
   );
 };
 
-const renderBoolean = (context: FieldRenderContext) => {
+const BooleanField = (context: FieldRenderContext) => {
   const { fieldKey, label, disabled, error } = context;
   const id = `field-${fieldKey}`;
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     context.onChange(event.target.checked);
-  };
+  }, [context]);
 
   return (
     <FieldWrapper>
@@ -475,25 +475,31 @@ const renderBoolean = (context: FieldRenderContext) => {
   );
 };
 
-const renderEnumSelect = (context: FieldRenderContext) => {
+const EnumSelectField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
   const selectableValues = getSelectableValues(context.possibleValues);
   const allowCustom = context.allowCustomSelection;
-  const handleCustomSelectionChange = (event: ChangeEvent<HTMLInputElement>) => {
-    context.onChange(
-      field.type === "number"
-        ? parseNumberValue(event.target.value)
-        : event.target.value,
-    );
-  };
-  const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    context.onChange(
-      field.type === "number"
-        ? parseNumberValue(event.target.value)
-        : event.target.value,
-    );
-  };
+  const handleCustomSelectionChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      context.onChange(
+        field.type === "number"
+          ? parseNumberValue(event.target.value)
+          : event.target.value,
+      );
+    },
+    [context, field.type],
+  );
+  const handleSelectChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      context.onChange(
+        field.type === "number"
+          ? parseNumberValue(event.target.value)
+          : event.target.value,
+      );
+    },
+    [context, field.type],
+  );
 
   return (
     <FieldWrapper>
@@ -587,15 +593,15 @@ const SuiteButton = ({
  */
 export const webSuite: ComponentSuite<ReactElement> = {
   renderers: {
-    string: renderString,
-    number: renderNumber,
-    boolean: renderBoolean,
-    enum_select: renderEnumSelect,
-    array: renderArray,
-    relation_single: renderRelationSingle,
-    relation_array: renderRelationArray,
-    custom_single: renderCustomSingle,
-    custom_array: renderCustomArray,
+    string: StringField,
+    number: NumberField,
+    boolean: BooleanField,
+    enum_select: EnumSelectField,
+    array: ArrayField,
+    relation_single: RelationSingleField,
+    relation_array: RelationArrayField,
+    custom_single: CustomSingleField,
+    custom_array: CustomArrayField,
   },
   primitives: {
     FormRoot,

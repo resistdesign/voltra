@@ -4,7 +4,7 @@
  * Web AutoForm wrappers backed by the default web renderer.
  */
 
-import type { FC } from "react";
+import { createElement, type FC } from "react";
 import type {
   AutoFieldProps,
   CustomValidatorMap,
@@ -30,7 +30,7 @@ const defaultWebRenderer = createWebFormRenderer();
  * @returns Rendered field UI.
  */
 export const AutoField: FC<AutoFieldProps> = (props) => {
-  return webAutoField({
+  return createElement(webAutoField, {
     field: props.field,
     fieldKey: props.fieldKey,
     value: props.value,

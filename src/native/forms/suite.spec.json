@@ -1,0 +1,34 @@
+{
+  "file": "./suite.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runNativeSuiteCompletenessScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "missingKinds": []
+      }
+    },
+    {
+      "export": "runNativeSuiteActionWiringScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "relationAction": "open",
+        "relationFullPaging": true,
+        "customAction": "add",
+        "customType": "Special"
+      }
+    },
+    {
+      "export": "runNativeSuiteFormRootWebSubmitScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "formTag": "form",
+        "preventDefaultCalls": 1,
+        "submitCalls": 1
+      }
+    }
+  ]
+}

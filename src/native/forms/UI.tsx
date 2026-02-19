@@ -4,7 +4,7 @@
  * Native AutoForm wrappers backed by the default native renderer.
  */
 
-import type { FC } from "react";
+import { createElement, type FC } from "react";
 import type {
   AutoFieldProps,
   CustomValidatorMap,
@@ -30,7 +30,7 @@ const defaultNativeRenderer = createNativeFormRenderer();
  * @returns Rendered field UI.
  */
 export const AutoField: FC<AutoFieldProps> = (props) => {
-  return nativeAutoField({
+  return createElement(nativeAutoField, {
     field: props.field,
     fieldKey: props.fieldKey,
     value: props.value,

@@ -1,0 +1,21 @@
+{
+  "file": "./createNativeFormRenderer.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeCreateFormRendererOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasOverride": true
+      }
+    },
+    {
+      "export": "runNativeAutoFieldWrapperScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasTextInput": true
+      }
+    }
+  ]
+}

@@ -42,7 +42,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "nestedResult": "string:tags[0]"
+        "nestedResult": true
       }
     }
   ]

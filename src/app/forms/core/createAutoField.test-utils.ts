@@ -6,6 +6,8 @@
 
 import type { TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 import { getErrorDescriptor } from "../../../common/TypeParsing/Validation";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { createAutoField } from "./createAutoField";
 import type { ComponentSuite, FieldRenderContext } from "./types";
 
@@ -16,17 +18,19 @@ const baseField: TypeInfoField = {
   optional: false,
 };
 
-const kindSuite: ComponentSuite<string> = {
+const kindSuite: ComponentSuite = {
   renderers: {
-    string: () => "string",
-    number: () => "number",
-    boolean: () => "boolean",
-    enum_select: () => "enum_select",
-    array: () => "array",
-    relation_single: () => "relation_single",
-    relation_array: () => "relation_array",
-    custom_single: () => "custom_single",
-    custom_array: () => "custom_array",
+    string: () => createElement("span", { "data-kind": "string" }),
+    number: () => createElement("span", { "data-kind": "number" }),
+    boolean: () => createElement("span", { "data-kind": "boolean" }),
+    enum_select: () => createElement("span", { "data-kind": "enum_select" }),
+    array: () => createElement("span", { "data-kind": "array" }),
+    relation_single: () =>
+      createElement("span", { "data-kind": "relation_single" }),
+    relation_array: () =>
+      createElement("span", { "data-kind": "relation_array" }),
+    custom_single: () => createElement("span", { "data-kind": "custom_single" }),
+    custom_array: () => createElement("span", { "data-kind": "custom_array" }),
   },
 };
 
@@ -35,75 +39,61 @@ const kindSuite: ComponentSuite<string> = {
  */
 export const runCreateAutoFieldSelectionScenario = () => {
   const autoField = createAutoField(kindSuite as any);
+  const renderKind = (field: TypeInfoField, fieldKey: string, value: unknown) => {
+    const html = renderToStaticMarkup(
+      createElement(autoField, {
+        field,
+        fieldKey,
+        value: value as any,
+        onChange: () => undefined,
+      }),
+    );
+    return (html.match(/data-kind=\"([^\"]+)\"/)?.[1] ?? "missing");
+  };
 
   return {
-    stringKind: autoField({
-      field: { ...baseField, type: "string" },
-      fieldKey: "title",
-      value: "Hello",
-      onChange: () => undefined,
-    }),
-    numberKind: autoField({
-      field: { ...baseField, type: "number" },
-      fieldKey: "count",
-      value: 3,
-      onChange: () => undefined,
-    }),
-    booleanKind: autoField({
-      field: { ...baseField, type: "boolean" },
-      fieldKey: "active",
-      value: true,
-      onChange: () => undefined,
-    }),
-    enumKind: autoField({
-      field: {
+    stringKind: renderKind({ ...baseField, type: "string" }, "title", "Hello"),
+    numberKind: renderKind({ ...baseField, type: "number" }, "count", 3),
+    booleanKind: renderKind({ ...baseField, type: "boolean" }, "active", true),
+    enumKind: renderKind(
+      {
         ...baseField,
         type: "string",
         possibleValues: ["alpha", "beta"],
       },
-      fieldKey: "status",
-      value: "alpha",
-      onChange: () => undefined,
-    }),
-    arrayKind: autoField({
-      field: { ...baseField, type: "string", array: true },
-      fieldKey: "tags",
-      value: ["a"],
-      onChange: () => undefined,
-    }),
-    relationSingleKind: autoField({
-      field: { ...baseField, type: "string", typeReference: "Widget" },
-      fieldKey: "widget",
-      value: undefined,
-      onChange: () => undefined,
-    }),
-    relationArrayKind: autoField({
-      field: {
+      "status",
+      "alpha",
+    ),
+    arrayKind: renderKind({ ...baseField, type: "string", array: true }, "tags", ["a"]),
+    relationSingleKind: renderKind(
+      { ...baseField, type: "string", typeReference: "Widget" },
+      "widget",
+      undefined,
+    ),
+    relationArrayKind: renderKind(
+      {
         ...baseField,
         type: "string",
         typeReference: "Widget",
         array: true,
       },
-      fieldKey: "widgets",
-      value: undefined,
-      onChange: () => undefined,
-    }),
-    customSingleKind: autoField({
-      field: { ...baseField, tags: { customType: "Special" } },
-      fieldKey: "custom",
-      value: undefined,
-      onChange: () => undefined,
-    }),
-    customArrayKind: autoField({
-      field: {
+      "widgets",
+      undefined,
+    ),
+    customSingleKind: renderKind(
+      { ...baseField, tags: { customType: "Special" } },
+      "custom",
+      undefined,
+    ),
+    customArrayKind: renderKind(
+      {
         ...baseField,
         array: true,
         tags: { customType: "Special" },
       },
-      fieldKey: "customs",
-      value: undefined,
-      onChange: () => undefined,
-    }),
+      "customs",
+      undefined,
+    ),
   };
 };
 
@@ -113,11 +103,11 @@ export const runCreateAutoFieldSelectionScenario = () => {
 export const runCreateAutoFieldContextScenario = () => {
   let capturedContext: any = null;
 
-  const suite: ComponentSuite<FieldRenderContext> = {
+  const suite: ComponentSuite = {
     renderers: {
       string: (context) => {
         capturedContext = context;
-        return context;
+        return createElement("span", { "data-kind": "string" });
       },
       number: () => {
         throw new Error("Unexpected renderer");
@@ -148,22 +138,24 @@ export const runCreateAutoFieldContextScenario = () => {
 
   const autoField = createAutoField(suite as any);
 
-  autoField({
-    field: {
-      ...baseField,
-      tags: {
-        label: "Display Name",
-        allowCustomSelection: true,
-        format: "email",
-        constraints: { pattern: "[a-z]+" },
+  renderToStaticMarkup(
+    createElement(autoField, {
+      field: {
+        ...baseField,
+        tags: {
+          label: "Display Name",
+          allowCustomSelection: true,
+          format: "email",
+          constraints: { pattern: "[a-z]+" },
+        },
       },
-    },
-    fieldKey: "name",
-    value: "Ada",
-    onChange: () => undefined,
-    error: getErrorDescriptor("Required"),
-    disabled: true,
-  });
+      fieldKey: "name",
+      value: "Ada",
+      onChange: () => undefined,
+      error: getErrorDescriptor("Required"),
+      disabled: true,
+    }),
+  );
 
   return {
     label: capturedContext?.label,
@@ -184,9 +176,10 @@ export const runCreateAutoFieldContextScenario = () => {
  * Validate that renderField recurses through the same dispatcher.
  */
 export const runCreateAutoFieldRecursionScenario = () => {
-  const suite: ComponentSuite<string> = {
+  const suite: ComponentSuite = {
     renderers: {
-      string: (context) => `string:${context.fieldKey}`,
+      string: (context) =>
+        createElement("span", { "data-kind": `string:${context.fieldKey}` }),
       number: () => {
         throw new Error("Unexpected renderer");
       },
@@ -197,12 +190,16 @@ export const runCreateAutoFieldRecursionScenario = () => {
         throw new Error("Unexpected renderer");
       },
       array: (context) =>
-        context.renderField({
-          field: { ...context.field, array: false, tags: undefined },
-          fieldKey: `${context.fieldKey}[0]`,
-          value: "nested",
-          onChange: () => undefined,
-        }),
+        createElement(
+          "div",
+          undefined,
+          context.renderField({
+            field: { ...context.field, array: false, tags: undefined },
+            fieldKey: `${context.fieldKey}[0]`,
+            value: "nested",
+            onChange: () => undefined,
+          }),
+        ),
       relation_single: () => {
         throw new Error("Unexpected renderer");
       },
@@ -219,13 +216,16 @@ export const runCreateAutoFieldRecursionScenario = () => {
   };
 
   const autoField = createAutoField(suite as any);
-
-  return {
-    nestedResult: autoField({
+  const html = renderToStaticMarkup(
+    createElement(autoField, {
       field: { ...baseField, type: "string", array: true },
       fieldKey: "tags",
       value: ["nested"],
       onChange: () => undefined,
     }),
+  );
+
+  return {
+    nestedResult: html.includes("data-kind=\"string:tags[0]\""),
   };
 };

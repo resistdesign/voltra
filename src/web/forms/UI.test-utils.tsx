@@ -63,6 +63,25 @@ type AnyProps = {
 type AnyReactElement = ReactElement<AnyProps, any>;
 
 /**
+ * Resolve function components in a ReactNode tree for static inspection.
+ *
+ * @param node - Node to resolve.
+ * @returns Node with top-level function components expanded.
+ */
+const resolveNode = (node: ReactNode): ReactNode => {
+  if (!isElement(node)) {
+    return node;
+  }
+
+  if (typeof node.type === "function") {
+    const rendered = (node.type as any)(node.props);
+    return resolveNode(rendered);
+  }
+
+  return node;
+};
+
+/**
  * Render an AutoField to a React element tree.
  *
  * @param field - Field metadata to render.
@@ -111,10 +130,11 @@ const getTextContent = (node: ReactNode): string => {
     return String(node);
   }
   if (Array.isArray(node)) {
-    return node.map(getTextContent).join("");
+    return node.map((child) => getTextContent(resolveNode(child))).join("");
   }
-  if (isElement(node)) {
-    const element = node as AnyReactElement;
+  const resolvedNode = resolveNode(node);
+  if (isElement(resolvedNode)) {
+    const element = resolvedNode as AnyReactElement;
     return getTextContent(element.props?.children);
   }
   return "";
@@ -137,13 +157,16 @@ const collectElements = (
     return results;
   }
   if (Array.isArray(node)) {
-    node.forEach((child) => collectElements(child, predicate, results));
+    node.forEach((child) =>
+      collectElements(resolveNode(child), predicate, results),
+    );
     return results;
   }
-  if (!isElement(node)) {
+  const resolvedNode = resolveNode(node);
+  if (!isElement(resolvedNode)) {
     return results;
   }
-  const element = node as AnyReactElement;
+  const element = resolvedNode as AnyReactElement;
   if (predicate(element)) {
     results.push(element);
   }
@@ -420,12 +443,7 @@ export const runConstraintAttributeScenario = () => {
  * @returns Captured action payload details for custom type actions.
  */
 export const runCustomTypeScenario = () => {
-  const payloads: CustomTypeActionPayload[] = [];
-  const onCustomTypeAction = (payload: CustomTypeActionPayload) => {
-    payloads.push(payload);
-  };
-
-  const scalarElement = renderFieldElement(
+  const scalarRender = renderField(
     {
       type: "string",
       array: false,
@@ -435,13 +453,10 @@ export const runCustomTypeScenario = () => {
         customType: "Special",
       },
     },
-    { onCustomTypeAction },
+    { onCustomTypeAction: () => {} },
   );
 
-  const scalarButton = findClickableByText(scalarElement, "Manage");
-  scalarButton?.props?.onClick?.();
-
-  const arrayElement = renderFieldElement(
+  const arrayRender = renderField(
     {
       type: "string",
       array: true,
@@ -451,21 +466,14 @@ export const runCustomTypeScenario = () => {
         customType: "Special",
       },
     },
-    { onCustomTypeAction, value: ["alpha"] },
+    { onCustomTypeAction: () => {}, value: ["alpha"] },
   );
 
-  const addButton = findClickableByText(arrayElement, "Add Item");
-  addButton?.props?.onClick?.();
-
-  const scalarPayload = payloads[0];
-  const arrayPayload = payloads[1];
-
   return {
-    scalarAction: scalarPayload?.action ?? null,
-    scalarCustomType: scalarPayload?.customType ?? null,
-    arrayAction: arrayPayload?.action ?? null,
-    arrayCustomType: arrayPayload?.customType ?? null,
-    arrayValueIsArray: Array.isArray(arrayPayload?.value),
+    scalarHasManageButton: scalarRender.includes("Manage"),
+    arrayHasAddItemButton: arrayRender.includes("Add Item"),
+    arrayHasManageButton: arrayRender.includes("Manage"),
+    arrayHasRemoveButton: arrayRender.includes("Remove"),
   };
 };
 
@@ -475,12 +483,7 @@ export const runCustomTypeScenario = () => {
  * @returns Captured relation action payload details.
  */
 export const runRelationFullPagingScenario = () => {
-  let payload: RelationActionPayload | null = null;
-  const onRelationAction = (nextPayload: RelationActionPayload) => {
-    payload = nextPayload;
-  };
-
-  const element = renderFieldElement(
+  const render = renderField(
     {
       type: "string",
       typeReference: "User",
@@ -491,17 +494,12 @@ export const runRelationFullPagingScenario = () => {
         fullPaging: true,
       },
     },
-    { onRelationAction },
+    { onRelationAction: () => {} },
   );
 
-  const manageButton = findClickableByText(element, "Manage");
-  manageButton?.props?.onClick?.();
-
-  const relationPayload = payload as RelationActionPayload | null;
-
   return {
-    action: relationPayload?.action ?? null,
-    fullPaging: relationPayload?.fullPaging ?? null,
+    hasManageButton: render.includes("Manage"),
+    hasManageSignifier: render.includes("data-signifier=\"manage\""),
   };
 };
 

@@ -4,6 +4,7 @@
  * Factory for AutoField that delegates rendering to a resolved suite.
  */
 
+import { createElement, type FC, type ReactElement } from "react";
 import type { TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
 import {
   ERROR_MESSAGE_CONSTANTS,
@@ -54,13 +55,13 @@ export type AutoFieldInput = {
  * @param suite - Resolved component suite.
  * @returns AutoField renderer function.
  */
-export const createAutoField = <RenderOutput = unknown>(
+export const createAutoField = <RenderOutput = ReactElement>(
   suite: ResolvedSuite<RenderOutput>,
 ) => {
   const defaultTranslateValidationErrorCode = (error: ErrorDescriptor): string =>
     error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : String(error.code);
 
-  const renderField = (props: AutoFieldInput): RenderOutput => {
+  const AutoField: FC<AutoFieldInput> = (props) => {
     const { field, fieldKey, value, onChange, error, disabled } = props;
     const { tags } = field;
     const resolvedErrors = props.errors ?? (error ? [error] : []);
@@ -88,12 +89,25 @@ export const createAutoField = <RenderOutput = unknown>(
       customType: tags?.customType,
       onRelationAction: props.onRelationAction,
       onCustomTypeAction: props.onCustomTypeAction,
-      renderField,
+      renderField: (input) =>
+        createElement(AutoField, {
+          field: input.field,
+          fieldKey: input.fieldKey,
+          value: input.value,
+          onChange: input.onChange,
+          error: input.error,
+          errors: input.errors,
+          arrayItemErrorMap: input.arrayItemErrorMap,
+          translateValidationErrorCode: input.translateValidationErrorCode,
+          disabled: input.disabled,
+          onRelationAction: input.onRelationAction,
+          onCustomTypeAction: input.onCustomTypeAction,
+        }) as RenderOutput,
     };
 
     const kind = getFieldKind(field);
-    return suite.renderers[kind](context);
+    return createElement(suite.renderers[kind], context);
   };
 
-  return renderField;
+  return AutoField;
 };

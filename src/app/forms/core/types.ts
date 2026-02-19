@@ -4,6 +4,7 @@
  * Core, platform-agnostic types for form rendering.
  */
 
+import type { ComponentType, ReactElement } from "react";
 import type {
   LiteralValue,
   TypeInfoDataItem,
@@ -146,23 +147,23 @@ export type FieldRenderContext<RenderOutput = unknown> = {
 };
 
 /**
- * Renderer function for a single field kind.
+ * Renderer component for a single field kind.
  */
-export type FieldRenderer<RenderOutput = unknown> = (
-  context: FieldRenderContext<RenderOutput>,
-) => RenderOutput;
+export type FieldRenderer<RenderOutput = ReactElement> = ComponentType<
+  FieldRenderContext<RenderOutput>
+>;
 
 /**
  * Optional primitive component contract for suites.
  */
-export type PrimitiveComponent<Props, RenderOutput = unknown> = (
+export type PrimitiveComponent<Props, RenderOutput = ReactElement> = (
   props: Props,
 ) => RenderOutput;
 
 /**
  * Primitive components that suites may override.
  */
-export type PrimitiveComponents<RenderOutput = unknown> = {
+export type PrimitiveComponents<RenderOutput = ReactElement> = {
   /** Root container for the form view. */
   FormRoot: PrimitiveComponent<
     { children: RenderOutput; onSubmit?: () => void },
@@ -190,7 +191,7 @@ export type PrimitiveComponents<RenderOutput = unknown> = {
 /**
  * Suite definition with optional renderers/primitives.
  */
-export type ComponentSuite<RenderOutput = unknown> = {
+export type ComponentSuite<RenderOutput = ReactElement> = {
   /** Field renderers keyed by kind. */
   renderers: Partial<Record<FieldKind, FieldRenderer<RenderOutput>>>;
   /** Optional primitive component overrides. */
@@ -200,7 +201,7 @@ export type ComponentSuite<RenderOutput = unknown> = {
 /**
  * Fully resolved suite with required renderers.
  */
-export type ResolvedSuite<RenderOutput = unknown> = {
+export type ResolvedSuite<RenderOutput = ReactElement> = {
   /** Field renderers keyed by kind. */
   renderers: Record<FieldKind, FieldRenderer<RenderOutput>>;
   /** Optional primitive component overrides. */
