@@ -4,6 +4,8 @@
 import { ComparisonOperators, FieldCriterion } from "./SearchTypes";
 import {
   CustomTypeInfoFieldValidatorMap,
+  getErrorDescriptor,
+  getNoErrorDescriptor,
   RelationshipValidationType,
   TypeInfoValidationResults,
   validateTypeInfoFieldValue,
@@ -50,7 +52,7 @@ export const validateSearchFields = (
   const results: TypeInfoValidationResults = {
     typeName: typeInfoName,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
 
@@ -66,7 +68,7 @@ export const validateSearchFields = (
       ) {
         results.valid = false;
         results.errorMap[fieldName] = [
-          SEARCH_VALIDATION_ERRORS.INVALID_OPERATOR,
+          getErrorDescriptor(SEARCH_VALIDATION_ERRORS.INVALID_OPERATOR),
         ];
       } else {
         const tIF = fields[fieldName];
@@ -78,12 +80,14 @@ export const validateSearchFields = (
           if (denyRead) {
             results.valid = false;
             results.errorMap[fieldName] = [
-              SEARCH_VALIDATION_ERRORS.INVALID_FIELD,
+              getErrorDescriptor(SEARCH_VALIDATION_ERRORS.INVALID_FIELD),
             ];
           } else if (disallowRelationalFields && typeReference) {
             results.valid = false;
             results.errorMap[fieldName] = [
-              SEARCH_VALIDATION_ERRORS.RELATIONAL_FIELDS_NOT_ALLOWED,
+              getErrorDescriptor(
+                SEARCH_VALIDATION_ERRORS.RELATIONAL_FIELDS_NOT_ALLOWED,
+              ),
             ];
           } else {
             if (operator && OPERATORS_WITHOUT_VALUES.has(operator)) {
@@ -100,7 +104,7 @@ export const validateSearchFields = (
                   tVO,
                   tIF,
                   typeInfoMap,
-                  false,
+                  true,
                   true,
                   customValidators,
                   TypeOperation.READ,
@@ -123,14 +127,14 @@ export const validateSearchFields = (
         } else {
           results.valid = false;
           results.errorMap[fieldName] = [
-            SEARCH_VALIDATION_ERRORS.INVALID_FIELD,
+            getErrorDescriptor(SEARCH_VALIDATION_ERRORS.INVALID_FIELD),
           ];
         }
       }
     }
   } else {
     results.valid = false;
-    results.error = SEARCH_VALIDATION_ERRORS.INVALID_TYPE_INFO;
+    results.error = getErrorDescriptor(SEARCH_VALIDATION_ERRORS.INVALID_TYPE_INFO);
   }
 
   return results;

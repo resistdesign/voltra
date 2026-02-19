@@ -10,11 +10,20 @@ import type {
   TypeInfo,
 } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getNoErrorDescriptor,
+  type FieldValueValidatorMap,
+  type ErrorDescriptor,
+  type TypeInfoValidationResults,
+  validateTypeInfoDataItem,
+} from "../../common/TypeParsing/Validation";
 import type {
   FormController,
   FormFieldController,
   FormValue,
   FormValues,
+  TranslateValidationErrorCode,
 } from "./types";
 
 /**
@@ -89,6 +98,40 @@ const buildInitialValues = (
 };
 
 /**
+ * Default translation from error descriptors to readable messages.
+ *
+ * @param error - Validation error descriptor.
+ * @returns Message suitable for form UI.
+ */
+const defaultTranslateValidationErrorCode: TranslateValidationErrorCode = (
+  error: ErrorDescriptor,
+) => {
+  const { code, values = [] } = error;
+  const [constraintValue] = values;
+
+  switch (code) {
+    case ERROR_MESSAGE_CONSTANTS.MISSING:
+      return "This field is required";
+    case ERROR_MESSAGE_CONSTANTS.VALUE_DOES_NOT_MATCH_PATTERN:
+      return "Value does not match required pattern";
+    case ERROR_MESSAGE_CONSTANTS.VALUE_BELOW_MINIMUM:
+      return `Value must be at least ${constraintValue ?? "the minimum"}`;
+    case ERROR_MESSAGE_CONSTANTS.VALUE_ABOVE_MAXIMUM:
+      return `Value must be at most ${constraintValue ?? "the maximum"}`;
+    case ERROR_MESSAGE_CONSTANTS.INVALID_OPTION:
+      return "Value is not one of the allowed options";
+    case ERROR_MESSAGE_CONSTANTS.INVALID_TYPE:
+      return "Value has an invalid type";
+    case ERROR_MESSAGE_CONSTANTS.NONE:
+      return "";
+    default:
+      return code;
+  }
+};
+
+const FORM_ENGINE_TYPE_NAME = "__AUTO_FORM__";
+
+/**
  * Hook that derives form state and field controllers from type metadata.
  *
  * @param initialValues - Initial form values.
@@ -102,9 +145,16 @@ export const useFormEngine = (
   options?: {
     /** Operation to evaluate when deriving field state. */
     operation?: TypeOperation;
+    /** Optional translator for validation error descriptors. */
+    translateValidationErrorCode?: TranslateValidationErrorCode;
+    /** Optional custom validators keyed by field name. */
+    customValidatorMap?: FieldValueValidatorMap;
   },
 ): FormController => {
   const operation = options?.operation ?? TypeOperation.CREATE;
+  const translateValidationErrorCode =
+    options?.translateValidationErrorCode ?? defaultTranslateValidationErrorCode;
+  const customValidatorMap = options?.customValidatorMap ?? {};
   const [values, setValues] = useState<FormValues>(
     buildInitialValues(initialValues, typeInfo),
   );
@@ -119,55 +169,33 @@ export const useFormEngine = (
     });
   }, []);
 
-  const validate = useCallback(() => {
-    // Basic validation based on type info
+  const validate = useCallback((): TypeInfoValidationResults => {
+    const fields = typeInfo.fields ?? {};
+    const validationResults = validateTypeInfoDataItem(
+      values,
+      typeInfo,
+      customValidatorMap,
+      {
+        typeName: FORM_ENGINE_TYPE_NAME,
+        typeOperation: operation,
+      },
+    );
+
     const newErrors: Record<string, string> = {};
-    for (const [key, field] of Object.entries(typeInfo.fields ?? {})) {
-      if (field.tags?.hidden) {
-        continue;
-      }
-
-      const val = values[key];
-      if (field.readonly && (val === undefined || val === null || val === "")) {
-        continue;
-      }
-      const isMissing =
-        val === undefined ||
-        val === null ||
-        val === "" ||
-        (field.array && (!Array.isArray(val) || val.length === 0));
-      if (!field.optional && isMissing) {
-        newErrors[key] = "This field is required";
-        continue;
-      }
-
-      if (isMissing) {
-        continue;
-      }
-
-      const constraints = field.tags?.constraints;
-      if (constraints?.pattern && typeof val === "string") {
-        const pattern = new RegExp(constraints.pattern);
-        if (!pattern.test(val)) {
-          newErrors[key] = "Value does not match required pattern";
-          continue;
-        }
-      }
-
-      if (field.type === "number" && typeof val === "number") {
-        if (constraints?.min !== undefined && val < constraints.min) {
-          newErrors[key] = `Value must be at least ${constraints.min}`;
-          continue;
-        }
-        if (constraints?.max !== undefined && val > constraints.max) {
-          newErrors[key] = `Value must be at most ${constraints.max}`;
-          continue;
-        }
+    for (const key of Object.keys(fields)) {
+      const errorDescriptor =
+        (validationResults.errorMap[key] ?? []).find(
+          (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+        ) ?? getNoErrorDescriptor();
+      const translated = translateValidationErrorCode(errorDescriptor);
+      if (translated) {
+        newErrors[key] = translated;
       }
     }
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [typeInfo, values]);
+    return validationResults;
+  }, [typeInfo, values, operation, translateValidationErrorCode, customValidatorMap]);
 
   const fields = useMemo<FormFieldController[]>(() => {
     return Object.entries(typeInfo.fields ?? {}).map(([key, field]) => {

@@ -1,52 +1,34 @@
 # AutoForm Validation Should Conform To Existing Shapes
 
-1. `src/app/forms/Engine.ts` `validate` *should* return a `TypeInfoValidationResult` object.
-2. `TypeInfoValidationResult` `error` and `errorMap` fields should be changed to look like this:
-   ```typescript
-   /**
-    * A descriptor for an error.
-    */
-   export type ErrorDescriptor = {
-     code: valueof ERROR_MESSAGE_CONSTANTS; // Pseudo code. Needs to use values from ERROR_MESSAGE_CONSTANTS.
-     values?: string[]; // Used for things like min/max targets or other constraints that should have been met. 
-   };
-   
-   /**
-    * A map of errors.
-    * */
-   export type ErrorMap = {
-     [key: string]: ErrorDescriptor[];
-   };
-   
-   /**
-    * The validation results for type info fields.
-    */
-   export type TypeInfoValidationResults = {
-     /**
-      * Type name being validated.
-      */
-     typeName: string | null;
-     /**
-      * Whether the validation passed.
-      */
-     valid: boolean;
-     /**
-      * Primary error code when validation fails.
-      */
-     error: ErrorDescriptor;
-     /**
-      * Field-level error mapping.
-      */
-     errorMap: ErrorMap;
-   };
-   ```
-3. All validation consumers should be updated to use the new return type.
-4. AutoForm should take a prop called `translateValidationErrorCode` that it can use to pass
-   user-friendly/application-specific error messages to the internal error message rendering mechanisms and renderers.
-5. `ERROR_MESSAGE_CONSTANTS` should have whatever codes added that it needs, like constraint related codes and such.
-   `ERROR_MESSAGE_CONSTANTS` may need to be `as const` or an enum.
-6. All tests/doc-comments/consuming-code/readmes/examples/demos/samples/etc should be updated to reflect all of these
-   changes.
+## Checklist
 
-IMPORTANT: Be thorough. Code cleanly. Understand the spirit of this refactor and the uniformity and flexibility it
-intends to bring. Investigate first. Understand the project.
+- [x] `src/app/forms/Engine.ts` `validate` returns a `TypeInfoValidationResults` object.
+- [x] `TypeInfoValidationResults` `error` and `errorMap` use structured error descriptors:
+  - [x] Add `ErrorDescriptor` type (`code` + optional `values`).
+  - [x] Add `ErrorMap` type (`Record<string, ErrorDescriptor[]>`).
+  - [x] Update `TypeInfoValidationResults` to use `ErrorDescriptor` and `ErrorMap`.
+- [x] Update all validation consumers to use the new return type.
+- [x] Add `translateValidationErrorCode` prop to `AutoForm` and wire it into internal error rendering.
+- [x] Expand `ERROR_MESSAGE_CONSTANTS` to include any needed validation codes (including constraint-oriented codes) and keep it as a strongly-typed constant set.
+- [x] Update tests, doc-comments, consuming code, readmes/examples/demos/samples impacted by the refactor.
+
+## Follow-up Checklist (Centralize Data-Item Validation)
+
+- [x] Add a centralized `validateTypeInfoDataItem` function in `src/common/TypeParsing/Validation.ts` that owns full TypeInfoDataItem validation iteration and returns `TypeInfoValidationResults`.
+- [x] Add and export a field-level custom validator function signature type and map:
+  - [x] `FieldValueValidator`
+  - [x] `FieldValueValidatorMap`
+  - [x] Ensure call path supports App -> AutoForm -> Engine -> Validation.
+- [x] Expand TypeInfo field tags with a `validation` branch in `SupportedFieldTags`:
+  - [x] `emptyArrayIsValid?: boolean` (default required arrays remain invalid when empty)
+  - [x] `validateHidden?: boolean` (default hidden fields are not validated)
+  - [x] Any additional minimal options needed to remove Engine-side branching.
+- [x] Update `Validation.ts` field/data-item validators to honor new `tags.validation` options and remove app-specific fallback logic from Engine.
+- [x] Update `src/app/forms/Engine.ts` so `validate` delegates fully to common data-item validation and only maps errors for UI.
+- [x] Thread `customValidatorMap` support through AutoForm/Engine types and props.
+- [x] Update all impacted docs/comments/tests/specs/helpers/consumers for the new centralized API.
+- [x] Run full test suite and confirm green.
+
+## Notes
+
+- IMPORTANT: Be thorough. Code cleanly. Understand the spirit of this refactor and the uniformity and flexibility it intends to bring. Investigate first. Understand the project.

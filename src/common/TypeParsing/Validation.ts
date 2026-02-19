@@ -6,6 +6,7 @@
  */
 import {
   TypeInfo,
+  TypeInfoDataItem,
   TypeInfoField,
   TypeInfoMap,
   TypeKeyword,
@@ -45,10 +46,80 @@ export type CustomTypeInfoFieldValidatorMap = Record<
 >;
 
 /**
+ * A custom field validator that can return a domain-specific error descriptor.
+ */
+export type FieldValueValidator = (
+  value: any,
+  typeInfoField: TypeInfoField,
+) => ErrorDescriptor;
+
+/**
+ * A map of custom field validators by field key.
+ */
+export type FieldValueValidatorMap = Record<string, FieldValueValidator>;
+
+/**
+ * Error code for custom type validation failures.
+ */
+export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
+
+/**
+ * Error codes for primitive type validation failures.
+ */
+export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS = {
+  string: "NOT_A_STRING",
+  number: "NOT_A_NUMBER",
+  boolean: "NOT_A_BOOLEAN",
+} as const;
+
+/**
+ * Error codes for denied type operations.
+ */
+export const DENIED_TYPE_OPERATIONS = {
+  CREATE: "DENIED_TYPE_OPERATION_CREATE",
+  READ: "DENIED_TYPE_OPERATION_READ",
+  UPDATE: "DENIED_TYPE_OPERATION_UPDATE",
+  DELETE: "DENIED_TYPE_OPERATION_DELETE",
+} as const;
+
+/**
+ * Error codes for TypeInfo validation failures.
+ */
+export const ERROR_MESSAGE_CONSTANTS = {
+  NONE: "NONE",
+  INVALID_CUSTOM_TYPE,
+  ...PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
+  ...DENIED_TYPE_OPERATIONS,
+  MISSING: "MISSING",
+  INVALID_OPTION: "INVALID_OPTION",
+  INVALID_FIELD: "INVALID_FIELD",
+  RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED:
+    "RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED",
+  INVALID_TYPE: "INVALID_TYPE",
+  NO_UNION_TYPE_MATCHED: "NO_UNION_TYPE_MATCHED",
+  TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
+  INVALID_PATTERN: "INVALID_PATTERN",
+  VALUE_DOES_NOT_MATCH_PATTERN: "VALUE_DOES_NOT_MATCH_PATTERN",
+  VALUE_BELOW_MINIMUM: "VALUE_BELOW_MINIMUM",
+  VALUE_ABOVE_MAXIMUM: "VALUE_ABOVE_MAXIMUM",
+} as const;
+
+export type ErrorCode =
+  (typeof ERROR_MESSAGE_CONSTANTS)[keyof typeof ERROR_MESSAGE_CONSTANTS];
+
+/**
+ * A descriptor for a validation error.
+ */
+export type ErrorDescriptor = {
+  code: ErrorCode | string;
+  values?: string[];
+};
+
+/**
  * A map of errors.
- * */
+ */
 export type ErrorMap = {
-  [key: string]: string[];
+  [key: string]: ErrorDescriptor[];
 };
 
 /**
@@ -66,7 +137,7 @@ export type TypeInfoValidationResults = {
   /**
    * Primary error code when validation fails.
    */
-  error: string;
+  error: ErrorDescriptor;
   /**
    * Field-level error mapping.
    */
@@ -74,44 +145,21 @@ export type TypeInfoValidationResults = {
 };
 
 /**
- * Error code for custom type validation failures.
+ * Creates an error descriptor from a code and optional values.
  */
-export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
+export const getErrorDescriptor = (
+  code: ErrorCode | string = ERROR_MESSAGE_CONSTANTS.NONE,
+  values?: string[],
+): ErrorDescriptor => ({
+  code,
+  values,
+});
 
 /**
- * Error codes for primitive type validation failures.
+ * Creates a descriptor representing the absence of an error.
  */
-export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS: Record<TypeKeyword, string> = {
-  string: "NOT_A_STRING",
-  number: "NOT_A_NUMBER",
-  boolean: "NOT_A_BOOLEAN",
-};
-
-/**
- * Error codes for TypeInfo validation failures.
- */
-export const ERROR_MESSAGE_CONSTANTS = {
-  MISSING: "MISSING",
-  INVALID_OPTION: "INVALID_OPTION",
-  INVALID_FIELD: "INVALID_FIELD",
-  RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED:
-    "RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED",
-  INVALID_TYPE: "INVALID_TYPE",
-  NO_UNION_TYPE_MATCHED: "NO_UNION_TYPE_MATCHED",
-  TYPE_DOES_NOT_EXIST: "TYPE_DOES_NOT_EXIST",
-  INVALID_PATTERN: "INVALID_PATTERN",
-  VALUE_DOES_NOT_MATCH_PATTERN: "VALUE_DOES_NOT_MATCH_PATTERN",
-};
-
-/**
- * Error codes for denied type operations.
- */
-export const DENIED_TYPE_OPERATIONS: Record<TypeOperation, string> = {
-  CREATE: "DENIED_TYPE_OPERATION_CREATE",
-  READ: "DENIED_TYPE_OPERATION_READ",
-  UPDATE: "DENIED_TYPE_OPERATION_UPDATE",
-  DELETE: "DENIED_TYPE_OPERATION_DELETE",
-};
+export const getNoErrorDescriptor = (): ErrorDescriptor =>
+  getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.NONE);
 
 /**
  * Validates a value against a pattern.
@@ -134,24 +182,26 @@ export const validateValueMatchesPattern = (
   const results: TypeInfoValidationResults = {
     typeName,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
   const valueSupplied = typeof value !== "undefined";
   const patternSupplied = typeof pattern === "string" && pattern.trim() !== "";
 
-  if (!valueSupplied || !patternSupplied) {
+  if (valueSupplied && patternSupplied) {
     try {
       const regex = new RegExp(pattern as string);
       const testResult = typeof value === "string" && regex.test(value);
 
       if (!testResult) {
         results.valid = false;
-        results.error = ERROR_MESSAGE_CONSTANTS.VALUE_DOES_NOT_MATCH_PATTERN;
+        results.error = getErrorDescriptor(
+          ERROR_MESSAGE_CONSTANTS.VALUE_DOES_NOT_MATCH_PATTERN,
+        );
       }
     } catch (e) {
       results.valid = false;
-      results.error = ERROR_MESSAGE_CONSTANTS.INVALID_PATTERN;
+      results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_PATTERN);
     }
   }
 
@@ -270,12 +320,18 @@ export const validateTypeInfoFieldValue = (
     array,
     optional,
     possibleValues,
-    tags: { customType, constraints: { pattern = undefined } = {} } = {},
+    tags: {
+      customType,
+      validation: {
+        emptyArrayIsValid: emptyArrayIsValidOverride = undefined,
+      } = {},
+      constraints: { pattern = undefined, min = undefined, max = undefined } = {},
+    } = {},
   } = typeInfoField;
   const results: TypeInfoValidationResults = {
     typeName: typeReference ?? type,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
   const requiredValueAllowed: boolean =
@@ -288,6 +344,7 @@ export const validateTypeInfoFieldValue = (
   const canSkipValidation =
     (itemIsPartial && (valueIsUndefined || valueIsNull)) ||
     (optional && valueIsUndefined);
+  const emptyArrayIsValid = emptyArrayIsValidOverride ?? false;
 
   if (canSkipValidation) {
     results.valid = true;
@@ -298,7 +355,20 @@ export const validateTypeInfoFieldValue = (
     !hasValue(value)
   ) {
     results.valid = false;
-    results.error = ERROR_MESSAGE_CONSTANTS.MISSING;
+    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING);
+  } else if (array && !ignoreArray && !Array.isArray(value)) {
+    results.valid = false;
+    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_TYPE);
+  } else if (
+    array &&
+    !ignoreArray &&
+    !optional &&
+    Array.isArray(value) &&
+    value.length === 0 &&
+    !emptyArrayIsValid
+  ) {
+    results.valid = false;
+    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING);
   } else if (array && !ignoreArray) {
     const {
       valid: validArray,
@@ -346,8 +416,9 @@ export const validateTypeInfoFieldValue = (
 
         if (valueSupplied) {
           results.valid = false;
-          results.error =
-            ERROR_MESSAGE_CONSTANTS.RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED;
+          results.error = getErrorDescriptor(
+            ERROR_MESSAGE_CONSTANTS.RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED,
+          );
         }
       } else if (
         relationshipValidationType === RelationshipValidationType.EXCLUDE
@@ -357,7 +428,7 @@ export const validateTypeInfoFieldValue = (
       }
     } else if (possibleValues && !possibleValues.includes(value)) {
       results.valid = false;
-      results.error = ERROR_MESSAGE_CONSTANTS.INVALID_OPTION;
+      results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_OPTION);
     } else {
       const pendingValid = validateKeywordType(value, type);
       const customValid = validateCustomType(
@@ -371,18 +442,37 @@ export const validateTypeInfoFieldValue = (
 
       if (type === "string" && typeof pattern === "string") {
         const { valid: patternValid, error: patternError } =
-          validateValueMatchesPattern(value, pattern);
+          validateValueMatchesPattern(typeReference ?? type, value, pattern);
 
         results.valid = getValidityValue(results.valid, patternValid);
         results.error = patternError;
       }
 
+      if (type === "number" && typeof value === "number") {
+        if (typeof min === "number" && value < min) {
+          results.valid = false;
+          results.error = getErrorDescriptor(
+            ERROR_MESSAGE_CONSTANTS.VALUE_BELOW_MINIMUM,
+            [`${min}`],
+          );
+        } else if (typeof max === "number" && value > max) {
+          results.valid = false;
+          results.error = getErrorDescriptor(
+            ERROR_MESSAGE_CONSTANTS.VALUE_ABOVE_MAXIMUM,
+            [`${max}`],
+          );
+        }
+      }
+
       if (!customValid) {
-        results.error = INVALID_CUSTOM_TYPE;
+        results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE);
       } else if (!results.valid) {
-        results.error = results.error
-          ? results.error
-          : PRIMITIVE_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword];
+        results.error =
+          results.error.code !== ERROR_MESSAGE_CONSTANTS.NONE
+            ? results.error
+            : getErrorDescriptor(
+                PRIMITIVE_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword],
+              );
       }
     }
   }
@@ -417,7 +507,7 @@ export const validateArrayOfTypeInfoFieldValues = (
   const results: TypeInfoValidationResults = {
     typeName: typeReference ?? type,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
 
@@ -425,7 +515,7 @@ export const validateArrayOfTypeInfoFieldValues = (
     const v = values[i];
     const {
       valid: indexValid,
-      error: indexError = "",
+      error: indexError = getNoErrorDescriptor(),
       errorMap: indexErrorMap,
     } = validateTypeInfoFieldValue(
       v,
@@ -466,7 +556,7 @@ export const validateTypeInfoFieldOperationAllowed = (
   const results: TypeInfoValidationResults = {
     typeName: null,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
 
@@ -484,7 +574,7 @@ export const validateTypeInfoFieldOperationAllowed = (
     results.valid = !denied;
 
     if (!results.valid) {
-      results.error = DENIED_TYPE_OPERATIONS[fieldOperation];
+      results.error = getErrorDescriptor(DENIED_TYPE_OPERATIONS[fieldOperation]);
 
       results.errorMap[fieldName] = [results.error];
     }
@@ -511,7 +601,7 @@ export const validateTypeOperationAllowed = (
   const results: TypeInfoValidationResults = {
     typeName,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
   const { fields = {}, tags = {} } = typeInfo;
@@ -519,7 +609,7 @@ export const validateTypeOperationAllowed = (
 
   if (denied) {
     results.valid = false;
-    results.error = DENIED_TYPE_OPERATIONS[typeOperation];
+    results.error = getErrorDescriptor(DENIED_TYPE_OPERATIONS[typeOperation]);
   } else {
     for (const vF of valueFields) {
       const vFieldInfo = fields[vF];
@@ -530,6 +620,138 @@ export const validateTypeOperationAllowed = (
 
       if (!vFValid) {
         results.errorMap[vF] = [vFError];
+      }
+    }
+  }
+
+  return results;
+};
+
+/**
+ * Options for validating a data item against a single TypeInfo definition.
+ */
+export type ValidateTypeInfoDataItemOptions = {
+  /**
+   * Type name used for result metadata and nested lookups.
+   */
+  typeName?: string;
+  /**
+   * Additional types used for nested type references.
+   */
+  typeInfoMap?: TypeInfoMap;
+  /**
+   * Whether unknown fields should fail validation.
+   */
+  strict?: boolean;
+  /**
+   * Custom validators for `tags.customType` handling.
+   */
+  customTypeValidators?: CustomTypeInfoFieldValidatorMap;
+  /**
+   * Operation context for denied operation checks.
+   */
+  typeOperation?: TypeOperation;
+  /**
+   * Relationship validation behavior.
+   */
+  relationshipValidationType?: RelationshipValidationType;
+  /**
+   * Whether this is a partial payload.
+   */
+  itemIsPartial?: boolean;
+  /**
+   * Default hidden-field validation behavior.
+   */
+  validateHidden?: boolean;
+  /**
+   * Default readonly-field required-value behavior.
+   */
+  validateReadonly?: boolean;
+};
+
+const TYPE_INFO_DATA_ITEM_TYPE_NAME = "__TYPE_INFO_DATA_ITEM__";
+
+/**
+ * Validates a data item against a TypeInfo definition.
+ *
+ * @param value - Data item to validate.
+ * @param typeInfo - TypeInfo definition used for validation.
+ * @param customValidatorMap - Optional custom validators keyed by field.
+ * @param options - Validation behavior options.
+ * @returns Validation result for the entire item.
+ */
+export const validateTypeInfoDataItem = (
+  value: Partial<TypeInfoDataItem> = {},
+  typeInfo: TypeInfo,
+  customValidatorMap: FieldValueValidatorMap = {},
+  options?: ValidateTypeInfoDataItemOptions,
+): TypeInfoValidationResults => {
+  const {
+    typeName = TYPE_INFO_DATA_ITEM_TYPE_NAME,
+    typeInfoMap = {},
+    strict = true,
+    customTypeValidators,
+    typeOperation = TypeOperation.CREATE,
+    relationshipValidationType = RelationshipValidationType.STRICT_EXCLUDE,
+    itemIsPartial = typeOperation === TypeOperation.UPDATE,
+    validateHidden = false,
+    validateReadonly = false,
+  } = options ?? {};
+  const sourceFields = typeInfo.fields ?? {};
+  const normalizedFields: NonNullable<TypeInfo["fields"]> = {};
+
+  for (const [fieldName, field] of Object.entries(sourceFields)) {
+    const validationTags = field.tags?.validation ?? {};
+    const shouldValidateHidden = validationTags.validateHidden ?? validateHidden;
+    const shouldValidateReadonly =
+      validationTags.validateReadonly ?? validateReadonly;
+    const shouldSkipRequiredChecks =
+      (field.tags?.hidden && !shouldValidateHidden) ||
+      (field.readonly && !shouldValidateReadonly);
+
+    normalizedFields[fieldName] = shouldSkipRequiredChecks
+      ? {
+          ...field,
+          optional: true,
+        }
+      : field;
+  }
+
+  const normalizedTypeInfo: TypeInfo = {
+    ...typeInfo,
+    fields: normalizedFields,
+  };
+  const results = validateTypeInfoValue(
+    value ?? {},
+    typeName,
+    { ...typeInfoMap, [typeName]: normalizedTypeInfo },
+    strict,
+    customTypeValidators,
+    typeOperation,
+    relationshipValidationType,
+    itemIsPartial,
+  );
+
+  for (const [fieldName, validator] of Object.entries(customValidatorMap)) {
+    const field = normalizedFields[fieldName];
+
+    if (!field) {
+      continue;
+    }
+
+    let error = getNoErrorDescriptor();
+    try {
+      error = validator(value[fieldName], field);
+    } catch (e) {
+      error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE);
+    }
+
+    if (error.code !== ERROR_MESSAGE_CONSTANTS.NONE) {
+      results.valid = false;
+      results.errorMap[fieldName] = [...(results.errorMap[fieldName] ?? []), error];
+
+      if (results.error.code === ERROR_MESSAGE_CONSTANTS.NONE) {
+        results.error = error;
       }
     }
   }
@@ -564,7 +786,9 @@ export const validateTypeInfoValue = (
   const results: TypeInfoValidationResults = {
     typeName: typeInfoFullName,
     valid: !!typeInfo,
-    error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,
+    error: !!typeInfo
+      ? getNoErrorDescriptor()
+      : getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST),
     errorMap: {},
   };
 
@@ -596,7 +820,10 @@ export const validateTypeInfoValue = (
           : operationErrorMap[oE];
       }
 
-      if (!operationValid && operationError) {
+      if (
+        !operationValid &&
+        operationError.code !== ERROR_MESSAGE_CONSTANTS.NONE
+      ) {
         results.error = operationError;
       }
     }
@@ -617,7 +844,9 @@ export const validateTypeInfoValue = (
 
       if (!valid) {
         results.valid = false;
-        results.error = ERROR_MESSAGE_CONSTANTS.NO_UNION_TYPE_MATCHED;
+        results.error = getErrorDescriptor(
+          ERROR_MESSAGE_CONSTANTS.NO_UNION_TYPE_MATCHED,
+        );
       }
     } else if (strict) {
       const knownFields = Object.keys(fields || {});
@@ -626,7 +855,9 @@ export const validateTypeInfoValue = (
       for (const vF of valueFields) {
         if (!knownFields.includes(vF)) {
           results.valid = false;
-          results.errorMap[vF] = [ERROR_MESSAGE_CONSTANTS.INVALID_FIELD];
+          results.errorMap[vF] = [
+            getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_FIELD),
+          ];
         }
       }
     }
@@ -667,8 +898,8 @@ export const validateTypeInfoValue = (
       }
     }
 
-    if (!results.valid && !results.error) {
-      results.error = ERROR_MESSAGE_CONSTANTS.INVALID_TYPE;
+    if (!results.valid && results.error.code === ERROR_MESSAGE_CONSTANTS.NONE) {
+      results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_TYPE);
     }
   }
 

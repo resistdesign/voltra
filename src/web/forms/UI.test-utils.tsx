@@ -9,6 +9,7 @@ import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import { getNoErrorDescriptor } from "../../common/TypeParsing/Validation";
 import type {
   CustomTypeActionPayload,
   FormController,
@@ -513,7 +514,12 @@ export const runSubmitDisabledScenario = () => {
     errors: {},
     fields: [],
     setFieldValue: () => {},
-    validate: () => true,
+    validate: () => ({
+      typeName: "__TEST__",
+      valid: true,
+      error: getNoErrorDescriptor(),
+      errorMap: {},
+    }),
     setErrors: () => {},
   };
 
@@ -577,7 +583,12 @@ export const runHiddenFieldScenario = () => {
       },
     ],
     setFieldValue: () => {},
-    validate: () => true,
+    validate: () => ({
+      typeName: "__TEST__",
+      valid: true,
+      error: getNoErrorDescriptor(),
+      errorMap: {},
+    }),
     setErrors: () => {},
   };
 

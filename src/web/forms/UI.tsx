@@ -7,9 +7,11 @@
 import type { FC } from "react";
 import type {
   AutoFieldProps,
+  CustomValidatorMap,
   CustomTypeActionPayload,
   FormValues,
   RelationActionPayload,
+  TranslateValidationErrorCode,
 } from "../../app/forms/types";
 import { AutoForm as SharedAutoForm, AutoFormView as SharedAutoFormView } from "../../app/forms/UI";
 import { webAutoField } from "./suite";
@@ -86,6 +88,10 @@ export interface AutoFormProps {
   operation?: TypeOperation;
   /** Disable the submit button when true. */
   submitDisabled?: boolean;
+  /** Optional translator for validation error descriptors. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
+  /** Optional custom validators keyed by field name. */
+  customValidatorMap?: CustomValidatorMap;
 }
 
 /**

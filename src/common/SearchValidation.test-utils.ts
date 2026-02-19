@@ -1,6 +1,26 @@
 import { validateSearchFields } from "./SearchValidation";
 import { ComparisonOperators } from "./SearchTypes";
 import { TypeInfoMap } from "./TypeParsing/TypeInfo";
+import type {
+  ErrorDescriptor,
+  TypeInfoValidationResults,
+} from "./TypeParsing/Validation";
+import { ERROR_MESSAGE_CONSTANTS } from "./TypeParsing/Validation";
+
+const toLegacyValidationShape = (results: TypeInfoValidationResults) => ({
+  ...results,
+  error:
+    results.error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : results.error.code,
+  errorMap: Object.entries(results.errorMap).reduce(
+    (acc, [key, descriptors]: [string, ErrorDescriptor[]]) => {
+      acc[key] = descriptors.map((descriptor) =>
+        descriptor.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : descriptor.code,
+      );
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  ),
+});
 
 export const runSearchValidationScenario = () => {
   const typeInfoMap: TypeInfoMap = {
@@ -137,12 +157,12 @@ export const runSearchValidationScenario = () => {
   );
 
   return {
-    invalidType,
-    invalidOperator,
-    invalidField,
-    relationalDenied,
-    relationalDisallowed,
-    invalidValueOption,
-    validSearch,
+    invalidType: toLegacyValidationShape(invalidType),
+    invalidOperator: toLegacyValidationShape(invalidOperator),
+    invalidField: toLegacyValidationShape(invalidField),
+    relationalDenied: toLegacyValidationShape(relationalDenied),
+    relationalDisallowed: toLegacyValidationShape(relationalDisallowed),
+    invalidValueOption: toLegacyValidationShape(invalidValueOption),
+    validSearch: toLegacyValidationShape(validSearch),
   };
 };

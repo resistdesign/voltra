@@ -10,10 +10,12 @@ import type { TypeInfo, TypeOperation } from "../../common/TypeParsing/TypeInfo"
 import { useFormEngine } from "./Engine";
 import type {
   AutoFieldProps,
+  CustomValidatorMap,
   CustomTypeActionPayload,
   FormController,
   FormValues,
   RelationActionPayload,
+  TranslateValidationErrorCode,
 } from "./types";
 import type { ResolvedSuite } from "./core/types";
 
@@ -97,7 +99,8 @@ export const AutoFormView: FC<AutoFormViewProps> = ({
   const AutoField = renderer.AutoField;
 
   const submit = () => {
-    if (controller.validate()) {
+    const validationResults = controller.validate();
+    if (validationResults.valid) {
       onSubmit(controller.values);
     }
   };
@@ -150,6 +153,10 @@ export interface AutoFormProps {
   operation?: TypeOperation;
   /** Disable the submit button when true. */
   submitDisabled?: boolean;
+  /** Optional translator for validation error descriptors. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
+  /** Optional custom validators keyed by field name. */
+  customValidatorMap?: CustomValidatorMap;
 }
 
 /**
@@ -168,8 +175,14 @@ export const AutoForm: FC<AutoFormProps> = ({
   onCustomTypeAction,
   operation,
   submitDisabled,
+  translateValidationErrorCode,
+  customValidatorMap,
 }) => {
-  const controller = useFormEngine(initialValues, typeInfo, { operation });
+  const controller = useFormEngine(initialValues, typeInfo, {
+    operation,
+    translateValidationErrorCode,
+    customValidatorMap,
+  });
 
   useEffect(() => {
     if (onValuesChange) {
