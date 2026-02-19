@@ -172,3 +172,22 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
 - Additional utility audit observations:
   - `src/app/utils/History.ts` and `src/app/utils/Debug.ts` reviewed for default/path semantics and naming consistency; no high-confidence behavior regressions identified in this pass.
   - Existing `History` and `Debug` specs already cover core parse/build semantics and dependency-index diff behavior.
+
+- `src/common` search utility slice:
+  - Fixed OR-logic filtering behavior in `src/common/SearchUtils.ts`.
+    - Previous behavior initialized OR evaluation as truthy for each item, causing false-positive matches.
+    - Updated behavior initializes OR evaluation as false when field criteria are present, producing correct logical-OR filtering.
+  - Updated `src/common/SearchUtils.spec.json` expectation to match corrected semantics (`filteredOrIds` now returns only true matches).
+
+- Verification for `src/common` slice:
+  - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+  - `tsx src/common/Testing/CLI.ts "./src/common/SearchUtils.spec.json" "./src/common/SearchValidation.spec.json" "./src/common/SearchTypes.spec.json"`: passed.
+  - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- `src/common` command-line utility slice:
+  - Readability/maintainability cleanup in `src/common/CommandLine/collectRequiredEnvironmentVariables.ts`:
+    - clearer local names (`varName` instead of abbreviated loop variables)
+    - kept behavior unchanged for missing-variable validation and error rendering.
+  - Verification:
+    - `tsx src/common/Testing/CLI.ts "./src/common/CommandLine/collectRequiredEnvironmentVariables.spec.json"`: passed.
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
