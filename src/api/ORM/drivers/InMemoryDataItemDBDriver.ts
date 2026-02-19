@@ -18,14 +18,7 @@ import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
 } from "../../../common/SearchUtils";
-import Path from "path";
-import { fileURLToPath } from "url";
 import ConfigTypeInfoMap from "./InMemoryDataItemDBDriver/ConfigTypeInfoMap.json";
-
-const moduleDirname =
-  typeof __dirname === "string"
-    ? __dirname
-    : Path.dirname(fileURLToPath(import.meta.url));
 
 type CursorState = {
   offset?: number;

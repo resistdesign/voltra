@@ -5,4 +5,4 @@ export * from "./InMemoryItemRelationshipDBDriver";
 export * from "./InMemoryFileItemDBDriver";
 export * from "./IndexingRelationshipDriver";
 export * from "./common";
-export type { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
+export * from "./S3FileItemDBDriver/ConfigTypes";

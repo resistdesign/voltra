@@ -38,14 +38,7 @@ import {
   SearchCriteria,
 } from "../../../common/SearchTypes";
 import { getSortedItems } from "../../../common/SearchUtils";
-import Path from "path";
-import { fileURLToPath } from "url";
 import ConfigTypeInfoMap from "./DynamoDBDataItemDBDriver/ConfigTypeInfoMap.json";
-
-const moduleDirname =
-  typeof __dirname === "string"
-    ? __dirname
-    : Path.dirname(fileURLToPath(import.meta.url));
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>

@@ -72,7 +72,7 @@ const getTypeInfoFromPickOmitFieldFilters = (
 };
 
 const getTypeInfoFromExcludeFieldFilter = (
-  typeNameStr: string | undefined,
+  _typeNameStr: string | undefined,
   typeRef: TypeReferenceNode,
   typeMap: TypeMap,
 ): TypeInfo | undefined => {
@@ -136,7 +136,7 @@ const getTypeInfoFromExcludeFieldFilter = (
 
 const defaultFieldFilterProcessor = (
   typeNameStr: string | undefined,
-  typeRef: TypeReferenceNode,
+  _typeRef: TypeReferenceNode,
   typeMap: TypeMap,
 ): TypeInfo | undefined => {
   const refNode = typeNameStr ? typeMap[typeNameStr] : undefined;

@@ -28,11 +28,7 @@ export * from "./exact/ExactDdb";
 export * from "./exact/ExactIndex";
 export * from "./exact/ExactS3";
 export * from "./fulltext/FullTextMemoryBackend";
-export {
-  FullTextDdbBackend,
-  FullTextDdbWriter,
-  type FullTextTableNames,
-} from "./fulltext/FullTextDdbBackend";
+export * from "./fulltext/FullTextDdbBackend";
 export * from "./fulltext/Schema";
 export * from "./lossy/LossyDdb";
 export * from "./lossy/LossyIndex";
@@ -40,19 +36,10 @@ export * from "./lossy/LossyS3";
 export * from "./rel/RelationalInMemoryBackend";
 export * from "./rel/RelationalDdb";
 export * from "./rel/Cursor";
-export {
-  handler as relHandler,
-  setRelationalHandlerDependencies,
-  type EdgePutEvent,
-  type EdgeRemoveEvent,
-  type EdgeQueryEvent,
-  type RelationalHandlerDependencies,
-  type RelationalHandlerEvent,
-  type LambdaResponse as RelLambdaResponse,
-} from "./rel/Handlers";
+export * from "./rel/Handlers";
 export * from "./rel/Types";
 export * from "./structured/index";
 export * from "./tokenize";
 export * from "./Types";
 export * from "./Trace";
-export type { ResolvedSearchLimits } from "./Handler/Config";
+export * from "./Handler/Config";
