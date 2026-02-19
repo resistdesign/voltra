@@ -27,21 +27,22 @@ export const Route = <ParamsType extends Record<string, any>>(
     typeof props.exact !== "undefined" ||
     typeof props.onParamsChange !== "undefined";
   const adapterRef = useRef<RouteAdapter | null>(null);
-  const shouldInjectBrowserAdapter =
+  const shouldUseAutoBrowserAdapter =
     !hasMatcherProps &&
     typeof props.adapter === "undefined" &&
     typeof props.ingress === "undefined";
+  const routeProps = props as RouteProps<ParamsType>;
 
-  if (shouldInjectBrowserAdapter && !adapterRef.current) {
+  if (shouldUseAutoBrowserAdapter && !adapterRef.current) {
     adapterRef.current = createBrowserRouteAdapter();
   }
 
-  return shouldInjectBrowserAdapter ? (
+  return shouldUseAutoBrowserAdapter ? (
     <CoreRoute
-      {...(props as RouteProps<ParamsType>)}
+      {...routeProps}
       adapter={adapterRef.current ?? undefined}
     />
   ) : (
-    <CoreRoute {...(props as RouteProps<ParamsType>)} />
+    <CoreRoute {...routeProps} />
   );
 };

@@ -6,12 +6,30 @@ The effort is about making sure that leftover effects of that kind of change are
 
 ## Goals
 
+### Original Ordered Goals (Authoritative)
+
+1. Orphaned/unused symbols
+2. Orphaned/unused files
+3. Orphaned/unused code
+4. Documentation/demo/sample/example drift
+5. Sensible defaults ad present
+6. Consistent naming
+7. Code readability and maintainability
+8. Test coverage
+9. Design and architecture are not confusing and provide the easiest possible execution of consuming the provided tools,
+   utilities, components and so on.
+10. General, all around good project health.
+
 - Ensure there are no orphaned/unused symbols, files, or code paths.
 - Ensure documentation/demo/sample behavior still matches source behavior.
 - Ensure defaults, naming, readability, maintainability, and architecture consistency are strong.
 - Ensure test coverage stays aligned with behavior and public surfaces.
 
-Inspect broadly, but avoid churn-only edits. Voltra should remain simple, intuitive, and flexible.
+Inspect everything. Be careful. Don't over do it. This project should present as high quality to consumers.
+APIs/Surfaces/Mechanisms/Structures should makes sense and impress consumers with the level of thought and detail that
+has gone into making something simple and intuitive around every little corner.
+
+Voltra is simplicity, flexibility and abstracts away complexity while providing obvious and easy to use escape hatches.
 
 ## Checklist
 
@@ -25,12 +43,12 @@ Inspect broadly, but avoid churn-only edits. Voltra should remain simple, intuit
   - [x] Document findings, fixes, and residual risks in this plan.
 - [~] Phase 2: API/defaults/naming/maintainability pass
   - [x] Routing contract alignment: `web` should expose `Route` (not `RouteProvider`) and inject web mechanics while preserving the shared Route API shape.
-  - [ ] Audit defaults and option handling for sensible behavior.
-  - [ ] Audit naming consistency across modules touched by refactors.
-  - [ ] Apply targeted readability and maintainability improvements.
-  - [ ] Add/update docs/comments where public behavior is unclear.
-  - [ ] Run focused tests for touched areas.
-  - [ ] Document findings, fixes, and residual risks in this plan.
+  - [x] Audit defaults and option handling for sensible behavior.
+  - [x] Audit naming consistency across modules touched by refactors.
+  - [x] Apply targeted readability and maintainability improvements.
+  - [x] Add/update docs/comments where public behavior is unclear.
+  - [x] Run focused tests for touched areas.
+  - [x] Document findings, fixes, and residual risks in this plan.
 - [ ] Phase 3: Documentation/demo/test coverage alignment
   - [ ] Verify docs/site/demo/sample code aligns with current behavior.
   - [ ] Fix drift in docs/demo/sample code.
@@ -74,7 +92,7 @@ Inspect broadly, but avoid churn-only edits. Voltra should remain simple, intuit
     - `src/api/DBX/DBXScenarioConfig.ts`
   - Rationale: these may be intentionally retained as utilities or compatibility layers; defer removal to later phase with explicit consumer-surface review.
 
-## Phase 2 In-Progress Notes (2026-02-19)
+## Phase 2 Notes (2026-02-19)
 
 - Routing API contract decision captured from user guidance:
   - Consumers should use `Route` consistently across `app`, `native`, and `web`.
@@ -88,11 +106,25 @@ Inspect broadly, but avoid churn-only edits. Voltra should remain simple, intuit
     - Matcher mode (`path`/`exact`/`onParamsChange`) delegates directly to core `Route`.
     - Root mode auto-injects a browser adapter only when `adapter` and `ingress` are not provided.
   - Updated `src/web/utils/Route.test-utils.tsx` to validate web-only `Route` usage top-to-bottom (root and nested matcher scenarios), instead of mixing app `Route` in test composition.
+  - Added export-contract assertions for web route surface:
+    - `Route` export exists.
+    - `RouteProvider` export does not exist.
+  - Updated `src/web/utils/Route.spec.json` expectations accordingly.
+  - Applied minor readability cleanup in `src/web/utils/Route.tsx`:
+    - `shouldInjectBrowserAdapter` -> `shouldUseAutoBrowserAdapter`
+    - localized `routeProps` variable to avoid repeated casts.
 
 - Verification for this in-progress Phase 2 slice:
   - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
-  - `tsx src/common/Testing/CLI.ts "./src/web/utils/Route.spec.json" "./src/web/index.spec.json"`: passed.
+  - `tsx src/common/Testing/CLI.ts "./src/app/utils/Route.spec.json" "./src/web/utils/Route.spec.json" "./src/web/index.spec.json"`: passed.
+  - `yarn test:native`: passed (22 passes, 0 failures, 0 errors).
 
-- Remaining for full Phase 2 completion:
-  - Broader defaults/naming/readability audit beyond routing.
-  - Additional docs/comments pass where public behavior is still unclear.
+- Defaults/option-handling audit result:
+  - Web root route auto-adapter injection remains constrained to root mode and only when `adapter` and `ingress` are not supplied, preserving explicit override paths.
+  - Native route runtime integration remains constrained to root mode and non-web runtime.
+  - No additional defaults regressions found in this routing slice.
+
+- Naming/readability audit result (routing slice):
+  - Public consumer surface now consistently presents `Route` across `app`/`native`/`web`.
+  - Web-specific browser mechanics remain implemented in web module code, without cross-barrel re-export strategy.
+  - Remaining naming/readability audit across non-routing refactor-touched surfaces is still pending.

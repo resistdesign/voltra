@@ -68,7 +68,8 @@ export const runRouteScenario = async () => {
     }
   };
 
-  const { Route } = await loadRouteModule();
+  const routeModule = await loadRouteModule();
+  const { Route } = routeModule;
 
   const ContextProbe = () => {
     const context = useRouteContext();
@@ -111,6 +112,8 @@ export const runRouteScenario = async () => {
   (globalThis as any).CustomEvent = originalCustomEvent;
 
   return {
+    hasRouteExport: typeof routeModule.Route === "function",
+    hasRouteProviderExport: "RouteProvider" in routeModule,
     defaultContextRender,
     nestedRouteRender,
     exactMismatchRender,
