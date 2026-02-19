@@ -132,10 +132,10 @@ Current public double-exports across top-level package entrypoints:
 
 Based on the report, propose the minimal, consistent strategy:
 
-- [ ] Remove all disallowed cross‑barrel re-exports.
-- [ ] Ensure each symbol is imported from its owning barrel.
-- [ ] Update docs/examples to use owning barrel imports.
-- [ ] If any consumer-facing breakage is expected, list it explicitly (paths and symbols).
+- [x] Remove all disallowed cross‑barrel re-exports.
+- [x] Ensure each symbol is imported from its owning barrel.
+- [x] Update docs/examples to use owning barrel imports.
+- [x] If any consumer-facing breakage is expected, list it explicitly (paths and symbols).
 
 Deliverable: Add a short section to the report: “Proposed removals & expected breakages”.
 
@@ -145,31 +145,31 @@ Deliverable: Add a short section to the report: “Proposed removals & expected 
 
 ### 3.1 Remove disallowed cross-barrel exports
 
-- [ ] Delete/modify export statements so barrels only export their own domain symbols.
-- [ ] Ensure `iac-packs/*` exception remains intact.
+- [x] Delete/modify export statements so barrels only export their own domain symbols.
+- [x] Ensure `iac-packs/*` exception remains intact.
 
 ### 3.2 Repair internal imports
 
-- [ ] Update Voltra internal imports so they reference the correct owning modules (prefer direct module paths inside
+- [x] Update Voltra internal imports so they reference the correct owning modules (prefer direct module paths inside
   `src/` rather than importing through a different barrel).
 
 ### 3.3 Repair public API usage in docs/examples
 
-- [ ] Update README / docs / examples to import from the owning barrel.
+- [x] Update README / docs / examples to import from the owning barrel.
 
 ### 3.4 Validate
 
-- [ ] Typecheck
-- [ ] Build all targets
-- [ ] Generate docs (if applicable) and ensure links/sections still correct
-- [ ] Run tests
+- [x] Typecheck
+- [x] Build all targets
+- [x] Generate docs (if applicable) and ensure links/sections still correct
+- [x] Run tests
 
 ---
 
 ## Definition of Done
 
 - [ ] `docs/reports/cross-barrel-exports.md` exists and is complete.
-- [ ] No disallowed cross-barrel re-exports remain.
+- [x] No disallowed cross-barrel re-exports remain.
 - [ ] `iac-packs/*` cross-barrel exports remain (and only those).
-- [ ] Build + typecheck pass.
-- [ ] Docs/examples updated and consistent.
+- [x] Build + typecheck pass.
+- [x] Docs/examples updated and consistent.

@@ -1,5 +1,6 @@
 import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
+import { Route as AppRoute, useRouteContext } from "../../app/utils/Route";
 const loadRouteModule = async () => {
   const moduleUrl = new URL("./Route.tsx", import.meta.url);
   moduleUrl.search = `?t=${Date.now()}`;
@@ -67,7 +68,7 @@ export const runRouteScenario = async () => {
     }
   };
 
-  const { Route, RouteProvider, useRouteContext } = await loadRouteModule();
+  const { RouteProvider } = await loadRouteModule();
 
   const ContextProbe = () => {
     const context = useRouteContext();
@@ -80,13 +81,13 @@ export const runRouteScenario = async () => {
 
   const nestedRouteRender = renderToString(
     createElement(
-      Route,
+      AppRoute,
       null,
       createElement(
-        Route,
+        AppRoute,
         { path: "/app" },
         createElement(
-          Route,
+          AppRoute,
           { path: "books/:id", exact: true },
           createElement(ContextProbe),
         ),
@@ -96,10 +97,10 @@ export const runRouteScenario = async () => {
 
   const exactMismatchRender = renderToString(
     createElement(
-      Route,
+      AppRoute,
       null,
       createElement(
-        Route,
+        AppRoute,
         { path: "/app/books", exact: true },
         createElement("span", null, "nope"),
       ),
