@@ -1,4 +1,5 @@
 import {
+  type ChangeEvent,
   FC,
   useCallback,
   useEffect,
@@ -129,6 +130,15 @@ export const AdvancedDemo = () => {
   const [selectedType, setSelectedType] = useState("");
   const [editorTheme, setEditorTheme] = useState("github");
   const [useCustomSuite, setUseCustomSuite] = useState(false);
+  const handleToggleCustomSuite = useCallback(() => {
+    setUseCustomSuite((value) => !value);
+  }, []);
+  const handleSelectedTypeChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      setSelectedType(event.target.value);
+    },
+    [],
+  );
   const getTypeInfo = useCallback(() => {
     try {
       const types: TypeInfoMap = getTypeInfoMapFromTypeScript(code);
@@ -194,52 +204,64 @@ export const AdvancedDemo = () => {
     >("open");
     const renderer = useCustomSuite ? customRenderer : defaultRenderer;
 
-    const handleRelationAction = ({
-      action,
-      fieldKey,
-    }: {
-      action: RelationAction;
-      fieldKey: string;
-    }) => {
-      setLastAction(`Relation ${action} on ${fieldKey}`);
-      setLastActionType(action);
-    };
+    const handleNoopSubmit = useCallback(() => {}, []);
 
-    const handleCustomTypeAction = ({
-      action,
-      fieldKey,
-      customType,
-      value,
-      index,
-      field,
-      onChange,
-    }: CustomTypeActionPayload) => {
-      setLastAction(`Custom ${customType} ${action} on ${fieldKey}`);
-      setLastActionType(action);
+    const handleRelationAction = useCallback(
+      ({
+        action,
+        fieldKey,
+      }: {
+        action: RelationAction;
+        fieldKey: string;
+      }) => {
+        setLastAction(`Relation ${action} on ${fieldKey}`);
+        setLastActionType(action);
+      },
+      [],
+    );
 
-      if (action === "add") {
-        const nextItem = `${customType} item`;
-        if (field.array) {
-          const current = Array.isArray(value) ? value : [];
-          onChange([...current, nextItem]);
-        } else {
-          onChange(nextItem);
-        }
-        return;
-      }
+    const handleCustomTypeAction = useCallback(
+      ({
+        action,
+        fieldKey,
+        customType,
+        value,
+        index,
+        field,
+        onChange,
+      }: CustomTypeActionPayload) => {
+        setLastAction(`Custom ${customType} ${action} on ${fieldKey}`);
+        setLastActionType(action);
 
-      if (action === "remove") {
-        if (field.array) {
-          const next = [...(Array.isArray(value) ? value : [])];
-          if (typeof index === "number") {
-            next.splice(index, 1);
-            onChange(next);
+        if (action === "add") {
+          const nextItem = `${customType} item`;
+          if (field.array) {
+            const current = Array.isArray(value) ? value : [];
+            onChange([...current, nextItem]);
+          } else {
+            onChange(nextItem);
           }
-        } else {
-          onChange(null);
+          return;
         }
-      }
-    };
+
+        if (action === "remove") {
+          if (field.array) {
+            const next = [...(Array.isArray(value) ? value : [])];
+            if (typeof index === "number") {
+              next.splice(index, 1);
+              onChange(next);
+            }
+          } else {
+            onChange(null);
+          }
+        }
+      },
+      [],
+    );
+
+    const handleClearLastAction = useCallback(() => {
+      setLastAction(null);
+    }, []);
 
     return (
       <>
@@ -250,7 +272,7 @@ export const AdvancedDemo = () => {
         </SuiteStatus>
         <SharedAutoFormView
           controller={controller}
-          onSubmit={() => {}}
+          onSubmit={handleNoopSubmit}
           renderer={renderer}
           onRelationAction={handleRelationAction}
           onCustomTypeAction={handleCustomTypeAction}
@@ -259,7 +281,7 @@ export const AdvancedDemo = () => {
           <Alert
             type={lastActionType}
             message={`Last action: ${lastAction}`}
-            onClose={() => setLastAction(null)}
+            onClose={handleClearLastAction}
           />
         )}
         <JSONPreview>
@@ -351,13 +373,13 @@ return (
               type="button"
               className={useCustomSuite ? "secondary" : undefined}
               aria-pressed={useCustomSuite}
-              onClick={() => setUseCustomSuite((value) => !value)}
+              onClick={handleToggleCustomSuite}
             >
               Custom Component Suite
             </button>
             <select
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
+              onChange={handleSelectedTypeChange}
               disabled={Object.keys(types).length === 0}
             >
               <option value="">Select Type...</option>
