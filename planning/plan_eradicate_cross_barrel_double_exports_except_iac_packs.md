@@ -1,6 +1,11 @@
 # Plan: Eradicate Cross‑Barrel Double Exports (Except `iac-packs`)
 
-Goal: Find *all* exports that are re-exported across Voltra barrels (e.g. `app` re-exporting `common`, `api` re-exporting `app`, etc.), **report them**, and then (once approved) **remove/fix them** so each symbol has a single “home” barrel. The only allowed exception: **`iac-packs` barrels may export across barrels and more than once.**
+Context: `TypeOperation` is exported properly from the `common` barrel as an enum. But it is also exported from the
+`app` barrel as a type. This kind of mistake breaks import functionality for consumers and must be repaired.
+
+Goal: Find *all* exports that are re-exported across Voltra barrels (e.g. `app` re-exporting `common`, `api`
+re-exporting `app`, etc.), **report them**, and then (once approved) **remove/fix them** so each symbol has a single
+“home” barrel. The only allowed exception: **`iac-packs` barrels may export across barrels and more than once.**
 
 Repo artifact: `voltra-main.zip`
 
@@ -8,7 +13,8 @@ Repo artifact: `voltra-main.zip`
 
 ## Phase 0 — Ground rules (codify first)
 
-- [ ] Define “barrels” as top-level entrypoint domains (examples: `api`, `app`, `common`, `build`, `native`, `web`, `iac-packs/*`, etc.).
+- [ ] Define “barrels” as top-level entrypoint domains (examples: `api`, `app`, `common`, `build`, `native`, `web`,
+  `iac-packs/*`, etc.).
 - [ ] Define “cross‑barrel export” as: a barrel `X` exporting from a file path that belongs to a different barrel `Y`.
 - [ ] Rule: **No cross-barrel re-exports** anywhere **except** `iac-packs/*` barrels.
 - [ ] Rule: Do not replace this with new “type-only convenience exports” — avoid the entire footgun.
@@ -53,7 +59,8 @@ Include:
   - target module
   - target barrel
   - classification: allowed (iac-packs) / disallowed
-- [ ] A “high risk” list: anything that is a runtime value exported via `export type` (enums/consts/functions) and any name collisions.
+- [ ] A “high risk” list: anything that is a runtime value exported via `export type` (enums/consts/functions) and any
+  name collisions.
 
 Important: **No code edits** in Phase 1.
 
@@ -81,7 +88,8 @@ Deliverable: Add a short section to the report: “Proposed removals & expected 
 
 ### 3.2 Repair internal imports
 
-- [ ] Update Voltra internal imports so they reference the correct owning modules (prefer direct module paths inside `src/` rather than importing through a different barrel).
+- [ ] Update Voltra internal imports so they reference the correct owning modules (prefer direct module paths inside
+  `src/` rather than importing through a different barrel).
 
 ### 3.3 Repair public API usage in docs/examples
 
