@@ -5,7 +5,12 @@
  */
 
 import { createElement } from "react";
-import type { FormEvent, ReactElement } from "react";
+import type {
+  ChangeEvent,
+  FormEvent,
+  MouseEvent,
+  ReactElement,
+} from "react";
 import type {
   LiteralValue,
   TypeInfoField,
@@ -92,6 +97,16 @@ const renderRelationSingle = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
+  const handleManageRelation = () => {
+    onRelationAction?.({
+      action: "open",
+      fieldKey,
+      field,
+      value: undefined,
+      fullPaging: field.tags?.fullPaging,
+      onChange: context.onChange,
+    });
+  };
 
   return (
     <FieldWrapper>
@@ -103,16 +118,7 @@ const renderRelationSingle = (context: FieldRenderContext) => {
           data-signifier="manage"
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onRelationAction({
-              action: "open",
-              fieldKey,
-              field,
-              value: undefined,
-              fullPaging: field.tags?.fullPaging,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleManageRelation}
         >
           Manage
         </button>
@@ -126,6 +132,16 @@ const renderRelationArray = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
+  const handleManageRelation = () => {
+    onRelationAction?.({
+      action: "open",
+      fieldKey,
+      field,
+      value: undefined,
+      fullPaging: field.tags?.fullPaging,
+      onChange: context.onChange,
+    });
+  };
 
   return (
     <FieldWrapper>
@@ -137,16 +153,7 @@ const renderRelationArray = (context: FieldRenderContext) => {
           data-signifier="manage-related"
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onRelationAction({
-              action: "open",
-              fieldKey,
-              field,
-              value: undefined,
-              fullPaging: field.tags?.fullPaging,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleManageRelation}
         >
           Manage
         </button>
@@ -161,6 +168,19 @@ const renderCustomSingle = (context: FieldRenderContext) => {
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
+  const handleManageCustomType = () => {
+    if (!customType) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "open",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      onChange: context.onChange,
+    });
+  };
 
   return (
     <FieldWrapper>
@@ -173,16 +193,7 @@ const renderCustomSingle = (context: FieldRenderContext) => {
           data-signifier="manage"
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onCustomTypeAction({
-              action: "open",
-              fieldKey,
-              field,
-              customType,
-              value: context.value,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleManageCustomType}
         >
           Manage
         </button>
@@ -198,6 +209,63 @@ const renderCustomArray = (context: FieldRenderContext) => {
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
   const arrayValue = Array.isArray(context.value) ? context.value : [];
+  const handleEditItem = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!customType) {
+      return;
+    }
+    const indexRaw = event.currentTarget.getAttribute("data-array-index");
+    if (!indexRaw) {
+      return;
+    }
+    const index = Number(indexRaw);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "edit",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      index,
+      onChange: context.onChange,
+    });
+  };
+  const handleRemoveItem = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!customType) {
+      return;
+    }
+    const indexRaw = event.currentTarget.getAttribute("data-array-index");
+    if (!indexRaw) {
+      return;
+    }
+    const index = Number(indexRaw);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "remove",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      index,
+      onChange: context.onChange,
+    });
+  };
+  const handleAddItem = () => {
+    if (!customType) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "add",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      onChange: context.onChange,
+    });
+  };
 
   return (
     <FieldWrapper>
@@ -215,19 +283,10 @@ const renderCustomArray = (context: FieldRenderContext) => {
               {customType && onCustomTypeAction ? (
                 <button
                   data-signifier="manage"
+                  data-array-index={String(index)}
                   type="button"
                   disabled={disabled}
-                  onClick={() =>
-                    onCustomTypeAction({
-                      action: "edit",
-                      fieldKey,
-                      field,
-                      customType,
-                      value: context.value,
-                      index,
-                      onChange: context.onChange,
-                    })
-                  }
+                  onClick={handleEditItem}
                 >
                   Manage
                 </button>
@@ -235,18 +294,9 @@ const renderCustomArray = (context: FieldRenderContext) => {
               {customType && onCustomTypeAction ? (
                 <button
                   type="button"
+                  data-array-index={String(index)}
                   disabled={disabled}
-                  onClick={() =>
-                    onCustomTypeAction({
-                      action: "remove",
-                      fieldKey,
-                      field,
-                      customType,
-                      value: context.value,
-                      index,
-                      onChange: context.onChange,
-                    })
-                  }
+                  onClick={handleRemoveItem}
                 >
                   Remove
                 </button>
@@ -259,16 +309,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
         <button
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onCustomTypeAction({
-              action: "add",
-              fieldKey,
-              field,
-              customType,
-              value: context.value,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleAddItem}
         >
           Add Item
         </button>
@@ -285,6 +326,27 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
   const arrayValue = Array.isArray(context.value)
     ? [...(context.value as LiteralValue[])]
     : [];
+  const handleRemoveArrayItem = (event: MouseEvent<HTMLButtonElement>) => {
+    const indexRaw = event.currentTarget.getAttribute("data-array-index");
+    if (!indexRaw) {
+      return;
+    }
+    const index = Number(indexRaw);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    const newValue = [...arrayValue];
+    newValue.splice(index, 1);
+    context.onChange(newValue);
+  };
+  const handleAddArrayItem = () => {
+    const baseValue = Array.isArray(context.value) ? context.value : [];
+    const newValue = [...baseValue];
+    const newItem =
+      field.type === "number" ? 0 : field.type === "boolean" ? false : "";
+    newValue.push(newItem);
+    context.onChange(newValue);
+  };
 
   return (
     <FieldWrapper>
@@ -316,12 +378,9 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
             </div>
             <button
               type="button"
+              data-array-index={String(index)}
               disabled={disabled}
-              onClick={() => {
-                const newValue = [...arrayValue];
-                newValue.splice(index, 1);
-                context.onChange(newValue);
-              }}
+              onClick={handleRemoveArrayItem}
             >
               Remove
             </button>
@@ -330,14 +389,7 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
         <button
           type="button"
           disabled={disabled}
-          onClick={() => {
-            const baseValue = Array.isArray(context.value) ? context.value : [];
-            const newValue = [...baseValue];
-            const newItem =
-              field.type === "number" ? 0 : field.type === "boolean" ? false : "";
-            newValue.push(newItem);
-            context.onChange(newValue);
-          }}
+          onClick={handleAddArrayItem}
         >
           Add Item
         </button>
@@ -350,6 +402,9 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
 const renderString = (context: FieldRenderContext) => {
   const { fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(event.target.value);
+  };
 
   return (
     <FieldWrapper>
@@ -360,7 +415,7 @@ const renderString = (context: FieldRenderContext) => {
         id={id}
         type={context.format || "text"}
         value={(context.value as string) || ""}
-        onChange={(e: any) => context.onChange(e.target.value)}
+        onChange={handleChange}
         disabled={disabled}
         pattern={context.constraints?.pattern}
       />
@@ -372,6 +427,9 @@ const renderString = (context: FieldRenderContext) => {
 const renderNumber = (context: FieldRenderContext) => {
   const { fieldKey, label, required, disabled, error } = context;
   const id = `field-${fieldKey}`;
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(parseNumberValue(event.target.value));
+  };
 
   return (
     <FieldWrapper>
@@ -382,7 +440,7 @@ const renderNumber = (context: FieldRenderContext) => {
         id={id}
         type="number"
         value={(context.value as number) ?? ""}
-        onChange={(e: any) => context.onChange(parseNumberValue(e.target.value))}
+        onChange={handleChange}
         disabled={disabled}
         min={context.constraints?.min}
         max={context.constraints?.max}
@@ -396,6 +454,9 @@ const renderNumber = (context: FieldRenderContext) => {
 const renderBoolean = (context: FieldRenderContext) => {
   const { fieldKey, label, disabled, error } = context;
   const id = `field-${fieldKey}`;
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(event.target.checked);
+  };
 
   return (
     <FieldWrapper>
@@ -404,7 +465,7 @@ const renderBoolean = (context: FieldRenderContext) => {
           id={id}
           type="checkbox"
           checked={!!context.value}
-          onChange={(e: any) => context.onChange(e.target.checked)}
+          onChange={handleChange}
           disabled={disabled}
         />
         <label htmlFor={id}> {label} </label>
@@ -419,6 +480,20 @@ const renderEnumSelect = (context: FieldRenderContext) => {
   const id = `field-${fieldKey}`;
   const selectableValues = getSelectableValues(context.possibleValues);
   const allowCustom = context.allowCustomSelection;
+  const handleCustomSelectionChange = (event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(
+      field.type === "number"
+        ? parseNumberValue(event.target.value)
+        : event.target.value,
+    );
+  };
+  const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    context.onChange(
+      field.type === "number"
+        ? parseNumberValue(event.target.value)
+        : event.target.value,
+    );
+  };
 
   return (
     <FieldWrapper>
@@ -434,13 +509,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
               type="text"
               list={`list-${id}`}
               value={(context.value as string | number) ?? ""}
-              onChange={(e: any) =>
-                context.onChange(
-                  field.type === "number"
-                    ? parseNumberValue(e.target.value)
-                    : e.target.value,
-                )
-              }
+              onChange={handleCustomSelectionChange}
               placeholder="Select or type..."
               disabled={disabled}
             />
@@ -457,13 +526,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
           <select
             id={id}
             value={(context.value as string | number) ?? ""}
-            onChange={(e: any) =>
-              context.onChange(
-                field.type === "number"
-                  ? parseNumberValue(e.target.value)
-                  : e.target.value,
-              )
-            }
+            onChange={handleSelectChange}
             disabled={disabled}
           >
             <option value="">Select...</option>
