@@ -65,6 +65,8 @@ export const INVALID_CUSTOM_TYPE = "INVALID_CUSTOM_TYPE";
 
 /**
  * Error codes for primitive type validation failures.
+ *
+ * Keys intentionally match `typeof value` results.
  */
 export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS = {
   string: "NOT_A_STRING",
@@ -74,6 +76,8 @@ export const PRIMITIVE_ERROR_MESSAGE_CONSTANTS = {
 
 /**
  * Error codes for denied type operations.
+ *
+ * Keys intentionally match `TypeOperation` names.
  */
 export const DENIED_TYPE_OPERATIONS = {
   CREATE: "DENIED_TYPE_OPERATION_CREATE",
@@ -84,12 +88,23 @@ export const DENIED_TYPE_OPERATIONS = {
 
 /**
  * Error codes for TypeInfo validation failures.
+ *
+ * Uses canonical string-valued keys (for example `NOT_A_STRING` and
+ * `DENIED_TYPE_OPERATION_CREATE`) so consumers can key by code values.
  */
 export const ERROR_MESSAGE_CONSTANTS = {
   NONE: "NONE",
   INVALID_CUSTOM_TYPE,
-  ...PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
-  ...DENIED_TYPE_OPERATIONS,
+  [PRIMITIVE_ERROR_MESSAGE_CONSTANTS.string]:
+    PRIMITIVE_ERROR_MESSAGE_CONSTANTS.string,
+  [PRIMITIVE_ERROR_MESSAGE_CONSTANTS.number]:
+    PRIMITIVE_ERROR_MESSAGE_CONSTANTS.number,
+  [PRIMITIVE_ERROR_MESSAGE_CONSTANTS.boolean]:
+    PRIMITIVE_ERROR_MESSAGE_CONSTANTS.boolean,
+  [DENIED_TYPE_OPERATIONS.CREATE]: DENIED_TYPE_OPERATIONS.CREATE,
+  [DENIED_TYPE_OPERATIONS.READ]: DENIED_TYPE_OPERATIONS.READ,
+  [DENIED_TYPE_OPERATIONS.UPDATE]: DENIED_TYPE_OPERATIONS.UPDATE,
+  [DENIED_TYPE_OPERATIONS.DELETE]: DENIED_TYPE_OPERATIONS.DELETE,
   MISSING: "MISSING",
   INVALID_OPTION: "INVALID_OPTION",
   INVALID_FIELD: "INVALID_FIELD",
@@ -106,6 +121,18 @@ export const ERROR_MESSAGE_CONSTANTS = {
 
 export type ErrorCode =
   (typeof ERROR_MESSAGE_CONSTANTS)[keyof typeof ERROR_MESSAGE_CONSTANTS];
+
+/**
+ * Primitive type keyword to error code mapping used during validation.
+ */
+export const TYPE_KEYWORD_ERROR_MESSAGE_CONSTANTS: Record<
+  TypeKeyword,
+  ErrorCode
+> = {
+  string: PRIMITIVE_ERROR_MESSAGE_CONSTANTS.string,
+  number: PRIMITIVE_ERROR_MESSAGE_CONSTANTS.number,
+  boolean: PRIMITIVE_ERROR_MESSAGE_CONSTANTS.boolean,
+};
 
 /**
  * A descriptor for a validation error.
@@ -201,7 +228,9 @@ export const validateValueMatchesPattern = (
       }
     } catch (e) {
       results.valid = false;
-      results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_PATTERN);
+      results.error = getErrorDescriptor(
+        ERROR_MESSAGE_CONSTANTS.INVALID_PATTERN,
+      );
     }
   }
 
@@ -325,7 +354,11 @@ export const validateTypeInfoFieldValue = (
       validation: {
         emptyArrayIsValid: emptyArrayIsValidOverride = undefined,
       } = {},
-      constraints: { pattern = undefined, min = undefined, max = undefined } = {},
+      constraints: {
+        pattern = undefined,
+        min = undefined,
+        max = undefined,
+      } = {},
     } = {},
   } = typeInfoField;
   const results: TypeInfoValidationResults = {
@@ -428,7 +461,9 @@ export const validateTypeInfoFieldValue = (
       }
     } else if (possibleValues && !possibleValues.includes(value)) {
       results.valid = false;
-      results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_OPTION);
+      results.error = getErrorDescriptor(
+        ERROR_MESSAGE_CONSTANTS.INVALID_OPTION,
+      );
     } else {
       const pendingValid = validateKeywordType(value, type);
       const customValid = validateCustomType(
@@ -465,13 +500,15 @@ export const validateTypeInfoFieldValue = (
       }
 
       if (!customValid) {
-        results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE);
+        results.error = getErrorDescriptor(
+          ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE,
+        );
       } else if (!results.valid) {
         results.error =
           results.error.code !== ERROR_MESSAGE_CONSTANTS.NONE
             ? results.error
             : getErrorDescriptor(
-                PRIMITIVE_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword],
+                TYPE_KEYWORD_ERROR_MESSAGE_CONSTANTS[type as TypeKeyword],
               );
       }
     }
@@ -574,7 +611,9 @@ export const validateTypeInfoFieldOperationAllowed = (
     results.valid = !denied;
 
     if (!results.valid) {
-      results.error = getErrorDescriptor(DENIED_TYPE_OPERATIONS[fieldOperation]);
+      results.error = getErrorDescriptor(
+        DENIED_TYPE_OPERATIONS[fieldOperation],
+      );
 
       results.errorMap[fieldName] = [results.error];
     }
@@ -702,7 +741,8 @@ export const validateTypeInfoDataItem = (
 
   for (const [fieldName, field] of Object.entries(sourceFields)) {
     const validationTags = field.tags?.validation ?? {};
-    const shouldValidateHidden = validationTags.validateHidden ?? validateHidden;
+    const shouldValidateHidden =
+      validationTags.validateHidden ?? validateHidden;
     const shouldValidateReadonly =
       validationTags.validateReadonly ?? validateReadonly;
     const shouldSkipRequiredChecks =
@@ -748,7 +788,10 @@ export const validateTypeInfoDataItem = (
 
     if (error.code !== ERROR_MESSAGE_CONSTANTS.NONE) {
       results.valid = false;
-      results.errorMap[fieldName] = [...(results.errorMap[fieldName] ?? []), error];
+      results.errorMap[fieldName] = [
+        ...(results.errorMap[fieldName] ?? []),
+        error,
+      ];
 
       if (results.error.code === ERROR_MESSAGE_CONSTANTS.NONE) {
         results.error = error;

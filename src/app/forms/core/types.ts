@@ -9,6 +9,7 @@ import type {
   TypeInfoDataItem,
   TypeInfoField,
 } from "../../../common/TypeParsing/TypeInfo";
+import type { ErrorDescriptor } from "../../../common/TypeParsing/Validation";
 import type { ItemRelationshipInfoType } from "../../../common/ItemRelationshipInfoTypes";
 
 /**
@@ -99,8 +100,10 @@ export type FieldRenderContext<RenderOutput = unknown> = {
   required: boolean;
   /** True when the field UI should be disabled. */
   disabled: boolean;
-  /** Optional error message to display under the field. */
-  error?: string;
+  /** Optional error descriptor to display under the field. */
+  error?: ErrorDescriptor;
+  /** Translate an error descriptor to a user-facing message. */
+  translateValidationErrorCode: (error: ErrorDescriptor) => string;
   /** Current value for the field. */
   value: FieldValue | undefined;
   /** Change handler for the field value. */
@@ -125,7 +128,8 @@ export type FieldRenderContext<RenderOutput = unknown> = {
     fieldKey: string;
     value: FieldValue | undefined;
     onChange: (value: FieldValue) => void;
-    error?: string;
+    error?: ErrorDescriptor;
+    translateValidationErrorCode?: (error: ErrorDescriptor) => string;
     disabled?: boolean;
     onRelationAction?: (payload: RelationActionPayload) => void;
     onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;

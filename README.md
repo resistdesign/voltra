@@ -334,6 +334,12 @@ AutoForm passes validation through the same centralized logic and supports:
 - `customValidatorMap` for app-specific rules
 - `translateValidationErrorCode` for UI-facing messages
 
+Error-code constants are split by purpose:
+
+- `PRIMITIVE_ERROR_MESSAGE_CONSTANTS` keys follow `typeof` (`string`, `number`, `boolean`)
+- `DENIED_TYPE_OPERATIONS` keys follow `TypeOperation` (`CREATE`, `READ`, `UPDATE`, `DELETE`)
+- `ERROR_MESSAGE_CONSTANTS` exposes canonical code-keyed entries (for example `NOT_A_STRING`, `DENIED_TYPE_OPERATION_CREATE`)
+
 ## Docs Site
 
 The docs site is both reference documentation and a canonical usage example.

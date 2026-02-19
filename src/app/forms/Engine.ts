@@ -12,6 +12,7 @@ import type {
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import {
   ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptor,
   getNoErrorDescriptor,
   type FieldValueValidatorMap,
   type ErrorDescriptor,
@@ -20,10 +21,11 @@ import {
 } from "../../common/TypeParsing/Validation";
 import type {
   FormController,
+  FormErrorInputMap,
+  FormErrorMap,
   FormFieldController,
   FormValue,
   FormValues,
-  TranslateValidationErrorCode,
 } from "./types";
 
 /**
@@ -97,38 +99,6 @@ const buildInitialValues = (
   return values;
 };
 
-/**
- * Default translation from error descriptors to readable messages.
- *
- * @param error - Validation error descriptor.
- * @returns Message suitable for form UI.
- */
-const defaultTranslateValidationErrorCode: TranslateValidationErrorCode = (
-  error: ErrorDescriptor,
-) => {
-  const { code, values = [] } = error;
-  const [constraintValue] = values;
-
-  switch (code) {
-    case ERROR_MESSAGE_CONSTANTS.MISSING:
-      return "This field is required";
-    case ERROR_MESSAGE_CONSTANTS.VALUE_DOES_NOT_MATCH_PATTERN:
-      return "Value does not match required pattern";
-    case ERROR_MESSAGE_CONSTANTS.VALUE_BELOW_MINIMUM:
-      return `Value must be at least ${constraintValue ?? "the minimum"}`;
-    case ERROR_MESSAGE_CONSTANTS.VALUE_ABOVE_MAXIMUM:
-      return `Value must be at most ${constraintValue ?? "the maximum"}`;
-    case ERROR_MESSAGE_CONSTANTS.INVALID_OPTION:
-      return "Value is not one of the allowed options";
-    case ERROR_MESSAGE_CONSTANTS.INVALID_TYPE:
-      return "Value has an invalid type";
-    case ERROR_MESSAGE_CONSTANTS.NONE:
-      return "";
-    default:
-      return code;
-  }
-};
-
 const FORM_ENGINE_TYPE_NAME = "__AUTO_FORM__";
 
 /**
@@ -145,20 +115,33 @@ export const useFormEngine = (
   options?: {
     /** Operation to evaluate when deriving field state. */
     operation?: TypeOperation;
-    /** Optional translator for validation error descriptors. */
-    translateValidationErrorCode?: TranslateValidationErrorCode;
     /** Optional custom validators keyed by field name. */
     customValidatorMap?: FieldValueValidatorMap;
   },
 ): FormController => {
   const operation = options?.operation ?? TypeOperation.CREATE;
-  const translateValidationErrorCode =
-    options?.translateValidationErrorCode ?? defaultTranslateValidationErrorCode;
   const customValidatorMap = options?.customValidatorMap ?? {};
   const [values, setValues] = useState<FormValues>(
     buildInitialValues(initialValues, typeInfo),
   );
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrorsState] = useState<FormErrorMap>({});
+
+  const normalizeErrorMap = useCallback(
+    (pendingErrors: FormErrorInputMap): FormErrorMap =>
+      Object.entries(pendingErrors).reduce((acc, [key, value]) => {
+        acc[key] =
+          typeof value === "string" ? getErrorDescriptor(value) : value;
+        return acc;
+      }, {} as FormErrorMap),
+    [],
+  );
+
+  const setErrors = useCallback(
+    (pendingErrors: FormErrorInputMap) => {
+      setErrorsState(normalizeErrorMap(pendingErrors));
+    },
+    [normalizeErrorMap],
+  );
 
   const setFieldValue = useCallback((path: string, value: FormValue) => {
     setValues((prev) => {
@@ -181,21 +164,17 @@ export const useFormEngine = (
       },
     );
 
-    const newErrors: Record<string, string> = {};
+    const newErrors: FormErrorMap = {};
     for (const key of Object.keys(fields)) {
-      const errorDescriptor =
+      newErrors[key] =
         (validationResults.errorMap[key] ?? []).find(
           (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
         ) ?? getNoErrorDescriptor();
-      const translated = translateValidationErrorCode(errorDescriptor);
-      if (translated) {
-        newErrors[key] = translated;
-      }
     }
 
-    setErrors(newErrors);
+    setErrorsState(newErrors);
     return validationResults;
-  }, [typeInfo, values, operation, translateValidationErrorCode, customValidatorMap]);
+  }, [typeInfo, values, operation, customValidatorMap]);
 
   const fields = useMemo<FormFieldController[]>(() => {
     return Object.entries(typeInfo.fields ?? {}).map(([key, field]) => {

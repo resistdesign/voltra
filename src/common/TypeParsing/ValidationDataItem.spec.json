@@ -15,6 +15,30 @@
         "customValidatorInvalidCode": "RESERVED_NAME",
         "customValidatorValid": true
       }
+    },
+    {
+      "export": "runValidationErrorConstantsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "primitiveStringCode": "NOT_A_STRING",
+        "primitiveNumberCode": "NOT_A_NUMBER",
+        "primitiveBooleanCode": "NOT_A_BOOLEAN",
+        "primitiveStringMappedInErrorConstants": true,
+        "primitiveNumberMappedInErrorConstants": true,
+        "primitiveBooleanMappedInErrorConstants": true,
+        "deniedCreateMappedInErrorConstants": true,
+        "deniedReadMappedInErrorConstants": true,
+        "deniedUpdateMappedInErrorConstants": true,
+        "deniedDeleteMappedInErrorConstants": true,
+        "hasLegacyCreateProperty": false,
+        "hasLegacyReadProperty": false,
+        "hasLegacyUpdateProperty": false,
+        "hasLegacyDeleteProperty": false,
+        "hasLowercasePrimitiveStringProperty": false,
+        "hasLowercasePrimitiveNumberProperty": false,
+        "hasLowercasePrimitiveBooleanProperty": false
+      }
     }
   ]
 }

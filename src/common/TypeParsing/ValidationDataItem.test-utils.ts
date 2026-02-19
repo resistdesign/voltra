@@ -1,6 +1,8 @@
 import type { TypeInfo } from "./TypeInfo";
 import {
+  DENIED_TYPE_OPERATIONS,
   ERROR_MESSAGE_CONSTANTS,
+  PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
   getErrorDescriptor,
   validateTypeInfoDataItem,
 } from "./Validation";
@@ -109,5 +111,44 @@ export const runTypeInfoDataItemValidationScenario = () => {
       customValidatorInvalid.errorMap.nickname?.find((e) => e.code !== "NONE")
         ?.code ?? null,
     customValidatorValid: customValidatorValid.valid,
+  };
+};
+
+export const runValidationErrorConstantsScenario = () => {
+  const hasOwn = (key: string) =>
+    Object.prototype.hasOwnProperty.call(ERROR_MESSAGE_CONSTANTS, key);
+
+  return {
+    primitiveStringCode: PRIMITIVE_ERROR_MESSAGE_CONSTANTS.string,
+    primitiveNumberCode: PRIMITIVE_ERROR_MESSAGE_CONSTANTS.number,
+    primitiveBooleanCode: PRIMITIVE_ERROR_MESSAGE_CONSTANTS.boolean,
+    primitiveStringMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[PRIMITIVE_ERROR_MESSAGE_CONSTANTS.string] ===
+      PRIMITIVE_ERROR_MESSAGE_CONSTANTS.string,
+    primitiveNumberMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[PRIMITIVE_ERROR_MESSAGE_CONSTANTS.number] ===
+      PRIMITIVE_ERROR_MESSAGE_CONSTANTS.number,
+    primitiveBooleanMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[PRIMITIVE_ERROR_MESSAGE_CONSTANTS.boolean] ===
+      PRIMITIVE_ERROR_MESSAGE_CONSTANTS.boolean,
+    deniedCreateMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[DENIED_TYPE_OPERATIONS.CREATE] ===
+      DENIED_TYPE_OPERATIONS.CREATE,
+    deniedReadMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[DENIED_TYPE_OPERATIONS.READ] ===
+      DENIED_TYPE_OPERATIONS.READ,
+    deniedUpdateMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[DENIED_TYPE_OPERATIONS.UPDATE] ===
+      DENIED_TYPE_OPERATIONS.UPDATE,
+    deniedDeleteMappedInErrorConstants:
+      ERROR_MESSAGE_CONSTANTS[DENIED_TYPE_OPERATIONS.DELETE] ===
+      DENIED_TYPE_OPERATIONS.DELETE,
+    hasLegacyCreateProperty: hasOwn("CREATE"),
+    hasLegacyReadProperty: hasOwn("READ"),
+    hasLegacyUpdateProperty: hasOwn("UPDATE"),
+    hasLegacyDeleteProperty: hasOwn("DELETE"),
+    hasLowercasePrimitiveStringProperty: hasOwn("string"),
+    hasLowercasePrimitiveNumberProperty: hasOwn("number"),
+    hasLowercasePrimitiveBooleanProperty: hasOwn("boolean"),
   };
 };

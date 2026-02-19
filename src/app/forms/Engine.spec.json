@@ -248,7 +248,9 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "errors": {
-          "name": "Bad"
+          "name": {
+            "code": "Bad"
+          }
         }
       }
     }
