@@ -81,7 +81,7 @@ const renderErrorMessage = (context: FieldRenderContext) => {
 };
 
 const RelationSingleField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
 
   return createElement(
@@ -111,7 +111,7 @@ const RelationSingleField = (context: FieldRenderContext) => {
 };
 
 const RelationArrayField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
 
   return createElement(
@@ -141,7 +141,7 @@ const RelationArrayField = (context: FieldRenderContext) => {
 };
 
 const CustomSingleField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
 
@@ -173,7 +173,7 @@ const CustomSingleField = (context: FieldRenderContext) => {
 };
 
 const CustomArrayField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
   const arrayValue = Array.isArray(context.value) ? context.value : [];
@@ -260,7 +260,7 @@ const CustomArrayField = (context: FieldRenderContext) => {
 };
 
 const ArrayField = (context: FieldRenderContext<ReactElement>) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
     ? [...(context.value as LiteralValue[])]
@@ -335,7 +335,7 @@ const ArrayField = (context: FieldRenderContext<ReactElement>) => {
 };
 
 const StringField = (context: FieldRenderContext) => {
-  const { label, required, disabled, error } = context;
+  const { label, required, disabled } = context;
 
   return createElement(
     FieldWrapper,
@@ -352,7 +352,7 @@ const StringField = (context: FieldRenderContext) => {
 };
 
 const NumberField = (context: FieldRenderContext) => {
-  const { label, required, disabled, error } = context;
+  const { label, required, disabled } = context;
 
   return createElement(
     FieldWrapper,
@@ -371,7 +371,7 @@ const NumberField = (context: FieldRenderContext) => {
 };
 
 const BooleanField = (context: FieldRenderContext) => {
-  const { label, disabled, error } = context;
+  const { label, disabled } = context;
 
   return createElement(
     FieldWrapper,
@@ -391,7 +391,7 @@ const BooleanField = (context: FieldRenderContext) => {
 };
 
 const EnumSelectField = (context: FieldRenderContext) => {
-  const { field, label, required, disabled, error } = context;
+  const { field, label, required, disabled } = context;
   const selectableValues = getSelectableValues(context.possibleValues) ?? [];
 
   return createElement(
