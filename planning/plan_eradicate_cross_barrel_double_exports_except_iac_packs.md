@@ -64,6 +64,68 @@ Include:
 
 Important: **No code edits** in Phase 1.
 
+### 1.4 Approval checklist (line-item decisions)
+
+Cross-barrel export declarations discovered across `src/**/*.ts` and `src/**/*.tsx`:
+
+- [ ] `src/api/ORM/drivers/common/index.ts:9` exports `ListItemsConfig, ListItemsResults` from `src/common/SearchTypes`
+- [ ] `src/api/ORM/drivers/common/index.ts:18` exports `TypeInfoDataItem, TypeInfoPack` from
+  `src/common/TypeParsing/TypeInfo`
+- [ ] `src/api/ORM/drivers/index.ts:14` exports `ListRelationshipsConfig, SearchCriteria` from
+  `src/common/SearchTypes`
+- [ ] `src/api/ORM/drivers/index.ts:23` exports `TypeInfoMap` from `src/common/TypeParsing/TypeInfo`
+- [ ] `src/api/ORM/index.ts:14` exports `DeleteRelationshipResults, ORMOperation, RelationshipOperation, TypeInfoORMAPI, TypeInfoORMContext` from `src/common/TypeInfoORM/Types`
+- [ ] `src/api/ORM/index.ts:26` exports `LiteralValue, TypeInfo, TypeInfoField, TypeOperation` from
+  `src/common/TypeParsing/TypeInfo`
+- [ ] `src/api/ORM/index.ts:37` exports `CustomTypeInfoFieldValidatorMap, TypeInfoValidationResults` from
+  `src/common/TypeParsing/Validation`
+- [ ] `src/app/forms/core/index.ts:19` exports `LiteralValue, TypeInfoDataItem, TypeInfoField` from
+  `src/common/TypeParsing/TypeInfo`
+- [ ] `src/app/forms/index.ts:34` exports `LiteralValue, TypeInfo, TypeInfoDataItem, TypeInfoField, TypeOperation`
+  from `src/common/TypeParsing/TypeInfo`
+- [ ] `src/app/utils/index.ts:31` exports `ListItemsConfig, ListItemsResults, ListRelationshipsConfig` from
+  `src/common/SearchTypes`
+- [ ] `src/app/utils/index.ts:41` exports `DeleteRelationshipResults, TypeInfoORMAPIRoutePaths, TypeInfoORMClientAPI, TypeInfoORMServiceError` from `src/common/TypeInfoORM/Types`
+- [ ] `src/app/utils/index.ts:52` exports `TypeInfoDataItem` from `src/common/TypeParsing/TypeInfo`
+- [ ] `src/native/utils/index.ts:7` exports `*` from `src/app/utils/History`
+- [ ] `src/web/utils/Route.tsx:33` exports `RouteAdapter, RouteContextType, RouteProps, RouteProviderProps, RouteQuery, RouteQueryValue` from `src/app/utils/Route`
+- [ ] `src/iac-packs/index.ts:6` exports `*` from `src/iac/packs` (allowed exception domain)
+
+Current public double-exports across top-level package entrypoints:
+
+- [ ] `buildHistoryPath` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `createHistoryBackHandler` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `createMemoryHistory` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `HistoryController` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `HistoryEntry` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `HistoryListener` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `HistoryLocation` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `HistoryPathParts` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `parseHistoryPath` exposed by `app` + `native` (declared in `src/app/utils/History.ts`)
+- [ ] `RouteAdapter` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `RouteContextType` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `RouteProps` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `RouteProviderProps` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `RouteQuery` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `RouteQueryValue` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `RouteRuntimeIntegration` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `useRouteContext` exposed by `app` + `native` (declared in `src/app/utils/Route.tsx`)
+- [ ] `CustomTypeInfoFieldValidatorMap` exposed by `api` + `common` (declared in
+  `src/common/TypeParsing/Validation.ts`)
+- [ ] `DeleteRelationshipResults` exposed by `api` + `app` (declared in `src/common/TypeInfoORM/Types.ts`)
+- [ ] `ListItemsConfig` exposed by `api` + `app` (declared in `src/common/SearchTypes.ts`)
+- [ ] `ListItemsResults` exposed by `api` + `app` (declared in `src/common/SearchTypes.ts`)
+- [ ] `ListRelationshipsConfig` exposed by `api` + `app` (declared in `src/common/SearchTypes.ts`)
+- [ ] `LiteralValue` exposed by `api` + `app` (declared in `src/common/TypeParsing/TypeInfo.ts`)
+- [ ] `TypeInfo` exposed by `api` + `app` + `common` (declared in `src/common/TypeParsing/TypeInfo.ts`)
+- [ ] `TypeInfoDataItem` exposed by `api` + `app` (declared in `src/common/TypeParsing/TypeInfo.ts`)
+- [ ] `TypeInfoField` exposed by `api` + `app` + `common` (declared in `src/common/TypeParsing/TypeInfo.ts`)
+- [ ] `TypeInfoMap` exposed by `api` + `common` (declared in `src/common/TypeParsing/TypeInfo.ts`)
+- [ ] `TypeInfoORMServiceError` exposed by `app` + `common` (declared in `src/common/TypeInfoORM/Types.ts`)
+- [ ] `TypeInfoValidationResults` exposed by `api` + `common` (declared in
+  `src/common/TypeParsing/Validation.ts`)
+- [ ] `TypeOperation` exposed by `api` + `app` + `common` (declared in `src/common/TypeParsing/TypeInfo.ts`)
+
 ---
 
 ## Phase 2 — Fix plan proposal (still no code edits)
@@ -111,4 +173,3 @@ Deliverable: Add a short section to the report: “Proposed removals & expected 
 - [ ] `iac-packs/*` cross-barrel exports remain (and only those).
 - [ ] Build + typecheck pass.
 - [ ] Docs/examples updated and consistent.
-
