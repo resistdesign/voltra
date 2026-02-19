@@ -2,38 +2,106 @@
   "file": "./DynamoDBDataItemDBDriver.test-utils.ts",
   "tests": [
     {
-      "export": "runDynamoDBDataItemDriverScenario",
+      "export": "runDynamoDBDataItemDriverCreatedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-2", "item-3"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverReadSelectedScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": ["item-1", "item-2", "item-3"],
-        "readSelected": {
-          "id": "item-1",
-          "name": "Alpha"
-        },
-        "afterUpdate": {
-          "name": "Alpha+",
-          "age": 35
-        },
-        "filteredIds": ["item-1", "item-3"],
-        "page1Ids": ["item-1", "item-2"],
-        "page2Ids": ["item-3"],
-        "listSelectedKeys": [["id"], ["id"], ["id"]],
-        "deleteResult": true,
-        "missingReadError": "ITEM_NOT_FOUND",
-        "invalidCursorError": "INVALID_CURSOR",
-        "listFilterExpression": "#age >= :age AND #status = :status",
-        "listFilterAttributeNames": {
-          "#age": "age",
-          "#status": "status"
-        },
-        "listFilterAttributeValues": {
-          ":age": 30,
-          ":status": "active"
-        },
-        "missingReadErrorExpected": "ITEM_NOT_FOUND",
-        "invalidCursorErrorExpected": "INVALID_CURSOR"
+        "id": "item-1",
+        "name": "Alpha"
       }
+    },
+    {
+      "export": "runDynamoDBDataItemDriverAfterUpdateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "name": "Alpha+",
+        "age": 35
+      }
+    },
+    {
+      "export": "runDynamoDBDataItemDriverFilteredIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-3"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-2"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-3"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverListSelectedKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [["id"], ["id"], ["id"]]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDynamoDBDataItemDriverMissingReadErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "ITEM_NOT_FOUND"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInvalidCursorErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INVALID_CURSOR"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverListFilterExpressionScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "#age >= :age AND #status = :status"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverListFilterAttributeNamesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "#age": "age",
+        "#status": "status"
+      }
+    },
+    {
+      "export": "runDynamoDBDataItemDriverListFilterAttributeValuesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        ":age": 30,
+        ":status": "active"
+      }
+    },
+    {
+      "export": "runDynamoDBDataItemDriverMissingReadErrorExpectedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "ITEM_NOT_FOUND"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInvalidCursorErrorExpectedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INVALID_CURSOR"
     }
   ]
 }

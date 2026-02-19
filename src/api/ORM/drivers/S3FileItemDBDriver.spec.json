@@ -2,29 +2,67 @@
   "file": "./S3FileItemDBDriver.test-utils.ts",
   "tests": [
     {
-      "export": "runS3FileItemDriverScenario",
+      "export": "runS3FileItemDriverCreatedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["alpha.txt", "beta.txt"]
+    },
+    {
+      "export": "runS3FileItemDriverReadWithUrlsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": ["alpha.txt", "beta.txt"],
-        "readWithUrls": {
-          "id": "alpha.txt",
-          "mimeType": "application/octet-stream",
-          "sizeInBytes": 0,
-          "uploadUrl": "upload://Files/alpha.txt",
-          "downloadUrl": "download://Files/alpha.txt"
-        },
-        "listPage1Ids": ["alpha.txt"],
-        "listPage2Ids": ["beta.txt"],
-        "listWithUrlsIds": ["alpha.txt", "beta.txt"],
-        "listWithUrlsDownloadUrls": [
-          "download://Files/alpha.txt",
-          "download://Files/beta.txt"
-        ],
-        "deleteResult": true,
-        "missingIdError": "MISSING_ID",
-        "missingIdErrorExpected": "MISSING_ID"
+        "id": "alpha.txt",
+        "mimeType": "application/octet-stream",
+        "sizeInBytes": 0,
+        "uploadUrl": "upload://Files/alpha.txt",
+        "downloadUrl": "download://Files/alpha.txt"
       }
+    },
+    {
+      "export": "runS3FileItemDriverListPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["alpha.txt"]
+    },
+    {
+      "export": "runS3FileItemDriverListPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["beta.txt"]
+    },
+    {
+      "export": "runS3FileItemDriverListWithUrlsIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["alpha.txt", "beta.txt"]
+    },
+    {
+      "export": "runS3FileItemDriverListWithUrlsDownloadUrlsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "download://Files/alpha.txt",
+        "download://Files/beta.txt"
+      ]
+    },
+    {
+      "export": "runS3FileItemDriverDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runS3FileItemDriverMissingIdErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "MISSING_ID"
+    },
+    {
+      "export": "runS3FileItemDriverMissingIdErrorExpectedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "MISSING_ID"
     }
   ]
 }
