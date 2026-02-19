@@ -16,6 +16,20 @@ export const runServiceScenario = async () => {
     config.port,
   );
   const originUrl = getFullUrl(config.protocol, config.domain, "", "", config.port);
+  const normalizedProtocolUrl = getFullUrl(
+    "https:",
+    "example.com",
+    "api",
+    "v2",
+    443,
+  );
+  const normalizedDomainUrl = getFullUrl(
+    "https",
+    "example.com/",
+    "api",
+    "v3",
+    443,
+  );
 
   const originalFetch = globalThis.fetch;
   let requestInfo: any = {};
@@ -51,6 +65,8 @@ export const runServiceScenario = async () => {
   return {
     url,
     originUrl,
+    normalizedProtocolUrl,
+    normalizedDomainUrl,
     requestInfo: {
       input: requestInfo.input,
       method: requestInfo.init?.method,

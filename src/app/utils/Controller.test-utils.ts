@@ -51,6 +51,7 @@ const buildHarness = (
 export const runControllerScenario = () => {
   const objectHarness = buildHarness({ name: "Alpha" }, "name", false);
   const arrayHarness = buildHarness(["zero", "one"], 1, true);
+  const missingArrayHarness = buildHarness(undefined, 1, true);
   const missingKeyHarness = buildHarness(undefined, "name", false);
 
   return {
@@ -60,6 +61,8 @@ export const runControllerScenario = () => {
     arrayValue: arrayHarness.getValue() ?? null,
     arrayParent: arrayHarness.getParent(),
     arrayChanges: arrayHarness.getChanges(),
+    missingArrayValue: missingArrayHarness.getValue() ?? null,
+    missingArrayParent: missingArrayHarness.getParent() ?? null,
     missingValue: missingKeyHarness.getValue() ?? null,
     missingParent: missingKeyHarness.getParent() ?? null,
   };

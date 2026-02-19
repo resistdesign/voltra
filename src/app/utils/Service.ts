@@ -48,6 +48,10 @@ export const getFullUrl = (
   path: string = "",
   port?: number,
 ): string => {
+  const normalizedProtocol = protocol.endsWith(":")
+    ? protocol.slice(0, -1)
+    : protocol;
+  const normalizedDomain = domain.replace(/\/+$/, "");
   const portString = !!port ? `:${port}` : "";
   const fullPath = mergeStringPaths(
     basePath,
@@ -63,7 +67,7 @@ export const getFullUrl = (
       : `${PATH_DELIMITER}${fullPath}`
     : "";
 
-  return `${protocol}://${domain}${portString}${normalizedPath}`;
+  return `${normalizedProtocol}://${normalizedDomain}${portString}${normalizedPath}`;
 };
 
 /**
