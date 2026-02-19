@@ -23,7 +23,7 @@ each test scenario on the other side of this effort.
   - [x] Split `src/common/SearchValidation.spec.json` + `src/common/SearchValidation.test-utils.ts`
   - [x] Run focused verification for the four updated spec files
 - [~] Phase 2: Continue splitting remaining single-test spec files in plan order by directory
-  - Remaining: 49 single-test spec files still need scenario-split refactors.
+  - Remaining: 39 single-test spec files still need scenario-split refactors.
   - [x] Batch 1 (`src/common`)
   - [x] Split `src/common/SearchTypes.spec.json` + `src/common/SearchTypes.test-utils.ts`
   - [x] Split `src/common/StringTransformers.spec.json` + `src/common/StringTransformers.test-utils.ts`
@@ -67,3 +67,19 @@ each test scenario on the other side of this effort.
   - [x] Split `src/api/ORM/ListItemUtils.spec.json` + `src/api/ORM/ListItemUtils.test-utils.ts`
   - [x] Split `src/api/Indexing/Handler.spec.json` + `src/api/Indexing/Handler.test-utils.ts`
   - [x] Run focused verification for Batch 7 specs
+  - [x] Batch 8 (`src/api/Indexing` non-E2E)
+  - [x] Split `src/api/Indexing/IndexingCore.spec.json` + `src/api/Indexing/IndexingCore.test-utils.ts`
+  - [x] Split `src/api/Indexing/exact/ExactIndex.spec.json` + `src/api/Indexing/exact/ExactIndex.test-utils.ts`
+  - [x] Split `src/api/Indexing/fulltext/FullTextMemoryBackend.spec.json` + `src/api/Indexing/fulltext/FullTextMemoryBackend.test-utils.ts`
+  - [x] Split `src/api/Indexing/lossy/LossyIndex.spec.json` + `src/api/Indexing/lossy/LossyIndex.test-utils.ts`
+  - [x] Run focused verification for Batch 8 specs
+  - [x] Batch 9 (`src/api/Indexing` support)
+  - [x] Split `src/api/Indexing/IndexingEnvVarMapping.spec.json` + `src/api/Indexing/IndexingEnvVarMapping.test-utils.ts`
+  - [x] Split `src/api/Indexing/IndexingTablesValidation.spec.json` + `src/api/Indexing/IndexingTablesValidation.test-utils.ts`
+  - [x] Split `src/api/Indexing/exact/ExactS3.spec.json` + `src/api/Indexing/exact/ExactS3.test-utils.ts`
+  - [x] Split `src/api/Indexing/lossy/LossyS3.spec.json` + `src/api/Indexing/lossy/LossyS3.test-utils.ts`
+  - [x] Run focused verification for Batch 9 specs
+  - [x] Batch 10 (`src/api/Indexing` relational + structured)
+  - [x] Split `src/api/Indexing/rel/RelationalIndexing.spec.json` + `src/api/Indexing/rel/RelationalIndexing.test-utils.ts`
+  - [x] Split `src/api/Indexing/structured/StructuredInMemoryBackend.spec.json` + `src/api/Indexing/structured/StructuredInMemoryBackend.test-utils.ts`
+  - [x] Run focused verification for Batch 10 specs

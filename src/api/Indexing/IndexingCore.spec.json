@@ -2,56 +2,124 @@
   "file": "./IndexingCore.test-utils.ts",
   "tests": [
     {
-      "export": "runIndexingCoreScenario",
+      "export": "runIndexingCoreLossyEmptyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runIndexingCoreLossyWithPlanScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "lossyEmpty": null,
-        "lossyWithPlan": {
-          "lastDocId": "5",
-          "plan": {
-            "primaryToken": "token",
-            "statsVersion": 2,
-            "sorting": "docIdAsc"
-          }
-        },
-        "exactWithPending": {
-          "lossy": {
-            "lastDocId": "a"
-          },
-          "verification": {
-            "lastDocId": "2",
-            "pendingCandidates": ["1", "2"],
-            "pendingOffset": 3
-          },
-          "plan": {
-            "primaryToken": "primary",
-            "sorting": "docIdAsc"
-          }
-        },
-        "lossyWrongTypeError": "Expected lossy cursor payload.",
-        "exactWrongTypeError": "Expected exact cursor payload.",
-        "invalidEncodingError": "Invalid cursor payload.",
-        "invalidPayloadError": "Invalid cursor payload.",
-        "unsupportedPayloadError": "Unsupported cursor payload.",
-        "docIdCompare": [0, -1, 1],
-        "normalizedDocId": "0",
-        "normalizeError": "Document is missing a non-empty primary field \"id\".",
-        "tokenized": {
-          "normalized": "creme brulee",
-          "tokens": ["creme", "brulee"]
-        },
-        "lossyTokens": ["ell", "hel", "hell*", "llo"],
-        "lossyShortTokens": ["hi*"],
-        "traceSnapshot": {
-          "postingsPages": 0,
-          "candidatesVerified": 0,
-          "batchGetCalls": 0,
-          "batchGetKeys": 0,
-          "ddbQueryCalls": 0,
-          "ddbBatchGetCalls": 0,
-          "ddbItemReadCalls": 0
+        "lastDocId": "5",
+        "plan": {
+          "primaryToken": "token",
+          "statsVersion": 2,
+          "sorting": "docIdAsc"
         }
+      }
+    },
+    {
+      "export": "runIndexingCoreExactWithPendingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "lossy": {
+          "lastDocId": "a"
+        },
+        "verification": {
+          "lastDocId": "2",
+          "pendingCandidates": ["1", "2"],
+          "pendingOffset": 3
+        },
+        "plan": {
+          "primaryToken": "primary",
+          "sorting": "docIdAsc"
+        }
+      }
+    },
+    {
+      "export": "runIndexingCoreLossyWrongTypeErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Expected lossy cursor payload."
+    },
+    {
+      "export": "runIndexingCoreExactWrongTypeErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Expected exact cursor payload."
+    },
+    {
+      "export": "runIndexingCoreInvalidEncodingErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Invalid cursor payload."
+    },
+    {
+      "export": "runIndexingCoreInvalidPayloadErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Invalid cursor payload."
+    },
+    {
+      "export": "runIndexingCoreUnsupportedPayloadErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Unsupported cursor payload."
+    },
+    {
+      "export": "runIndexingCoreDocIdCompareScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [0, -1, 1]
+    },
+    {
+      "export": "runIndexingCoreNormalizedDocIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "0"
+    },
+    {
+      "export": "runIndexingCoreNormalizeErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Document is missing a non-empty primary field \"id\"."
+    },
+    {
+      "export": "runIndexingCoreTokenizedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "normalized": "creme brulee",
+        "tokens": ["creme", "brulee"]
+      }
+    },
+    {
+      "export": "runIndexingCoreLossyTokensScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["ell", "hel", "hell*", "llo"]
+    },
+    {
+      "export": "runIndexingCoreLossyShortTokensScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["hi*"]
+    },
+    {
+      "export": "runIndexingCoreTraceSnapshotScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "postingsPages": 0,
+        "candidatesVerified": 0,
+        "batchGetCalls": 0,
+        "batchGetKeys": 0,
+        "ddbQueryCalls": 0,
+        "ddbBatchGetCalls": 0,
+        "ddbItemReadCalls": 0
       }
     }
   ]

@@ -11,7 +11,7 @@ import { createSearchTrace } from "./Trace";
 const encodeBase64Url = (value: string): string =>
   Buffer.from(value, "utf8").toString("base64url");
 
-export const runIndexingCoreScenario = () => {
+const runIndexingCoreScenario = () => {
   const lossyEmpty = encodeLossyCursor();
   const lossyWithPlan = decodeLossyCursor(
     encodeLossyCursor({
@@ -111,3 +111,48 @@ export const runIndexingCoreScenario = () => {
     },
   };
 };
+
+export const runIndexingCoreLossyEmptyScenario = () =>
+  runIndexingCoreScenario().lossyEmpty;
+
+export const runIndexingCoreLossyWithPlanScenario = () =>
+  runIndexingCoreScenario().lossyWithPlan;
+
+export const runIndexingCoreExactWithPendingScenario = () =>
+  runIndexingCoreScenario().exactWithPending;
+
+export const runIndexingCoreLossyWrongTypeErrorScenario = () =>
+  runIndexingCoreScenario().lossyWrongTypeError;
+
+export const runIndexingCoreExactWrongTypeErrorScenario = () =>
+  runIndexingCoreScenario().exactWrongTypeError;
+
+export const runIndexingCoreInvalidEncodingErrorScenario = () =>
+  runIndexingCoreScenario().invalidEncodingError;
+
+export const runIndexingCoreInvalidPayloadErrorScenario = () =>
+  runIndexingCoreScenario().invalidPayloadError;
+
+export const runIndexingCoreUnsupportedPayloadErrorScenario = () =>
+  runIndexingCoreScenario().unsupportedPayloadError;
+
+export const runIndexingCoreDocIdCompareScenario = () =>
+  runIndexingCoreScenario().docIdCompare;
+
+export const runIndexingCoreNormalizedDocIdScenario = () =>
+  runIndexingCoreScenario().normalizedDocId;
+
+export const runIndexingCoreNormalizeErrorScenario = () =>
+  runIndexingCoreScenario().normalizeError;
+
+export const runIndexingCoreTokenizedScenario = () =>
+  runIndexingCoreScenario().tokenized;
+
+export const runIndexingCoreLossyTokensScenario = () =>
+  runIndexingCoreScenario().lossyTokens;
+
+export const runIndexingCoreLossyShortTokensScenario = () =>
+  runIndexingCoreScenario().lossyShortTokens;
+
+export const runIndexingCoreTraceSnapshotScenario = () =>
+  runIndexingCoreScenario().traceSnapshot;

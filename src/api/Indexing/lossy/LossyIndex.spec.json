@@ -2,31 +2,54 @@
   "file": "./LossyIndex.test-utils.ts",
   "tests": [
     {
-      "export": "runLossyIndexScenario",
+      "export": "runLossyIndexPostingsAllScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "postingsAll": {
-          "docIds": ["doc-1", "doc-2"]
-        },
-        "postingsPage": {
-          "docIds": ["doc-1"],
-          "nextCursor": "doc-1"
-        },
-        "postingsPage2": {
-          "docIds": ["doc-2"]
-        },
-        "postingsAfterRemove": {
-          "docIds": ["doc-1"]
-        },
-        "postingsAlpha": {
-          "docIds": ["doc-4"]
-        },
-        "ddbKey": {
-          "token": "token",
-          "indexField": "text",
-          "docId": "doc-1"
-        }
+        "docIds": ["doc-1", "doc-2"]
+      }
+    },
+    {
+      "export": "runLossyIndexPostingsPageScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "docIds": ["doc-1"],
+        "nextCursor": "doc-1"
+      }
+    },
+    {
+      "export": "runLossyIndexPostingsPage2Scenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "docIds": ["doc-2"]
+      }
+    },
+    {
+      "export": "runLossyIndexPostingsAfterRemoveScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "docIds": ["doc-1"]
+      }
+    },
+    {
+      "export": "runLossyIndexPostingsAlphaScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "docIds": ["doc-4"]
+      }
+    },
+    {
+      "export": "runLossyIndexDdbKeyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "token": "token",
+        "indexField": "text",
+        "docId": "doc-1"
       }
     }
   ]
