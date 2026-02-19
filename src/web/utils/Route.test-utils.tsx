@@ -119,3 +119,18 @@ export const runRouteScenario = async () => {
     exactMismatchRender,
   };
 };
+
+export const runRouteHasRouteExportScenario = async () =>
+  (await runRouteScenario()).hasRouteExport;
+
+export const runRouteHasRouteProviderExportScenario = async () =>
+  (await runRouteScenario()).hasRouteProviderExport;
+
+export const runRouteDefaultContextRenderScenario = async () =>
+  (await runRouteScenario()).defaultContextRender;
+
+export const runRouteNestedRouteRenderScenario = async () =>
+  (await runRouteScenario()).nestedRouteRender;
+
+export const runRouteExactMismatchRenderScenario = async () =>
+  (await runRouteScenario()).exactMismatchRender;

@@ -2,22 +2,52 @@
   "file": "./cdn.test-utils.ts",
   "tests": [
     {
-      "export": "runCDNPackScenario",
+      "export": "runCDNPackResourceKeysScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "resourceKeys": [
-          "SiteCDN",
-          "SiteCDNOriginAccessControl",
-          "SiteCDNRoute53Record"
-        ],
-        "oacName": "SiteCDNOriginAccessControl",
-        "distributionDependsOn": "BucketResource",
-        "viewerCertificateArn": "arn:aws:acm:us-east-1:123:cert/1",
-        "defaultRootObject": "index.html",
-        "route53HostedZoneId": "HZ123",
-        "route53DependsOn": ["SiteCDN"]
-      }
+      "expectation": [
+        "SiteCDN",
+        "SiteCDNOriginAccessControl",
+        "SiteCDNRoute53Record"
+      ]
+    },
+    {
+      "export": "runCDNPackOacNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "SiteCDNOriginAccessControl"
+    },
+    {
+      "export": "runCDNPackDistributionDependsOnScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "BucketResource"
+    },
+    {
+      "export": "runCDNPackViewerCertificateArnScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "arn:aws:acm:us-east-1:123:cert/1"
+    },
+    {
+      "export": "runCDNPackDefaultRootObjectScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "index.html"
+    },
+    {
+      "export": "runCDNPackRoute53HostedZoneIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "HZ123"
+    },
+    {
+      "export": "runCDNPackRoute53DependsOnScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "SiteCDN"
+      ]
     }
   ]
 }

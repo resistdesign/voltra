@@ -2,58 +2,171 @@
   "file": "./DBX_RELATIONSHIPS_E2E.test-utils.ts",
   "tests": [
     {
-      "export": "runDbxRelationshipsScenario",
+      "export": "runDbxRelationshipsCreatedAuthorIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["author-1", "author-2"]
+    },
+    {
+      "export": "runDbxRelationshipsCreatedPostIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2", "post-3", "post-4"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-2"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage1TitlesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["Alpha"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage2TitlesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["Beta"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage1KeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["id", "title"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage2KeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["id", "title"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage1CursorPresentScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1RelatedPage2CursorPresentScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1Page1TargetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1Page2TargetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-2"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2TargetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-3", "post-missing"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2ResolvedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-3"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2MissingReadsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        {
+          "id": "post-missing",
+          "statusCode": 500,
+          "message": "ITEM_NOT_FOUND"
+        }
+      ]
+    },
+    {
+      "export": "runDbxRelationshipsPost1AuthorTargetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["author-1"]
+    },
+    {
+      "export": "runDbxRelationshipsDeleteAuthor1Post2ResultScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdAuthorIds": ["author-1", "author-2"],
-        "createdPostIds": ["post-1", "post-2", "post-3", "post-4"],
-        "author1RelatedPage1Ids": ["post-1"],
-        "author1RelatedPage2Ids": ["post-2"],
-        "author1RelatedPage1Titles": ["Alpha"],
-        "author1RelatedPage2Titles": ["Beta"],
-        "author1RelatedPage1Keys": ["id", "title"],
-        "author1RelatedPage2Keys": ["id", "title"],
-        "author1RelatedPage1CursorPresent": true,
-        "author1RelatedPage2CursorPresent": false,
-        "author1Page1Targets": ["post-1"],
-        "author1Page2Targets": ["post-2"],
-        "author2Targets": ["post-3", "post-missing"],
-        "author2ResolvedIds": ["post-3"],
-        "author2MissingReads": [
-          {
-            "id": "post-missing",
-            "statusCode": 500,
-            "message": "ITEM_NOT_FOUND"
-          }
-        ],
-        "post1AuthorTargets": ["author-1"],
-        "deleteAuthor1Post2Result": {
-          "success": true,
-          "remainingItemsExist": false
-        },
-        "author1TargetsAfterDelete": ["post-1"],
-        "deletePost3Result": true,
-        "author2TargetsAfterDelete": ["post-3", "post-missing"],
-        "author2ResolvedIdsAfterDelete": [],
-        "author2MissingReadsAfterDelete": [
-          {
-            "id": "post-3",
-            "statusCode": 500,
-            "message": "ITEM_NOT_FOUND"
-          },
-          {
-            "id": "post-missing",
-            "statusCode": 500,
-            "message": "ITEM_NOT_FOUND"
-          }
-        ],
-        "deleteMissingRelationResult": {
-          "success": true,
-          "remainingItemsExist": false
-        },
-        "author2TargetsAfterPrune": ["post-3"]
+        "success": true,
+        "remainingItemsExist": false
       }
+    },
+    {
+      "export": "runDbxRelationshipsAuthor1TargetsAfterDeleteScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1"]
+    },
+    {
+      "export": "runDbxRelationshipsDeletePost3ResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2TargetsAfterDeleteScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-3", "post-missing"]
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2ResolvedIdsAfterDeleteScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2MissingReadsAfterDeleteScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        {
+          "id": "post-3",
+          "statusCode": 500,
+          "message": "ITEM_NOT_FOUND"
+        },
+        {
+          "id": "post-missing",
+          "statusCode": 500,
+          "message": "ITEM_NOT_FOUND"
+        }
+      ]
+    },
+    {
+      "export": "runDbxRelationshipsDeleteMissingRelationResultScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "success": true,
+        "remainingItemsExist": false
+      }
+    },
+    {
+      "export": "runDbxRelationshipsAuthor2TargetsAfterPruneScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-3"]
     }
   ]
 }

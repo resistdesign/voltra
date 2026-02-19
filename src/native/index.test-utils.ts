@@ -29,3 +29,41 @@ export const runNativeIndexScenario = () => {
   };
 };
 
+export const runNativeIndexHasFormsNamespaceScenario = async () =>
+  (await runNativeIndexScenario()).hasFormsNamespace;
+
+export const runNativeIndexHasUtilsNamespaceScenario = async () =>
+  (await runNativeIndexScenario()).hasUtilsNamespace;
+
+export const runNativeIndexHasAutoFormTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasAutoFormTopLevel;
+
+export const runNativeIndexHasAutoFormViewTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasAutoFormViewTopLevel;
+
+export const runNativeIndexHasCreateNativeFormRendererTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasCreateNativeFormRendererTopLevel;
+
+export const runNativeIndexHasNativeSuiteTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasNativeSuiteTopLevel;
+
+export const runNativeIndexHasCreateNativeHistoryTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasCreateNativeHistoryTopLevel;
+
+export const runNativeIndexHasRouteTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasRouteTopLevel;
+
+export const runNativeIndexHasMakeNativeEasyLayoutTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasMakeNativeEasyLayoutTopLevel;
+
+export const runNativeIndexHasFormsAutoFormScenario = async () =>
+  (await runNativeIndexScenario()).hasFormsAutoForm;
+
+export const runNativeIndexHasFormsCreateNativeFormRendererScenario = async () =>
+  (await runNativeIndexScenario()).hasFormsCreateNativeFormRenderer;
+
+export const runNativeIndexHasUtilsCreateNativeHistoryScenario = async () =>
+  (await runNativeIndexScenario()).hasUtilsCreateNativeHistory;
+
+export const runNativeIndexHasUtilsRouteScenario = async () =>
+  (await runNativeIndexScenario()).hasUtilsRoute;

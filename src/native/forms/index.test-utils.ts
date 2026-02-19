@@ -25,3 +25,35 @@ export const runNativeFormsIndexScenario = () => {
   };
 };
 
+export const runNativeFormsIndexHasAutoFieldScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasAutoField;
+
+export const runNativeFormsIndexHasAutoFormScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasAutoForm;
+
+export const runNativeFormsIndexHasAutoFormViewScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasAutoFormView;
+
+export const runNativeFormsIndexHasCreateNativeFormRendererScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasCreateNativeFormRenderer;
+
+export const runNativeFormsIndexHasNativeSuiteScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasNativeSuite;
+
+export const runNativeFormsIndexHasNativeAutoFieldScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasNativeAutoField;
+
+export const runNativeFormsIndexHasFieldWrapperScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasFieldWrapper;
+
+export const runNativeFormsIndexHasErrorMessageScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasErrorMessage;
+
+export const runNativeFormsIndexHasArrayContainerScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasArrayContainer;
+
+export const runNativeFormsIndexHasArrayItemWrapperScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasArrayItemWrapper;
+
+export const runNativeFormsIndexHasButtonPrimitiveScenario = async () =>
+  (await runNativeFormsIndexScenario()).hasButtonPrimitive;

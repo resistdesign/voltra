@@ -2,19 +2,52 @@
   "file": "./index.test-utils.ts",
   "tests": [
     {
-      "export": "runNativeUtilsIndexScenario",
+      "export": "runNativeUtilsIndexHasEasyLayoutFactoryScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "hasEasyLayoutFactory": true,
-        "hasEasyLayoutHook": true,
-        "hasEasyLayoutView": true,
-        "hasCreateNativeHistory": true,
-        "hasMapNativeURLToPath": true,
-        "hasRoute": true,
-        "hasBuildPathFromRouteChain": true,
-        "hasNativeBackIntegration": true
-      }
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasEasyLayoutHookScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasEasyLayoutViewScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasCreateNativeHistoryScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasMapNativeURLToPathScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasRouteScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasBuildPathFromRouteChainScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeUtilsIndexHasNativeBackIntegrationScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

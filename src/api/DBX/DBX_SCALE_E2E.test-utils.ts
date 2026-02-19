@@ -251,7 +251,7 @@ const runDbxScaleScenarioWithSize = async (datasetSize: number) => {
   };
 };
 
-const runDbxScaleScenario = async () =>
+export const runDbxScaleScenario = async () =>
   runDbxScaleScenarioWithSize(DATASET_SIZE_SMALL);
 
 export const runDbxScaleScenarioMed = async () =>
@@ -274,3 +274,21 @@ export const runDbxScaleSearchScenario = async () =>
 
 export const runDbxScaleTimingBucketsScenario = async () =>
   (await runDbxScaleScenario()).timingBuckets;
+
+export const runDbxScaleMedDatasetScenario = async () =>
+  (await runDbxScaleScenarioMed()).dataset;
+
+export const runDbxScaleMedCreateSummaryScenario = async () =>
+  (await runDbxScaleScenarioMed()).createSummary;
+
+export const runDbxScaleMedPagingScenario = async () =>
+  (await runDbxScaleScenarioMed()).paging;
+
+export const runDbxScaleMedOrderingScenario = async () =>
+  (await runDbxScaleScenarioMed()).ordering;
+
+export const runDbxScaleMedSearchScenario = async () =>
+  (await runDbxScaleScenarioMed()).search;
+
+export const runDbxScaleMedTimingBucketsScenario = async () =>
+  (await runDbxScaleScenarioMed()).timingBuckets;

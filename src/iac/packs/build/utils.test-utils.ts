@@ -36,3 +36,18 @@ export const runBuildUtilsScenario = () => {
     buildSpec,
   };
 };
+
+export const runBuildUtilsUpdateCmdScenario = async () =>
+  (await runBuildUtilsScenario()).updateCmd;
+
+export const runBuildUtilsCopyCmdScenario = async () =>
+  (await runBuildUtilsScenario()).copyCmd;
+
+export const runBuildUtilsInvalidateCmdScenario = async () =>
+  (await runBuildUtilsScenario()).invalidateCmd;
+
+export const runBuildUtilsNpmCmdScenario = async () =>
+  (await runBuildUtilsScenario()).npmCmd;
+
+export const runBuildUtilsBuildSpecScenario = async () =>
+  (await runBuildUtilsScenario()).buildSpec;

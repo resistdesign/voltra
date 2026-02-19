@@ -57,3 +57,12 @@ export const runSimpleCFTScenario = () => {
     yamlMatches: JSON.stringify(yamlParsed) === JSON.stringify(json),
   };
 };
+
+export const runSimpleCFTTemplateScenario = async () =>
+  (await runSimpleCFTScenario()).template;
+
+export const runSimpleCFTStringMatchesScenario = async () =>
+  (await runSimpleCFTScenario()).stringMatches;
+
+export const runSimpleCFTYamlMatchesScenario = async () =>
+  (await runSimpleCFTScenario()).yamlMatches;

@@ -2,15 +2,28 @@
   "file": "./index.test-utils.ts",
   "tests": [
     {
-      "export": "runIaCIndexScenario",
+      "export": "runIaCIndexHasUtilFunctionScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "hasUtilFunction": true,
-        "hasSimpleCFT": true,
-        "simpleCFTInstance": true,
-        "utilFunctionMatches": true
-      }
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runIaCIndexHasSimpleCFTScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runIaCIndexSimpleCFTInstanceScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runIaCIndexUtilFunctionMatchesScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

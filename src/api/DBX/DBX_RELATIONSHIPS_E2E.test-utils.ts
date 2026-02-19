@@ -488,3 +488,75 @@ export const runDbxRelationshipsScenario = async () => {
     ),
   };
 };
+
+export const runDbxRelationshipsCreatedAuthorIdsScenario = async () =>
+  (await runDbxRelationshipsScenario()).createdAuthorIds;
+
+export const runDbxRelationshipsCreatedPostIdsScenario = async () =>
+  (await runDbxRelationshipsScenario()).createdPostIds;
+
+export const runDbxRelationshipsAuthor1RelatedPage1IdsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage1Ids;
+
+export const runDbxRelationshipsAuthor1RelatedPage2IdsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage2Ids;
+
+export const runDbxRelationshipsAuthor1RelatedPage1TitlesScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage1Titles;
+
+export const runDbxRelationshipsAuthor1RelatedPage2TitlesScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage2Titles;
+
+export const runDbxRelationshipsAuthor1RelatedPage1KeysScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage1Keys;
+
+export const runDbxRelationshipsAuthor1RelatedPage2KeysScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage2Keys;
+
+export const runDbxRelationshipsAuthor1RelatedPage1CursorPresentScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage1CursorPresent;
+
+export const runDbxRelationshipsAuthor1RelatedPage2CursorPresentScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1RelatedPage2CursorPresent;
+
+export const runDbxRelationshipsAuthor1Page1TargetsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1Page1Targets;
+
+export const runDbxRelationshipsAuthor1Page2TargetsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1Page2Targets;
+
+export const runDbxRelationshipsAuthor2TargetsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2Targets;
+
+export const runDbxRelationshipsAuthor2ResolvedIdsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2ResolvedIds;
+
+export const runDbxRelationshipsAuthor2MissingReadsScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2MissingReads;
+
+export const runDbxRelationshipsPost1AuthorTargetsScenario = async () =>
+  (await runDbxRelationshipsScenario()).post1AuthorTargets;
+
+export const runDbxRelationshipsDeleteAuthor1Post2ResultScenario = async () =>
+  (await runDbxRelationshipsScenario()).deleteAuthor1Post2Result;
+
+export const runDbxRelationshipsAuthor1TargetsAfterDeleteScenario = async () =>
+  (await runDbxRelationshipsScenario()).author1TargetsAfterDelete;
+
+export const runDbxRelationshipsDeletePost3ResultScenario = async () =>
+  (await runDbxRelationshipsScenario()).deletePost3Result;
+
+export const runDbxRelationshipsAuthor2TargetsAfterDeleteScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2TargetsAfterDelete;
+
+export const runDbxRelationshipsAuthor2ResolvedIdsAfterDeleteScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2ResolvedIdsAfterDelete;
+
+export const runDbxRelationshipsAuthor2MissingReadsAfterDeleteScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2MissingReadsAfterDelete;
+
+export const runDbxRelationshipsDeleteMissingRelationResultScenario = async () =>
+  (await runDbxRelationshipsScenario()).deleteMissingRelationResult;
+
+export const runDbxRelationshipsAuthor2TargetsAfterPruneScenario = async () =>
+  (await runDbxRelationshipsScenario()).author2TargetsAfterPrune;

@@ -2,19 +2,62 @@
   "file": "./repo.test-utils.ts",
   "tests": [
     {
-      "export": "runRepoPackScenario",
+      "export": "runRepoPackParameterKeysScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "parameterKeys": ["RepoBranch", "RepoName", "RepoOwner", "RepoToken"],
-        "groupLabel": "Repository",
-        "groupParameters": ["RepoOwner", "RepoName", "RepoBranch", "RepoToken"],
-        "ownerParamLabel": "RepoOwner",
-        "ownerParamType": "String",
-        "nameParamLabel": "RepoName",
-        "branchParamLabel": "RepoBranch",
-        "tokenParamNoEcho": true
-      }
+      "expectation": [
+        "RepoBranch",
+        "RepoName",
+        "RepoOwner",
+        "RepoToken"
+      ]
+    },
+    {
+      "export": "runRepoPackGroupLabelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Repository"
+    },
+    {
+      "export": "runRepoPackGroupParametersScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "RepoOwner",
+        "RepoName",
+        "RepoBranch",
+        "RepoToken"
+      ]
+    },
+    {
+      "export": "runRepoPackOwnerParamLabelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "RepoOwner"
+    },
+    {
+      "export": "runRepoPackOwnerParamTypeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "String"
+    },
+    {
+      "export": "runRepoPackNameParamLabelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "RepoName"
+    },
+    {
+      "export": "runRepoPackBranchParamLabelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "RepoBranch"
+    },
+    {
+      "export": "runRepoPackTokenParamNoEchoScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

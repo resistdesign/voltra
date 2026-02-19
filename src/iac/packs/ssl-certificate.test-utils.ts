@@ -36,3 +36,21 @@ export const runSSLCertificatePackScenario = () => {
     customSANs: customCertificate?.Properties?.SubjectAlternativeNames ?? null,
   };
 };
+
+export const runSSLCertificatePackResourceKeysScenario = async () =>
+  (await runSSLCertificatePackScenario()).resourceKeys;
+
+export const runSSLCertificatePackDefaultDomainNameScenario = async () =>
+  (await runSSLCertificatePackScenario()).defaultDomainName;
+
+export const runSSLCertificatePackDefaultHostedZoneIdScenario = async () =>
+  (await runSSLCertificatePackScenario()).defaultHostedZoneId;
+
+export const runSSLCertificatePackDefaultSANsScenario = async () =>
+  (await runSSLCertificatePackScenario()).defaultSANs;
+
+export const runSSLCertificatePackCustomHostedZoneIdScenario = async () =>
+  (await runSSLCertificatePackScenario()).customHostedZoneId;
+
+export const runSSLCertificatePackCustomSANsScenario = async () =>
+  (await runSSLCertificatePackScenario()).customSANs;
