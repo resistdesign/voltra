@@ -44,6 +44,8 @@
           ["name"]
         ],
         "unionFieldKeys": ["id", "title", "rating", "tags", "author", "name"],
+        "unionPickedFieldSets": [["id"]],
+        "unionExcludedFieldSets": [["id", "title", "rating", "tags", "author"]],
         "flagKeyword": "boolean",
         "primaryField": "id",
         "primaryFieldError": "READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED"

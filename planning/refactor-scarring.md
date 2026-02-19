@@ -41,20 +41,20 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
   - [x] Apply low-risk fixes found in this phase.
   - [x] Run focused tests for touched areas.
   - [x] Document findings, fixes, and residual risks in this plan.
-- [~] Phase 2: API/defaults/naming/maintainability pass
+- [x] Phase 2: API/defaults/naming/maintainability pass
   - [x] Routing contract alignment: `web` should expose `Route` (not `RouteProvider`) and inject web mechanics while preserving the shared Route API shape.
-  - [~] Audit defaults and option handling for sensible behavior.
-  - [~] Audit naming consistency across modules touched by refactors.
-  - [~] Apply targeted readability and maintainability improvements.
-  - [~] Add/update docs/comments where public behavior is unclear.
-  - [~] Run focused tests for touched areas.
+  - [x] Audit defaults and option handling for sensible behavior.
+  - [x] Audit naming consistency across modules touched by refactors.
+  - [x] Apply targeted readability and maintainability improvements.
+  - [x] Add/update docs/comments where public behavior is unclear.
+  - [x] Run focused tests for touched areas.
+  - [x] Document findings, fixes, and residual risks in this plan.
+- [~] Phase 3: Documentation/demo/test coverage alignment
+  - [~] Verify docs/site/demo/sample code aligns with current behavior.
+  - [~] Fix drift in docs/demo/sample code.
+  - [~] Identify missing behavior coverage and add/update nearby JSON specs.
+  - [~] Run relevant test suites.
   - [~] Document findings, fixes, and residual risks in this plan.
-- [ ] Phase 3: Documentation/demo/test coverage alignment
-  - [ ] Verify docs/site/demo/sample code aligns with current behavior.
-  - [ ] Fix drift in docs/demo/sample code.
-  - [ ] Identify missing behavior coverage and add/update nearby JSON specs.
-  - [ ] Run relevant test suites.
-  - [ ] Document findings, fixes, and residual risks in this plan.
 - [ ] Phase 4: Final health pass
   - [ ] Confirm architecture/surfaces are easy to consume and consistent.
   - [ ] Perform final high-signal cleanup that avoids speculative churn.
@@ -212,3 +212,82 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
     - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
     - `tsx src/common/Testing/CLI.ts "./src/common/Logging/Utils.spec.json" "./src/common/Testing/Utils.spec.json"`: passed.
     - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- `src/app/utils/Service` normalization slice:
+  - Hardened URL construction defaults in `src/app/utils/Service.ts`:
+    - protocol normalization supports both `"https"` and `"https:"` inputs.
+    - domain normalization removes trailing slashes to avoid malformed `//` joins.
+    - existing host/path slash normalization behavior retained.
+  - Expanded service scenario expectations in:
+    - `src/app/utils/Service.test-utils.ts`
+    - `src/app/utils/Service.spec.json`
+    - Added explicit checks for normalized protocol/domain inputs.
+  - Verification:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `tsx src/common/Testing/CLI.ts "./src/app/utils/Service.spec.json" "./src/app/utils/ApplicationState.spec.json" "./src/app/utils/TypeInfoORMClient.spec.json"`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- `src/app/utils/Controller` edge-case slice:
+  - Fixed array-index controller behavior for missing parent arrays in `src/app/utils/Controller.ts`.
+    - Previous behavior could swallow an error and no-op when `isArrayIndex === true` and `parentValue` was `undefined`.
+    - Updated behavior initializes from an empty array in this case, then applies the indexed write.
+  - Small readability cleanup for ignored catch variables (`_error`) in the same file.
+  - Expanded controller scenario coverage:
+    - `src/app/utils/Controller.test-utils.ts`
+    - `src/app/utils/Controller.spec.json`
+    - Added missing-array-index assertion to lock in fallback behavior.
+  - Verification:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `tsx src/common/Testing/CLI.ts "./src/app/utils/Controller.spec.json" "./src/app/utils/ApplicationStateLoader.spec.json" "./src/app/utils/ApplicationState.spec.json"`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- `src/common/TypeParsing/ParsingUtils` union field-set slice:
+  - Hardened `Pick`/`Omit`/`Exclude` filtering of union field sets in `src/common/TypeParsing/ParsingUtils/getTypeInfoFromFieldFilter.ts`.
+    - Previous behavior could retain empty union member field sets after field-filter transforms.
+    - Updated behavior drops empty sets so downstream union metadata remains meaningful and does not include impossible variants.
+  - Expanded scenario coverage in:
+    - `src/common/TypeParsing/ParsingUtils/ParsingUtils.test-utils.ts`
+    - `src/common/TypeParsing/ParsingUtils/ParsingUtils.spec.json`
+    - Added `UnionPicked` assertion to lock in non-empty `unionFieldSets` output (`[["id"]]`).
+  - Verification:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `tsx src/common/Testing/CLI.ts "./src/common/TypeParsing/ParsingUtils/ParsingUtils.spec.json" "./src/common/TypeParsing/Utils.spec.json"`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- Remaining Phase 2 scope update:
+  - Continue app/common naming/readability/defaults sweep for additional high-confidence non-routing utility surfaces, then consolidate and close Phase 2 checklist rows once the pass is complete.
+
+- Phase 2 completion summary:
+  - Completed defaults, naming, maintainability, and behavior-hardening slices across web/app/common routing and utility surfaces.
+  - All Phase 2 changes were verified with strict compile checks plus focused and repeated full-suite test runs.
+  - Final verification snapshot for Phase 2 close:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+## Phase 3 Notes (2026-02-19)
+
+- Documentation/demo drift slice (routing usage):
+  - Updated demo site routing consumption to use platform `Route` from the web barrel:
+    - `site/app/src/client/App.tsx`
+    - Import changed from `src/app/utils` to `src/web`.
+  - Updated README routing section to reflect platform-specific route entrypoints:
+    - `README.md`
+    - Reframed guidance from app-only routing to shared `Route` API with platform barrel usage.
+    - Added explicit web and native route import examples.
+
+- Verification for this Phase 3 slice:
+  - `tsx src/common/Testing/CLI.ts "./src/web/index.spec.json" "./src/web/utils/Route.spec.json" "./src/app/index.spec.json"`: passed.
+  - `yarn site:build:app`: passed (Astro build + Typedoc + doc copy completed).
+
+- Additional coverage alignment slice (TypeParsing unions):
+  - Added explicit `Exclude` branch coverage for cleaned union field sets:
+    - `src/common/TypeParsing/ParsingUtils/ParsingUtils.test-utils.ts`
+    - `src/common/TypeParsing/ParsingUtils/ParsingUtils.spec.json`
+  - New assertion (`unionExcludedFieldSets`) confirms empty union sets are removed after exclude filtering while preserving valid surviving sets.
+  - Verification:
+    - `tsx src/common/Testing/CLI.ts "./src/common/TypeParsing/ParsingUtils/ParsingUtils.spec.json"`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- Remaining Phase 3 scope:
+  - Continue scanning docs/site/demo/example surfaces for additional drift beyond routing wording.
+  - Identify and add any missing behavior coverage surfaced by remaining drift findings.

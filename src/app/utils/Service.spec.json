@@ -8,6 +8,8 @@
       "expectation": {
         "url": "https://example.com:443/api/v1",
         "originUrl": "https://example.com:443/",
+        "normalizedProtocolUrl": "https://example.com:443/api/v2",
+        "normalizedDomainUrl": "https://example.com:443/api/v3",
         "requestInfo": {
           "input": "https://example.com:443/api/v1",
           "method": "POST",

@@ -17,6 +17,7 @@ import { getTypeKeyword } from "./getTypeKeyword";
 import { getUnionOrIntersectionTypeInfo } from "./getUnionOrIntersectionTypeInfo";
 import { getUnionOrLiteralStringValues } from "./getUnionOrLiteralStringValues";
 import { checkType } from "./checkType";
+import { getTypeInfoFromTypeAlias } from "./getTypeInfoFromTypeAlias";
 import { TypeInfo } from "../TypeInfo";
 
 export const runParsingUtilsScenario = () => {
@@ -38,6 +39,8 @@ export const runParsingUtilsScenario = () => {
 
     export type Picked = Pick<Book, "id" | "rating">;
     export type UnionType = Book | Person;
+    export type UnionPicked = Pick<UnionType, "id">;
+    export type UnionExcluded = Exclude<UnionType, Person>;
     export type Flag = boolean;
   `;
 
@@ -46,6 +49,8 @@ export const runParsingUtilsScenario = () => {
   const bookNode = typeMap.Book as TypeAliasDeclaration;
   const pickedNode = typeMap.Picked as TypeAliasDeclaration;
   const unionNode = typeMap.UnionType as TypeAliasDeclaration;
+  const unionPickedNode = typeMap.UnionPicked as TypeAliasDeclaration;
+  const unionExcludedNode = typeMap.UnionExcluded as TypeAliasDeclaration;
   const flagNode = typeMap.Flag as TypeAliasDeclaration;
 
   const commentTags = extractCommentTags(bookNode);
@@ -69,6 +74,11 @@ export const runParsingUtilsScenario = () => {
 
   const unionTypeInfo = getUnionOrIntersectionTypeInfo(
     unionNode.type as UnionTypeNode,
+    typeMap,
+  );
+  const unionPickedTypeInfo = getTypeInfoFromTypeAlias(unionPickedNode, typeMap);
+  const unionExcludedTypeInfo = getTypeInfoFromTypeAlias(
+    unionExcludedNode,
     typeMap,
   );
 
@@ -121,6 +131,8 @@ export const runParsingUtilsScenario = () => {
     pickedValues,
     unionFieldSets: unionTypeInfo?.unionFieldSets || [],
     unionFieldKeys: Object.keys(unionTypeInfo?.fields || {}),
+    unionPickedFieldSets: unionPickedTypeInfo?.unionFieldSets || [],
+    unionExcludedFieldSets: unionExcludedTypeInfo?.unionFieldSets || [],
     flagKeyword,
     primaryField,
     primaryFieldError,

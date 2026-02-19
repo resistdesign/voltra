@@ -18,6 +18,8 @@
         "arrayValue": "next",
         "arrayParent": ["zero", "next"],
         "arrayChanges": [["zero", "next"]],
+        "missingArrayValue": "next",
+        "missingArrayParent": [null, "next"],
         "missingValue": "updated",
         "missingParent": {
           "name": "updated"

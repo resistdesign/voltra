@@ -193,12 +193,13 @@ const coords = layout.computeNativeCoords({
 
 ## Routing (Web + Native)
 
-Voltra routing is unified under `@resistdesign/voltra/app`.
+Voltra routing uses the same `Route` API across app/web/native.
+Use the platform barrel for root `Route` so runtime mechanics are auto-wired.
 
 Reference example: `examples/routing/app-routing.ts`
 
 ```tsx
-import { Route } from "@resistdesign/voltra/app";
+import { Route } from "@resistdesign/voltra/web";
 
 <Route>
   <Route path="/" exact>
@@ -209,6 +210,16 @@ import { Route } from "@resistdesign/voltra/app";
   </Route>
   <Route path="/signup" exact>
     <SignUpScreen />
+  </Route>
+</Route>;
+```
+
+```tsx
+import { Route } from "@resistdesign/voltra/native";
+
+<Route>
+  <Route path="/" exact>
+    <HomeScreen />
   </Route>
 </Route>;
 ```
