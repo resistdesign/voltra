@@ -7,10 +7,10 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "hiddenDefaultValid": true,
-        "hiddenValidatedCode": "MISSING",
+        "hiddenValidatedCode": "MISSING_FIELD_VALUE",
         "readonlyDefaultValid": true,
-        "readonlyValidatedCode": "MISSING",
-        "emptyArrayInvalidCode": "MISSING",
+        "readonlyValidatedCode": "MISSING_FIELD_VALUE",
+        "emptyArrayInvalidCode": "MISSING_FIELD_VALUE",
         "emptyArrayValid": true,
         "customValidatorInvalidCode": "RESERVED_NAME",
         "customValidatorValid": true

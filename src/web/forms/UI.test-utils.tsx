@@ -625,7 +625,7 @@ export const runMultipleValueErrorsScenario = () => {
       value: "bad",
       onChange: () => {},
       errors: [
-        getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING),
+        getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE),
         getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE),
       ],
       translateValidationErrorCode: (error) => `msg:${error.code}`,
@@ -633,7 +633,7 @@ export const runMultipleValueErrorsScenario = () => {
   );
 
   return {
-    hasFirstError: render.includes("msg:MISSING"),
+    hasFirstError: render.includes("msg:MISSING_FIELD_VALUE"),
     hasSecondError: render.includes("msg:INVALID_CUSTOM_TYPE"),
   };
 };
@@ -657,7 +657,7 @@ export const runArrayItemErrorsScenario = () => {
       onChange: () => {},
       arrayItemErrorMap: {
         0: [
-          getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING),
+          getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE),
           getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE),
         ],
       },
@@ -666,7 +666,7 @@ export const runArrayItemErrorsScenario = () => {
   );
 
   return {
-    hasItemFirstError: render.includes("msg:MISSING"),
+    hasItemFirstError: render.includes("msg:MISSING_FIELD_VALUE"),
     hasItemSecondError: render.includes("msg:INVALID_CUSTOM_TYPE"),
   };
 };

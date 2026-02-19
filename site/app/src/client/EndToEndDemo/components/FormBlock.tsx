@@ -143,7 +143,7 @@ const translateValidationErrorCode = (error: ErrorDescriptor): string => {
   const { code, values = [] } = error;
   const [constraintValue] = values;
 
-  if (code === ERROR_MESSAGE_CONSTANTS.MISSING) {
+  if (code === ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE) {
     return "This field is required";
   }
 
