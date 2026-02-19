@@ -2,51 +2,74 @@
   "file": "./DBX_SCALE_E2E.test-utils.ts",
   "tests": [
     {
-      "export": "runDbxScaleScenario",
+      "export": "runDbxScaleDatasetScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "dataset": {
-          "size": 50,
-          "statusCounts": {
-            "draft": 17,
-            "published": 17,
-            "archived": 16
-          }
-        },
-        "createSummary": {
-          "count": 50,
-          "firstId": "post-1",
-          "lastId": "post-50"
-        },
-        "paging": {
-          "ok": true,
-          "totalItems": 50,
-          "uniqueItems": 50,
-          "emptyPageIndexes": [],
-          "pageSizeViolations": [],
-          "pageCount": 3,
-          "cursors": ["{\"offset\":20}", "{\"offset\":40}", null],
-          "firstIdsByPage": ["post-1", "post-21", "post-41"],
-          "lastIdsByPage": ["post-20", "post-40", "post-50"]
-        },
-        "ordering": {
-          "ok": true,
-          "mismatchIndex": null,
-          "firstIds": ["post-1", "post-2", "post-3"],
-          "lastIds": ["post-48", "post-49", "post-50"]
-        },
-        "search": {
-          "criteria": "status=published",
-          "total": 17,
-          "firstIds": ["post-2", "post-5", "post-8", "post-11", "post-14"],
-          "lastIds": ["post-38", "post-41", "post-44", "post-47", "post-50"]
-        },
-        "timingBuckets": {
-          "create": "fast",
-          "list": "fast",
-          "search": "fast"
+        "size": 50,
+        "statusCounts": {
+          "draft": 17,
+          "published": 17,
+          "archived": 16
         }
+      }
+    },
+    {
+      "export": "runDbxScaleCreateSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "count": 50,
+        "firstId": "post-1",
+        "lastId": "post-50"
+      }
+    },
+    {
+      "export": "runDbxScalePagingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "totalItems": 50,
+        "uniqueItems": 50,
+        "emptyPageIndexes": [],
+        "pageSizeViolations": [],
+        "pageCount": 3,
+        "cursors": ["{\"offset\":20}", "{\"offset\":40}", null],
+        "firstIdsByPage": ["post-1", "post-21", "post-41"],
+        "lastIdsByPage": ["post-20", "post-40", "post-50"]
+      }
+    },
+    {
+      "export": "runDbxScaleOrderingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "mismatchIndex": null,
+        "firstIds": ["post-1", "post-2", "post-3"],
+        "lastIds": ["post-48", "post-49", "post-50"]
+      }
+    },
+    {
+      "export": "runDbxScaleSearchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "criteria": "status=published",
+        "total": 17,
+        "firstIds": ["post-2", "post-5", "post-8", "post-11", "post-14"],
+        "lastIds": ["post-38", "post-41", "post-44", "post-47", "post-50"]
+      }
+    },
+    {
+      "export": "runDbxScaleTimingBucketsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "create": "fast",
+        "list": "fast",
+        "search": "fast"
       }
     }
   ]
