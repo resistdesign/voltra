@@ -6,7 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "cleanedSelected": ["id", "author"],
+        "cleanedSelected": ["author", "id"],
         "nonReferenceSelected": ["id"],
         "cleanedDataItem": {
           "id": "book-1",
