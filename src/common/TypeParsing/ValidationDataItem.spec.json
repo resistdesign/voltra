@@ -1,0 +1,20 @@
+{
+  "file": "./ValidationDataItem.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoDataItemValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hiddenDefaultValid": true,
+        "hiddenValidatedCode": "MISSING",
+        "readonlyDefaultValid": true,
+        "readonlyValidatedCode": "MISSING",
+        "emptyArrayInvalidCode": "MISSING",
+        "emptyArrayValid": true,
+        "customValidatorInvalidCode": "RESERVED_NAME",
+        "customValidatorValid": true
+      }
+    }
+  ]
+}

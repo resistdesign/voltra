@@ -29,6 +29,19 @@
 - [x] Update all impacted docs/comments/tests/specs/helpers/consumers for the new centralized API.
 - [x] Run full test suite and confirm green.
 
+## Finalization Checklist (Consumer Clarity + Explicit Coverage)
+
+- [x] Add dedicated tests for `validateTypeInfoDataItem` behavior:
+  - [x] `tags.validation.validateHidden`
+  - [x] `tags.validation.validateReadonly`
+  - [x] `tags.validation.emptyArrayIsValid`
+  - [x] `customValidatorMap`
+- [x] Add/expand consumer examples showing:
+  - [x] direct `@resistdesign/voltra/common` validation usage
+  - [x] AutoForm `customValidatorMap` + `translateValidationErrorCode`
+- [x] Update README sections to document the new validation surface and options.
+- [x] Run full test suite and confirm green.
+
 ## Notes
 
 - IMPORTANT: Be thorough. Code cleanly. Understand the spirit of this refactor and the uniformity and flexibility it intends to bring. Investigate first. Understand the project.
