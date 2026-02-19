@@ -16,7 +16,16 @@
             "UserPoolIdentityPool"
           ],
           "hasBaseDomainRecord": true,
-          "hasIdentityPoolRoles": false
+          "hasIdentityPoolRoles": false,
+          "oauthSummary": {
+            "allowedOAuthFlowsUserPoolClient": true,
+            "allowedOAuthFlows": [
+              "code",
+              "implicit"
+            ],
+            "hasCallbackURLs": true,
+            "hasLogoutURLs": true
+          }
         },
         "apiSummary": {
           "hasBaseDomainRecord": true,
@@ -33,7 +42,15 @@
           "hasBaseDomainRecord": false,
           "hasDomain": false,
           "hasDomainRecord": false,
-          "hasIdentityPoolRoles": false
+          "hasIdentityPoolRoles": false,
+          "oauthSummary": {
+            "allowedOAuthFlowsUserPoolClient": false,
+            "hasAllowedOAuthFlows": false,
+            "hasAllowedOAuthScopes": false,
+            "hasSupportedIdentityProviders": false,
+            "hasCallbackURLs": false,
+            "hasLogoutURLs": false
+          }
         }
       }
     }

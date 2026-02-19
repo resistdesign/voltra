@@ -103,6 +103,7 @@ export const addUserManagement = createResourcePack(
       apiGatewayRESTAPIId,
       apiStageName,
     } = config;
+    const isUserPoolDomainEnabled = config.enableUserPoolDomain !== false;
     const apiRoleConfig =
       apiGatewayRESTAPIId && apiStageName
         ? {
@@ -370,18 +371,24 @@ export const addUserManagement = createResourcePack(
             UserPoolId: {
               Ref: id,
             },
-            AllowedOAuthFlowsUserPoolClient: true,
-            AllowedOAuthFlows: ["code", "implicit"],
-            AllowedOAuthScopes: [
-              "openid",
-              "email",
-              "phone",
-              "profile",
-              "aws.cognito.signin.user.admin",
-            ],
+            ...(isUserPoolDomainEnabled
+              ? {
+                  AllowedOAuthFlowsUserPoolClient: true,
+                  AllowedOAuthFlows: ["code", "implicit"],
+                  AllowedOAuthScopes: [
+                    "openid",
+                    "email",
+                    "phone",
+                    "profile",
+                    "aws.cognito.signin.user.admin",
+                  ],
+                  SupportedIdentityProviders: ["COGNITO"],
+                }
+              : {
+                  AllowedOAuthFlowsUserPoolClient: false,
+                }),
             EnableTokenRevocation: true,
             PreventUserExistenceErrors: "ENABLED",
-            SupportedIdentityProviders: ["COGNITO"],
             ...(callbackUrls && callbackUrls.length > 0
               ? { CallbackURLs: callbackUrls }
               : {}),
