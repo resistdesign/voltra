@@ -23,7 +23,7 @@ each test scenario on the other side of this effort.
   - [x] Split `src/common/SearchValidation.spec.json` + `src/common/SearchValidation.test-utils.ts`
   - [x] Run focused verification for the four updated spec files
 - [~] Phase 2: Continue splitting remaining single-test spec files in plan order by directory
-  - Remaining: 31 single-test spec files still need scenario-split refactors.
+  - Remaining: 28 single-test spec files still need scenario-split refactors.
   - [x] Batch 1 (`src/common`)
   - [x] Split `src/common/SearchTypes.spec.json` + `src/common/SearchTypes.test-utils.ts`
   - [x] Split `src/common/StringTransformers.spec.json` + `src/common/StringTransformers.test-utils.ts`
@@ -95,3 +95,8 @@ each test scenario on the other side of this effort.
   - [x] Split `src/api/ORM/drivers/S3FileItemDBDriver.spec.json` + `src/api/ORM/drivers/S3FileItemDBDriver.test-utils.ts`
   - [x] Split `src/api/ORM/drivers/common/SupportedTypeInfoORMDBDrivers.spec.json` + `src/api/ORM/drivers/common/SupportedTypeInfoORMDBDrivers.test-utils.ts`
   - [x] Run focused verification for Batch 12 specs
+  - [x] Batch 13 (`src/api/DBX` search + aggregates)
+  - [x] Split `src/api/DBX/DBX_SEARCH_EXACT_E2E.spec.json` + `src/api/DBX/DBX_SEARCH_EXACT_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_SEARCH_LOSSY_E2E.spec.json` + `src/api/DBX/DBX_SEARCH_LOSSY_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_AGGREGATES_E2E.spec.json` + `src/api/DBX/DBX_AGGREGATES_E2E.test-utils.ts`
+  - [x] Run focused verification for Batch 13 specs

@@ -95,10 +95,7 @@ const runLossySearch = async (runtime: ReturnType<typeof buildDbxRuntime>) => {
   };
 };
 
-/**
- * Run the DBX lossy search E2E scenario against the in-memory router/runtime.
- */
-export const runDbxLossySearchScenario = async () => {
+const runDbxLossySearchScenario = async () => {
   const runtime = buildDbxRuntime();
   const postIds: string[] = [];
 
@@ -144,3 +141,21 @@ export const runDbxLossySearchScenario = async () => {
     afterDeleteSearchIds: afterDeleteSearch.ids,
   };
 };
+
+export const runDbxLossySearchCreatedPostIdsScenario = async () =>
+  (await runDbxLossySearchScenario()).createdPostIds;
+
+export const runDbxLossySearchInitialSearchIdsScenario = async () =>
+  (await runDbxLossySearchScenario()).initialSearchIds;
+
+export const runDbxLossySearchUpdateResultScenario = async () =>
+  (await runDbxLossySearchScenario()).updateResult;
+
+export const runDbxLossySearchAfterUpdateSearchIdsScenario = async () =>
+  (await runDbxLossySearchScenario()).afterUpdateSearchIds;
+
+export const runDbxLossySearchDeleteResultScenario = async () =>
+  (await runDbxLossySearchScenario()).deleteResult;
+
+export const runDbxLossySearchAfterDeleteSearchIdsScenario = async () =>
+  (await runDbxLossySearchScenario()).afterDeleteSearchIds;
