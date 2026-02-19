@@ -38,36 +38,59 @@ type AddUserManagementConfigBase = {
 
 type AddUserManagementConfigWithDomain = AddUserManagementConfigBase & {
   /**
-   * Enable a custom Cognito user pool domain and associated Route53 records.
+   * Enable Cognito Hosted UI/OAuth redirect mode by creating a custom user pool
+   * domain plus Route53 records.
    *
-   * Defaults to `true`.
+   * When enabled, the generated user pool client uses OAuth flows (`code`,
+   * `implicit`) and supports callback/logout/provider configuration.
+   *
+   * Defaults to `true`. Set `false` to opt out of Hosted UI resources and use
+   * SDK/API-based sign-in flows only.
    */
   enableUserPoolDomain?: true;
   /**
-   * Base domain name for the user pool.
+   * Base domain name used to create the auth subdomain.
+   *
+   * The pack creates a Cognito domain at `auth.<domainName>`.
    */
   domainName: any;
   /**
-   * Hosted zone id for DNS records.
+   * Route53 hosted zone id for DNS records under `domainName`.
    */
   hostedZoneId: any;
   /**
-   * SSL certificate ARN for the user pool domain.
+   * ACM certificate ARN (in `us-east-1`) for the Cognito custom domain.
    */
   sslCertificateArn: any;
   /**
-   * OAuth callback URLs.
+   * OAuth callback URLs for Hosted UI/federated redirect flows.
+   *
+   * These must be valid redirect URLs accepted by Cognito for the app client.
+   * They are required by Cognito when OAuth flows are enabled.
    */
   callbackUrls?: any[];
   /**
-   * OAuth logout URLs.
+   * OAuth logout redirect URLs for Hosted UI sign-out.
    */
   logoutUrls?: any[];
+  /**
+   * Supported identity providers for Hosted UI/OAuth flows.
+   *
+   * Defaults to `["COGNITO"]`.
+   * Use Cognito provider names such as `"COGNITO"`, `"Google"`,
+   * `"SignInWithApple"`, `"LoginWithAmazon"`, or names for configured OIDC/SAML
+   * providers.
+   */
+  supportedIdentityProviders?: any[];
 };
 
 type AddUserManagementConfigWithoutDomain = AddUserManagementConfigBase & {
   /**
-   * Disable custom Cognito user pool domain resources.
+   * Disable Cognito Hosted UI/OAuth redirect configuration.
+   *
+   * In this mode, the generated user pool client disables OAuth hosted-UI flows
+   * (`AllowedOAuthFlowsUserPoolClient: false`) so callback/logout/provider
+   * settings are intentionally disallowed.
    */
   enableUserPoolDomain: false;
   domainName?: never;
@@ -76,6 +99,7 @@ type AddUserManagementConfigWithoutDomain = AddUserManagementConfigBase & {
   baseDomainRecordAliasTargetDNSName?: never;
   callbackUrls?: never;
   logoutUrls?: never;
+  supportedIdentityProviders?: never;
 };
 
 /**
@@ -103,6 +127,14 @@ export const addUserManagement = createResourcePack(
       apiGatewayRESTAPIId,
       apiStageName,
     } = config;
+    const isUserPoolDomainEnabled = config.enableUserPoolDomain !== false;
+    const supportedIdentityProviders =
+      isUserPoolDomainEnabled &&
+      "supportedIdentityProviders" in config &&
+      config.supportedIdentityProviders &&
+      config.supportedIdentityProviders.length > 0
+        ? config.supportedIdentityProviders
+        : ["COGNITO"];
     const apiRoleConfig =
       apiGatewayRESTAPIId && apiStageName
         ? {
@@ -370,18 +402,24 @@ export const addUserManagement = createResourcePack(
             UserPoolId: {
               Ref: id,
             },
-            AllowedOAuthFlowsUserPoolClient: true,
-            AllowedOAuthFlows: ["code", "implicit"],
-            AllowedOAuthScopes: [
-              "openid",
-              "email",
-              "phone",
-              "profile",
-              "aws.cognito.signin.user.admin",
-            ],
+            ...(isUserPoolDomainEnabled
+              ? {
+                  AllowedOAuthFlowsUserPoolClient: true,
+                  AllowedOAuthFlows: ["code", "implicit"],
+                  AllowedOAuthScopes: [
+                    "openid",
+                    "email",
+                    "phone",
+                    "profile",
+                    "aws.cognito.signin.user.admin",
+                  ],
+                  SupportedIdentityProviders: supportedIdentityProviders,
+                }
+              : {
+                  AllowedOAuthFlowsUserPoolClient: false,
+                }),
             EnableTokenRevocation: true,
             PreventUserExistenceErrors: "ENABLED",
-            SupportedIdentityProviders: ["COGNITO"],
             ...(callbackUrls && callbackUrls.length > 0
               ? { CallbackURLs: callbackUrls }
               : {}),

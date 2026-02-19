@@ -25,7 +25,26 @@
           "hasBaseDomainRecord": true,
           "hasDomain": true,
           "hasDomainRecord": true,
-          "hasIdentityPoolRoles": true
+          "hasIdentityPoolRoles": true,
+          "oauthSummary": {
+            "allowedOAuthFlowsUserPoolClient": true,
+            "allowedOAuthFlows": [
+              "code",
+              "implicit"
+            ],
+            "supportedIdentityProviders": [
+              "COGNITO"
+            ],
+            "hasCallbackURLs": true,
+            "hasLogoutURLs": true
+          }
+        },
+        "withCustomProvidersSummary": {
+          "supportedIdentityProviders": [
+            "COGNITO",
+            "Google",
+            "LoginWithAmazon"
+          ]
         },
         "withoutDomainSummary": {
           "resourceKeys": [
@@ -40,7 +59,15 @@
           "hasBaseDomainRecord": false,
           "hasDomain": false,
           "hasDomainRecord": false,
-          "hasIdentityPoolRoles": true
+          "hasIdentityPoolRoles": true,
+          "oauthSummary": {
+            "allowedOAuthFlowsUserPoolClient": false,
+            "hasAllowedOAuthFlows": false,
+            "hasAllowedOAuthScopes": false,
+            "hasSupportedIdentityProviders": false,
+            "hasCallbackURLs": false,
+            "hasLogoutURLs": false
+          }
         }
       }
     }
