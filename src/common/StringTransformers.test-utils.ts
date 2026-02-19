@@ -4,29 +4,34 @@ import {
   transformValueToString,
 } from "./StringTransformers";
 
-export const runStringTransformersScenario = () => {
+export const runStringTransformerStringScenario = () =>
+  transformValueToString("hello", "string");
+
+export const runStringTransformerNumberScenario = () =>
+  transformValueToString(42, "number");
+
+export const runStringTransformerBooleanTrueScenario = () =>
+  transformValueToString(true, "boolean");
+
+export const runStringTransformerBooleanFalseScenario = () =>
+  transformValueToString(false, "boolean");
+
+export const runStringTransformerNullScenario = () =>
+  transformValueToString(null, "string");
+
+export const runStringTransformerCustomDateScenario = () => {
   const date = new Date("2020-01-01T00:00:00.000Z");
-
-  const stringValue = transformValueToString("hello", "string");
-  const numberValue = transformValueToString(42, "number");
-  const booleanTrue = transformValueToString(true, "boolean");
-  const booleanFalse = transformValueToString(false, "boolean");
-  const nullValue = transformValueToString(null, "string");
-
-  const customDate = transformValueToString(date, "string", "date");
-  const customUnknown = transformValueToString(123, "string", "unknown");
-  const customFallback = transformValueToString(123, "string", "missing");
-
-  return {
-    stringValue,
-    numberValue,
-    booleanTrue,
-    booleanFalse,
-    nullValue,
-    customDate,
-    customUnknown,
-    customFallback,
-    keywords: Object.keys(STRING_TRANSFORMERS).sort(),
-    customKeys: Object.keys(CUSTOM_STRING_TRANSFORMERS).sort(),
-  };
+  return transformValueToString(date, "string", "date");
 };
+
+export const runStringTransformerCustomUnknownScenario = () =>
+  transformValueToString(123, "string", "unknown");
+
+export const runStringTransformerCustomFallbackScenario = () =>
+  transformValueToString(123, "string", "missing");
+
+export const runStringTransformerKeywordKeysScenario = () =>
+  Object.keys(STRING_TRANSFORMERS).sort();
+
+export const runStringTransformerCustomKeysScenario = () =>
+  Object.keys(CUSTOM_STRING_TRANSFORMERS).sort();

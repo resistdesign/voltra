@@ -2,30 +2,53 @@
   "file": "./Utils.test-utils.ts",
   "tests": [
     {
-      "export": "runTypeParsingUtilsScenario",
+      "export": "runTypeParsingUtilsCleanedSelectedScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["author", "id"]
+    },
+    {
+      "export": "runTypeParsingUtilsNonReferenceSelectedScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["id"]
+    },
+    {
+      "export": "runTypeParsingUtilsCleanedDataItemScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "cleanedSelected": ["author", "id"],
-        "nonReferenceSelected": ["id"],
-        "cleanedDataItem": {
-          "id": "book-1",
-          "title": "Guide",
-          "author": "person-1"
-        },
-        "nonReferenceDataItem": {
-          "id": "book-1",
-          "title": "Guide"
-        },
-        "unselected": {
-          "title": "Guide"
-        },
-        "noSelected": {
-          "id": "book-1",
-          "title": "Guide",
-          "author": "person-1",
-          "missing": "ignored"
-        }
+        "id": "book-1",
+        "title": "Guide",
+        "author": "person-1"
+      }
+    },
+    {
+      "export": "runTypeParsingUtilsNonReferenceDataItemScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "id": "book-1",
+        "title": "Guide"
+      }
+    },
+    {
+      "export": "runTypeParsingUtilsUnselectedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "title": "Guide"
+      }
+    },
+    {
+      "export": "runTypeParsingUtilsNoSelectedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "id": "book-1",
+        "title": "Guide",
+        "author": "person-1",
+        "missing": "ignored"
       }
     }
   ]

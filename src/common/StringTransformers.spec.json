@@ -2,28 +2,71 @@
   "file": "./StringTransformers.test-utils.ts",
   "tests": [
     {
-      "export": "runStringTransformersScenario",
+      "export": "runStringTransformerStringScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "stringValue": "hello",
-        "numberValue": "42",
-        "booleanTrue": "true",
-        "booleanFalse": "false",
-        "nullValue": "",
-        "customDate": "2020-01-01T00:00:00.000Z",
-        "customUnknown": "123",
-        "customFallback": "",
-        "keywords": ["boolean", "number", "string"],
-        "customKeys": [
-          "date",
-          "datetime",
-          "duration",
-          "reference",
-          "time",
-          "unknown"
-        ]
-      }
+      "operation": "===",
+      "expectation": "hello"
+    },
+    {
+      "export": "runStringTransformerNumberScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "42"
+    },
+    {
+      "export": "runStringTransformerBooleanTrueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "true"
+    },
+    {
+      "export": "runStringTransformerBooleanFalseScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "false"
+    },
+    {
+      "export": "runStringTransformerNullScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": ""
+    },
+    {
+      "export": "runStringTransformerCustomDateScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "2020-01-01T00:00:00.000Z"
+    },
+    {
+      "export": "runStringTransformerCustomUnknownScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "123"
+    },
+    {
+      "export": "runStringTransformerCustomFallbackScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": ""
+    },
+    {
+      "export": "runStringTransformerKeywordKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["boolean", "number", "string"]
+    },
+    {
+      "export": "runStringTransformerCustomKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "date",
+        "datetime",
+        "duration",
+        "reference",
+        "time",
+        "unknown"
+      ]
     }
   ]
 }

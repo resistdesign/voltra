@@ -34,7 +34,7 @@ const toLegacyValidationShape = (results: TypeInfoValidationResults) => ({
   ),
 });
 
-export const runItemRelationshipValidationScenario = () => {
+const getRelationshipValidationScenarioData = () => {
   const baseItem = {
     [ItemRelationshipInfoKeys.fromTypeName]: "Book",
     [ItemRelationshipInfoKeys.fromTypeFieldName]: "author",
@@ -63,10 +63,30 @@ export const runItemRelationshipValidationScenario = () => {
   );
 
   return {
-    validResult: toLegacyValidationShape(validResult),
-    missingFieldResult: toLegacyValidationShape(missingFieldResult),
-    omittedFieldResult: toLegacyValidationShape(omittedFieldResult),
-    omittedFieldErrorResult: toLegacyValidationShape(omittedFieldErrorResult),
-    expectedErrors: TYPE_INFO_ORM_RELATIONSHIP_ERRORS,
+    validResult,
+    missingFieldResult,
+    omittedFieldResult,
+    omittedFieldErrorResult,
   };
 };
+
+export const runItemRelationshipValidationValidResultScenario = () =>
+  toLegacyValidationShape(getRelationshipValidationScenarioData().validResult);
+
+export const runItemRelationshipValidationMissingFieldResultScenario = () =>
+  toLegacyValidationShape(
+    getRelationshipValidationScenarioData().missingFieldResult,
+  );
+
+export const runItemRelationshipValidationOmittedFieldResultScenario = () =>
+  toLegacyValidationShape(
+    getRelationshipValidationScenarioData().omittedFieldResult,
+  );
+
+export const runItemRelationshipValidationOmittedFieldErrorResultScenario = () =>
+  toLegacyValidationShape(
+    getRelationshipValidationScenarioData().omittedFieldErrorResult,
+  );
+
+export const runItemRelationshipValidationExpectedErrorsScenario = () =>
+  TYPE_INFO_ORM_RELATIONSHIP_ERRORS;

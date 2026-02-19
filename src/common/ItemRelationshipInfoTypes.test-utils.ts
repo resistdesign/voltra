@@ -3,7 +3,7 @@ import {
   ItemRelationshipInfoKeys,
 } from "./ItemRelationshipInfoTypes";
 
-export const runItemRelationshipInfoTypesScenario = () => {
+const getItemRelationshipInfoTypeScenarioData = () => {
   const infoKeys = Object.values(ItemRelationshipInfoKeys);
   const identifyingKeys = Object.values(ItemRelationshipInfoIdentifyingKeys);
 
@@ -32,3 +32,18 @@ export const runItemRelationshipInfoTypesScenario = () => {
     originInfo,
   };
 };
+
+export const runItemRelationshipInfoKeysScenario = () =>
+  getItemRelationshipInfoTypeScenarioData().infoKeys;
+
+export const runItemRelationshipIdentifyingKeysScenario = () =>
+  getItemRelationshipInfoTypeScenarioData().identifyingKeys;
+
+export const runItemRelationshipBaseInfoScenario = () =>
+  getItemRelationshipInfoTypeScenarioData().baseInfo;
+
+export const runItemRelationshipInfoWithIdScenario = () =>
+  getItemRelationshipInfoTypeScenarioData().infoWithId;
+
+export const runItemRelationshipOriginInfoScenario = () =>
+  getItemRelationshipInfoTypeScenarioData().originInfo;

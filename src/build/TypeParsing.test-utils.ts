@@ -1,7 +1,7 @@
 import { getTypeInfoMapFromTypeScript } from "./TypeParsing";
 import { TypeInfoMap } from "../common/TypeParsing/TypeInfo";
 
-export const runTypeParsingScenario = () => {
+const getTypeInfoMapScenario = () => {
   const source = `
     /** @label Book @persisted true */
     export type Book = {
@@ -24,20 +24,41 @@ export const runTypeParsingScenario = () => {
     type Hidden = { secret: string };
   `;
 
-  const typeInfoMap: TypeInfoMap = getTypeInfoMapFromTypeScript(source);
-  const book = typeInfoMap.Book;
-  const picked = typeInfoMap.PickedBook;
-  const omitted = typeInfoMap.OmittedBook;
-  const mixed = typeInfoMap.Mixed;
+  return getTypeInfoMapFromTypeScript(source) as TypeInfoMap;
+};
 
+export const runTypeParsingMapKeysScenario = () => {
+  const typeInfoMap = getTypeInfoMapScenario();
+  return Object.keys(typeInfoMap).sort();
+};
+
+export const runTypeParsingBookMetadataScenario = () => {
+  const typeInfoMap = getTypeInfoMapScenario();
+  const book = typeInfoMap.Book;
   return {
-    mapKeys: Object.keys(typeInfoMap).sort(),
     bookPrimaryField: book?.primaryField,
     bookFields: Object.keys(book?.fields || {}),
     bookTags: book?.tags || {},
     bookRatingOptions: book?.fields?.rating?.possibleValues || [],
-    pickedFields: Object.keys(picked?.fields || {}),
-    omittedFields: Object.keys(omitted?.fields || {}),
+  };
+};
+
+export const runTypeParsingPickedBookScenario = () => {
+  const typeInfoMap = getTypeInfoMapScenario();
+  const picked = typeInfoMap.PickedBook;
+  return Object.keys(picked?.fields || {});
+};
+
+export const runTypeParsingOmittedBookScenario = () => {
+  const typeInfoMap = getTypeInfoMapScenario();
+  const omitted = typeInfoMap.OmittedBook;
+  return Object.keys(omitted?.fields || {});
+};
+
+export const runTypeParsingMixedUnionScenario = () => {
+  const typeInfoMap = getTypeInfoMapScenario();
+  const mixed = typeInfoMap.Mixed;
+  return {
     mixedUnionFieldSets: mixed?.unionFieldSets || [],
     mixedFields: Object.keys(mixed?.fields || {}).sort(),
   };

@@ -1,6 +1,6 @@
 import { collectRequiredEnvironmentVariables } from "./collectRequiredEnvironmentVariables";
 
-export const runCollectRequiredEnvironmentVariablesScenario = () => {
+const runCollectRequiredEnvironmentVariablesScenario = () => {
   const varNames = ["VOLTRA_A", "VOLTRA_B"] as const;
   const originalValues = {
     VOLTRA_A: process.env.VOLTRA_A,
@@ -41,3 +41,12 @@ export const runCollectRequiredEnvironmentVariablesScenario = () => {
     missingMessage,
   };
 };
+
+export const runCollectRequiredEnvironmentVariablesCollectedScenario = () =>
+  runCollectRequiredEnvironmentVariablesScenario().collected;
+
+export const runCollectRequiredEnvironmentVariablesMissingThrownScenario = () =>
+  runCollectRequiredEnvironmentVariablesScenario().missingThrown;
+
+export const runCollectRequiredEnvironmentVariablesMissingMessageScenario = () =>
+  runCollectRequiredEnvironmentVariablesScenario().missingMessage;

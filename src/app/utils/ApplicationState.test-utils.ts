@@ -10,7 +10,7 @@ import {
   type ApplicationStateModificationState,
 } from "./ApplicationState";
 
-export const runApplicationStateScenario = () => {
+const getApplicationStateScenarioData = () => {
   const identifierA: ApplicationStateIdentifier = { screen: { profile: {} } };
   const identifierB: ApplicationStateIdentifier = { screen: { settings: {} } };
   const identifierC = getApplicationStateIdentifier();
@@ -41,23 +41,51 @@ export const runApplicationStateScenario = () => {
     modifiedWithA,
   );
 
-  const valueA = getApplicationStateValue(identifierA, stateWithBoth);
-  const valueB = getApplicationStateValue(identifierB, stateWithBoth);
-  const modifiedA = getApplicationStateModified(identifierA, modifiedWithBoth);
-  const modifiedB = getApplicationStateModified(identifierB, modifiedWithBoth);
+  return {
+    identifierA,
+    identifierB,
+    identifierC,
+    identifierD,
+    stateWithBoth,
+    modifiedWithBoth,
+  };
+};
 
-  const structure = getApplicationStateValueStructure(
+export const runApplicationStateIdentifierCIsEmptyScenario = () => {
+  const { identifierC } = getApplicationStateScenarioData();
+  return Object.keys(identifierC).length === 0;
+};
+
+export const runApplicationStateIdentifierDSameRefScenario = () => {
+  const { identifierA, identifierD } = getApplicationStateScenarioData();
+  return identifierD === identifierA;
+};
+
+export const runApplicationStateValueAScenario = () => {
+  const { identifierA, stateWithBoth } = getApplicationStateScenarioData();
+  return getApplicationStateValue(identifierA, stateWithBoth);
+};
+
+export const runApplicationStateValueBScenario = () => {
+  const { identifierB, stateWithBoth } = getApplicationStateScenarioData();
+  return getApplicationStateValue(identifierB, stateWithBoth);
+};
+
+export const runApplicationStateModifiedAScenario = () => {
+  const { identifierA, modifiedWithBoth } = getApplicationStateScenarioData();
+  return getApplicationStateModified(identifierA, modifiedWithBoth);
+};
+
+export const runApplicationStateModifiedBScenario = () => {
+  const { identifierB, modifiedWithBoth } = getApplicationStateScenarioData();
+  return getApplicationStateModified(identifierB, modifiedWithBoth);
+};
+
+export const runApplicationStateStructureScenario = () => {
+  const { identifierA, identifierB, stateWithBoth } =
+    getApplicationStateScenarioData();
+  return getApplicationStateValueStructure(
     { first: identifierA, second: identifierB },
     stateWithBoth,
   );
-
-  return {
-    identifierCIsEmpty: Object.keys(identifierC).length === 0,
-    identifierDSameRef: identifierD === identifierA,
-    valueA,
-    valueB,
-    modifiedA,
-    modifiedB,
-    structure,
-  };
 };

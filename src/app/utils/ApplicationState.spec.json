@@ -2,20 +2,48 @@
   "file": "./ApplicationState.test-utils.ts",
   "tests": [
     {
-      "export": "runApplicationStateScenario",
+      "export": "runApplicationStateIdentifierCIsEmptyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateIdentifierDSameRefScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateValueAScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "alpha"
+    },
+    {
+      "export": "runApplicationStateValueBScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "beta"
+    },
+    {
+      "export": "runApplicationStateModifiedAScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateModifiedBScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runApplicationStateStructureScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "identifierCIsEmpty": true,
-        "identifierDSameRef": true,
-        "valueA": "alpha",
-        "valueB": "beta",
-        "modifiedA": true,
-        "modifiedB": false,
-        "structure": {
-          "first": "alpha",
-          "second": "beta"
-        }
+        "first": "alpha",
+        "second": "beta"
       }
     }
   ]

@@ -1,6 +1,6 @@
 import type { ExpandComplexType } from "./HelperTypes";
 
-export const runHelperTypesScenario = () => {
+const getHelperTypesScenarioData = () => {
   type Input = { a: string } & { b: number };
   type Expanded = ExpandComplexType<Input>;
 
@@ -12,3 +12,8 @@ export const runHelperTypesScenario = () => {
     keys,
   };
 };
+
+export const runHelperTypesExampleScenario = () =>
+  getHelperTypesScenarioData().example;
+
+export const runHelperTypesKeysScenario = () => getHelperTypesScenarioData().keys;

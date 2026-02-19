@@ -2,54 +2,117 @@
   "file": "./ParsingUtils.test-utils.ts",
   "tests": [
     {
-      "export": "runParsingUtilsScenario",
+      "export": "runParsingUtilsCommentTagsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "commentTags": {
-          "label": "Book",
-          "persisted": true,
-          "meta": {
-            "nested": 5
-          }
-        },
-        "typeInfoFieldKeys": ["id", "title", "rating", "tags", "author"],
-        "titleFieldSummary": {
-          "readonly": true,
-          "optional": true,
-          "label": "Title",
-          "deniedOperations": {
-            "create": true,
-            "update": true,
-            "delete": true
-          }
-        },
-        "ratingDetails": {
-          "type": "number",
-          "array": false,
-          "options": [1, 2, 3]
-        },
-        "ratingCheck": {
-          "isArray": false,
-          "typeKeyword": "number",
-          "options": [1, 2, 3]
-        },
-        "literalValues": {
-          "values": [1, 2, 3],
-          "type": "number"
-        },
-        "pickedValues": ["id", "rating"],
-        "unionFieldSets": [
-          ["id", "title", "rating", "tags", "author"],
-          ["name"]
-        ],
-        "unionFieldKeys": ["id", "title", "rating", "tags", "author", "name"],
-        "unionPickedFieldSets": [["id"]],
-        "unionExcludedFieldSets": [["id", "title", "rating", "tags", "author"]],
-        "flagKeyword": "boolean",
-        "primaryField": "id",
-        "primaryFieldError": "READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED"
+        "label": "Book",
+        "persisted": true,
+        "meta": {
+          "nested": 5
+        }
       }
+    },
+    {
+      "export": "runParsingUtilsTypeInfoFieldKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["id", "title", "rating", "tags", "author"]
+    },
+    {
+      "export": "runParsingUtilsTitleFieldSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "readonly": true,
+        "optional": true,
+        "label": "Title",
+        "deniedOperations": {
+          "create": true,
+          "update": true,
+          "delete": true
+        }
+      }
+    },
+    {
+      "export": "runParsingUtilsRatingDetailsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "number",
+        "array": false,
+        "options": [1, 2, 3]
+      }
+    },
+    {
+      "export": "runParsingUtilsRatingCheckScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "isArray": false,
+        "typeKeyword": "number",
+        "options": [1, 2, 3]
+      }
+    },
+    {
+      "export": "runParsingUtilsLiteralValuesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "values": [1, 2, 3],
+        "type": "number"
+      }
+    },
+    {
+      "export": "runParsingUtilsPickedValuesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["id", "rating"]
+    },
+    {
+      "export": "runParsingUtilsUnionFieldSetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        ["id", "title", "rating", "tags", "author"],
+        ["name"]
+      ]
+    },
+    {
+      "export": "runParsingUtilsUnionFieldKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["id", "title", "rating", "tags", "author", "name"]
+    },
+    {
+      "export": "runParsingUtilsUnionPickedFieldSetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [["id"]]
+    },
+    {
+      "export": "runParsingUtilsUnionExcludedFieldSetsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [["id", "title", "rating", "tags", "author"]]
+    },
+    {
+      "export": "runParsingUtilsFlagKeywordScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "boolean"
+    },
+    {
+      "export": "runParsingUtilsPrimaryFieldScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "id"
+    },
+    {
+      "export": "runParsingUtilsPrimaryFieldErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED"
     }
   ]
 }

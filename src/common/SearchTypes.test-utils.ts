@@ -9,7 +9,7 @@ import {
 } from "./SearchTypes";
 import { ItemRelationshipInfoKeys } from "./ItemRelationshipInfoTypes";
 
-export const runSearchTypesScenario = () => {
+const getSearchTypesScenarioData = () => {
   const criteria: SearchCriteria = {
     logicalOperator: LogicalOperators.AND,
     fieldCriteria: [
@@ -61,3 +61,18 @@ export const runSearchTypesScenario = () => {
     },
   };
 };
+
+export const runSearchTypesCriteriaScenario = () =>
+  getSearchTypesScenarioData().criteria;
+
+export const runSearchTypesListConfigScenario = () =>
+  getSearchTypesScenarioData().listConfig;
+
+export const runSearchTypesRelationshipConfigScenario = () =>
+  getSearchTypesScenarioData().relationshipConfig;
+
+export const runSearchTypesLogicalOperatorsScenario = () =>
+  getSearchTypesScenarioData().operators.logical;
+
+export const runSearchTypesComparisonOperatorsScenario = () =>
+  getSearchTypesScenarioData().operators.comparison;
