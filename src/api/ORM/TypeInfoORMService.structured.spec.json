@@ -2,18 +2,46 @@
   "file": "./TypeInfoORMService.structured.test-utils.ts",
   "tests": [
     {
-      "export": "runTypeInfoORMStructuredScenario",
+      "export": "runTypeInfoORMStructuredCreatedIdsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "createdIds": ["1", "2", "3"],
-        "newsIds": ["1", "2"],
-        "tagsBIds": ["1", "2"],
-        "scoreBetweenIds": ["1"],
-        "page1Ids": ["1"],
-        "page2Ids": ["2"],
-        "afterUpdateIds": ["2"]
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2", "3"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredNewsIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredTagsBIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredScoreBetweenIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredAfterUpdateIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2"]
     }
   ]
 }

@@ -19,7 +19,7 @@ const hasDriverShape = (driver: DataItemDBDriver<TestItem, "id">) => {
   };
 };
 
-export const runSupportedTypeInfoOrmDriversScenario = () => {
+const runSupportedTypeInfoOrmDriversScenario = () => {
   const driverNames = Object.values(SupportedTypeInfoORMDBDriverNames);
   const supportedKeys = Object.keys(SUPPORTED_TYPE_INFO_ORM_DB_DRIVERS).sort();
 
@@ -81,3 +81,27 @@ export const runSupportedTypeInfoOrmDriversScenario = () => {
     dataItemErrors: DATA_ITEM_DB_DRIVER_ERRORS,
   };
 };
+
+export const runSupportedTypeInfoOrmDriversDriverNamesScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().driverNames;
+
+export const runSupportedTypeInfoOrmDriversSupportedKeysScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().supportedKeys;
+
+export const runSupportedTypeInfoOrmDriversEntryTypeNamesScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().entryTypeNames;
+
+export const runSupportedTypeInfoOrmDriversDynamoDriverShapeScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().dynamoDriverShape;
+
+export const runSupportedTypeInfoOrmDriversInMemoryDriverShapeScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().inMemoryDriverShape;
+
+export const runSupportedTypeInfoOrmDriversInMemoryFileDriverShapeScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().inMemoryFileDriverShape;
+
+export const runSupportedTypeInfoOrmDriversS3DriverShapeScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().s3DriverShape;
+
+export const runSupportedTypeInfoOrmDriversDataItemErrorsScenario = () =>
+  runSupportedTypeInfoOrmDriversScenario().dataItemErrors;

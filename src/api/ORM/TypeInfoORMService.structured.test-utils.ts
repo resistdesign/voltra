@@ -58,7 +58,7 @@ const typeInfoMap: TypeInfoMap = {
   },
 };
 
-export const runTypeInfoORMStructuredScenario = async () => {
+const runTypeInfoORMStructuredScenario = async () => {
   let counter = 0;
   const driver = new InMemoryDataItemDBDriver<Post, "id">({
     tableName: "Posts",
@@ -203,3 +203,24 @@ export const runTypeInfoORMStructuredScenario = async () => {
     afterUpdateIds: afterUpdate.items.map((item) => item.id),
   };
 };
+
+export const runTypeInfoORMStructuredCreatedIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).createdIds;
+
+export const runTypeInfoORMStructuredNewsIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).newsIds;
+
+export const runTypeInfoORMStructuredTagsBIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).tagsBIds;
+
+export const runTypeInfoORMStructuredScoreBetweenIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).scoreBetweenIds;
+
+export const runTypeInfoORMStructuredPage1IdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).page1Ids;
+
+export const runTypeInfoORMStructuredPage2IdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).page2Ids;
+
+export const runTypeInfoORMStructuredAfterUpdateIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).afterUpdateIds;

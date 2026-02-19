@@ -139,8 +139,8 @@ const buildDriver = () => {
   return { driver, objects };
 };
 
-export const runS3FileItemDriverScenario = async () => {
-  const { driver, objects } = buildDriver();
+const runS3FileItemDriverScenario = async () => {
+  const { driver } = buildDriver();
 
   const id1 = await driver.createItem({ name: "alpha.txt", directory: "" });
   const id2 = await driver.createItem({ name: "beta.txt", directory: "" });
@@ -187,3 +187,30 @@ export const runS3FileItemDriverScenario = async () => {
     missingIdErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID,
   };
 };
+
+export const runS3FileItemDriverCreatedIdsScenario = async () =>
+  (await runS3FileItemDriverScenario()).createdIds;
+
+export const runS3FileItemDriverReadWithUrlsScenario = async () =>
+  (await runS3FileItemDriverScenario()).readWithUrls;
+
+export const runS3FileItemDriverListPage1IdsScenario = async () =>
+  (await runS3FileItemDriverScenario()).listPage1Ids;
+
+export const runS3FileItemDriverListPage2IdsScenario = async () =>
+  (await runS3FileItemDriverScenario()).listPage2Ids;
+
+export const runS3FileItemDriverListWithUrlsIdsScenario = async () =>
+  (await runS3FileItemDriverScenario()).listWithUrlsIds;
+
+export const runS3FileItemDriverListWithUrlsDownloadUrlsScenario = async () =>
+  (await runS3FileItemDriverScenario()).listWithUrlsDownloadUrls;
+
+export const runS3FileItemDriverDeleteResultScenario = async () =>
+  (await runS3FileItemDriverScenario()).deleteResult;
+
+export const runS3FileItemDriverMissingIdErrorScenario = async () =>
+  (await runS3FileItemDriverScenario()).missingIdError;
+
+export const runS3FileItemDriverMissingIdErrorExpectedScenario = async () =>
+  (await runS3FileItemDriverScenario()).missingIdErrorExpected;
