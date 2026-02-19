@@ -2,28 +2,71 @@
   "file": "./Controller.test-utils.ts",
   "tests": [
     {
-      "export": "runControllerScenario",
+      "export": "runControllerObjectValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "updated"
+    },
+    {
+      "export": "runControllerObjectParentScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "objectValue": "updated",
-        "objectParent": {
-          "name": "updated"
-        },
-        "objectChanges": [
-          {
-            "name": "updated"
-          }
-        ],
-        "arrayValue": "next",
-        "arrayParent": ["zero", "next"],
-        "arrayChanges": [["zero", "next"]],
-        "missingArrayValue": "next",
-        "missingArrayParent": [null, "next"],
-        "missingValue": "updated",
-        "missingParent": {
+        "name": "updated"
+      }
+    },
+    {
+      "export": "runControllerObjectChangesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        {
           "name": "updated"
         }
+      ]
+    },
+    {
+      "export": "runControllerArrayValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "next"
+    },
+    {
+      "export": "runControllerArrayParentScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["zero", "next"]
+    },
+    {
+      "export": "runControllerArrayChangesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [["zero", "next"]]
+    },
+    {
+      "export": "runControllerMissingArrayValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "next"
+    },
+    {
+      "export": "runControllerMissingArrayParentScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [null, "next"]
+    },
+    {
+      "export": "runControllerMissingValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "updated"
+    },
+    {
+      "export": "runControllerMissingParentScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "name": "updated"
       }
     }
   ]

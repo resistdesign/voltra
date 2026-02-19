@@ -2,36 +2,64 @@
   "file": "./Utils.test-utils.ts",
   "tests": [
     {
-      "export": "runLoggingUtilsScenario",
+      "export": "runLoggingUtilsResultScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "result": "1-two",
-        "disabledResult": "A",
-        "circularResult": "ok",
-        "thrownMessage": "boom",
-        "logMessages": [
-          ["LOGGING_FUNCTION_CALL", "INPUT", "doThing", ":"],
-          ["LOGGING_FUNCTION_CALL", "OUTPUT", "doThing", ":"],
-          ["LOGGING_FUNCTION_CALL", "INPUT", "failThing", ":"],
-          ["LOGGING_FUNCTION_CALL", "INPUT", "circularThing", ":"],
-          ["LOGGING_FUNCTION_CALL", "OUTPUT", "circularThing", ":"]
-        ],
-        "errorMessages": [["LOGGING_FUNCTION_CALL", "ERROR", "failThing", ":"]],
-        "expectedLabels": ["LOGGING_FUNCTION_CALL", "INPUT", "doThing", ":"],
-        "expectedOutputLabels": [
-          "LOGGING_FUNCTION_CALL",
-          "OUTPUT",
-          "doThing",
-          ":"
-        ],
-        "expectedErrorLabels": [
-          "LOGGING_FUNCTION_CALL",
-          "ERROR",
-          "failThing",
-          ":"
-        ]
-      }
+      "operation": "===",
+      "expectation": "1-two"
+    },
+    {
+      "export": "runLoggingUtilsDisabledResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "A"
+    },
+    {
+      "export": "runLoggingUtilsCircularResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "ok"
+    },
+    {
+      "export": "runLoggingUtilsThrownMessageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "boom"
+    },
+    {
+      "export": "runLoggingUtilsLogMessagesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        ["LOGGING_FUNCTION_CALL", "INPUT", "doThing", ":"],
+        ["LOGGING_FUNCTION_CALL", "OUTPUT", "doThing", ":"],
+        ["LOGGING_FUNCTION_CALL", "INPUT", "failThing", ":"],
+        ["LOGGING_FUNCTION_CALL", "INPUT", "circularThing", ":"],
+        ["LOGGING_FUNCTION_CALL", "OUTPUT", "circularThing", ":"]
+      ]
+    },
+    {
+      "export": "runLoggingUtilsErrorMessagesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [["LOGGING_FUNCTION_CALL", "ERROR", "failThing", ":"]]
+    },
+    {
+      "export": "runLoggingUtilsExpectedLabelsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["LOGGING_FUNCTION_CALL", "INPUT", "doThing", ":"]
+    },
+    {
+      "export": "runLoggingUtilsExpectedOutputLabelsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["LOGGING_FUNCTION_CALL", "OUTPUT", "doThing", ":"]
+    },
+    {
+      "export": "runLoggingUtilsExpectedErrorLabelsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["LOGGING_FUNCTION_CALL", "ERROR", "failThing", ":"]
     }
   ]
 }

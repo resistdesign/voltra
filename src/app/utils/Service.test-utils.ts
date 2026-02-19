@@ -1,6 +1,6 @@
 import { getFullUrl, sendServiceRequest, type ServiceConfig } from "./Service";
 
-export const runServiceScenario = async () => {
+const runServiceScenario = async () => {
   const config: ServiceConfig = {
     protocol: "https",
     domain: "example.com",
@@ -77,3 +77,23 @@ export const runServiceScenario = async () => {
     errorMessage,
   };
 };
+
+export const runServiceUrlScenario = async () => (await runServiceScenario()).url;
+
+export const runServiceOriginUrlScenario = async () =>
+  (await runServiceScenario()).originUrl;
+
+export const runServiceNormalizedProtocolUrlScenario = async () =>
+  (await runServiceScenario()).normalizedProtocolUrl;
+
+export const runServiceNormalizedDomainUrlScenario = async () =>
+  (await runServiceScenario()).normalizedDomainUrl;
+
+export const runServiceRequestInfoScenario = async () =>
+  (await runServiceScenario()).requestInfo;
+
+export const runServiceSuccessResponseScenario = async () =>
+  (await runServiceScenario()).successResponse;
+
+export const runServiceErrorMessageScenario = async () =>
+  (await runServiceScenario()).errorMessage;

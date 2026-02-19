@@ -1,6 +1,6 @@
 import { logFunctionCall, LOGGING_MESSAGES } from "./Utils";
 
-export const runLoggingUtilsScenario = async () => {
+const runLoggingUtilsScenario = async () => {
   const originalLog = console.log;
   const originalError = console.error;
   const logs: any[] = [];
@@ -79,3 +79,30 @@ export const runLoggingUtilsScenario = async () => {
     ],
   };
 };
+
+export const runLoggingUtilsResultScenario = async () =>
+  (await runLoggingUtilsScenario()).result;
+
+export const runLoggingUtilsDisabledResultScenario = async () =>
+  (await runLoggingUtilsScenario()).disabledResult;
+
+export const runLoggingUtilsCircularResultScenario = async () =>
+  (await runLoggingUtilsScenario()).circularResult;
+
+export const runLoggingUtilsThrownMessageScenario = async () =>
+  (await runLoggingUtilsScenario()).thrownMessage;
+
+export const runLoggingUtilsLogMessagesScenario = async () =>
+  (await runLoggingUtilsScenario()).logMessages;
+
+export const runLoggingUtilsErrorMessagesScenario = async () =>
+  (await runLoggingUtilsScenario()).errorMessages;
+
+export const runLoggingUtilsExpectedLabelsScenario = async () =>
+  (await runLoggingUtilsScenario()).expectedLabels;
+
+export const runLoggingUtilsExpectedOutputLabelsScenario = async () =>
+  (await runLoggingUtilsScenario()).expectedOutputLabels;
+
+export const runLoggingUtilsExpectedErrorLabelsScenario = async () =>
+  (await runLoggingUtilsScenario()).expectedErrorLabels;

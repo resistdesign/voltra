@@ -1,7 +1,6 @@
 import {
   createSourceFile,
   ScriptTarget,
-  SyntaxKind,
   TypeAliasDeclaration,
   TypeReferenceNode,
   UnionTypeNode,
@@ -20,7 +19,7 @@ import { checkType } from "./checkType";
 import { getTypeInfoFromTypeAlias } from "./getTypeInfoFromTypeAlias";
 import { TypeInfo } from "../TypeInfo";
 
-export const runParsingUtilsScenario = () => {
+const getParsingUtilsScenarioData = () => {
   const source = `
     /** @label Book @persisted true @meta.nested 5 */
     export type Book = {
@@ -53,7 +52,6 @@ export const runParsingUtilsScenario = () => {
   const unionExcludedNode = typeMap.UnionExcluded as TypeAliasDeclaration;
   const flagNode = typeMap.Flag as TypeAliasDeclaration;
 
-  const commentTags = extractCommentTags(bookNode);
   const typeInfo = getTypeInfo(bookNode.type as any);
   const titleProperty = (bookNode.type as any).members.find(
     (member: any) => member.name?.getText() === "title",
@@ -63,14 +61,8 @@ export const runParsingUtilsScenario = () => {
   );
   const titleField = getTypeInfoField(titleProperty);
   const ratingType = ratingProperty.type;
-  const ratingDetails = extractTypeDetails(ratingType);
-  const ratingCheck = checkType(ratingType);
-  const literalValues = extractLiteralValues(ratingType as UnionTypeNode);
 
   const pickedTypeRef = pickedNode.type as TypeReferenceNode;
-  const pickedValues = getUnionOrLiteralStringValues(
-    pickedTypeRef.typeArguments?.[1],
-  );
 
   const unionTypeInfo = getUnionOrIntersectionTypeInfo(
     unionNode.type as UnionTypeNode,
@@ -81,20 +73,6 @@ export const runParsingUtilsScenario = () => {
     unionExcludedNode,
     typeMap,
   );
-
-  const flagKeyword = getTypeKeyword(flagNode.type);
-
-  const primaryField = getPrimaryFieldForTypeInfo({
-    fields: {
-      id: {
-        type: "string",
-        array: false,
-        readonly: false,
-        optional: false,
-        tags: { primaryField: true },
-      },
-    },
-  });
 
   let primaryFieldError = "";
   try {
@@ -117,24 +95,96 @@ export const runParsingUtilsScenario = () => {
   }
 
   return {
-    commentTags,
-    typeInfoFieldKeys: Object.keys(typeInfo.fields || {}),
-    titleFieldSummary: {
-      readonly: titleField.readonly,
-      optional: titleField.optional,
-      label: titleField.tags?.label,
-      deniedOperations: titleField.tags?.deniedOperations,
-    },
-    ratingDetails,
-    ratingCheck,
-    literalValues,
-    pickedValues,
-    unionFieldSets: unionTypeInfo?.unionFieldSets || [],
-    unionFieldKeys: Object.keys(unionTypeInfo?.fields || {}),
-    unionPickedFieldSets: unionPickedTypeInfo?.unionFieldSets || [],
-    unionExcludedFieldSets: unionExcludedTypeInfo?.unionFieldSets || [],
-    flagKeyword,
-    primaryField,
+    bookNode,
+    typeInfo,
+    titleField,
+    ratingType,
+    pickedTypeRef,
+    unionTypeInfo,
+    unionPickedTypeInfo,
+    unionExcludedTypeInfo,
+    flagNode,
     primaryFieldError,
   };
 };
+
+export const runParsingUtilsCommentTagsScenario = () => {
+  const { bookNode } = getParsingUtilsScenarioData();
+  return extractCommentTags(bookNode);
+};
+
+export const runParsingUtilsTypeInfoFieldKeysScenario = () => {
+  const { typeInfo } = getParsingUtilsScenarioData();
+  return Object.keys(typeInfo.fields || {});
+};
+
+export const runParsingUtilsTitleFieldSummaryScenario = () => {
+  const { titleField } = getParsingUtilsScenarioData();
+  return {
+    readonly: titleField.readonly,
+    optional: titleField.optional,
+    label: titleField.tags?.label,
+    deniedOperations: titleField.tags?.deniedOperations,
+  };
+};
+
+export const runParsingUtilsRatingDetailsScenario = () => {
+  const { ratingType } = getParsingUtilsScenarioData();
+  return extractTypeDetails(ratingType);
+};
+
+export const runParsingUtilsRatingCheckScenario = () => {
+  const { ratingType } = getParsingUtilsScenarioData();
+  return checkType(ratingType);
+};
+
+export const runParsingUtilsLiteralValuesScenario = () => {
+  const { ratingType } = getParsingUtilsScenarioData();
+  return extractLiteralValues(ratingType as UnionTypeNode);
+};
+
+export const runParsingUtilsPickedValuesScenario = () => {
+  const { pickedTypeRef } = getParsingUtilsScenarioData();
+  return getUnionOrLiteralStringValues(pickedTypeRef.typeArguments?.[1]);
+};
+
+export const runParsingUtilsUnionFieldSetsScenario = () => {
+  const { unionTypeInfo } = getParsingUtilsScenarioData();
+  return unionTypeInfo?.unionFieldSets || [];
+};
+
+export const runParsingUtilsUnionFieldKeysScenario = () => {
+  const { unionTypeInfo } = getParsingUtilsScenarioData();
+  return Object.keys(unionTypeInfo?.fields || {});
+};
+
+export const runParsingUtilsUnionPickedFieldSetsScenario = () => {
+  const { unionPickedTypeInfo } = getParsingUtilsScenarioData();
+  return unionPickedTypeInfo?.unionFieldSets || [];
+};
+
+export const runParsingUtilsUnionExcludedFieldSetsScenario = () => {
+  const { unionExcludedTypeInfo } = getParsingUtilsScenarioData();
+  return unionExcludedTypeInfo?.unionFieldSets || [];
+};
+
+export const runParsingUtilsFlagKeywordScenario = () => {
+  const { flagNode } = getParsingUtilsScenarioData();
+  return getTypeKeyword(flagNode.type);
+};
+
+export const runParsingUtilsPrimaryFieldScenario = () =>
+  getPrimaryFieldForTypeInfo({
+    fields: {
+      id: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+        tags: { primaryField: true },
+      },
+    },
+  });
+
+export const runParsingUtilsPrimaryFieldErrorScenario = () =>
+  getParsingUtilsScenarioData().primaryFieldError;

@@ -6,12 +6,17 @@ import {
   TypeInfoORMServiceError,
 } from "./Types";
 
-export const runTypeInfoORMTypesScenario = () => {
-  return {
-    resourceName: ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
-    relationshipOperations: Object.values(RelationshipOperation),
-    operationGroups: Object.values(OperationGroup),
-    apiRoutes: Object.values(TypeInfoORMAPIRoutePaths),
-    serviceErrors: Object.values(TypeInfoORMServiceError),
-  };
-};
+export const runTypeInfoORMTypesResourceNameScenario = () =>
+  ITEM_RELATIONSHIP_DAC_RESOURCE_NAME;
+
+export const runTypeInfoORMTypesRelationshipOperationsScenario = () =>
+  Object.values(RelationshipOperation);
+
+export const runTypeInfoORMTypesOperationGroupsScenario = () =>
+  Object.values(OperationGroup);
+
+export const runTypeInfoORMTypesApiRoutesScenario = () =>
+  Object.values(TypeInfoORMAPIRoutePaths);
+
+export const runTypeInfoORMTypesServiceErrorsScenario = () =>
+  Object.values(TypeInfoORMServiceError);

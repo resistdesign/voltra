@@ -2,17 +2,40 @@
   "file": "./SearchUtils.test-utils.ts",
   "tests": [
     {
-      "export": "runSearchUtilsScenario",
+      "export": "runSearchUtilsCompareScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runSearchUtilsCompareArrayContainsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runSearchUtilsCompareArrayNotContainsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runSearchUtilsFilterAndScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "compareResult": true,
-        "compareArrayContains": true,
-        "compareArrayNotContains": false,
-        "filteredAndIds": ["1"],
-        "filteredOrIds": ["2"],
-        "sortedIds": ["1", "3", "2"]
-      }
+      "expectation": ["1"]
+    },
+    {
+      "export": "runSearchUtilsFilterOrScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["2"]
+    },
+    {
+      "export": "runSearchUtilsSortScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["1", "3", "2"]
     }
   ]
 }

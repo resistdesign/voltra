@@ -2,46 +2,64 @@
   "file": "./Types.test-utils.ts",
   "tests": [
     {
-      "export": "runTypeInfoORMTypesScenario",
+      "export": "runTypeInfoORMTypesResourceNameScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "resourceName": "TYPE_INFO_ORM_ITEM_RELATIONSHIP",
-        "relationshipOperations": ["GET", "SET", "UNSET"],
-        "operationGroups": [
-          "ALL_OPERATIONS",
-          "ALL_ITEM_OPERATIONS",
-          "ALL_RELATIONSHIP_OPERATIONS"
-        ],
-        "apiRoutes": [
-          "create",
-          "read",
-          "update",
-          "delete",
-          "list",
-          "create-relationship",
-          "delete-relationship",
-          "list-relationships",
-          "list-related-items"
-        ],
-        "serviceErrors": [
-          "NO_DRIVERS_SUPPLIED",
-          "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
-          "NO_PRIMARY_FIELD_VALUE_SUPPLIED",
-          "INVALID_DRIVER",
-          "INVALID_RELATIONSHIP_DRIVER",
-          "INVALID_TYPE_INFO",
-          "TYPE_INFO_MISSING_PRIMARY_FIELD",
+      "operation": "===",
+      "expectation": "TYPE_INFO_ORM_ITEM_RELATIONSHIP"
+    },
+    {
+      "export": "runTypeInfoORMTypesRelationshipOperationsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["GET", "SET", "UNSET"]
+    },
+    {
+      "export": "runTypeInfoORMTypesOperationGroupsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "ALL_OPERATIONS",
+        "ALL_ITEM_OPERATIONS",
+        "ALL_RELATIONSHIP_OPERATIONS"
+      ]
+    },
+    {
+      "export": "runTypeInfoORMTypesApiRoutesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "create",
+        "read",
+        "update",
+        "delete",
+        "list",
+        "create-relationship",
+        "delete-relationship",
+        "list-relationships",
+        "list-related-items"
+      ]
+    },
+    {
+      "export": "runTypeInfoORMTypesServiceErrorsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "NO_DRIVERS_SUPPLIED",
+        "NO_RELATIONSHIP_DRIVERS_SUPPLIED",
+        "NO_PRIMARY_FIELD_VALUE_SUPPLIED",
+        "INVALID_DRIVER",
+        "INVALID_RELATIONSHIP_DRIVER",
+        "INVALID_TYPE_INFO",
+        "TYPE_INFO_MISSING_PRIMARY_FIELD",
         "INVALID_RELATIONSHIP",
         "INVALID_OPERATION",
         "MISSING_ACCESSING_ROLE",
         "INDEXING_UNSUPPORTED_CRITERIA",
-          "INDEXING_UNSUPPORTED_COMBINATION",
-          "INDEXING_MISSING_INDEX_FIELD",
-          "INDEXING_MISSING_BACKEND",
-          "INDEXING_REQUIRES_CRITERIA"
-        ]
-      }
+        "INDEXING_UNSUPPORTED_COMBINATION",
+        "INDEXING_MISSING_INDEX_FIELD",
+        "INDEXING_MISSING_BACKEND",
+        "INDEXING_REQUIRES_CRITERIA"
+      ]
     }
   ]
 }

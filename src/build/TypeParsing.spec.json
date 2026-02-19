@@ -2,27 +2,42 @@
   "file": "./TypeParsing.test-utils.ts",
   "tests": [
     {
-      "export": "runTypeParsingScenario",
+      "export": "runTypeParsingMapKeysScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["Book", "ExcludedBook", "Mixed", "OmittedBook", "Person", "PickedBook"]
+    },
+    {
+      "export": "runTypeParsingBookMetadataScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "mapKeys": [
-          "Book",
-          "ExcludedBook",
-          "Mixed",
-          "OmittedBook",
-          "Person",
-          "PickedBook"
-        ],
         "bookPrimaryField": "id",
         "bookFields": ["id", "title", "rating", "tags", "author"],
         "bookTags": {
           "label": "Book",
           "persisted": true
         },
-        "bookRatingOptions": [1, 2],
-        "pickedFields": ["id", "rating"],
-        "omittedFields": ["id", "title", "rating", "author"],
+        "bookRatingOptions": [1, 2]
+      }
+    },
+    {
+      "export": "runTypeParsingPickedBookScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["id", "rating"]
+    },
+    {
+      "export": "runTypeParsingOmittedBookScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["id", "title", "rating", "author"]
+    },
+    {
+      "export": "runTypeParsingMixedUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
         "mixedUnionFieldSets": [
           ["id", "title", "rating", "tags", "author"],
           ["name"]
