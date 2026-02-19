@@ -38,7 +38,31 @@ export const runAuthPackScenario = () => {
     })
     .toJSON();
 
+  const withCustomProvidersTemplate = new SimpleCFT()
+    .applyPack(addAuth, {
+      userManagementId: "UserPool",
+      authRoleName: "AuthRole",
+      unauthRoleName: "UnauthRole",
+      hostedZoneIdParameterName: "HostedZoneId",
+      domainNameParameterName: "DomainName",
+      sslCertificateId: "CertificateArn",
+      mainCDNCloudFrontId: "MainCDN",
+      apiCloudFunctionGatewayId: "ApiGateway",
+      apiStageName: "prod",
+      adminGroupId: "AdminGroup",
+      userManagementAdminGroupName: "admins",
+      callbackUrls: ["https://example.com/callback"],
+      logoutUrls: ["https://example.com/logout"],
+      supportedIdentityProviders: ["COGNITO", "Google", "LoginWithAmazon"],
+    })
+    .toJSON();
+
   const withoutDomainResources = withoutDomainTemplate.Resources || {};
+  const withCustomProvidersResources = withCustomProvidersTemplate.Resources || {};
+  const withDomainClient = withDomainResources.UserPoolClient as any;
+  const withCustomProvidersClient =
+    withCustomProvidersResources.UserPoolClient as any;
+  const withoutDomainClient = withoutDomainResources.UserPoolClient as any;
 
   return {
     withDomainSummary: {
@@ -50,6 +74,19 @@ export const runAuthPackScenario = () => {
       hasDomain: "UserPoolDomain" in withDomainResources,
       hasDomainRecord: "UserPoolDomainRecord" in withDomainResources,
       hasIdentityPoolRoles: "UserPoolIdentityPoolRoles" in withDomainResources,
+      oauthSummary: {
+        allowedOAuthFlowsUserPoolClient:
+          withDomainClient?.Properties?.AllowedOAuthFlowsUserPoolClient,
+        allowedOAuthFlows: withDomainClient?.Properties?.AllowedOAuthFlows,
+        supportedIdentityProviders:
+          withDomainClient?.Properties?.SupportedIdentityProviders,
+        hasCallbackURLs: "CallbackURLs" in (withDomainClient?.Properties || {}),
+        hasLogoutURLs: "LogoutURLs" in (withDomainClient?.Properties || {}),
+      },
+    },
+    withCustomProvidersSummary: {
+      supportedIdentityProviders:
+        withCustomProvidersClient?.Properties?.SupportedIdentityProviders,
     },
     withoutDomainSummary: {
       resourceKeys: Object.keys(withoutDomainResources).sort(),
@@ -58,6 +95,18 @@ export const runAuthPackScenario = () => {
       hasDomainRecord: "UserPoolDomainRecord" in withoutDomainResources,
       hasIdentityPoolRoles:
         "UserPoolIdentityPoolRoles" in withoutDomainResources,
+      oauthSummary: {
+        allowedOAuthFlowsUserPoolClient:
+          withoutDomainClient?.Properties?.AllowedOAuthFlowsUserPoolClient,
+        hasAllowedOAuthFlows:
+          "AllowedOAuthFlows" in (withoutDomainClient?.Properties || {}),
+        hasAllowedOAuthScopes:
+          "AllowedOAuthScopes" in (withoutDomainClient?.Properties || {}),
+        hasSupportedIdentityProviders:
+          "SupportedIdentityProviders" in (withoutDomainClient?.Properties || {}),
+        hasCallbackURLs: "CallbackURLs" in (withoutDomainClient?.Properties || {}),
+        hasLogoutURLs: "LogoutURLs" in (withoutDomainClient?.Properties || {}),
+      },
     },
   };
 };
