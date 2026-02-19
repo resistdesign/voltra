@@ -336,6 +336,34 @@ AutoForm passes validation through the same centralized logic and supports:
 - multiple value-level errors per field
 - per-index array item errors for array fields
 
+Validation error maps can include both value-level errors and array item errors:
+
+```ts
+{
+  errorMap: {
+    title: [
+      { code: "MISSING" },
+      { code: "VALUE_DOES_NOT_MATCH_PATTERN" }
+    ],
+    tags: [
+      { code: "INVALID_TYPE" },
+      {
+        itemErrorMap: {
+          0: [{ code: "NOT_A_STRING" }],
+          2: [
+            { code: "NOT_A_STRING" },
+            { code: "INVALID_CUSTOM_TYPE" }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+- Field-level multiple errors are represented by multiple `ErrorDescriptor` entries in the field array.
+- Array item errors are represented by `itemErrorMap[index] = ErrorDescriptor[]`.
+
 Error-code constants are split by purpose:
 
 - `PRIMITIVE_ERROR_MESSAGE_CONSTANTS` keys follow `typeof` (`string`, `number`, `boolean`)
