@@ -22,35 +22,3 @@ export * from "./UniversalRouteAdapter";
 export * from "./Service";
 export * from "./TypeInfoORMAPIUtils";
 export * from "./TypeInfoORMClient";
-
-// BEGIN: missing-export-refinement
-/**
- * @category app
- * @group Type Dependencies
- */
-export type {
-  ListItemsConfig,
-  ListItemsResults,
-  ListRelationshipsConfig,
-} from "../../common/SearchTypes";
-
-/**
- * @category app
- * @group Type Dependencies
- */
-export type {
-  DeleteRelationshipResults,
-  TypeInfoORMAPIRoutePaths,
-  TypeInfoORMClientAPI,
-  TypeInfoORMServiceError,
-} from "../../common/TypeInfoORM/Types";
-
-/**
- * @category app
- * @group Type Dependencies
- */
-export type {
-  TypeInfoDataItem,
-} from "../../common/TypeParsing/TypeInfo";
-
-// END: missing-export-refinement

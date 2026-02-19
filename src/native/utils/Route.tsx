@@ -17,7 +17,6 @@ import type {
 import {
   Route as CoreRoute,
   buildRoutePath,
-  useRouteContext,
 } from "../../app/utils/Route";
 import { getPathArray } from "../../common/Routing";
 
@@ -220,15 +219,4 @@ export const buildPathFromRouteChain = (
   });
 
   return buildRoutePath(segments, query);
-};
-
-export { useRouteContext };
-export type {
-  RouteAdapter,
-  RouteContextType,
-  RouteProps,
-  RouteProviderProps,
-  RouteQuery,
-  RouteQueryValue,
-  RouteRuntimeIntegration,
 };
