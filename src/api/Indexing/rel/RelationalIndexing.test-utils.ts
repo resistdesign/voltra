@@ -7,7 +7,6 @@ import {
   encodeRelationEdgePartitionKey,
   relationEdgesSchema,
 } from "./RelationalDdb";
-import type { Edge, EdgePage, RelationalQueryOptions } from "./Types";
 import {
   handler as relationalHandler,
   setRelationalHandlerDependencies,
@@ -20,15 +19,6 @@ type RelationEdgeStoreItem<
   otherId: string;
   metadata?: TMetadata;
 };
-
-const buildCursorKey = (request: {
-  edgeKey: string;
-  exclusiveStartKey?: { edgeKey: string; otherId: string };
-  limit?: number;
-}) =>
-  request.exclusiveStartKey
-    ? `${request.edgeKey}|${request.exclusiveStartKey.otherId}|${request.limit ?? ""}`
-    : `${request.edgeKey}|${request.limit ?? ""}`;
 
 export const runRelationalIndexingScenario = async () => {
   const inMemoryBackend = new RelationalInMemoryBackend<{ weight: number }>();
@@ -134,7 +124,9 @@ export const runRelationalIndexingScenario = async () => {
     relationalCursorDecoded,
     ddbSchema: relationEdgesSchema,
     ddbKey: buildRelationEdgeDdbKey("a", "owns", "out", "b"),
-    ddbItem: buildRelationEdgeDdbItem("a", "owns", "out", "b", { weight: 1 }),
+    ddbItem: buildRelationEdgeDdbItem("a", "owns", "out", "b", {
+      weight: 1,
+    }),
     ddbPartitionKey: encodeRelationEdgePartitionKey("a", "owns", "out"),
     ddbPage1,
     ddbPage2,
@@ -143,3 +135,45 @@ export const runRelationalIndexingScenario = async () => {
     handlerQuery,
   };
 };
+
+export const runRelationalIndexingOutgoingPage1Scenario = async () =>
+  (await runRelationalIndexingScenario()).outgoingPage1;
+
+export const runRelationalIndexingOutgoingPage2Scenario = async () =>
+  (await runRelationalIndexingScenario()).outgoingPage2;
+
+export const runRelationalIndexingIncomingPageScenario = async () =>
+  (await runRelationalIndexingScenario()).incomingPage;
+
+export const runRelationalIndexingCursorScenario = async () =>
+  (await runRelationalIndexingScenario()).relationalCursor;
+
+export const runRelationalIndexingCursorDecodedScenario = async () =>
+  (await runRelationalIndexingScenario()).relationalCursorDecoded;
+
+export const runRelationalIndexingDdbSchemaScenario = async () =>
+  (await runRelationalIndexingScenario()).ddbSchema;
+
+export const runRelationalIndexingDdbKeyScenario = async () =>
+  (await runRelationalIndexingScenario()).ddbKey;
+
+export const runRelationalIndexingDdbItemScenario = async () =>
+  (await runRelationalIndexingScenario()).ddbItem;
+
+export const runRelationalIndexingDdbPartitionKeyScenario = async () =>
+  (await runRelationalIndexingScenario()).ddbPartitionKey;
+
+export const runRelationalIndexingDdbPage1Scenario = async () =>
+  (await runRelationalIndexingScenario()).ddbPage1;
+
+export const runRelationalIndexingDdbPage2Scenario = async () =>
+  (await runRelationalIndexingScenario()).ddbPage2;
+
+export const runRelationalIndexingDdbAfterRemoveScenario = async () =>
+  (await runRelationalIndexingScenario()).ddbAfterRemove;
+
+export const runRelationalIndexingHandlerPutScenario = async () =>
+  (await runRelationalIndexingScenario()).handlerPut;
+
+export const runRelationalIndexingHandlerQueryScenario = async () =>
+  (await runRelationalIndexingScenario()).handlerQuery;

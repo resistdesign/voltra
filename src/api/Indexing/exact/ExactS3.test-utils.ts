@@ -5,7 +5,7 @@ import {
   type ExactS3Pointer,
 } from "./ExactS3";
 
-export const runExactS3MemoryScenario = async () => {
+const runExactS3MemoryScenario = async () => {
   const pointer: ExactS3Pointer = {
     bucket: "test-bucket",
     key: buildExactS3Key("hello world", "text", "doc-1"),
@@ -23,3 +23,12 @@ export const runExactS3MemoryScenario = async () => {
     missing: await loadExactPositions(missingPointer),
   };
 };
+
+export const runExactS3MemoryKeyScenario = async () =>
+  (await runExactS3MemoryScenario()).key;
+
+export const runExactS3MemoryLoadedScenario = async () =>
+  (await runExactS3MemoryScenario()).loaded;
+
+export const runExactS3MemoryMissingScenario = async () =>
+  (await runExactS3MemoryScenario()).missing;

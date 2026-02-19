@@ -3,7 +3,7 @@ import { indexingTableEnvVars } from "../../../site/common/IndexingTableNames";
 /**
  * Validate the demo indexing env var naming scheme is stable and unique.
  */
-export const runIndexingEnvVarMappingScenario = () => {
+const runIndexingEnvVarMappingScenario = () => {
   const envVars = [
     ...Object.values(indexingTableEnvVars.fullText),
     ...Object.values(indexingTableEnvVars.structured),
@@ -20,3 +20,15 @@ export const runIndexingEnvVarMappingScenario = () => {
     allPrefixed,
   };
 };
+
+export const runIndexingEnvVarMappingEnvVarsScenario = () =>
+  runIndexingEnvVarMappingScenario().envVars;
+
+export const runIndexingEnvVarMappingUniqueCountScenario = () =>
+  runIndexingEnvVarMappingScenario().uniqueCount;
+
+export const runIndexingEnvVarMappingTotalCountScenario = () =>
+  runIndexingEnvVarMappingScenario().totalCount;
+
+export const runIndexingEnvVarMappingAllPrefixedScenario = () =>
+  runIndexingEnvVarMappingScenario().allPrefixed;

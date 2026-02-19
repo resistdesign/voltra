@@ -13,7 +13,7 @@ const stubClient: DynamoQueryClient = {
 /**
  * Validate that DDB backends fail fast when required table names are missing.
  */
-export const runIndexingTablesValidationScenario = () => {
+const runIndexingTablesValidationScenario = () => {
   let missingFullTextTableError: string | undefined;
   try {
     new FullTextDdbBackend({
@@ -61,3 +61,12 @@ export const runIndexingTablesValidationScenario = () => {
     missingRelationsTableError,
   };
 };
+
+export const runIndexingTablesValidationMissingFullTextTableErrorScenario = () =>
+  runIndexingTablesValidationScenario().missingFullTextTableError;
+
+export const runIndexingTablesValidationMissingStructuredTableErrorScenario = () =>
+  runIndexingTablesValidationScenario().missingStructuredTableError;
+
+export const runIndexingTablesValidationMissingRelationsTableErrorScenario = () =>
+  runIndexingTablesValidationScenario().missingRelationsTableError;

@@ -1,7 +1,7 @@
 import { LossyIndex } from "./LossyIndex";
 import { buildLossyDdbKey } from "./LossyDdb";
 
-export const runLossyIndexScenario = () => {
+const runLossyIndexScenario = () => {
   const index = new LossyIndex();
 
   index.addPosting("hello", "text", "doc-2");
@@ -34,3 +34,20 @@ export const runLossyIndexScenario = () => {
     ddbKey: buildLossyDdbKey("token", "text", "doc-1"),
   };
 };
+
+export const runLossyIndexPostingsAllScenario = () =>
+  runLossyIndexScenario().postingsAll;
+
+export const runLossyIndexPostingsPageScenario = () =>
+  runLossyIndexScenario().postingsPage;
+
+export const runLossyIndexPostingsPage2Scenario = () =>
+  runLossyIndexScenario().postingsPage2;
+
+export const runLossyIndexPostingsAfterRemoveScenario = () =>
+  runLossyIndexScenario().postingsAfterRemove;
+
+export const runLossyIndexPostingsAlphaScenario = () =>
+  runLossyIndexScenario().postingsAlpha;
+
+export const runLossyIndexDdbKeyScenario = () => runLossyIndexScenario().ddbKey;
