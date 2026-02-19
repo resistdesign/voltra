@@ -57,6 +57,11 @@
 - [x] Fix TypeDoc generation (`yarn doc`) after the renderer-context API changes.
 - [x] Add regression tests that lock in constant-shape expectations for primitive and denied-operation error mappings.
 - [x] Update docs/comments for consumers to explain correct `ERROR_MESSAGE_CONSTANTS` usage vs primitive/operation mapping constants.
+- [x] Finalize `ErrorMap` array semantics so array index failures are carried via `ArrayErrorDescriptorCollection.itemErrorMap` while preserving descriptor arrays for value-level errors.
+- [x] Thread the richer error shape through `useFormEngine` / controller field state (`errors` + `arrayItemErrorMap`) and keep `setErrors` compatibility.
+- [x] Update AutoForm renderer flow (shared/web/native) to render multiple value-level errors and per-index array item errors.
+- [x] Update impacted consumers/test-utils (DBX + validation helpers + demo FormBlock) to handle mixed error-map entries.
+- [x] Re-run full verification: `yarn test`, `yarn doc`, and `yarn build`.
 
 ## Notes
 

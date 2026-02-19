@@ -36,6 +36,8 @@ export const AutoField: FC<AutoFieldProps> = (props) => {
     value: props.value,
     onChange: props.onChange,
     error: props.error,
+    errors: props.errors,
+    arrayItemErrorMap: props.arrayItemErrorMap,
     translateValidationErrorCode: props.translateValidationErrorCode,
     disabled: props.disabled,
     onRelationAction: props.onRelationAction,

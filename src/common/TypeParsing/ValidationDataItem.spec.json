@@ -39,6 +39,17 @@
         "hasLowercasePrimitiveNumberProperty": false,
         "hasLowercasePrimitiveBooleanProperty": false
       }
+    },
+    {
+      "export": "runArrayItemErrorMapScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "valid": false,
+        "topLevelCode": "INVALID_TYPE",
+        "fieldCode": "NOT_A_STRING",
+        "index1Codes": ["NOT_A_STRING"]
+      }
     }
   ]
 }

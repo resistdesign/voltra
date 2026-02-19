@@ -10,6 +10,7 @@ import type {
   LiteralValue,
   TypeInfoField,
 } from "../../common/TypeParsing/TypeInfo";
+import { ERROR_MESSAGE_CONSTANTS } from "../../common/TypeParsing/Validation";
 import type {
   ComponentSuite,
   FieldRenderContext,
@@ -65,19 +66,26 @@ const formatCustomValue = (val: unknown) => {
 };
 
 const renderErrorMessage = (context: FieldRenderContext) => {
-  const { error, translateValidationErrorCode } = context;
+  const { error, errors = [], translateValidationErrorCode } = context;
+  const descriptors = (errors.length ? errors : error ? [error] : []).filter(
+    (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+  );
 
-  if (!error) {
+  if (!descriptors.length) {
     return null;
   }
 
-  const message = translateValidationErrorCode(error);
-
-  if (!message) {
-    return null;
-  }
-
-  return <ErrorMessage>{message}</ErrorMessage>;
+  return (
+    <>
+      {descriptors.map((descriptor, index) => {
+        const message = translateValidationErrorCode(descriptor);
+        if (!message) {
+          return null;
+        }
+        return <ErrorMessage key={`${descriptor.code}-${index}`}>{message}</ErrorMessage>;
+      })}
+    </>
+  );
 };
 
 const renderRelationSingle = (context: FieldRenderContext) => {
@@ -296,6 +304,13 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
                   newValue[index] = newItem as LiteralValue;
                   context.onChange(newValue);
                 },
+                errors: context.arrayItemErrorMap?.[index] ?? [],
+                error:
+                  context.arrayItemErrorMap?.[index]?.find(
+                    (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+                  ) ?? undefined,
+                translateValidationErrorCode:
+                  context.translateValidationErrorCode,
                 disabled,
               })}
             </div>

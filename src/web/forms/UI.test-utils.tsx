@@ -9,7 +9,11 @@ import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
-import { getNoErrorDescriptor } from "../../common/TypeParsing/Validation";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptor,
+  getNoErrorDescriptor,
+} from "../../common/TypeParsing/Validation";
 import type {
   CustomTypeActionPayload,
   FormController,
@@ -602,5 +606,69 @@ export const runHiddenFieldScenario = () => {
   return {
     hasVisibleField: render.includes("field-visible"),
     hasHiddenField: render.includes("field-secret"),
+  };
+};
+
+/**
+ * Validate multiple value-level errors render for one field.
+ *
+ * @returns Render assertions for multiple field errors.
+ */
+export const runMultipleValueErrorsScenario = () => {
+  const render = renderToString(
+    createElement(AutoField, {
+      field: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      fieldKey: "field",
+      value: "bad",
+      onChange: () => {},
+      errors: [
+        getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING),
+        getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE),
+      ],
+      translateValidationErrorCode: (error) => `msg:${error.code}`,
+    }),
+  );
+
+  return {
+    hasFirstError: render.includes("msg:MISSING"),
+    hasSecondError: render.includes("msg:INVALID_CUSTOM_TYPE"),
+  };
+};
+
+/**
+ * Validate per-index array item errors render on nested array items.
+ *
+ * @returns Render assertions for array item errors.
+ */
+export const runArrayItemErrorsScenario = () => {
+  const render = renderToString(
+    createElement(AutoField, {
+      field: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: false,
+      },
+      fieldKey: "field",
+      value: ["bad"],
+      onChange: () => {},
+      arrayItemErrorMap: {
+        0: [
+          getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING),
+          getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE),
+        ],
+      },
+      translateValidationErrorCode: (error) => `msg:${error.code}`,
+    }),
+  );
+
+  return {
+    hasItemFirstError: render.includes("msg:MISSING"),
+    hasItemSecondError: render.includes("msg:INVALID_CUSTOM_TYPE"),
   };
 };

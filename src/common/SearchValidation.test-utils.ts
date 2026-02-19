@@ -2,18 +2,28 @@ import { validateSearchFields } from "./SearchValidation";
 import { ComparisonOperators } from "./SearchTypes";
 import { TypeInfoMap } from "./TypeParsing/TypeInfo";
 import type {
+  ArrayErrorDescriptorCollection,
   ErrorDescriptor,
   TypeInfoValidationResults,
 } from "./TypeParsing/Validation";
-import { ERROR_MESSAGE_CONSTANTS } from "./TypeParsing/Validation";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptors,
+} from "./TypeParsing/Validation";
 
 const toLegacyValidationShape = (results: TypeInfoValidationResults) => ({
   ...results,
   error:
     results.error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : results.error.code,
   errorMap: Object.entries(results.errorMap).reduce(
-    (acc, [key, descriptors]: [string, ErrorDescriptor[]]) => {
-      acc[key] = descriptors.map((descriptor) =>
+    (
+      acc,
+      [key, descriptors]: [
+        string,
+        (ErrorDescriptor | ArrayErrorDescriptorCollection)[],
+      ],
+    ) => {
+      acc[key] = getErrorDescriptors(descriptors).map((descriptor) =>
         descriptor.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : descriptor.code,
       );
       return acc;

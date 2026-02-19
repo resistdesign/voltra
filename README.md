@@ -333,6 +333,8 @@ AutoForm passes validation through the same centralized logic and supports:
 
 - `customValidatorMap` for app-specific rules
 - `translateValidationErrorCode` for UI-facing messages
+- multiple value-level errors per field
+- per-index array item errors for array fields
 
 Error-code constants are split by purpose:
 

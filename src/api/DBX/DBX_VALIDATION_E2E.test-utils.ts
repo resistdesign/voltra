@@ -1,7 +1,8 @@
 import type { TypeInfoValidationResults } from "../../common/TypeParsing/Validation";
 import {
   ERROR_MESSAGE_CONSTANTS,
-  type ErrorDescriptor,
+  getArrayItemErrorMap,
+  getErrorDescriptors,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoORMServiceError } from "../../common/TypeInfoORM";
@@ -54,13 +55,36 @@ const summarizeError = (
 ) => {
   const parsed = response.parsedBody as ErrorBody | undefined;
   const errorMap = parsed?.error?.errorMap ?? {};
-  const normalizeErrorCodes = (
-    descriptors: ErrorDescriptor[] | undefined,
-  ): string[] | undefined => {
-    if (!Array.isArray(descriptors)) {
-      return undefined;
+  const normalizeErrorCodes = (key: string): string[] | undefined => {
+    const entries = errorMap[key];
+    if (Array.isArray(entries)) {
+      const descriptors = getErrorDescriptors(entries);
+      if (descriptors.length) {
+        return descriptors.map((descriptor) => descriptor.code);
+      }
     }
-    return descriptors.map((descriptor) => descriptor.code);
+
+    const [rawFieldKey, rawIndex] = key.split("/");
+    const normalizedFieldKey = rawFieldKey?.replace(/^"+|"+$/g, "");
+    const index = Number(rawIndex);
+
+    if (Number.isInteger(index)) {
+      const candidateFieldKeys = [rawFieldKey, normalizedFieldKey].filter(
+        (v): v is string => typeof v === "string" && v.length > 0,
+      );
+
+      for (const fieldKey of candidateFieldKeys) {
+        if (!Array.isArray(errorMap[fieldKey])) {
+          continue;
+        }
+        const itemErrors = getArrayItemErrorMap(errorMap[fieldKey])[index];
+        if (itemErrors?.length) {
+          return itemErrors.map((descriptor) => descriptor.code);
+        }
+      }
+    }
+
+    return undefined;
   };
 
   return {
@@ -68,7 +92,7 @@ const summarizeError = (
     status: parsed?.status,
     error: parsed?.error?.error?.code,
     errorMap: keys.reduce((acc, key) => {
-      const value = normalizeErrorCodes(errorMap[key]);
+      const value = normalizeErrorCodes(key);
       if (value) {
         acc[key] = value;
       }
