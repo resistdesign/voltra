@@ -2,6 +2,14 @@
   "file": "./createNativeFormRenderer.test-utils.ts",
   "tests": [
     {
+      "export": "runNativeCreateFormRendererDefaultScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasDefaultTextInput": true
+      }
+    },
+    {
       "export": "runNativeCreateFormRendererOverrideScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

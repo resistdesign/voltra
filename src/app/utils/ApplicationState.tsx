@@ -105,7 +105,7 @@ export const getApplicationStateValue = (
 export const setApplicationStateModified = (
   identifier: ApplicationStateIdentifier,
   value: boolean,
-  modificationState: ApplicationState,
+  modificationState: ApplicationStateModificationState,
 ): ApplicationStateModificationState =>
   new Map(modificationState).set(identifier, value);
 
@@ -222,6 +222,8 @@ export const useApplicationStateValue = (
   } = useContext(ApplicationStateContext);
   const appStateRef = useRef(applicationState);
   appStateRef.current = applicationState;
+  const modificationStateRef = useRef(modificationState);
+  modificationStateRef.current = modificationState;
   const modified = useMemo(
     () => getApplicationStateModified(identifier, modificationState),
     [identifier, modificationState],
@@ -233,7 +235,11 @@ export const useApplicationStateValue = (
   const setModified = useCallback(
     (isModified: boolean) => {
       setModificationState(
-        setApplicationStateModified(identifier, isModified, modificationState),
+        setApplicationStateModified(
+          identifier,
+          isModified,
+          modificationStateRef.current,
+        ),
       );
     },
     [identifier, setModificationState],

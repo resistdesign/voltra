@@ -41,6 +41,30 @@ export const runNativeCreateFormRendererOverrideScenario = () => {
 };
 
 /**
+ * Validate that native renderer defaults to the built-in native suite when no override is provided.
+ */
+export const runNativeCreateFormRendererDefaultScenario = () => {
+  const renderer = createNativeFormRenderer();
+  const html = renderToStaticMarkup(
+    createElement(renderer.AutoField, {
+      field: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      fieldKey: "title",
+      value: "Hello",
+      onChange: () => undefined,
+    }),
+  );
+
+  return {
+    hasDefaultTextInput: html.includes("TextInput"),
+  };
+};
+
+/**
  * Validate native AutoField wrapper renders through the component pipeline.
  */
 export const runNativeAutoFieldWrapperScenario = () => {

@@ -43,12 +43,12 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
   - [x] Document findings, fixes, and residual risks in this plan.
 - [~] Phase 2: API/defaults/naming/maintainability pass
   - [x] Routing contract alignment: `web` should expose `Route` (not `RouteProvider`) and inject web mechanics while preserving the shared Route API shape.
-  - [x] Audit defaults and option handling for sensible behavior.
-  - [x] Audit naming consistency across modules touched by refactors.
-  - [x] Apply targeted readability and maintainability improvements.
-  - [x] Add/update docs/comments where public behavior is unclear.
-  - [x] Run focused tests for touched areas.
-  - [x] Document findings, fixes, and residual risks in this plan.
+  - [~] Audit defaults and option handling for sensible behavior.
+  - [~] Audit naming consistency across modules touched by refactors.
+  - [~] Apply targeted readability and maintainability improvements.
+  - [~] Add/update docs/comments where public behavior is unclear.
+  - [~] Run focused tests for touched areas.
+  - [~] Document findings, fixes, and residual risks in this plan.
 - [ ] Phase 3: Documentation/demo/test coverage alignment
   - [ ] Verify docs/site/demo/sample code aligns with current behavior.
   - [ ] Fix drift in docs/demo/sample code.
@@ -128,3 +128,47 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
   - Public consumer surface now consistently presents `Route` across `app`/`native`/`web`.
   - Web-specific browser mechanics remain implemented in web module code, without cross-barrel re-export strategy.
   - Remaining naming/readability audit across non-routing refactor-touched surfaces is still pending.
+
+- Non-routing defaults and maintainability slice (forms):
+  - Added explicit default-behavior coverage for form renderer factories:
+    - `src/web/forms/createWebFormRenderer.test-utils.ts`
+    - `src/web/forms/createWebFormRenderer.spec.json`
+    - `src/native/forms/createNativeFormRenderer.test-utils.ts`
+    - `src/native/forms/createNativeFormRenderer.spec.json`
+  - New checks assert default suite behavior when no override suite is provided:
+    - Web factory emits standard `<input>` path.
+    - Native factory emits standard `TextInput` path.
+  - Added maintainability comment in `src/app/utils/index.ts` clarifying intentional dual export of:
+    - `./EasyLayout` (high-level factory)
+    - `./easy-layout` (low-level parser/track helpers)
+
+- Verification for non-routing slice:
+  - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+  - `tsx src/common/Testing/CLI.ts "./src/web/forms/createWebFormRenderer.spec.json" "./src/app/forms/index.spec.json"`: passed.
+  - `yarn test:native`: passed (23 passes, 0 failures, 0 errors).
+
+- Remaining Phase 2 scope:
+  - Continue defaults/naming/readability audit through non-routing app/common utilities that were heavily refactored (beyond routing/forms slices).
+
+- Non-routing utilities slice (service/state/ORM utils):
+  - `src/app/utils/Service.ts`
+    - Fixed URL normalization so host and merged path are always separated by `/`.
+    - Preserved root-path behavior for empty `basePath`/`path` (`https://host:port/`).
+    - Updated service spec/test expectations accordingly.
+  - `src/app/utils/ApplicationState.tsx`
+    - Corrected `setApplicationStateModified` signature to consume `ApplicationStateModificationState` (instead of `ApplicationState`).
+    - Hardened `useApplicationStateValue.setModified` to read latest modification map via ref-backed state snapshot, avoiding stale closure writes.
+  - `src/app/utils/TypeInfoORMAPIUtils.ts`
+    - Replaced broad `for...in` API wrapping iteration with explicit own-key iteration (`Object.keys`) for clearer/safe method enumeration.
+
+- Verification for utilities slice:
+  - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+  - `tsx src/common/Testing/CLI.ts "./src/app/utils/Service.spec.json" "./src/app/utils/Controller.spec.json" "./src/app/utils/ApplicationState.spec.json"`: passed.
+  - `tsx src/common/Testing/CLI.ts "./src/app/utils/TypeInfoORMAPIUtils.spec.json" "./src/app/utils/TypeInfoORMClient.spec.json" "./src/app/utils/Service.spec.json" "./src/app/utils/ApplicationState.spec.json"`: passed.
+
+- Remaining Phase 2 scope update:
+  - Continue through additional non-routing `app/common` modules, prioritizing defaults and naming consistency where refactor impact was broad.
+
+- Additional utility audit observations:
+  - `src/app/utils/History.ts` and `src/app/utils/Debug.ts` reviewed for default/path semantics and naming consistency; no high-confidence behavior regressions identified in this pass.
+  - Existing `History` and `Debug` specs already cover core parse/build semantics and dependency-index diff behavior.

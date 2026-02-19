@@ -37,3 +37,27 @@ export const runCreateWebFormRendererOverrideScenario = () => {
     stringKind: html.includes("data-kind=\"override\""),
   };
 };
+
+/**
+ * Validate that web renderer defaults to the built-in web suite when no override is provided.
+ */
+export const runCreateWebFormRendererDefaultScenario = () => {
+  const renderer = createWebFormRenderer();
+  const html = renderToStaticMarkup(
+    createElement(renderer.AutoField, {
+      field: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      fieldKey: "title",
+      value: "Hello",
+      onChange: () => undefined,
+    }),
+  );
+
+  return {
+    hasDefaultInput: html.includes("<input"),
+  };
+};

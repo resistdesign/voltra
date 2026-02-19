@@ -2,6 +2,14 @@
   "file": "./createWebFormRenderer.test-utils.ts",
   "tests": [
     {
+      "export": "runCreateWebFormRendererDefaultScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasDefaultInput": true
+      }
+    },
+    {
       "export": "runCreateWebFormRendererOverrideScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

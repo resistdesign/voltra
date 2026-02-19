@@ -57,8 +57,13 @@ export const getFullUrl = (
     false,
     false,
   );
+  const normalizedPath = fullPath
+    ? fullPath.startsWith(PATH_DELIMITER)
+      ? fullPath
+      : `${PATH_DELIMITER}${fullPath}`
+    : "";
 
-  return `${protocol}://${domain}${portString}${fullPath}`;
+  return `${protocol}://${domain}${portString}${normalizedPath}`;
 };
 
 /**
