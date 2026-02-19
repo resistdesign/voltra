@@ -32,7 +32,7 @@ export const runTypeParsingUtilsScenario = () => {
     },
   };
 
-  const selectedFields = ["id", "author", "missing"] as const;
+  const selectedFields = ["author", "id", "missing"] as const;
   const cleanedSelected = removeNonexistentFieldsFromSelectedFields(typeInfo, [
     ...selectedFields,
   ]);

@@ -17,6 +17,14 @@ export enum LOGGING_MESSAGES {
  * @param enabled - Whether to emit logs.
  * @returns The function result.
  */
+const stringifyForLog = (value: unknown): string => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch (error) {
+    return "[Unserializable]";
+  }
+};
+
 export const logFunctionCall = async (
   label: string,
   args: any[],
@@ -29,7 +37,7 @@ export const logFunctionCall = async (
       LOGGING_MESSAGES.INPUT,
       label,
       ":",
-      JSON.stringify(args, null, 2),
+      stringifyForLog(args),
     );
   }
 
@@ -42,7 +50,7 @@ export const logFunctionCall = async (
         LOGGING_MESSAGES.OUTPUT,
         label,
         ":",
-        JSON.stringify(result, null, 2),
+        stringifyForLog(result),
       );
     }
 

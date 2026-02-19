@@ -40,6 +40,14 @@ export const runLoggingUtilsScenario = async () => {
     (value: string) => value.toUpperCase(),
     false,
   );
+  const circularArg: { self?: unknown } = {};
+  circularArg.self = circularArg;
+  const circularResult = await logFunctionCall(
+    "circularThing",
+    [circularArg],
+    () => "ok",
+    true,
+  );
 
   console.log = originalLog;
   console.error = originalError;
@@ -47,6 +55,7 @@ export const runLoggingUtilsScenario = async () => {
   return {
     result,
     disabledResult,
+    circularResult,
     thrownMessage,
     logMessages: logs.map((entry) => entry.slice(0, 4)),
     errorMessages: errors.map((entry) => entry.slice(0, 4)),

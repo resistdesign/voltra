@@ -191,3 +191,24 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
   - Verification:
     - `tsx src/common/Testing/CLI.ts "./src/common/CommandLine/collectRequiredEnvironmentVariables.spec.json"`: passed.
     - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+
+- `src/common/TypeParsing` selection-helper slice:
+  - Updated `src/common/TypeParsing/Utils.ts` selected-field filtering helpers to preserve caller-provided selected-field order.
+    - `removeNonexistentFieldsFromSelectedFields` now filters directly over `selectedFields` order.
+    - `removeTypeReferenceFieldsFromSelectedFields` now filters directly over `selectedFields` order and field metadata.
+  - Updated `src/common/TypeParsing/Utils.test-utils.ts` + `src/common/TypeParsing/Utils.spec.json` to assert order preservation explicitly.
+  - Verification:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `tsx src/common/Testing/CLI.ts "./src/common/TypeParsing/Utils.spec.json" "./src/common/TypeParsing/Validation.spec.json" "./src/common/TypeParsing/ValidationDataItem.spec.json"`: passed.
+
+- `src/common` logging/testing utility slice:
+  - Hardened logging serialization in `src/common/Logging/Utils.ts`:
+    - Added `stringifyForLog` fallback to prevent `JSON.stringify` crashes (for example circular objects) from interrupting wrapped calls when logging is enabled.
+  - Updated logging scenario coverage:
+    - `src/common/Logging/Utils.test-utils.ts`
+    - `src/common/Logging/Utils.spec.json`
+    - Added circular-input case to ensure logging stays resilient and call result still returns.
+  - Verification:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `tsx src/common/Testing/CLI.ts "./src/common/Logging/Utils.spec.json" "./src/common/Testing/Utils.spec.json"`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
