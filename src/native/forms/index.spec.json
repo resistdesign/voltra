@@ -1,0 +1,23 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeFormsIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasAutoField": true,
+        "hasAutoForm": true,
+        "hasAutoFormView": true,
+        "hasCreateNativeFormRenderer": true,
+        "hasNativeSuite": true,
+        "hasNativeAutoField": true,
+        "hasFieldWrapper": true,
+        "hasErrorMessage": true,
+        "hasArrayContainer": true,
+        "hasArrayItemWrapper": true,
+        "hasButtonPrimitive": true
+      }
+    }
+  ]
+}

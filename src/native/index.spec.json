@@ -1,0 +1,25 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasFormsNamespace": false,
+        "hasUtilsNamespace": false,
+        "hasAutoFormTopLevel": true,
+        "hasAutoFormViewTopLevel": true,
+        "hasCreateNativeFormRendererTopLevel": true,
+        "hasNativeSuiteTopLevel": true,
+        "hasCreateNativeHistoryTopLevel": true,
+        "hasRouteTopLevel": true,
+        "hasMakeNativeEasyLayoutTopLevel": true,
+        "hasFormsAutoForm": true,
+        "hasFormsCreateNativeFormRenderer": true,
+        "hasUtilsCreateNativeHistory": true,
+        "hasUtilsRoute": true
+      }
+    }
+  ]
+}

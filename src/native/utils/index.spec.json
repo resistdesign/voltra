@@ -1,0 +1,20 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeUtilsIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasEasyLayoutFactory": true,
+        "hasEasyLayoutHook": true,
+        "hasEasyLayoutView": true,
+        "hasCreateNativeHistory": true,
+        "hasMapNativeURLToPath": true,
+        "hasRoute": true,
+        "hasBuildPathFromRouteChain": true,
+        "hasNativeBackIntegration": true
+      }
+    }
+  ]
+}

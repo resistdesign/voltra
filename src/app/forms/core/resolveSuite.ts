@@ -4,6 +4,7 @@
  * Resolve a component suite by merging overrides with fallback defaults.
  */
 
+import type { ReactElement } from "react";
 import type { ComponentSuite, FieldKind, ResolvedSuite } from "./types";
 
 const fieldKinds: FieldKind[] = [
@@ -18,7 +19,7 @@ const fieldKinds: FieldKind[] = [
   "custom_array",
 ];
 
-const getMissingKinds = <RenderOutput = unknown>(
+const getMissingKinds = <RenderOutput = ReactElement>(
   renderers: Partial<ResolvedSuite<RenderOutput>["renderers"]>,
 ): FieldKind[] => {
   return fieldKinds.filter((kind) => !renderers[kind]);
@@ -31,7 +32,7 @@ const getMissingKinds = <RenderOutput = unknown>(
  * @param fallback - Default suite providing full coverage.
  * @returns Fully resolved suite with all renderers present.
  */
-export const resolveSuite = <RenderOutput = unknown>(
+export const resolveSuite = <RenderOutput = ReactElement>(
   overrides: ComponentSuite<RenderOutput> | undefined,
   fallback: ComponentSuite<RenderOutput>,
 ): ResolvedSuite<RenderOutput> => {

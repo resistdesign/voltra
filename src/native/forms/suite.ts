@@ -80,7 +80,7 @@ const renderErrorMessage = (context: FieldRenderContext) => {
   );
 };
 
-const renderRelationSingle = (context: FieldRenderContext) => {
+const RelationSingleField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
 
@@ -110,7 +110,7 @@ const renderRelationSingle = (context: FieldRenderContext) => {
   );
 };
 
-const renderRelationArray = (context: FieldRenderContext) => {
+const RelationArrayField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
 
@@ -140,7 +140,7 @@ const renderRelationArray = (context: FieldRenderContext) => {
   );
 };
 
-const renderCustomSingle = (context: FieldRenderContext) => {
+const CustomSingleField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
@@ -172,7 +172,7 @@ const renderCustomSingle = (context: FieldRenderContext) => {
   );
 };
 
-const renderCustomArray = (context: FieldRenderContext) => {
+const CustomArrayField = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
@@ -259,7 +259,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
   );
 };
 
-const renderArray = (context: FieldRenderContext<ReactElement>) => {
+const ArrayField = (context: FieldRenderContext<ReactElement>) => {
   const { field, fieldKey, label, required, disabled, error } = context;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
@@ -334,7 +334,7 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
   );
 };
 
-const renderString = (context: FieldRenderContext) => {
+const StringField = (context: FieldRenderContext) => {
   const { label, required, disabled, error } = context;
 
   return createElement(
@@ -351,7 +351,7 @@ const renderString = (context: FieldRenderContext) => {
   );
 };
 
-const renderNumber = (context: FieldRenderContext) => {
+const NumberField = (context: FieldRenderContext) => {
   const { label, required, disabled, error } = context;
 
   return createElement(
@@ -370,7 +370,7 @@ const renderNumber = (context: FieldRenderContext) => {
   );
 };
 
-const renderBoolean = (context: FieldRenderContext) => {
+const BooleanField = (context: FieldRenderContext) => {
   const { label, disabled, error } = context;
 
   return createElement(
@@ -390,7 +390,7 @@ const renderBoolean = (context: FieldRenderContext) => {
   );
 };
 
-const renderEnumSelect = (context: FieldRenderContext) => {
+const EnumSelectField = (context: FieldRenderContext) => {
   const { field, label, required, disabled, error } = context;
   const selectableValues = getSelectableValues(context.possibleValues) ?? [];
 
@@ -459,15 +459,15 @@ const SuiteButton = ({
  */
 export const nativeSuite: ComponentSuite<ReactElement> = {
   renderers: {
-    string: renderString,
-    number: renderNumber,
-    boolean: renderBoolean,
-    enum_select: renderEnumSelect,
-    array: renderArray,
-    relation_single: renderRelationSingle,
-    relation_array: renderRelationArray,
-    custom_single: renderCustomSingle,
-    custom_array: renderCustomArray,
+    string: StringField,
+    number: NumberField,
+    boolean: BooleanField,
+    enum_select: EnumSelectField,
+    array: ArrayField,
+    relation_single: RelationSingleField,
+    relation_array: RelationArrayField,
+    custom_single: CustomSingleField,
+    custom_array: CustomArrayField,
   },
   primitives: {
     FormRoot,

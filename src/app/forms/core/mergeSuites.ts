@@ -4,6 +4,7 @@
  * Helpers for composing component suites.
  */
 
+import type { ReactElement } from "react";
 import type { ComponentSuite, FieldKind, FieldRenderer } from "./types";
 
 /**
@@ -13,7 +14,7 @@ import type { ComponentSuite, FieldKind, FieldRenderer } from "./types";
  * @param overrides - Partial suite overrides.
  * @returns Merged suite.
  */
-export const mergeSuites = <RenderOutput = unknown>(
+export const mergeSuites = <RenderOutput = ReactElement>(
   base: ComponentSuite<RenderOutput>,
   overrides: ComponentSuite<RenderOutput>,
 ): ComponentSuite<RenderOutput> => {
@@ -36,7 +37,7 @@ export const mergeSuites = <RenderOutput = unknown>(
  * @param renderer - Replacement renderer.
  * @returns Suite with renderer override.
  */
-export const withRendererOverride = <RenderOutput = unknown>(
+export const withRendererOverride = <RenderOutput = ReactElement>(
   kind: FieldKind,
   renderer: FieldRenderer<RenderOutput>,
 ): ComponentSuite<RenderOutput> => ({
