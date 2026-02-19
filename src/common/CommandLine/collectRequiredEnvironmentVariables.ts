@@ -9,17 +9,17 @@
 export const collectRequiredEnvironmentVariables = <VarName extends string>(
   varNames: VarName[],
 ): Record<VarName, string> => {
-  const result: Record<VarName, string> = {} as any;
+  const result = {} as Record<VarName, string>;
   const missingEnvVars: VarName[] = [];
 
-  for (const vN of varNames) {
-    const value: string | undefined = process.env[vN];
+  for (const varName of varNames) {
+    const value: string | undefined = process.env[varName];
 
     // IMPORTANT: Verify that we have all required environment variables.
     if (!value) {
-      missingEnvVars.push(vN);
+      missingEnvVars.push(varName);
     } else {
-      result[vN] = value;
+      result[varName] = value;
     }
   }
 
@@ -32,7 +32,7 @@ export const collectRequiredEnvironmentVariables = <VarName extends string>(
 
 Missing Required Environment Variables:
 
-${missingEnvVars.map((vN) => `- ${vN}`).join(`
+${missingEnvVars.map((varName) => `- ${varName}`).join(`
 `)}
 `,
     );

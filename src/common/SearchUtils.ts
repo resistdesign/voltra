@@ -231,6 +231,9 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
   for (const currentItem of items) {
     if (typeof currentItem === "object" && currentItem !== null) {
       let meetsCriteria = true;
+      if (logicalOperator === LogicalOperators.OR && fieldCriteria.length > 0) {
+        meetsCriteria = false;
+      }
 
       for (const fieldCriterion of fieldCriteria) {
         const { fieldName } = fieldCriterion;
