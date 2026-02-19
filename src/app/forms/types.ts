@@ -79,8 +79,10 @@ export interface AutoFieldProps {
   value: FormValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FormValue) => void;
-  /** Optional error message to display under the field. */
-  error?: string;
+  /** Optional error descriptor to display under the field. */
+  error?: ErrorDescriptor;
+  /** Optional translator from error descriptor to user-facing message. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
   /** Disables the field UI when true. */
   disabled?: boolean;
   /** Optional callback for relation actions. */
@@ -115,9 +117,19 @@ export type FormFieldController = {
   value: FormValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FormValue) => void;
-  /** Optional error message for the field. */
-  error?: string;
+  /** Optional error descriptor for the field. */
+  error?: ErrorDescriptor;
 };
+
+/**
+ * Validation errors keyed by field and represented as descriptors/codes.
+ */
+export type FormErrorMap = Record<string, ErrorDescriptor>;
+
+/**
+ * Input map used to set form errors, accepting descriptors or raw codes.
+ */
+export type FormErrorInputMap = Record<string, ErrorDescriptor | string>;
 
 /**
  * Controller for a form instance and its fields.
@@ -132,7 +144,7 @@ export type FormController = {
   /** Current form values keyed by field. */
   values: FormValues;
   /** Validation errors keyed by field. */
-  errors: Record<string, string>;
+  errors: FormErrorMap;
   /** Derived controllers for each field. */
   fields: FormFieldController[];
   /** Update a field value by key. */
@@ -140,5 +152,5 @@ export type FormController = {
   /** Validate the form and return success. */
   validate: () => TypeInfoValidationResults;
   /** Override form errors with a provided map. */
-  setErrors: (errors: Record<string, string>) => void;
+  setErrors: (errors: FormErrorInputMap) => void;
 };

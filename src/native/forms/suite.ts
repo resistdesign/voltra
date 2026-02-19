@@ -53,6 +53,22 @@ const formatCustomValue = (val: unknown) => {
   return JSON.stringify(val, null, 2);
 };
 
+const renderErrorMessage = (context: FieldRenderContext) => {
+  const { error, translateValidationErrorCode } = context;
+
+  if (!error) {
+    return null;
+  }
+
+  const message = translateValidationErrorCode(error);
+
+  if (!message) {
+    return null;
+  }
+
+  return createElement(ErrorMessage, null, message);
+};
+
 const renderRelationSingle = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
@@ -79,7 +95,7 @@ const renderRelationSingle = (context: FieldRenderContext) => {
           "Manage",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -109,7 +125,7 @@ const renderRelationArray = (context: FieldRenderContext) => {
           "Manage",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -141,7 +157,7 @@ const renderCustomSingle = (context: FieldRenderContext) => {
           "Manage",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -228,7 +244,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
           "Add Item",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -295,7 +311,7 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
         "Add Item",
       ),
     ),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -312,7 +328,7 @@ const renderString = (context: FieldRenderContext) => {
       editable: !disabled,
       placeholder: label,
     }),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -331,7 +347,7 @@ const renderNumber = (context: FieldRenderContext) => {
       keyboardType: "numeric",
       placeholder: label,
     }),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -351,7 +367,7 @@ const renderBoolean = (context: FieldRenderContext) => {
       }),
       createElement(Text, null, label),
     ),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -381,7 +397,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
         ),
       ),
     ),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 

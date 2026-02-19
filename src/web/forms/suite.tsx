@@ -64,6 +64,22 @@ const formatCustomValue = (val: unknown) => {
   return JSON.stringify(val, null, 2);
 };
 
+const renderErrorMessage = (context: FieldRenderContext) => {
+  const { error, translateValidationErrorCode } = context;
+
+  if (!error) {
+    return null;
+  }
+
+  const message = translateValidationErrorCode(error);
+
+  if (!message) {
+    return null;
+  }
+
+  return <ErrorMessage>{message}</ErrorMessage>;
+};
+
 const renderRelationSingle = (context: FieldRenderContext) => {
   const { field, fieldKey, label, required, disabled, error, onRelationAction } =
     context;
@@ -93,7 +109,7 @@ const renderRelationSingle = (context: FieldRenderContext) => {
           Manage
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -127,7 +143,7 @@ const renderRelationArray = (context: FieldRenderContext) => {
           Manage
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -163,7 +179,7 @@ const renderCustomSingle = (context: FieldRenderContext) => {
           Manage
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -249,7 +265,7 @@ const renderCustomArray = (context: FieldRenderContext) => {
           Add Item
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -311,7 +327,7 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
           Add Item
         </button>
       </ArrayContainer>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -333,7 +349,7 @@ const renderString = (context: FieldRenderContext) => {
         disabled={disabled}
         pattern={context.constraints?.pattern}
       />
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -357,7 +373,7 @@ const renderNumber = (context: FieldRenderContext) => {
         max={context.constraints?.max}
         step={context.constraints?.step}
       />
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -378,7 +394,7 @@ const renderBoolean = (context: FieldRenderContext) => {
         />
         <label htmlFor={id}> {label} </label>
       </div>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -443,7 +459,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
             ))}
           </select>
         )}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };

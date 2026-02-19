@@ -50,6 +50,7 @@ export const runWebSuiteStringRendererScenario = () => {
     label: "Title",
     required: true,
     disabled: false,
+    translateValidationErrorCode: (error) => String(error.code),
     value: "Hello",
     onChange: () => undefined,
     renderField: () => <></>,

@@ -5,6 +5,7 @@
  */
 
 import type { TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
+import { getErrorDescriptor } from "../../../common/TypeParsing/Validation";
 import { createAutoField } from "./createAutoField";
 import type { ComponentSuite, FieldRenderContext } from "./types";
 
@@ -160,7 +161,7 @@ export const runCreateAutoFieldContextScenario = () => {
     fieldKey: "name",
     value: "Ada",
     onChange: () => undefined,
-    error: "Required",
+    error: getErrorDescriptor("Required"),
     disabled: true,
   });
 

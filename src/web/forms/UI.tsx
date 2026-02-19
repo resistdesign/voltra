@@ -36,6 +36,7 @@ export const AutoField: FC<AutoFieldProps> = (props) => {
     value: props.value,
     onChange: props.onChange,
     error: props.error,
+    translateValidationErrorCode: props.translateValidationErrorCode,
     disabled: props.disabled,
     onRelationAction: props.onRelationAction,
     onCustomTypeAction: props.onCustomTypeAction,
@@ -56,6 +57,8 @@ export interface AutoFormViewProps {
   onRelationAction?: (payload: RelationActionPayload) => void;
   /** Optional custom type action handler. */
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
+  /** Optional translator for validation error descriptors. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
 }
 
 /**
