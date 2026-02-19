@@ -23,6 +23,9 @@
               "code",
               "implicit"
             ],
+            "supportedIdentityProviders": [
+              "COGNITO"
+            ],
             "hasCallbackURLs": true,
             "hasLogoutURLs": true
           }
@@ -51,6 +54,13 @@
             "hasCallbackURLs": false,
             "hasLogoutURLs": false
           }
+        },
+        "customProviderSummary": {
+          "supportedIdentityProviders": [
+            "COGNITO",
+            "Google",
+            "SignInWithApple"
+          ]
         }
       }
     }

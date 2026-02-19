@@ -32,9 +32,19 @@
               "code",
               "implicit"
             ],
+            "supportedIdentityProviders": [
+              "COGNITO"
+            ],
             "hasCallbackURLs": true,
             "hasLogoutURLs": true
           }
+        },
+        "withCustomProvidersSummary": {
+          "supportedIdentityProviders": [
+            "COGNITO",
+            "Google",
+            "LoginWithAmazon"
+          ]
         },
         "withoutDomainSummary": {
           "resourceKeys": [
