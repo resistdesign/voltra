@@ -2,52 +2,117 @@
   "file": "./file-storage.test-utils.ts",
   "tests": [
     {
-      "export": "runFileStoragePackScenario",
+      "export": "runFileStoragePackResourceKeysScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "FileStorage"
+      ]
+    },
+    {
+      "export": "runFileStoragePackDefaultDeletionPolicyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Delete"
+    },
+    {
+      "export": "runFileStoragePackDefaultPublicAccessScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "resourceKeys": ["FileStorage"],
-        "defaultDeletionPolicy": "Delete",
-        "defaultPublicAccess": {
-          "BlockPublicAcls": true,
-          "BlockPublicPolicy": true,
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true
-        },
-        "defaultCors": null,
-        "defaultOwnershipControls": null,
-        "defaultEncryption": [
-          {
-            "ServerSideEncryptionByDefault": {
-              "SSEAlgorithm": "AES256"
-            }
+        "BlockPublicAcls": true,
+        "BlockPublicPolicy": true,
+        "IgnorePublicAcls": true,
+        "RestrictPublicBuckets": true
+      }
+    },
+    {
+      "export": "runFileStoragePackDefaultCorsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runFileStoragePackDefaultOwnershipControlsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runFileStoragePackDefaultEncryptionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "ServerSideEncryptionByDefault": {
+            "SSEAlgorithm": "AES256"
           }
-        ],
-        "customDeletionPolicy": "Retain",
-        "customBucketName": "files.example.com",
-        "customAccessControl": "Private",
-        "customPublicAccess": {
-          "BlockPublicAcls": false,
-          "BlockPublicPolicy": false,
-          "IgnorePublicAcls": false,
-          "RestrictPublicBuckets": false
-        },
-        "customCors": {
-          "CorsRules": [
-            {
-              "AllowedHeaders": ["*"],
-              "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
-              "AllowedOrigins": ["*"]
-            }
-          ]
-        },
-        "customOwnershipControls": {
-          "Rules": [
-            {
-              "ObjectOwnership": "ObjectWriter"
-            }
-          ]
         }
+      ]
+    },
+    {
+      "export": "runFileStoragePackCustomDeletionPolicyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Retain"
+    },
+    {
+      "export": "runFileStoragePackCustomBucketNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "files.example.com"
+    },
+    {
+      "export": "runFileStoragePackCustomAccessControlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Private"
+    },
+    {
+      "export": "runFileStoragePackCustomPublicAccessScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "BlockPublicAcls": false,
+        "BlockPublicPolicy": false,
+        "IgnorePublicAcls": false,
+        "RestrictPublicBuckets": false
+      }
+    },
+    {
+      "export": "runFileStoragePackCustomCorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "CorsRules": [
+          {
+            "AllowedHeaders": [
+              "*"
+            ],
+            "AllowedMethods": [
+              "GET",
+              "PUT",
+              "POST",
+              "DELETE",
+              "HEAD"
+            ],
+            "AllowedOrigins": [
+              "*"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "export": "runFileStoragePackCustomOwnershipControlsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "Rules": [
+          {
+            "ObjectOwnership": "ObjectWriter"
+          }
+        ]
       }
     }
   ]

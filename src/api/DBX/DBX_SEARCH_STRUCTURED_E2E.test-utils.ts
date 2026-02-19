@@ -694,3 +694,72 @@ export const runDbxStructuredSearchScenario = async () => {
     afterDeletePublishedIds: listIds(afterDeletePublished),
   };
 };
+
+export const runDbxStructuredSearchCreatedPostIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).createdPostIds;
+
+export const runDbxStructuredSearchPublishedIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).publishedIds;
+
+export const runDbxStructuredSearchAlphaTagIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).alphaTagIds;
+
+export const runDbxStructuredSearchScoreBetweenIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).scoreBetweenIds;
+
+export const runDbxStructuredSearchStatusInIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).statusInIds;
+
+export const runDbxStructuredSearchPublishedAlphaIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).publishedAlphaIds;
+
+export const runDbxStructuredSearchDraftOrHighScoreIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).draftOrHighScoreIds;
+
+export const runDbxStructuredSearchPublishedPage1IdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).publishedPage1Ids;
+
+export const runDbxStructuredSearchPublishedPage2IdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).publishedPage2Ids;
+
+export const runDbxStructuredSearchDenseAndPublishedNewsIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndPublishedNewsIds;
+
+export const runDbxStructuredSearchDenseAndPublishedAlphaIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndPublishedAlphaIds;
+
+export const runDbxStructuredSearchDenseAndContradictionIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndContradictionIds;
+
+export const runDbxStructuredSearchDenseOrWideIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseOrWideIds;
+
+export const runDbxStructuredSearchDenseOrDeltaOnlyIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseOrDeltaOnlyIds;
+
+export const runDbxStructuredSearchDenseAndWithInIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndWithInIds;
+
+export const runDbxStructuredSearchDenseAndWithLikeIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndWithLikeIds;
+
+export const runDbxStructuredSearchDenseOrAlphaGammaIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseOrAlphaGammaIds;
+
+export const runDbxStructuredSearchDenseAndAlphaDraftIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndAlphaDraftIds;
+
+export const runDbxStructuredSearchDenseAndBetaExactIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).denseAndBetaExactIds;
+
+export const runDbxStructuredSearchUpdateResultScenario = async () =>
+  (await runDbxStructuredSearchScenario()).updateResult;
+
+export const runDbxStructuredSearchAfterUpdatePublishedIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).afterUpdatePublishedIds;
+
+export const runDbxStructuredSearchDeleteResultScenario = async () =>
+  (await runDbxStructuredSearchScenario()).deleteResult;
+
+export const runDbxStructuredSearchAfterDeletePublishedIdsScenario = async () =>
+  (await runDbxStructuredSearchScenario()).afterDeletePublishedIds;

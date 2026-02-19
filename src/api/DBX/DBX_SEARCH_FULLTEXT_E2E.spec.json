@@ -2,63 +2,306 @@
   "file": "./DBX_SEARCH_FULLTEXT_E2E.test-utils.ts",
   "tests": [
     {
-      "export": "runDbxFullTextSearchScenario",
+      "export": "runDbxFullTextSearchCreatedPostIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "createdPostIds": [
-          "post-1",
-          "post-2",
-          "post-3",
-          "post-4",
-          "post-5",
-          "post-6",
-          "post-7",
-          "post-8",
-          "post-9",
-          "post-10",
-          "post-11",
-          "post-12"
-        ],
-        "exactSentenceIds": ["post-1"],
-        "exactSentenceNineDefaultIds": [],
-        "exactSentenceNineMidIds": ["post-1"],
-        "exactSentenceNineHighIds": ["post-1"],
-        "exactLongDefaultIds": [],
-        "exactLongMidIds": [],
-        "exactLongHighIds": ["post-7"],
-        "exactDiacriticsIds": ["post-2"],
-        "exactStopwordsIds": ["post-8"],
-        "exactQuotedPhraseIds": ["post-12"],
-        "exactPunctuationIds": ["post-10"],
-        "exactSeparatorsIds": ["post-3"],
-        "exactHyphenatedIds": ["post-5"],
-        "exactNumericShortIds": ["post-6"],
-        "lossyMiddleTokenIds": ["post-1", "post-8"],
-        "lossyDiacriticsIds": ["post-2"],
-        "lossySeparatorsIds": ["post-3"],
-        "lossyMixedCaseIds": ["post-9"],
-        "lossyPunctuationIds": ["post-10"],
-        "lossyAddressIds": ["post-4"],
-        "lossyPrefixIds": ["post-5"],
-        "lossyShortTokenIds": ["post-6"],
-        "lossyEmojiIds": ["post-11"],
-        "lossySmartApostrophesIds": ["post-12"],
-        "lossyMixedPunctuationIds": ["post-6"],
-        "updateSwapId": "post-1",
-        "updateSwapBeforeIds": ["post-1"],
-        "updateSwapResult": true,
-        "updateSwapAfterOldIds": [],
-        "updateSwapAfterNewIds": ["post-1"],
-        "updateNullId": "post-2",
-        "updateNullBeforeIds": ["post-2"],
-        "updateNullResult": true,
-        "updateNullAfterIds": [],
-        "updateNonFullTextId": "post-3",
-        "updateNonFullTextBeforeIds": ["post-3"],
-        "updateNonFullTextResult": true,
-        "updateNonFullTextAfterIds": ["post-3"]
-      }
+      "expectation": [
+        "post-1",
+        "post-2",
+        "post-3",
+        "post-4",
+        "post-5",
+        "post-6",
+        "post-7",
+        "post-8",
+        "post-9",
+        "post-10",
+        "post-11",
+        "post-12"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactSentenceIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-1"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactSentenceNineDefaultIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDbxFullTextSearchExactSentenceNineMidIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-1"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactSentenceNineHighIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-1"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactLongDefaultIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDbxFullTextSearchExactLongMidIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDbxFullTextSearchExactLongHighIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-7"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactDiacriticsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-2"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactStopwordsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-8"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactQuotedPhraseIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-12"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactPunctuationIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-10"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactSeparatorsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-3"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactHyphenatedIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-5"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchExactNumericShortIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-6"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyMiddleTokenIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-1",
+        "post-8"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyDiacriticsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-2"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossySeparatorsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-3"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyMixedCaseIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-9"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyPunctuationIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-10"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyAddressIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-4"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyPrefixIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-5"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyShortTokenIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-6"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyEmojiIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-11"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossySmartApostrophesIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-12"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchLossyMixedPunctuationIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-6"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateSwapIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "post-1"
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateSwapBeforeIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-1"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateSwapResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateSwapAfterOldIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateSwapAfterNewIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-1"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNullIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "post-2"
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNullBeforeIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-2"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNullResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNullAfterIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNonFullTextIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "post-3"
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNonFullTextBeforeIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-3"
+      ]
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNonFullTextResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxFullTextSearchUpdateNonFullTextAfterIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "post-3"
+      ]
     }
   ]
 }

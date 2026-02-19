@@ -2,26 +2,51 @@
   "file": "./ssl-certificate.test-utils.ts",
   "tests": [
     {
-      "export": "runSSLCertificatePackScenario",
+      "export": "runSSLCertificatePackResourceKeysScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "resourceKeys": ["Certificate"],
-        "defaultDomainName": "example.com",
-        "defaultHostedZoneId": "HZ123",
-        "defaultSANs": [
-          {
-            "Fn::Sub": [
-              "*.${BaseDomainName}",
-              {
-                "BaseDomainName": "example.com"
-              }
-            ]
-          }
-        ],
-        "customHostedZoneId": "HZ456",
-        "customSANs": null
-      }
+      "expectation": [
+        "Certificate"
+      ]
+    },
+    {
+      "export": "runSSLCertificatePackDefaultDomainNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "example.com"
+    },
+    {
+      "export": "runSSLCertificatePackDefaultHostedZoneIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "HZ123"
+    },
+    {
+      "export": "runSSLCertificatePackDefaultSANsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "Fn::Sub": [
+            "*.${BaseDomainName}",
+            {
+              "BaseDomainName": "example.com"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "export": "runSSLCertificatePackCustomHostedZoneIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "HZ456"
+    },
+    {
+      "export": "runSSLCertificatePackCustomSANsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
     }
   ]
 }

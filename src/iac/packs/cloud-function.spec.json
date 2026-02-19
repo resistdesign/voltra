@@ -2,63 +2,120 @@
   "file": "./cloud-function.test-utils.ts",
   "tests": [
     {
-      "export": "runCloudFunctionPackScenario",
+      "export": "runCloudFunctionPackDefaultRuntimeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "nodejs26.x"
+    },
+    {
+      "export": "runCloudFunctionPackDefaultHandlerScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "index.handler"
+    },
+    {
+      "export": "runCloudFunctionPackDefaultTimeoutScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": 30
+    },
+    {
+      "export": "runCloudFunctionPackDefaultCodeScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "defaultRuntime": "nodejs26.x",
-        "defaultHandler": "index.handler",
-        "defaultTimeout": 30,
-        "defaultCode": {
-          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n"
-        },
-        "defaultEnv": {
-          "Variables": {
-            "NODE_ENV": "production"
-          }
-        },
-        "defaultPolicies": [
-          {
-            "PolicyName": "lambda-parameter-store",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": ["*"],
-                  "Resource": "*"
-                }
-              ]
-            }
-          }
-        ],
-        "placeholderCode": {
-          "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n"
-        },
-        "customRuntime": "nodejs20.x",
-        "customHandler": "main.handler",
-        "customTimeout": 10,
-        "customEnv": {
-          "Variables": {
-            "NODE_ENV": "test"
-          }
-        },
-        "customPolicies": [
-          {
-            "PolicyName": "custom-policy",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": ["logs:CreateLogGroup"],
-                  "Resource": "*"
-                }
-              ]
-            }
-          }
-        ]
+        "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n"
       }
+    },
+    {
+      "export": "runCloudFunctionPackDefaultEnvScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "Variables": {
+          "NODE_ENV": "production"
+        }
+      }
+    },
+    {
+      "export": "runCloudFunctionPackDefaultPoliciesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "PolicyName": "lambda-parameter-store",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "*"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "export": "runCloudFunctionPackPlaceholderCodeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ZipFile": "module.exports = {handler: async () => ({\n            statusCode: 200,\n            headers: {'Content-Type': 'application/json'},\n            body: '\"You did it!\"'\n          })};\n"
+      }
+    },
+    {
+      "export": "runCloudFunctionPackCustomRuntimeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "nodejs20.x"
+    },
+    {
+      "export": "runCloudFunctionPackCustomHandlerScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "main.handler"
+    },
+    {
+      "export": "runCloudFunctionPackCustomTimeoutScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": 10
+    },
+    {
+      "export": "runCloudFunctionPackCustomEnvScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "Variables": {
+          "NODE_ENV": "test"
+        }
+      }
+    },
+    {
+      "export": "runCloudFunctionPackCustomPoliciesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "PolicyName": "custom-policy",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "logs:CreateLogGroup"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

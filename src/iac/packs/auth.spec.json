@@ -2,72 +2,80 @@
   "file": "./auth.test-utils.ts",
   "tests": [
     {
-      "export": "runAuthPackScenario",
+      "export": "runAuthPackWithDomainSummaryScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "withDomainSummary": {
-          "resourceKeys": [
-            "AdminGroup",
-            "UserPool",
-            "UserPoolAuthRole",
-            "UserPoolBaseDomainRecord",
-            "UserPoolClient",
-            "UserPoolDomain",
-            "UserPoolDomainRecord",
-            "UserPoolIdentityPool",
-            "UserPoolIdentityPoolRoles",
-            "UserPoolUnauthRole"
+        "resourceKeys": [
+          "AdminGroup",
+          "UserPool",
+          "UserPoolAuthRole",
+          "UserPoolBaseDomainRecord",
+          "UserPoolClient",
+          "UserPoolDomain",
+          "UserPoolDomainRecord",
+          "UserPoolIdentityPool",
+          "UserPoolIdentityPoolRoles",
+          "UserPoolUnauthRole"
+        ],
+        "adminGroupName": "admins",
+        "authRoleName": "AuthRole",
+        "unauthRoleName": "UnauthRole",
+        "hasBaseDomainRecord": true,
+        "hasDomain": true,
+        "hasDomainRecord": true,
+        "hasIdentityPoolRoles": true,
+        "oauthSummary": {
+          "allowedOAuthFlowsUserPoolClient": true,
+          "allowedOAuthFlows": [
+            "code",
+            "implicit"
           ],
-          "adminGroupName": "admins",
-          "authRoleName": "AuthRole",
-          "unauthRoleName": "UnauthRole",
-          "hasBaseDomainRecord": true,
-          "hasDomain": true,
-          "hasDomainRecord": true,
-          "hasIdentityPoolRoles": true,
-          "oauthSummary": {
-            "allowedOAuthFlowsUserPoolClient": true,
-            "allowedOAuthFlows": [
-              "code",
-              "implicit"
-            ],
-            "supportedIdentityProviders": [
-              "COGNITO"
-            ],
-            "hasCallbackURLs": true,
-            "hasLogoutURLs": true
-          }
-        },
-        "withCustomProvidersSummary": {
           "supportedIdentityProviders": [
-            "COGNITO",
-            "Google",
-            "LoginWithAmazon"
-          ]
-        },
-        "withoutDomainSummary": {
-          "resourceKeys": [
-            "AdminGroup",
-            "UserPool",
-            "UserPoolAuthRole",
-            "UserPoolClient",
-            "UserPoolIdentityPool",
-            "UserPoolIdentityPoolRoles",
-            "UserPoolUnauthRole"
+            "COGNITO"
           ],
-          "hasBaseDomainRecord": false,
-          "hasDomain": false,
-          "hasDomainRecord": false,
-          "hasIdentityPoolRoles": true,
-          "oauthSummary": {
-            "allowedOAuthFlowsUserPoolClient": false,
-            "hasAllowedOAuthFlows": false,
-            "hasAllowedOAuthScopes": false,
-            "hasSupportedIdentityProviders": false,
-            "hasCallbackURLs": false,
-            "hasLogoutURLs": false
-          }
+          "hasCallbackURLs": true,
+          "hasLogoutURLs": true
+        }
+      }
+    },
+    {
+      "export": "runAuthPackWithCustomProvidersSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "supportedIdentityProviders": [
+          "COGNITO",
+          "Google",
+          "LoginWithAmazon"
+        ]
+      }
+    },
+    {
+      "export": "runAuthPackWithoutDomainSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "AdminGroup",
+          "UserPool",
+          "UserPoolAuthRole",
+          "UserPoolClient",
+          "UserPoolIdentityPool",
+          "UserPoolIdentityPoolRoles",
+          "UserPoolUnauthRole"
+        ],
+        "hasBaseDomainRecord": false,
+        "hasDomain": false,
+        "hasDomainRecord": false,
+        "hasIdentityPoolRoles": true,
+        "oauthSummary": {
+          "allowedOAuthFlowsUserPoolClient": false,
+          "hasAllowedOAuthFlows": false,
+          "hasAllowedOAuthScopes": false,
+          "hasSupportedIdentityProviders": false,
+          "hasCallbackURLs": false,
+          "hasLogoutURLs": false
         }
       }
     }

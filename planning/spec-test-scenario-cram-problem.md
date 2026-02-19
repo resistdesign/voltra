@@ -22,8 +22,8 @@ each test scenario on the other side of this effort.
   - [x] Split `src/common/SearchUtils.spec.json` + `src/common/SearchUtils.test-utils.ts`
   - [x] Split `src/common/SearchValidation.spec.json` + `src/common/SearchValidation.test-utils.ts`
   - [x] Run focused verification for the four updated spec files
-- [~] Phase 2: Continue splitting remaining single-test spec files in plan order by directory
-  - Remaining: 25 single-test spec files still need scenario-split refactors.
+- [x] Phase 2: Continue splitting remaining single-test spec files in plan order by directory
+  - Remaining: 0 single-test spec files still need scenario-split refactors.
   - [x] Batch 1 (`src/common`)
   - [x] Split `src/common/SearchTypes.spec.json` + `src/common/SearchTypes.test-utils.ts`
   - [x] Split `src/common/StringTransformers.spec.json` + `src/common/StringTransformers.test-utils.ts`
@@ -105,3 +105,36 @@ each test scenario on the other side of this effort.
   - [x] Split `src/api/DBX/DBX_SCALE_E2E.spec.json` + `src/api/DBX/DBX_SCALE_E2E.test-utils.ts`
   - [x] Split `src/api/DBX/DBX_INDEX_COLLISION_E2E.spec.json` + `src/api/DBX/DBX_INDEX_COLLISION_E2E.test-utils.ts`
   - [x] Run focused verification for Batch 14 specs
+  - [x] Batch 15 (`src/api/DBX` CRUD + relationships)
+  - [x] Split `src/api/DBX/DBX_CRUD_E2E.spec.json` + `src/api/DBX/DBX_CRUD_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_RELATIONSHIPS_E2E.spec.json` + `src/api/DBX/DBX_RELATIONSHIPS_E2E.test-utils.ts`
+  - [x] Run focused verification for Batch 15 specs
+  - [x] Batch 16 (`src/api/DBX` structured + fulltext + scale-med)
+  - [x] Split `src/api/DBX/DBX_SEARCH_STRUCTURED_E2E.spec.json` + `src/api/DBX/DBX_SEARCH_STRUCTURED_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_SEARCH_FULLTEXT_E2E.spec.json` + `src/api/DBX/DBX_SEARCH_FULLTEXT_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_SCALE_E2E_MED.spec.json` + `src/api/DBX/DBX_SCALE_E2E.test-utils.ts`
+  - [x] Run focused verification for Batch 16 specs
+  - [x] Batch 17 (`src/common` + `src/native` + `src/web` remaining single-test specs)
+  - [x] Split `src/common/TypeParsing/Validation.spec.json` + `src/common/TypeParsing/Validation.test-utils.ts`
+  - [x] Split `src/native/index.spec.json` + `src/native/index.test-utils.ts`
+  - [x] Split `src/native/forms/index.spec.json` + `src/native/forms/index.test-utils.ts`
+  - [x] Split `src/native/utils/index.spec.json` + `src/native/utils/index.test-utils.ts`
+  - [x] Split `src/web/index.spec.json` + `src/web/index.test-utils.ts`
+  - [x] Split `src/web/utils/Route.spec.json` + `src/web/utils/Route.test-utils.tsx`
+  - [x] Run focused verification for Batch 17 specs (`tsx` CLI for common/web + `yarn test:native` for native)
+  - [x] Batch 18 (`src/iac` remaining single-test specs)
+  - [x] Split `src/iac/SimpleCFT.spec.json` + `src/iac/SimpleCFT.test-utils.ts`
+  - [x] Split `src/iac/index.spec.json` + `src/iac/index.test-utils.ts`
+  - [x] Split `src/iac/packs/auth.spec.json` + `src/iac/packs/auth.test-utils.ts`
+  - [x] Split `src/iac/packs/auth/user-management.spec.json` + `src/iac/packs/auth/user-management.test-utils.ts`
+  - [x] Split `src/iac/packs/build.spec.json` + `src/iac/packs/build.test-utils.ts`
+  - [x] Split `src/iac/packs/build/utils.spec.json` + `src/iac/packs/build/utils.test-utils.ts`
+  - [x] Split `src/iac/packs/cdn.spec.json` + `src/iac/packs/cdn.test-utils.ts`
+  - [x] Split `src/iac/packs/cloud-function.spec.json` + `src/iac/packs/cloud-function.test-utils.ts`
+  - [x] Split `src/iac/packs/database.spec.json` + `src/iac/packs/database.test-utils.ts`
+  - [x] Split `src/iac/packs/dns.spec.json` + `src/iac/packs/dns.test-utils.ts`
+  - [x] Split `src/iac/packs/file-storage.spec.json` + `src/iac/packs/file-storage.test-utils.ts`
+  - [x] Split `src/iac/packs/gateway.spec.json` + `src/iac/packs/gateway.test-utils.ts`
+  - [x] Split `src/iac/packs/repo.spec.json` + `src/iac/packs/repo.test-utils.ts`
+  - [x] Split `src/iac/packs/ssl-certificate.spec.json` + `src/iac/packs/ssl-certificate.test-utils.ts`
+  - [x] Run focused verification for Batch 18 specs

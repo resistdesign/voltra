@@ -22,3 +22,26 @@ export const runNativeUtilsIndexScenario = () => {
   };
 };
 
+export const runNativeUtilsIndexHasEasyLayoutFactoryScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasEasyLayoutFactory;
+
+export const runNativeUtilsIndexHasEasyLayoutHookScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasEasyLayoutHook;
+
+export const runNativeUtilsIndexHasEasyLayoutViewScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasEasyLayoutView;
+
+export const runNativeUtilsIndexHasCreateNativeHistoryScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasCreateNativeHistory;
+
+export const runNativeUtilsIndexHasMapNativeURLToPathScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasMapNativeURLToPath;
+
+export const runNativeUtilsIndexHasRouteScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasRoute;
+
+export const runNativeUtilsIndexHasBuildPathFromRouteChainScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasBuildPathFromRouteChain;
+
+export const runNativeUtilsIndexHasNativeBackIntegrationScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasNativeBackIntegration;

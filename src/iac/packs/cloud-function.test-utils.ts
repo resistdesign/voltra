@@ -60,3 +60,39 @@ export const runCloudFunctionPackScenario = () => {
     customPolicies: customRole?.Properties?.Policies,
   };
 };
+
+export const runCloudFunctionPackDefaultRuntimeScenario = async () =>
+  (await runCloudFunctionPackScenario()).defaultRuntime;
+
+export const runCloudFunctionPackDefaultHandlerScenario = async () =>
+  (await runCloudFunctionPackScenario()).defaultHandler;
+
+export const runCloudFunctionPackDefaultTimeoutScenario = async () =>
+  (await runCloudFunctionPackScenario()).defaultTimeout;
+
+export const runCloudFunctionPackDefaultCodeScenario = async () =>
+  (await runCloudFunctionPackScenario()).defaultCode;
+
+export const runCloudFunctionPackDefaultEnvScenario = async () =>
+  (await runCloudFunctionPackScenario()).defaultEnv;
+
+export const runCloudFunctionPackDefaultPoliciesScenario = async () =>
+  (await runCloudFunctionPackScenario()).defaultPolicies;
+
+export const runCloudFunctionPackPlaceholderCodeScenario = async () =>
+  (await runCloudFunctionPackScenario()).placeholderCode;
+
+export const runCloudFunctionPackCustomRuntimeScenario = async () =>
+  (await runCloudFunctionPackScenario()).customRuntime;
+
+export const runCloudFunctionPackCustomHandlerScenario = async () =>
+  (await runCloudFunctionPackScenario()).customHandler;
+
+export const runCloudFunctionPackCustomTimeoutScenario = async () =>
+  (await runCloudFunctionPackScenario()).customTimeout;
+
+export const runCloudFunctionPackCustomEnvScenario = async () =>
+  (await runCloudFunctionPackScenario()).customEnv;
+
+export const runCloudFunctionPackCustomPoliciesScenario = async () =>
+  (await runCloudFunctionPackScenario()).customPolicies;

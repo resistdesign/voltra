@@ -2,13 +2,16 @@
   "file": "./index.test-utils.ts",
   "tests": [
     {
-      "export": "runWebIndexScenario",
+      "export": "runWebIndexHasFormsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "hasForms": false,
-        "hasUtils": false
-      }
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runWebIndexHasUtilsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
     }
   ]
 }

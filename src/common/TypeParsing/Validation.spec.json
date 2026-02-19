@@ -1,42 +1,36 @@
 {
-  "file": "./Validation.ts",
+  "file": "./Validation.test-utils.ts",
   "tests": [
     {
-      "export": "validateTypeInfoValue",
-      "conditions": [
-        {
-          "name": "Violet"
-        },
-        "Person",
-        {
-          "Person": {
-            "fields": {
-              "name": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        true,
-        null,
-        "CREATE",
-        null,
-        false
-      ],
+      "export": "runValidateTypeInfoValueCreateTypeNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Person"
+    },
+    {
+      "export": "runValidateTypeInfoValueCreateValidScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runValidateTypeInfoValueCreateErrorScenario",
+      "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "typeName": "Person",
-        "valid": true,
-        "error": {
-          "code": "NONE"
-        },
-        "errorMap": {
-          "name": [
-            {
-              "code": "NONE"
-            }
-          ]
-        }
+        "code": "NONE"
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueCreateErrorMapScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "name": [
+          {
+            "code": "NONE"
+          }
+        ]
       }
     }
   ]

@@ -10,3 +10,15 @@ export const runIaCIndexScenario = () => {
     utilFunctionMatches: IaC.addParameter === addParameter,
   };
 };
+
+export const runIaCIndexHasUtilFunctionScenario = async () =>
+  (await runIaCIndexScenario()).hasUtilFunction;
+
+export const runIaCIndexHasSimpleCFTScenario = async () =>
+  (await runIaCIndexScenario()).hasSimpleCFT;
+
+export const runIaCIndexSimpleCFTInstanceScenario = async () =>
+  (await runIaCIndexScenario()).simpleCFTInstance;
+
+export const runIaCIndexUtilFunctionMatchesScenario = async () =>
+  (await runIaCIndexScenario()).utilFunctionMatches;

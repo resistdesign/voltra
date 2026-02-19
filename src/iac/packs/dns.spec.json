@@ -2,20 +2,64 @@
   "file": "./dns.test-utils.ts",
   "tests": [
     {
-      "export": "runDNSPackScenario",
+      "export": "runDNSPackResourceKeysScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "resourceKeys": ["AppDNS"],
-        "defaultRecordType": "A",
-        "defaultTTL": "300",
-        "defaultHostedZoneId": "HZ123",
-        "defaultDomainName": "app.example.com",
-        "defaultResourceRecords": ["203.0.113.10"],
-        "customRecordType": "CNAME",
-        "customTTL": "300",
-        "customResourceRecords": ["alias.example.com"]
-      }
+      "expectation": [
+        "AppDNS"
+      ]
+    },
+    {
+      "export": "runDNSPackDefaultRecordTypeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "A"
+    },
+    {
+      "export": "runDNSPackDefaultTTLScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "300"
+    },
+    {
+      "export": "runDNSPackDefaultHostedZoneIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "HZ123"
+    },
+    {
+      "export": "runDNSPackDefaultDomainNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "app.example.com"
+    },
+    {
+      "export": "runDNSPackDefaultResourceRecordsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "203.0.113.10"
+      ]
+    },
+    {
+      "export": "runDNSPackCustomRecordTypeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "CNAME"
+    },
+    {
+      "export": "runDNSPackCustomTTLScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "300"
+    },
+    {
+      "export": "runDNSPackCustomResourceRecordsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "alias.example.com"
+      ]
     }
   ]
 }

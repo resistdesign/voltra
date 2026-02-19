@@ -30,3 +30,24 @@ export const runCDNPackScenario = () => {
     route53DependsOn: route53?.DependsOn,
   };
 };
+
+export const runCDNPackResourceKeysScenario = async () =>
+  (await runCDNPackScenario()).resourceKeys;
+
+export const runCDNPackOacNameScenario = async () =>
+  (await runCDNPackScenario()).oacName;
+
+export const runCDNPackDistributionDependsOnScenario = async () =>
+  (await runCDNPackScenario()).distributionDependsOn;
+
+export const runCDNPackViewerCertificateArnScenario = async () =>
+  (await runCDNPackScenario()).viewerCertificateArn;
+
+export const runCDNPackDefaultRootObjectScenario = async () =>
+  (await runCDNPackScenario()).defaultRootObject;
+
+export const runCDNPackRoute53HostedZoneIdScenario = async () =>
+  (await runCDNPackScenario()).route53HostedZoneId;
+
+export const runCDNPackRoute53DependsOnScenario = async () =>
+  (await runCDNPackScenario()).route53DependsOn;

@@ -65,3 +65,42 @@ export const runGatewayPackScenario = () => {
     customDeploymentId: customStage?.Properties?.DeploymentId?.Ref,
   };
 };
+
+export const runGatewayPackResourceKeysScenario = async () =>
+  (await runGatewayPackScenario()).resourceKeys;
+
+export const runGatewayPackDefaultAuthTypeScenario = async () =>
+  (await runGatewayPackScenario()).defaultAuthType;
+
+export const runGatewayPackDefaultStageNameScenario = async () =>
+  (await runGatewayPackScenario()).defaultStageName;
+
+export const runGatewayPackDefaultDeploymentIdScenario = async () =>
+  (await runGatewayPackScenario()).defaultDeploymentId;
+
+export const runGatewayPackDefaultIntegrationUriScenario = async () =>
+  (await runGatewayPackScenario()).defaultIntegrationUri;
+
+export const runGatewayPackDefaultRoute53RecordTypeScenario = async () =>
+  (await runGatewayPackScenario()).defaultRoute53RecordType;
+
+export const runGatewayPackCustomAuthTypeScenario = async () =>
+  (await runGatewayPackScenario()).customAuthType;
+
+export const runGatewayPackCustomAuthScopesScenario = async () =>
+  (await runGatewayPackScenario()).customAuthScopes;
+
+export const runGatewayPackCustomAuthorizerRefScenario = async () =>
+  (await runGatewayPackScenario()).customAuthorizerRef;
+
+export const runGatewayPackCustomAuthorizerIdentitySourceScenario = async () =>
+  (await runGatewayPackScenario()).customAuthorizerIdentitySource;
+
+export const runGatewayPackCustomAuthorizerProviderARNsScenario = async () =>
+  (await runGatewayPackScenario()).customAuthorizerProviderARNs;
+
+export const runGatewayPackCustomStageNameScenario = async () =>
+  (await runGatewayPackScenario()).customStageName;
+
+export const runGatewayPackCustomDeploymentIdScenario = async () =>
+  (await runGatewayPackScenario()).customDeploymentId;
