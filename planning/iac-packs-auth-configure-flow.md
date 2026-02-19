@@ -17,17 +17,19 @@ Automatic defaults are preferred.
 
 ## Next Phase: Federated Provider Configurability
 
-- [ ] Extend auth/user-management pack config to optionally accept `supportedIdentityProviders`.
-- [ ] Keep sensible defaults so existing consumers get current behavior (`["COGNITO"]` in domain-enabled mode).
-- [ ] Validate/guard config so provider settings are only applied in domain-enabled OAuth mode.
-- [ ] Add/expand test-utils + spec assertions for:
-- [ ] domain-enabled default behavior with no new config supplied.
-- [ ] domain-enabled custom provider list behavior.
-- [ ] domain-disabled behavior still omits provider/OAuth hosted-UI settings.
-- [ ] Update pack-level docs/comments for new config and usage constraints.
-- [ ] Run targeted auth pack specs and confirm no regressions.
+- [x] Extend auth/user-management pack config to optionally accept `supportedIdentityProviders`.
+- [x] Keep sensible defaults so existing consumers get current behavior (`["COGNITO"]` in domain-enabled mode).
+- [x] Validate/guard config so provider settings are only applied in domain-enabled OAuth mode.
+- [x] Add/expand test-utils + spec assertions for:
+- [x] domain-enabled default behavior with no new config supplied.
+- [x] domain-enabled custom provider list behavior.
+- [x] domain-disabled behavior still omits provider/OAuth hosted-UI settings.
+- [x] Update pack-level docs/comments for new config and usage constraints.
+- [x] Run targeted auth pack specs and confirm no regressions.
 
 ## Notes
+
+Doc comments for auth/user-management config properties were expanded to include default behavior, domain-enabled/domain-disabled constraints, and provider naming guidance.
 
 Sample error from a stack update trying to remove callback/logout URLs while flow still expected them:
 

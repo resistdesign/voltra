@@ -44,40 +44,75 @@ type AddAuthConfigBase = {
 
 type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
   /**
-   * Enable a custom Cognito user pool domain and associated Route53 records.
+   * Enable Cognito Hosted UI/OAuth redirect mode by creating a custom user pool
+   * domain plus Route53 records.
    *
-   * Defaults to `true`.
+   * When enabled, the generated user pool client uses OAuth flows (`code`,
+   * `implicit`) and supports callback/logout URL configuration.
+   *
+   * Defaults to `true`. Set `false` to opt out of Hosted UI resources and use
+   * SDK/API-based sign-in flows only.
    */
   enableUserPoolDomain?: true;
   /**
-   * Parameter name for Route53 hosted zone id.
+   * Parameter name for the Route53 hosted zone id that owns `domainName`.
+   *
+   * Required when `enableUserPoolDomain` is not `false`.
    */
   hostedZoneIdParameterName: string;
   /**
-   * Parameter name for base domain.
+   * Parameter name for the base domain used for the auth subdomain.
+   *
+   * The pack creates a Cognito domain at `auth.<base-domain>`.
+   * Required when `enableUserPoolDomain` is not `false`.
    */
   domainNameParameterName: string;
   /**
-   * SSL certificate resource id for the user pool domain.
+   * ACM certificate resource id (in `us-east-1`) for the Cognito custom
+   * domain.
+   *
+   * Required when `enableUserPoolDomain` is not `false`.
    */
   sslCertificateId: string;
   /**
-   * CloudFront distribution id for the main CDN.
+   * CloudFront distribution resource id used as the base-domain alias target.
+   *
+   * This is used for the root/base domain record before creating the auth
+   * subdomain record.
    */
   mainCDNCloudFrontId: string;
   /**
-   * OAuth callback URLs.
+   * OAuth callback URLs for Hosted UI/federated redirect flows.
+   *
+   * These must be valid redirect URLs accepted by Cognito for the app client.
+   * They are required by Cognito when OAuth flows are enabled.
    */
   callbackUrls: any[];
   /**
-   * OAuth logout URLs.
+   * OAuth logout redirect URLs for Hosted UI sign-out.
+   *
+   * These should match the application routes users are redirected to after
+   * logout.
    */
   logoutUrls: any[];
+  /**
+   * Supported identity providers for Hosted UI/OAuth flows.
+   *
+   * Defaults to `["COGNITO"]`.
+   * Use Cognito provider names such as `"COGNITO"`, `"Google"`,
+   * `"SignInWithApple"`, `"LoginWithAmazon"`, or names for configured OIDC/SAML
+   * providers.
+   */
+  supportedIdentityProviders?: any[];
 };
 
 type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
   /**
-   * Disable custom Cognito user pool domain resources.
+   * Disable Cognito Hosted UI/OAuth redirect configuration.
+   *
+   * In this mode, the generated user pool client disables OAuth hosted-UI flows
+   * (`AllowedOAuthFlowsUserPoolClient: false`) so callback/logout/provider
+   * settings are intentionally disallowed.
    */
   enableUserPoolDomain: false;
   hostedZoneIdParameterName?: never;
@@ -86,6 +121,7 @@ type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
   mainCDNCloudFrontId?: never;
   callbackUrls?: never;
   logoutUrls?: never;
+  supportedIdentityProviders?: never;
 };
 
 /**
@@ -107,6 +143,7 @@ export const addAuth = createResourcePack((config: AddAuthConfig) => {
     unauthRoleName,
     callbackUrls,
     logoutUrls,
+    supportedIdentityProviders,
     apiCloudFunctionGatewayId,
     apiStageName,
     adminGroupId,
@@ -142,6 +179,7 @@ export const addAuth = createResourcePack((config: AddAuthConfig) => {
             },
             callbackUrls: callbackUrls,
             logoutUrls: logoutUrls,
+            supportedIdentityProviders: supportedIdentityProviders,
           }),
     })
     .patch({

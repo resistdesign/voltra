@@ -26,6 +26,8 @@ export const runUserManagementPackScenario = () => {
       allowedOAuthFlowsUserPoolClient:
         minimalClient?.Properties?.AllowedOAuthFlowsUserPoolClient,
       allowedOAuthFlows: minimalClient?.Properties?.AllowedOAuthFlows,
+      supportedIdentityProviders:
+        minimalClient?.Properties?.SupportedIdentityProviders,
       hasCallbackURLs: "CallbackURLs" in (minimalClient?.Properties || {}),
       hasLogoutURLs: "LogoutURLs" in (minimalClient?.Properties || {}),
     },
@@ -56,6 +58,28 @@ export const runUserManagementPackScenario = () => {
     hasIdentityPoolRoles: "UserPoolIdentityPoolRoles" in apiResources,
     authRoleName: authRole?.Properties?.RoleName,
     unauthRoleName: unauthRole?.Properties?.RoleName,
+  };
+
+  const customProviderTemplate = new SimpleCFT()
+    .applyPack(addUserManagement, {
+      id: "UserPool",
+      authRoleName: "AuthRole",
+      unauthRoleName: "UnauthRole",
+      domainName: "example.com",
+      hostedZoneId: "HZ123",
+      sslCertificateArn: "arn:aws:acm:us-east-1:123:cert/1",
+      callbackUrls: ["https://example.com/callback"],
+      logoutUrls: ["https://example.com/logout"],
+      supportedIdentityProviders: ["COGNITO", "Google", "SignInWithApple"],
+    })
+    .toJSON();
+
+  const customProviderResources = customProviderTemplate.Resources || {};
+  const customProviderClient = customProviderResources.UserPoolClient as any;
+
+  const customProviderSummary = {
+    supportedIdentityProviders:
+      customProviderClient?.Properties?.SupportedIdentityProviders,
   };
 
   const noDomainTemplate = new SimpleCFT()
@@ -93,5 +117,6 @@ export const runUserManagementPackScenario = () => {
     minimalSummary,
     apiSummary,
     noDomainSummary,
+    customProviderSummary,
   };
 };
