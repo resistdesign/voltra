@@ -39,6 +39,8 @@ export const runAuthPackScenario = () => {
     .toJSON();
 
   const withoutDomainResources = withoutDomainTemplate.Resources || {};
+  const withDomainClient = withDomainResources.UserPoolClient as any;
+  const withoutDomainClient = withoutDomainResources.UserPoolClient as any;
 
   return {
     withDomainSummary: {
@@ -50,6 +52,13 @@ export const runAuthPackScenario = () => {
       hasDomain: "UserPoolDomain" in withDomainResources,
       hasDomainRecord: "UserPoolDomainRecord" in withDomainResources,
       hasIdentityPoolRoles: "UserPoolIdentityPoolRoles" in withDomainResources,
+      oauthSummary: {
+        allowedOAuthFlowsUserPoolClient:
+          withDomainClient?.Properties?.AllowedOAuthFlowsUserPoolClient,
+        allowedOAuthFlows: withDomainClient?.Properties?.AllowedOAuthFlows,
+        hasCallbackURLs: "CallbackURLs" in (withDomainClient?.Properties || {}),
+        hasLogoutURLs: "LogoutURLs" in (withDomainClient?.Properties || {}),
+      },
     },
     withoutDomainSummary: {
       resourceKeys: Object.keys(withoutDomainResources).sort(),
@@ -58,6 +67,18 @@ export const runAuthPackScenario = () => {
       hasDomainRecord: "UserPoolDomainRecord" in withoutDomainResources,
       hasIdentityPoolRoles:
         "UserPoolIdentityPoolRoles" in withoutDomainResources,
+      oauthSummary: {
+        allowedOAuthFlowsUserPoolClient:
+          withoutDomainClient?.Properties?.AllowedOAuthFlowsUserPoolClient,
+        hasAllowedOAuthFlows:
+          "AllowedOAuthFlows" in (withoutDomainClient?.Properties || {}),
+        hasAllowedOAuthScopes:
+          "AllowedOAuthScopes" in (withoutDomainClient?.Properties || {}),
+        hasSupportedIdentityProviders:
+          "SupportedIdentityProviders" in (withoutDomainClient?.Properties || {}),
+        hasCallbackURLs: "CallbackURLs" in (withoutDomainClient?.Properties || {}),
+        hasLogoutURLs: "LogoutURLs" in (withoutDomainClient?.Properties || {}),
+      },
     },
   };
 };
