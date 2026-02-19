@@ -23,7 +23,7 @@ each test scenario on the other side of this effort.
   - [x] Split `src/common/SearchValidation.spec.json` + `src/common/SearchValidation.test-utils.ts`
   - [x] Run focused verification for the four updated spec files
 - [~] Phase 2: Continue splitting remaining single-test spec files in plan order by directory
-  - Remaining: 28 single-test spec files still need scenario-split refactors.
+  - Remaining: 25 single-test spec files still need scenario-split refactors.
   - [x] Batch 1 (`src/common`)
   - [x] Split `src/common/SearchTypes.spec.json` + `src/common/SearchTypes.test-utils.ts`
   - [x] Split `src/common/StringTransformers.spec.json` + `src/common/StringTransformers.test-utils.ts`
@@ -100,3 +100,8 @@ each test scenario on the other side of this effort.
   - [x] Split `src/api/DBX/DBX_SEARCH_LOSSY_E2E.spec.json` + `src/api/DBX/DBX_SEARCH_LOSSY_E2E.test-utils.ts`
   - [x] Split `src/api/DBX/DBX_AGGREGATES_E2E.spec.json` + `src/api/DBX/DBX_AGGREGATES_E2E.test-utils.ts`
   - [x] Run focused verification for Batch 13 specs
+  - [x] Batch 14 (`src/api/DBX` validation + scale + collisions)
+  - [x] Split `src/api/DBX/DBX_VALIDATION_E2E.spec.json` + `src/api/DBX/DBX_VALIDATION_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_SCALE_E2E.spec.json` + `src/api/DBX/DBX_SCALE_E2E.test-utils.ts`
+  - [x] Split `src/api/DBX/DBX_INDEX_COLLISION_E2E.spec.json` + `src/api/DBX/DBX_INDEX_COLLISION_E2E.test-utils.ts`
+  - [x] Run focused verification for Batch 14 specs

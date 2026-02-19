@@ -101,10 +101,7 @@ const summarizeError = (
   };
 };
 
-/**
- * Run the DBX validation E2E scenario against the in-memory router/runtime.
- */
-export const runDbxValidationScenario = async () => {
+const runDbxValidationScenario = async () => {
   const runtime = buildDbxRuntime();
 
   const invalidFieldCreate = await runDbxRequest(runtime, {
@@ -223,13 +220,12 @@ export const runDbxValidationScenario = async () => {
       "createdAt",
     ]),
     invalidRelationshipAuthorCreate: summarizeError(
-    invalidRelationshipAuthorCreate,
+      invalidRelationshipAuthorCreate,
       ["\"posts\"/\"0\""],
     ),
-    invalidRelationshipPostCreate: summarizeError(
-      invalidRelationshipPostCreate,
-      ["author"],
-    ),
+    invalidRelationshipPostCreate: summarizeError(invalidRelationshipPostCreate, [
+      "author",
+    ]),
     invalidUpdateMissingId: summarizeError(invalidUpdateMissingId, []),
     invalidUpdateUnknownField: summarizeError(invalidUpdateUnknownField, [
       "nope",
@@ -252,3 +248,30 @@ export const runDbxValidationScenario = async () => {
     },
   };
 };
+
+export const runDbxValidationInvalidFieldCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidFieldCreate;
+
+export const runDbxValidationInvalidTypeCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidTypeCreate;
+
+export const runDbxValidationInvalidRelationshipAuthorCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidRelationshipAuthorCreate;
+
+export const runDbxValidationInvalidRelationshipPostCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidRelationshipPostCreate;
+
+export const runDbxValidationInvalidUpdateMissingIdScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateMissingId;
+
+export const runDbxValidationInvalidUpdateUnknownFieldScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateUnknownField;
+
+export const runDbxValidationInvalidUpdateRelationshipFieldScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateRelationshipField;
+
+export const runDbxValidationInvalidUpdateTypeMismatchScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateTypeMismatch;
+
+export const runDbxValidationExpectedErrorsScenario = async () =>
+  (await runDbxValidationScenario()).expectedErrors;
