@@ -342,7 +342,7 @@ Validation error maps can include both value-level errors and array item errors:
 {
   errorMap: {
     title: [
-      { code: "MISSING" },
+      { code: "MISSING_FIELD_VALUE" },
       { code: "VALUE_DOES_NOT_MATCH_PATTERN" }
     ],
     tags: [

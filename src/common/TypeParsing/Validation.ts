@@ -105,7 +105,7 @@ export const ERROR_MESSAGE_CONSTANTS = {
   [DENIED_TYPE_OPERATIONS.READ]: DENIED_TYPE_OPERATIONS.READ,
   [DENIED_TYPE_OPERATIONS.UPDATE]: DENIED_TYPE_OPERATIONS.UPDATE,
   [DENIED_TYPE_OPERATIONS.DELETE]: DENIED_TYPE_OPERATIONS.DELETE,
-  MISSING: "MISSING",
+  MISSING_FIELD_VALUE: "MISSING_FIELD_VALUE",
   INVALID_OPTION: "INVALID_OPTION",
   INVALID_FIELD: "INVALID_FIELD",
   RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED:
@@ -444,7 +444,7 @@ export const validateTypeInfoFieldValue = (
     !hasValue(value)
   ) {
     results.valid = false;
-    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING);
+    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE);
   } else if (array && !ignoreArray && !Array.isArray(value)) {
     results.valid = false;
     results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_TYPE);
@@ -457,7 +457,7 @@ export const validateTypeInfoFieldValue = (
     !emptyArrayIsValid
   ) {
     results.valid = false;
-    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING);
+    results.error = getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE);
   } else if (array && !ignoreArray) {
     const {
       valid: validArray,

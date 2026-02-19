@@ -195,7 +195,7 @@ const defaultTranslateValidationErrorCode: TranslateValidationErrorCode = (
       return "Update operation is not allowed for this value";
     case ERROR_MESSAGE_CONSTANTS.DENIED_TYPE_OPERATION_DELETE:
       return "Delete operation is not allowed for this value";
-    case ERROR_MESSAGE_CONSTANTS.MISSING:
+    case ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE:
       return "This field is required";
     case ERROR_MESSAGE_CONSTANTS.INVALID_FIELD:
       return "This field is not allowed";
