@@ -10,7 +10,6 @@ import type {
   TypeInfoField,
   TypeOperation,
 } from "../../common/TypeParsing/TypeInfo";
-import type { ItemRelationshipInfoType } from "../../common/ItemRelationshipInfoTypes";
 import type {
   CustomTypeActionPayload,
   RelationActionPayload,

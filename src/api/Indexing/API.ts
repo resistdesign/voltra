@@ -975,9 +975,7 @@ export async function searchLossy({
 }
 
 async function hasExactPhrase(
-  reader: IndexReader,
   docId: DocId,
-  indexField: string,
   phraseTokens: string[],
   docTokenChecker: DocTokenMembershipChecker,
   positionsLoader: ExactPositionsLoader,
@@ -1118,9 +1116,7 @@ export async function searchExact({
 
         if (
           await hasExactPhrase(
-            reader,
             docId,
-            indexField,
             exactTokens,
             docTokenChecker,
             positionsLoader,
@@ -1172,9 +1168,7 @@ export async function searchExact({
     const verifyCandidate = async (docId: DocId): Promise<boolean> => {
       lastProcessedDocId = docId;
       return hasExactPhrase(
-        reader,
         docId,
-        indexField,
         exactTokens,
         docTokenChecker,
         positionsLoader,

@@ -118,7 +118,7 @@ export const getTypeInfoORMRouteMap = (
   });
 
   const createHandlerFactory = (
-    eventData: NormalizedCloudFunctionEventData,
+    _eventData: NormalizedCloudFunctionEventData,
   ): RouteHandler => orm.create;
   const createHandlerFactoryWithDAC = (
     eventData: NormalizedCloudFunctionEventData,
