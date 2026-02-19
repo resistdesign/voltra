@@ -14,47 +14,55 @@ const baseField: TypeInfoField = {
   optional: false,
 };
 
-/**
- * Run a scenario covering each field kind category.
- *
- * @returns Snapshot of resolved field kinds.
- */
-export const runGetFieldKindScenario = () => {
-  return {
-    stringKind: getFieldKind({ ...baseField, type: "string" }),
-    numberKind: getFieldKind({ ...baseField, type: "number" }),
-    booleanKind: getFieldKind({ ...baseField, type: "boolean" }),
-    enumKind: getFieldKind({
-      ...baseField,
-      type: "string",
-      possibleValues: ["alpha", "beta"],
-    }),
-    arrayKind: getFieldKind({
-      ...baseField,
-      type: "string",
-      array: true,
-    }),
-    relationSingleKind: getFieldKind({
-      ...baseField,
-      type: "string",
-      typeReference: "Widget",
-    }),
-    relationArrayKind: getFieldKind({
-      ...baseField,
-      type: "string",
-      typeReference: "Widget",
-      array: true,
-    }),
-    customSingleKind: getFieldKind({
-      ...baseField,
-      type: "string",
-      tags: { customType: "Special" },
-    }),
-    customArrayKind: getFieldKind({
-      ...baseField,
-      type: "string",
-      array: true,
-      tags: { customType: "Special" },
-    }),
-  };
-};
+export const runGetFieldKindStringScenario = () =>
+  getFieldKind({ ...baseField, type: "string" });
+
+export const runGetFieldKindNumberScenario = () =>
+  getFieldKind({ ...baseField, type: "number" });
+
+export const runGetFieldKindBooleanScenario = () =>
+  getFieldKind({ ...baseField, type: "boolean" });
+
+export const runGetFieldKindEnumScenario = () =>
+  getFieldKind({
+    ...baseField,
+    type: "string",
+    possibleValues: ["alpha", "beta"],
+  });
+
+export const runGetFieldKindArrayScenario = () =>
+  getFieldKind({
+    ...baseField,
+    type: "string",
+    array: true,
+  });
+
+export const runGetFieldKindRelationSingleScenario = () =>
+  getFieldKind({
+    ...baseField,
+    type: "string",
+    typeReference: "Widget",
+  });
+
+export const runGetFieldKindRelationArrayScenario = () =>
+  getFieldKind({
+    ...baseField,
+    type: "string",
+    typeReference: "Widget",
+    array: true,
+  });
+
+export const runGetFieldKindCustomSingleScenario = () =>
+  getFieldKind({
+    ...baseField,
+    type: "string",
+    tags: { customType: "Special" },
+  });
+
+export const runGetFieldKindCustomArrayScenario = () =>
+  getFieldKind({
+    ...baseField,
+    type: "string",
+    array: true,
+    tags: { customType: "Special" },
+  });

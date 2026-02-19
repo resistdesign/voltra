@@ -70,7 +70,7 @@ const buildHarness = (config: ApplicationStateLoaderConfig): LoaderHarness => {
   };
 };
 
-export const runApplicationStateLoaderScenario = async () => {
+const runApplicationStateLoaderScenario = async () => {
   const identifier: ApplicationStateIdentifier = { screen: { profile: {} } };
   const serviceConfig: ServiceConfig = {
     protocol: "https",
@@ -140,3 +140,33 @@ export const runApplicationStateLoaderScenario = async () => {
     errorOnLoadCalls: errorHarness.onLoadCalls,
   };
 };
+
+export const runApplicationStateLoaderInitialLoadingScenario = async () =>
+  (await runApplicationStateLoaderScenario()).initialLoading;
+
+export const runApplicationStateLoaderInitialLatestErrorScenario = async () =>
+  (await runApplicationStateLoaderScenario()).initialLatestError;
+
+export const runApplicationStateLoaderSuccessHasValueScenario = async () =>
+  (await runApplicationStateLoaderScenario()).successHasValue;
+
+export const runApplicationStateLoaderSuccessValueScenario = async () =>
+  (await runApplicationStateLoaderScenario()).successValue;
+
+export const runApplicationStateLoaderSuccessModifiedScenario = async () =>
+  (await runApplicationStateLoaderScenario()).successModified;
+
+export const runApplicationStateLoaderSuccessOnLoadCallsScenario = async () =>
+  (await runApplicationStateLoaderScenario()).successOnLoadCalls;
+
+export const runApplicationStateLoaderErrorHasValueScenario = async () =>
+  (await runApplicationStateLoaderScenario()).errorHasValue;
+
+export const runApplicationStateLoaderErrorValueScenario = async () =>
+  (await runApplicationStateLoaderScenario()).errorValue;
+
+export const runApplicationStateLoaderErrorModifiedScenario = async () =>
+  (await runApplicationStateLoaderScenario()).errorModified;
+
+export const runApplicationStateLoaderErrorOnLoadCallsScenario = async () =>
+  (await runApplicationStateLoaderScenario()).errorOnLoadCalls;
