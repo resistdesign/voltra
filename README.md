@@ -131,8 +131,10 @@ EasyLayout now has:
 - Client routing: `examples/routing/app-routing.ts`
 - Backend API routing: `examples/api/backend-routing.ts`
 - Forms: `examples/forms/`
+  - `examples/forms/auto-form-validation-customization.tsx`
 - Layout: `examples/layout/`
 - Common types: `examples/common/types.ts`
+  - `examples/common/typeinfo-validation.ts`
 - Build-time parsing: `examples/build/type-parsing.ts`
 
 ### Template syntax
@@ -310,6 +312,27 @@ Renderers emit actions via:
 - `onCustomTypeAction(payload)` for custom types
 
 Use these to wire modals, selectors, or editors without baking UI into the core engine.
+
+### Centralized Validation
+
+All TypeInfo data-item validation can be run directly from `@resistdesign/voltra/common`:
+
+```ts
+import { validateTypeInfoDataItem } from "@resistdesign/voltra/common";
+```
+
+`validateTypeInfoDataItem` supports:
+
+- field-level `customValidatorMap` callbacks that return `ErrorDescriptor`
+- `tags.validation` field options:
+  - `validateHidden`
+  - `validateReadonly`
+  - `emptyArrayIsValid`
+
+AutoForm passes validation through the same centralized logic and supports:
+
+- `customValidatorMap` for app-specific rules
+- `translateValidationErrorCode` for UI-facing messages
 
 ## Docs Site
 

@@ -22,6 +22,7 @@ Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. T
 
 - `examples/forms/web-form-suite.ts`
 - `examples/forms/native-form-suite.ts`
+- `examples/forms/auto-form-validation-customization.tsx`
 
 Use these for web/native form renderer entrypoints.
 
@@ -35,6 +36,7 @@ Use these for EasyLayout template usage in web/native runtimes.
 ## Common Types
 
 - `examples/common/types.ts`
+- `examples/common/typeinfo-validation.ts`
 
 Use this for shared `@resistdesign/voltra/common` type references.
 
