@@ -1,6 +1,7 @@
 import type { TypeInfoValidationResults } from "../../common/TypeParsing/Validation";
 import {
   ERROR_MESSAGE_CONSTANTS,
+  type ErrorDescriptor,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoORMServiceError } from "../../common/TypeInfoORM";
@@ -53,15 +54,23 @@ const summarizeError = (
 ) => {
   const parsed = response.parsedBody as ErrorBody | undefined;
   const errorMap = parsed?.error?.errorMap ?? {};
+  const normalizeErrorCodes = (
+    descriptors: ErrorDescriptor[] | undefined,
+  ): string[] | undefined => {
+    if (!Array.isArray(descriptors)) {
+      return undefined;
+    }
+    return descriptors.map((descriptor) => descriptor.code);
+  };
 
   return {
     statusCode: response.statusCode,
     status: parsed?.status,
-    error: parsed?.error?.error,
+    error: parsed?.error?.error?.code,
     errorMap: keys.reduce((acc, key) => {
-      const value = errorMap[key];
+      const value = normalizeErrorCodes(errorMap[key]);
       if (value) {
-        acc[key] = value as string[];
+        acc[key] = value;
       }
       return acc;
     }, {} as Record<string, string[]>),

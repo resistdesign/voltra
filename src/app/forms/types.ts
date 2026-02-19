@@ -11,11 +11,28 @@ import type {
   TypeOperation,
 } from "../../common/TypeParsing/TypeInfo";
 import type {
+  ErrorDescriptor,
+  FieldValueValidatorMap,
+  TypeInfoValidationResults,
+} from "../../common/TypeParsing/Validation";
+import type {
   CustomTypeActionPayload,
   RelationActionPayload,
 } from "./core/types";
 
 export * from "./core/types";
+
+/**
+ * Translates validation error descriptors into UI messages.
+ */
+export type TranslateValidationErrorCode = (
+  error: ErrorDescriptor,
+) => string;
+
+/**
+ * Optional custom field validators keyed by field name.
+ */
+export type CustomValidatorMap = FieldValueValidatorMap;
 
 /**
  * Loose map of form values keyed by field.
@@ -121,7 +138,7 @@ export type FormController = {
   /** Update a field value by key. */
   setFieldValue: (key: string, value: FormValue) => void;
   /** Validate the form and return success. */
-  validate: () => boolean;
+  validate: () => TypeInfoValidationResults;
   /** Override form errors with a provided map. */
   setErrors: (errors: Record<string, string>) => void;
 };

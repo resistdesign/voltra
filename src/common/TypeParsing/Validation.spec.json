@@ -27,9 +27,15 @@
       "expectation": {
         "typeName": "Person",
         "valid": true,
-        "error": "",
+        "error": {
+          "code": "NONE"
+        },
         "errorMap": {
-          "name": [""]
+          "name": [
+            {
+              "code": "NONE"
+            }
+          ]
         }
       }
     }

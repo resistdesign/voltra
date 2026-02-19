@@ -231,7 +231,7 @@ export const runReadonlyValidationScenario = () => {
 
     if (!didValidate.current) {
       didValidate.current = true;
-      validationPassed = controller.validate();
+      validationPassed = controller.validate().valid;
     }
 
     snapshot = {
@@ -275,7 +275,7 @@ export const runOptionalValidationScenario = () => {
 
     if (!didValidate.current) {
       didValidate.current = true;
-      validationPassed = controller.validate();
+      validationPassed = controller.validate().valid;
     }
 
     snapshot = {
@@ -490,7 +490,7 @@ export const runPatternValidationScenario = () => {
 
     if (!didValidate.current) {
       didValidate.current = true;
-      validationPassed = controller.validate();
+      validationPassed = controller.validate().valid;
     }
 
     snapshot = {

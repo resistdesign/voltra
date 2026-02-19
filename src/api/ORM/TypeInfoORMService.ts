@@ -16,6 +16,8 @@ import {
 import {
   CustomTypeInfoFieldValidatorMap,
   ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptor,
+  getNoErrorDescriptor,
   getValidityValue,
   RelationshipValidationType,
   TypeInfoValidationResults,
@@ -1069,7 +1071,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const results: TypeInfoValidationResults = {
       typeName,
       valid: !!typeInfo,
-      error: !!typeInfo ? "" : ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST,
+      error: !!typeInfo
+        ? getNoErrorDescriptor()
+        : getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.TYPE_DOES_NOT_EXIST),
       errorMap: {},
     };
     const {
@@ -1094,7 +1098,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         : operationErrorMap[oE];
     }
 
-    if (!operationValid && operationError) {
+    if (!operationValid && operationError.code !== ERROR_MESSAGE_CONSTANTS.NONE) {
       results.error = operationError;
     }
 
@@ -1271,7 +1275,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         const relationshipValidationResults: TypeInfoValidationResults = {
           typeName: fromTypeName,
           valid: false,
-          error: TypeInfoORMServiceError.INVALID_RELATIONSHIP,
+          error: getErrorDescriptor(TypeInfoORMServiceError.INVALID_RELATIONSHIP),
           errorMap: {},
         };
 
@@ -1784,7 +1788,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const validationResults: TypeInfoValidationResults = {
         typeName,
         valid: false,
-        error: TypeInfoORMServiceError.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
+        error: getErrorDescriptor(
+          TypeInfoORMServiceError.NO_PRIMARY_FIELD_VALUE_SUPPLIED,
+        ),
         errorMap: {},
       };
 

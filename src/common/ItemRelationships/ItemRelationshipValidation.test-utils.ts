@@ -3,6 +3,26 @@ import {
   validateRelationshipItem,
 } from "./ItemRelationshipValidation";
 import { ItemRelationshipInfoKeys } from "../ItemRelationshipInfoTypes";
+import type {
+  ErrorDescriptor,
+  TypeInfoValidationResults,
+} from "../TypeParsing/Validation";
+import { ERROR_MESSAGE_CONSTANTS } from "../TypeParsing/Validation";
+
+const toLegacyValidationShape = (results: TypeInfoValidationResults) => ({
+  ...results,
+  error:
+    results.error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : results.error.code,
+  errorMap: Object.entries(results.errorMap).reduce(
+    (acc, [key, descriptors]: [string, ErrorDescriptor[]]) => {
+      acc[key] = descriptors.map((descriptor) =>
+        descriptor.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : descriptor.code,
+      );
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  ),
+});
 
 export const runItemRelationshipValidationScenario = () => {
   const baseItem = {
@@ -33,10 +53,10 @@ export const runItemRelationshipValidationScenario = () => {
   );
 
   return {
-    validResult,
-    missingFieldResult,
-    omittedFieldResult,
-    omittedFieldErrorResult,
+    validResult: toLegacyValidationShape(validResult),
+    missingFieldResult: toLegacyValidationShape(missingFieldResult),
+    omittedFieldResult: toLegacyValidationShape(omittedFieldResult),
+    omittedFieldErrorResult: toLegacyValidationShape(omittedFieldErrorResult),
     expectedErrors: TYPE_INFO_ORM_RELATIONSHIP_ERRORS,
   };
 };
