@@ -94,7 +94,7 @@ const renderErrorMessage = (context: FieldRenderContext) => {
 };
 
 const RelationSingleField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
   const handleManageRelation = useCallback(() => {
@@ -129,7 +129,7 @@ const RelationSingleField = (context: FieldRenderContext) => {
 };
 
 const RelationArrayField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
   const handleManageRelation = useCallback(() => {
@@ -164,7 +164,7 @@ const RelationArrayField = (context: FieldRenderContext) => {
 };
 
 const CustomSingleField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
@@ -204,7 +204,7 @@ const CustomSingleField = (context: FieldRenderContext) => {
 };
 
 const CustomArrayField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
@@ -320,7 +320,7 @@ const CustomArrayField = (context: FieldRenderContext) => {
 };
 
 const ArrayField = (context: FieldRenderContext<ReactElement>) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
@@ -400,7 +400,7 @@ const ArrayField = (context: FieldRenderContext<ReactElement>) => {
 };
 
 const StringField = (context: FieldRenderContext) => {
-  const { fieldKey, label, required, disabled, error } = context;
+  const { fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     context.onChange(event.target.value);
@@ -425,7 +425,7 @@ const StringField = (context: FieldRenderContext) => {
 };
 
 const NumberField = (context: FieldRenderContext) => {
-  const { fieldKey, label, required, disabled, error } = context;
+  const { fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     context.onChange(parseNumberValue(event.target.value));
@@ -452,7 +452,7 @@ const NumberField = (context: FieldRenderContext) => {
 };
 
 const BooleanField = (context: FieldRenderContext) => {
-  const { fieldKey, label, disabled, error } = context;
+  const { fieldKey, label, disabled } = context;
   const id = `field-${fieldKey}`;
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     context.onChange(event.target.checked);
@@ -476,7 +476,7 @@ const BooleanField = (context: FieldRenderContext) => {
 };
 
 const EnumSelectField = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const selectableValues = getSelectableValues(context.possibleValues);
   const allowCustom = context.allowCustomSelection;
