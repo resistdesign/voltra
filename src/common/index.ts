@@ -34,32 +34,10 @@ export * from "./CommandLine";
  * @category common
  * @group Type Parsing
  */
-export {
-  TypeOperation,
-} from "./TypeParsing/TypeInfo";
-/**
- * @category common
- * @group Type Parsing
- */
-export type {
-  DeniedOperations,
-  SupportedFieldTags,
-  SupportedTags,
-  TypeInfo,
-  TypeInfoField,
-  TypeInfoMap,
-} from "./TypeParsing/TypeInfo";
+export * from "./TypeParsing";
 
 /**
  * @category common
  * @group Shared Types
  */
-export {
-  TypeInfoORMServiceError,
-} from "./TypeInfoORM/Types";
-
-/**
- * @category common
- * @group Type Parsing
- */
-export * from "./TypeParsing/Validation";
+export * from "./TypeInfoORM";

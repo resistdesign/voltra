@@ -37,43 +37,43 @@ export const COMPARATORS: Record<
 > = {
   [ComparisonOperators.EQUALS]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue === criterionValue,
   [ComparisonOperators.NOT_EQUALS]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue !== criterionValue,
   [ComparisonOperators.GREATER_THAN]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue > criterionValue,
   [ComparisonOperators.GREATER_THAN_OR_EQUAL]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue >= criterionValue,
   [ComparisonOperators.LESS_THAN]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue < criterionValue,
   [ComparisonOperators.LESS_THAN_OR_EQUAL]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue <= criterionValue,
   [ComparisonOperators.IN]: (
-    criterionValue: any,
+    _criterionValue: any,
     criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) =>
     Array.isArray(criterionValueOptions) &&
     criterionValueOptions.includes(fieldValue),
   [ComparisonOperators.NOT_IN]: (
-    criterionValue: any,
+    _criterionValue: any,
     criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) =>
@@ -81,36 +81,36 @@ export const COMPARATORS: Record<
     !criterionValueOptions.includes(fieldValue),
   [ComparisonOperators.LIKE]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => `${fieldValue}`.includes(`${criterionValue}`),
   [ComparisonOperators.NOT_LIKE]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => !`${fieldValue}`.includes(`${criterionValue}`),
   [ComparisonOperators.EXISTS]: (
-    criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue !== undefined && fieldValue !== null,
   [ComparisonOperators.NOT_EXISTS]: (
-    criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue === undefined || fieldValue === null,
   [ComparisonOperators.IS_NOT_EMPTY]: (
-    criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue !== undefined && fieldValue !== null && fieldValue !== "",
   [ComparisonOperators.IS_EMPTY]: (
-    criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => fieldValue === undefined || fieldValue === null || fieldValue === "",
   [ComparisonOperators.BETWEEN]: (
-    criterionValue: any,
+    _criterionValue: any,
     criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) =>
@@ -118,7 +118,7 @@ export const COMPARATORS: Record<
     fieldValue >= criterionValueOptions[0] &&
     fieldValue <= criterionValueOptions[1],
   [ComparisonOperators.NOT_BETWEEN]: (
-    criterionValue: any,
+    _criterionValue: any,
     criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) =>
@@ -127,32 +127,32 @@ export const COMPARATORS: Record<
     fieldValue > criterionValueOptions[1],
   [ComparisonOperators.CONTAINS]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => Array.isArray(fieldValue) && fieldValue.includes(criterionValue),
   [ComparisonOperators.NOT_CONTAINS]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => !Array.isArray(fieldValue) || !fieldValue.includes(criterionValue),
   [ComparisonOperators.STARTS_WITH]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => `${fieldValue}`.startsWith(`${criterionValue}`),
   [ComparisonOperators.ENDS_WITH]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => `${fieldValue}`.endsWith(`${criterionValue}`),
   [ComparisonOperators.DOES_NOT_START_WITH]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => !`${fieldValue}`.startsWith(`${criterionValue}`),
   [ComparisonOperators.DOES_NOT_END_WITH]: (
     criterionValue: any,
-    criterionValueOptions: any[] | undefined,
+    _criterionValueOptions: any[] | undefined,
     fieldValue: any,
   ) => !`${fieldValue}`.endsWith(`${criterionValue}`),
 };

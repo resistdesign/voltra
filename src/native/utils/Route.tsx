@@ -3,15 +3,12 @@
  *
  * Native routing helpers that adapt common navigation state to RouteAdapter.
  */
-import React, { type PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { BackHandler, Platform } from "react-native";
 import type {
   RouteAdapter,
-  RouteContextType,
   RouteProps,
-  RouteProviderProps,
   RouteQuery,
-  RouteQueryValue,
   RouteRuntimeIntegration,
 } from "../../app/utils/Route";
 import {

@@ -18,14 +18,7 @@ import {
 } from "../../../common/SearchUtils";
 import type { BaseFileItem } from "./S3FileItemDBDriver";
 import { getFullFileKey } from "./S3FileItemDBDriver/S3FileDriver";
-import Path from "path";
-import { fileURLToPath } from "url";
 import ConfigTypeInfoMap from "./InMemoryFileItemDBDriver/ConfigTypeInfoMap.json";
-
-const moduleDirname =
-  typeof __dirname === "string"
-    ? __dirname
-    : Path.dirname(fileURLToPath(import.meta.url));
 
 type CursorState = {
   offset?: number;

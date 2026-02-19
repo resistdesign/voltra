@@ -133,7 +133,7 @@ export type RelationalHandlerDependencies<
 /**
  * Lambda-style response payload.
  */
-export type LambdaResponse = {
+export type RelLambdaResponse = {
   /**
    * HTTP status code for the response.
    */
@@ -174,7 +174,7 @@ export function setRelationalHandlerDependencies(
  */
 export async function handler(
   event: RelationalHandlerEvent,
-): Promise<LambdaResponse> {
+): Promise<RelLambdaResponse> {
   if (!dependencies) {
     throw new Error(
       "Relational handler dependencies are not configured. Call setRelationalHandlerDependencies().",
@@ -215,3 +215,5 @@ export async function handler(
       };
   }
 }
+
+export const relHandler = handler;

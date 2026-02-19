@@ -30,33 +30,12 @@ import {
 } from "./Schema";
 import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
 import type {
-  BatchGetItemInput,
-  BatchGetItemOutput,
-  BatchWriteItemInput,
-  BatchWriteItemOutput,
   DynamoBatchWriter,
   DynamoQueryClient,
-  GetItemInput,
-  GetItemOutput,
   KeysAndAttributes,
-  QueryInput,
-  QueryOutput,
   WriteRequest,
 } from "../ddb/Types";
-export type {
-  BatchGetItemInput,
-  BatchGetItemOutput,
-  BatchWriteItemInput,
-  BatchWriteItemOutput,
-  DynamoBatchWriter,
-  DynamoQueryClient,
-  GetItemInput,
-  GetItemOutput,
-  KeysAndAttributes,
-  QueryInput,
-  QueryOutput,
-  WriteRequest,
-} from "../ddb/Types";
+export * from "../ddb/Types";
 
 /**
  * Deployment-specific DynamoDB table names required for fulltext storage.
@@ -557,7 +536,7 @@ export type FullTextDdbBackendConfig = FullTextDdbWriterConfig & {
 /**
  * Page of lossy postings results.
  */
-export type LossyPostingsPage = {
+type LossyPostingsPage = {
   /**
    * Document ids in the page.
    */
@@ -571,7 +550,7 @@ export type LossyPostingsPage = {
 /**
  * Paging options for lossy postings queries.
  */
-export type LossyPostingsPageOptions = {
+type LossyPostingsPageOptions = {
   /**
    * Exclusive starting doc id for paging.
    */
@@ -1142,3 +1121,6 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
     return { df: rawDf, version: 1 };
   }
 }
+
+export type FullTextLossyPostingsPage = LossyPostingsPage;
+export type FullTextLossyPostingsPageOptions = LossyPostingsPageOptions;

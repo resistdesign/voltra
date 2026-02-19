@@ -1,0 +1,21 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+  "tagDefinitions": [
+    {
+      "tagName": "@allowCustomSelection",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@category",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@default",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@ignore",
+      "syntaxKind": "modifier"
+    }
+  ]
+}
