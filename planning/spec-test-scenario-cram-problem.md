@@ -23,7 +23,7 @@ each test scenario on the other side of this effort.
   - [x] Split `src/common/SearchValidation.spec.json` + `src/common/SearchValidation.test-utils.ts`
   - [x] Run focused verification for the four updated spec files
 - [~] Phase 2: Continue splitting remaining single-test spec files in plan order by directory
-  - Remaining: 60 single-test spec files still need scenario-split refactors.
+  - Remaining: 49 single-test spec files still need scenario-split refactors.
   - [x] Batch 1 (`src/common`)
   - [x] Split `src/common/SearchTypes.spec.json` + `src/common/SearchTypes.test-utils.ts`
   - [x] Split `src/common/StringTransformers.spec.json` + `src/common/StringTransformers.test-utils.ts`
@@ -52,3 +52,18 @@ each test scenario on the other side of this effort.
   - [x] Split `src/app/utils/RouteHistory.spec.json` + `src/app/utils/RouteHistory.test-utils.ts`
   - [x] Split `src/app/utils/Service.spec.json` + `src/app/utils/Service.test-utils.ts`
   - [x] Run focused verification for Batch 5 specs
+  - [x] Batch 6 (`src/app`)
+  - [x] Split `src/app/forms/core/getFieldKind.spec.json` + `src/app/forms/core/getFieldKind.test-utils.ts`
+  - [x] Split `src/app/forms/index.spec.json` + `src/app/forms/index.test-utils.ts`
+  - [x] Split `src/app/index.spec.json` + `src/app/index.test-utils.ts`
+  - [x] Split `src/app/utils/ApplicationStateLoader.spec.json` + `src/app/utils/ApplicationStateLoader.test-utils.ts`
+  - [x] Split `src/app/utils/Debug.spec.json` + `src/app/utils/Debug.test-utils.ts`
+  - [x] Split `src/app/utils/TypeInfoORMAPIUtils.spec.json` + `src/app/utils/TypeInfoORMAPIUtils.test-utils.ts`
+  - [x] Split `src/app/utils/TypeInfoORMClient.spec.json` + `src/app/utils/TypeInfoORMClient.test-utils.ts`
+  - [x] Run focused verification for Batch 6 specs
+  - [x] Batch 7 (`src/api` non-E2E)
+  - [x] Split `src/api/Router/Router.spec.json` + `src/api/Router/Router.test-utils.ts`
+  - [x] Split `src/api/DataAccessControl.spec.json` + `src/api/DataAccessControl.test-utils.ts`
+  - [x] Split `src/api/ORM/ListItemUtils.spec.json` + `src/api/ORM/ListItemUtils.test-utils.ts`
+  - [x] Split `src/api/Indexing/Handler.spec.json` + `src/api/Indexing/Handler.test-utils.ts`
+  - [x] Run focused verification for Batch 7 specs

@@ -2,98 +2,11 @@
   "file": "./TypeInfoORMClient.test-utils.ts",
   "tests": [
     {
-      "export": "runTypeInfoORMClientScenario",
+      "export": "runTypeInfoORMClientCallsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "calls": [
-          {
-            "path": "create",
-            "args": [
-              "Book",
-              {
-                "title": "Alpha"
-              }
-            ]
-          },
-          {
-            "path": "read",
-            "args": ["Book", "book-1"]
-          },
-          {
-            "path": "update",
-            "args": [
-              "Book",
-              {
-                "id": "book-1",
-                "title": "Beta"
-              }
-            ]
-          },
-          {
-            "path": "delete",
-            "args": ["Book", "book-1"]
-          },
-          {
-            "path": "list",
-            "args": [
-              "Book",
-              {
-                "itemsPerPage": 5
-              },
-              ["id"]
-            ]
-          },
-          {
-            "path": "create-relationship",
-            "args": [
-              {
-                "fromTypeName": "Author",
-                "fromTypeFieldName": "books",
-                "fromTypePrimaryFieldValue": "author-1",
-                "toTypePrimaryFieldValue": "book-1"
-              }
-            ]
-          },
-          {
-            "path": "delete-relationship",
-            "args": [
-              {
-                "fromTypeName": "Author",
-                "fromTypeFieldName": "books",
-                "fromTypePrimaryFieldValue": "author-1",
-                "toTypePrimaryFieldValue": "book-1"
-              }
-            ]
-          },
-          {
-            "path": "list-relationships",
-            "args": [
-              {
-                "relationshipItemOrigin": {
-                  "fromTypeName": "Author",
-                  "fromTypeFieldName": "books",
-                  "fromTypePrimaryFieldValue": "author-1"
-                }
-              }
-            ]
-          },
-          {
-            "path": "list-related-items",
-            "args": [
-              {
-                "relationshipItemOrigin": {
-                  "fromTypeName": "Author",
-                  "fromTypeFieldName": "books",
-                  "fromTypePrimaryFieldValue": "author-1"
-                }
-              },
-              ["title"]
-            ]
-          }
-        ],
-        "created": {
-          "ok": true,
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        {
           "path": "create",
           "args": [
             "Book",
@@ -102,13 +15,11 @@
             }
           ]
         },
-        "read": {
-          "ok": true,
+        {
           "path": "read",
           "args": ["Book", "book-1"]
         },
-        "updated": {
-          "ok": true,
+        {
           "path": "update",
           "args": [
             "Book",
@@ -118,13 +29,11 @@
             }
           ]
         },
-        "deleted": {
-          "ok": true,
+        {
           "path": "delete",
           "args": ["Book", "book-1"]
         },
-        "list": {
-          "ok": true,
+        {
           "path": "list",
           "args": [
             "Book",
@@ -134,8 +43,7 @@
             ["id"]
           ]
         },
-        "relCreated": {
-          "ok": true,
+        {
           "path": "create-relationship",
           "args": [
             {
@@ -146,8 +54,7 @@
             }
           ]
         },
-        "relDeleted": {
-          "ok": true,
+        {
           "path": "delete-relationship",
           "args": [
             {
@@ -158,8 +65,7 @@
             }
           ]
         },
-        "relList": {
-          "ok": true,
+        {
           "path": "list-relationships",
           "args": [
             {
@@ -171,8 +77,7 @@
             }
           ]
         },
-        "relatedItems": {
-          "ok": true,
+        {
           "path": "list-related-items",
           "args": [
             {
@@ -185,6 +90,144 @@
             ["title"]
           ]
         }
+      ]
+    },
+    {
+      "export": "runTypeInfoORMClientCreatedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "create",
+        "args": [
+          "Book",
+          {
+            "title": "Alpha"
+          }
+        ]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientReadScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "read",
+        "args": ["Book", "book-1"]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientUpdatedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "update",
+        "args": [
+          "Book",
+          {
+            "id": "book-1",
+            "title": "Beta"
+          }
+        ]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientDeletedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "delete",
+        "args": ["Book", "book-1"]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientListScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "list",
+        "args": [
+          "Book",
+          {
+            "itemsPerPage": 5
+          },
+          ["id"]
+        ]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientRelCreatedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "create-relationship",
+        "args": [
+          {
+            "fromTypeName": "Author",
+            "fromTypeFieldName": "books",
+            "fromTypePrimaryFieldValue": "author-1",
+            "toTypePrimaryFieldValue": "book-1"
+          }
+        ]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientRelDeletedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "delete-relationship",
+        "args": [
+          {
+            "fromTypeName": "Author",
+            "fromTypeFieldName": "books",
+            "fromTypePrimaryFieldValue": "author-1",
+            "toTypePrimaryFieldValue": "book-1"
+          }
+        ]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientRelListScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "list-relationships",
+        "args": [
+          {
+            "relationshipItemOrigin": {
+              "fromTypeName": "Author",
+              "fromTypeFieldName": "books",
+              "fromTypePrimaryFieldValue": "author-1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientRelatedItemsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "list-related-items",
+        "args": [
+          {
+            "relationshipItemOrigin": {
+              "fromTypeName": "Author",
+              "fromTypeFieldName": "books",
+              "fromTypePrimaryFieldValue": "author-1"
+            }
+          },
+          ["title"]
+        ]
       }
     }
   ]

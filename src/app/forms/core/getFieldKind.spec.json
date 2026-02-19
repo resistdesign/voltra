@@ -2,20 +2,58 @@
   "file": "./getFieldKind.test-utils.ts",
   "tests": [
     {
-      "export": "runGetFieldKindScenario",
+      "export": "runGetFieldKindStringScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "stringKind": "string",
-        "numberKind": "number",
-        "booleanKind": "boolean",
-        "enumKind": "enum_select",
-        "arrayKind": "array",
-        "relationSingleKind": "relation_single",
-        "relationArrayKind": "relation_array",
-        "customSingleKind": "custom_single",
-        "customArrayKind": "custom_array"
-      }
+      "operation": "===",
+      "expectation": "string"
+    },
+    {
+      "export": "runGetFieldKindNumberScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "number"
+    },
+    {
+      "export": "runGetFieldKindBooleanScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "boolean"
+    },
+    {
+      "export": "runGetFieldKindEnumScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "enum_select"
+    },
+    {
+      "export": "runGetFieldKindArrayScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "array"
+    },
+    {
+      "export": "runGetFieldKindRelationSingleScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "relation_single"
+    },
+    {
+      "export": "runGetFieldKindRelationArrayScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "relation_array"
+    },
+    {
+      "export": "runGetFieldKindCustomSingleScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "custom_single"
+    },
+    {
+      "export": "runGetFieldKindCustomArrayScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "custom_array"
     }
   ]
 }

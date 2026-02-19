@@ -2,24 +2,82 @@
   "file": "./index.test-utils.ts",
   "tests": [
     {
-      "export": "runAppIndexScenario",
+      "export": "runAppIndexHasUtilsNamespaceScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "hasUtilsNamespace": false,
-        "hasFormsNamespace": false,
-        "hasParseTemplateTopLevel": true,
-        "hasComputeTrackPixelsTopLevel": true,
-        "hasCreateFormRendererTopLevel": true,
-        "hasUseApplicationStateLoaderTopLevel": true,
-        "hasUseController": true,
-        "hasTypeInfoORMClient": true,
-        "hasRoute": true,
-        "hasApplicationState": true,
-        "hasApplicationStateLoader": true,
-        "hasService": true,
-        "hasTypeInfoORMAPI": true
-      }
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runAppIndexHasFormsNamespaceScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runAppIndexHasParseTemplateTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasComputeTrackPixelsTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasCreateFormRendererTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasUseApplicationStateLoaderTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasUseControllerScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasTypeInfoORMClientScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasRouteScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasApplicationStateScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasApplicationStateLoaderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasServiceScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runAppIndexHasTypeInfoORMAPIScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

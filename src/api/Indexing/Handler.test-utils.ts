@@ -8,7 +8,7 @@ import {
 } from "./API";
 import { handler, setHandlerDependencies } from "./Handler";
 
-export const runIndexingHandlerScenario = async () => {
+const runIndexingHandlerScenario = async () => {
   const backend = new FullTextMemoryBackend();
   setIndexBackend(backend);
   setHandlerDependencies({ backend });
@@ -87,3 +87,27 @@ export const runIndexingHandlerScenario = async () => {
     apiLossyAfterRemove,
   };
 };
+
+export const runIndexingHandlerApiLossyFirstScenario = async () =>
+  (await runIndexingHandlerScenario()).apiLossyFirst;
+
+export const runIndexingHandlerApiLossySecondScenario = async () =>
+  (await runIndexingHandlerScenario()).apiLossySecond;
+
+export const runIndexingHandlerApiExactScenario = async () =>
+  (await runIndexingHandlerScenario()).apiExact;
+
+export const runIndexingHandlerHandlerIndexScenario = async () =>
+  (await runIndexingHandlerScenario()).handlerIndex;
+
+export const runIndexingHandlerHandlerExactScenario = async () =>
+  (await runIndexingHandlerScenario()).handlerExact;
+
+export const runIndexingHandlerHandlerRemoveScenario = async () =>
+  (await runIndexingHandlerScenario()).handlerRemove;
+
+export const runIndexingHandlerHandlerLossyScenario = async () =>
+  (await runIndexingHandlerScenario()).handlerLossy;
+
+export const runIndexingHandlerApiLossyAfterRemoveScenario = async () =>
+  (await runIndexingHandlerScenario()).apiLossyAfterRemove;

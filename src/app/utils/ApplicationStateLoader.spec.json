@@ -2,24 +2,67 @@
   "file": "./ApplicationStateLoader.test-utils.ts",
   "tests": [
     {
-      "export": "runApplicationStateLoaderScenario",
+      "export": "runApplicationStateLoaderInitialLoadingScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runApplicationStateLoaderInitialLatestErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runApplicationStateLoaderSuccessHasValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateLoaderSuccessValueScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "initialLoading": false,
-        "initialLatestError": null,
-        "successHasValue": true,
-        "successValue": {
-          "result": "ok",
-          "args": ["direct"]
-        },
-        "successModified": false,
-        "successOnLoadCalls": [true],
-        "errorHasValue": true,
-        "errorValue": null,
-        "errorModified": false,
-        "errorOnLoadCalls": [false]
+        "result": "ok",
+        "args": ["direct"]
       }
+    },
+    {
+      "export": "runApplicationStateLoaderSuccessModifiedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runApplicationStateLoaderSuccessOnLoadCallsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [true]
+    },
+    {
+      "export": "runApplicationStateLoaderErrorHasValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateLoaderErrorValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runApplicationStateLoaderErrorModifiedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runApplicationStateLoaderErrorOnLoadCallsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [false]
     }
   ]
 }

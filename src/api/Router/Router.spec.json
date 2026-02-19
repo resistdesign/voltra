@@ -2,73 +2,101 @@
   "file": "./Router.test-utils.ts",
   "tests": [
     {
-      "export": "runRouterScenario",
+      "export": "runRouterRouteKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["\"alpha\"", "\"beta\"", "\"gamma\"", "\"status\""]
+    },
+    {
+      "export": "runRouterNormalizedScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "routeKeys": ["\"alpha\"", "\"beta\"", "\"gamma\"", "\"status\""],
-        "normalized": {
-          "authInfo": {
-            "userId": "user-1",
-            "roles": ["admin"]
-          },
-          "headers": {
-            "origin": ["https://example.com"]
-          },
-          "method": "POST",
-          "path": "status",
-          "body": ["payload"]
+        "authInfo": {
+          "userId": "user-1",
+          "roles": ["admin"]
         },
-        "handlerResponse": {
-          "statusCode": 200,
-          "headers": {
-            "Access-Control-Allow-Origin": "https://example.com",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
-          },
-          "body": "\"ok\""
+        "headers": {
+          "origin": ["https://example.com"]
         },
-        "optionsResponse": {
-          "statusCode": 200,
-          "headers": {
-            "Access-Control-Allow-Origin": "https://example.com",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
-          },
-          "body": "OK"
+        "method": "POST",
+        "path": "status",
+        "body": ["payload"]
+      }
+    },
+    {
+      "export": "runRouterHandlerResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "headers": {
+          "Access-Control-Allow-Origin": "https://example.com",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
-        "notFoundResponse": {
-          "statusCode": 404,
-          "headers": {
-            "Access-Control-Allow-Origin": "https://example.com",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
-          },
-          "body": "Not Found"
+        "body": "\"ok\""
+      }
+    },
+    {
+      "export": "runRouterOptionsResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "headers": {
+          "Access-Control-Allow-Origin": "https://example.com",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
-        "unauthorizedResponse": {
-          "statusCode": 401,
-          "headers": {
-            "Access-Control-Allow-Origin": "https://example.com",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
-          },
-          "body": "Unauthorized"
+        "body": "OK"
+      }
+    },
+    {
+      "export": "runRouterNotFoundResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 404,
+        "headers": {
+          "Access-Control-Allow-Origin": "https://example.com",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
-        "errorResponse": {
-          "statusCode": 500,
-          "headers": {
-            "Access-Control-Allow-Origin": "https://example.com",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-            "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
-          },
-          "body": "{\n  \"status\": \"Internal Server Error\",\n  \"message\": \"boom\",\n  \"error\": {}\n}"
-        }
+        "body": "Not Found"
+      }
+    },
+    {
+      "export": "runRouterUnauthorizedResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 401,
+        "headers": {
+          "Access-Control-Allow-Origin": "https://example.com",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+        },
+        "body": "Unauthorized"
+      }
+    },
+    {
+      "export": "runRouterErrorResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 500,
+        "headers": {
+          "Access-Control-Allow-Origin": "https://example.com",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+        },
+        "body": "{\n  \"status\": \"Internal Server Error\",\n  \"message\": \"boom\",\n  \"error\": {}\n}"
       }
     }
   ]

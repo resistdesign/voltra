@@ -35,7 +35,7 @@ const assertWrappedAPIRejectsContext = (api: TypeInfoORMServiceAPI) => {
   api.listRelationships({ relationshipItemOrigin: {} as any }, { accessingRoleId: "role-1" });
 };
 
-export const runTypeInfoORMAPIUtilsScenario = async () => {
+const runTypeInfoORMAPIUtilsScenario = async () => {
   const api = buildApi();
   const successCalls: RequestStateSummary[] = [];
   const errorCalls: RequestStateSummary[] = [];
@@ -100,3 +100,21 @@ export const runTypeInfoORMAPIUtilsScenario = async () => {
     factoryCallData: factoryCalls.map((call) => call.data),
   };
 };
+
+export const runTypeInfoORMAPIUtilsSuccessCallsScenario = async () =>
+  (await runTypeInfoORMAPIUtilsScenario()).successCalls;
+
+export const runTypeInfoORMAPIUtilsErrorCallsScenario = async () =>
+  (await runTypeInfoORMAPIUtilsScenario()).errorCalls;
+
+export const runTypeInfoORMAPIUtilsRequestIdIsStringScenario = async () =>
+  (await runTypeInfoORMAPIUtilsScenario()).requestIdIsString;
+
+export const runTypeInfoORMAPIUtilsFactoryCallsCountScenario = async () =>
+  (await runTypeInfoORMAPIUtilsScenario()).factoryCallsCount;
+
+export const runTypeInfoORMAPIUtilsFactoryCallMatchesIdScenario = async () =>
+  (await runTypeInfoORMAPIUtilsScenario()).factoryCallMatchesId;
+
+export const runTypeInfoORMAPIUtilsFactoryCallDataScenario = async () =>
+  (await runTypeInfoORMAPIUtilsScenario()).factoryCallData;
