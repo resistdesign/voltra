@@ -11,6 +11,12 @@ import type {
   TypeOperation,
 } from "../../common/TypeParsing/TypeInfo";
 import type { ItemRelationshipInfoType } from "../../common/ItemRelationshipInfoTypes";
+import type {
+  CustomTypeActionPayload,
+  RelationActionPayload,
+} from "./core/types";
+
+export * from "./core/types";
 
 /**
  * Loose map of form values keyed by field.
@@ -119,54 +125,4 @@ export type FormController = {
   validate: () => boolean;
   /** Override form errors with a provided map. */
   setErrors: (errors: Record<string, string>) => void;
-};
-
-/**
- * Supported relation actions emitted by fields.
- */
-export type RelationAction = "open" | "add" | "edit" | "remove";
-
-/**
- * Payload for relation action callbacks.
- */
-export type RelationActionPayload = {
-  /** Relation action to perform. */
-  action: RelationAction;
-  /** Field key that initiated the action. */
-  fieldKey: string;
-  /** Field metadata for the relation. */
-  field: TypeInfoField;
-  /** Current relation value for the field. */
-  value: ItemRelationshipInfoType | ItemRelationshipInfoType[] | undefined;
-  /** Whether relation selection should use full paging. */
-  fullPaging?: boolean;
-  /** Index when acting on an array item. */
-  index?: number;
-  /** Change handler to update the relation value. */
-  onChange: (value: FormValue) => void;
-};
-
-/**
- * Supported actions for custom type handlers.
- */
-export type CustomTypeAction = "open" | "add" | "edit" | "remove";
-
-/**
- * Payload for custom type action callbacks.
- */
-export type CustomTypeActionPayload = {
-  /** Custom type action to perform. */
-  action: CustomTypeAction;
-  /** Field key that initiated the action. */
-  fieldKey: string;
-  /** Field metadata for the custom type. */
-  field: TypeInfoField;
-  /** Custom type identifier. */
-  customType: string;
-  /** Current value for the custom type. */
-  value: FormValue | undefined;
-  /** Index when acting on an array item. */
-  index?: number;
-  /** Change handler to update the custom value. */
-  onChange: (value: FormValue) => void;
 };
