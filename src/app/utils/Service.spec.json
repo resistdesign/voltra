@@ -6,9 +6,10 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "url": "https://example.com:443api/v1",
+        "url": "https://example.com:443/api/v1",
+        "originUrl": "https://example.com:443/",
         "requestInfo": {
-          "input": "https://example.com:443api/v1",
+          "input": "https://example.com:443/api/v1",
           "method": "POST",
           "headers": {
             "Content-Type": "application/json",

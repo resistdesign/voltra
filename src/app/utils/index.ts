@@ -14,6 +14,8 @@ export * from "./ApplicationStateLoader";
 export * from "./Controller";
 export * from "./Debug";
 export * from "./EasyLayout";
+// Keep low-level easy-layout parser/track helpers available alongside the
+// higher-level EasyLayout factory surface.
 export * from "./easy-layout";
 export * from "./History";
 export * from "./Route";

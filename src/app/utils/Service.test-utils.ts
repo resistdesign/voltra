@@ -15,6 +15,7 @@ export const runServiceScenario = async () => {
     "v1",
     config.port,
   );
+  const originUrl = getFullUrl(config.protocol, config.domain, "", "", config.port);
 
   const originalFetch = globalThis.fetch;
   let requestInfo: any = {};
@@ -49,6 +50,7 @@ export const runServiceScenario = async () => {
 
   return {
     url,
+    originUrl,
     requestInfo: {
       input: requestInfo.input,
       method: requestInfo.init?.method,
