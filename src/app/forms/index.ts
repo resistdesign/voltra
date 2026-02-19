@@ -5,23 +5,6 @@
  */
 
 export * from "./types";
-export type {
-  ComponentSuite,
-  FieldKind,
-  FieldRenderContext,
-  FieldRenderer,
-  FieldValue,
-  PrimitiveComponent,
-  PrimitiveComponents,
-  ResolvedSuite,
-} from "./core";
-export {
-  createAutoField,
-  createFormRenderer,
-  getFieldKind,
-  mergeSuites,
-  resolveSuite,
-  withRendererOverride,
-} from "./core";
+export * from "./core";
 export * from "./Engine";
 export * from "./UI";

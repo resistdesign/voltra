@@ -3,7 +3,7 @@
  *
  * Web routing exports unified app Route implementation.
  */
-import React, { PropsWithChildren, useRef } from "react";
+import { PropsWithChildren, useRef } from "react";
 import {
   RouteProvider as CoreRouteProvider,
   type RouteAdapter,

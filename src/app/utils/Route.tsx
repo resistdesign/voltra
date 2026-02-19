@@ -4,7 +4,7 @@
  * Render-agnostic routing helpers with nested Route contexts.
  * Supply a RouteAdapter via RouteProvider or use root Route provider mode.
  */
-import React, {
+import {
   createContext,
   PropsWithChildren,
   useContext,
