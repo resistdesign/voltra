@@ -2,17 +2,40 @@
   "file": "./DBX_SEARCH_LOSSY_E2E.test-utils.ts",
   "tests": [
     {
-      "export": "runDbxLossySearchScenario",
+      "export": "runDbxLossySearchCreatedPostIdsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "createdPostIds": ["post-1", "post-2", "post-3", "post-4"],
-        "initialSearchIds": ["post-1", "post-2"],
-        "updateResult": true,
-        "afterUpdateSearchIds": ["post-1", "post-2", "post-3"],
-        "deleteResult": true,
-        "afterDeleteSearchIds": ["post-2", "post-3"]
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2", "post-3", "post-4"]
+    },
+    {
+      "export": "runDbxLossySearchInitialSearchIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2"]
+    },
+    {
+      "export": "runDbxLossySearchUpdateResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxLossySearchAfterUpdateSearchIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2", "post-3"]
+    },
+    {
+      "export": "runDbxLossySearchDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxLossySearchAfterDeleteSearchIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-2", "post-3"]
     }
   ]
 }

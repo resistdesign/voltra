@@ -95,10 +95,7 @@ const runExactSearch = async (runtime: ReturnType<typeof buildDbxRuntime>) => {
   };
 };
 
-/**
- * Run the DBX exact search E2E scenario against the in-memory router/runtime.
- */
-export const runDbxExactSearchScenario = async () => {
+const runDbxExactSearchScenario = async () => {
   const runtime = buildDbxRuntime();
   const postIds: string[] = [];
 
@@ -144,3 +141,21 @@ export const runDbxExactSearchScenario = async () => {
     afterDeleteSearchIds: afterDeleteSearch.ids,
   };
 };
+
+export const runDbxExactSearchCreatedPostIdsScenario = async () =>
+  (await runDbxExactSearchScenario()).createdPostIds;
+
+export const runDbxExactSearchInitialSearchIdsScenario = async () =>
+  (await runDbxExactSearchScenario()).initialSearchIds;
+
+export const runDbxExactSearchUpdateResultScenario = async () =>
+  (await runDbxExactSearchScenario()).updateResult;
+
+export const runDbxExactSearchAfterUpdateSearchIdsScenario = async () =>
+  (await runDbxExactSearchScenario()).afterUpdateSearchIds;
+
+export const runDbxExactSearchDeleteResultScenario = async () =>
+  (await runDbxExactSearchScenario()).deleteResult;
+
+export const runDbxExactSearchAfterDeleteSearchIdsScenario = async () =>
+  (await runDbxExactSearchScenario()).afterDeleteSearchIds;

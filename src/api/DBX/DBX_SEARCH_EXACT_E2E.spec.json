@@ -2,17 +2,40 @@
   "file": "./DBX_SEARCH_EXACT_E2E.test-utils.ts",
   "tests": [
     {
-      "export": "runDbxExactSearchScenario",
+      "export": "runDbxExactSearchCreatedPostIdsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "createdPostIds": ["post-1", "post-2", "post-3", "post-4"],
-        "initialSearchIds": ["post-1", "post-2"],
-        "updateResult": true,
-        "afterUpdateSearchIds": ["post-1", "post-2", "post-3"],
-        "deleteResult": true,
-        "afterDeleteSearchIds": ["post-1", "post-3"]
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2", "post-3", "post-4"]
+    },
+    {
+      "export": "runDbxExactSearchInitialSearchIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2"]
+    },
+    {
+      "export": "runDbxExactSearchUpdateResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxExactSearchAfterUpdateSearchIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-2", "post-3"]
+    },
+    {
+      "export": "runDbxExactSearchDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDbxExactSearchAfterDeleteSearchIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1", "post-3"]
     }
   ]
 }

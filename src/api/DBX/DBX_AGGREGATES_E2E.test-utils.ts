@@ -112,9 +112,7 @@ const buildAggregateSnapshot = (items: Post[]) => {
   }
 
   const totalCount = items.length;
-  const averageScore = totalCount
-    ? roundTo(totalScore / totalCount, 2)
-    : 0;
+  const averageScore = totalCount ? roundTo(totalScore / totalCount, 2) : 0;
   const averageScoreByStatus = {
     draft: statusCounts.draft
       ? roundTo(scoreTotals.draft / statusCounts.draft, 2)
@@ -137,10 +135,7 @@ const buildAggregateSnapshot = (items: Post[]) => {
   };
 };
 
-/**
- * Run the DBX aggregates + reports E2E scenario against the in-memory router/runtime.
- */
-export const runDbxAggregatesScenario = async () => {
+const runDbxAggregatesScenario = async () => {
   const runtime = buildDbxRuntime();
   const postIds: string[] = [];
 
@@ -190,3 +185,15 @@ export const runDbxAggregatesScenario = async () => {
     },
   };
 };
+
+export const runDbxAggregatesCreatedPostIdsScenario = async () =>
+  (await runDbxAggregatesScenario()).createdPostIds;
+
+export const runDbxAggregatesOrderedIdsScenario = async () =>
+  (await runDbxAggregatesScenario()).orderedIds;
+
+export const runDbxAggregatesRealtimeAggregatesScenario = async () =>
+  (await runDbxAggregatesScenario()).realtimeAggregates;
+
+export const runDbxAggregatesReportJobScenario = async () =>
+  (await runDbxAggregatesScenario()).reportJob;
