@@ -49,17 +49,17 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
   - [x] Add/update docs/comments where public behavior is unclear.
   - [x] Run focused tests for touched areas.
   - [x] Document findings, fixes, and residual risks in this plan.
-- [~] Phase 3: Documentation/demo/test coverage alignment
-  - [~] Verify docs/site/demo/sample code aligns with current behavior.
-  - [~] Fix drift in docs/demo/sample code.
-  - [~] Identify missing behavior coverage and add/update nearby JSON specs.
-  - [~] Run relevant test suites.
-  - [~] Document findings, fixes, and residual risks in this plan.
-- [ ] Phase 4: Final health pass
-  - [ ] Confirm architecture/surfaces are easy to consume and consistent.
-  - [ ] Perform final high-signal cleanup that avoids speculative churn.
-  - [ ] Run broad verification (`yarn test` and any impacted build/doc tasks).
-  - [ ] Summarize completion evidence and close plan when user confirms.
+- [x] Phase 3: Documentation/demo/test coverage alignment
+  - [x] Verify docs/site/demo/sample code aligns with current behavior.
+  - [x] Fix drift in docs/demo/sample code.
+  - [x] Identify missing behavior coverage and add/update nearby JSON specs.
+  - [x] Run relevant test suites.
+  - [x] Document findings, fixes, and residual risks in this plan.
+- [x] Phase 4: Final health pass
+  - [x] Confirm architecture/surfaces are easy to consume and consistent.
+  - [x] Perform final high-signal cleanup that avoids speculative churn.
+  - [x] Run broad verification (`yarn test` and any impacted build/doc tasks).
+  - [x] Summarize completion evidence and close plan when user confirms.
 
 ## Phase 1 Notes (2026-02-19)
 
@@ -291,3 +291,46 @@ Voltra is simplicity, flexibility and abstracts away complexity while providing 
 - Remaining Phase 3 scope:
   - Continue scanning docs/site/demo/example surfaces for additional drift beyond routing wording.
   - Identify and add any missing behavior coverage surfaced by remaining drift findings.
+
+- Additional docs/examples alignment slice:
+  - Updated routing reference examples to match the platform Route contract:
+    - `examples/routing/app-routing.ts`
+      - Route example exports now point to `@resistdesign/voltra/web` and `@resistdesign/voltra/native`.
+      - `@resistdesign/voltra/app` usage retained only for adapter escape-hatch examples (`createUniversalAdapter`).
+    - `examples/README.md`
+      - Routing guidance updated to direct consumers to web/native Route barrels and app adapter escape hatches.
+  - Verification:
+    - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+    - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+
+- Phase 3 completion summary:
+  - Docs/site/demo/sample routing usage now consistently reflects platform Route entrypoints.
+  - Missing union-field-set coverage branches introduced by refactor cleanup are now asserted in nearby JSON specs.
+  - Relevant focused and broad test suites passed after each slice.
+
+## Phase 4 Notes (2026-02-19)
+
+- Consumer-surface consistency confirmation:
+  - Reviewed barrel/export surfaces for `app`/`web`/`native` routing expectations:
+    - `src/web/utils/index.ts`
+    - `src/native/utils/index.ts`
+    - `src/app/utils/index.ts`
+  - Confirmed `web`/`native` expose `Route` while app retains lower-level route primitives and adapter escape-hatch APIs.
+
+- Final high-signal cleanup:
+  - Aligned examples index guidance with current route contract:
+    - `examples/README.md`
+  - Aligned routing reference snippet exports with platform Route usage + app escape hatches:
+    - `examples/routing/app-routing.ts`
+
+- Broad verification:
+  - `yarn -s tsc -p tsconfig.build.json --noEmit --noUnusedLocals --noUnusedParameters`: passed.
+  - `yarn test`: passed (core: 191 passes, 0 failures, 0 errors; native: 23 passes, 0 failures, 0 errors).
+  - `yarn site:build:app`: passed (Astro build + Typedoc + doc copy completed).
+
+- Completion evidence summary:
+  - Remaining working tree edits are limited to:
+    - `examples/README.md`
+    - `examples/routing/app-routing.ts`
+    - `planning/refactor-scarring.md`
+  - Plan execution is complete through Phase 4; plan file should be moved to `planning/complete/` once user confirms closure.
