@@ -72,3 +72,50 @@ export const runRouteHistoryAfterAdapterBackScenario = () =>
 
 export const runRouteHistoryEventsScenario = () =>
   getRouteHistoryBridgeScenario().events;
+
+export const runRouteHistoryRelativePathScenario = () => {
+  const history = createMemoryHistory("/signup");
+  const adapter = createRouteAdapterFromHistory(history);
+
+  adapter.push?.("/confirm");
+  const absoluteFromRoot = adapter.getPath();
+
+  history.replace("/signup");
+  adapter.push?.("confirm");
+  const relativeSegment = adapter.getPath();
+
+  history.replace("/signup");
+  adapter.push?.("./confirm");
+  const relativeCurrentDirectory = adapter.getPath();
+
+  history.replace("/signup");
+  adapter.replace?.("../confirm");
+  const relativeParentDirectory = adapter.getPath();
+
+  history.replace("/signup/confirm");
+  adapter.push?.("../complete");
+  const relativeSingleParentFromNested = adapter.getPath();
+
+  history.replace("/signup/complete");
+  adapter.push?.("../../login");
+  const relativeMultipleParentsFromNested = adapter.getPath();
+
+  history.replace("/signup/complete");
+  adapter.replace?.("/");
+  const rootSlash = adapter.getPath();
+
+  history.replace("/signup/complete");
+  adapter.push?.("");
+  const rootEmpty = adapter.getPath();
+
+  return {
+    absoluteFromRoot,
+    relativeSegment,
+    relativeCurrentDirectory,
+    relativeParentDirectory,
+    relativeSingleParentFromNested,
+    relativeMultipleParentsFromNested,
+    rootSlash,
+    rootEmpty,
+  };
+};
