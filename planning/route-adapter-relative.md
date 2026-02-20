@@ -61,3 +61,17 @@ export type RouteAdapter = {
 
 1. `push`: Should calculate the target path based on the above syntax and push it to the adapter.
 2. `replace`: Should calculate the target path based on the above syntax and replace it in the adapter.
+
+*IMPORTANT*: The are Route Pathing Utils in the `common` barrel (`src/common/Routing.ts`) that are/should be shared
+between client-side and API routing code. There are two **VERY IMPORTANT** things to keep in mind:
+
+1. Route Pathing logic *SHOULD* be centralized here.
+2. Nothing you do in the common route pathing utils should break other consuming features/code/tools/utils/etc.
+
+We will need to do the following:
+
+1. Add tests around this functionality.
+2. Update tests that are already related to this functionality.
+3. Update docs/doc-comments/examples/samples/demos/readmes/etc.
+
+Everything should be clear. Nothing should be stale. Nothing should be broken.
