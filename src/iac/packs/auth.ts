@@ -11,7 +11,7 @@ import { SimpleCFT } from "../SimpleCFT";
 /**
  * Configuration for the auth pack.
  */
-type AddAuthConfigBase = {
+export type AddAuthConfigBase = {
   /**
    * Cognito user pool resource id.
    */
@@ -42,7 +42,11 @@ type AddAuthConfigBase = {
   userManagementAdminGroupName: string;
 };
 
-type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
+/**
+ * Configuration for adding auth resources including a user pool domain with
+ * callback and logout URLs.
+ * */
+export type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
   /**
    * Enable Cognito Hosted UI/OAuth redirect mode by creating a custom user pool
    * domain plus Route53 records.
@@ -106,7 +110,10 @@ type AddAuthConfigWithUserPoolDomain = AddAuthConfigBase & {
   supportedIdentityProviders?: any[];
 };
 
-type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
+/**
+ * Configuration for adding auth resources without a user pool domain.
+ * */
+export type AddAuthConfigWithoutUserPoolDomain = AddAuthConfigBase & {
   /**
    * Disable Cognito Hosted UI/OAuth redirect configuration.
    *
