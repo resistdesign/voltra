@@ -17,7 +17,7 @@ import {
   getParamsAndTestPath,
   getPathString,
   mergeStringPaths,
-  resolvePath,
+  resolveRouteAdapterPath,
 } from "../../common/Routing";
 import {
   createUniversalAdapter,
@@ -32,7 +32,12 @@ export type RouteAdapter = {
   getPath: () => string;
   /** Subscribe to path changes. */
   subscribe: (listener: (path: string) => void) => () => void;
-  /** Optional navigation helper for adapters that can push state. */
+  /**
+   * Optional navigation helper for adapters that can push state.
+   *
+   * `push`/`replace` paths are normalized through shared routing utils:
+   * absolute (`/x`), relative (`x`, `./x`, `../x`), and empty (`""` => `/`).
+   */
   push?: (path: string, title?: string) => void;
   /** Optional navigation helper for adapters that can replace state. */
   replace?: (path: string, title?: string) => void;
@@ -95,8 +100,10 @@ export const createManualRouteAdapter = (initialPath: string = "/") => {
         listeners.delete(listener);
       };
     },
-    push: (path: string) => updatePath(path),
-    replace: (path: string) => updatePath(path),
+    push: (path: string) =>
+      updatePath(resolveRouteAdapterPath(currentPath, path)),
+    replace: (path: string) =>
+      updatePath(resolveRouteAdapterPath(currentPath, path)),
   };
 
   return {
@@ -213,6 +220,47 @@ export const {
  */
 export const useRouteContext = () => useContext(RouteContext);
 
+const wrappedRouteAdapterCache = new WeakMap<RouteAdapter, RouteAdapter>();
+
+/**
+ * Wrap a RouteAdapter so `push` and `replace` resolve relative paths.
+ *
+ * This preserves existing adapter behavior for subscriptions/back navigation,
+ * while normalizing path syntax consistently across web/native/app wrappers.
+ *
+ * @param adapter - RouteAdapter to normalize.
+ * @returns Adapter with relative-aware `push` and `replace`.
+ */
+export const wrapRouteAdapterWithPathResolver = (
+  adapter: RouteAdapter,
+): RouteAdapter => {
+  if (!adapter.push && !adapter.replace) {
+    return adapter;
+  }
+
+  const cachedAdapter = wrappedRouteAdapterCache.get(adapter);
+  if (cachedAdapter) {
+    return cachedAdapter;
+  }
+
+  const wrappedAdapter: RouteAdapter = {
+    ...adapter,
+    push: adapter.push
+      ? (path: string, title?: string) => {
+          adapter.push?.(resolveRouteAdapterPath(adapter.getPath(), path), title);
+        }
+      : undefined,
+    replace: adapter.replace
+      ? (path: string, title?: string) => {
+          adapter.replace?.(resolveRouteAdapterPath(adapter.getPath(), path), title);
+        }
+      : undefined,
+  };
+
+  wrappedRouteAdapterCache.set(adapter, wrappedAdapter);
+  return wrappedAdapter;
+};
+
 const getWindow = (): (Window & typeof globalThis) | undefined => {
   if (typeof globalThis === "undefined") {
     return undefined;
@@ -256,7 +304,10 @@ const useBrowserLinkInterceptor = (adapter: RouteAdapter | undefined) => {
         new URL(href);
         return;
       } catch (error) {
-        const nextPath = resolvePath(WINDOW.location?.pathname ?? "", href);
+        const nextPath = resolveRouteAdapterPath(
+          WINDOW.location?.pathname ?? "",
+          href,
+        );
         event.preventDefault();
         adapter.push?.(nextPath, title);
       }
@@ -290,15 +341,19 @@ export const RouteProvider = ({
   initialPath,
   children,
 }: RouteProviderProps) => {
+  const normalizedAdapter = useMemo(
+    () => wrapRouteAdapterWithPathResolver(adapter),
+    [adapter],
+  );
   const [currentPath, setCurrentPath] = useState<string>(
-    initialPath ?? adapter.getPath(),
+    initialPath ?? normalizedAdapter.getPath(),
   );
 
   useEffect(() => {
-    return adapter.subscribe((nextPath) => {
+    return normalizedAdapter.subscribe((nextPath) => {
       setCurrentPath(nextPath);
     });
-  }, [adapter]);
+  }, [normalizedAdapter]);
 
   const contextValue = useMemo(
     () => ({
@@ -306,9 +361,9 @@ export const RouteProvider = ({
       parentPath: "",
       params: {},
       isTopLevel: true,
-      adapter,
+      adapter: normalizedAdapter,
     }),
-    [currentPath, adapter],
+    [currentPath, normalizedAdapter],
   );
 
   return (

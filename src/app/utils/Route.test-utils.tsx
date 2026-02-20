@@ -1,6 +1,10 @@
 import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { Route, useRouteContext } from "./Route";
+import {
+  Route,
+  useRouteContext,
+  wrapRouteAdapterWithPathResolver,
+} from "./Route";
 
 const ContextProbe = () => {
   const context = useRouteContext();
@@ -163,5 +167,33 @@ export const runAppRouteRuntimeIntegrationMatcherGuardScenario = () => {
   return {
     threw,
     messageIncludesRuntimeIntegration,
+  };
+};
+
+export const runAppRouteAdapterWrapperRelativePathScenario = () => {
+  let currentPath = "/signup/complete";
+  const pushed: string[] = [];
+  const replaced: string[] = [];
+  const rawAdapter = {
+    getPath: () => currentPath,
+    subscribe: () => () => {},
+    push: (path: string) => {
+      pushed.push(path);
+      currentPath = path;
+    },
+    replace: (path: string) => {
+      replaced.push(path);
+      currentPath = path;
+    },
+  };
+  const adapter = wrapRouteAdapterWithPathResolver(rawAdapter);
+
+  adapter.push?.("../../login");
+  adapter.replace?.("");
+
+  return {
+    pushed,
+    replaced,
+    finalPath: currentPath,
   };
 };

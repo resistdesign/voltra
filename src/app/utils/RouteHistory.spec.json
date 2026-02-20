@@ -61,6 +61,21 @@
         "/app/books/101",
         "/app/books/99"
       ]
+    },
+    {
+      "export": "runRouteHistoryRelativePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "absoluteFromRoot": "/confirm",
+        "relativeSegment": "/signup/confirm",
+        "relativeCurrentDirectory": "/signup/confirm",
+        "relativeParentDirectory": "/confirm",
+        "relativeSingleParentFromNested": "/signup/complete",
+        "relativeMultipleParentsFromNested": "/login",
+        "rootSlash": "/",
+        "rootEmpty": "/"
+      }
     }
   ]
 }

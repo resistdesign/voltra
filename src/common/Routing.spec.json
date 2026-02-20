@@ -50,6 +50,21 @@
       "expectation": "/authors/7"
     },
     {
+      "export": "runRoutingResolveRouteAdapterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "absoluteFromRoot": "/confirm",
+        "relativeSegment": "/signup/confirm",
+        "relativeCurrentDirectory": "/signup/confirm",
+        "relativeParentDirectory": "/confirm",
+        "relativeSingleParentFromNested": "/signup/complete",
+        "relativeMultipleParentsFromNested": "/login",
+        "rootSlash": "/",
+        "rootEmpty": "/"
+      }
+    },
+    {
       "export": "runRoutingParamsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

@@ -32,6 +32,18 @@
         "fallbackToSlash": true,
         "noOpOnIdenticalPath": true
       }
+    },
+    {
+      "export": "runUniversalAdapterRelativePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "webRelativeSegment": "/signup/confirm",
+        "webRelativeParentDirectory": "/signup/complete",
+        "webRootEmpty": "/",
+        "nativeRelativeMultipleParents": "/login",
+        "nativeRootSlash": "/"
+      }
     }
   ]
 }
