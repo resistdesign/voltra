@@ -15,7 +15,10 @@ import {
   Route as CoreRoute,
   buildRoutePath,
 } from "../../app/utils/Route";
-import { getPathArray } from "../../common/Routing";
+import {
+  getPathArray,
+  resolveRouteAdapterPath,
+} from "../../common/Routing";
 
 /**
  * Options to adapt a navigation state container into a RouteAdapter.
@@ -72,6 +75,8 @@ export const createNavigationStateRouteAdapter = <TState,>(
   options: NavigationStateAdapterOptions<TState>,
 ): RouteAdapter => {
   const getPath = () => options.toPath(options.getState());
+  const resolvePath = (path: string) =>
+    resolveRouteAdapterPath(getPath(), path);
 
   return {
     getPath,
@@ -79,8 +84,12 @@ export const createNavigationStateRouteAdapter = <TState,>(
       options.subscribe(() => {
         listener(getPath());
       }),
-    push: options.navigate ? (path: string) => options.navigate?.(path) : undefined,
-    replace: options.replace ? (path: string) => options.replace?.(path) : undefined,
+    push: options.navigate
+      ? (path: string) => options.navigate?.(resolvePath(path))
+      : undefined,
+    replace: options.replace
+      ? (path: string) => options.replace?.(resolvePath(path))
+      : undefined,
   };
 };
 

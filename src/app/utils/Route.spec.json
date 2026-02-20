@@ -39,6 +39,20 @@
         "threw": true,
         "messageIncludesRuntimeIntegration": true
       }
+    },
+    {
+      "export": "runAppRouteAdapterWrapperRelativePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "pushed": [
+          "/login"
+        ],
+        "replaced": [
+          "/"
+        ],
+        "finalPath": "/"
+      }
     }
   ]
 }

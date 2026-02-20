@@ -187,3 +187,37 @@ export const runUniversalAdapterIngressPrecedenceScenario = async () => {
     noOpOnIdenticalPath,
   };
 };
+
+export const runUniversalAdapterRelativePathScenario = () => {
+  const originalWindow = (globalThis as any).window;
+  const windowMock = buildWindowMock("/signup");
+  (globalThis as any).window = windowMock;
+
+  const webAdapter = createUniversalAdapter({ strategy: "web" });
+  webAdapter.push?.("confirm");
+  const webRelativeSegment = webAdapter.getPath();
+  webAdapter.replace?.("../complete");
+  const webRelativeParentDirectory = webAdapter.getPath();
+  webAdapter.push?.("");
+  const webRootEmpty = webAdapter.getPath();
+
+  (globalThis as any).window = undefined;
+  const nativeAdapter = createUniversalAdapter({
+    strategy: "native",
+    initialPath: "/signup/complete",
+  });
+  nativeAdapter.push?.("../../login");
+  const nativeRelativeMultipleParents = nativeAdapter.getPath();
+  nativeAdapter.replace?.("/");
+  const nativeRootSlash = nativeAdapter.getPath();
+
+  (globalThis as any).window = originalWindow;
+
+  return {
+    webRelativeSegment,
+    webRelativeParentDirectory,
+    webRootEmpty,
+    nativeRelativeMultipleParents,
+    nativeRootSlash,
+  };
+};
