@@ -2,29 +2,62 @@
   "file": "./InMemoryItemRelationshipDBDriver.test-utils.ts",
   "tests": [
     {
-      "export": "runInMemoryRelationshipDriverScenario",
+      "export": "runInMemoryRelationshipDriverCreatedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "User|favoritePost|user-1|post-1",
+        "User|favoritePost|user-1|post-2",
+        "User|likes|user-2|post-3"
+      ]
+    },
+    {
+      "export": "runInMemoryRelationshipDriverListFavoriteIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "User|favoritePost|user-1|post-1",
+        "User|favoritePost|user-1|post-2"
+      ]
+    },
+    {
+      "export": "runInMemoryRelationshipDriverPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["User|favoritePost|user-1|post-1"]
+    },
+    {
+      "export": "runInMemoryRelationshipDriverPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["User|favoritePost|user-1|post-2"]
+    },
+    {
+      "export": "runInMemoryRelationshipDriverAfterUpdateScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": [
-          "User|favoritePost|user-1|post-1",
-          "User|favoritePost|user-1|post-2",
-          "User|likes|user-2|post-3"
-        ],
-        "listFavoriteIds": [
-          "User|favoritePost|user-1|post-1",
-          "User|favoritePost|user-1|post-2"
-        ],
-        "page1Ids": ["User|favoritePost|user-1|post-1"],
-        "page2Ids": ["User|favoritePost|user-1|post-2"],
-        "afterUpdate": {
-          "id": "User|favoritePost|user-1|post-1",
-          "toTypePrimaryFieldValue": "post-1b"
-        },
-        "deleteResult": true,
-        "remainingFavoriteIds": ["User|favoritePost|user-1|post-1"],
-        "invalidCursorError": "INVALID_CURSOR"
+        "id": "User|favoritePost|user-1|post-1",
+        "toTypePrimaryFieldValue": "post-1b"
       }
+    },
+    {
+      "export": "runInMemoryRelationshipDriverDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runInMemoryRelationshipDriverRemainingFavoriteIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["User|favoritePost|user-1|post-1"]
+    },
+    {
+      "export": "runInMemoryRelationshipDriverInvalidCursorErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INVALID_CURSOR"
     }
   ]
 }

@@ -2,14 +2,22 @@
   "file": "./IndexingRelationshipDriver.test-utils.ts",
   "tests": [
     {
-      "export": "runIndexingRelationshipScenario",
+      "export": "runIndexingRelationshipAfterFirstScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "afterFirst": ["post-1"],
-        "afterSecond": ["post-2"],
-        "afterDelete": []
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-1"]
+    },
+    {
+      "export": "runIndexingRelationshipAfterSecondScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["post-2"]
+    },
+    {
+      "export": "runIndexingRelationshipAfterDeleteScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
     }
   ]
 }

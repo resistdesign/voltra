@@ -29,3 +29,18 @@ export const runDatabasePackScenario = () => {
     keySchema: table?.Properties?.KeySchema,
   };
 };
+
+export const runDatabasePackResourceKeysScenario = async () =>
+  (await runDatabasePackScenario()).resourceKeys;
+
+export const runDatabasePackTableNameScenario = async () =>
+  (await runDatabasePackScenario()).tableName;
+
+export const runDatabasePackBillingModeScenario = async () =>
+  (await runDatabasePackScenario()).billingMode;
+
+export const runDatabasePackAttributeDefinitionsScenario = async () =>
+  (await runDatabasePackScenario()).attributeDefinitions;
+
+export const runDatabasePackKeySchemaScenario = async () =>
+  (await runDatabasePackScenario()).keySchema;

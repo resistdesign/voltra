@@ -14,7 +14,7 @@ const buildRoute = (path: string, payload: unknown): Route => ({
   handler: () => payload,
 });
 
-export const runRouterScenario = async () => {
+const runRouterScenario = async () => {
   let routeMap = {};
 
   routeMap = addRouteToRouteMap(routeMap, buildRoute("status", "ok"));
@@ -111,3 +111,24 @@ export const runRouterScenario = async () => {
     errorResponse,
   };
 };
+
+export const runRouterRouteKeysScenario = async () =>
+  (await runRouterScenario()).routeKeys;
+
+export const runRouterNormalizedScenario = async () =>
+  (await runRouterScenario()).normalized;
+
+export const runRouterHandlerResponseScenario = async () =>
+  (await runRouterScenario()).handlerResponse;
+
+export const runRouterOptionsResponseScenario = async () =>
+  (await runRouterScenario()).optionsResponse;
+
+export const runRouterNotFoundResponseScenario = async () =>
+  (await runRouterScenario()).notFoundResponse;
+
+export const runRouterUnauthorizedResponseScenario = async () =>
+  (await runRouterScenario()).unauthorizedResponse;
+
+export const runRouterErrorResponseScenario = async () =>
+  (await runRouterScenario()).errorResponse;

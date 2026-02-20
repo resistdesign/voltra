@@ -2,90 +2,107 @@
   "file": "./DBX_SCALE_E2E.test-utils.ts",
   "tests": [
     {
-      "export": "runDbxScaleScenarioMed",
+      "export": "runDbxScaleMedDatasetScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "dataset": {
-          "size": 200,
-          "statusCounts": {
-            "draft": 67,
-            "published": 67,
-            "archived": 66
-          }
-        },
-        "createSummary": {
-          "count": 200,
-          "firstId": "post-1",
-          "lastId": "post-200"
-        },
-        "paging": {
-          "ok": true,
-          "totalItems": 200,
-          "uniqueItems": 200,
-          "emptyPageIndexes": [],
-          "pageSizeViolations": [],
-          "pageCount": 10,
-          "cursors": [
-            "{\"offset\":20}",
-            "{\"offset\":40}",
-            "{\"offset\":60}",
-            "{\"offset\":80}",
-            "{\"offset\":100}",
-            "{\"offset\":120}",
-            "{\"offset\":140}",
-            "{\"offset\":160}",
-            "{\"offset\":180}",
-            null
-          ],
-          "firstIdsByPage": [
-            "post-1",
-            "post-21",
-            "post-41",
-            "post-61",
-            "post-81",
-            "post-101",
-            "post-121",
-            "post-141",
-            "post-161",
-            "post-181"
-          ],
-          "lastIdsByPage": [
-            "post-20",
-            "post-40",
-            "post-60",
-            "post-80",
-            "post-100",
-            "post-120",
-            "post-140",
-            "post-160",
-            "post-180",
-            "post-200"
-          ]
-        },
-        "ordering": {
-          "ok": true,
-          "mismatchIndex": null,
-          "firstIds": ["post-1", "post-2", "post-3"],
-          "lastIds": ["post-198", "post-199", "post-200"]
-        },
-        "search": {
-          "criteria": "status=published",
-          "total": 67,
-          "firstIds": ["post-2", "post-5", "post-8", "post-11", "post-14"],
-          "lastIds": [
-            "post-188",
-            "post-191",
-            "post-194",
-            "post-197",
-            "post-200"
-          ]
-        },
-        "timingBuckets": {
-          "create": "fast",
-          "list": "fast",
-          "search": "fast"
+        "size": 200,
+        "statusCounts": {
+          "draft": 67,
+          "published": 67,
+          "archived": 66
         }
+      }
+    },
+    {
+      "export": "runDbxScaleMedCreateSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "count": 200,
+        "firstId": "post-1",
+        "lastId": "post-200"
+      }
+    },
+    {
+      "export": "runDbxScaleMedPagingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "totalItems": 200,
+        "uniqueItems": 200,
+        "emptyPageIndexes": [],
+        "pageSizeViolations": [],
+        "pageCount": 10,
+        "cursors": [
+          "{\"offset\":20}",
+          "{\"offset\":40}",
+          "{\"offset\":60}",
+          "{\"offset\":80}",
+          "{\"offset\":100}",
+          "{\"offset\":120}",
+          "{\"offset\":140}",
+          "{\"offset\":160}",
+          "{\"offset\":180}",
+          null
+        ],
+        "firstIdsByPage": [
+          "post-1",
+          "post-21",
+          "post-41",
+          "post-61",
+          "post-81",
+          "post-101",
+          "post-121",
+          "post-141",
+          "post-161",
+          "post-181"
+        ],
+        "lastIdsByPage": [
+          "post-20",
+          "post-40",
+          "post-60",
+          "post-80",
+          "post-100",
+          "post-120",
+          "post-140",
+          "post-160",
+          "post-180",
+          "post-200"
+        ]
+      }
+    },
+    {
+      "export": "runDbxScaleMedOrderingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "mismatchIndex": null,
+        "firstIds": ["post-1", "post-2", "post-3"],
+        "lastIds": ["post-198", "post-199", "post-200"]
+      }
+    },
+    {
+      "export": "runDbxScaleMedSearchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "criteria": "status=published",
+        "total": 67,
+        "firstIds": ["post-2", "post-5", "post-8", "post-11", "post-14"],
+        "lastIds": ["post-188", "post-191", "post-194", "post-197", "post-200"]
+      }
+    },
+    {
+      "export": "runDbxScaleMedTimingBucketsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "create": "fast",
+        "list": "fast",
+        "search": "fast"
       }
     }
   ]

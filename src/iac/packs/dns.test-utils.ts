@@ -38,3 +38,30 @@ export const runDNSPackScenario = () => {
     customResourceRecords: customRecord?.Properties?.ResourceRecords,
   };
 };
+
+export const runDNSPackResourceKeysScenario = async () =>
+  (await runDNSPackScenario()).resourceKeys;
+
+export const runDNSPackDefaultRecordTypeScenario = async () =>
+  (await runDNSPackScenario()).defaultRecordType;
+
+export const runDNSPackDefaultTTLScenario = async () =>
+  (await runDNSPackScenario()).defaultTTL;
+
+export const runDNSPackDefaultHostedZoneIdScenario = async () =>
+  (await runDNSPackScenario()).defaultHostedZoneId;
+
+export const runDNSPackDefaultDomainNameScenario = async () =>
+  (await runDNSPackScenario()).defaultDomainName;
+
+export const runDNSPackDefaultResourceRecordsScenario = async () =>
+  (await runDNSPackScenario()).defaultResourceRecords;
+
+export const runDNSPackCustomRecordTypeScenario = async () =>
+  (await runDNSPackScenario()).customRecordType;
+
+export const runDNSPackCustomTTLScenario = async () =>
+  (await runDNSPackScenario()).customTTL;
+
+export const runDNSPackCustomResourceRecordsScenario = async () =>
+  (await runDNSPackScenario()).customResourceRecords;

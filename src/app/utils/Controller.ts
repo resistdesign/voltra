@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 const getKeyValueWithoutError = (obj: any, key: string | number) => {
   try {
     return obj[key];
-  } catch (e) {
+  } catch (_error) {
     return undefined;
   }
 };
@@ -36,7 +36,8 @@ export const useController = (
         setValue(value);
 
         if (isArrayIndex) {
-          const newArray = [...parentValue];
+          const baseArray = Array.isArray(parentValue) ? parentValue : [];
+          const newArray = [...baseArray];
 
           newArray[key as number] = value;
 
@@ -47,7 +48,7 @@ export const useController = (
             [key]: value,
           });
         }
-      } catch (e) {
+      } catch (_error) {
         // Ignore.
       }
     },
@@ -57,7 +58,7 @@ export const useController = (
   useEffect(() => {
     try {
       setValue(getKeyValueWithoutError(parentValue, key));
-    } catch (e) {
+    } catch (_error) {
       setValue(undefined);
     }
   }, [parentValue, key]);

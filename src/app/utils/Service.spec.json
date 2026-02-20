@@ -2,26 +2,57 @@
   "file": "./Service.test-utils.ts",
   "tests": [
     {
-      "export": "runServiceScenario",
+      "export": "runServiceUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api/v1"
+    },
+    {
+      "export": "runServiceOriginUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/"
+    },
+    {
+      "export": "runServiceNormalizedProtocolUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api/v2"
+    },
+    {
+      "export": "runServiceNormalizedDomainUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api/v3"
+    },
+    {
+      "export": "runServiceRequestInfoScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "url": "https://example.com:443api/v1",
-        "requestInfo": {
-          "input": "https://example.com:443api/v1",
-          "method": "POST",
-          "headers": {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer token-1"
-          },
-          "body": "[\"a\",1]"
+        "input": "https://example.com:443/api/v1",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer token-1"
         },
-        "successResponse": {
-          "ok": true,
-          "args": ["a", 1]
-        },
-        "errorMessage": "nope"
+        "body": "[\"a\",1]"
       }
+    },
+    {
+      "export": "runServiceSuccessResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "args": ["a", 1]
+      }
+    },
+    {
+      "export": "runServiceErrorMessageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "nope"
     }
   ]
 }

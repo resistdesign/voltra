@@ -1,4 +1,4 @@
-import type { FormEvent, ReactElement } from "react";
+import { createElement, type FormEvent, type ReactElement } from "react";
 import styled from "styled-components";
 import type { ComponentSuite, FieldRenderContext } from "../../../../../src/app/forms";
 import { webSuite } from "../../../../../src/web/forms/suite";
@@ -35,7 +35,7 @@ const createCustomRenderer =
     return (
       <FieldFrame data-kind={kind}>
         <FieldKindLabel>{SUITE_LABELS[kind]}</FieldKindLabel>
-        {renderer(context)}
+        {createElement(renderer, context)}
       </FieldFrame>
     );
   };

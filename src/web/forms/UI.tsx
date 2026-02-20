@@ -4,12 +4,14 @@
  * Web AutoForm wrappers backed by the default web renderer.
  */
 
-import type { FC } from "react";
+import { createElement, type FC } from "react";
 import type {
   AutoFieldProps,
+  CustomValidatorMap,
   CustomTypeActionPayload,
   FormValues,
   RelationActionPayload,
+  TranslateValidationErrorCode,
 } from "../../app/forms/types";
 import { AutoForm as SharedAutoForm, AutoFormView as SharedAutoFormView } from "../../app/forms/UI";
 import { webAutoField } from "./suite";
@@ -28,12 +30,15 @@ const defaultWebRenderer = createWebFormRenderer();
  * @returns Rendered field UI.
  */
 export const AutoField: FC<AutoFieldProps> = (props) => {
-  return webAutoField({
+  return createElement(webAutoField, {
     field: props.field,
     fieldKey: props.fieldKey,
     value: props.value,
     onChange: props.onChange,
     error: props.error,
+    errors: props.errors,
+    arrayItemErrorMap: props.arrayItemErrorMap,
+    translateValidationErrorCode: props.translateValidationErrorCode,
     disabled: props.disabled,
     onRelationAction: props.onRelationAction,
     onCustomTypeAction: props.onCustomTypeAction,
@@ -54,6 +59,8 @@ export interface AutoFormViewProps {
   onRelationAction?: (payload: RelationActionPayload) => void;
   /** Optional custom type action handler. */
   onCustomTypeAction?: (payload: CustomTypeActionPayload) => void;
+  /** Optional translator for validation error descriptors. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
 }
 
 /**
@@ -86,6 +93,10 @@ export interface AutoFormProps {
   operation?: TypeOperation;
   /** Disable the submit button when true. */
   submitDisabled?: boolean;
+  /** Optional translator for validation error descriptors. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
+  /** Optional custom validators keyed by field name. */
+  customValidatorMap?: CustomValidatorMap;
 }
 
 /**

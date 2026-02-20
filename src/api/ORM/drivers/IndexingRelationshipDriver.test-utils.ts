@@ -9,7 +9,7 @@ const buildDriver = (): IndexingRelationshipDriver =>
       `${fromTypeName}.${fromTypeFieldName}`,
   });
 
-export const runIndexingRelationshipScenario = async () => {
+const runIndexingRelationshipScenario = async () => {
   const driver = buildDriver();
   const base: BaseItemRelationshipInfo = {
     fromTypeName: "User",
@@ -74,3 +74,12 @@ export const runIndexingRelationshipScenario = async () => {
     afterDelete: afterDelete.items.map((item) => item.toTypePrimaryFieldValue),
   };
 };
+
+export const runIndexingRelationshipAfterFirstScenario = async () =>
+  (await runIndexingRelationshipScenario()).afterFirst;
+
+export const runIndexingRelationshipAfterSecondScenario = async () =>
+  (await runIndexingRelationshipScenario()).afterSecond;
+
+export const runIndexingRelationshipAfterDeleteScenario = async () =>
+  (await runIndexingRelationshipScenario()).afterDelete;

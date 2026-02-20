@@ -1,7 +1,7 @@
 import { convertASTToMap } from "./TypeMapping";
 import { createSourceFile, ScriptTarget } from "typescript";
 
-export const runTypeMappingScenario = () => {
+const getTypeMappingKeys = () => {
   const source = `
     namespace Outer {
       export type A = { id: string };
@@ -13,9 +13,15 @@ export const runTypeMappingScenario = () => {
   `;
   const node = createSourceFile("map.ts", source, ScriptTarget.Latest, true);
   const map = convertASTToMap(node, {});
-  const keys = Object.keys(map).sort();
+  return Object.keys(map).sort();
+};
 
-  return {
-    keys,
-  };
+export const runTypeMappingTopLevelScenario = () => {
+  const keys = getTypeMappingKeys();
+  return keys.filter((key) => !key.includes("."));
+};
+
+export const runTypeMappingNestedNamespaceScenario = () => {
+  const keys = getTypeMappingKeys();
+  return keys.filter((key) => key.includes("."));
 };

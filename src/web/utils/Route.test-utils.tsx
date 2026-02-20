@@ -1,6 +1,6 @@
 import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { Route as AppRoute, useRouteContext } from "../../app/utils/Route";
+import { useRouteContext } from "../../app/utils/Route";
 const loadRouteModule = async () => {
   const moduleUrl = new URL("./Route.tsx", import.meta.url);
   moduleUrl.search = `?t=${Date.now()}`;
@@ -68,7 +68,8 @@ export const runRouteScenario = async () => {
     }
   };
 
-  const { RouteProvider } = await loadRouteModule();
+  const routeModule = await loadRouteModule();
+  const { Route } = routeModule;
 
   const ContextProbe = () => {
     const context = useRouteContext();
@@ -76,18 +77,18 @@ export const runRouteScenario = async () => {
   };
 
   const defaultContextRender = renderToString(
-    createElement(RouteProvider, null, createElement(ContextProbe)),
+    createElement(Route, null, createElement(ContextProbe)),
   );
 
   const nestedRouteRender = renderToString(
     createElement(
-      AppRoute,
+      Route,
       null,
       createElement(
-        AppRoute,
+        Route,
         { path: "/app" },
         createElement(
-          AppRoute,
+          Route,
           { path: "books/:id", exact: true },
           createElement(ContextProbe),
         ),
@@ -97,10 +98,10 @@ export const runRouteScenario = async () => {
 
   const exactMismatchRender = renderToString(
     createElement(
-      AppRoute,
+      Route,
       null,
       createElement(
-        AppRoute,
+        Route,
         { path: "/app/books", exact: true },
         createElement("span", null, "nope"),
       ),
@@ -111,8 +112,25 @@ export const runRouteScenario = async () => {
   (globalThis as any).CustomEvent = originalCustomEvent;
 
   return {
+    hasRouteExport: typeof routeModule.Route === "function",
+    hasRouteProviderExport: "RouteProvider" in routeModule,
     defaultContextRender,
     nestedRouteRender,
     exactMismatchRender,
   };
 };
+
+export const runRouteHasRouteExportScenario = async () =>
+  (await runRouteScenario()).hasRouteExport;
+
+export const runRouteHasRouteProviderExportScenario = async () =>
+  (await runRouteScenario()).hasRouteProviderExport;
+
+export const runRouteDefaultContextRenderScenario = async () =>
+  (await runRouteScenario()).defaultContextRender;
+
+export const runRouteNestedRouteRenderScenario = async () =>
+  (await runRouteScenario()).nestedRouteRender;
+
+export const runRouteExactMismatchRenderScenario = async () =>
+  (await runRouteScenario()).exactMismatchRender;

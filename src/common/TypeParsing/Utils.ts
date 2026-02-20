@@ -19,15 +19,7 @@ export const removeNonexistentFieldsFromSelectedFields = <
 ) => {
   if (Array.isArray(selectedFields)) {
     const { fields = {} } = typeInfo;
-    const cleanSelectFields: (keyof ItemType)[] = [];
-
-    for (const tIF in fields) {
-      if (selectedFields.includes(tIF as keyof ItemType)) {
-        cleanSelectFields.push(tIF as keyof ItemType);
-      }
-    }
-
-    return cleanSelectFields;
+    return selectedFields.filter((field) => Boolean(fields[field as string]));
   } else {
     return selectedFields;
   }
@@ -47,20 +39,10 @@ export const removeTypeReferenceFieldsFromSelectedFields = <ItemType>(
 ): (keyof ItemType)[] | undefined => {
   if (Array.isArray(selectedFields)) {
     const { fields = {} } = typeInfo;
-    const cleanSelectFields: (keyof ItemType)[] = [];
-
-    for (const tIF in fields) {
-      const { typeReference } = fields[tIF];
-
-      if (
-        typeof typeReference === "undefined" &&
-        selectedFields.includes(tIF as keyof ItemType)
-      ) {
-        cleanSelectFields.push(tIF as keyof ItemType);
-      }
-    }
-
-    return cleanSelectFields;
+    return selectedFields.filter((field) => {
+      const typeInfoField = fields[field as string];
+      return typeInfoField && typeof typeInfoField.typeReference === "undefined";
+    });
   } else {
     return selectedFields;
   }

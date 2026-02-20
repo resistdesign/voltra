@@ -1,4 +1,4 @@
-import type { FC, ReactNode } from "react";
+import { type FC, type ReactNode, useCallback } from "react";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { FormBlock } from "../components/FormBlock";
@@ -18,29 +18,33 @@ export const CreatePersonScreen: FC<CreatePersonScreenProps> = ({
   isSaving,
   onCreate,
   onBack,
-}) => (
-  <Section>
-    <InlineHeader>
-      <h4>Create Person</h4>
-      <button type="button" onClick={onBack}>
-        Back to People
-      </button>
-    </InlineHeader>
-    <article>
-      <h5>New Person</h5>
-      <FormBlock
-        key={`person-create-${personCreateKey}`}
-        typeInfo={personTypeInfo}
-        initialValues={{}}
-        operation={TypeOperation.CREATE}
-        onSubmit={onCreate}
-        onRelationAction={() => {}}
-        submitDisabled={isSaving}
-      />
-      {isSaving && <small>Saving...</small>}
-    </article>
-  </Section>
-);
+}) => {
+  const handleRelationAction = useCallback(() => {}, []);
+
+  return (
+    <Section>
+      <InlineHeader>
+        <h4>Create Person</h4>
+        <button type="button" onClick={onBack}>
+          Back to People
+        </button>
+      </InlineHeader>
+      <article>
+        <h5>New Person</h5>
+        <FormBlock
+          key={`person-create-${personCreateKey}`}
+          typeInfo={personTypeInfo}
+          initialValues={{}}
+          operation={TypeOperation.CREATE}
+          onSubmit={onCreate}
+          onRelationAction={handleRelationAction}
+          submitDisabled={isSaving}
+        />
+        {isSaving && <small>Saving...</small>}
+      </article>
+    </Section>
+  );
+};
 
 const InlineHeader: FC<{ children: ReactNode }> = ({ children }) => (
   <div

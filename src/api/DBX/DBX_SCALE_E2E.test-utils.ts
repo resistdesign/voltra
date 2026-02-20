@@ -94,8 +94,7 @@ const buildPublishedCriteria = (): SearchCriteria => ({
   ],
 });
 
-const listIds = (items?: Post[]) =>
-  (items ?? []).map((item) => item.id);
+const listIds = (items?: Post[]) => (items ?? []).map((item) => item.id);
 
 const buildTimingBucket = (ms: number): TimingBucket =>
   ms <= TIMING_BUCKET_MAX_MS ? "fast" : "slow";
@@ -206,9 +205,7 @@ const runDbxScaleScenarioWithSize = async (datasetSize: number) => {
   const publishedSample = sampleEdges(publishedIds, 5);
 
   const pagingTranscript = paging.transcript;
-  const firstIdsByPage = pagingTranscript.idsByPage.map(
-    (ids) => ids[0] ?? null,
-  );
+  const firstIdsByPage = pagingTranscript.idsByPage.map((ids) => ids[0] ?? null);
   const lastIdsByPage = pagingTranscript.idsByPage.map(
     (ids) => ids[ids.length - 1] ?? null,
   );
@@ -254,14 +251,44 @@ const runDbxScaleScenarioWithSize = async (datasetSize: number) => {
   };
 };
 
-/**
- * Run the DBX scale/perf E2E scenario against the in-memory router/runtime.
- */
 export const runDbxScaleScenario = async () =>
   runDbxScaleScenarioWithSize(DATASET_SIZE_SMALL);
 
-/**
- * Run the DBX scale/perf E2E scenario with a medium dataset.
- */
 export const runDbxScaleScenarioMed = async () =>
   runDbxScaleScenarioWithSize(DATASET_SIZE_MED);
+
+export const runDbxScaleDatasetScenario = async () =>
+  (await runDbxScaleScenario()).dataset;
+
+export const runDbxScaleCreateSummaryScenario = async () =>
+  (await runDbxScaleScenario()).createSummary;
+
+export const runDbxScalePagingScenario = async () =>
+  (await runDbxScaleScenario()).paging;
+
+export const runDbxScaleOrderingScenario = async () =>
+  (await runDbxScaleScenario()).ordering;
+
+export const runDbxScaleSearchScenario = async () =>
+  (await runDbxScaleScenario()).search;
+
+export const runDbxScaleTimingBucketsScenario = async () =>
+  (await runDbxScaleScenario()).timingBuckets;
+
+export const runDbxScaleMedDatasetScenario = async () =>
+  (await runDbxScaleScenarioMed()).dataset;
+
+export const runDbxScaleMedCreateSummaryScenario = async () =>
+  (await runDbxScaleScenarioMed()).createSummary;
+
+export const runDbxScaleMedPagingScenario = async () =>
+  (await runDbxScaleScenarioMed()).paging;
+
+export const runDbxScaleMedOrderingScenario = async () =>
+  (await runDbxScaleScenarioMed()).ordering;
+
+export const runDbxScaleMedSearchScenario = async () =>
+  (await runDbxScaleScenarioMed()).search;
+
+export const runDbxScaleMedTimingBucketsScenario = async () =>
+  (await runDbxScaleScenarioMed()).timingBuckets;

@@ -1,6 +1,6 @@
 import { logFunctionCall, LOGGING_MESSAGES } from "./Utils";
 
-export const runLoggingUtilsScenario = async () => {
+const runLoggingUtilsScenario = async () => {
   const originalLog = console.log;
   const originalError = console.error;
   const logs: any[] = [];
@@ -40,6 +40,14 @@ export const runLoggingUtilsScenario = async () => {
     (value: string) => value.toUpperCase(),
     false,
   );
+  const circularArg: { self?: unknown } = {};
+  circularArg.self = circularArg;
+  const circularResult = await logFunctionCall(
+    "circularThing",
+    [circularArg],
+    () => "ok",
+    true,
+  );
 
   console.log = originalLog;
   console.error = originalError;
@@ -47,6 +55,7 @@ export const runLoggingUtilsScenario = async () => {
   return {
     result,
     disabledResult,
+    circularResult,
     thrownMessage,
     logMessages: logs.map((entry) => entry.slice(0, 4)),
     errorMessages: errors.map((entry) => entry.slice(0, 4)),
@@ -70,3 +79,30 @@ export const runLoggingUtilsScenario = async () => {
     ],
   };
 };
+
+export const runLoggingUtilsResultScenario = async () =>
+  (await runLoggingUtilsScenario()).result;
+
+export const runLoggingUtilsDisabledResultScenario = async () =>
+  (await runLoggingUtilsScenario()).disabledResult;
+
+export const runLoggingUtilsCircularResultScenario = async () =>
+  (await runLoggingUtilsScenario()).circularResult;
+
+export const runLoggingUtilsThrownMessageScenario = async () =>
+  (await runLoggingUtilsScenario()).thrownMessage;
+
+export const runLoggingUtilsLogMessagesScenario = async () =>
+  (await runLoggingUtilsScenario()).logMessages;
+
+export const runLoggingUtilsErrorMessagesScenario = async () =>
+  (await runLoggingUtilsScenario()).errorMessages;
+
+export const runLoggingUtilsExpectedLabelsScenario = async () =>
+  (await runLoggingUtilsScenario()).expectedLabels;
+
+export const runLoggingUtilsExpectedOutputLabelsScenario = async () =>
+  (await runLoggingUtilsScenario()).expectedOutputLabels;
+
+export const runLoggingUtilsExpectedErrorLabelsScenario = async () =>
+  (await runLoggingUtilsScenario()).expectedErrorLabels;

@@ -4,6 +4,7 @@
  * Factory for building form renderers backed by component suites.
  */
 
+import type { ReactElement } from "react";
 import type { ResolvedSuite, ComponentSuite } from "./types";
 import { resolveSuite } from "./resolveSuite";
 import { createAutoField, type AutoFieldInput } from "./createAutoField";
@@ -14,7 +15,7 @@ import { createAutoField, type AutoFieldInput } from "./createAutoField";
  * @param options - Suite configuration.
  * @returns Renderer helpers tied to resolved suites.
  */
-export const createFormRenderer = <RenderOutput = unknown>(options: {
+export const createFormRenderer = <RenderOutput = ReactElement>(options: {
   fallbackSuite: ComponentSuite<RenderOutput>;
   suite?: ComponentSuite<RenderOutput>;
 }) => {

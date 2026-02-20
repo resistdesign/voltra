@@ -3,6 +3,10 @@
  */
 import type { TypeInfoValidationResults } from "../TypeParsing/Validation";
 import {
+  getErrorDescriptor,
+  getNoErrorDescriptor,
+} from "../TypeParsing/Validation";
+import {
   ItemRelationshipInfoKeys,
   ItemRelationshipInfoType,
 } from "../ItemRelationshipInfoTypes";
@@ -31,7 +35,7 @@ export const validateRelationshipItem = (
   const results: TypeInfoValidationResults = {
     typeName: fromTypeName,
     valid: true,
-    error: "",
+    error: getNoErrorDescriptor(),
     errorMap: {},
   };
 
@@ -49,10 +53,13 @@ export const validateRelationshipItem = (
         (omitRKV && universalRKV in relationshipItem)
       ) {
         results.valid = false;
-        results.error =
-          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+        results.error = getErrorDescriptor(
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM,
+        );
         results.errorMap[rKV] = [
-          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM_FIELD,
+          getErrorDescriptor(
+            TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM_FIELD,
+          ),
         ];
       } else if (
         // Missing Field
@@ -60,16 +67,21 @@ export const validateRelationshipItem = (
         (!(universalRKV in relationshipItem) || !relationshipItem[universalRKV])
       ) {
         results.valid = false;
-        results.error =
-          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+        results.error = getErrorDescriptor(
+          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM,
+        );
         results.errorMap[rKV] = [
-          TYPE_INFO_ORM_RELATIONSHIP_ERRORS.MISSING_RELATIONSHIP_ITEM_FIELD,
+          getErrorDescriptor(
+            TYPE_INFO_ORM_RELATIONSHIP_ERRORS.MISSING_RELATIONSHIP_ITEM_FIELD,
+          ),
         ];
       }
     }
   } else {
     results.valid = false;
-    results.error = TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM;
+    results.error = getErrorDescriptor(
+      TYPE_INFO_ORM_RELATIONSHIP_ERRORS.INVALID_RELATIONSHIP_ITEM,
+    );
   }
 
   return results;

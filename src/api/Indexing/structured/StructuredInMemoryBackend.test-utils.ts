@@ -1,7 +1,7 @@
 import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
 import { searchStructured } from "./SearchStructured";
 
-export const runStructuredInMemoryBackendScenario = async () => {
+const runStructuredInMemoryBackendScenario = async () => {
   const backend = new StructuredInMemoryBackend();
 
   await backend.write("1", { category: "news", tags: ["a", "b"], score: 10 });
@@ -135,3 +135,33 @@ export const runStructuredInMemoryBackendScenario = async () => {
     afterRemoveIds: afterRemove.candidateIds,
   };
 };
+
+export const runStructuredInMemoryBackendNewsIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).newsIds;
+
+export const runStructuredInMemoryBackendTagsBIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).tagsBIds;
+
+export const runStructuredInMemoryBackendScoreGte10IdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).scoreGte10Ids;
+
+export const runStructuredInMemoryBackendScoreBetweenIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).scoreBetweenIds;
+
+export const runStructuredInMemoryBackendModelLikeHonIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).modelLikeHonIds;
+
+export const runStructuredInMemoryBackendModelLikeToyIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).modelLikeToyIds;
+
+export const runStructuredInMemoryBackendPage1IdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).page1Ids;
+
+export const runStructuredInMemoryBackendPage2IdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).page2Ids;
+
+export const runStructuredInMemoryBackendAfterUpdateIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).afterUpdateIds;
+
+export const runStructuredInMemoryBackendAfterRemoveIdsScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).afterRemoveIds;

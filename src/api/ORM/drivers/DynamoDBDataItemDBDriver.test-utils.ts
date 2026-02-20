@@ -207,7 +207,7 @@ const buildDriver = () => {
   };
 };
 
-export const runDynamoDBDataItemDriverScenario = async () => {
+const runDynamoDBDataItemDriverScenario = async () => {
   const { driver, getLastScanInput } = buildDriver();
 
   const id1 = await driver.createItem({
@@ -301,3 +301,48 @@ export const runDynamoDBDataItemDriverScenario = async () => {
     invalidCursorErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
   };
 };
+
+export const runDynamoDBDataItemDriverCreatedIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).createdIds;
+
+export const runDynamoDBDataItemDriverReadSelectedScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).readSelected;
+
+export const runDynamoDBDataItemDriverAfterUpdateScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).afterUpdate;
+
+export const runDynamoDBDataItemDriverFilteredIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).filteredIds;
+
+export const runDynamoDBDataItemDriverPage1IdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).page1Ids;
+
+export const runDynamoDBDataItemDriverPage2IdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).page2Ids;
+
+export const runDynamoDBDataItemDriverListSelectedKeysScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).listSelectedKeys;
+
+export const runDynamoDBDataItemDriverDeleteResultScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).deleteResult;
+
+export const runDynamoDBDataItemDriverMissingReadErrorScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).missingReadError;
+
+export const runDynamoDBDataItemDriverInvalidCursorErrorScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).invalidCursorError;
+
+export const runDynamoDBDataItemDriverListFilterExpressionScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).listFilterExpression;
+
+export const runDynamoDBDataItemDriverListFilterAttributeNamesScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).listFilterAttributeNames;
+
+export const runDynamoDBDataItemDriverListFilterAttributeValuesScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).listFilterAttributeValues;
+
+export const runDynamoDBDataItemDriverMissingReadErrorExpectedScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).missingReadErrorExpected;
+
+export const runDynamoDBDataItemDriverInvalidCursorErrorExpectedScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).invalidCursorErrorExpected;

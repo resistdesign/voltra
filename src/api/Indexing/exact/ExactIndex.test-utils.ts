@@ -1,7 +1,7 @@
 import { ExactIndex } from "./ExactIndex";
 import { buildExactDdbItem, buildExactDdbKey } from "./ExactDdb";
 
-export const runExactIndexScenario = () => {
+const runExactIndexScenario = () => {
   const index = new ExactIndex();
 
   index.addDocument("doc-1", "text", ["hello", "world", "hello"]);
@@ -50,3 +50,31 @@ export const runExactIndexScenario = () => {
     ddbItem: buildExactDdbItem("token", "text", "doc-1", [3, 4]),
   };
 };
+
+export const runExactIndexPositionsDoc1HelloScenario = () =>
+  runExactIndexScenario().positionsDoc1Hello;
+
+export const runExactIndexPositionsDoc2HelloScenario = () =>
+  runExactIndexScenario().positionsDoc2Hello;
+
+export const runExactIndexHasPhraseDoc1Scenario = () =>
+  runExactIndexScenario().hasPhraseDoc1;
+
+export const runExactIndexHasPhraseDoc2Scenario = () =>
+  runExactIndexScenario().hasPhraseDoc2;
+
+export const runExactIndexMissingPhraseScenario = () =>
+  runExactIndexScenario().missingPhrase;
+
+export const runExactIndexVerifiedPage1Scenario = () =>
+  runExactIndexScenario().verifiedPage1;
+
+export const runExactIndexVerifiedPage2Scenario = () =>
+  runExactIndexScenario().verifiedPage2;
+
+export const runExactIndexPositionsAfterRemoveScenario = () =>
+  runExactIndexScenario().positionsAfterRemove;
+
+export const runExactIndexDdbKeyScenario = () => runExactIndexScenario().ddbKey;
+
+export const runExactIndexDdbItemScenario = () => runExactIndexScenario().ddbItem;

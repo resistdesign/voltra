@@ -10,7 +10,7 @@ import {
 } from "./DataAccessControl";
 import type { LiteralValue } from "../common/TypeParsing/TypeInfo";
 
-export const runDataAccessControlScenario = async () => {
+const runDataAccessControlScenario = async () => {
   const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE as unknown as LiteralValue;
   const wildcardMatch = getValueIsWildcardSignifier(wildcard);
   const wildcardMismatch = getValueIsWildcardSignifier({ WILD_CARD: "x" });
@@ -104,3 +104,33 @@ export const runDataAccessControlScenario = async () => {
     merged,
   };
 };
+
+export const runDataAccessControlWildcardMatchScenario = async () =>
+  (await runDataAccessControlScenario()).wildcardMatch;
+
+export const runDataAccessControlWildcardMismatchScenario = async () =>
+  (await runDataAccessControlScenario()).wildcardMismatch;
+
+export const runDataAccessControlExactMatchScenario = async () =>
+  (await runDataAccessControlScenario()).exactMatch;
+
+export const runDataAccessControlPrefixWildcardMatchScenario = async () =>
+  (await runDataAccessControlScenario()).prefixWildcardMatch;
+
+export const runDataAccessControlNoMatchScenario = async () =>
+  (await runDataAccessControlScenario()).noMatch;
+
+export const runDataAccessControlFlattenedCountScenario = async () =>
+  (await runDataAccessControlScenario()).flattenedCount;
+
+export const runDataAccessControlCacheKeysScenario = async () =>
+  (await runDataAccessControlScenario()).cacheKeys;
+
+export const runDataAccessControlAccessSpecificityScenario = async () =>
+  (await runDataAccessControlScenario()).accessSpecificity;
+
+export const runDataAccessControlAccessExactOverridesScenario = async () =>
+  (await runDataAccessControlScenario()).accessExactOverrides;
+
+export const runDataAccessControlMergedScenario = async () =>
+  (await runDataAccessControlScenario()).merged;

@@ -6,21 +6,25 @@
 
 import type { ComponentSuite } from "./types";
 import { resolveSuite } from "./resolveSuite";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
 
-const fallbackSuite: ComponentSuite<string> = {
+const fallbackSuite: ComponentSuite = {
   renderers: {
-    string: () => "string",
-    number: () => "number",
-    boolean: () => "boolean",
-    enum_select: () => "enum",
-    array: () => "array",
-    relation_single: () => "relation_single",
-    relation_array: () => "relation_array",
-    custom_single: () => "custom_single",
-    custom_array: () => "custom_array",
+    string: () => createElement("span", { "data-kind": "string" }),
+    number: () => createElement("span", { "data-kind": "number" }),
+    boolean: () => createElement("span", { "data-kind": "boolean" }),
+    enum_select: () => createElement("span", { "data-kind": "enum" }),
+    array: () => createElement("span", { "data-kind": "array" }),
+    relation_single: () =>
+      createElement("span", { "data-kind": "relation_single" }),
+    relation_array: () =>
+      createElement("span", { "data-kind": "relation_array" }),
+    custom_single: () => createElement("span", { "data-kind": "custom_single" }),
+    custom_array: () => createElement("span", { "data-kind": "custom_array" }),
   },
   primitives: {
-    Button: () => "button",
+    Button: () => createElement("span", { "data-kind": "button" }),
   },
 };
 
@@ -31,15 +35,19 @@ export const runResolveSuiteOverrideScenario = () => {
   const suite = resolveSuite(
     {
       renderers: {
-        string: () => "override_string",
+        string: () => createElement("span", { "data-kind": "override_string" }),
       },
     },
     fallbackSuite,
   );
 
   return {
-    stringRenderer: suite.renderers.string({} as any),
-    numberRenderer: suite.renderers.number({} as any),
+    stringRenderer: renderToStaticMarkup(createElement(suite.renderers.string, {} as any)).includes(
+      "override_string",
+    ),
+    numberRenderer: renderToStaticMarkup(createElement(suite.renderers.number, {} as any)).includes(
+      "number",
+    ),
   };
 };
 
@@ -51,15 +59,20 @@ export const runResolveSuitePrimitiveScenario = () => {
     {
       renderers: {},
       primitives: {
-        Button: () => "override_button",
+        Button: () => createElement("span", { "data-kind": "override_button" }),
       },
     },
     fallbackSuite,
   );
 
   return {
-    buttonPrimitive: suite.primitives?.Button?.({} as any) ?? null,
-    stringRenderer: suite.renderers.string({} as any),
+    buttonPrimitive:
+      renderToStaticMarkup(createElement(suite.primitives?.Button as any, {} as any)).includes(
+        "override_button",
+      ) ?? null,
+    stringRenderer: renderToStaticMarkup(createElement(suite.renderers.string, {} as any)).includes(
+      "string",
+    ),
   };
 };
 
@@ -71,7 +84,7 @@ export const runResolveSuiteMissingScenario = () => {
     resolveSuite(
       {
         renderers: {
-          string: () => "string",
+          string: () => createElement("span", { "data-kind": "string" }),
         },
       },
       { renderers: {} },

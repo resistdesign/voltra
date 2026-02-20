@@ -18,7 +18,7 @@ const assertTypeInfoORMClientAPIRejectsContext = (
   clientAPI.createRelationship({} as BaseItemRelationshipInfo, { accessingRoleId: "role-1" });
 };
 
-export const runTypeInfoORMClientScenario = async () => {
+const runTypeInfoORMClientScenario = async () => {
   const calls: Array<{ path: string; args: any[] }> = [];
   const originalFetch = globalThis.fetch;
 
@@ -92,3 +92,33 @@ export const runTypeInfoORMClientScenario = async () => {
     relatedItems,
   };
 };
+
+export const runTypeInfoORMClientCallsScenario = async () =>
+  (await runTypeInfoORMClientScenario()).calls;
+
+export const runTypeInfoORMClientCreatedScenario = async () =>
+  (await runTypeInfoORMClientScenario()).created;
+
+export const runTypeInfoORMClientReadScenario = async () =>
+  (await runTypeInfoORMClientScenario()).read;
+
+export const runTypeInfoORMClientUpdatedScenario = async () =>
+  (await runTypeInfoORMClientScenario()).updated;
+
+export const runTypeInfoORMClientDeletedScenario = async () =>
+  (await runTypeInfoORMClientScenario()).deleted;
+
+export const runTypeInfoORMClientListScenario = async () =>
+  (await runTypeInfoORMClientScenario()).list;
+
+export const runTypeInfoORMClientRelCreatedScenario = async () =>
+  (await runTypeInfoORMClientScenario()).relCreated;
+
+export const runTypeInfoORMClientRelDeletedScenario = async () =>
+  (await runTypeInfoORMClientScenario()).relDeleted;
+
+export const runTypeInfoORMClientRelListScenario = async () =>
+  (await runTypeInfoORMClientScenario()).relList;
+
+export const runTypeInfoORMClientRelatedItemsScenario = async () =>
+  (await runTypeInfoORMClientScenario()).relatedItems;

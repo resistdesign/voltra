@@ -37,3 +37,27 @@ export const runBuildPackScenario = () => {
     buildProjectRef: buildStage?.Actions?.[0]?.Configuration?.ProjectName?.Ref,
   };
 };
+
+export const runBuildPackResourceKeysScenario = async () =>
+  (await runBuildPackScenario()).resourceKeys;
+
+export const runBuildPackProviderScenario = async () =>
+  (await runBuildPackScenario()).provider;
+
+export const runBuildPackDefaultProviderScenario = async () =>
+  (await runBuildPackScenario()).defaultProvider;
+
+export const runBuildPackEnvironmentTypeScenario = async () =>
+  (await runBuildPackScenario()).environmentType;
+
+export const runBuildPackEnvironmentComputeTypeScenario = async () =>
+  (await runBuildPackScenario()).environmentComputeType;
+
+export const runBuildPackEnvironmentImageScenario = async () =>
+  (await runBuildPackScenario()).environmentImage;
+
+export const runBuildPackSourceOwnerScenario = async () =>
+  (await runBuildPackScenario()).sourceOwner;
+
+export const runBuildPackBuildProjectRefScenario = async () =>
+  (await runBuildPackScenario()).buildProjectRef;

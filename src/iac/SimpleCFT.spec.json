@@ -2,57 +2,69 @@
   "file": "./SimpleCFT.test-utils.ts",
   "tests": [
     {
-      "export": "runSimpleCFTScenario",
+      "export": "runSimpleCFTTemplateScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "template": {
-          "AWSTemplateFormatVersion": "2010-09-09",
-          "Resources": {
-            "SampleResource": {
-              "Type": "Custom::Thing"
-            }
-          },
-          "Description": "Voltra stack",
-          "Parameters": {
-            "Env": {
-              "Type": "String"
-            },
-            "Region": {
-              "Type": "String"
-            }
-          },
-          "Metadata": {
-            "AWS::CloudFormation::Interface": {
-              "ParameterGroups": [
-                {
-                  "Label": {
-                    "default": "Main"
-                  },
-                  "Parameters": ["Env"]
-                },
-                {
-                  "Label": {
-                    "default": "Extra"
-                  },
-                  "Parameters": ["Region"]
-                }
-              ],
-              "ParameterLabels": {
-                "Env": {
-                  "default": "Environment"
-                },
-                "Region": {
-                  "default": "Region"
-                }
-              }
-            },
-            "Owner": "Voltra"
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Resources": {
+          "SampleResource": {
+            "Type": "Custom::Thing"
           }
         },
-        "stringMatches": true,
-        "yamlMatches": true
+        "Description": "Voltra stack",
+        "Parameters": {
+          "Env": {
+            "Type": "String"
+          },
+          "Region": {
+            "Type": "String"
+          }
+        },
+        "Metadata": {
+          "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+              {
+                "Label": {
+                  "default": "Main"
+                },
+                "Parameters": [
+                  "Env"
+                ]
+              },
+              {
+                "Label": {
+                  "default": "Extra"
+                },
+                "Parameters": [
+                  "Region"
+                ]
+              }
+            ],
+            "ParameterLabels": {
+              "Env": {
+                "default": "Environment"
+              },
+              "Region": {
+                "default": "Region"
+              }
+            }
+          },
+          "Owner": "Voltra"
+        }
       }
+    },
+    {
+      "export": "runSimpleCFTStringMatchesScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runSimpleCFTYamlMatchesScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

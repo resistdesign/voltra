@@ -2,15 +2,28 @@
   "file": "./Debug.test-utils.ts",
   "tests": [
     {
-      "export": "runDebugScenario",
+      "export": "runDebugUnchangedScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "unchanged": [],
-        "changed": [1, 2],
-        "added": [1, 2],
-        "removed": []
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runDebugChangedScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [1, 2]
+    },
+    {
+      "export": "runDebugAddedScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [1, 2]
+    },
+    {
+      "export": "runDebugRemovedScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
     }
   ]
 }

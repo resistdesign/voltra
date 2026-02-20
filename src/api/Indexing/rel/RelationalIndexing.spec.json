@@ -2,126 +2,189 @@
   "file": "./RelationalIndexing.test-utils.ts",
   "tests": [
     {
-      "export": "runRelationalIndexingScenario",
+      "export": "runRelationalIndexingOutgoingPage1Scenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "outgoingPage1": {
-          "edges": [
-            {
-              "key": {
-                "from": "a",
-                "to": "b",
-                "relation": "owns"
-              },
-              "metadata": {
-                "weight": 1
-              }
+        "edges": [
+          {
+            "key": {
+              "from": "a",
+              "to": "b",
+              "relation": "owns"
+            },
+            "metadata": {
+              "weight": 1
             }
-          ],
-          "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwibGFzdElkIjoiYiJ9"
-        },
-        "outgoingPage2": {
-          "edges": [
-            {
-              "key": {
-                "from": "a",
-                "to": "c",
-                "relation": "owns"
-              },
-              "metadata": {
-                "weight": 2
-              }
-            }
-          ]
-        },
-        "incomingPage": {
-          "edges": [
-            {
-              "key": {
-                "from": "a",
-                "to": "b",
-                "relation": "owns"
-              },
-              "metadata": {
-                "weight": 1
-              }
-            }
-          ]
-        },
-        "relationalCursor": "eyJ2IjoxLCJ0IjoicmVsIiwibGFzdElkIjoiYiIsImNvbnRpbnVhdGlvblRva2VuIjoidG9rZW4tMSJ9",
-        "relationalCursorDecoded": {
-          "lastId": "b",
-          "continuationToken": "token-1"
-        },
-        "ddbSchema": {
-          "partitionKey": "edgeKey",
-          "sortKey": "otherId",
-          "metadataAttribute": "metadata"
-        },
-        "ddbKey": {
-          "edgeKey": "a\u0000owns\u0000out",
-          "otherId": "b"
-        },
-        "ddbItem": {
-          "edgeKey": "a\u0000owns\u0000out",
-          "otherId": "b",
-          "metadata": {
-            "weight": 1
           }
-        },
-        "ddbPartitionKey": "a\u0000owns\u0000out",
-        "ddbPage1": {
-          "edges": [
-            {
-              "key": {
-                "from": "a",
-                "to": "b",
-                "relation": "owns"
-              },
-              "metadata": {
-                "weight": 1
-              }
+        ],
+        "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwibGFzdElkIjoiYiJ9"
+      }
+    },
+    {
+      "export": "runRelationalIndexingOutgoingPage2Scenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edges": [
+          {
+            "key": {
+              "from": "a",
+              "to": "c",
+              "relation": "owns"
+            },
+            "metadata": {
+              "weight": 2
             }
-          ],
-          "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwiY29udGludWF0aW9uVG9rZW4iOiJ7XCJlZGdlS2V5XCI6XCJhXFx1MDAwMG93bnNcXHUwMDAwb3V0XCIsXCJvdGhlcklkXCI6XCJiXCJ9In0"
-        },
-        "ddbPage2": {
-          "edges": [
-            {
-              "key": {
-                "from": "a",
-                "to": "c",
-                "relation": "owns"
-              },
-              "metadata": {
-                "weight": 2
-              }
+          }
+        ]
+      }
+    },
+    {
+      "export": "runRelationalIndexingIncomingPageScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edges": [
+          {
+            "key": {
+              "from": "a",
+              "to": "b",
+              "relation": "owns"
+            },
+            "metadata": {
+              "weight": 1
             }
-          ]
-        },
-        "ddbAfterRemove": {
-          "edges": [
-            {
-              "key": {
-                "from": "a",
-                "to": "c",
-                "relation": "owns"
-              },
-              "metadata": {
-                "weight": 2
-              }
-            }
-          ]
-        },
-        "handlerPut": {
-          "statusCode": 200,
-          "body": "{\"ok\":true}"
-        },
-        "handlerQuery": {
-          "statusCode": 200,
-          "body": "{\"edges\":[{\"key\":{\"from\":\"x\",\"to\":\"y\",\"relation\":\"likes\"}}]}"
+          }
+        ]
+      }
+    },
+    {
+      "export": "runRelationalIndexingCursorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "eyJ2IjoxLCJ0IjoicmVsIiwibGFzdElkIjoiYiIsImNvbnRpbnVhdGlvblRva2VuIjoidG9rZW4tMSJ9"
+    },
+    {
+      "export": "runRelationalIndexingCursorDecodedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "lastId": "b",
+        "continuationToken": "token-1"
+      }
+    },
+    {
+      "export": "runRelationalIndexingDdbSchemaScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "partitionKey": "edgeKey",
+        "sortKey": "otherId",
+        "metadataAttribute": "metadata"
+      }
+    },
+    {
+      "export": "runRelationalIndexingDdbKeyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edgeKey": "a\u0000owns\u0000out",
+        "otherId": "b"
+      }
+    },
+    {
+      "export": "runRelationalIndexingDdbItemScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edgeKey": "a\u0000owns\u0000out",
+        "otherId": "b",
+        "metadata": {
+          "weight": 1
         }
+      }
+    },
+    {
+      "export": "runRelationalIndexingDdbPartitionKeyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "a\u0000owns\u0000out"
+    },
+    {
+      "export": "runRelationalIndexingDdbPage1Scenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edges": [
+          {
+            "key": {
+              "from": "a",
+              "to": "b",
+              "relation": "owns"
+            },
+            "metadata": {
+              "weight": 1
+            }
+          }
+        ],
+        "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwiY29udGludWF0aW9uVG9rZW4iOiJ7XCJlZGdlS2V5XCI6XCJhXFx1MDAwMG93bnNcXHUwMDAwb3V0XCIsXCJvdGhlcklkXCI6XCJiXCJ9In0"
+      }
+    },
+    {
+      "export": "runRelationalIndexingDdbPage2Scenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edges": [
+          {
+            "key": {
+              "from": "a",
+              "to": "c",
+              "relation": "owns"
+            },
+            "metadata": {
+              "weight": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "export": "runRelationalIndexingDdbAfterRemoveScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "edges": [
+          {
+            "key": {
+              "from": "a",
+              "to": "c",
+              "relation": "owns"
+            },
+            "metadata": {
+              "weight": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "export": "runRelationalIndexingHandlerPutScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "body": "{\"ok\":true}"
+      }
+    },
+    {
+      "export": "runRelationalIndexingHandlerQueryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "body": "{\"edges\":[{\"key\":{\"from\":\"x\",\"to\":\"y\",\"relation\":\"likes\"}}]}"
       }
     }
   ]

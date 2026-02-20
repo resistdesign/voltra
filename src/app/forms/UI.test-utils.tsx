@@ -7,6 +7,11 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptor,
+  getNoErrorDescriptor,
+} from "../../common/TypeParsing/Validation";
 import type {
   AutoFieldProps,
   FormController,
@@ -25,7 +30,14 @@ const createController = (
     errors: {},
     fields: [],
     setFieldValue: () => {},
-    validate: () => validateResult,
+    validate: () => ({
+      typeName: "__TEST__",
+      valid: validateResult,
+      error: validateResult
+        ? getNoErrorDescriptor()
+        : getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_TYPE),
+      errorMap: {},
+    }),
     setErrors: () => {},
     ...options,
   };
@@ -84,7 +96,12 @@ export const runSharedSubmitValidationScenario = () => {
   const invalidController = createController({
     validate: () => {
       invalidValidateCalls += 1;
-      return false;
+      return {
+        typeName: "__TEST__",
+        valid: false,
+        error: getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_TYPE),
+        errorMap: {},
+      };
     },
     values: { name: "invalid" },
   });
@@ -106,7 +123,12 @@ export const runSharedSubmitValidationScenario = () => {
   const validController = createController({
     validate: () => {
       validValidateCalls += 1;
-      return true;
+      return {
+        typeName: "__TEST__",
+        valid: true,
+        error: getNoErrorDescriptor(),
+        errorMap: {},
+      };
     },
     values: { name: "valid" },
   });
@@ -227,7 +249,12 @@ export const runSharedSuitePrimitiveUsageScenario = () => {
   let submitCalls = 0;
 
   const controller = createController({
-    validate: () => true,
+    validate: () => ({
+      typeName: "__TEST__",
+      valid: true,
+      error: getNoErrorDescriptor(),
+      errorMap: {},
+    }),
     values: { title: "Hello" },
   });
 

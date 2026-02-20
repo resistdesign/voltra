@@ -2,19 +2,52 @@
   "file": "./getSimpleId.test-utils.ts",
   "tests": [
     {
-      "export": "runGetSimpleIdScenario",
+      "export": "runGetSimpleIdFirstIdScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "firstId": "0-MjAyMC0wMS0wMVQwMDowMDowMC4wMDBa-4fzzzxjylrx-4fzzzxjylrx",
-        "secondId": "1-MjAyMC0wMS0wMVQwMDowMDowMC4wMDBa-4fzzzxjylrx-4fzzzxjylrx",
-        "firstCounter": "0",
-        "secondCounter": "1",
-        "decodedTimestamp": "2020-01-01T00:00:00.000Z",
-        "rand1": "4fzzzxjylrx",
-        "rand2": "4fzzzxjylrx",
-        "expectedRand": "4fzzzxjylrx"
-      }
+      "operation": "===",
+      "expectation": "0-MjAyMC0wMS0wMVQwMDowMDowMC4wMDBa-4fzzzxjylrx-4fzzzxjylrx"
+    },
+    {
+      "export": "runGetSimpleIdSecondIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "1-MjAyMC0wMS0wMVQwMDowMDowMC4wMDBa-4fzzzxjylrx-4fzzzxjylrx"
+    },
+    {
+      "export": "runGetSimpleIdFirstCounterScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "0"
+    },
+    {
+      "export": "runGetSimpleIdSecondCounterScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "1"
+    },
+    {
+      "export": "runGetSimpleIdDecodedTimestampScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "2020-01-01T00:00:00.000Z"
+    },
+    {
+      "export": "runGetSimpleIdRand1Scenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "4fzzzxjylrx"
+    },
+    {
+      "export": "runGetSimpleIdRand2Scenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "4fzzzxjylrx"
+    },
+    {
+      "export": "runGetSimpleIdExpectedRandScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "4fzzzxjylrx"
     }
   ]
 }

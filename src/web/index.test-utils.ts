@@ -15,3 +15,9 @@ export const runWebIndexScenario = () => {
     hasUtils: "Utils" in Web,
   };
 };
+
+export const runWebIndexHasFormsScenario = async () =>
+  (await runWebIndexScenario()).hasForms;
+
+export const runWebIndexHasUtilsScenario = async () =>
+  (await runWebIndexScenario()).hasUtils;

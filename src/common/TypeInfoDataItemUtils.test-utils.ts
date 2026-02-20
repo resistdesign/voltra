@@ -1,7 +1,7 @@
 import { getDefaultValueInfo } from "./TypeInfoDataItemUtils";
 import { TypeInfoField } from "./TypeParsing/TypeInfo";
 
-export const runTypeInfoDataItemUtilsScenario = () => {
+const getTypeInfoDataItemUtilsScenarioFields = () => {
   const stringField: TypeInfoField = {
     type: "string",
     array: false,
@@ -83,12 +83,33 @@ export const runTypeInfoDataItemUtilsScenario = () => {
   };
 
   return {
-    stringDefault: getDefaultValueInfo(stringField),
-    numberDefault: getDefaultValueInfo(numberField),
-    booleanDefault: getDefaultValueInfo(booleanField),
-    arrayDefault: getDefaultValueInfo(arrayField),
-    rawArrayDefault: getDefaultValueInfo(rawArrayField),
-    noDefault: getDefaultValueInfo(noDefaultField),
-    referenceDefault: getDefaultValueInfo(referenceField),
+    stringField,
+    numberField,
+    booleanField,
+    arrayField,
+    rawArrayField,
+    noDefaultField,
+    referenceField,
   };
 };
+
+export const runTypeInfoDataItemUtilsStringDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().stringField);
+
+export const runTypeInfoDataItemUtilsNumberDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().numberField);
+
+export const runTypeInfoDataItemUtilsBooleanDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().booleanField);
+
+export const runTypeInfoDataItemUtilsArrayDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().arrayField);
+
+export const runTypeInfoDataItemUtilsRawArrayDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().rawArrayField);
+
+export const runTypeInfoDataItemUtilsNoDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().noDefaultField);
+
+export const runTypeInfoDataItemUtilsReferenceDefaultScenario = () =>
+  getDefaultValueInfo(getTypeInfoDataItemUtilsScenarioFields().referenceField);

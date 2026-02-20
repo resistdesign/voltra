@@ -57,7 +57,7 @@ const getTypeInfoFromPickOmitFieldFilters = (
                 ? omitFieldNames.includes(field)
                 : !omitFieldNames.includes(field),
             ),
-          )
+          ).filter((fieldSet) => fieldSet.length > 0)
         : undefined;
 
       typeInfo = {
@@ -119,7 +119,7 @@ const getTypeInfoFromExcludeFieldFilter = (
         const cleanUnionFieldSets = existingUnionFieldSets
           ? existingUnionFieldSets.map((fieldSet) =>
               fieldSet.filter((field) => !excludeFieldNames.includes(field)),
-            )
+            ).filter((fieldSet) => fieldSet.length > 0)
           : undefined;
 
         typeInfo = {

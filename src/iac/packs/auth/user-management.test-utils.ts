@@ -120,3 +120,15 @@ export const runUserManagementPackScenario = () => {
     customProviderSummary,
   };
 };
+
+export const runUserManagementPackMinimalSummaryScenario = async () =>
+  (await runUserManagementPackScenario()).minimalSummary;
+
+export const runUserManagementPackApiSummaryScenario = async () =>
+  (await runUserManagementPackScenario()).apiSummary;
+
+export const runUserManagementPackNoDomainSummaryScenario = async () =>
+  (await runUserManagementPackScenario()).noDomainSummary;
+
+export const runUserManagementPackCustomProviderSummaryScenario = async () =>
+  (await runUserManagementPackScenario()).customProviderSummary;

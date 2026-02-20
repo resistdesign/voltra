@@ -6,7 +6,7 @@ const loadAppModule = async (specifier: string) => {
   return import(moduleUrl.href);
 };
 
-export const runAppIndexScenario = async () => {
+const runAppIndexScenario = async () => {
   const originalWindow = (globalThis as any).window;
   const originalCustomEvent = (globalThis as any).CustomEvent;
   const { windowMock } = buildWindowMock("/app");
@@ -43,3 +43,42 @@ export const runAppIndexScenario = async () => {
     hasTypeInfoORMAPI: "useTypeInfoORMAPI" in AppUtils,
   };
 };
+
+export const runAppIndexHasUtilsNamespaceScenario = async () =>
+  (await runAppIndexScenario()).hasUtilsNamespace;
+
+export const runAppIndexHasFormsNamespaceScenario = async () =>
+  (await runAppIndexScenario()).hasFormsNamespace;
+
+export const runAppIndexHasParseTemplateTopLevelScenario = async () =>
+  (await runAppIndexScenario()).hasParseTemplateTopLevel;
+
+export const runAppIndexHasComputeTrackPixelsTopLevelScenario = async () =>
+  (await runAppIndexScenario()).hasComputeTrackPixelsTopLevel;
+
+export const runAppIndexHasCreateFormRendererTopLevelScenario = async () =>
+  (await runAppIndexScenario()).hasCreateFormRendererTopLevel;
+
+export const runAppIndexHasUseApplicationStateLoaderTopLevelScenario = async () =>
+  (await runAppIndexScenario()).hasUseApplicationStateLoaderTopLevel;
+
+export const runAppIndexHasUseControllerScenario = async () =>
+  (await runAppIndexScenario()).hasUseController;
+
+export const runAppIndexHasTypeInfoORMClientScenario = async () =>
+  (await runAppIndexScenario()).hasTypeInfoORMClient;
+
+export const runAppIndexHasRouteScenario = async () =>
+  (await runAppIndexScenario()).hasRoute;
+
+export const runAppIndexHasApplicationStateScenario = async () =>
+  (await runAppIndexScenario()).hasApplicationState;
+
+export const runAppIndexHasApplicationStateLoaderScenario = async () =>
+  (await runAppIndexScenario()).hasApplicationStateLoader;
+
+export const runAppIndexHasServiceScenario = async () =>
+  (await runAppIndexScenario()).hasService;
+
+export const runAppIndexHasTypeInfoORMAPIScenario = async () =>
+  (await runAppIndexScenario()).hasTypeInfoORMAPI;

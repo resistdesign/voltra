@@ -110,3 +110,12 @@ export const runAuthPackScenario = () => {
     },
   };
 };
+
+export const runAuthPackWithDomainSummaryScenario = async () =>
+  (await runAuthPackScenario()).withDomainSummary;
+
+export const runAuthPackWithCustomProvidersSummaryScenario = async () =>
+  (await runAuthPackScenario()).withCustomProvidersSummary;
+
+export const runAuthPackWithoutDomainSummaryScenario = async () =>
+  (await runAuthPackScenario()).withoutDomainSummary;

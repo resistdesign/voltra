@@ -2,14 +2,34 @@
   "file": "./Route.test-utils.tsx",
   "tests": [
     {
-      "export": "runRouteScenario",
+      "export": "runRouteHasRouteExportScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "defaultContextRender": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;&quot;,&quot;params&quot;:{},&quot;isTopLevel&quot;:true,&quot;adapter&quot;:{}}</span>",
-        "nestedRouteRender": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;\\&quot;app\\&quot;/\\&quot;books\\&quot;/\\&quot;:id\\&quot;&quot;,&quot;params&quot;:{&quot;id&quot;:42},&quot;isTopLevel&quot;:false,&quot;adapter&quot;:{}}</span>",
-        "exactMismatchRender": ""
-      }
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runRouteHasRouteProviderExportScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runRouteDefaultContextRenderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;&quot;,&quot;params&quot;:{},&quot;isTopLevel&quot;:true,&quot;adapter&quot;:{}}</span>"
+    },
+    {
+      "export": "runRouteNestedRouteRenderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;\\&quot;app\\&quot;/\\&quot;books\\&quot;/\\&quot;:id\\&quot;&quot;,&quot;params&quot;:{&quot;id&quot;:42},&quot;isTopLevel&quot;:false,&quot;adapter&quot;:{}}</span>"
+    },
+    {
+      "export": "runRouteExactMismatchRenderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": ""
     }
   ]
 }

@@ -8,7 +8,7 @@ import {
   encodeTokenKey,
 } from "./Schema";
 
-export const runFullTextMemoryBackendScenario = async () => {
+const runFullTextMemoryBackendScenario = async () => {
   const backend = new FullTextMemoryBackend();
 
   await backend.addLossyPosting("hello", "text", "doc-1");
@@ -79,3 +79,39 @@ export const runFullTextMemoryBackendScenario = async () => {
     },
   };
 };
+
+export const runFullTextMemoryBackendLossyAllScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).lossyAll;
+
+export const runFullTextMemoryBackendLossyPageScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).lossyPage;
+
+export const runFullTextMemoryBackendExactDoc1Scenario = async () =>
+  (await runFullTextMemoryBackendScenario()).exactDoc1;
+
+export const runFullTextMemoryBackendExactBatchScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).exactBatch;
+
+export const runFullTextMemoryBackendTokenStatsScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).tokenStats;
+
+export const runFullTextMemoryBackendTokenStatsMissingScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).tokenStatsMissing;
+
+export const runFullTextMemoryBackendHasDocTokenScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).hasDocToken;
+
+export const runFullTextMemoryBackendHasDocTokenMissingScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).hasDocTokenMissing;
+
+export const runFullTextMemoryBackendBatchHasScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).batchHas;
+
+export const runFullTextMemoryBackendLossyAfterRemoveScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).lossyAfterRemove;
+
+export const runFullTextMemoryBackendExactAfterRemoveScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).exactAfterRemove;
+
+export const runFullTextMemoryBackendSchemaScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).schema;

@@ -115,6 +115,26 @@ export type SupportedFieldTags = Partial<{
    * Operations that will be denied at the field level.
    * */
   deniedOperations: DeniedOperations;
+  /**
+   * Validation behavior overrides for field processing.
+   * */
+  validation: Partial<{
+    /**
+     * Whether hidden fields should be validated.
+     * Defaults to false for data-item validation flows that opt into field-level behavior.
+     */
+    validateHidden: boolean;
+    /**
+     * Whether readonly fields should enforce required-value checks.
+     * Defaults to false for data-item validation flows that opt into field-level behavior.
+     */
+    validateReadonly: boolean;
+    /**
+     * Whether empty arrays are accepted for required array fields.
+     * Defaults to false.
+     */
+    emptyArrayIsValid: boolean;
+  }>;
 }>;
 
 /**

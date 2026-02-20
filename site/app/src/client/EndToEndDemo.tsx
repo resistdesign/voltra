@@ -510,7 +510,7 @@ export const EndToEndDemo: FC = () => {
     });
   }, [deleteRelationship, relatedCarId, selectedPersonId, withPending]);
 
-  const addFilter = () => {
+  const addFilter = useCallback(() => {
     setFilters((prev) => [
       ...prev,
       {
@@ -520,19 +520,58 @@ export const EndToEndDemo: FC = () => {
         value: "",
       },
     ]);
-  };
+  }, []);
 
-  const updateFilter = (id: string, updates: Partial<SearchFilter>) => {
+  const updateFilter = useCallback((id: string, updates: Partial<SearchFilter>) => {
     setFilters((prev) =>
       prev.map((filter) =>
         filter.id === id ? { ...filter, ...updates } : filter,
       ),
     );
-  };
+  }, []);
 
-  const removeFilter = (id: string) => {
+  const removeFilter = useCallback((id: string) => {
     setFilters((prev) => prev.filter((filter) => filter.id !== id));
-  };
+  }, []);
+
+  const handleGoToPeople = useCallback(
+    () => dispatch({ type: "goToPeopleList" }),
+    [dispatch],
+  );
+
+  const handleExitRelate = useCallback(
+    () => dispatch({ type: "exitRelateBackToPerson" }),
+    [dispatch],
+  );
+
+  const handleRefreshPeople = useCallback(() => {
+    void refreshPeople();
+  }, [refreshPeople]);
+
+  const handleNextPeoplePage = useCallback(() => {
+    void refreshPeople(personListCursor);
+  }, [personListCursor, refreshPeople]);
+
+  const handleSelectPerson = useCallback(
+    async (personId: string) => {
+      await loadPerson(personId);
+      dispatch({ type: "enterPersonDetail", personId });
+    },
+    [dispatch, loadPerson],
+  );
+
+  const handleStartCreatePerson = useCallback(
+    () => dispatch({ type: "startCreatePerson" }),
+    [dispatch],
+  );
+
+  const handleStartRelate = useCallback(() => {
+    if (!selectedPersonId) {
+      return;
+    }
+
+    dispatch({ type: "startRelateCar", personId: selectedPersonId });
+  }, [dispatch, selectedPersonId]);
 
   const screen = getActiveScreen(demoState);
   const personLabel = formatPersonLabel(selectedPerson, selectedPersonId);
@@ -572,8 +611,8 @@ export const EndToEndDemo: FC = () => {
         personLabel={personLabel}
         showPerson={showPerson}
         isRelating={isRelating}
-        onGoToPeople={() => dispatch({ type: "goToPeopleList" })}
-        onExitRelate={() => dispatch({ type: "exitRelateBackToPerson" })}
+        onGoToPeople={handleGoToPeople}
+        onExitRelate={handleExitRelate}
       />
 
       {screen === "PeopleHome" && (
@@ -583,13 +622,10 @@ export const EndToEndDemo: FC = () => {
           personListCursor={personListCursor}
           isLoading={isPeopleLoading}
           onItemsPerPageChange={setPersonItemsPerPage}
-          onRefresh={() => refreshPeople()}
-          onNextPage={() => refreshPeople(personListCursor)}
-          onSelectPerson={async (personId) => {
-            await loadPerson(personId);
-            dispatch({ type: "enterPersonDetail", personId });
-          }}
-          onStartCreate={() => dispatch({ type: "startCreatePerson" })}
+          onRefresh={handleRefreshPeople}
+          onNextPage={handleNextPeoplePage}
+          onSelectPerson={handleSelectPerson}
+          onStartCreate={handleStartCreatePerson}
         />
       )}
 
@@ -599,7 +635,7 @@ export const EndToEndDemo: FC = () => {
           personCreateKey={personCreateKey}
           isSaving={isPersonCreating}
           onCreate={handleCreatePerson}
-          onBack={() => dispatch({ type: "goToPeopleList" })}
+          onBack={handleGoToPeople}
         />
       )}
 
@@ -612,13 +648,9 @@ export const EndToEndDemo: FC = () => {
           isDeleting={isPersonDeleting}
           onUpdate={handleUpdatePerson}
           onDelete={handleDeletePerson}
-          onStartRelate={() =>
-            dispatch({ type: "startRelateCar", personId: selectedPersonId })
-          }
-          onBack={() => dispatch({ type: "goToPeopleList" })}
-          onRelationAction={() =>
-            dispatch({ type: "startRelateCar", personId: selectedPersonId })
-          }
+          onStartRelate={handleStartRelate}
+          onBack={handleGoToPeople}
+          onRelationAction={handleStartRelate}
         />
       )}
 
@@ -657,7 +689,7 @@ export const EndToEndDemo: FC = () => {
           onRemoveFilter={removeFilter}
           onCarItemsPerPageChange={setCarItemsPerPage}
           onRunSearch={runCarSearch}
-          onBack={() => dispatch({ type: "exitRelateBackToPerson" })}
+          onBack={handleExitRelate}
         />
       )}
 

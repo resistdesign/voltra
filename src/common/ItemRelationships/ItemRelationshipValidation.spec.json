@@ -2,43 +2,61 @@
   "file": "./ItemRelationshipValidation.test-utils.ts",
   "tests": [
     {
-      "export": "runItemRelationshipValidationScenario",
+      "export": "runItemRelationshipValidationValidResultScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "validResult": {
-          "typeName": "Book",
-          "valid": true,
-          "error": "",
-          "errorMap": {}
-        },
-        "missingFieldResult": {
-          "typeName": "Book",
-          "valid": false,
-          "error": "INVALID_RELATIONSHIP_ITEM",
-          "errorMap": {
-            "toTypePrimaryFieldValue": ["MISSING_RELATIONSHIP_ITEM_FIELD"]
-          }
-        },
-        "omittedFieldResult": {
-          "typeName": "Book",
-          "valid": true,
-          "error": "",
-          "errorMap": {}
-        },
-        "omittedFieldErrorResult": {
-          "typeName": "Book",
-          "valid": false,
-          "error": "INVALID_RELATIONSHIP_ITEM",
-          "errorMap": {
-            "toTypePrimaryFieldValue": ["INVALID_RELATIONSHIP_ITEM_FIELD"]
-          }
-        },
-        "expectedErrors": {
-          "INVALID_RELATIONSHIP_ITEM": "INVALID_RELATIONSHIP_ITEM",
-          "INVALID_RELATIONSHIP_ITEM_FIELD": "INVALID_RELATIONSHIP_ITEM_FIELD",
-          "MISSING_RELATIONSHIP_ITEM_FIELD": "MISSING_RELATIONSHIP_ITEM_FIELD"
+        "typeName": "Book",
+        "valid": true,
+        "error": "",
+        "errorMap": {}
+      }
+    },
+    {
+      "export": "runItemRelationshipValidationMissingFieldResultScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Book",
+        "valid": false,
+        "error": "INVALID_RELATIONSHIP_ITEM",
+        "errorMap": {
+          "toTypePrimaryFieldValue": ["MISSING_RELATIONSHIP_ITEM_FIELD"]
         }
+      }
+    },
+    {
+      "export": "runItemRelationshipValidationOmittedFieldResultScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Book",
+        "valid": true,
+        "error": "",
+        "errorMap": {}
+      }
+    },
+    {
+      "export": "runItemRelationshipValidationOmittedFieldErrorResultScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Book",
+        "valid": false,
+        "error": "INVALID_RELATIONSHIP_ITEM",
+        "errorMap": {
+          "toTypePrimaryFieldValue": ["INVALID_RELATIONSHIP_ITEM_FIELD"]
+        }
+      }
+    },
+    {
+      "export": "runItemRelationshipValidationExpectedErrorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "INVALID_RELATIONSHIP_ITEM": "INVALID_RELATIONSHIP_ITEM",
+        "INVALID_RELATIONSHIP_ITEM_FIELD": "INVALID_RELATIONSHIP_ITEM_FIELD",
+        "MISSING_RELATIONSHIP_ITEM_FIELD": "MISSING_RELATIONSHIP_ITEM_FIELD"
       }
     }
   ]

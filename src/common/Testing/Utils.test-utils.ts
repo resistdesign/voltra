@@ -1,45 +1,52 @@
 import { TestComparisonOperation } from "./Types";
 import { compare, mergeTestResults, OPERATIONS } from "./Utils";
 
-export const runTestingUtilsScenario = () => {
-  const equalsResult = compare(1, 1, TestComparisonOperation.EQUALS);
-  const notEqualsResult = compare(1, 2, TestComparisonOperation.NOT_EQUALS);
-  const inResult = compare("a", ["a", "b"], TestComparisonOperation.IN);
-  const betweenResult = compare(5, [1, 10], TestComparisonOperation.BETWEEN);
-  const containsResult = compare(
-    "hello world",
-    "world",
-    TestComparisonOperation.CONTAINS,
-  );
-  const regexResult = compare(
+export const runTestingUtilsEqualsResultScenario = () =>
+  compare(1, 1, TestComparisonOperation.EQUALS);
+
+export const runTestingUtilsNotEqualsResultScenario = () =>
+  compare(1, 2, TestComparisonOperation.NOT_EQUALS);
+
+export const runTestingUtilsInResultScenario = () =>
+  compare("a", ["a", "b"], TestComparisonOperation.IN);
+
+export const runTestingUtilsBetweenResultScenario = () =>
+  compare(5, [1, 10], TestComparisonOperation.BETWEEN);
+
+export const runTestingUtilsContainsResultScenario = () =>
+  compare("hello world", "world", TestComparisonOperation.CONTAINS);
+
+export const runTestingUtilsRegexResultScenario = () =>
+  compare(
     "alpha-123",
     { pattern: "^alpha-\\d+$" },
     TestComparisonOperation.REGEX,
   );
-  const extRegexResult = compare(
+
+export const runTestingUtilsExtRegexResultScenario = () =>
+  compare(
     "alpha-123",
     {
       pattern: [{ value: "alpha-" }, { value: "\\d+", escaped: false }],
     },
     TestComparisonOperation.EXT_REGEX,
   );
-  const deepEqualsResult = compare(
+
+export const runTestingUtilsDeepEqualsResultScenario = () =>
+  compare(
     { a: 1, b: { c: 2 } },
     { a: 1, b: { c: 2 } },
     TestComparisonOperation.DEEP_EQUALS,
   );
-  const arrayContainsResult = compare(
-    ["x", "y"],
-    "y",
-    TestComparisonOperation.ARRAY_CONTAINS,
-  );
-  const arrayEqualsResult = compare(
-    [1, 2, 3],
-    [1, 2, 3],
-    TestComparisonOperation.ARRAY_EQUALS,
-  );
 
-  const merged = mergeTestResults(
+export const runTestingUtilsArrayContainsResultScenario = () =>
+  compare(["x", "y"], "y", TestComparisonOperation.ARRAY_CONTAINS);
+
+export const runTestingUtilsArrayEqualsResultScenario = () =>
+  compare([1, 2, 3], [1, 2, 3], TestComparisonOperation.ARRAY_EQUALS);
+
+export const runTestingUtilsMergedScenario = () =>
+  mergeTestResults(
     {
       messages: ["m1"],
       passes: ["p1"],
@@ -50,18 +57,5 @@ export const runTestingUtilsScenario = () => {
     },
   );
 
-  return {
-    equalsResult,
-    notEqualsResult,
-    inResult,
-    betweenResult,
-    containsResult,
-    regexResult,
-    extRegexResult,
-    deepEqualsResult,
-    arrayContainsResult,
-    arrayEqualsResult,
-    merged,
-    operationKeys: Object.keys(OPERATIONS).sort(),
-  };
-};
+export const runTestingUtilsOperationKeysScenario = () =>
+  Object.keys(OPERATIONS).sort();

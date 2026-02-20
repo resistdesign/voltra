@@ -202,8 +202,9 @@ export const useTypeInfoORMAPI = (
   const api = useMemo<TypeInfoORMServiceAPI>(() => {
     const apiBase: Partial<TypeInfoORMServiceAPI> = {};
 
-    for (const aM in typeInfoORMAPI) {
-      const methodName = aM as keyof TypeInfoORMClientAPI;
+    for (const methodName of Object.keys(typeInfoORMAPI) as Array<
+      keyof TypeInfoORMClientAPI
+    >) {
 
       apiBase[methodName] = requestHandlerFactory(
         typeInfoORMAPI,

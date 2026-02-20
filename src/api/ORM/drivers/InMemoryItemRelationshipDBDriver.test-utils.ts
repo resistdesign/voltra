@@ -27,7 +27,7 @@ const buildRelationship = (
   toTypePrimaryFieldValue,
 });
 
-export const runInMemoryRelationshipDriverScenario = async () => {
+const runInMemoryRelationshipDriverScenario = async () => {
   const driver = buildDriver();
 
   const rel1 = buildRelationship("User", "favoritePost", "user-1", "post-1");
@@ -129,3 +129,27 @@ export const runInMemoryRelationshipDriverScenario = async () => {
     invalidCursorError,
   };
 };
+
+export const runInMemoryRelationshipDriverCreatedIdsScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).createdIds;
+
+export const runInMemoryRelationshipDriverListFavoriteIdsScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).listFavoriteIds;
+
+export const runInMemoryRelationshipDriverPage1IdsScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).page1Ids;
+
+export const runInMemoryRelationshipDriverPage2IdsScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).page2Ids;
+
+export const runInMemoryRelationshipDriverAfterUpdateScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).afterUpdate;
+
+export const runInMemoryRelationshipDriverDeleteResultScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).deleteResult;
+
+export const runInMemoryRelationshipDriverRemainingFavoriteIdsScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).remainingFavoriteIds;
+
+export const runInMemoryRelationshipDriverInvalidCursorErrorScenario = async () =>
+  (await runInMemoryRelationshipDriverScenario()).invalidCursorError;

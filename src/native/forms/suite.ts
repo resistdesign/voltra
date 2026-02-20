@@ -11,6 +11,7 @@ import type {
   LiteralValue,
   TypeInfoField,
 } from "../../common/TypeParsing/TypeInfo";
+import { ERROR_MESSAGE_CONSTANTS } from "../../common/TypeParsing/Validation";
 import type {
   ComponentSuite,
   FieldRenderContext,
@@ -53,8 +54,34 @@ const formatCustomValue = (val: unknown) => {
   return JSON.stringify(val, null, 2);
 };
 
-const renderRelationSingle = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+const renderErrorMessage = (context: FieldRenderContext) => {
+  const { error, errors = [], translateValidationErrorCode } = context;
+  const descriptors = (errors.length ? errors : error ? [error] : []).filter(
+    (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+  );
+
+  if (!descriptors.length) {
+    return null;
+  }
+
+  return createElement(
+    View,
+    { style: { gap: 4 } },
+    descriptors.map((descriptor, index) => {
+      const message = translateValidationErrorCode(descriptor);
+      if (!message) {
+        return null;
+      }
+      return createElement(
+        ErrorMessage,
+        { key: `${descriptor.code}-${index}`, children: message },
+      );
+    }),
+  );
+};
+
+const RelationSingleField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
 
   return createElement(
@@ -79,12 +106,12 @@ const renderRelationSingle = (context: FieldRenderContext) => {
           "Manage",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderRelationArray = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+const RelationArrayField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
 
   return createElement(
@@ -109,12 +136,12 @@ const renderRelationArray = (context: FieldRenderContext) => {
           "Manage",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderCustomSingle = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const CustomSingleField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
 
@@ -141,12 +168,12 @@ const renderCustomSingle = (context: FieldRenderContext) => {
           "Manage",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderCustomArray = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const CustomArrayField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
   const arrayValue = Array.isArray(context.value) ? context.value : [];
@@ -228,12 +255,12 @@ const renderCustomArray = (context: FieldRenderContext) => {
           "Add Item",
         )
       : null,
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderArray = (context: FieldRenderContext<ReactElement>) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const ArrayField = (context: FieldRenderContext<ReactElement>) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
     ? [...(context.value as LiteralValue[])]
@@ -262,6 +289,14 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
                 newValue[index] = newItem as LiteralValue;
                 context.onChange(newValue);
               },
+              errors: context.arrayItemErrorMap?.[index] ?? [],
+              error:
+                context.arrayItemErrorMap?.[index]?.find(
+                  (descriptor) =>
+                    descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+                ) ?? undefined,
+              translateValidationErrorCode:
+                context.translateValidationErrorCode,
               disabled,
             }),
           ),
@@ -295,12 +330,12 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
         "Add Item",
       ),
     ),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderString = (context: FieldRenderContext) => {
-  const { label, required, disabled, error } = context;
+const StringField = (context: FieldRenderContext) => {
+  const { label, required, disabled } = context;
 
   return createElement(
     FieldWrapper,
@@ -312,12 +347,12 @@ const renderString = (context: FieldRenderContext) => {
       editable: !disabled,
       placeholder: label,
     }),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderNumber = (context: FieldRenderContext) => {
-  const { label, required, disabled, error } = context;
+const NumberField = (context: FieldRenderContext) => {
+  const { label, required, disabled } = context;
 
   return createElement(
     FieldWrapper,
@@ -331,12 +366,12 @@ const renderNumber = (context: FieldRenderContext) => {
       keyboardType: "numeric",
       placeholder: label,
     }),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderBoolean = (context: FieldRenderContext) => {
-  const { label, disabled, error } = context;
+const BooleanField = (context: FieldRenderContext) => {
+  const { label, disabled } = context;
 
   return createElement(
     FieldWrapper,
@@ -351,12 +386,12 @@ const renderBoolean = (context: FieldRenderContext) => {
       }),
       createElement(Text, null, label),
     ),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
-const renderEnumSelect = (context: FieldRenderContext) => {
-  const { field, label, required, disabled, error } = context;
+const EnumSelectField = (context: FieldRenderContext) => {
+  const { field, label, required, disabled } = context;
   const selectableValues = getSelectableValues(context.possibleValues) ?? [];
 
   return createElement(
@@ -381,7 +416,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
         ),
       ),
     ),
-    error ? createElement(ErrorMessage, null, error) : null,
+    renderErrorMessage(context),
   );
 };
 
@@ -424,15 +459,15 @@ const SuiteButton = ({
  */
 export const nativeSuite: ComponentSuite<ReactElement> = {
   renderers: {
-    string: renderString,
-    number: renderNumber,
-    boolean: renderBoolean,
-    enum_select: renderEnumSelect,
-    array: renderArray,
-    relation_single: renderRelationSingle,
-    relation_array: renderRelationArray,
-    custom_single: renderCustomSingle,
-    custom_array: renderCustomArray,
+    string: StringField,
+    number: NumberField,
+    boolean: BooleanField,
+    enum_select: EnumSelectField,
+    array: ArrayField,
+    relation_single: RelationSingleField,
+    relation_array: RelationArrayField,
+    custom_single: CustomSingleField,
+    custom_array: CustomArrayField,
   },
   primitives: {
     FormRoot,

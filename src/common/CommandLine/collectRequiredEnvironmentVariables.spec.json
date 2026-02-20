@@ -2,17 +2,25 @@
   "file": "./collectRequiredEnvironmentVariables.test-utils.ts",
   "tests": [
     {
-      "export": "runCollectRequiredEnvironmentVariablesScenario",
+      "export": "runCollectRequiredEnvironmentVariablesCollectedScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "collected": {
-          "VOLTRA_A": "alpha",
-          "VOLTRA_B": "bravo"
-        },
-        "missingThrown": true,
-        "missingMessage": "\n┌──────────────────────────────────┐\n│   ⚠  ENVIRONMENT CHECK FAILED    │\n└──────────────────────────────────┘\n\nMissing Required Environment Variables:\n\n- VOLTRA_B\n"
+        "VOLTRA_A": "alpha",
+        "VOLTRA_B": "bravo"
       }
+    },
+    {
+      "export": "runCollectRequiredEnvironmentVariablesMissingThrownScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCollectRequiredEnvironmentVariablesMissingMessageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "\n┌──────────────────────────────────┐\n│   ⚠  ENVIRONMENT CHECK FAILED    │\n└──────────────────────────────────┘\n\nMissing Required Environment Variables:\n\n- VOLTRA_B\n"
     }
   ]
 }

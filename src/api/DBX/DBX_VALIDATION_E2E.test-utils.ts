@@ -1,6 +1,8 @@
 import type { TypeInfoValidationResults } from "../../common/TypeParsing/Validation";
 import {
   ERROR_MESSAGE_CONSTANTS,
+  getArrayItemErrorMap,
+  getErrorDescriptors,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
 } from "../../common/TypeParsing/Validation";
 import { TypeInfoORMServiceError } from "../../common/TypeInfoORM";
@@ -53,25 +55,53 @@ const summarizeError = (
 ) => {
   const parsed = response.parsedBody as ErrorBody | undefined;
   const errorMap = parsed?.error?.errorMap ?? {};
+  const normalizeErrorCodes = (key: string): string[] | undefined => {
+    const entries = errorMap[key];
+    if (Array.isArray(entries)) {
+      const descriptors = getErrorDescriptors(entries);
+      if (descriptors.length) {
+        return descriptors.map((descriptor) => descriptor.code);
+      }
+    }
+
+    const [rawFieldKey, rawIndex] = key.split("/");
+    const normalizedFieldKey = rawFieldKey?.replace(/^"+|"+$/g, "");
+    const index = Number(rawIndex);
+
+    if (Number.isInteger(index)) {
+      const candidateFieldKeys = [rawFieldKey, normalizedFieldKey].filter(
+        (v): v is string => typeof v === "string" && v.length > 0,
+      );
+
+      for (const fieldKey of candidateFieldKeys) {
+        if (!Array.isArray(errorMap[fieldKey])) {
+          continue;
+        }
+        const itemErrors = getArrayItemErrorMap(errorMap[fieldKey])[index];
+        if (itemErrors?.length) {
+          return itemErrors.map((descriptor) => descriptor.code);
+        }
+      }
+    }
+
+    return undefined;
+  };
 
   return {
     statusCode: response.statusCode,
     status: parsed?.status,
-    error: parsed?.error?.error,
+    error: parsed?.error?.error?.code,
     errorMap: keys.reduce((acc, key) => {
-      const value = errorMap[key];
+      const value = normalizeErrorCodes(key);
       if (value) {
-        acc[key] = value as string[];
+        acc[key] = value;
       }
       return acc;
     }, {} as Record<string, string[]>),
   };
 };
 
-/**
- * Run the DBX validation E2E scenario against the in-memory router/runtime.
- */
-export const runDbxValidationScenario = async () => {
+const runDbxValidationScenario = async () => {
   const runtime = buildDbxRuntime();
 
   const invalidFieldCreate = await runDbxRequest(runtime, {
@@ -190,13 +220,12 @@ export const runDbxValidationScenario = async () => {
       "createdAt",
     ]),
     invalidRelationshipAuthorCreate: summarizeError(
-    invalidRelationshipAuthorCreate,
+      invalidRelationshipAuthorCreate,
       ["\"posts\"/\"0\""],
     ),
-    invalidRelationshipPostCreate: summarizeError(
-      invalidRelationshipPostCreate,
-      ["author"],
-    ),
+    invalidRelationshipPostCreate: summarizeError(invalidRelationshipPostCreate, [
+      "author",
+    ]),
     invalidUpdateMissingId: summarizeError(invalidUpdateMissingId, []),
     invalidUpdateUnknownField: summarizeError(invalidUpdateUnknownField, [
       "nope",
@@ -219,3 +248,30 @@ export const runDbxValidationScenario = async () => {
     },
   };
 };
+
+export const runDbxValidationInvalidFieldCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidFieldCreate;
+
+export const runDbxValidationInvalidTypeCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidTypeCreate;
+
+export const runDbxValidationInvalidRelationshipAuthorCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidRelationshipAuthorCreate;
+
+export const runDbxValidationInvalidRelationshipPostCreateScenario = async () =>
+  (await runDbxValidationScenario()).invalidRelationshipPostCreate;
+
+export const runDbxValidationInvalidUpdateMissingIdScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateMissingId;
+
+export const runDbxValidationInvalidUpdateUnknownFieldScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateUnknownField;
+
+export const runDbxValidationInvalidUpdateRelationshipFieldScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateRelationshipField;
+
+export const runDbxValidationInvalidUpdateTypeMismatchScenario = async () =>
+  (await runDbxValidationScenario()).invalidUpdateTypeMismatch;
+
+export const runDbxValidationExpectedErrorsScenario = async () =>
+  (await runDbxValidationScenario()).expectedErrors;

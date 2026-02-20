@@ -2,21 +2,64 @@
   "file": "./StructuredInMemoryBackend.test-utils.ts",
   "tests": [
     {
-      "export": "runStructuredInMemoryBackendScenario",
+      "export": "runStructuredInMemoryBackendNewsIdsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "newsIds": ["1", "2"],
-        "tagsBIds": ["1", "2"],
-        "scoreGte10Ids": ["1", "2"],
-        "scoreBetweenIds": ["1"],
-        "modelLikeHonIds": ["2"],
-        "modelLikeToyIds": [],
-        "page1Ids": ["1"],
-        "page2Ids": ["2"],
-        "afterUpdateIds": ["2"],
-        "afterRemoveIds": []
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendTagsBIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendScoreGte10IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendScoreBetweenIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendModelLikeHonIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendModelLikeToyIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
+    },
+    {
+      "export": "runStructuredInMemoryBackendPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendAfterUpdateIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2"]
+    },
+    {
+      "export": "runStructuredInMemoryBackendAfterRemoveIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
     }
   ]
 }

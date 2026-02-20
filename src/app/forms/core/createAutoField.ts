@@ -4,7 +4,14 @@
  * Factory for AutoField that delegates rendering to a resolved suite.
  */
 
+import { createElement, type FC, type ReactElement } from "react";
 import type { TypeInfoField } from "../../../common/TypeParsing/TypeInfo";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptor,
+  type ErrorDescriptor,
+  type ArrayItemErrorMap,
+} from "../../../common/TypeParsing/Validation";
 import { getFieldKind } from "./getFieldKind";
 import type {
   CustomTypeActionPayload,
@@ -26,8 +33,14 @@ export type AutoFieldInput = {
   value: FieldValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FieldValue) => void;
-  /** Optional error message to display under the field. */
-  error?: string;
+  /** Optional error descriptor to display under the field. */
+  error?: ErrorDescriptor;
+  /** Optional value-level errors for the field. */
+  errors?: ErrorDescriptor[];
+  /** Optional per-index errors for array fields. */
+  arrayItemErrorMap?: ArrayItemErrorMap;
+  /** Optional translator for validation error descriptors. */
+  translateValidationErrorCode?: (error: ErrorDescriptor) => string;
   /** Disables the field UI when true. */
   disabled?: boolean;
   /** Optional callback for relation actions. */
@@ -42,12 +55,19 @@ export type AutoFieldInput = {
  * @param suite - Resolved component suite.
  * @returns AutoField renderer function.
  */
-export const createAutoField = <RenderOutput = unknown>(
+export const createAutoField = <RenderOutput = ReactElement>(
   suite: ResolvedSuite<RenderOutput>,
 ) => {
-  const renderField = (props: AutoFieldInput): RenderOutput => {
+  const defaultTranslateValidationErrorCode = (error: ErrorDescriptor): string =>
+    error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : String(error.code);
+
+  const AutoField: FC<AutoFieldInput> = (props) => {
     const { field, fieldKey, value, onChange, error, disabled } = props;
     const { tags } = field;
+    const resolvedErrors = props.errors ?? (error ? [error] : []);
+    const resolvedError =
+      resolvedErrors.find((descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE) ??
+      getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.NONE);
 
     const context: FieldRenderContext<RenderOutput> = {
       field,
@@ -55,7 +75,11 @@ export const createAutoField = <RenderOutput = unknown>(
       label: tags?.label ?? fieldKey,
       required: !field.optional,
       disabled: !!disabled,
-      error,
+      error: resolvedError,
+      errors: resolvedErrors,
+      arrayItemErrorMap: props.arrayItemErrorMap,
+      translateValidationErrorCode:
+        props.translateValidationErrorCode ?? defaultTranslateValidationErrorCode,
       value,
       onChange,
       constraints: tags?.constraints,
@@ -65,12 +89,25 @@ export const createAutoField = <RenderOutput = unknown>(
       customType: tags?.customType,
       onRelationAction: props.onRelationAction,
       onCustomTypeAction: props.onCustomTypeAction,
-      renderField,
+      renderField: (input) =>
+        createElement(AutoField, {
+          field: input.field,
+          fieldKey: input.fieldKey,
+          value: input.value,
+          onChange: input.onChange,
+          error: input.error,
+          errors: input.errors,
+          arrayItemErrorMap: input.arrayItemErrorMap,
+          translateValidationErrorCode: input.translateValidationErrorCode,
+          disabled: input.disabled,
+          onRelationAction: input.onRelationAction,
+          onCustomTypeAction: input.onCustomTypeAction,
+        }) as RenderOutput,
     };
 
     const kind = getFieldKind(field);
-    return suite.renderers[kind](context);
+    return createElement(suite.renderers[kind], context);
   };
 
-  return renderField;
+  return AutoField;
 };
