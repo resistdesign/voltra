@@ -4,6 +4,7 @@ import {
   getParamsAndTestPath,
   mergeStringPaths,
   resolvePath,
+  resolveRouteAdapterPath,
 } from "./Routing";
 
 export const runRoutingPathArrayScenario = () =>
@@ -35,6 +36,23 @@ export const runRoutingResolveRelativeScenario = () =>
 
 export const runRoutingResolveAbsoluteScenario = () =>
   resolvePath("/books/42", "/authors/7");
+
+export const runRoutingResolveRouteAdapterScenario = () => ({
+  absoluteFromRoot: resolveRouteAdapterPath("/signup", "/confirm"),
+  relativeSegment: resolveRouteAdapterPath("/signup", "confirm"),
+  relativeCurrentDirectory: resolveRouteAdapterPath("/signup", "./confirm"),
+  relativeParentDirectory: resolveRouteAdapterPath("/signup", "../confirm"),
+  relativeSingleParentFromNested: resolveRouteAdapterPath(
+    "/signup/confirm",
+    "../complete",
+  ),
+  relativeMultipleParentsFromNested: resolveRouteAdapterPath(
+    "/signup/complete",
+    "../../login",
+  ),
+  rootSlash: resolveRouteAdapterPath("/signup/complete", "/"),
+  rootEmpty: resolveRouteAdapterPath("/signup/complete", ""),
+});
 
 export const runRoutingParamsScenario = () =>
   getParamsAndTestPath("/books/42/chapters/3", "/books/:id");

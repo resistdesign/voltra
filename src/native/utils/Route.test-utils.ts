@@ -68,6 +68,30 @@ export const runNativeNavigationStateAdapterScenario = () => {
   };
 };
 
+export const runNativeNavigationStateRelativePathScenario = () => {
+  let navigatedPath = "";
+  let replacedPath = "";
+  const adapter = createNavigationStateRouteAdapter({
+    getState: () => ({ path: "/signup/complete" }),
+    subscribe: () => () => {},
+    toPath: (state) => state.path,
+    navigate: (path: string) => {
+      navigatedPath = path;
+    },
+    replace: (path: string) => {
+      replacedPath = path;
+    },
+  });
+
+  adapter.push?.("../../login");
+  adapter.replace?.("");
+
+  return {
+    navigatedPath,
+    replacedPath,
+  };
+};
+
 export const runNativeRouteChainScenario = () => {
   const path = buildPathFromRouteChain(
     [

@@ -20,6 +20,15 @@
       }
     },
     {
+      "export": "runNativeNavigationStateRelativePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "navigatedPath": "/login",
+        "replacedPath": "/"
+      }
+    },
+    {
       "export": "runNativeRouteChainScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

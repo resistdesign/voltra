@@ -150,6 +150,102 @@ export const resolvePath = (currentPath: string, newPath: string): string => {
   return "/" + currentSegments.join("/");
 };
 
+const splitRoutePathParts = (
+  rawPath: string,
+): {
+  path: string;
+  search: string;
+  hash: string;
+} => {
+  let path = rawPath;
+  let hash = "";
+  let search = "";
+
+  const hashIndex = path.indexOf("#");
+  if (hashIndex >= 0) {
+    hash = path.slice(hashIndex);
+    path = path.slice(0, hashIndex);
+  }
+
+  const searchIndex = path.indexOf("?");
+  if (searchIndex >= 0) {
+    search = path.slice(searchIndex);
+    path = path.slice(0, searchIndex);
+  }
+
+  return {
+    path,
+    search,
+    hash,
+  };
+};
+
+/**
+ * Resolve RouteAdapter navigation input against the current path.
+ *
+ * Rules:
+ * - `"/x"` resolves from root.
+ * - `"x"` and `"./x"` resolve under current path.
+ * - `"../x"` resolves one level up per `..`.
+ * - `"/"` and `""` both resolve to root (`"/"`).
+ *
+ * @param currentPath - Current absolute path (query/hash ignored).
+ * @param nextPath - Adapter navigation target (absolute or relative).
+ * @returns Resolved absolute path string.
+ */
+export const resolveRouteAdapterPath = (
+  currentPath: string,
+  nextPath: string,
+): string => {
+  const rawNextPath = String(nextPath ?? "").trim();
+  if (rawNextPath === "") {
+    return "/";
+  }
+
+  const { path: rawCurrentBase } = splitRoutePathParts(
+    String(currentPath ?? "").trim(),
+  );
+  const { path: rawRelativePath, search, hash } = splitRoutePathParts(rawNextPath);
+  const isAbsoluteTarget = rawRelativePath.startsWith(PATH_DELIMITER);
+  const currentSegments = getPathArray(
+    rawCurrentBase || PATH_DELIMITER,
+    PATH_DELIMITER,
+    true,
+    true,
+    false,
+    false,
+  ) as string[];
+  const outputSegments = isAbsoluteTarget ? [] : [...currentSegments];
+  const relativeSegments = getPathArray(
+    rawRelativePath,
+    PATH_DELIMITER,
+    true,
+    true,
+    false,
+    false,
+  ) as string[];
+
+  relativeSegments.forEach((segment) => {
+    if (segment === "." || segment === "") {
+      return;
+    }
+
+    if (segment === "..") {
+      outputSegments.pop();
+      return;
+    }
+
+    outputSegments.push(segment);
+  });
+
+  const resolvedPath =
+    outputSegments.length > 0
+      ? `/${outputSegments.join(PATH_DELIMITER)}`
+      : PATH_DELIMITER;
+
+  return `${resolvedPath}${search}${hash}`;
+};
+
 /**
  * Get the parameter values from a path string and test the `path` against a `testPath`.
  *

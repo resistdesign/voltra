@@ -8,6 +8,7 @@ import {
   createMemoryHistory,
   parseHistoryPath,
 } from "./History";
+import { resolveRouteAdapterPath } from "../../common/Routing";
 import { createRouteAdapterFromHistory } from "./RouteHistory";
 import type { RouteAdapter } from "./Route";
 
@@ -134,12 +135,16 @@ export const createBrowserRouteAdapter = (): RouteAdapter => {
         return;
       }
 
-      const targetPath = parseHistoryPath(path).path;
+      const resolvedPath = resolveRouteAdapterPath(
+        WINDOW.location?.pathname ?? "",
+        path,
+      );
+      const targetPath = parseHistoryPath(resolvedPath).path;
       if (targetPath === (WINDOW.location?.pathname ?? "")) {
         return;
       }
 
-      WINDOW.history.pushState({}, title, path);
+      WINDOW.history.pushState({}, title, resolvedPath);
       notify();
     },
     replace: (path: string, title: string = "") => {
@@ -147,12 +152,16 @@ export const createBrowserRouteAdapter = (): RouteAdapter => {
         return;
       }
 
-      const targetPath = parseHistoryPath(path).path;
+      const resolvedPath = resolveRouteAdapterPath(
+        WINDOW.location?.pathname ?? "",
+        path,
+      );
+      const targetPath = parseHistoryPath(resolvedPath).path;
       if (targetPath === (WINDOW.location?.pathname ?? "")) {
         return;
       }
 
-      WINDOW.history.replaceState({}, title, path);
+      WINDOW.history.replaceState({}, title, resolvedPath);
       notify();
     },
     back: () => WINDOW?.history?.back(),
@@ -225,16 +234,18 @@ export const createNativeRouteAdapter = (
   return {
     ...adapter,
     push: (path: string, title?: string) => {
-      if (parseHistoryPath(path).path === history.location.path) {
+      const resolvedPath = resolveRouteAdapterPath(history.location.path, path);
+      if (parseHistoryPath(resolvedPath).path === history.location.path) {
         return;
       }
-      adapter.push?.(path, title);
+      adapter.push?.(resolvedPath, title);
     },
     replace: (path: string, title?: string) => {
-      if (parseHistoryPath(path).path === history.location.path) {
+      const resolvedPath = resolveRouteAdapterPath(history.location.path, path);
+      if (parseHistoryPath(resolvedPath).path === history.location.path) {
         return;
       }
-      adapter.replace?.(path, title);
+      adapter.replace?.(resolvedPath, title);
     },
     subscribe: (listener) => {
       subscribers += 1;

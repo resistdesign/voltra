@@ -4,6 +4,7 @@
  * Bridge helpers between HistoryController and RouteAdapter.
  */
 import type { HistoryController } from "./History";
+import { resolveRouteAdapterPath } from "../../common/Routing";
 import type { RouteAdapter } from "./Route";
 
 /**
@@ -14,6 +15,7 @@ import type { RouteAdapter } from "./Route";
  *
  * Adapter navigation methods call history with `replaceSearch: true` so a
  * path-only navigation does not accidentally retain a previous query string.
+ * Relative navigation input is resolved against the current history path.
  *
  * Example:
  * ```ts
@@ -35,10 +37,14 @@ export const createRouteAdapterFromHistory = (
       });
     },
     push: (path: string) => {
-      history.push(path, { replaceSearch: true });
+      history.push(resolveRouteAdapterPath(history.location.path, path), {
+        replaceSearch: true,
+      });
     },
     replace: (path: string) => {
-      history.replace(path, { replaceSearch: true });
+      history.replace(resolveRouteAdapterPath(history.location.path, path), {
+        replaceSearch: true,
+      });
     },
     back: history.back,
     canGoBack: () => history.index > 0,

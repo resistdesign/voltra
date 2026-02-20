@@ -16,8 +16,8 @@ Here's how it works:
    adapter, it should go to `domain.com/confirm`.
 5. If I'm at `domain.com/signup/confirm` and I push/replace `"../complete"` (prefixed with move up one directory) to a
    route adapter, it should go to `domain.com/signup/complete`.
-6. If I'm at `domain.com/signup/complete` and I push/replace `"../../login"` (prefixed with move up two directories) to
-   a route adapter, it should go to `domain.com/login`.
+6. If I'm at `domain.com/signup/complete` and I push/replace `"../../login"` (prefixed with move up two directories) to a
+   route adapter, it should go to `domain.com/login`.
 7. If I'm at `domain.com/signup/complete` and I push/replace `"/"` (only a slash) to a route adapter, it should go to
    `domain.com`.
 8. If I'm at `domain.com/signup/complete` and I push/replace `""` (and empty string) to a route adapter, it should go to
@@ -75,3 +75,11 @@ We will need to do the following:
 3. Update docs/doc-comments/examples/samples/demos/readmes/etc.
 
 Everything should be clear. Nothing should be stale. Nothing should be broken.
+
+## Checklist
+
+- [x] Implement centralized route-adapter relative path resolver in `src/common/Routing.ts`.
+- [x] Apply adapter push/replace wrapping so app/web/native Route usage resolves relative paths consistently.
+- [x] Add/update JSON spec scenarios for route path resolution and adapter behavior.
+- [x] Update doc comments and usage notes for the new adapter path-resolution behavior.
+- [x] Run targeted tests for changed routing areas and confirm passing.
