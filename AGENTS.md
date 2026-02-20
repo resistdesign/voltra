@@ -95,6 +95,19 @@
 - Provide concrete evidence of progress when asked (e.g., `git diff --stat`, specific files edited, or test outputs).
 - If scope changes become necessary, pause and ask the user before proceeding; do not assume consent.
 
+## Compiled Learnings Process
+
+- This process is special-purpose and must only be run when explicitly requested by the user.
+- Before running it, ensure there is an active plan in `planning/` that tracks the steps as a live checklist.
+- Steps:
+  - Capture today’s date.
+  - Create `planning/learnings/` and `planning/archived/` if they do not exist.
+  - Create a dated learnings file in `planning/learnings/` (for example `YYYY-MM-DD.md`).
+  - Read all current plans in `planning/complete/` and write a refined, condensed synthesis (not a raw concatenation).
+  - Move all files from `planning/complete/` to `planning/archived/` after the synthesis file is complete.
+- `planning/learnings/` is the canonical location for distilled project insights.
+- `planning/archived/` stores historical completed plans after they have been synthesized.
+
 ## Execution Style
 
 - Default to forward progress: make reasonable decisions and proceed without waiting for confirmation, unless a scope
