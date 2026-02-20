@@ -16,7 +16,7 @@ const buildDriver = () =>
     },
   });
 
-export const runInMemoryFileItemDriverScenario = async () => {
+const runInMemoryFileItemDriverScenario = async () => {
   const driver = buildDriver();
 
   const id1 = await driver.createItem({
@@ -97,3 +97,30 @@ export const runInMemoryFileItemDriverScenario = async () => {
     missingReadError,
   };
 };
+
+export const runInMemoryFileItemDriverCreatedIdsScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).createdIds;
+
+export const runInMemoryFileItemDriverReadWithUrlsScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).readWithUrls;
+
+export const runInMemoryFileItemDriverAfterUpdateScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).afterUpdate;
+
+export const runInMemoryFileItemDriverFilteredIdsScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).filteredIds;
+
+export const runInMemoryFileItemDriverFilteredDownloadUrlsScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).filteredDownloadUrls;
+
+export const runInMemoryFileItemDriverPage1IdsScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).page1Ids;
+
+export const runInMemoryFileItemDriverPage2IdsScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).page2Ids;
+
+export const runInMemoryFileItemDriverDeleteResultScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).deleteResult;
+
+export const runInMemoryFileItemDriverMissingReadErrorScenario = async () =>
+  (await runInMemoryFileItemDriverScenario()).missingReadError;

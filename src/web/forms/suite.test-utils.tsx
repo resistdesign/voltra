@@ -5,6 +5,7 @@
  */
 
 import type { ReactElement } from "react";
+import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import type { FieldRenderContext, FieldKind } from "../../app/forms/core";
 import { webSuite } from "./suite";
@@ -50,12 +51,13 @@ export const runWebSuiteStringRendererScenario = () => {
     label: "Title",
     required: true,
     disabled: false,
+    translateValidationErrorCode: (error) => String(error.code),
     value: "Hello",
     onChange: () => undefined,
     renderField: () => <></>,
   };
 
-  const element = webSuite.renderers.string?.(context);
+  const element = createElement(webSuite.renderers.string as any, context);
   const html = renderToString(element as any);
 
   return {

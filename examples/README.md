@@ -10,7 +10,10 @@ These files are curated **reference snippets** for consumers.
 
 - `examples/routing/app-routing.ts`
 
-Use this when you need app-side route matching/navigation behavior via `@resistdesign/voltra/app`.
+Use this for client route usage via platform barrels:
+- `@resistdesign/voltra/web` for web Route roots/matchers
+- `@resistdesign/voltra/native` for native Route roots/matchers
+- `@resistdesign/voltra/app` only for adapter escape hatches (`createUniversalAdapter`)
 
 ## API Routing (Backend)
 
@@ -22,6 +25,7 @@ Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. T
 
 - `examples/forms/web-form-suite.ts`
 - `examples/forms/native-form-suite.ts`
+- `examples/forms/auto-form-validation-customization.tsx`
 
 Use these for web/native form renderer entrypoints.
 
@@ -35,6 +39,7 @@ Use these for EasyLayout template usage in web/native runtimes.
 ## Common Types
 
 - `examples/common/types.ts`
+- `examples/common/typeinfo-validation.ts`
 
 Use this for shared `@resistdesign/voltra/common` type references.
 

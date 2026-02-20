@@ -22,7 +22,7 @@ const buildDriver = () => {
   });
 };
 
-export const runInMemoryDataItemDriverScenario = async () => {
+const runInMemoryDataItemDriverScenario = async () => {
   const driver = buildDriver();
 
   const id1 = await driver.createItem({
@@ -116,3 +116,33 @@ export const runInMemoryDataItemDriverScenario = async () => {
     invalidCursorError,
   };
 };
+
+export const runInMemoryDataItemDriverCreatedIdsScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).createdIds;
+
+export const runInMemoryDataItemDriverReadSelectedScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).readSelected;
+
+export const runInMemoryDataItemDriverAfterUpdateScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).afterUpdate;
+
+export const runInMemoryDataItemDriverFilteredIdsScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).filteredIds;
+
+export const runInMemoryDataItemDriverPage1IdsScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).page1Ids;
+
+export const runInMemoryDataItemDriverPage2IdsScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).page2Ids;
+
+export const runInMemoryDataItemDriverListSelectedKeysScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).listSelectedKeys;
+
+export const runInMemoryDataItemDriverDeleteResultScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).deleteResult;
+
+export const runInMemoryDataItemDriverMissingReadErrorScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).missingReadError;
+
+export const runInMemoryDataItemDriverInvalidCursorErrorScenario = async () =>
+  (await runInMemoryDataItemDriverScenario()).invalidCursorError;

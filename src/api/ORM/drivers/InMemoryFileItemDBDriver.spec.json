@@ -2,30 +2,68 @@
   "file": "./InMemoryFileItemDBDriver.test-utils.ts",
   "tests": [
     {
-      "export": "runInMemoryFileItemDriverScenario",
+      "export": "runInMemoryFileItemDriverCreatedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["docs/alpha.txt", "docs/beta.txt", "logs/gamma.log"]
+    },
+    {
+      "export": "runInMemoryFileItemDriverReadWithUrlsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": ["docs/alpha.txt", "docs/beta.txt", "logs/gamma.log"],
-        "readWithUrls": {
-          "id": "docs/alpha.txt",
-          "uploadUrl": "memory://upload/Files/docs/alpha.txt",
-          "downloadUrl": "memory://download/Files/docs/alpha.txt"
-        },
-        "afterUpdate": {
-          "sizeInBytes": 18,
-          "updatedOn": 1700000000000
-        },
-        "filteredIds": ["docs/alpha.txt", "docs/beta.txt"],
-        "filteredDownloadUrls": [
-          "memory://download/Files/docs/alpha.txt",
-          "memory://download/Files/docs/beta.txt"
-        ],
-        "page1Ids": ["docs/alpha.txt"],
-        "page2Ids": ["docs/beta.txt"],
-        "deleteResult": true,
-        "missingReadError": "ITEM_NOT_FOUND"
+        "id": "docs/alpha.txt",
+        "uploadUrl": "memory://upload/Files/docs/alpha.txt",
+        "downloadUrl": "memory://download/Files/docs/alpha.txt"
       }
+    },
+    {
+      "export": "runInMemoryFileItemDriverAfterUpdateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "sizeInBytes": 18,
+        "updatedOn": 1700000000000
+      }
+    },
+    {
+      "export": "runInMemoryFileItemDriverFilteredIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["docs/alpha.txt", "docs/beta.txt"]
+    },
+    {
+      "export": "runInMemoryFileItemDriverFilteredDownloadUrlsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "memory://download/Files/docs/alpha.txt",
+        "memory://download/Files/docs/beta.txt"
+      ]
+    },
+    {
+      "export": "runInMemoryFileItemDriverPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["docs/alpha.txt"]
+    },
+    {
+      "export": "runInMemoryFileItemDriverPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["docs/beta.txt"]
+    },
+    {
+      "export": "runInMemoryFileItemDriverDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runInMemoryFileItemDriverMissingReadErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "ITEM_NOT_FOUND"
     }
   ]
 }

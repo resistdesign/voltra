@@ -2,37 +2,65 @@
   "file": "./RouteHistory.test-utils.ts",
   "tests": [
     {
-      "export": "runRouteHistoryBridgeScenario",
+      "export": "runRouteHistoryInitialAdapterPathScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "/app/books/42"
+    },
+    {
+      "export": "runRouteHistoryInitialHistoryPathScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "/app/books/42?tab=summary"
+    },
+    {
+      "export": "runRouteHistoryAfterAdapterPushScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "initialAdapterPath": "/app/books/42",
-        "initialHistoryPath": "/app/books/42?tab=summary",
-        "afterAdapterPush": {
-          "adapterPath": "/app/books/99",
-          "historyPath": "/app/books/99"
-        },
-        "afterHistoryPush": {
-          "adapterPath": "/app/books/100",
-          "historyPath": "/app/books/100?tab=debug",
-          "canGoBack": true
-        },
-        "afterAdapterReplace": {
-          "adapterPath": "/app/books/101",
-          "historyPath": "/app/books/101"
-        },
-        "afterAdapterBack": {
-          "adapterPath": "/app/books/99",
-          "historyPath": "/app/books/99",
-          "canGoBack": true
-        },
-        "events": [
-          "/app/books/99",
-          "/app/books/100",
-          "/app/books/101",
-          "/app/books/99"
-        ]
+        "adapterPath": "/app/books/99",
+        "historyPath": "/app/books/99"
       }
+    },
+    {
+      "export": "runRouteHistoryAfterHistoryPushScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "adapterPath": "/app/books/100",
+        "historyPath": "/app/books/100?tab=debug",
+        "canGoBack": true
+      }
+    },
+    {
+      "export": "runRouteHistoryAfterAdapterReplaceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "adapterPath": "/app/books/101",
+        "historyPath": "/app/books/101"
+      }
+    },
+    {
+      "export": "runRouteHistoryAfterAdapterBackScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "adapterPath": "/app/books/99",
+        "historyPath": "/app/books/99",
+        "canGoBack": true
+      }
+    },
+    {
+      "export": "runRouteHistoryEventsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "/app/books/99",
+        "/app/books/100",
+        "/app/books/101",
+        "/app/books/99"
+      ]
     }
   ]
 }

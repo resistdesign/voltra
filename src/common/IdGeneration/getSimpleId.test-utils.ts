@@ -1,11 +1,13 @@
+let importSequence = 0;
+
 const loadGetSimpleId = async () => {
   const moduleUrl = new URL("./getSimpleId.ts", import.meta.url);
-  moduleUrl.search = `?t=${Date.now()}`;
+  moduleUrl.search = `?t=${Date.now()}-${importSequence++}`;
   return import(moduleUrl.href);
 };
 const FIXED_ISO = "2020-01-01T00:00:00.000Z";
 
-export const runGetSimpleIdScenario = async () => {
+const getSimpleIdPairScenario = async () => {
   const originalRandom = Math.random;
   const originalDate = Date;
   const fakeRandom = 0.123456789;
@@ -46,3 +48,27 @@ export const runGetSimpleIdScenario = async () => {
     expectedRand,
   };
 };
+
+export const runGetSimpleIdFirstIdScenario = async () =>
+  (await getSimpleIdPairScenario()).firstId;
+
+export const runGetSimpleIdSecondIdScenario = async () =>
+  (await getSimpleIdPairScenario()).secondId;
+
+export const runGetSimpleIdFirstCounterScenario = async () =>
+  (await getSimpleIdPairScenario()).firstCounter;
+
+export const runGetSimpleIdSecondCounterScenario = async () =>
+  (await getSimpleIdPairScenario()).secondCounter;
+
+export const runGetSimpleIdDecodedTimestampScenario = async () =>
+  (await getSimpleIdPairScenario()).decodedTimestamp;
+
+export const runGetSimpleIdRand1Scenario = async () =>
+  (await getSimpleIdPairScenario()).rand1;
+
+export const runGetSimpleIdRand2Scenario = async () =>
+  (await getSimpleIdPairScenario()).rand2;
+
+export const runGetSimpleIdExpectedRandScenario = async () =>
+  (await getSimpleIdPairScenario()).expectedRand;

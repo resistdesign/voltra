@@ -2,26 +2,39 @@
   "file": "./IndexingEnvVarMapping.test-utils.ts",
   "tests": [
     {
-      "export": "runIndexingEnvVarMappingScenario",
+      "export": "runIndexingEnvVarMappingEnvVarsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "envVars": [
-          "INDEXING_FULLTEXT_DOC_MIRROR_TABLE",
-          "INDEXING_FULLTEXT_DOC_TOKENS_TABLE",
-          "INDEXING_FULLTEXT_DOC_TOKEN_POSITIONS_TABLE",
-          "INDEXING_FULLTEXT_EXACT_POSTINGS_TABLE",
-          "INDEXING_FULLTEXT_LOSSY_POSTINGS_TABLE",
-          "INDEXING_FULLTEXT_TOKEN_STATS_TABLE",
-          "INDEXING_RELATION_EDGES_TABLE",
-          "INDEXING_STRUCTURED_DOC_FIELDS_TABLE",
-          "INDEXING_STRUCTURED_RANGE_INDEX_TABLE",
-          "INDEXING_STRUCTURED_TERM_INDEX_TABLE"
-        ],
-        "uniqueCount": 10,
-        "totalCount": 10,
-        "allPrefixed": true
-      }
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "INDEXING_FULLTEXT_DOC_MIRROR_TABLE",
+        "INDEXING_FULLTEXT_DOC_TOKENS_TABLE",
+        "INDEXING_FULLTEXT_DOC_TOKEN_POSITIONS_TABLE",
+        "INDEXING_FULLTEXT_EXACT_POSTINGS_TABLE",
+        "INDEXING_FULLTEXT_LOSSY_POSTINGS_TABLE",
+        "INDEXING_FULLTEXT_TOKEN_STATS_TABLE",
+        "INDEXING_RELATION_EDGES_TABLE",
+        "INDEXING_STRUCTURED_DOC_FIELDS_TABLE",
+        "INDEXING_STRUCTURED_RANGE_INDEX_TABLE",
+        "INDEXING_STRUCTURED_TERM_INDEX_TABLE"
+      ]
+    },
+    {
+      "export": "runIndexingEnvVarMappingUniqueCountScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": 10
+    },
+    {
+      "export": "runIndexingEnvVarMappingTotalCountScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": 10
+    },
+    {
+      "export": "runIndexingEnvVarMappingAllPrefixedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

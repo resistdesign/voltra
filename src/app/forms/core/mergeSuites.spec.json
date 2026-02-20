@@ -6,9 +6,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "stringRenderer": "override",
-        "numberRenderer": "number",
-        "buttonPrimitive": "override_button"
+        "stringRenderer": true,
+        "numberRenderer": true,
+        "buttonPrimitive": true
       }
     },
     {
@@ -16,8 +16,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "stringRenderer": "override",
-        "numberRenderer": "number"
+        "stringRenderer": true,
+        "numberRenderer": true
       }
     }
   ]

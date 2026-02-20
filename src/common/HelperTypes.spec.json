@@ -2,16 +2,19 @@
   "file": "./HelperTypes.test-utils.ts",
   "tests": [
     {
-      "export": "runHelperTypesScenario",
+      "export": "runHelperTypesExampleScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "example": {
-          "a": "alpha",
-          "b": 42
-        },
-        "keys": ["a", "b"]
+        "a": "alpha",
+        "b": 42
       }
+    },
+    {
+      "export": "runHelperTypesKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["a", "b"]
     }
   ]
 }

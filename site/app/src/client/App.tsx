@@ -1,7 +1,7 @@
 import { FC } from "react";
 import styled from "styled-components";
 import { ApplicationStateProvider } from "../../../../src/app/utils";
-import { Route } from "../../../../src/app/utils";
+import { Route } from "../../../../src/web";
 import { AdvancedDemo } from "./AdvancedDemo";
 import { EasyLayoutDemo } from "./EasyLayoutDemo";
 import { EndToEndDemo } from "./EndToEndDemo";

@@ -2,38 +2,58 @@
   "file": "./database.test-utils.ts",
   "tests": [
     {
-      "export": "runDatabasePackScenario",
+      "export": "runDatabasePackResourceKeysScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "resourceKeys": ["BooksTable"],
-        "tableName": "books",
-        "billingMode": "PAY_PER_REQUEST",
-        "attributeDefinitions": [
-          {
-            "AttributeName": "id",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "sort",
-            "AttributeType": "S"
-          },
-          {
-            "AttributeName": "rating",
-            "AttributeType": "N"
-          }
-        ],
-        "keySchema": [
-          {
-            "AttributeName": "id",
-            "KeyType": "HASH"
-          },
-          {
-            "AttributeName": "sort",
-            "KeyType": "RANGE"
-          }
-        ]
-      }
+      "expectation": [
+        "BooksTable"
+      ]
+    },
+    {
+      "export": "runDatabasePackTableNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "books"
+    },
+    {
+      "export": "runDatabasePackBillingModeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "PAY_PER_REQUEST"
+    },
+    {
+      "export": "runDatabasePackAttributeDefinitionsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "AttributeName": "id",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "sort",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "rating",
+          "AttributeType": "N"
+        }
+      ]
+    },
+    {
+      "export": "runDatabasePackKeySchemaScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "AttributeName": "id",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sort",
+          "KeyType": "RANGE"
+        }
+      ]
     }
   ]
 }

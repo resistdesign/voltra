@@ -29,3 +29,27 @@ export const runRepoPackScenario = () => {
     tokenParamNoEcho: Parameters.RepoToken?.NoEcho,
   };
 };
+
+export const runRepoPackParameterKeysScenario = async () =>
+  (await runRepoPackScenario()).parameterKeys;
+
+export const runRepoPackGroupLabelScenario = async () =>
+  (await runRepoPackScenario()).groupLabel;
+
+export const runRepoPackGroupParametersScenario = async () =>
+  (await runRepoPackScenario()).groupParameters;
+
+export const runRepoPackOwnerParamLabelScenario = async () =>
+  (await runRepoPackScenario()).ownerParamLabel;
+
+export const runRepoPackOwnerParamTypeScenario = async () =>
+  (await runRepoPackScenario()).ownerParamType;
+
+export const runRepoPackNameParamLabelScenario = async () =>
+  (await runRepoPackScenario()).nameParamLabel;
+
+export const runRepoPackBranchParamLabelScenario = async () =>
+  (await runRepoPackScenario()).branchParamLabel;
+
+export const runRepoPackTokenParamNoEchoScenario = async () =>
+  (await runRepoPackScenario()).tokenParamNoEcho;

@@ -2,66 +2,79 @@
   "file": "./user-management.test-utils.ts",
   "tests": [
     {
-      "export": "runUserManagementPackScenario",
+      "export": "runUserManagementPackMinimalSummaryScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "minimalSummary": {
-          "resourceKeys": [
-            "UserPool",
-            "UserPoolBaseDomainRecord",
-            "UserPoolClient",
-            "UserPoolDomain",
-            "UserPoolDomainRecord",
-            "UserPoolIdentityPool"
+        "resourceKeys": [
+          "UserPool",
+          "UserPoolBaseDomainRecord",
+          "UserPoolClient",
+          "UserPoolDomain",
+          "UserPoolDomainRecord",
+          "UserPoolIdentityPool"
+        ],
+        "hasBaseDomainRecord": true,
+        "hasIdentityPoolRoles": false,
+        "oauthSummary": {
+          "allowedOAuthFlowsUserPoolClient": true,
+          "allowedOAuthFlows": [
+            "code",
+            "implicit"
           ],
-          "hasBaseDomainRecord": true,
-          "hasIdentityPoolRoles": false,
-          "oauthSummary": {
-            "allowedOAuthFlowsUserPoolClient": true,
-            "allowedOAuthFlows": [
-              "code",
-              "implicit"
-            ],
-            "supportedIdentityProviders": [
-              "COGNITO"
-            ],
-            "hasCallbackURLs": true,
-            "hasLogoutURLs": true
-          }
-        },
-        "apiSummary": {
-          "hasBaseDomainRecord": true,
-          "hasIdentityPoolRoles": true,
-          "authRoleName": "AuthRole",
-          "unauthRoleName": "UnauthRole"
-        },
-        "noDomainSummary": {
-          "resourceKeys": [
-            "UserPool",
-            "UserPoolClient",
-            "UserPoolIdentityPool"
-          ],
-          "hasBaseDomainRecord": false,
-          "hasDomain": false,
-          "hasDomainRecord": false,
-          "hasIdentityPoolRoles": false,
-          "oauthSummary": {
-            "allowedOAuthFlowsUserPoolClient": false,
-            "hasAllowedOAuthFlows": false,
-            "hasAllowedOAuthScopes": false,
-            "hasSupportedIdentityProviders": false,
-            "hasCallbackURLs": false,
-            "hasLogoutURLs": false
-          }
-        },
-        "customProviderSummary": {
           "supportedIdentityProviders": [
-            "COGNITO",
-            "Google",
-            "SignInWithApple"
-          ]
+            "COGNITO"
+          ],
+          "hasCallbackURLs": true,
+          "hasLogoutURLs": true
         }
+      }
+    },
+    {
+      "export": "runUserManagementPackApiSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasBaseDomainRecord": true,
+        "hasIdentityPoolRoles": true,
+        "authRoleName": "AuthRole",
+        "unauthRoleName": "UnauthRole"
+      }
+    },
+    {
+      "export": "runUserManagementPackNoDomainSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "resourceKeys": [
+          "UserPool",
+          "UserPoolClient",
+          "UserPoolIdentityPool"
+        ],
+        "hasBaseDomainRecord": false,
+        "hasDomain": false,
+        "hasDomainRecord": false,
+        "hasIdentityPoolRoles": false,
+        "oauthSummary": {
+          "allowedOAuthFlowsUserPoolClient": false,
+          "hasAllowedOAuthFlows": false,
+          "hasAllowedOAuthScopes": false,
+          "hasSupportedIdentityProviders": false,
+          "hasCallbackURLs": false,
+          "hasLogoutURLs": false
+        }
+      }
+    },
+    {
+      "export": "runUserManagementPackCustomProviderSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "supportedIdentityProviders": [
+          "COGNITO",
+          "Google",
+          "SignInWithApple"
+        ]
       }
     }
   ]

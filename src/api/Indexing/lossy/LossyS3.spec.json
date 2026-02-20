@@ -2,14 +2,22 @@
   "file": "./LossyS3.test-utils.ts",
   "tests": [
     {
-      "export": "runLossyS3MemoryScenario",
+      "export": "runLossyS3MemoryKeyScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "key": "lossy/text/hello%20world.json",
-        "loaded": [1, "2", 3],
-        "missing": []
-      }
+      "operation": "===",
+      "expectation": "lossy/text/hello%20world.json"
+    },
+    {
+      "export": "runLossyS3MemoryLoadedScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [1, "2", 3]
+    },
+    {
+      "export": "runLossyS3MemoryMissingScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
     }
   ]
 }

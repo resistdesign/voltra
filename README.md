@@ -131,8 +131,10 @@ EasyLayout now has:
 - Client routing: `examples/routing/app-routing.ts`
 - Backend API routing: `examples/api/backend-routing.ts`
 - Forms: `examples/forms/`
+  - `examples/forms/auto-form-validation-customization.tsx`
 - Layout: `examples/layout/`
 - Common types: `examples/common/types.ts`
+  - `examples/common/typeinfo-validation.ts`
 - Build-time parsing: `examples/build/type-parsing.ts`
 
 ### Template syntax
@@ -191,12 +193,13 @@ const coords = layout.computeNativeCoords({
 
 ## Routing (Web + Native)
 
-Voltra routing is unified under `@resistdesign/voltra/app`.
+Voltra routing uses the same `Route` API across app/web/native.
+Use the platform barrel for root `Route` so runtime mechanics are auto-wired.
 
 Reference example: `examples/routing/app-routing.ts`
 
 ```tsx
-import { Route } from "@resistdesign/voltra/app";
+import { Route } from "@resistdesign/voltra/web";
 
 <Route>
   <Route path="/" exact>
@@ -207,6 +210,16 @@ import { Route } from "@resistdesign/voltra/app";
   </Route>
   <Route path="/signup" exact>
     <SignUpScreen />
+  </Route>
+</Route>;
+```
+
+```tsx
+import { Route } from "@resistdesign/voltra/native";
+
+<Route>
+  <Route path="/" exact>
+    <HomeScreen />
   </Route>
 </Route>;
 ```
@@ -310,6 +323,63 @@ Renderers emit actions via:
 - `onCustomTypeAction(payload)` for custom types
 
 Use these to wire modals, selectors, or editors without baking UI into the core engine.
+
+### Centralized Validation
+
+All TypeInfo data-item validation can be run directly from `@resistdesign/voltra/common`:
+
+```ts
+import { validateTypeInfoDataItem } from "@resistdesign/voltra/common";
+```
+
+`validateTypeInfoDataItem` supports:
+
+- field-level `customValidatorMap` callbacks that return `ErrorDescriptor`
+- `tags.validation` field options:
+  - `validateHidden`
+  - `validateReadonly`
+  - `emptyArrayIsValid`
+
+AutoForm passes validation through the same centralized logic and supports:
+
+- `customValidatorMap` for app-specific rules
+- `translateValidationErrorCode` for UI-facing messages
+- multiple value-level errors per field
+- per-index array item errors for array fields
+
+Validation error maps can include both value-level errors and array item errors:
+
+```ts
+{
+  errorMap: {
+    title: [
+      { code: "MISSING_FIELD_VALUE" },
+      { code: "VALUE_DOES_NOT_MATCH_PATTERN" }
+    ],
+    tags: [
+      { code: "INVALID_TYPE" },
+      {
+        itemErrorMap: {
+          0: [{ code: "NOT_A_STRING" }],
+          2: [
+            { code: "NOT_A_STRING" },
+            { code: "INVALID_CUSTOM_TYPE" }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+- Field-level multiple errors are represented by multiple `ErrorDescriptor` entries in the field array.
+- Array item errors are represented by `itemErrorMap[index] = ErrorDescriptor[]`.
+
+Error-code constants are split by purpose:
+
+- `PRIMITIVE_ERROR_MESSAGE_CONSTANTS` keys follow `typeof` (`string`, `number`, `boolean`)
+- `DENIED_TYPE_OPERATIONS` keys follow `TypeOperation` (`CREATE`, `READ`, `UPDATE`, `DELETE`)
+- `ERROR_MESSAGE_CONSTANTS` exposes canonical code-keyed entries (for example `NOT_A_STRING`, `DENIED_TYPE_OPERATION_CREATE`)
 
 ## Docs Site
 

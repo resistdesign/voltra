@@ -89,11 +89,10 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "scalarAction": "open",
-        "scalarCustomType": "Special",
-        "arrayAction": "add",
-        "arrayCustomType": "Special",
-        "arrayValueIsArray": true
+        "scalarHasManageButton": true,
+        "arrayHasAddItemButton": true,
+        "arrayHasManageButton": true,
+        "arrayHasRemoveButton": true
       }
     },
     {
@@ -101,8 +100,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "action": "open",
-        "fullPaging": true
+        "hasManageButton": true,
+        "hasManageSignifier": true
       }
     },
     {
@@ -120,6 +119,24 @@
       "expectation": {
         "hasVisibleField": true,
         "hasHiddenField": false
+      }
+    },
+    {
+      "export": "runMultipleValueErrorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasFirstError": true,
+        "hasSecondError": true
+      }
+    },
+    {
+      "export": "runArrayItemErrorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasItemFirstError": true,
+        "hasItemSecondError": true
       }
     }
   ]

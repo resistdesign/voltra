@@ -1,4 +1,11 @@
-import { CSSProperties, FC, useMemo, useState } from "react";
+import {
+  type ChangeEvent,
+  CSSProperties,
+  FC,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import {
   ComponentMap,
   getEasyLayoutTemplateDetails,
@@ -30,6 +37,12 @@ const nativeViewport = {
 
 export const EasyLayoutDemo: FC = () => {
   const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
+  const handleTemplateChange = useCallback(
+    (event: ChangeEvent<HTMLTextAreaElement>) => {
+      setTemplate(event.target.value);
+    },
+    [],
+  );
   const {
     web: { layout: WebLayout, areas = {} as ComponentMap } = {},
     native,
@@ -89,7 +102,7 @@ export const EasyLayoutDemo: FC = () => {
           name="easy-layout-template"
           rows={6}
           value={template}
-          onChange={(event) => setTemplate(event.target.value)}
+          onChange={handleTemplateChange}
         />
       </article>
 

@@ -1,7 +1,7 @@
 import { buildHistoryPath, createMemoryHistory } from "./History";
 import { createRouteAdapterFromHistory } from "./RouteHistory";
 
-export const runRouteHistoryBridgeScenario = () => {
+const getRouteHistoryBridgeScenario = () => {
   const history = createMemoryHistory("/app/books/42?tab=summary");
   const adapter = createRouteAdapterFromHistory(history);
   const events: string[] = [];
@@ -48,6 +48,27 @@ export const runRouteHistoryBridgeScenario = () => {
     afterHistoryPush,
     afterAdapterReplace,
     afterAdapterBack,
-    events: events,
+    events,
   };
 };
+
+export const runRouteHistoryInitialAdapterPathScenario = () =>
+  getRouteHistoryBridgeScenario().initialAdapterPath;
+
+export const runRouteHistoryInitialHistoryPathScenario = () =>
+  getRouteHistoryBridgeScenario().initialHistoryPath;
+
+export const runRouteHistoryAfterAdapterPushScenario = () =>
+  getRouteHistoryBridgeScenario().afterAdapterPush;
+
+export const runRouteHistoryAfterHistoryPushScenario = () =>
+  getRouteHistoryBridgeScenario().afterHistoryPush;
+
+export const runRouteHistoryAfterAdapterReplaceScenario = () =>
+  getRouteHistoryBridgeScenario().afterAdapterReplace;
+
+export const runRouteHistoryAfterAdapterBackScenario = () =>
+  getRouteHistoryBridgeScenario().afterAdapterBack;
+
+export const runRouteHistoryEventsScenario = () =>
+  getRouteHistoryBridgeScenario().events;

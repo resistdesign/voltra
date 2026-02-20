@@ -248,8 +248,42 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "errors": {
-          "name": "Bad"
+          "name": [
+            {
+              "code": "Bad"
+            }
+          ]
         }
+      }
+    },
+    {
+      "export": "runArrayItemErrorMappingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "tagsErrors": [
+          {
+            "itemErrorMap": {
+              "0": [
+                {
+                  "code": "TAG_INVALID_0"
+                }
+              ],
+              "2": [
+                {
+                  "code": "TAG_INVALID_2A"
+                },
+                {
+                  "code": "TAG_INVALID_2B"
+                }
+              ]
+            }
+          }
+        ],
+        "fieldErrorCode": "NONE",
+        "fieldErrorsCount": 0,
+        "index0FirstCode": "TAG_INVALID_0",
+        "index2Codes": ["TAG_INVALID_2A", "TAG_INVALID_2B"]
       }
     }
   ]

@@ -6,14 +6,14 @@
 
 import * as Forms from "./index";
 
-/**
- * Validate forms index exports.
- */
-export const runAppFormsIndexScenario = () => {
-  return {
-    hasCreateFormRenderer: "createFormRenderer" in Forms,
-    hasCreateWebFormRenderer: "createWebFormRenderer" in Forms,
-    hasCreateNativeFormRenderer: "createNativeFormRenderer" in Forms,
-    hasMergeSuites: "mergeSuites" in Forms,
-  };
-};
+export const runAppFormsIndexHasCreateFormRendererScenario = () =>
+  "createFormRenderer" in Forms;
+
+export const runAppFormsIndexHasCreateWebFormRendererScenario = () =>
+  "createWebFormRenderer" in Forms;
+
+export const runAppFormsIndexHasCreateNativeFormRendererScenario = () =>
+  "createNativeFormRenderer" in Forms;
+
+export const runAppFormsIndexHasMergeSuitesScenario = () =>
+  "mergeSuites" in Forms;

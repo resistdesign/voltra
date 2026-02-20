@@ -1,0 +1,71 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeFormsIndexHasAutoFieldScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasAutoFormScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasAutoFormViewScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasCreateNativeFormRendererScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasNativeSuiteScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasNativeAutoFieldScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasFieldWrapperScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasErrorMessageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasArrayContainerScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasArrayItemWrapperScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeFormsIndexHasButtonPrimitiveScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}

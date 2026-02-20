@@ -27,13 +27,64 @@ export const BackHandler = {
   __triggerHardwareBackPress: () => backListener?.() ?? false,
 };
 
-const createPrimitive = (name: string) => {
-  return ({ children, ...props }: Record<string, any>) =>
-    React.createElement(name, props, children);
+type PrimitiveProps = Record<string, any> & { children?: React.ReactNode };
+
+const createPrimitive = (
+  tag: "div" | "span" | "button" | "input",
+  displayName: string,
+  normalize?: (props: PrimitiveProps) => PrimitiveProps,
+) => {
+  const Primitive = ({ children, ...props }: PrimitiveProps) => {
+    const normalized = normalize ? normalize(props) : props;
+    return React.createElement(
+      tag,
+      { "data-rn": displayName, ...normalized },
+      children,
+    );
+  };
+  Primitive.displayName = displayName;
+  return Primitive;
 };
 
-export const View = createPrimitive("View");
-export const Text = createPrimitive("Text");
-export const Pressable = createPrimitive("Pressable");
-export const Switch = createPrimitive("Switch");
-export const TextInput = createPrimitive("TextInput");
+export const View = createPrimitive("div", "View", (props) => {
+  const { style, ...rest } = props;
+  return rest;
+});
+
+export const Text = createPrimitive("span", "Text", (props) => {
+  const { style, ...rest } = props;
+  return rest;
+});
+
+export const Pressable = createPrimitive("button", "Pressable", (props) => {
+  const { onPress, disabled, style, ...rest } = props;
+  return {
+    ...rest,
+    type: "button",
+    disabled: !!disabled,
+    onClick: onPress,
+  };
+});
+
+export const Switch = createPrimitive("input", "Switch", (props) => {
+  const { onValueChange, value, disabled, style, ...rest } = props;
+  return {
+    ...rest,
+    type: "checkbox",
+    checked: !!value,
+    disabled: !!disabled,
+    onChange: (event: { target: { checked: boolean } }) =>
+      onValueChange?.(!!event.target.checked),
+  };
+});
+
+export const TextInput = createPrimitive("input", "TextInput", (props) => {
+  const { onChangeText, value, editable, style, ...rest } = props;
+  return {
+    ...rest,
+    value: value ?? "",
+    disabled: editable === false,
+    onChange: (event: { target: { value: string } }) =>
+      onChangeText?.(event.target.value),
+  };
+});

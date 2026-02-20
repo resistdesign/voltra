@@ -25,7 +25,9 @@
         "label": "Display Name",
         "required": true,
         "disabled": true,
-        "error": "Required",
+        "error": {
+          "code": "Required"
+        },
         "value": "Ada",
         "allowCustomSelection": true,
         "format": "email",
@@ -40,7 +42,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "nestedResult": "string:tags[0]"
+        "nestedResult": true
       }
     }
   ]

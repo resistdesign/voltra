@@ -18,7 +18,7 @@ const buildDriver = () => {
   });
 };
 
-export const runListItemUtilsScenario = async () => {
+const runListItemUtilsScenario = async () => {
   const driver = buildDriver() as unknown as DataItemDBDriver<any, any>;
 
   const id1 = await (
@@ -83,3 +83,21 @@ export const runListItemUtilsScenario = async () => {
     filteredWithSelect: filteredWithSelect.items,
   };
 };
+
+export const runListItemUtilsCreatedIdsScenario = async () =>
+  (await runListItemUtilsScenario()).createdIds;
+
+export const runListItemUtilsNoFilterIdsScenario = async () =>
+  (await runListItemUtilsScenario()).noFilterIds;
+
+export const runListItemUtilsFilteredIdsScenario = async () =>
+  (await runListItemUtilsScenario()).filteredIds;
+
+export const runListItemUtilsTransformedItemsScenario = async () =>
+  (await runListItemUtilsScenario()).transformedItems;
+
+export const runListItemUtilsSelectedFieldKeysScenario = async () =>
+  (await runListItemUtilsScenario()).selectedFieldKeys;
+
+export const runListItemUtilsFilteredWithSelectScenario = async () =>
+  (await runListItemUtilsScenario()).filteredWithSelect;

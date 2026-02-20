@@ -2,6 +2,11 @@ import type { FC } from "react";
 import type { RelationActionPayload } from "../../../../../../src/app/forms";
 import { AutoFormView } from "../../../../../../src/web/forms";
 import { useFormEngine } from "../../../../../../src/app/forms";
+import type { FormErrorInputMap } from "../../../../../../src/app/forms";
+import type {
+  ArrayErrorDescriptorCollection,
+  ErrorDescriptor,
+} from "../../../../../../src/common/TypeParsing/Validation";
 import { ERROR_MESSAGE_CONSTANTS } from "../../../../../../src/common/TypeParsing/Validation";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
@@ -47,13 +52,14 @@ export const FormBlock: FC<FormBlockProps> = ({
       onSubmit={handleSubmit}
       onRelationAction={onRelationAction}
       submitDisabled={submitDisabled}
+      translateValidationErrorCode={translateValidationErrorCode}
     />
   );
 };
 
 const extractValidationErrors = (
   error: unknown,
-): Record<string, string> | null => {
+): FormErrorInputMap | null => {
   if (!error || typeof error !== "object") {
     return null;
   }
@@ -67,22 +73,77 @@ const extractValidationErrors = (
     return null;
   }
 
-  const fieldErrors: Record<string, string> = {};
+  const fieldErrors: FormErrorInputMap = {};
 
   for (const [key, value] of Object.entries(errorMap)) {
-    const fieldKey = key.split(".")[0];
-    const code = Array.isArray(value) ? value[0] : value;
+    const fieldKey = getTopLevelFieldKey(key);
+    const entries = getErrorEntries(value);
 
-    if (typeof code === "string") {
-      fieldErrors[fieldKey] = getErrorMessage(code);
+    if (
+      fieldKey &&
+      entries.length &&
+      !fieldErrors[fieldKey]
+    ) {
+      fieldErrors[fieldKey] = entries;
     }
   }
 
   return Object.keys(fieldErrors).length ? fieldErrors : null;
 };
 
-const getErrorMessage = (code: string) => {
-  if (code === ERROR_MESSAGE_CONSTANTS.MISSING) {
+const getErrorEntries = (
+  value: unknown,
+): (ErrorDescriptor | ArrayErrorDescriptorCollection)[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const entries: (ErrorDescriptor | ArrayErrorDescriptorCollection)[] = [];
+
+  for (const entry of value) {
+    if (
+      entry &&
+      typeof entry === "object" &&
+      "code" in entry &&
+      typeof entry.code === "string"
+    ) {
+      const descriptor = entry as ErrorDescriptor;
+      if (descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE) {
+        entries.push(descriptor);
+      }
+      continue;
+    }
+
+    if (
+      entry &&
+      typeof entry === "object" &&
+      "itemErrorMap" in entry &&
+      typeof (entry as any).itemErrorMap === "object"
+    ) {
+      entries.push(entry as ArrayErrorDescriptorCollection);
+    }
+  }
+
+  return entries;
+};
+
+const getTopLevelFieldKey = (path: string): string => {
+  if (!path) {
+    return "";
+  }
+
+  const firstSegment = path.includes("/")
+    ? path.split("/")[0]
+    : path.split(".")[0];
+
+  return firstSegment.replace(/^"+|"+$/g, "");
+};
+
+const translateValidationErrorCode = (error: ErrorDescriptor): string => {
+  const { code, values = [] } = error;
+  const [constraintValue] = values;
+
+  if (code === ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE) {
     return "This field is required";
   }
 
@@ -92,6 +153,22 @@ const getErrorMessage = (code: string) => {
 
   if (code === ERROR_MESSAGE_CONSTANTS.INVALID_PATTERN) {
     return "Value does not match required pattern";
+  }
+
+  if (code === ERROR_MESSAGE_CONSTANTS.VALUE_BELOW_MINIMUM) {
+    return `Value must be at least ${constraintValue ?? "the minimum"}`;
+  }
+
+  if (code === ERROR_MESSAGE_CONSTANTS.VALUE_ABOVE_MAXIMUM) {
+    return `Value must be at most ${constraintValue ?? "the maximum"}`;
+  }
+
+  if (code === ERROR_MESSAGE_CONSTANTS.NONE) {
+    return "";
+  }
+
+  if (typeof code === "string" && code.trim()) {
+    return code;
   }
 
   return "Invalid value";

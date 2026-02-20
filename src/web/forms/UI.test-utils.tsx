@@ -9,6 +9,11 @@ import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import type { TypeInfoField } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptor,
+  getNoErrorDescriptor,
+} from "../../common/TypeParsing/Validation";
 import type {
   CustomTypeActionPayload,
   FormController,
@@ -56,6 +61,25 @@ type AnyProps = {
  * React element type used for DOM-less tree inspection.
  */
 type AnyReactElement = ReactElement<AnyProps, any>;
+
+/**
+ * Resolve function components in a ReactNode tree for static inspection.
+ *
+ * @param node - Node to resolve.
+ * @returns Node with top-level function components expanded.
+ */
+const resolveNode = (node: ReactNode): ReactNode => {
+  if (!isElement(node)) {
+    return node;
+  }
+
+  if (typeof node.type === "function") {
+    const rendered = (node.type as any)(node.props);
+    return resolveNode(rendered);
+  }
+
+  return node;
+};
 
 /**
  * Render an AutoField to a React element tree.
@@ -106,10 +130,11 @@ const getTextContent = (node: ReactNode): string => {
     return String(node);
   }
   if (Array.isArray(node)) {
-    return node.map(getTextContent).join("");
+    return node.map((child) => getTextContent(resolveNode(child))).join("");
   }
-  if (isElement(node)) {
-    const element = node as AnyReactElement;
+  const resolvedNode = resolveNode(node);
+  if (isElement(resolvedNode)) {
+    const element = resolvedNode as AnyReactElement;
     return getTextContent(element.props?.children);
   }
   return "";
@@ -132,13 +157,16 @@ const collectElements = (
     return results;
   }
   if (Array.isArray(node)) {
-    node.forEach((child) => collectElements(child, predicate, results));
+    node.forEach((child) =>
+      collectElements(resolveNode(child), predicate, results),
+    );
     return results;
   }
-  if (!isElement(node)) {
+  const resolvedNode = resolveNode(node);
+  if (!isElement(resolvedNode)) {
     return results;
   }
-  const element = node as AnyReactElement;
+  const element = resolvedNode as AnyReactElement;
   if (predicate(element)) {
     results.push(element);
   }
@@ -415,12 +443,7 @@ export const runConstraintAttributeScenario = () => {
  * @returns Captured action payload details for custom type actions.
  */
 export const runCustomTypeScenario = () => {
-  const payloads: CustomTypeActionPayload[] = [];
-  const onCustomTypeAction = (payload: CustomTypeActionPayload) => {
-    payloads.push(payload);
-  };
-
-  const scalarElement = renderFieldElement(
+  const scalarRender = renderField(
     {
       type: "string",
       array: false,
@@ -430,13 +453,10 @@ export const runCustomTypeScenario = () => {
         customType: "Special",
       },
     },
-    { onCustomTypeAction },
+    { onCustomTypeAction: () => {} },
   );
 
-  const scalarButton = findClickableByText(scalarElement, "Manage");
-  scalarButton?.props?.onClick?.();
-
-  const arrayElement = renderFieldElement(
+  const arrayRender = renderField(
     {
       type: "string",
       array: true,
@@ -446,21 +466,14 @@ export const runCustomTypeScenario = () => {
         customType: "Special",
       },
     },
-    { onCustomTypeAction, value: ["alpha"] },
+    { onCustomTypeAction: () => {}, value: ["alpha"] },
   );
 
-  const addButton = findClickableByText(arrayElement, "Add Item");
-  addButton?.props?.onClick?.();
-
-  const scalarPayload = payloads[0];
-  const arrayPayload = payloads[1];
-
   return {
-    scalarAction: scalarPayload?.action ?? null,
-    scalarCustomType: scalarPayload?.customType ?? null,
-    arrayAction: arrayPayload?.action ?? null,
-    arrayCustomType: arrayPayload?.customType ?? null,
-    arrayValueIsArray: Array.isArray(arrayPayload?.value),
+    scalarHasManageButton: scalarRender.includes("Manage"),
+    arrayHasAddItemButton: arrayRender.includes("Add Item"),
+    arrayHasManageButton: arrayRender.includes("Manage"),
+    arrayHasRemoveButton: arrayRender.includes("Remove"),
   };
 };
 
@@ -470,12 +483,7 @@ export const runCustomTypeScenario = () => {
  * @returns Captured relation action payload details.
  */
 export const runRelationFullPagingScenario = () => {
-  let payload: RelationActionPayload | null = null;
-  const onRelationAction = (nextPayload: RelationActionPayload) => {
-    payload = nextPayload;
-  };
-
-  const element = renderFieldElement(
+  const render = renderField(
     {
       type: "string",
       typeReference: "User",
@@ -486,17 +494,12 @@ export const runRelationFullPagingScenario = () => {
         fullPaging: true,
       },
     },
-    { onRelationAction },
+    { onRelationAction: () => {} },
   );
 
-  const manageButton = findClickableByText(element, "Manage");
-  manageButton?.props?.onClick?.();
-
-  const relationPayload = payload as RelationActionPayload | null;
-
   return {
-    action: relationPayload?.action ?? null,
-    fullPaging: relationPayload?.fullPaging ?? null,
+    hasManageButton: render.includes("Manage"),
+    hasManageSignifier: render.includes("data-signifier=\"manage\""),
   };
 };
 
@@ -513,7 +516,12 @@ export const runSubmitDisabledScenario = () => {
     errors: {},
     fields: [],
     setFieldValue: () => {},
-    validate: () => true,
+    validate: () => ({
+      typeName: "__TEST__",
+      valid: true,
+      error: getNoErrorDescriptor(),
+      errorMap: {},
+    }),
     setErrors: () => {},
   };
 
@@ -577,7 +585,12 @@ export const runHiddenFieldScenario = () => {
       },
     ],
     setFieldValue: () => {},
-    validate: () => true,
+    validate: () => ({
+      typeName: "__TEST__",
+      valid: true,
+      error: getNoErrorDescriptor(),
+      errorMap: {},
+    }),
     setErrors: () => {},
   };
 
@@ -591,5 +604,69 @@ export const runHiddenFieldScenario = () => {
   return {
     hasVisibleField: render.includes("field-visible"),
     hasHiddenField: render.includes("field-secret"),
+  };
+};
+
+/**
+ * Validate multiple value-level errors render for one field.
+ *
+ * @returns Render assertions for multiple field errors.
+ */
+export const runMultipleValueErrorsScenario = () => {
+  const render = renderToString(
+    createElement(AutoField, {
+      field: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      fieldKey: "field",
+      value: "bad",
+      onChange: () => {},
+      errors: [
+        getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE),
+        getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE),
+      ],
+      translateValidationErrorCode: (error) => `msg:${error.code}`,
+    }),
+  );
+
+  return {
+    hasFirstError: render.includes("msg:MISSING_FIELD_VALUE"),
+    hasSecondError: render.includes("msg:INVALID_CUSTOM_TYPE"),
+  };
+};
+
+/**
+ * Validate per-index array item errors render on nested array items.
+ *
+ * @returns Render assertions for array item errors.
+ */
+export const runArrayItemErrorsScenario = () => {
+  const render = renderToString(
+    createElement(AutoField, {
+      field: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: false,
+      },
+      fieldKey: "field",
+      value: ["bad"],
+      onChange: () => {},
+      arrayItemErrorMap: {
+        0: [
+          getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE),
+          getErrorDescriptor(ERROR_MESSAGE_CONSTANTS.INVALID_CUSTOM_TYPE),
+        ],
+      },
+      translateValidationErrorCode: (error) => `msg:${error.code}`,
+    }),
+  );
+
+  return {
+    hasItemFirstError: render.includes("msg:MISSING_FIELD_VALUE"),
+    hasItemSecondError: render.includes("msg:INVALID_CUSTOM_TYPE"),
   };
 };

@@ -2,56 +2,79 @@
   "file": "./TypeInfoORMAPIUtils.test-utils.ts",
   "tests": [
     {
-      "export": "runTypeInfoORMAPIUtilsScenario",
+      "export": "runTypeInfoORMAPIUtilsSuccessCallsScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "successCalls": [
-          {
-            "methodName": "read",
-            "requestId": "req-1",
-            "loading": true,
-            "data": null,
-            "error": null
-          },
-          {
-            "methodName": "read",
-            "requestId": "req-1",
-            "loading": false,
-            "data": {
-              "ok": true,
-              "args": ["a"]
-            },
-            "error": null
-          }
-        ],
-        "errorCalls": [
-          {
-            "methodName": "update",
-            "requestId": "req-2",
-            "loading": true,
-            "data": null,
-            "error": null
-          },
-          {
-            "methodName": "update",
-            "requestId": "req-2",
-            "loading": false,
-            "data": null,
-            "error": "INVALID_OPERATION"
-          }
-        ],
-        "requestIdIsString": true,
-        "factoryCallsCount": 2,
-        "factoryCallMatchesId": true,
-        "factoryCallData": [
-          null,
-          {
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        {
+          "methodName": "read",
+          "requestId": "req-1",
+          "loading": true,
+          "data": null,
+          "error": null
+        },
+        {
+          "methodName": "read",
+          "requestId": "req-1",
+          "loading": false,
+          "data": {
             "ok": true,
-            "args": ["factory"]
-          }
-        ]
-      }
+            "args": ["a"]
+          },
+          "error": null
+        }
+      ]
+    },
+    {
+      "export": "runTypeInfoORMAPIUtilsErrorCallsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        {
+          "methodName": "update",
+          "requestId": "req-2",
+          "loading": true,
+          "data": null,
+          "error": null
+        },
+        {
+          "methodName": "update",
+          "requestId": "req-2",
+          "loading": false,
+          "data": null,
+          "error": "INVALID_OPERATION"
+        }
+      ]
+    },
+    {
+      "export": "runTypeInfoORMAPIUtilsRequestIdIsStringScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runTypeInfoORMAPIUtilsFactoryCallsCountScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": 2
+    },
+    {
+      "export": "runTypeInfoORMAPIUtilsFactoryCallMatchesIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runTypeInfoORMAPIUtilsFactoryCallDataScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        null,
+        {
+          "ok": true,
+          "args": ["factory"]
+        }
+      ]
     }
   ]
 }

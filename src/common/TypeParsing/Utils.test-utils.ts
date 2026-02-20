@@ -7,7 +7,7 @@ import {
 } from "./Utils";
 import { TypeInfo } from "./TypeInfo";
 
-export const runTypeParsingUtilsScenario = () => {
+const getTypeParsingUtilsScenarioData = () => {
   const typeInfo: TypeInfo = {
     fields: {
       id: {
@@ -32,38 +32,47 @@ export const runTypeParsingUtilsScenario = () => {
     },
   };
 
-  const selectedFields = ["id", "author", "missing"] as const;
-  const cleanedSelected = removeNonexistentFieldsFromSelectedFields(typeInfo, [
-    ...selectedFields,
-  ]);
-  const nonReferenceSelected = removeTypeReferenceFieldsFromSelectedFields(
-    typeInfo,
-    [...selectedFields],
-  );
-
+  const selectedFields = ["author", "id", "missing"] as const;
   const dataItem = {
     id: "book-1",
     title: "Guide",
     author: "person-1",
     missing: "ignored",
   };
-  const cleanedDataItem = removeNonexistentFieldsFromDataItem(
-    typeInfo,
-    dataItem,
-  );
-  const nonReferenceDataItem = removeTypeReferenceFieldsFromDataItem(
-    typeInfo,
-    dataItem,
-  );
-  const unselected = removeUnselectedFieldsFromDataItem(dataItem, ["title"]);
-  const noSelected = removeUnselectedFieldsFromDataItem(dataItem);
 
   return {
-    cleanedSelected,
-    nonReferenceSelected,
-    cleanedDataItem,
-    nonReferenceDataItem,
-    unselected,
-    noSelected,
+    typeInfo,
+    selectedFields,
+    dataItem,
   };
+};
+
+export const runTypeParsingUtilsCleanedSelectedScenario = () => {
+  const { typeInfo, selectedFields } = getTypeParsingUtilsScenarioData();
+  return removeNonexistentFieldsFromSelectedFields(typeInfo, [...selectedFields]);
+};
+
+export const runTypeParsingUtilsNonReferenceSelectedScenario = () => {
+  const { typeInfo, selectedFields } = getTypeParsingUtilsScenarioData();
+  return removeTypeReferenceFieldsFromSelectedFields(typeInfo, [...selectedFields]);
+};
+
+export const runTypeParsingUtilsCleanedDataItemScenario = () => {
+  const { typeInfo, dataItem } = getTypeParsingUtilsScenarioData();
+  return removeNonexistentFieldsFromDataItem(typeInfo, dataItem);
+};
+
+export const runTypeParsingUtilsNonReferenceDataItemScenario = () => {
+  const { typeInfo, dataItem } = getTypeParsingUtilsScenarioData();
+  return removeTypeReferenceFieldsFromDataItem(typeInfo, dataItem);
+};
+
+export const runTypeParsingUtilsUnselectedScenario = () => {
+  const { dataItem } = getTypeParsingUtilsScenarioData();
+  return removeUnselectedFieldsFromDataItem(dataItem, ["title"]);
+};
+
+export const runTypeParsingUtilsNoSelectedScenario = () => {
+  const { dataItem } = getTypeParsingUtilsScenarioData();
+  return removeUnselectedFieldsFromDataItem(dataItem);
 };

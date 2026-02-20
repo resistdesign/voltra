@@ -1,6 +1,6 @@
 import { getFullUrl, sendServiceRequest, type ServiceConfig } from "./Service";
 
-export const runServiceScenario = async () => {
+const runServiceScenario = async () => {
   const config: ServiceConfig = {
     protocol: "https",
     domain: "example.com",
@@ -14,6 +14,21 @@ export const runServiceScenario = async () => {
     config.basePath,
     "v1",
     config.port,
+  );
+  const originUrl = getFullUrl(config.protocol, config.domain, "", "", config.port);
+  const normalizedProtocolUrl = getFullUrl(
+    "https:",
+    "example.com",
+    "api",
+    "v2",
+    443,
+  );
+  const normalizedDomainUrl = getFullUrl(
+    "https",
+    "example.com/",
+    "api",
+    "v3",
+    443,
   );
 
   const originalFetch = globalThis.fetch;
@@ -49,6 +64,9 @@ export const runServiceScenario = async () => {
 
   return {
     url,
+    originUrl,
+    normalizedProtocolUrl,
+    normalizedDomainUrl,
     requestInfo: {
       input: requestInfo.input,
       method: requestInfo.init?.method,
@@ -59,3 +77,23 @@ export const runServiceScenario = async () => {
     errorMessage,
   };
 };
+
+export const runServiceUrlScenario = async () => (await runServiceScenario()).url;
+
+export const runServiceOriginUrlScenario = async () =>
+  (await runServiceScenario()).originUrl;
+
+export const runServiceNormalizedProtocolUrlScenario = async () =>
+  (await runServiceScenario()).normalizedProtocolUrl;
+
+export const runServiceNormalizedDomainUrlScenario = async () =>
+  (await runServiceScenario()).normalizedDomainUrl;
+
+export const runServiceRequestInfoScenario = async () =>
+  (await runServiceScenario()).requestInfo;
+
+export const runServiceSuccessResponseScenario = async () =>
+  (await runServiceScenario()).successResponse;
+
+export const runServiceErrorMessageScenario = async () =>
+  (await runServiceScenario()).errorMessage;

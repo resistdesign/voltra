@@ -7,8 +7,14 @@ import {
 import { ComparisonOperators, LogicalOperators } from "./SearchTypes";
 import { TypeInfoMap } from "./TypeParsing/TypeInfo";
 
-export const runSearchUtilsScenario = () => {
-  const items = [
+const getSearchUtilsScenario = () => {
+  const items: Array<{
+    id: string;
+    title: string;
+    rating: number;
+    tags: string[];
+    author: string;
+  }> = [
     {
       id: "1",
       title: "Voltra Guide",
@@ -64,7 +70,12 @@ export const runSearchUtilsScenario = () => {
     },
   };
 
-  const compareResult = compare(
+  return { items, typeInfoMap };
+};
+
+export const runSearchUtilsCompareScenario = () => {
+  const { items } = getSearchUtilsScenario();
+  return compare(
     {
       fieldName: "rating",
       operator: ComparisonOperators.GREATER_THAN,
@@ -72,7 +83,11 @@ export const runSearchUtilsScenario = () => {
     },
     items[0].rating,
   );
-  const compareArrayContains = compareArray(
+};
+
+export const runSearchUtilsCompareArrayContainsScenario = () => {
+  const { items } = getSearchUtilsScenario();
+  return compareArray(
     {
       fieldName: "tags",
       operator: ComparisonOperators.EQUALS,
@@ -80,7 +95,11 @@ export const runSearchUtilsScenario = () => {
     },
     items[0].tags,
   );
-  const compareArrayNotContains = compareArray(
+};
+
+export const runSearchUtilsCompareArrayNotContainsScenario = () => {
+  const { items } = getSearchUtilsScenario();
+  return compareArray(
     {
       fieldName: "tags",
       operator: ComparisonOperators.NOT_CONTAINS,
@@ -88,7 +107,10 @@ export const runSearchUtilsScenario = () => {
     },
     items[0].tags,
   );
+};
 
+export const runSearchUtilsFilterAndScenario = () => {
+  const { items, typeInfoMap } = getSearchUtilsScenario();
   const filteredAnd = getFilterTypeInfoDataItemsBySearchCriteria(
     {
       logicalOperator: LogicalOperators.AND,
@@ -119,7 +141,11 @@ export const runSearchUtilsScenario = () => {
     "Book",
     typeInfoMap,
   );
+  return filteredAnd.map((item) => item.id);
+};
 
+export const runSearchUtilsFilterOrScenario = () => {
+  const { items, typeInfoMap } = getSearchUtilsScenario();
   const filteredOr = getFilterTypeInfoDataItemsBySearchCriteria(
     {
       logicalOperator: LogicalOperators.OR,
@@ -140,16 +166,11 @@ export const runSearchUtilsScenario = () => {
     "Book",
     typeInfoMap,
   );
+  return filteredOr.map((item) => item.id);
+};
 
+export const runSearchUtilsSortScenario = () => {
+  const { items } = getSearchUtilsScenario();
   const sorted = getSortedItems([{ field: "rating", reverse: true }], items);
-  const sortedIds = sorted.map((item) => item.id);
-
-  return {
-    compareResult,
-    compareArrayContains,
-    compareArrayNotContains,
-    filteredAndIds: filteredAnd.map((item) => item.id),
-    filteredOrIds: filteredOr.map((item) => item.id),
-    sortedIds,
-  };
+  return sorted.map((item) => item.id);
 };

@@ -4,12 +4,18 @@
  * Default web component suite for form rendering.
  */
 
-import { createElement } from "react";
-import type { FormEvent, ReactElement } from "react";
+import { createElement, useCallback } from "react";
+import type {
+  ChangeEvent,
+  FormEvent,
+  MouseEvent,
+  ReactElement,
+} from "react";
 import type {
   LiteralValue,
   TypeInfoField,
 } from "../../common/TypeParsing/TypeInfo";
+import { ERROR_MESSAGE_CONSTANTS } from "../../common/TypeParsing/Validation";
 import type {
   ComponentSuite,
   FieldRenderContext,
@@ -64,10 +70,43 @@ const formatCustomValue = (val: unknown) => {
   return JSON.stringify(val, null, 2);
 };
 
-const renderRelationSingle = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+const renderErrorMessage = (context: FieldRenderContext) => {
+  const { error, errors = [], translateValidationErrorCode } = context;
+  const descriptors = (errors.length ? errors : error ? [error] : []).filter(
+    (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+  );
+
+  if (!descriptors.length) {
+    return null;
+  }
+
+  return (
+    <>
+      {descriptors.map((descriptor, index) => {
+        const message = translateValidationErrorCode(descriptor);
+        if (!message) {
+          return null;
+        }
+        return <ErrorMessage key={`${descriptor.code}-${index}`}>{message}</ErrorMessage>;
+      })}
+    </>
+  );
+};
+
+const RelationSingleField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
+  const handleManageRelation = useCallback(() => {
+    onRelationAction?.({
+      action: "open",
+      fieldKey,
+      field,
+      value: undefined,
+      fullPaging: field.tags?.fullPaging,
+      onChange: context.onChange,
+    });
+  }, [context.onChange, field, fieldKey, onRelationAction]);
 
   return (
     <FieldWrapper>
@@ -79,29 +118,30 @@ const renderRelationSingle = (context: FieldRenderContext) => {
           data-signifier="manage"
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onRelationAction({
-              action: "open",
-              fieldKey,
-              field,
-              value: undefined,
-              fullPaging: field.tags?.fullPaging,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleManageRelation}
         >
           Manage
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderRelationArray = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error, onRelationAction } =
+const RelationArrayField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled, onRelationAction } =
     context;
   const id = `field-${fieldKey}`;
+  const handleManageRelation = useCallback(() => {
+    onRelationAction?.({
+      action: "open",
+      fieldKey,
+      field,
+      value: undefined,
+      fullPaging: field.tags?.fullPaging,
+      onChange: context.onChange,
+    });
+  }, [context.onChange, field, fieldKey, onRelationAction]);
 
   return (
     <FieldWrapper>
@@ -113,30 +153,34 @@ const renderRelationArray = (context: FieldRenderContext) => {
           data-signifier="manage-related"
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onRelationAction({
-              action: "open",
-              fieldKey,
-              field,
-              value: undefined,
-              fullPaging: field.tags?.fullPaging,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleManageRelation}
         >
           Manage
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderCustomSingle = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const CustomSingleField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
+  const handleManageCustomType = useCallback(() => {
+    if (!customType) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "open",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      onChange: context.onChange,
+    });
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
 
   return (
     <FieldWrapper>
@@ -149,31 +193,79 @@ const renderCustomSingle = (context: FieldRenderContext) => {
           data-signifier="manage"
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onCustomTypeAction({
-              action: "open",
-              fieldKey,
-              field,
-              customType,
-              value: context.value,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleManageCustomType}
         >
           Manage
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderCustomArray = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const CustomArrayField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const customType = field.tags?.customType;
   const onCustomTypeAction = context.onCustomTypeAction;
   const arrayValue = Array.isArray(context.value) ? context.value : [];
+  const handleEditItem = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (!customType) {
+      return;
+    }
+    const indexRaw = event.currentTarget.getAttribute("data-array-index");
+    if (!indexRaw) {
+      return;
+    }
+    const index = Number(indexRaw);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "edit",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      index,
+      onChange: context.onChange,
+    });
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
+  const handleRemoveItem = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    if (!customType) {
+      return;
+    }
+    const indexRaw = event.currentTarget.getAttribute("data-array-index");
+    if (!indexRaw) {
+      return;
+    }
+    const index = Number(indexRaw);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "remove",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      index,
+      onChange: context.onChange,
+    });
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
+  const handleAddItem = useCallback(() => {
+    if (!customType) {
+      return;
+    }
+    onCustomTypeAction?.({
+      action: "add",
+      fieldKey,
+      field,
+      customType,
+      value: context.value,
+      onChange: context.onChange,
+    });
+  }, [context.onChange, context.value, customType, field, fieldKey, onCustomTypeAction]);
 
   return (
     <FieldWrapper>
@@ -191,19 +283,10 @@ const renderCustomArray = (context: FieldRenderContext) => {
               {customType && onCustomTypeAction ? (
                 <button
                   data-signifier="manage"
+                  data-array-index={String(index)}
                   type="button"
                   disabled={disabled}
-                  onClick={() =>
-                    onCustomTypeAction({
-                      action: "edit",
-                      fieldKey,
-                      field,
-                      customType,
-                      value: context.value,
-                      index,
-                      onChange: context.onChange,
-                    })
-                  }
+                  onClick={handleEditItem}
                 >
                   Manage
                 </button>
@@ -211,18 +294,9 @@ const renderCustomArray = (context: FieldRenderContext) => {
               {customType && onCustomTypeAction ? (
                 <button
                   type="button"
+                  data-array-index={String(index)}
                   disabled={disabled}
-                  onClick={() =>
-                    onCustomTypeAction({
-                      action: "remove",
-                      fieldKey,
-                      field,
-                      customType,
-                      value: context.value,
-                      index,
-                      onChange: context.onChange,
-                    })
-                  }
+                  onClick={handleRemoveItem}
                 >
                   Remove
                 </button>
@@ -235,32 +309,44 @@ const renderCustomArray = (context: FieldRenderContext) => {
         <button
           type="button"
           disabled={disabled}
-          onClick={() =>
-            onCustomTypeAction({
-              action: "add",
-              fieldKey,
-              field,
-              customType,
-              value: context.value,
-              onChange: context.onChange,
-            })
-          }
+          onClick={handleAddItem}
         >
           Add Item
         </button>
       ) : undefined}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderArray = (context: FieldRenderContext<ReactElement>) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const ArrayField = (context: FieldRenderContext<ReactElement>) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const itemField = createArrayItemField(field);
   const arrayValue = Array.isArray(context.value)
     ? [...(context.value as LiteralValue[])]
     : [];
+  const handleRemoveArrayItem = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    const indexRaw = event.currentTarget.getAttribute("data-array-index");
+    if (!indexRaw) {
+      return;
+    }
+    const index = Number(indexRaw);
+    if (!Number.isFinite(index)) {
+      return;
+    }
+    const newValue = [...arrayValue];
+    newValue.splice(index, 1);
+    context.onChange(newValue);
+  }, [arrayValue, context]);
+  const handleAddArrayItem = useCallback(() => {
+    const baseValue = Array.isArray(context.value) ? context.value : [];
+    const newValue = [...baseValue];
+    const newItem =
+      field.type === "number" ? 0 : field.type === "boolean" ? false : "";
+    newValue.push(newItem);
+    context.onChange(newValue);
+  }, [context, field.type]);
 
   return (
     <FieldWrapper>
@@ -280,17 +366,21 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
                   newValue[index] = newItem as LiteralValue;
                   context.onChange(newValue);
                 },
+                errors: context.arrayItemErrorMap?.[index] ?? [],
+                error:
+                  context.arrayItemErrorMap?.[index]?.find(
+                    (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+                  ) ?? undefined,
+                translateValidationErrorCode:
+                  context.translateValidationErrorCode,
                 disabled,
               })}
             </div>
             <button
               type="button"
+              data-array-index={String(index)}
               disabled={disabled}
-              onClick={() => {
-                const newValue = [...arrayValue];
-                newValue.splice(index, 1);
-                context.onChange(newValue);
-              }}
+              onClick={handleRemoveArrayItem}
             >
               Remove
             </button>
@@ -299,26 +389,22 @@ const renderArray = (context: FieldRenderContext<ReactElement>) => {
         <button
           type="button"
           disabled={disabled}
-          onClick={() => {
-            const baseValue = Array.isArray(context.value) ? context.value : [];
-            const newValue = [...baseValue];
-            const newItem =
-              field.type === "number" ? 0 : field.type === "boolean" ? false : "";
-            newValue.push(newItem);
-            context.onChange(newValue);
-          }}
+          onClick={handleAddArrayItem}
         >
           Add Item
         </button>
       </ArrayContainer>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderString = (context: FieldRenderContext) => {
-  const { fieldKey, label, required, disabled, error } = context;
+const StringField = (context: FieldRenderContext) => {
+  const { fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(event.target.value);
+  }, [context]);
 
   return (
     <FieldWrapper>
@@ -329,18 +415,21 @@ const renderString = (context: FieldRenderContext) => {
         id={id}
         type={context.format || "text"}
         value={(context.value as string) || ""}
-        onChange={(e: any) => context.onChange(e.target.value)}
+        onChange={handleChange}
         disabled={disabled}
         pattern={context.constraints?.pattern}
       />
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderNumber = (context: FieldRenderContext) => {
-  const { fieldKey, label, required, disabled, error } = context;
+const NumberField = (context: FieldRenderContext) => {
+  const { fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(parseNumberValue(event.target.value));
+  }, [context]);
 
   return (
     <FieldWrapper>
@@ -351,20 +440,23 @@ const renderNumber = (context: FieldRenderContext) => {
         id={id}
         type="number"
         value={(context.value as number) ?? ""}
-        onChange={(e: any) => context.onChange(parseNumberValue(e.target.value))}
+        onChange={handleChange}
         disabled={disabled}
         min={context.constraints?.min}
         max={context.constraints?.max}
         step={context.constraints?.step}
       />
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderBoolean = (context: FieldRenderContext) => {
-  const { fieldKey, label, disabled, error } = context;
+const BooleanField = (context: FieldRenderContext) => {
+  const { fieldKey, label, disabled } = context;
   const id = `field-${fieldKey}`;
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    context.onChange(event.target.checked);
+  }, [context]);
 
   return (
     <FieldWrapper>
@@ -373,21 +465,41 @@ const renderBoolean = (context: FieldRenderContext) => {
           id={id}
           type="checkbox"
           checked={!!context.value}
-          onChange={(e: any) => context.onChange(e.target.checked)}
+          onChange={handleChange}
           disabled={disabled}
         />
         <label htmlFor={id}> {label} </label>
       </div>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
 
-const renderEnumSelect = (context: FieldRenderContext) => {
-  const { field, fieldKey, label, required, disabled, error } = context;
+const EnumSelectField = (context: FieldRenderContext) => {
+  const { field, fieldKey, label, required, disabled } = context;
   const id = `field-${fieldKey}`;
   const selectableValues = getSelectableValues(context.possibleValues);
   const allowCustom = context.allowCustomSelection;
+  const handleCustomSelectionChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      context.onChange(
+        field.type === "number"
+          ? parseNumberValue(event.target.value)
+          : event.target.value,
+      );
+    },
+    [context, field.type],
+  );
+  const handleSelectChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      context.onChange(
+        field.type === "number"
+          ? parseNumberValue(event.target.value)
+          : event.target.value,
+      );
+    },
+    [context, field.type],
+  );
 
   return (
     <FieldWrapper>
@@ -403,13 +515,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
               type="text"
               list={`list-${id}`}
               value={(context.value as string | number) ?? ""}
-              onChange={(e: any) =>
-                context.onChange(
-                  field.type === "number"
-                    ? parseNumberValue(e.target.value)
-                    : e.target.value,
-                )
-              }
+              onChange={handleCustomSelectionChange}
               placeholder="Select or type..."
               disabled={disabled}
             />
@@ -426,13 +532,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
           <select
             id={id}
             value={(context.value as string | number) ?? ""}
-            onChange={(e: any) =>
-              context.onChange(
-                field.type === "number"
-                  ? parseNumberValue(e.target.value)
-                  : e.target.value,
-              )
-            }
+            onChange={handleSelectChange}
             disabled={disabled}
           >
             <option value="">Select...</option>
@@ -443,7 +543,7 @@ const renderEnumSelect = (context: FieldRenderContext) => {
             ))}
           </select>
         )}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {renderErrorMessage(context)}
     </FieldWrapper>
   );
 };
@@ -493,15 +593,15 @@ const SuiteButton = ({
  */
 export const webSuite: ComponentSuite<ReactElement> = {
   renderers: {
-    string: renderString,
-    number: renderNumber,
-    boolean: renderBoolean,
-    enum_select: renderEnumSelect,
-    array: renderArray,
-    relation_single: renderRelationSingle,
-    relation_array: renderRelationArray,
-    custom_single: renderCustomSingle,
-    custom_array: renderCustomArray,
+    string: StringField,
+    number: NumberField,
+    boolean: BooleanField,
+    enum_select: EnumSelectField,
+    array: ArrayField,
+    relation_single: RelationSingleField,
+    relation_array: RelationArrayField,
+    custom_single: CustomSingleField,
+    custom_array: CustomArrayField,
   },
   primitives: {
     FormRoot,

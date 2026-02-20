@@ -48,19 +48,66 @@ const buildHarness = (
   };
 };
 
-export const runControllerScenario = () => {
+const getControllerScenarioData = () => {
   const objectHarness = buildHarness({ name: "Alpha" }, "name", false);
   const arrayHarness = buildHarness(["zero", "one"], 1, true);
+  const missingArrayHarness = buildHarness(undefined, 1, true);
   const missingKeyHarness = buildHarness(undefined, "name", false);
 
   return {
-    objectValue: objectHarness.getValue() ?? null,
-    objectParent: objectHarness.getParent(),
-    objectChanges: objectHarness.getChanges(),
-    arrayValue: arrayHarness.getValue() ?? null,
-    arrayParent: arrayHarness.getParent(),
-    arrayChanges: arrayHarness.getChanges(),
-    missingValue: missingKeyHarness.getValue() ?? null,
-    missingParent: missingKeyHarness.getParent() ?? null,
+    objectHarness,
+    arrayHarness,
+    missingArrayHarness,
+    missingKeyHarness,
   };
+};
+
+export const runControllerObjectValueScenario = () => {
+  const { objectHarness } = getControllerScenarioData();
+  return objectHarness.getValue() ?? null;
+};
+
+export const runControllerObjectParentScenario = () => {
+  const { objectHarness } = getControllerScenarioData();
+  return objectHarness.getParent();
+};
+
+export const runControllerObjectChangesScenario = () => {
+  const { objectHarness } = getControllerScenarioData();
+  return objectHarness.getChanges();
+};
+
+export const runControllerArrayValueScenario = () => {
+  const { arrayHarness } = getControllerScenarioData();
+  return arrayHarness.getValue() ?? null;
+};
+
+export const runControllerArrayParentScenario = () => {
+  const { arrayHarness } = getControllerScenarioData();
+  return arrayHarness.getParent();
+};
+
+export const runControllerArrayChangesScenario = () => {
+  const { arrayHarness } = getControllerScenarioData();
+  return arrayHarness.getChanges();
+};
+
+export const runControllerMissingArrayValueScenario = () => {
+  const { missingArrayHarness } = getControllerScenarioData();
+  return missingArrayHarness.getValue() ?? null;
+};
+
+export const runControllerMissingArrayParentScenario = () => {
+  const { missingArrayHarness } = getControllerScenarioData();
+  return missingArrayHarness.getParent() ?? null;
+};
+
+export const runControllerMissingValueScenario = () => {
+  const { missingKeyHarness } = getControllerScenarioData();
+  return missingKeyHarness.getValue() ?? null;
+};
+
+export const runControllerMissingParentScenario = () => {
+  const { missingKeyHarness } = getControllerScenarioData();
+  return missingKeyHarness.getParent() ?? null;
 };

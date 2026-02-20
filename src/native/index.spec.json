@@ -1,0 +1,83 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNativeIndexHasFormsNamespaceScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runNativeIndexHasUtilsNamespaceScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runNativeIndexHasAutoFormTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasAutoFormViewTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasCreateNativeFormRendererTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasNativeSuiteTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasCreateNativeHistoryTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasRouteTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasMakeNativeEasyLayoutTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasFormsAutoFormScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasFormsCreateNativeFormRendererScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasUtilsCreateNativeHistoryScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasUtilsRouteScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}

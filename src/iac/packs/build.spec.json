@@ -2,25 +2,58 @@
   "file": "./build.test-utils.ts",
   "tests": [
     {
-      "export": "runBuildPackScenario",
+      "export": "runBuildPackResourceKeysScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": {
-        "resourceKeys": [
-          "BuildCodeBuildAndDeploy",
-          "BuildCodeBuildRole",
-          "BuildCodePipelineRole",
-          "BuildPipeline",
-          "BuildPipelineBucket"
-        ],
-        "provider": "GitHub",
-        "defaultProvider": "GitHub",
-        "environmentType": "LINUX_CONTAINER",
-        "environmentComputeType": "BUILD_GENERAL1_SMALL",
-        "environmentImage": "aws/codebuild/nodejs:10.14.1",
-        "sourceOwner": "voltra",
-        "buildProjectRef": "BuildCodeBuildAndDeploy"
-      }
+      "expectation": [
+        "BuildCodeBuildAndDeploy",
+        "BuildCodeBuildRole",
+        "BuildCodePipelineRole",
+        "BuildPipeline",
+        "BuildPipelineBucket"
+      ]
+    },
+    {
+      "export": "runBuildPackProviderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "GitHub"
+    },
+    {
+      "export": "runBuildPackDefaultProviderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "GitHub"
+    },
+    {
+      "export": "runBuildPackEnvironmentTypeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "LINUX_CONTAINER"
+    },
+    {
+      "export": "runBuildPackEnvironmentComputeTypeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "BUILD_GENERAL1_SMALL"
+    },
+    {
+      "export": "runBuildPackEnvironmentImageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "aws/codebuild/nodejs:10.14.1"
+    },
+    {
+      "export": "runBuildPackSourceOwnerScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "voltra"
+    },
+    {
+      "export": "runBuildPackBuildProjectRefScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "BuildCodeBuildAndDeploy"
     }
   ]
 }

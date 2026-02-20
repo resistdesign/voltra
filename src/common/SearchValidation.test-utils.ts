@@ -1,45 +1,76 @@
 import { validateSearchFields } from "./SearchValidation";
 import { ComparisonOperators } from "./SearchTypes";
 import { TypeInfoMap } from "./TypeParsing/TypeInfo";
+import type {
+  ArrayErrorDescriptorCollection,
+  ErrorDescriptor,
+  TypeInfoValidationResults,
+} from "./TypeParsing/Validation";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getErrorDescriptors,
+} from "./TypeParsing/Validation";
 
-export const runSearchValidationScenario = () => {
-  const typeInfoMap: TypeInfoMap = {
-    Book: {
-      fields: {
-        title: {
-          type: "string",
-          array: false,
-          readonly: false,
-          optional: false,
-        },
-        rating: {
-          type: "number",
-          array: false,
-          readonly: false,
-          optional: false,
-        },
+const toLegacyValidationShape = (results: TypeInfoValidationResults) => ({
+  ...results,
+  error:
+    results.error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : results.error.code,
+  errorMap: Object.entries(results.errorMap).reduce(
+    (
+      acc,
+      [key, descriptors]: [
+        string,
+        (ErrorDescriptor | ArrayErrorDescriptorCollection)[],
+      ],
+    ) => {
+      acc[key] = getErrorDescriptors(descriptors).map((descriptor) =>
+        descriptor.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : descriptor.code,
+      );
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  ),
+});
+
+const createTypeInfoMap = (): TypeInfoMap => ({
+  Book: {
+    fields: {
+      title: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      rating: {
+        type: "number",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      tags: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: false,
+      },
+      author: {
+        type: "string",
+        typeReference: "Person",
+        array: false,
+        readonly: false,
+        optional: false,
         tags: {
-          type: "string",
-          array: true,
-          readonly: false,
-          optional: false,
-        },
-        author: {
-          type: "string",
-          typeReference: "Person",
-          array: false,
-          readonly: false,
-          optional: false,
-          tags: {
-            deniedOperations: {
-              READ: true,
-            },
+          deniedOperations: {
+            READ: true,
           },
         },
       },
     },
-  };
+  },
+});
 
+export const runSearchValidationInvalidTypeScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const invalidType = validateSearchFields(
     "Missing",
     typeInfoMap,
@@ -53,6 +84,11 @@ export const runSearchValidationScenario = () => {
     false,
   );
 
+  return toLegacyValidationShape(invalidType);
+};
+
+export const runSearchValidationInvalidOperatorScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const invalidOperator = validateSearchFields(
     "Book",
     typeInfoMap,
@@ -66,6 +102,11 @@ export const runSearchValidationScenario = () => {
     false,
   );
 
+  return toLegacyValidationShape(invalidOperator);
+};
+
+export const runSearchValidationInvalidFieldScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const invalidField = validateSearchFields(
     "Book",
     typeInfoMap,
@@ -79,6 +120,11 @@ export const runSearchValidationScenario = () => {
     false,
   );
 
+  return toLegacyValidationShape(invalidField);
+};
+
+export const runSearchValidationRelationalDeniedScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const relationalDenied = validateSearchFields(
     "Book",
     typeInfoMap,
@@ -92,6 +138,11 @@ export const runSearchValidationScenario = () => {
     false,
   );
 
+  return toLegacyValidationShape(relationalDenied);
+};
+
+export const runSearchValidationRelationalDisallowedScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const relationalDisallowed = validateSearchFields(
     "Book",
     typeInfoMap,
@@ -105,6 +156,11 @@ export const runSearchValidationScenario = () => {
     true,
   );
 
+  return toLegacyValidationShape(relationalDisallowed);
+};
+
+export const runSearchValidationInvalidValueOptionScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const invalidValueOption = validateSearchFields(
     "Book",
     typeInfoMap,
@@ -118,6 +174,11 @@ export const runSearchValidationScenario = () => {
     false,
   );
 
+  return toLegacyValidationShape(invalidValueOption);
+};
+
+export const runSearchValidationValidSearchScenario = () => {
+  const typeInfoMap = createTypeInfoMap();
   const validSearch = validateSearchFields(
     "Book",
     typeInfoMap,
@@ -136,13 +197,5 @@ export const runSearchValidationScenario = () => {
     false,
   );
 
-  return {
-    invalidType,
-    invalidOperator,
-    invalidField,
-    relationalDenied,
-    relationalDisallowed,
-    invalidValueOption,
-    validSearch,
-  };
+  return toLegacyValidationShape(validSearch);
 };

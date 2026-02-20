@@ -191,3 +191,33 @@ export const runDbxCrudScenario = async () => {
     ordering: assertDbxStableOrdering(pages, expectedOrder),
   };
 };
+
+export const runDbxCrudCreatedAuthorIdsScenario = async () =>
+  (await runDbxCrudScenario()).createdAuthorIds;
+
+export const runDbxCrudCreatedPostIdsScenario = async () =>
+  (await runDbxCrudScenario()).createdPostIds;
+
+export const runDbxCrudReadPostScenario = async () =>
+  (await runDbxCrudScenario()).readPost;
+
+export const runDbxCrudUpdateResultScenario = async () =>
+  (await runDbxCrudScenario()).updateResult;
+
+export const runDbxCrudUpdatedPostScenario = async () =>
+  (await runDbxCrudScenario()).updatedPost;
+
+export const runDbxCrudDeleteResultScenario = async () =>
+  (await runDbxCrudScenario()).deleteResult;
+
+export const runDbxCrudListPageIdsScenario = async () =>
+  (await runDbxCrudScenario()).listPageIds;
+
+export const runDbxCrudListCursorsScenario = async () =>
+  (await runDbxCrudScenario()).listCursors;
+
+export const runDbxCrudPagingScenario = async () =>
+  (await runDbxCrudScenario()).paging;
+
+export const runDbxCrudOrderingScenario = async () =>
+  (await runDbxCrudScenario()).ordering;

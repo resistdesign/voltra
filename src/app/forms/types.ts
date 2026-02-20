@@ -11,11 +11,30 @@ import type {
   TypeOperation,
 } from "../../common/TypeParsing/TypeInfo";
 import type {
+  ArrayErrorDescriptorCollection,
+  ArrayItemErrorMap,
+  ErrorDescriptor,
+  FieldValueValidatorMap,
+  TypeInfoValidationResults,
+} from "../../common/TypeParsing/Validation";
+import type {
   CustomTypeActionPayload,
   RelationActionPayload,
 } from "./core/types";
 
 export * from "./core/types";
+
+/**
+ * Translates validation error descriptors into UI messages.
+ */
+export type TranslateValidationErrorCode = (
+  error: ErrorDescriptor,
+) => string;
+
+/**
+ * Optional custom field validators keyed by field name.
+ */
+export type CustomValidatorMap = FieldValueValidatorMap;
 
 /**
  * Loose map of form values keyed by field.
@@ -62,8 +81,14 @@ export interface AutoFieldProps {
   value: FormValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FormValue) => void;
-  /** Optional error message to display under the field. */
-  error?: string;
+  /** Optional primary error descriptor for convenience/backward compatibility. */
+  error?: ErrorDescriptor;
+  /** Optional list of value-level errors for the field. */
+  errors?: ErrorDescriptor[];
+  /** Optional per-index errors for array fields. */
+  arrayItemErrorMap?: ArrayItemErrorMap;
+  /** Optional translator from error descriptor to user-facing message. */
+  translateValidationErrorCode?: TranslateValidationErrorCode;
   /** Disables the field UI when true. */
   disabled?: boolean;
   /** Optional callback for relation actions. */
@@ -98,9 +123,33 @@ export type FormFieldController = {
   value: FormValue | undefined;
   /** Change handler for the field value. */
   onChange: (value: FormValue) => void;
-  /** Optional error message for the field. */
-  error?: string;
+  /** Optional primary error descriptor for the field. */
+  error?: ErrorDescriptor;
+  /** Optional list of value-level errors for the field. */
+  errors?: ErrorDescriptor[];
+  /** Optional per-index errors for array fields. */
+  arrayItemErrorMap?: ArrayItemErrorMap;
 };
+
+/**
+ * Validation errors keyed by field and represented as descriptors/codes.
+ */
+export type FormErrorMap = Record<
+  string,
+  (ErrorDescriptor | ArrayErrorDescriptorCollection)[]
+>;
+
+/**
+ * Input map used to set form errors, accepting descriptors or raw codes.
+ */
+export type FormErrorInputMap = Record<
+  string,
+  | ErrorDescriptor
+  | string
+  | ErrorDescriptor[]
+  | ArrayItemErrorMap
+  | (ErrorDescriptor | ArrayErrorDescriptorCollection)[]
+>;
 
 /**
  * Controller for a form instance and its fields.
@@ -115,13 +164,13 @@ export type FormController = {
   /** Current form values keyed by field. */
   values: FormValues;
   /** Validation errors keyed by field. */
-  errors: Record<string, string>;
+  errors: FormErrorMap;
   /** Derived controllers for each field. */
   fields: FormFieldController[];
   /** Update a field value by key. */
   setFieldValue: (key: string, value: FormValue) => void;
   /** Validate the form and return success. */
-  validate: () => boolean;
+  validate: () => TypeInfoValidationResults;
   /** Override form errors with a provided map. */
-  setErrors: (errors: Record<string, string>) => void;
+  setErrors: (errors: FormErrorInputMap) => void;
 };

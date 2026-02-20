@@ -498,3 +498,120 @@ export const runDbxFullTextSearchScenario = async () => {
     updateNonFullTextAfterIds: updateNonFullTextAfter.ids,
   };
 };
+
+export const runDbxFullTextSearchCreatedPostIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).createdPostIds;
+
+export const runDbxFullTextSearchExactSentenceIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactSentenceIds;
+
+export const runDbxFullTextSearchExactSentenceNineDefaultIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactSentenceNineDefaultIds;
+
+export const runDbxFullTextSearchExactSentenceNineMidIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactSentenceNineMidIds;
+
+export const runDbxFullTextSearchExactSentenceNineHighIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactSentenceNineHighIds;
+
+export const runDbxFullTextSearchExactLongDefaultIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactLongDefaultIds;
+
+export const runDbxFullTextSearchExactLongMidIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactLongMidIds;
+
+export const runDbxFullTextSearchExactLongHighIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactLongHighIds;
+
+export const runDbxFullTextSearchExactDiacriticsIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactDiacriticsIds;
+
+export const runDbxFullTextSearchExactStopwordsIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactStopwordsIds;
+
+export const runDbxFullTextSearchExactQuotedPhraseIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactQuotedPhraseIds;
+
+export const runDbxFullTextSearchExactPunctuationIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactPunctuationIds;
+
+export const runDbxFullTextSearchExactSeparatorsIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactSeparatorsIds;
+
+export const runDbxFullTextSearchExactHyphenatedIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactHyphenatedIds;
+
+export const runDbxFullTextSearchExactNumericShortIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactNumericShortIds;
+
+export const runDbxFullTextSearchLossyMiddleTokenIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyMiddleTokenIds;
+
+export const runDbxFullTextSearchLossyDiacriticsIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyDiacriticsIds;
+
+export const runDbxFullTextSearchLossySeparatorsIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossySeparatorsIds;
+
+export const runDbxFullTextSearchLossyMixedCaseIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyMixedCaseIds;
+
+export const runDbxFullTextSearchLossyPunctuationIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyPunctuationIds;
+
+export const runDbxFullTextSearchLossyAddressIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyAddressIds;
+
+export const runDbxFullTextSearchLossyPrefixIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyPrefixIds;
+
+export const runDbxFullTextSearchLossyShortTokenIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyShortTokenIds;
+
+export const runDbxFullTextSearchLossyEmojiIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyEmojiIds;
+
+export const runDbxFullTextSearchLossySmartApostrophesIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossySmartApostrophesIds;
+
+export const runDbxFullTextSearchLossyMixedPunctuationIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).lossyMixedPunctuationIds;
+
+export const runDbxFullTextSearchUpdateSwapIdScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateSwapId;
+
+export const runDbxFullTextSearchUpdateSwapBeforeIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateSwapBeforeIds;
+
+export const runDbxFullTextSearchUpdateSwapResultScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateSwapResult;
+
+export const runDbxFullTextSearchUpdateSwapAfterOldIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateSwapAfterOldIds;
+
+export const runDbxFullTextSearchUpdateSwapAfterNewIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateSwapAfterNewIds;
+
+export const runDbxFullTextSearchUpdateNullIdScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNullId;
+
+export const runDbxFullTextSearchUpdateNullBeforeIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNullBeforeIds;
+
+export const runDbxFullTextSearchUpdateNullResultScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNullResult;
+
+export const runDbxFullTextSearchUpdateNullAfterIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNullAfterIds;
+
+export const runDbxFullTextSearchUpdateNonFullTextIdScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNonFullTextId;
+
+export const runDbxFullTextSearchUpdateNonFullTextBeforeIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNonFullTextBeforeIds;
+
+export const runDbxFullTextSearchUpdateNonFullTextResultScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNonFullTextResult;
+
+export const runDbxFullTextSearchUpdateNonFullTextAfterIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).updateNonFullTextAfterIds;

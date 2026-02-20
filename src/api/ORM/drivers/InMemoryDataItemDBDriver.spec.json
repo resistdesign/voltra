@@ -2,27 +2,70 @@
   "file": "./InMemoryDataItemDBDriver.test-utils.ts",
   "tests": [
     {
-      "export": "runInMemoryDataItemDriverScenario",
+      "export": "runInMemoryDataItemDriverCreatedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-2", "item-3"]
+    },
+    {
+      "export": "runInMemoryDataItemDriverReadSelectedScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createdIds": ["item-1", "item-2", "item-3"],
-        "readSelected": {
-          "id": "item-1",
-          "name": "Alpha"
-        },
-        "afterUpdate": {
-          "name": "Alpha+",
-          "tags": ["a", "b"]
-        },
-        "filteredIds": ["item-1", "item-3"],
-        "page1Ids": ["item-2", "item-1"],
-        "page2Ids": ["item-3"],
-        "listSelectedKeys": [["id"], ["id"], ["id"]],
-        "deleteResult": true,
-        "missingReadError": "ITEM_NOT_FOUND",
-        "invalidCursorError": "INVALID_CURSOR"
+        "id": "item-1",
+        "name": "Alpha"
       }
+    },
+    {
+      "export": "runInMemoryDataItemDriverAfterUpdateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "name": "Alpha+",
+        "tags": ["a", "b"]
+      }
+    },
+    {
+      "export": "runInMemoryDataItemDriverFilteredIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-3"]
+    },
+    {
+      "export": "runInMemoryDataItemDriverPage1IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-2", "item-1"]
+    },
+    {
+      "export": "runInMemoryDataItemDriverPage2IdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-3"]
+    },
+    {
+      "export": "runInMemoryDataItemDriverListSelectedKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [["id"], ["id"], ["id"]]
+    },
+    {
+      "export": "runInMemoryDataItemDriverDeleteResultScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runInMemoryDataItemDriverMissingReadErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "ITEM_NOT_FOUND"
+    },
+    {
+      "export": "runInMemoryDataItemDriverInvalidCursorErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INVALID_CURSOR"
     }
   ]
 }

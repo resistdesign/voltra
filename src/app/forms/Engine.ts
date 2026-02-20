@@ -10,8 +10,21 @@ import type {
   TypeInfo,
 } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
+import {
+  ERROR_MESSAGE_CONSTANTS,
+  getArrayItemErrorMap,
+  getErrorDescriptor,
+  getErrorDescriptors,
+  getNoErrorDescriptor,
+  type FieldValueValidatorMap,
+  type ErrorDescriptor,
+  type TypeInfoValidationResults,
+  validateTypeInfoDataItem,
+} from "../../common/TypeParsing/Validation";
 import type {
   FormController,
+  FormErrorInputMap,
+  FormErrorMap,
   FormFieldController,
   FormValue,
   FormValues,
@@ -88,6 +101,8 @@ const buildInitialValues = (
   return values;
 };
 
+const FORM_ENGINE_TYPE_NAME = "__AUTO_FORM__";
+
 /**
  * Hook that derives form state and field controllers from type metadata.
  *
@@ -102,13 +117,79 @@ export const useFormEngine = (
   options?: {
     /** Operation to evaluate when deriving field state. */
     operation?: TypeOperation;
+    /** Optional custom validators keyed by field name. */
+    customValidatorMap?: FieldValueValidatorMap;
   },
 ): FormController => {
   const operation = options?.operation ?? TypeOperation.CREATE;
+  const customValidatorMap = options?.customValidatorMap ?? {};
   const [values, setValues] = useState<FormValues>(
     buildInitialValues(initialValues, typeInfo),
   );
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrorsState] = useState<FormErrorMap>({});
+
+  const normalizeErrorEntries = useCallback(
+    (value: FormErrorInputMap[string]): FormErrorMap[string] => {
+      if (typeof value === "string") {
+        return [getErrorDescriptor(value)];
+      }
+
+      if (Array.isArray(value)) {
+        return value;
+      }
+
+      if (value && typeof value === "object") {
+        if ("code" in value && typeof value.code === "string") {
+          return [value as ErrorDescriptor];
+        }
+
+        const itemErrorMap = value as Record<string, unknown>;
+        const numericKeys = Object.keys(itemErrorMap).filter((key) =>
+          /^\d+$/.test(key),
+        );
+
+        if (numericKeys.length) {
+          const normalizedItemErrorMap: Record<number, ErrorDescriptor[]> = {};
+
+          for (const key of numericKeys) {
+            const index = Number(key);
+            const rawValue = itemErrorMap[key];
+            if (!Array.isArray(rawValue)) {
+              continue;
+            }
+            normalizedItemErrorMap[index] = rawValue.filter(
+              (descriptor): descriptor is ErrorDescriptor =>
+                !!descriptor &&
+                typeof descriptor === "object" &&
+                "code" in descriptor &&
+                typeof descriptor.code === "string",
+            );
+          }
+
+          return [{ itemErrorMap: normalizedItemErrorMap }];
+        }
+      }
+
+      return [getNoErrorDescriptor()];
+    },
+    [],
+  );
+
+  const normalizeErrorMap = useCallback(
+    (pendingErrors: FormErrorInputMap): FormErrorMap =>
+      Object.entries(pendingErrors).reduce((acc, [key, value]) => {
+        acc[key] = normalizeErrorEntries(value);
+        return acc;
+      }, {} as FormErrorMap),
+    [normalizeErrorEntries],
+  );
+
+  const setErrors = useCallback(
+    (pendingErrors: FormErrorInputMap) => {
+      setErrorsState(normalizeErrorMap(pendingErrors));
+    },
+    [normalizeErrorMap],
+  );
 
   const setFieldValue = useCallback((path: string, value: FormValue) => {
     setValues((prev) => {
@@ -119,55 +200,26 @@ export const useFormEngine = (
     });
   }, []);
 
-  const validate = useCallback(() => {
-    // Basic validation based on type info
-    const newErrors: Record<string, string> = {};
-    for (const [key, field] of Object.entries(typeInfo.fields ?? {})) {
-      if (field.tags?.hidden) {
-        continue;
-      }
+  const validate = useCallback((): TypeInfoValidationResults => {
+    const fields = typeInfo.fields ?? {};
+    const validationResults = validateTypeInfoDataItem(
+      values,
+      typeInfo,
+      customValidatorMap,
+      {
+        typeName: FORM_ENGINE_TYPE_NAME,
+        typeOperation: operation,
+      },
+    );
 
-      const val = values[key];
-      if (field.readonly && (val === undefined || val === null || val === "")) {
-        continue;
-      }
-      const isMissing =
-        val === undefined ||
-        val === null ||
-        val === "" ||
-        (field.array && (!Array.isArray(val) || val.length === 0));
-      if (!field.optional && isMissing) {
-        newErrors[key] = "This field is required";
-        continue;
-      }
-
-      if (isMissing) {
-        continue;
-      }
-
-      const constraints = field.tags?.constraints;
-      if (constraints?.pattern && typeof val === "string") {
-        const pattern = new RegExp(constraints.pattern);
-        if (!pattern.test(val)) {
-          newErrors[key] = "Value does not match required pattern";
-          continue;
-        }
-      }
-
-      if (field.type === "number" && typeof val === "number") {
-        if (constraints?.min !== undefined && val < constraints.min) {
-          newErrors[key] = `Value must be at least ${constraints.min}`;
-          continue;
-        }
-        if (constraints?.max !== undefined && val > constraints.max) {
-          newErrors[key] = `Value must be at most ${constraints.max}`;
-          continue;
-        }
-      }
+    const newErrors: FormErrorMap = {};
+    for (const key of Object.keys(fields)) {
+      newErrors[key] = validationResults.errorMap[key] ?? [getNoErrorDescriptor()];
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [typeInfo, values]);
+
+    setErrorsState(newErrors);
+    return validationResults;
+  }, [typeInfo, values, operation, customValidatorMap]);
 
   const fields = useMemo<FormFieldController[]>(() => {
     return Object.entries(typeInfo.fields ?? {}).map(([key, field]) => {
@@ -190,7 +242,12 @@ export const useFormEngine = (
         constraints: tags?.constraints,
         value: values[key],
         onChange: (value: FormValue) => setFieldValue(key, value),
-        error: errors[key],
+        error:
+          getErrorDescriptors(errors[key] ?? []).find(
+            (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+          ) ?? getNoErrorDescriptor(),
+        errors: getErrorDescriptors(errors[key] ?? []),
+        arrayItemErrorMap: getArrayItemErrorMap(errors[key] ?? []),
       };
     });
   }, [typeInfo, values, errors, setFieldValue, operation]);
