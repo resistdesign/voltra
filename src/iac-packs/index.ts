@@ -5,5 +5,5 @@
  */
 export * from '../iac/packs';
 
-// This file is here visibility and easy access.
+// This file is here for documentation visibility.
 // DO NOT remove this export.
