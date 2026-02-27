@@ -210,9 +210,9 @@ export type TypeInfoORMIndexingConfig = {
      */
     backend: IndexBackend;
     /**
-     * Default index field names by type.
+     * Default index field name(s) by type.
      */
-    defaultIndexFieldByType?: Record<string, string>;
+    defaultIndexFieldByType?: Record<string, string | string[]>;
   };
   /**
    * Structured indexing configuration.
@@ -713,23 +713,52 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
-   * @returns Resolved index field name, if available.
+   * @returns Resolved full-text index field names.
    */
-  protected resolveFullTextIndexField = (
+  protected resolveFullTextIndexFields = (
     /**
-     * Type name used to resolve the default index field.
+     * Type name used to resolve the default index field(s).
      */
     typeName: string,
     /**
      * Optional override for the index field.
      */
     override?: string,
-  ): string | undefined => {
+  ): string[] => {
     if (override) {
-      return override;
+      return [override];
     }
 
-    return this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
+    const defaults =
+      this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
+
+    if (typeof defaults === "string") {
+      return [defaults];
+    }
+
+    if (!Array.isArray(defaults)) {
+      return [];
+    }
+
+    const seen = new Set<string>();
+    const fields: string[] = [];
+
+    for (const field of defaults) {
+      if (typeof field !== "string") {
+        continue;
+      }
+
+      const trimmed = field.trim();
+
+      if (!trimmed || seen.has(trimmed)) {
+        continue;
+      }
+
+      seen.add(trimmed);
+      fields.push(trimmed);
+    }
+
+    return fields;
   };
 
   /**
@@ -846,33 +875,35 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(
+    const indexFields = this.resolveFullTextIndexFields(
       typeName,
       indexFieldOverride,
     );
 
-    if (!fullText || !indexField) {
+    if (!fullText || indexFields.length === 0) {
       return;
     }
-
-    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
-    if (!(indexField in item)) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-        typeName,
-        indexField,
-      };
-    }
+    for (const indexField of indexFields) {
+      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-    await indexDocument({
-      backend: fullText.backend,
-      document: item,
-      primaryField: String(primaryField),
-      indexField,
-      indexFieldQualified: qualifiedIndexField,
-    });
+      if (!(indexField in item)) {
+        throw {
+          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+          typeName,
+          indexField,
+        };
+      }
+
+      await indexDocument({
+        backend: fullText.backend,
+        document: item,
+        primaryField: String(primaryField),
+        indexField,
+        indexFieldQualified: qualifiedIndexField,
+      });
+    }
   }
 
   /**
@@ -893,33 +924,35 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(
+    const indexFields = this.resolveFullTextIndexFields(
       typeName,
       indexFieldOverride,
     );
 
-    if (!fullText || !indexField) {
+    if (!fullText || indexFields.length === 0) {
       return;
     }
-
-    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
-    if (!(indexField in item)) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-        typeName,
-        indexField,
-      };
-    }
+    for (const indexField of indexFields) {
+      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-    await removeDocument({
-      backend: fullText.backend,
-      document: item,
-      primaryField: String(primaryField),
-      indexField,
-      indexFieldQualified: qualifiedIndexField,
-    });
+      if (!(indexField in item)) {
+        throw {
+          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+          typeName,
+          indexField,
+        };
+      }
+
+      await removeDocument({
+        backend: fullText.backend,
+        document: item,
+        primaryField: String(primaryField),
+        indexField,
+        indexFieldQualified: qualifiedIndexField,
+      });
+    }
   }
 
   /**
@@ -944,34 +977,36 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(
+    const indexFields = this.resolveFullTextIndexFields(
       typeName,
       indexFieldOverride,
     );
 
-    if (!fullText || !indexField) {
+    if (!fullText || indexFields.length === 0) {
       return;
     }
-
-    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
-    if (!(indexField in previousItem)) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-        typeName,
-        indexField,
-      };
-    }
+    for (const indexField of indexFields) {
+      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-    await replaceFullTextDocumentIndex({
-      backend: fullText.backend,
-      previousDocument: previousItem,
-      nextDocument: nextItem,
-      primaryField: String(primaryField),
-      indexField,
-      indexFieldQualified: qualifiedIndexField,
-    });
+      if (!(indexField in previousItem)) {
+        throw {
+          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+          typeName,
+          indexField,
+        };
+      }
+
+      await replaceFullTextDocumentIndex({
+        backend: fullText.backend,
+        previousDocument: previousItem,
+        nextDocument: nextItem,
+        primaryField: String(primaryField),
+        indexField,
+        indexFieldQualified: qualifiedIndexField,
+      });
+    }
   }
 
   /**
@@ -1999,10 +2034,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           let nextCursor: string | undefined = undefined;
 
           if (hasText) {
-            const indexField = this.resolveFullTextIndexField(
+            const indexFields = this.resolveFullTextIndexFields(
               typeName,
               text?.indexField,
             );
+
+            const indexField = indexFields[0];
 
             if (!indexField) {
               throw {

@@ -66,8 +66,8 @@ export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
         fullText: {
           backend: fullTextBackend,
           defaultIndexFieldByType: {
-            Person: "lastName",
-            Car: "model",
+            Person: ["lastName", "firstName"],
+            Car: ["model", "make"],
           },
         },
         structured: {
