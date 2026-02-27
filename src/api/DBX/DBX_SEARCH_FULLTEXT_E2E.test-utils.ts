@@ -34,7 +34,7 @@ const buildDbxRuntime = (options?: { maxTokens?: number }) => {
       fullText: {
         backend: new FullTextMemoryBackend(),
         defaultIndexFieldByType: {
-          Post: "body",
+          Post: ["body", "title"],
         },
       },
       limits: options?.maxTokens
@@ -162,6 +162,7 @@ const runFullTextSearch = async (
   runtime: ReturnType<typeof buildDbxRuntime>,
   mode: TextMode,
   query: string,
+  indexField?: string,
 ): Promise<SearchResult> => {
   const response = await runDbxRequest<ListItemsResults<Post>>(runtime, {
     method: "POST",
@@ -173,7 +174,7 @@ const runFullTextSearch = async (
         text: {
           query,
           mode,
-          indexField: "body",
+          ...(indexField ? { indexField } : {}),
         },
       },
     ],
@@ -223,115 +224,168 @@ export const runDbxFullTextSearchScenario = async () => {
     runtime,
     "exact",
     "quick brown fox jumps over",
+    "body",
+  );
+  const exactBodyDefaultIndexField = await runFullTextSearch(
+    runtime,
+    "exact",
+    "quick brown fox jumps over",
+  );
+  const exactTitleField = await runFullTextSearch(
+    runtime,
+    "exact",
+    "sentences",
+    "title",
+  );
+  const exactTitleWithDefaultField = await runFullTextSearch(
+    runtime,
+    "exact",
+    "sentences",
   );
   const exactSentenceNineDefault = await runFullTextSearch(
     runtime,
     "exact",
     "quick brown fox jumps over 13 lazy dogs today",
+    "body",
   );
   const exactSentenceNineMid = await runFullTextSearch(
     runtimeWithMidLimits,
     "exact",
     "quick brown fox jumps over 13 lazy dogs today",
+    "body",
   );
   const exactSentenceNineHigh = await runFullTextSearch(
     runtimeWithHighLimits,
     "exact",
     "quick brown fox jumps over 13 lazy dogs today",
+    "body",
   );
   const exactLongDefault = await runFullTextSearch(
     runtime,
     "exact",
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
+    "body",
   );
   const exactLongMid = await runFullTextSearch(
     runtimeWithMidLimits,
     "exact",
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
+    "body",
   );
   const exactLongHigh = await runFullTextSearch(
     runtimeWithHighLimits,
     "exact",
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
+    "body",
   );
   const exactDiacritics = await runFullTextSearch(
     runtime,
     "exact",
     "naïve café résumé coöperate são paulo",
+    "body",
   );
   const exactStopwords = await runFullTextSearch(
     runtime,
     "exact",
     "the the the",
+    "body",
   );
   const exactQuotedPhrase = await runFullTextSearch(
     runtime,
     "exact",
     "quoted phrase",
+    "body",
   );
   const exactPunctuation = await runFullTextSearch(
     runtime,
     "exact",
     "edge case",
+    "body",
   );
   const exactSeparators = await runFullTextSearch(
     runtime,
     "exact",
     "snake case and camelcase",
+    "body",
   );
   const exactHyphenated = await runFullTextSearch(
     runtime,
     "exact",
     "service oriented architecture",
+    "body",
   );
   const exactNumericShort = await runFullTextSearch(
     runtime,
     "exact",
     "v2 0 fix 123",
+    "body",
   );
 
-  const lossyMiddleToken = await runFullTextSearch(runtime, "lossy", "rown");
+  const lossyMiddleToken = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "rown",
+    "body",
+  );
   const lossyDiacritics = await runFullTextSearch(
     runtime,
     "lossy",
     "resume cafe",
+    "body",
   );
   const lossySeparators = await runFullTextSearch(
     runtime,
     "lossy",
     "dot case",
+    "body",
   );
   const lossyMixedCase = await runFullTextSearch(
     runtime,
     "lossy",
     "mixed case",
+    "body",
   );
   const lossyPunctuation = await runFullTextSearch(
     runtime,
     "lossy",
     "punctuation heavy",
+    "body",
   );
   const lossyAddress = await runFullTextSearch(
     runtime,
     "lossy",
     "foo bar example",
+    "body",
   );
   const lossyPrefix = await runFullTextSearch(
     runtime,
     "lossy",
     "microserv",
+    "body",
   );
-  const lossyShortToken = await runFullTextSearch(runtime, "lossy", "v2");
-  const lossyEmoji = await runFullTextSearch(runtime, "lossy", "rocket");
+  const lossyShortToken = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "v2",
+    "body",
+  );
+  const lossyEmoji = await runFullTextSearch(
+    runtime,
+    "lossy",
+    "rocket",
+    "body",
+  );
   const lossySmartApostrophes = await runFullTextSearch(
     runtime,
     "lossy",
     "smart apostrophes",
+    "body",
   );
   const lossyMixedPunctuation = await runFullTextSearch(
     runtime,
     "lossy",
     "o reilly",
+    "body",
   );
 
   const updateSwapResponse = await runDbxRequest<string>(runtimeForUpdates, {
@@ -353,6 +407,7 @@ export const runDbxFullTextSearchScenario = async () => {
     runtimeForUpdates,
     "exact",
     "alpha",
+    "body",
   );
   const updateSwapResult = await runDbxRequest<boolean>(runtimeForUpdates, {
     method: "POST",
@@ -369,11 +424,13 @@ export const runDbxFullTextSearchScenario = async () => {
     runtimeForUpdates,
     "exact",
     "alpha",
+    "body",
   );
   const updateSwapAfterNew = await runFullTextSearch(
     runtimeForUpdates,
     "exact",
     "charlie",
+    "body",
   );
 
   const updateNullResponse = await runDbxRequest<string>(runtimeForUpdates, {
@@ -395,6 +452,7 @@ export const runDbxFullTextSearchScenario = async () => {
     runtimeForUpdates,
     "exact",
     "echo",
+    "body",
   );
   const updateNullResult = await runDbxRequest<boolean>(runtimeForUpdates, {
     method: "POST",
@@ -411,6 +469,7 @@ export const runDbxFullTextSearchScenario = async () => {
     runtimeForUpdates,
     "exact",
     "echo",
+    "body",
   );
 
   const updateNonFullTextResponse = await runDbxRequest<string>(
@@ -435,6 +494,7 @@ export const runDbxFullTextSearchScenario = async () => {
     runtimeForUpdates,
     "exact",
     "golf",
+    "body",
   );
   const updateNonFullTextResult = await runDbxRequest<boolean>(
     runtimeForUpdates,
@@ -454,11 +514,15 @@ export const runDbxFullTextSearchScenario = async () => {
     runtimeForUpdates,
     "exact",
     "golf",
+    "body",
   );
 
   return {
     createdPostIds: postIds,
     exactSentenceIds: exactSentence.ids,
+    exactBodyDefaultIndexFieldIds: exactBodyDefaultIndexField.ids,
+    exactTitleFieldIds: exactTitleField.ids,
+    exactTitleWithDefaultFieldIds: exactTitleWithDefaultField.ids,
     exactSentenceNineDefaultIds: exactSentenceNineDefault.ids,
     exactSentenceNineMidIds: exactSentenceNineMid.ids,
     exactSentenceNineHighIds: exactSentenceNineHigh.ids,
@@ -504,6 +568,15 @@ export const runDbxFullTextSearchCreatedPostIdsScenario = async () =>
 
 export const runDbxFullTextSearchExactSentenceIdsScenario = async () =>
   (await runDbxFullTextSearchScenario()).exactSentenceIds;
+
+export const runDbxFullTextSearchExactBodyDefaultIndexFieldIdsScenario =
+  async () => (await runDbxFullTextSearchScenario()).exactBodyDefaultIndexFieldIds;
+
+export const runDbxFullTextSearchExactTitleFieldIdsScenario = async () =>
+  (await runDbxFullTextSearchScenario()).exactTitleFieldIds;
+
+export const runDbxFullTextSearchExactTitleWithDefaultFieldIdsScenario =
+  async () => (await runDbxFullTextSearchScenario()).exactTitleWithDefaultFieldIds;
 
 export const runDbxFullTextSearchExactSentenceNineDefaultIdsScenario = async () =>
   (await runDbxFullTextSearchScenario()).exactSentenceNineDefaultIds;

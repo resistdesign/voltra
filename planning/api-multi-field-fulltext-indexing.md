@@ -37,3 +37,19 @@ We will want to make sure that the following types of assets are updated around 
 5. Demo Site, app and api
 6. Samples/Examples
 7. Any other related assets
+
+## Checklist
+
+- [x] Phase 1: Core multi-field fulltext support
+  - [x] Refactor indexing config/types to support multiple fulltext fields per type.
+  - [x] Update indexing write paths to emit fulltext entries for all configured fields.
+  - [x] Update read/query paths to support field-targeted fulltext search across configured fields.
+  - [x] Update `TypeInfoORMService` list/search interfaces as needed for multi-field fulltext queries.
+  - [x] Add/update JSON spec tests covering multi-field indexing and search behavior.
+- [x] Phase 2: Consumer-facing assets
+  - [x] Update doc comments for changed public types/functions.
+  - [x] Update relevant docs/README/examples and demo usage for multi-field fulltext.
+  - [x] Verify exports/entrypoints remain aligned.
+- [x] Phase 3: Verification
+  - [x] Run targeted tests and full relevant test command(s).
+  - [x] Address failures and finalize checklist status.
