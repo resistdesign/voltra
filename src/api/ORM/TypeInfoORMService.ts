@@ -26,6 +26,7 @@ import {
 } from "../../common/TypeParsing/Validation";
 import {
   ComparisonOperators,
+  FieldCriterion,
   ListItemsConfig,
   ListItemsResults,
   ListRelationshipsConfig,
@@ -93,7 +94,10 @@ import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
 import type { Where, WhereValue } from "../Indexing/structured/Types";
-import { getSortedItems } from "../../common/SearchUtils";
+import {
+  getFilterTypeInfoDataItemsBySearchCriteria,
+  getSortedItems,
+} from "../../common/SearchUtils";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
 import { criteriaToStructuredWhere } from "./indexing/criteriaToStructuredWhere";
 import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
@@ -210,9 +214,9 @@ export type TypeInfoORMIndexingConfig = {
      */
     backend: IndexBackend;
     /**
-     * Default index field names by type.
+     * Default index field name(s) by type.
      */
-    defaultIndexFieldByType?: Record<string, string>;
+    defaultIndexFieldByType?: Record<string, string | string[]>;
   };
   /**
    * Structured indexing configuration.
@@ -713,24 +717,348 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
-   * @returns Resolved index field name, if available.
+   * @returns Resolved full-text index field names.
    */
-  protected resolveFullTextIndexField = (
+  protected resolveFullTextIndexFields = (
     /**
-     * Type name used to resolve the default index field.
+     * Type name used to resolve the default index field(s).
      */
     typeName: string,
     /**
      * Optional override for the index field.
      */
     override?: string,
-  ): string | undefined => {
+  ): string[] => {
     if (override) {
-      return override;
+      return [override];
     }
 
-    return this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
+    const defaults =
+      this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
+
+    if (typeof defaults === "string") {
+      return [defaults];
+    }
+
+    if (!Array.isArray(defaults)) {
+      return [];
+    }
+
+    const seen = new Set<string>();
+    const fields: string[] = [];
+
+    for (const field of defaults) {
+      if (typeof field !== "string") {
+        continue;
+      }
+
+      const trimmed = field.trim();
+
+      if (!trimmed || seen.has(trimmed)) {
+        continue;
+      }
+
+      seen.add(trimmed);
+      fields.push(trimmed);
+    }
+
+    return fields;
   };
+
+  /**
+   * @returns True when the operator maps to full-text search.
+   */
+  protected isFullTextSearchOperator = (
+    /**
+     * Operator to evaluate.
+     */
+    operator: ComparisonOperators,
+  ): boolean =>
+    operator === ComparisonOperators.LIKE ||
+    operator === ComparisonOperators.CONTAINS ||
+    operator === ComparisonOperators.STARTS_WITH;
+
+  /**
+   * @returns Full-text query plan derived from a field criterion.
+   */
+  protected toFullTextSearchPlan = (
+    /**
+     * Criterion to map.
+     */
+    criterion: FieldCriterion,
+  ):
+    | {
+        mode: "lossy" | "exact";
+        query: string;
+      }
+    | undefined => {
+    const operator = criterion.operator ?? ComparisonOperators.EQUALS;
+
+    if (!this.isFullTextSearchOperator(operator)) {
+      return undefined;
+    }
+
+    if (typeof criterion.value !== "string") {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+        operator,
+        fieldName: criterion.fieldName,
+      };
+    }
+
+    const query = criterion.value.trim();
+
+    if (!query) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+        operator,
+        fieldName: criterion.fieldName,
+      };
+    }
+
+    if (operator === ComparisonOperators.CONTAINS) {
+      return {
+        mode: "exact",
+        query,
+      };
+    }
+
+    if (operator === ComparisonOperators.STARTS_WITH) {
+      return {
+        mode: "lossy",
+        query: `${query}*`,
+      };
+    }
+
+    return {
+      mode: "lossy",
+      query,
+    };
+  };
+
+  /**
+   * @returns Auto full-text search plan for list criteria, if applicable.
+   */
+  protected resolveAutoFullTextCriteriaPlan = (
+    /**
+     * Type being listed.
+     */
+    typeName: string,
+    /**
+     * Search criteria from list config.
+     */
+    criteria?: SearchCriteria,
+  ):
+    | {
+        mode: "lossy" | "exact";
+        query: string;
+        indexField: string;
+      }
+    | undefined => {
+    if (!criteria?.fieldCriteria?.length) {
+      return undefined;
+    }
+
+    const configuredIndexFields = new Set(
+      this.resolveFullTextIndexFields(typeName),
+    );
+
+    if (configuredIndexFields.size === 0) {
+      return undefined;
+    }
+
+    const fullTextCandidates: Array<{
+      mode: "lossy" | "exact";
+      query: string;
+      indexField: string;
+    }> = [];
+    let hasNonFullTextCriteria = false;
+
+    for (const criterion of criteria.fieldCriteria) {
+      const indexField = criterion.fieldName;
+
+      if (!configuredIndexFields.has(indexField)) {
+        hasNonFullTextCriteria = true;
+        continue;
+      }
+
+      const plan = this.toFullTextSearchPlan(criterion);
+
+      if (!plan) {
+        hasNonFullTextCriteria = true;
+        continue;
+      }
+
+      fullTextCandidates.push({
+        ...plan,
+        indexField,
+      });
+    }
+
+    if (fullTextCandidates.length === 0) {
+      return undefined;
+    }
+
+    if (
+      hasNonFullTextCriteria ||
+      fullTextCandidates.length > 1 ||
+      criteria.logicalOperator === LogicalOperators.OR
+    ) {
+      throw {
+        message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
+        typeName,
+      };
+    }
+
+    return fullTextCandidates[0];
+  };
+
+  /**
+   * @returns Encoded cursor for full-scan compare pagination.
+   */
+  protected encodeFullScanCompareCursor = (
+    /**
+     * Next offset in filtered/sorted results.
+     */
+    offset: number,
+  ): string => JSON.stringify({ fullScanCompareOffset: offset });
+
+  /**
+   * @returns Decoded offset for full-scan compare pagination.
+   */
+  protected decodeFullScanCompareCursor = (
+    /**
+     * Cursor from list config.
+     */
+    cursor?: string,
+  ): number => {
+    if (!cursor) {
+      return 0;
+    }
+
+    try {
+      const parsed = JSON.parse(cursor) as { fullScanCompareOffset?: number };
+      const offset = parsed.fullScanCompareOffset;
+
+      if (!Number.isFinite(offset) || (offset as number) < 0) {
+        throw new Error("Invalid full scan cursor offset");
+      }
+
+      return offset as number;
+    } catch (_error) {
+      throw {
+        message: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
+        cursor,
+      };
+    }
+  };
+
+  /**
+   * Execute a criteria list via full scan + in-memory compare.
+   *
+   * This is the universal fallback strategy for criteria/operators that are not
+   * supported by indexed query planners.
+   *
+   * @returns List results with cursor.
+   */
+  protected async listByFullScanAndCompare(
+    /**
+     * Type name to list.
+     */
+    typeName: string,
+    /**
+     * Original list config.
+     */
+    config: ListItemsConfig,
+    /**
+     * Selected fields for cleaned response.
+     */
+    cleanSelectedFields: (keyof TypeInfoDataItem)[] | undefined,
+    /**
+     * Whether DAC checks are enabled.
+     */
+    useDAC: boolean,
+    /**
+     * Optional request context.
+     */
+    context?: TypeInfoORMContext,
+  ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> {
+    const driver = this.getDriverInternal(typeName);
+    const { criteria, sortFields, itemsPerPage = 10, cursor } = config;
+    const allItems: Partial<TypeInfoDataItem>[] = [];
+    let scanCursor: string | undefined;
+
+    while (true) {
+      const page = await driver.listItems({
+        itemsPerPage: 250,
+        cursor: scanCursor,
+      });
+
+      allItems.push(...(page.items ?? []));
+
+      if (!page.cursor || page.cursor === scanCursor) {
+        break;
+      }
+
+      scanCursor = page.cursor;
+    }
+
+    const filtered = criteria
+      ? (getFilterTypeInfoDataItemsBySearchCriteria(
+          criteria,
+          allItems as TypeInfoDataItem[],
+          typeName,
+          this.config.typeInfoMap,
+        ) as TypeInfoDataItem[])
+      : (allItems as TypeInfoDataItem[]);
+    const sorted = getSortedItems(sortFields, filtered);
+    let index = this.decodeFullScanCompareCursor(cursor);
+    const cleanedItems: Partial<TypeInfoDataItem>[] = [];
+
+    while (index < sorted.length && cleanedItems.length < itemsPerPage) {
+      const item = sorted[index] as Partial<TypeInfoDataItem>;
+      index += 1;
+
+      let fieldsResources: Record<string, DACAccessResult> | undefined;
+
+      if (useDAC) {
+        const {
+          allowed: readAllowed,
+          denied: readDenied,
+          fieldsResources: nextFieldsResources = {},
+        } = await this.getItemDACValidation(
+          item,
+          typeName,
+          TypeOperation.READ,
+          context,
+        );
+        const listDenied = readDenied || !readAllowed;
+
+        if (listDenied) {
+          continue;
+        }
+
+        fieldsResources = nextFieldsResources;
+      }
+
+      cleanedItems.push(
+        this.getCleanItem(
+          typeName,
+          item,
+          fieldsResources,
+          cleanSelectedFields,
+        ),
+      );
+    }
+
+    return {
+      items: cleanedItems,
+      cursor:
+        index < sorted.length
+          ? this.encodeFullScanCompareCursor(index)
+          : undefined,
+    };
+  }
 
   /**
    * @param value Value to check.
@@ -846,33 +1174,35 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(
+    const indexFields = this.resolveFullTextIndexFields(
       typeName,
       indexFieldOverride,
     );
 
-    if (!fullText || !indexField) {
+    if (!fullText || indexFields.length === 0) {
       return;
     }
-
-    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
-    if (!(indexField in item)) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-        typeName,
-        indexField,
-      };
-    }
+    for (const indexField of indexFields) {
+      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-    await indexDocument({
-      backend: fullText.backend,
-      document: item,
-      primaryField: String(primaryField),
-      indexField,
-      indexFieldQualified: qualifiedIndexField,
-    });
+      if (!(indexField in item)) {
+        throw {
+          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+          typeName,
+          indexField,
+        };
+      }
+
+      await indexDocument({
+        backend: fullText.backend,
+        document: item,
+        primaryField: String(primaryField),
+        indexField,
+        indexFieldQualified: qualifiedIndexField,
+      });
+    }
   }
 
   /**
@@ -893,33 +1223,35 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(
+    const indexFields = this.resolveFullTextIndexFields(
       typeName,
       indexFieldOverride,
     );
 
-    if (!fullText || !indexField) {
+    if (!fullText || indexFields.length === 0) {
       return;
     }
-
-    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
-    if (!(indexField in item)) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-        typeName,
-        indexField,
-      };
-    }
+    for (const indexField of indexFields) {
+      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-    await removeDocument({
-      backend: fullText.backend,
-      document: item,
-      primaryField: String(primaryField),
-      indexField,
-      indexFieldQualified: qualifiedIndexField,
-    });
+      if (!(indexField in item)) {
+        throw {
+          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+          typeName,
+          indexField,
+        };
+      }
+
+      await removeDocument({
+        backend: fullText.backend,
+        document: item,
+        primaryField: String(primaryField),
+        indexField,
+        indexFieldQualified: qualifiedIndexField,
+      });
+    }
   }
 
   /**
@@ -944,34 +1276,36 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     indexFieldOverride?: string,
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
-    const indexField = this.resolveFullTextIndexField(
+    const indexFields = this.resolveFullTextIndexFields(
       typeName,
       indexFieldOverride,
     );
 
-    if (!fullText || !indexField) {
+    if (!fullText || indexFields.length === 0) {
       return;
     }
-
-    const qualifiedIndexField = qualifyIndexField(typeName, indexField);
     const { primaryField } = this.getTypeInfo(typeName);
 
-    if (!(indexField in previousItem)) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-        typeName,
-        indexField,
-      };
-    }
+    for (const indexField of indexFields) {
+      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-    await replaceFullTextDocumentIndex({
-      backend: fullText.backend,
-      previousDocument: previousItem,
-      nextDocument: nextItem,
-      primaryField: String(primaryField),
-      indexField,
-      indexFieldQualified: qualifiedIndexField,
-    });
+      if (!(indexField in previousItem)) {
+        throw {
+          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
+          typeName,
+          indexField,
+        };
+      }
+
+      await replaceFullTextDocumentIndex({
+        backend: fullText.backend,
+        previousDocument: previousItem,
+        nextDocument: nextItem,
+        primaryField: String(primaryField),
+        indexField,
+        indexFieldQualified: qualifiedIndexField,
+      });
+    }
   }
 
   /**
@@ -1950,7 +2284,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { typeInfoMap, useDAC, indexing } = this.config;
     const typeInfo = this.getTypeInfo(typeName);
     const { fields: {} = {} } = typeInfo;
-    const { criteria, text, itemsPerPage, cursor, sortFields } = config;
+    const { criteria, itemsPerPage, cursor, sortFields } = config;
     const { fieldCriteria = [] }: Partial<SearchCriteria> = criteria || {};
     const searchFieldValidationResults = validateSearchFields(
       typeName,
@@ -1964,60 +2298,29 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const hasStructured = !!indexing?.structured?.reader;
       const hasFullText = !!indexing?.fullText?.backend;
       const hasCriteria = !!criteria && fieldCriteria.length > 0;
-      const hasText = !!text;
 
-      const shouldUseIndexing = !!hasCriteria || !!hasText;
-
-      if (hasStructured || hasFullText) {
-        if (!shouldUseIndexing) {
-          // Fall back to driver list when no criteria/text are supplied.
-        } else {
-          if (hasCriteria && hasText) {
-            throw {
-              message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
-              typeName,
-            };
-          }
-
-          if (hasCriteria && !hasStructured) {
-            throw {
-              message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-              typeName,
-              backend: "structured.reader",
-            };
-          }
-
-          if (hasText && !hasFullText) {
-            throw {
-              message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-              typeName,
-              backend: "fullText",
-            };
-          }
-
+      if (hasCriteria && (hasStructured || hasFullText)) {
+        try {
           let docIds: Array<string | number> = [];
           let nextCursor: string | undefined = undefined;
 
-          if (hasText) {
-            const indexField = this.resolveFullTextIndexField(
+          const fullTextPlan = this.resolveAutoFullTextCriteriaPlan(
+            typeName,
+            criteria,
+          );
+
+          if (fullTextPlan && hasFullText) {
+
+            const qualifiedIndexField = qualifyIndexField(
               typeName,
-              text?.indexField,
+              fullTextPlan.indexField,
             );
-
-            if (!indexField) {
-              throw {
-                message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-                typeName,
-              };
-            }
-
-            const qualifiedIndexField = qualifyIndexField(typeName, indexField);
             const fullTextBackend = indexing?.fullText?.backend;
             const searchResult =
-              text?.mode === "exact"
+              fullTextPlan.mode === "exact"
                 ? await searchExact({
                     backend: fullTextBackend,
-                    query: text.query,
+                    query: fullTextPlan.query,
                     indexField: qualifiedIndexField,
                     limit: itemsPerPage,
                     cursor,
@@ -2025,7 +2328,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                   })
                 : await searchLossy({
                     backend: fullTextBackend,
-                    query: text?.query ?? "",
+                    query: fullTextPlan.query,
                     indexField: qualifiedIndexField,
                     limit: itemsPerPage,
                     cursor,
@@ -2034,7 +2337,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
             docIds = searchResult.docIds;
             nextCursor = searchResult.nextCursor;
-          } else {
+          } else if (hasStructured) {
+
             const where = criteriaToStructuredWhere(criteria);
 
             if (!where) {
@@ -2061,6 +2365,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
             docIds = page.candidateIds;
             nextCursor = page.cursor;
+          } else {
+            throw {
+              message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+              typeName,
+            };
           }
 
           const driver = this.getDriverInternal(typeName);
@@ -2126,7 +2435,25 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             items: sortedItems as Partial<TypeInfoDataItem>[],
             cursor: nextCursor,
           };
+        } catch (_error) {
+          return this.listByFullScanAndCompare(
+            typeName,
+            config,
+            cleanSelectedFields,
+            useDAC,
+            context,
+          );
         }
+      }
+
+      if (hasCriteria) {
+        return this.listByFullScanAndCompare(
+          typeName,
+          config,
+          cleanSelectedFields,
+          useDAC,
+          context,
+        );
       }
 
       const driver = this.getDriverInternal(typeName);

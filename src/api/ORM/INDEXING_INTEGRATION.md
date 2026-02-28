@@ -6,8 +6,15 @@ This document captures current ORM list/search and relationship behaviors that m
 
 - Inputs: `ListItemsConfig` supports `criteria` (AND/OR of `FieldCriterion`), `sortFields`, `itemsPerPage`, `cursor`, and optional `selectedFields`.
 - Validation: `validateSearchFields` enforces that criteria field names exist in the type info map.
+- Execution path selection:
+  - Auto fulltext path: used when criteria contains exactly one fulltext-indexed field criterion and the operator is fulltext-compatible (`LIKE`, `CONTAINS`, `STARTS_WITH`).
+  - Structured indexed path: used when criteria can be translated by `criteriaToStructuredWhere`.
+  - Full scan + compare fallback: used when indexed paths are unavailable or unsupported for a given operator/combination.
 - Operators: the ORM expects the following comparison operators to be supported by the underlying list engine:
   - `EQUALS`, `NOT_EQUALS`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `IN`, `NOT_IN`, `LIKE`, `NOT_LIKE`, `EXISTS`, `NOT_EXISTS`, `IS_NOT_EMPTY`, `IS_EMPTY`, `BETWEEN`, `NOT_BETWEEN`, `CONTAINS`, `NOT_CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `DOES_NOT_START_WITH`, `DOES_NOT_END_WITH`.
+- Fulltext semantics:
+  - `EQUALS` is structural exact equality and is intentionally not treated as fulltext.
+  - Fulltext routing is criteria-driven; `list` does not accept a separate fulltext argument.
 - Paging: `itemsPerPage` and `cursor` are passed to the driver. The DynamoDB driver uses `Scan` and returns a JSON-serialized `LastEvaluatedKey` as the cursor.
 - Sorting: `sortFields` is applied in-memory in the DynamoDB driver after list results are loaded.
 - Selected fields: `selectedFields` is sanitized to always include the primary field; when DAC is enabled, reads ignore `selectedFields` at the driver level and are filtered after DAC validation.

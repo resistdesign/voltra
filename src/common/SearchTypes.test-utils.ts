@@ -3,7 +3,6 @@ import {
   LogicalOperators,
   SearchCriteria,
   ListItemsConfig,
-  TextSearchConfig,
   ListRelationshipsConfig,
   SortField,
 } from "./SearchTypes";
@@ -28,18 +27,11 @@ const getSearchTypesScenarioData = () => {
 
   const sortFields: SortField[] = [{ field: "publishedAt", reverse: true }];
 
-  const text: TextSearchConfig = {
-    query: "Voltra",
-    mode: "exact",
-    indexField: "title",
-  };
-
   const listConfig: ListItemsConfig = {
     itemsPerPage: 10,
     cursor: "cursor-1",
     criteria,
     sortFields,
-    text,
   };
 
   const relationshipConfig: ListRelationshipsConfig = {

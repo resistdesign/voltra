@@ -35,6 +35,13 @@ State sources in `EndToEndDemo.tsx`
 Notes
 - The demo renders only the active screen via `getActiveScreen`.
 
+Car search behavior (`CarRelateScreen`)
+- Quick query is criteria-driven and targets a selected field (`make` or `model`).
+- Fulltext operators demonstrated in UI are `LIKE` and `STARTS_WITH`.
+- `EQUALS` remains structural exact matching (non-fulltext).
+- Structured filters are combined with `AND`/`OR` and demonstrate non-fulltext operator flows.
+- API-side routing is automatic: fulltext when applicable, otherwise structured/fallback paths.
+
 How to add a new entity type screen
 1. Extend the demo state in `EndToEndDemo/demoState.ts` (add type/mode/screen).
 2. Create a screen in `EndToEndDemo/screens/` using the existing layout helpers.

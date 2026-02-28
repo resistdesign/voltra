@@ -212,24 +212,6 @@ export type PagingInfo = {
 };
 
 /**
- * Configuration for full-text search requests.
- * */
-export type TextSearchConfig = {
-  /**
-   * Text query to search for.
-   * */
-  query: string;
-  /**
-   * Index mode to use when searching.
-   * */
-  mode?: "lossy" | "exact";
-  /**
-   * Optional index field name.
-   * */
-  indexField?: string;
-};
-
-/**
  * The configuration for listing and searching for items.
  * */
 export type ListItemsConfig = PagingInfo & {
@@ -241,10 +223,6 @@ export type ListItemsConfig = PagingInfo & {
    * Sort fields to apply.
    * */
   sortFields?: SortField[];
-  /**
-   * Full-text search configuration.
-   * */
-  text?: TextSearchConfig;
 };
 
 /**
