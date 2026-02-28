@@ -90,7 +90,7 @@ const runExactSearch = async (runtime: ReturnType<typeof buildDbxRuntime>) => {
           fieldCriteria: [
             {
               fieldName: "body",
-              operator: ComparisonOperators.CONTAINS,
+              operator: ComparisonOperators.LIKE,
               value: "Alpha Bravo!",
             },
           ],
