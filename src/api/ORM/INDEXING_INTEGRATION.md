@@ -8,8 +8,12 @@ This document captures current ORM list/search and relationship behaviors that m
 - Validation: `validateSearchFields` enforces that criteria field names exist in the type info map.
 - Execution path selection:
   - Auto fulltext path: used when criteria contains exactly one fulltext-indexed field criterion and the operator is fulltext-compatible (`LIKE`, `CONTAINS`, `STARTS_WITH`).
-  - Structured indexed path: used when criteria can be translated by `criteriaToStructuredWhere`.
+  - Structured indexed path: used only when all criteria fields are explicitly listed in `indexing.structured.indexedFieldsByType[typeName]` and every criterion's field type/operator pair is supported by structured indexing.
   - Full scan + compare fallback: used when indexed paths are unavailable or unsupported for a given operator/combination.
+- Structured field inclusion:
+  - Structured indexing is opt-in by field via `indexing.structured.indexedFieldsByType`.
+  - Fields not included in `indexedFieldsByType` are excluded from structured index writes and structured query routing.
+  - Excluded/unsupported criteria automatically use full scan + compare fallback.
 - Operators: the ORM expects the following comparison operators to be supported by the underlying list engine:
   - `EQUALS`, `NOT_EQUALS`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `IN`, `NOT_IN`, `LIKE`, `NOT_LIKE`, `EXISTS`, `NOT_EXISTS`, `IS_NOT_EMPTY`, `IS_EMPTY`, `BETWEEN`, `NOT_BETWEEN`, `CONTAINS`, `NOT_CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `DOES_NOT_START_WITH`, `DOES_NOT_END_WITH`.
 - Fulltext semantics:

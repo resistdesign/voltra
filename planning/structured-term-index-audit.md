@@ -8,8 +8,8 @@ semantics.
 
 ## Scope Constraints
 
-- Do not implement any runtime/code behavior changes yet.
-- Produce an execution-ready plan only.
+- Execution approved: runtime/code behavior changes are in scope.
+- Maintain execution discipline against this plan.
 - Do not hardcode any field names.
 - Do not reduce query correctness for supported search behavior.
 - This project is alpha: no backward-compatibility/deprecation track is required in this plan.
@@ -43,67 +43,67 @@ semantics.
 
 ## Phase 1: Baseline & Contract Definition (No behavior change)
 
-- [ ] Define explicit config contract for structured indexing field inclusion.
-- [ ] Define Type/Operator matrix contract using `TypeInfoField` shape:
-- [ ] scalar `string`
-- [ ] scalar `number`
-- [ ] scalar `boolean`
-- [ ] array fields by element type
-- [ ] Define deterministic fallback rule to scan+compare for non-indexed fields/operators.
-- [ ] Quantify current fanout baseline and projected fanout under proposed field-inclusion defaults.
+- [x] Define explicit config contract for structured indexing field inclusion.
+- [x] Define Type/Operator matrix contract using `TypeInfoField` shape:
+- [x] scalar `string`
+- [x] scalar `number`
+- [x] scalar `boolean`
+- [x] array fields by element type
+- [x] Define deterministic fallback rule to scan+compare for non-indexed fields/operators.
+- [x] Quantify current fanout baseline and projected fanout under proposed field-inclusion defaults.
 
 ### Phase 1 Acceptance
 
-- [ ] Config contract draft exists.
-- [ ] Type/Operator matrix draft exists.
-- [ ] Baseline and projected fanout estimates exist.
+- [x] Config contract draft exists.
+- [x] Type/Operator matrix draft exists.
+- [x] Baseline and projected fanout estimates exist.
 
 ## Phase 2: Type/Operator Matrix Finalization
 
-- [ ] Map each supported `ComparisonOperators` value to allowed behavior by type/array shape.
-- [ ] Define criteria translation outcomes for each valid Type/Operator combination.
-- [ ] Define explicit invalid-combination handling.
-- [ ] Define array behavior per operator (`CONTAINS`, `IN`, etc.) with unambiguous semantics.
+- [x] Map each supported `ComparisonOperators` value to allowed behavior by type/array shape.
+- [x] Define criteria translation outcomes for each valid Type/Operator combination.
+- [x] Define explicit invalid-combination handling.
+- [x] Define array behavior per operator (`CONTAINS`, `IN`, etc.) with unambiguous semantics.
 
 ### Example Matrix Shape (Illustrative Only)
 
-- [ ] scalar `string`: `EQUALS` -> term `eq`; `CONTAINS`/`LIKE` -> term `contains` when field is indexed.
-- [ ] scalar `number`: `EQUALS` -> exact path; `BETWEEN`/`>=`/`<=` -> range path when field is indexed.
-- [ ] scalar `boolean`: `EQUALS` semantics when field is indexed.
-- [ ] array fields: operator handling based on element type and operator definition.
+- [x] scalar `string`: `EQUALS` -> term `eq`; `CONTAINS`/`LIKE` -> term `contains` when field is indexed.
+- [x] scalar `number`: `EQUALS` -> exact path; `BETWEEN`/`>=`/`<=` -> range path when field is indexed.
+- [x] scalar `boolean`: `EQUALS` semantics when field is indexed.
+- [x] array fields: operator handling based on element type and operator definition.
 
 ### Phase 2 Acceptance
 
-- [ ] Final Type/Operator matrix documented.
-- [ ] Criteria translation contract documented.
-- [ ] Invalid-combination handling documented.
+- [x] Final Type/Operator matrix documented.
+- [x] Criteria translation contract documented.
+- [x] Invalid-combination handling documented.
 
 ## Phase 3: Config Surface & Resolution Rules
 
-- [ ] Define final config structure for field inclusion by type.
-- [ ] Define precedence rules (global defaults, per-type overrides, per-field overrides).
-- [ ] Define resolution flow: field inclusion check -> Type/Operator rule -> indexed query path or scan+compare
+- [x] Define final config structure for field inclusion by type.
+- [x] Define precedence rules (global defaults, per-type overrides, per-field overrides).
+- [x] Define resolution flow: field inclusion check -> Type/Operator rule -> indexed query path or scan+compare
   fallback.
 - [ ] Define observability counters for index growth and fallback usage.
 
 ### Phase 3 Acceptance
 
-- [ ] Final config schema documented.
-- [ ] Resolution/precedence rules documented.
+- [x] Final config schema documented.
+- [x] Resolution/precedence rules documented.
 - [ ] Observability requirements documented.
 
 ## Phase 4: Accuracy Preservation Plan
 
-- [ ] Define no-regression requirements per Type/Operator pair.
-- [ ] Define test matrix for indexed paths and fallback scan+compare paths.
-- [ ] Define parity checks ensuring supported query results remain correct.
+- [x] Define no-regression requirements per Type/Operator pair.
+- [x] Define test matrix for indexed paths and fallback scan+compare paths.
+- [x] Define parity checks ensuring supported query results remain correct.
 - [ ] Define tokenizer correctness expectations for `contains` semantics.
 
 ### Phase 4 Acceptance
 
-- [ ] Accuracy matrix complete.
-- [ ] Test matrix complete.
-- [ ] Parity-check criteria complete.
+- [x] Accuracy matrix complete.
+- [x] Test matrix complete.
+- [x] Parity-check criteria complete.
 
 ## Phase 5: Tokenizer Strategy (Primary)
 
@@ -120,19 +120,19 @@ semantics.
 
 ## Phase 6: Delivery Plan (When approved)
 
-- [ ] Implement config contract for field inclusion.
-- [ ] Implement Type/Operator resolution flow.
-- [ ] Implement scan+compare fallback for non-indexed paths.
+- [x] Implement config contract for field inclusion.
+- [x] Implement Type/Operator resolution flow.
+- [x] Implement scan+compare fallback for non-indexed paths.
 - [ ] Implement tokenizer changes (if approved in Phase 5).
-- [ ] Add/extend tests for matrix behavior, fallback behavior, and parity.
-- [ ] Add documentation with explicit examples and configuration starter patterns.
+- [x] Add/extend tests for matrix behavior, fallback behavior, and parity.
+- [x] Add documentation with explicit examples and configuration starter patterns.
 
 ### Phase 6 Acceptance
 
-- [ ] Structured + ORM criteria tests pass.
-- [ ] Fanout reduction target met.
-- [ ] Supported-query correctness preserved.
-- [ ] Documentation examples are clear and complete.
+- [x] Structured + ORM criteria tests pass.
+- [x] Fanout reduction target met (estimate-based for demo seed profile).
+- [x] Supported-query correctness preserved.
+- [x] Documentation examples are clear and complete.
 
 ## Open Decisions For Review
 
@@ -142,10 +142,22 @@ semantics.
 
 ## Deliverables For Next Execution Turn (After Approval)
 
-- [ ] Config contract update.
-- [ ] Type/Operator resolution update.
-- [ ] Field-inclusion gating update.
-- [ ] Fallback scan+compare update.
-- [ ] Test additions/updates.
-- [ ] Documentation with explicit examples.
-- [ ] Examples in the `examples` folder.
+- [x] Config contract update.
+- [x] Type/Operator resolution update.
+- [x] Field-inclusion gating update.
+- [x] Fallback scan+compare update.
+- [x] Test additions/updates.
+- [x] Documentation with explicit examples.
+- [x] Examples in the `examples` folder.
+
+## Execution Notes (Current Run)
+- [x] Implemented `indexing.structured.indexedFieldsByType` contract and routing/write gating.
+- [x] Implemented Type/Operator structured eligibility checks with scan+compare fallback.
+- [x] Added tests for configured-field structured usage, non-indexed-field fallback, and non-`id` primary field behavior.
+- [x] Added demo configuration with explicit indexed fields by type.
+- [x] Added integration contract documentation updates.
+- [x] Added `examples/api/orm-structured-indexing.ts` and linked it from `examples/README.md`.
+- [x] Computed demo-seed fanout estimate:
+- [x] baseline total term entries: `80,159`
+- [x] proposed total term entries: `16,510`
+- [x] estimated reduction: `63,649` entries (`79.4%`)

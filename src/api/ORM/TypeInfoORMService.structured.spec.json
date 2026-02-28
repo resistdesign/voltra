@@ -42,6 +42,36 @@
       "conditions": [],
       "operation": "ARRAY_EQUALS",
       "expectation": ["2"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredConfiguredQueryUsedStructuredScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runTypeInfoORMStructuredUnconfiguredQueryFallbackScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runTypeInfoORMStructuredUnindexedTitleIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredNonIdPrimaryFieldIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["n-1"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredGeneratedNonIdPrimaryFieldIdScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "n-1"
     }
   ]
 }
