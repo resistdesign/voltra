@@ -2,32 +2,36 @@
 
 ## Goal
 
-Reduce structured term-index fanout and cost while preserving search accuracy, using configuration-first controls driven
+**Reduce structured term-index fanout and cost _WHILE PRESERVING SEARCH ACCURACY_**, using configuration-first controls
+driven
 by `TypeInfo` metadata, data type, array designation, and search operators.
 
 ## Scope Constraints
 
-- Do not implement any runtime/code behavior changes yet.
+- Do not implement any runtime/code behavior changes yet. (**Once approved, changes will be implemented.**)
 - Produce an execution-ready plan only.
-- Prioritize config/policy controls first.
-- Do not reduce query correctness for supported search behavior.
-- Do not hardcode specific field names in logic.
+- Prioritize config~~/policy~~ controls first.
+- Do not reduce query correctness for supported search behavior. **EXACTLY RIGHT**
+- Do not hardcode specific field names in logic. **OBVIOUS FOR AN ORM**
 
 ## Clarifications (Authoritative)
 
 - `primaryField` must always come from `TypeInfo` at runtime. Field name strings are examples only, never hardcoded
-  assumptions.
-- Indexing/search behavior signifier is the pair: `Data Type (+ array/non-array)` x `Search Operator`.
-- Field names in this plan are illustrative examples only for discussion.
+  assumptions. **YES**
+- Indexing/search behavior signifier is the pair: `Data Type (+ array/non-array)` x `Search Operator`. **YES**
+- Field names in this plan are illustrative examples only for discussion. **YES**
 
 ## Assumptions From User Feedback
 
-- [x] Primary field tokenization concern is primarily a configuration/policy issue.
-- [x] Field-mode behavior should be adjustable by config before algorithmic changes.
-- [x] Tokenizer improvements are interesting but secondary.
-- [x] Accuracy should not be reduced.
-- [x] Concurrency hardening is separate and optional for this track.
-- [x] Opt-in indexed fields is likely desirable.
+- [ ] Primary field tokenization concern is primarily a configuration/policy issue. **YES**
+- [ ] Field-mode behavior should be adjustable by ~~config before~~ algorithmic changes. **Behavior is determined by
+  Type/Operator. Field is only indexed if it is set in the config.**
+- [ ] Tokenizer improvements are ~~interesting but secondary.~~ **INTERESTING AND PRIMARY** (That's the main point of
+  this plan!!!)
+- [ ] Accuracy should not be reduced. **EXACTLY RIGHT**
+- [ ] Concurrency hardening is separate and optional for this track. (If it's easy and helps and doesn't break anything,
+  do it.)
+- [ ] Opt-in indexed fields is ~~likely desirable.~~ IMPERATIVE.
 
 ## Phase 1: Baseline & Policy Design (No behavior change)
 
@@ -36,16 +40,17 @@ by `TypeInfo` metadata, data type, array designation, and search operators.
 - [ ] scalar `string` (non-array)
 - [ ] scalar `number` (non-array)
 - [ ] scalar `boolean` (non-array)
-- [ ] array fields by element type
+- [ ] array fields by element type **(TypeInfoField designates whether or not a field is an array.)**
 - [ ] Define operator support policy by type/operator pair.
-- [ ] Define default policy: opt-in fields for structured indexing, no implicit all-field indexing.
+- [ ] Define default policy: opt-in fields for structured indexing, no implicit all-field indexing. **CORRECT**
 - [ ] Define migration-compatible fallback for existing configs (feature flag or versioned default).
 - [ ] Produce expected fanout estimates using current seed data under policy variants.
 
 ### Phase 1 Acceptance
 
 - [ ] Written policy schema draft exists.
-- [ ] Backward-compatibility strategy exists.
+- [ ] ~~Backward-compatibility strategy exists.~~ **WE DO NOT NEED TO BE BACKWARDS COMPATIBLE. THIS IS AN ALPHA RELEASE
+  PROJECT RIGHT NOW**
 - [ ] Estimated entry-count reduction is quantified for demo seed data.
 
 ## Phase 2: Type/Operator Matrix Contract
@@ -68,7 +73,8 @@ by `TypeInfo` metadata, data type, array designation, and search operators.
 - [ ] `boolean` scalar:
 - [ ] `EQUALS` only
 - [ ] array fields:
-- [ ] `CONTAINS` semantics only where element type is supported and policy-enabled
+- [ ] `CONTAINS` semantics only where element type is supported and ~~policy-enabled~~ (Consumers will NOT configure by
+  operator or policy, we simply turn indexing ON/OFF BY FIELD NAME.)
 
 ### Phase 2 Acceptance
 
@@ -142,15 +148,20 @@ by `TypeInfo` metadata, data type, array designation, and search operators.
 
 ## Open Decisions Requiring Your Approval Before Implementation
 
-- [ ] Whether non-indexed-field criteria should fallback to driver scan/filter or return explicit
-  unsupported-indexed-query error.
-- [ ] Whether to keep backward compatibility mode enabled by default for one release.
-- [ ] Whether `contains` should ever be enabled by default for identifier/contact-style string fields.
+- [ ] Whether non-indexed-field criteria should fallback to driver scan/filter or ~~return explicit
+  unsupported-indexed-query error~~. **FALLBACK TO SCAN+COMPARE**
+- [ ] ~~Whether to keep backward compatibility mode enabled by default for one release.~~ **ALPHA PROJECT, NO BACKWARDS
+  COMPATIBILITY, THIS PROJECT SHOULD NOT CONTAIN DEPRECATION WARNINGS OR DOC COMMENT ANNOTATIONS ANYWHERE (I should not
+  find any of that, anywhere.)**
+- [ ] Whether `contains` should ever be enabled by default for identifier/contact-style string fields. **WHY!!?!?!!?!? I
+  DON'T KNOW WHAT THIS MEANS.**
 
 ## Deliverables For Next Execution Turn (When You Approve)
 
-- [ ] Config contract update.
-- [ ] Type/operator policy resolution update.
-- [ ] Structured indexing gating update.
-- [ ] Tests for policy behavior and parity.
-- [ ] Documentation and migration notes.
+- [ ] Config contract update. **IF FIELDS AREN'T CONFIGURED, THEY'RE NOT INDEXED**
+- [ ] Type/operator policy resolution update. **What does this mean?**
+- [ ] Structured indexing gating update. **What does this mean?**
+- [ ] Tests for policy behavior and parity. **YES**
+- [ ] Documentation ~~and migration notes.~~ **Documentation only, this project is alpha.**
+- [ ] Detailed and explicit Examples and Samples that make indexing semantics CLEAR and give a GREAT starting point for
+  configuration.
