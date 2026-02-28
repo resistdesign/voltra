@@ -28,15 +28,29 @@ Understand how it will be configured while being clear to consumers about how it
 
 ## Follow Through
 
-We will want to make sure that the following types of assets are updated around this refactor:
+Re-run and verify each asset category after the refactor/feature work:
 
-1. Documentation
-2. Doc Comments
-3. READMEs
-4. Tests
-5. Demo Site, app and api
-6. Samples/Examples
-7. Any other related assets
+- [x] Documentation
+  - Verified `TypeInfoORM` behavior contract reflects auto-fulltext, structured, and fallback routing.
+  - Updated: `src/api/ORM/INDEXING_INTEGRATION.md`
+- [x] Doc Comments
+  - Verified public typing/docs reflect multi-field fulltext config (`Record<string, string | string[]>`) and criteria-driven list behavior.
+  - Verified by: `yarn doc`
+- [x] READMEs
+  - Updated demo README notes to explicitly describe quick-query fulltext vs structural behavior.
+  - Updated: `site/app/src/client/EndToEndDemo.README.md`
+- [x] Tests
+  - Operator coverage suite exists and validates fulltext, structural/indexed, and full-scan+compare fallback behavior.
+  - Coverage source: `src/api/ORM/TypeInfoORMService.operatorCoverage.spec.json`
+- [x] Demo Site, app and api
+  - Demo API config uses multi-field fulltext indexing by type.
+  - Demo app search flow uses criteria-based routing with field selection and operators.
+  - Verified in: `site/api/routeMap.ts`, `site/app/src/client/EndToEndDemo.tsx`, `site/app/src/client/EndToEndDemo/screens/CarRelateScreen.tsx`
+- [x] Samples/Examples
+  - Added explicit pointers to the demo and ORM integration docs as the reference implementation pattern.
+  - Updated: `examples/README.md`
+- [x] Any other related assets
+  - Operator checklist notes reflect implementability and fallback intent per operator.
 
 ## Supported Search Criteria Operator Checklist
 

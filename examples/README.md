@@ -21,6 +21,15 @@ Use this for client route usage via platform barrels:
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
 
+## ORM Search + Indexing Reference
+
+- Multi-field fulltext indexing example: `site/api/routeMap.ts`
+- Criteria-driven search UI flow: `site/app/src/client/EndToEndDemo/screens/CarRelateScreen.tsx`
+- Runtime behavior contract: `src/api/ORM/INDEXING_INTEGRATION.md`
+
+Use these references for the current pattern: configure fulltext fields per type, then query with `criteria` so `list`
+auto-selects fulltext/structured/fallback behavior.
+
 ## Forms
 
 - `examples/forms/web-form-suite.ts`
