@@ -53,14 +53,14 @@ We will want to make sure that the following types of assets are updated around 
 - [x] Phase 3: Verification
   - [x] Run targeted tests and full relevant test command(s).
   - [x] Address failures and finalize checklist status.
-- [ ] Phase 4: Auto-fulltext search behavior in `list`
-  - [ ] Remove direct fulltext argument usage from `list` config and related request paths.
-  - [ ] Require field-targeted fulltext behavior via structured search criteria only.
-  - [ ] Implement auto-selection of fulltext backend when criteria fields are fulltext-indexed and operators imply fulltext search semantics.
-  - [ ] Keep non-fulltext-compatible operators/fields on structured or driver paths with explicit validation/error behavior where needed.
-  - [ ] Add/update JSON specs covering required field targeting, automatic fulltext routing, and unsupported combinations.
-- [ ] Phase 5: Demo Site multi-field fulltext demonstration
-  - [ ] Update demo API indexing config to clearly demonstrate multi-field fulltext indexing for one or more types.
-  - [ ] Update demo app search flows to exercise the new auto-fulltext criteria-based behavior.
-  - [ ] Add/adjust demo-facing tests or scenario coverage to verify behavior end-to-end.
-  - [ ] Ensure demo source clearly shows the implementation pattern for others to follow.
+- [x] Phase 4: Auto-fulltext search behavior in `list`
+  - [x] Remove direct fulltext argument usage from `list` config and related request paths.
+  - [x] Require field-targeted fulltext behavior via structured search criteria only.
+  - [x] Implement auto-selection of fulltext backend when criteria fields are fulltext-indexed and operators imply fulltext search semantics.
+  - [x] Keep non-fulltext-compatible operators/fields on structured or driver paths with explicit validation/error behavior where needed.
+  - [x] Add/update JSON specs covering required field targeting, automatic fulltext routing, and unsupported combinations.
+- [x] Phase 5: Demo Site multi-field fulltext demonstration
+  - [x] Update demo API indexing config to clearly demonstrate multi-field fulltext indexing for one or more types.
+  - [x] Update demo app search flows to exercise the new auto-fulltext criteria-based behavior.
+  - [x] Add/adjust demo-facing tests or scenario coverage to verify behavior end-to-end.
+  - [x] Ensure demo source clearly shows the implementation pattern for others to follow.
