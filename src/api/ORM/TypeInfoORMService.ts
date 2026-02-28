@@ -772,7 +772,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     operator: ComparisonOperators,
   ): boolean =>
     operator === ComparisonOperators.LIKE ||
-    operator === ComparisonOperators.EQUALS ||
+    operator === ComparisonOperators.CONTAINS ||
     operator === ComparisonOperators.STARTS_WITH;
 
   /**
@@ -813,7 +813,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       };
     }
 
-    if (operator === ComparisonOperators.EQUALS) {
+    if (operator === ComparisonOperators.CONTAINS) {
       return {
         mode: "exact",
         query,

@@ -229,91 +229,91 @@ export const runDbxFullTextSearchScenario = async () => {
 
   const exactSentence = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "quick brown fox jumps over",
     "body",
   );
   const exactTitleField = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "sentences",
     "title",
   );
   const exactSentenceNineDefault = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "quick brown fox jumps over 13 lazy dogs today",
     "body",
   );
   const exactSentenceNineMid = await runFullTextSearch(
     runtimeWithMidLimits,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "quick brown fox jumps over 13 lazy dogs today",
     "body",
   );
   const exactSentenceNineHigh = await runFullTextSearch(
     runtimeWithHighLimits,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "quick brown fox jumps over 13 lazy dogs today",
     "body",
   );
   const exactLongDefault = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
     "body",
   );
   const exactLongMid = await runFullTextSearch(
     runtimeWithMidLimits,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
     "body",
   );
   const exactLongHigh = await runFullTextSearch(
     runtimeWithHighLimits,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
     "body",
   );
   const exactDiacritics = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "naïve café résumé coöperate são paulo",
     "body",
   );
   const exactStopwords = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "the the the",
     "body",
   );
   const exactQuotedPhrase = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "quoted phrase",
     "body",
   );
   const exactPunctuation = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "edge case",
     "body",
   );
   const exactSeparators = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "snake case and camelcase",
     "body",
   );
   const exactHyphenated = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "service oriented architecture",
     "body",
   );
   const exactNumericShort = await runFullTextSearch(
     runtime,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "v2 0 fix 123",
     "body",
   );
@@ -402,7 +402,7 @@ export const runDbxFullTextSearchScenario = async () => {
   const updateSwapId = updateSwapResponse.parsedBody as string;
   const updateSwapBefore = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "alpha",
     "body",
   );
@@ -419,13 +419,13 @@ export const runDbxFullTextSearchScenario = async () => {
   });
   const updateSwapAfterOld = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "alpha",
     "body",
   );
   const updateSwapAfterNew = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "charlie",
     "body",
   );
@@ -447,7 +447,7 @@ export const runDbxFullTextSearchScenario = async () => {
   const updateNullId = updateNullResponse.parsedBody as string;
   const updateNullBefore = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "echo",
     "body",
   );
@@ -464,7 +464,7 @@ export const runDbxFullTextSearchScenario = async () => {
   });
   const updateNullAfter = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "echo",
     "body",
   );
@@ -489,7 +489,7 @@ export const runDbxFullTextSearchScenario = async () => {
   const updateNonFullTextId = updateNonFullTextResponse.parsedBody as string;
   const updateNonFullTextBefore = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "golf",
     "body",
   );
@@ -509,7 +509,7 @@ export const runDbxFullTextSearchScenario = async () => {
   );
   const updateNonFullTextAfter = await runFullTextSearch(
     runtimeForUpdates,
-    ComparisonOperators.EQUALS,
+    ComparisonOperators.CONTAINS,
     "golf",
     "body",
   );
