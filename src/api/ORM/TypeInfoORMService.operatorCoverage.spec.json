@@ -1,0 +1,143 @@
+{
+  "file": "./TypeInfoORMService.operatorCoverage.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoORMOperatorCoverageEqualsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-3"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageNotEqualsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-2", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageGreaterThanIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageGreaterThanOrEqualIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-3", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageLessThanIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageLessThanOrEqualIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-2"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageInIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-3", "record-4"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageNotInIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-2", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageLikeIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-2"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageNotLikeIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-3", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageExistsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-2", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageNotExistsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-3"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageIsNotEmptyIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageIsEmptyIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-2", "record-3"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageBetweenIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-2", "record-3", "record-4"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageNotBetweenIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageContainsFullTextIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageContainsArrayIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-3"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageNotContainsIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-2", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageStartsWithIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-2"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageEndsWithIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-3"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageDoesNotStartWithIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-3", "record-4", "record-5"]
+    },
+    {
+      "export": "runTypeInfoORMOperatorCoverageDoesNotEndWithIdsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": ["record-1", "record-2", "record-4", "record-5"]
+    }
+  ]
+}

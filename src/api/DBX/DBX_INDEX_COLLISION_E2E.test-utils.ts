@@ -90,10 +90,15 @@ const runFullTextSearch = async <T extends Record<any, any>>(
       typeName,
       {
         itemsPerPage: 10,
-        text: {
-          query,
-          mode: "lossy",
-          indexField: "lastName",
+        criteria: {
+          logicalOperator: LogicalOperators.AND,
+          fieldCriteria: [
+            {
+              fieldName: "lastName",
+              operator: ComparisonOperators.LIKE,
+              value: query,
+            },
+          ],
         },
       },
     ],

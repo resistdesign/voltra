@@ -40,6 +40,8 @@ type SearchFilter = {
   value: string;
 };
 
+type CarSearchField = "make" | "model";
+
 const getApiDomain = (hostname: string) => {
   if (hostname === DOMAINS.API) {
     return hostname;
@@ -87,8 +89,12 @@ export const EndToEndDemo: FC = () => {
   const [relatedCar, setRelatedCar] = useState<any | null>(null);
   const [relatedCarSummary, setRelatedCarSummary] = useState<any | null>(null);
   const [carSearchQuery, setCarSearchQuery] = useState("");
-  const [carSearchMode, setCarSearchMode] = useState<"lossy" | "exact">(
-    "lossy",
+  const [carSearchField, setCarSearchField] = useState<CarSearchField>(
+    "model",
+  );
+  const [carSearchOperator, setCarSearchOperator] =
+    useState<ComparisonOperators>(
+      ComparisonOperators.LIKE,
   );
   const [carSearchCursor, setCarSearchCursor] = useState<string | undefined>(
     undefined,
@@ -385,9 +391,15 @@ export const EndToEndDemo: FC = () => {
       const trimmedQuery = carSearchQuery.trim();
 
       if (trimmedQuery) {
-        config.text = {
-          query: trimmedQuery,
-          mode: carSearchMode,
+        config.criteria = {
+          logicalOperator: LogicalOperators.AND,
+          fieldCriteria: [
+            {
+              fieldName: carSearchField,
+              operator: carSearchOperator,
+              value: trimmedQuery,
+            },
+          ],
         };
       } else {
         const activeFilters = filters.filter((filter) => {
@@ -423,7 +435,14 @@ export const EndToEndDemo: FC = () => {
 
       return config;
     },
-    [carItemsPerPage, carSearchMode, carSearchQuery, filters, filtersOperator],
+    [
+      carItemsPerPage,
+      carSearchField,
+      carSearchOperator,
+      carSearchQuery,
+      filters,
+      filtersOperator,
+    ],
   );
 
   const runCarSearch = useCallback(
@@ -668,7 +687,8 @@ export const EndToEndDemo: FC = () => {
           isCarCreating={isCarCreating}
           isCarUpdating={isCarUpdating}
           isCarDeleting={isCarDeleting}
-          carSearchMode={carSearchMode}
+          carSearchField={carSearchField}
+          carSearchOperator={carSearchOperator}
           carSearchQuery={carSearchQuery}
           carSearchCursor={carSearchCursor}
           carSearchResults={carSearchResults}
@@ -682,7 +702,8 @@ export const EndToEndDemo: FC = () => {
           onUpdateCar={handleUpdateCar}
           onDeleteCar={handleDeleteCar}
           onCarSearchQueryChange={setCarSearchQuery}
-          onCarSearchModeChange={setCarSearchMode}
+          onCarSearchFieldChange={setCarSearchField}
+          onCarSearchOperatorChange={setCarSearchOperator}
           onFiltersOperatorChange={setFiltersOperator}
           onAddFilter={addFilter}
           onUpdateFilter={updateFilter}

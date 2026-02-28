@@ -1,4 +1,8 @@
-import type { ListItemsResults } from "../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+  type ListItemsResults,
+} from "../../common/SearchTypes";
 import { FullTextMemoryBackend } from "../Indexing";
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
@@ -81,10 +85,15 @@ const runLossySearch = async (runtime: ReturnType<typeof buildDbxRuntime>) => {
       "Post",
       {
         itemsPerPage: 10,
-        text: {
-          query: "alpha bravo",
-          mode: "lossy",
-          indexField: "body",
+        criteria: {
+          logicalOperator: LogicalOperators.AND,
+          fieldCriteria: [
+            {
+              fieldName: "body",
+              operator: ComparisonOperators.LIKE,
+              value: "alpha bravo",
+            },
+          ],
         },
       },
     ],

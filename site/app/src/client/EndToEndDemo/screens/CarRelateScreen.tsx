@@ -31,7 +31,8 @@ type CarRelateScreenProps = {
   isCarCreating?: boolean;
   isCarUpdating?: boolean;
   isCarDeleting?: boolean;
-  carSearchMode: "lossy" | "exact";
+  carSearchField: "make" | "model";
+  carSearchOperator: ComparisonOperators;
   carSearchQuery: string;
   carSearchCursor?: string;
   carSearchResults: any[];
@@ -45,7 +46,8 @@ type CarRelateScreenProps = {
   onUpdateCar: (values: any) => void;
   onDeleteCar: () => void;
   onCarSearchQueryChange: (value: string) => void;
-  onCarSearchModeChange: (value: "lossy" | "exact") => void;
+  onCarSearchFieldChange: (value: "make" | "model") => void;
+  onCarSearchOperatorChange: (value: ComparisonOperators) => void;
   onFiltersOperatorChange: (value: LogicalOperators) => void;
   onAddFilter: () => void;
   onUpdateFilter: (id: string, updates: Partial<SearchFilter>) => void;
@@ -68,7 +70,8 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
   isCarCreating,
   isCarUpdating,
   isCarDeleting,
-  carSearchMode,
+  carSearchField,
+  carSearchOperator,
   carSearchQuery,
   carSearchCursor,
   carSearchResults,
@@ -82,7 +85,8 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
   onUpdateCar,
   onDeleteCar,
   onCarSearchQueryChange,
-  onCarSearchModeChange,
+  onCarSearchFieldChange,
+  onCarSearchOperatorChange,
   onFiltersOperatorChange,
   onAddFilter,
   onUpdateFilter,
@@ -154,11 +158,18 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
     [onRemoveFilter],
   );
 
-  const handleCarSearchModeChange = useCallback(
+  const handleCarSearchFieldChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
-      onCarSearchModeChange(event.target.value as "lossy" | "exact");
+      onCarSearchFieldChange(event.target.value as "make" | "model");
     },
-    [onCarSearchModeChange],
+    [onCarSearchFieldChange],
+  );
+
+  const handleCarSearchOperatorChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      onCarSearchOperatorChange(event.target.value as ComparisonOperators);
+    },
+    [onCarSearchOperatorChange],
   );
 
   const handleCarItemsPerPageChange = useCallback(
@@ -229,91 +240,113 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
 
         <Grid>
           <article>
-            <h5>Search Cars (Text + Structured + Cursor Paging)</h5>
-            {carSearchMode === "lossy" ? (
+            <h5>Search Cars (Auto Fulltext + Structured + Cursor Paging)</h5>
+            <fieldset>
+              <legend>Quick Fulltext Query</legend>
+              <InlineRow>
+                <label>
+                  Field
+                  <select
+                    value={carSearchField}
+                    onChange={handleCarSearchFieldChange}
+                  >
+                    <option value="model">Model</option>
+                    <option value="make">Make</option>
+                  </select>
+                </label>
+                <label>
+                  Operator
+                  <select
+                    value={carSearchOperator}
+                    onChange={handleCarSearchOperatorChange}
+                  >
+                    <option value={ComparisonOperators.LIKE}>Like</option>
+                    <option value={ComparisonOperators.EQUALS}>Equals</option>
+                    <option value={ComparisonOperators.STARTS_WITH}>Starts With</option>
+                  </select>
+                </label>
+              </InlineRow>
               <label>
-                Text Query
+                Query
                 <input
                   type="text"
                   value={carSearchQuery}
                   onChange={handleCarSearchQueryChange}
+                  placeholder="Set a query to run fulltext on the selected field"
                 />
               </label>
-            ) : (
-              <fieldset>
-                <legend>Structured Filters</legend>
-                <InlineRow>
-                  <label>
-                    Operator
+              <small>
+                This sends list criteria for a fulltext-indexed field and lets the
+                API auto-route to fulltext search.
+              </small>
+            </fieldset>
+
+            <fieldset>
+              <legend>Structured Filters (used when quick query is empty)</legend>
+              <InlineRow>
+                <label>
+                  Operator
+                  <select
+                    value={filtersOperator}
+                    onChange={handleFiltersOperatorChange}
+                  >
+                    <option value={LogicalOperators.AND}>AND</option>
+                    <option value={LogicalOperators.OR}>OR</option>
+                  </select>
+                </label>
+                <button type="button" onClick={onAddFilter}>
+                  Add Filter
+                </button>
+              </InlineRow>
+              {filters.length === 0 ? (
+                <p>No structured filters yet.</p>
+              ) : (
+                filters.map((filter) => (
+                  <InlineRow key={filter.id}>
                     <select
-                      value={filtersOperator}
-                      onChange={handleFiltersOperatorChange}
+                      data-filter-id={filter.id}
+                      value={filter.fieldName}
+                      onChange={handleFilterFieldChange}
                     >
-                      <option value={LogicalOperators.AND}>AND</option>
-                      <option value={LogicalOperators.OR}>OR</option>
+                      <option value="make">Make</option>
+                      <option value="model">Model</option>
+                      <option value="year">Year</option>
                     </select>
-                  </label>
-                  <button type="button" onClick={onAddFilter}>
-                    Add Filter
-                  </button>
-                </InlineRow>
-                {filters.length === 0 ? (
-                  <p>No structured filters yet.</p>
-                ) : (
-                  filters.map((filter) => (
-                    <InlineRow key={filter.id}>
-                      <select
-                        data-filter-id={filter.id}
-                        value={filter.fieldName}
-                        onChange={handleFilterFieldChange}
-                      >
-                        <option value="make">Make</option>
-                        <option value="model">Model</option>
-                        <option value="year">Year</option>
-                      </select>
-                      <select
-                        data-filter-id={filter.id}
-                        value={filter.operator}
-                        onChange={handleFilterOperatorChange}
-                      >
-                        <option value={ComparisonOperators.EQUALS}>Equals</option>
-                        <option value={ComparisonOperators.NOT_EQUALS}>
-                          Not Equals
-                        </option>
-                        <option value={ComparisonOperators.LIKE}>Like</option>
-                        <option value={ComparisonOperators.GREATER_THAN}>
-                          Greater Than
-                        </option>
-                        <option value={ComparisonOperators.LESS_THAN}>
-                          Less Than
-                        </option>
-                      </select>
-                      <input
-                        type="text"
-                        data-filter-id={filter.id}
-                        value={filter.value}
-                        onChange={handleFilterValueChange}
-                        placeholder="Value"
-                      />
-                      <button
-                        type="button"
-                        data-filter-id={filter.id}
-                        onClick={handleRemoveFilter}
-                      >
-                        Remove
-                      </button>
-                    </InlineRow>
-                  ))
-                )}
-              </fieldset>
-            )}
-            <label>
-              Text Mode
-              <select value={carSearchMode} onChange={handleCarSearchModeChange}>
-                <option value="lossy">Lossy</option>
-                <option value="exact">Exact</option>
-              </select>
-            </label>
+                    <select
+                      data-filter-id={filter.id}
+                      value={filter.operator}
+                      onChange={handleFilterOperatorChange}
+                    >
+                      <option value={ComparisonOperators.EQUALS}>Equals</option>
+                      <option value={ComparisonOperators.NOT_EQUALS}>
+                        Not Equals
+                      </option>
+                      <option value={ComparisonOperators.LIKE}>Like</option>
+                      <option value={ComparisonOperators.GREATER_THAN}>
+                        Greater Than
+                      </option>
+                      <option value={ComparisonOperators.LESS_THAN}>
+                        Less Than
+                      </option>
+                    </select>
+                    <input
+                      type="text"
+                      data-filter-id={filter.id}
+                      value={filter.value}
+                      onChange={handleFilterValueChange}
+                      placeholder="Value"
+                    />
+                    <button
+                      type="button"
+                      data-filter-id={filter.id}
+                      onClick={handleRemoveFilter}
+                    >
+                      Remove
+                    </button>
+                  </InlineRow>
+                ))
+              )}
+            </fieldset>
             <InlineRow>
               <label>
                 Items per page

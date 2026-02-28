@@ -11,7 +11,7 @@
       "export": "runDbxExactSearchInitialSearchIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["post-1", "post-2"]
+      "expectation": ["post-1", "post-2", "post-3"]
     },
     {
       "export": "runDbxExactSearchUpdateResultScenario",
@@ -35,7 +35,7 @@
       "export": "runDbxExactSearchAfterDeleteSearchIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["post-1", "post-3"]
+      "expectation": ["post-1", "post-3", "post-4"]
     }
   ]
 }
