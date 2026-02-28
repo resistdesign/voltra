@@ -84,20 +84,20 @@ semantics.
 - [x] Define precedence rules (global defaults, per-type overrides, per-field overrides).
 - [x] Define resolution flow: field inclusion check -> Type/Operator rule -> indexed query path or scan+compare
   fallback.
-- [ ] Define observability counters for index growth and fallback usage.
+- [x] Define observability counters for index growth and fallback usage.
 
 ### Phase 3 Acceptance
 
 - [x] Final config schema documented.
 - [x] Resolution/precedence rules documented.
-- [ ] Observability requirements documented.
+- [x] Observability requirements documented.
 
 ## Phase 4: Accuracy Preservation Plan
 
 - [x] Define no-regression requirements per Type/Operator pair.
 - [x] Define test matrix for indexed paths and fallback scan+compare paths.
 - [x] Define parity checks ensuring supported query results remain correct.
-- [ ] Define tokenizer correctness expectations for `contains` semantics.
+- [x] Define tokenizer correctness expectations for `contains` semantics.
 
 ### Phase 4 Acceptance
 
@@ -107,16 +107,16 @@ semantics.
 
 ## Phase 5: Tokenizer Strategy (Primary)
 
-- [ ] Evaluate tokenizer approach for indexed string fields to reduce fanout while preserving required semantics.
-- [ ] Compare candidate token strategies against correctness requirements.
-- [ ] Define acceptance threshold balancing fanout reduction and accuracy.
-- [ ] Select strategy and define implementation/test scope.
+- [x] Evaluate tokenizer approach for indexed string fields to reduce fanout while preserving required semantics.
+- [x] Compare candidate token strategies against correctness requirements.
+- [x] Define acceptance threshold balancing fanout reduction and accuracy.
+- [x] Select strategy and define implementation/test scope.
 
 ### Phase 5 Acceptance
 
-- [ ] Selected tokenizer strategy documented.
-- [ ] Fanout/accuracy tradeoff documented.
-- [ ] Implementation scope approved.
+- [x] Selected tokenizer strategy documented.
+- [x] Fanout/accuracy tradeoff documented.
+- [x] Implementation scope approved.
 
 ## Phase 6: Delivery Plan (When approved)
 
@@ -157,7 +157,13 @@ semantics.
 - [x] Added demo configuration with explicit indexed fields by type.
 - [x] Added integration contract documentation updates.
 - [x] Added `examples/api/orm-structured-indexing.ts` and linked it from `examples/README.md`.
+- [x] Added list-routing observability hook example.
+- [x] Added structured index-write observability hook (`onStructuredIndexWrite`) and test coverage.
 - [x] Computed demo-seed fanout estimate:
 - [x] baseline total term entries: `80,159`
 - [x] proposed total term entries: `16,510`
 - [x] estimated reduction: `63,649` entries (`79.4%`)
+- [x] Evaluated tokenizer candidates for current indexed-field profile:
+- [x] `1-3gram` total: `16,510` (selected default for correctness)
+- [x] `2-3gram` total: `10,869` (34.17% lower than `1-3gram`, but higher risk to short-substring behavior)
+- [x] `3gram` total: `5,636` (65.86% lower than `1-3gram`, but materially higher correctness risk)

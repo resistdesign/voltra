@@ -70,6 +70,18 @@ const runTypeInfoORMStructuredScenario = async () => {
     uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
   });
   const structuredBackend = new StructuredInMemoryBackend();
+  const routingEvents: Array<{
+    path: "fullText" | "structured" | "fullScanCompare";
+    reason:
+      | "fullTextPlan"
+      | "structuredEligible"
+      | "criteriaWithoutIndexedPath"
+      | "indexedPathFailedOrUnsupported";
+  }> = [];
+  const structuredIndexWriteEvents: Array<{
+    action: "upsert" | "remove";
+    indexedFieldCount: number;
+  }> = [];
   const structuredReaderCalls = {
     terms: 0,
     ranges: 0,
@@ -108,6 +120,17 @@ const runTypeInfoORMStructuredScenario = async () => {
         writer: structuredBackend,
         indexedFieldsByType: {
           Post: ["category", "score", "tags"],
+        },
+      },
+      observability: {
+        onListRoutingDecision: (event) => {
+          routingEvents.push({ path: event.path, reason: event.reason });
+        },
+        onStructuredIndexWrite: (event) => {
+          structuredIndexWriteEvents.push({
+            action: event.action,
+            indexedFieldCount: event.indexedFieldCount,
+          });
         },
       },
     },
@@ -327,6 +350,18 @@ const runTypeInfoORMStructuredScenario = async () => {
     unindexedTitleIds: unindexedTitleQuery.items.map((item) => item.id),
     nonIdPrimaryFieldIds: noteByTitle.items.map((item) => item.noteKey),
     generatedNonIdPrimaryFieldId: noteId,
+    sawStructuredRoutingDecision: routingEvents.some(
+      (event) => event.path === "structured",
+    ),
+    sawFullScanFallbackRoutingDecision: routingEvents.some(
+      (event) =>
+        event.path === "fullScanCompare" &&
+        (event.reason === "criteriaWithoutIndexedPath" ||
+          event.reason === "indexedPathFailedOrUnsupported"),
+    ),
+    sawStructuredIndexWriteTelemetry:
+      structuredIndexWriteEvents.some((event) => event.action === "upsert") &&
+      structuredIndexWriteEvents.some((event) => event.indexedFieldCount > 0),
   };
 };
 
@@ -369,3 +404,15 @@ export const runTypeInfoORMStructuredNonIdPrimaryFieldIdsScenario = async () =>
 export const runTypeInfoORMStructuredGeneratedNonIdPrimaryFieldIdScenario =
   async () =>
     (await runTypeInfoORMStructuredScenario()).generatedNonIdPrimaryFieldId;
+
+export const runTypeInfoORMStructuredSawStructuredRoutingDecisionScenario =
+  async () => (await runTypeInfoORMStructuredScenario()).sawStructuredRoutingDecision;
+
+export const runTypeInfoORMStructuredSawFullScanFallbackRoutingDecisionScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario())
+      .sawFullScanFallbackRoutingDecision;
+
+export const runTypeInfoORMStructuredSawStructuredIndexWriteTelemetryScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario()).sawStructuredIndexWriteTelemetry;

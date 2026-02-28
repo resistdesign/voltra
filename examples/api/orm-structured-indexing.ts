@@ -15,5 +15,16 @@ export const ormStructuredIndexingConfigExample: TypeInfoORMIndexingConfig = {
       Car: ["make", "model", "year"],
     },
   },
+  observability: {
+    onListRoutingDecision: ({ typeName, path, reason, criteriaCount }) => {
+      console.log(
+        `[ORM routing] type=${typeName} path=${path} reason=${reason} criteria=${criteriaCount}`,
+      );
+    },
+    onStructuredIndexWrite: ({ typeName, docId, action, indexedFieldCount }) => {
+      console.log(
+        `[ORM structured-index] type=${typeName} docId=${docId} action=${action} indexedFields=${indexedFieldCount}`,
+      );
+    },
+  },
 };
-
