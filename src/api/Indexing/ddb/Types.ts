@@ -83,6 +83,42 @@ export type GetItemOutput = {
 };
 
 /**
+ * Input payload for DynamoDB put item operations.
+ */
+export type PutItemInput = {
+  /**
+   * DynamoDB table name.
+   */
+  TableName: string;
+  /**
+   * Item attributes to store.
+   */
+  Item: AttributeMap;
+  /**
+   * Optional conditional expression.
+   */
+  ConditionExpression?: string;
+  /**
+   * Optional expression attribute names.
+   */
+  ExpressionAttributeNames?: Record<string, string>;
+  /**
+   * Optional expression attribute values.
+   */
+  ExpressionAttributeValues?: AttributeMap;
+};
+
+/**
+ * Output payload from DynamoDB put item operations.
+ */
+export type PutItemOutput = {
+  /**
+   * True when conditional write failed.
+   */
+  conditionFailed?: boolean;
+};
+
+/**
  * DynamoDB batch write request entry.
  */
 export type WriteRequest = {
@@ -118,6 +154,12 @@ export type DynamoBatchWriter = {
    * @returns Get item output payload.
    */
   getItem(input: GetItemInput): Promise<GetItemOutput>;
+  /**
+   * Execute a DynamoDB put item operation.
+   * @param input Put item input payload.
+   * @returns Put item output payload.
+   */
+  putItem(input: PutItemInput): Promise<PutItemOutput>;
 };
 
 /**

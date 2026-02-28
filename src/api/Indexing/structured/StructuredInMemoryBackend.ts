@@ -9,6 +9,7 @@ import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredWriter } from "./Handlers";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
 import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import { StructuredInMemoryIndex } from "./StructuredInMemoryIndex";
 
 type StructuredPage = { candidateIds: DocId[]; lastEvaluatedKey?: string };
@@ -36,10 +37,17 @@ export class StructuredInMemoryBackend
   implements StructuredSearchDependencies, StructuredWriter
 {
   private docFields = new Map<DocId, StructuredDocFieldsRecord>();
-  private index = new StructuredInMemoryIndex();
+  private index: StructuredInMemoryIndex;
+
+  /**
+   * @param tokenizer Optional tokenizer overrides for structured string contains behavior.
+   */
+  constructor(private readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {
+    this.index = new StructuredInMemoryIndex(tokenizer);
+  }
 
   private rebuildIndex(): void {
-    const nextIndex = new StructuredInMemoryIndex();
+    const nextIndex = new StructuredInMemoryIndex(this.tokenizer);
 
     for (const [docId, fields] of this.docFields.entries()) {
       nextIndex.addDocument(docId, fields);

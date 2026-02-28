@@ -123,7 +123,7 @@ semantics.
 - [x] Implement config contract for field inclusion.
 - [x] Implement Type/Operator resolution flow.
 - [x] Implement scan+compare fallback for non-indexed paths.
-- [ ] Implement tokenizer changes (if approved in Phase 5).
+- [x] Implement tokenizer changes (configurable with safe defaults).
 - [x] Add/extend tests for matrix behavior, fallback behavior, and parity.
 - [x] Add documentation with explicit examples and configuration starter patterns.
 
@@ -136,9 +136,9 @@ semantics.
 
 ## Open Decisions For Review
 
-- [ ] Final default field-inclusion profile by type.
-- [ ] Final tokenizer strategy selection after Phase 5 evaluation.
-- [ ] Whether to include any small/safe concurrency hardening in-scope.
+- [x] Final default field-inclusion profile by type.
+- [x] Final tokenizer strategy selection after Phase 5 evaluation.
+- [x] Include small/safe concurrency hardening in-scope.
 
 ## Deliverables For Next Execution Turn (After Approval)
 
@@ -159,6 +159,8 @@ semantics.
 - [x] Added `examples/api/orm-structured-indexing.ts` and linked it from `examples/README.md`.
 - [x] Added list-routing observability hook example.
 - [x] Added structured index-write observability hook (`onStructuredIndexWrite`) and test coverage.
+- [x] Added configurable tokenizer plumbing (`structured.tokenizer`) with default-safe values.
+- [x] Added optimistic CAS concurrency hardening for structured DDB doc-fields writes.
 - [x] Computed demo-seed fanout estimate:
 - [x] baseline total term entries: `80,159`
 - [x] proposed total term entries: `16,510`

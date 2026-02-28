@@ -94,6 +94,7 @@ import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
 import type { Where, WhereValue } from "../Indexing/structured/Types";
+import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
@@ -235,6 +236,10 @@ export type TypeInfoORMIndexingConfig = {
      * from structured indexing and structured query routing.
      */
     indexedFieldsByType?: Record<string, string[]>;
+    /**
+     * Optional tokenizer overrides for structured string contains/LIKE behavior.
+     */
+    tokenizer?: Partial<StructuredStringTokenizerConfig>;
     /**
      * Field name mapping per type.
      */
@@ -2604,9 +2609,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
               fieldCriteria.length,
             );
 
-            const where = criteriaToStructuredWhere(criteria);
+            const tokenizer = indexing?.structured?.tokenizer;
+            const whereWithTokenizer = criteriaToStructuredWhere(
+              criteria,
+              tokenizer,
+            );
 
-            if (!where) {
+            if (!whereWithTokenizer) {
               throw {
                 message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
                 typeName,
@@ -2615,7 +2624,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
             const mappedWhere = this.applyStructuredFieldMap(
               typeName,
-              where,
+              whereWithTokenizer,
               indexing?.structured?.fieldMapByType?.[typeName],
             );
             const structuredReader = indexing?.structured?.reader;

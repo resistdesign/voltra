@@ -6,7 +6,10 @@
 import { decodeStructuredCursor, encodeStructuredCursor } from "./Cursor";
 import type { DocId } from "../Types";
 import { compareDocId } from "../docId";
-import { buildStructuredStringContainsTokens } from "./StructuredStringLike";
+import {
+  type StructuredStringTokenizerConfig,
+  buildStructuredStringContainsTokens,
+} from "./StructuredStringLike";
 import type {
   CandidatePage,
   StructuredQueryOptions,
@@ -192,6 +195,10 @@ function addPosting(
  * In-memory structured index that builds term/contains/range postings.
  */
 export class StructuredInMemoryIndex {
+  constructor(
+    private readonly tokenizer?: Partial<StructuredStringTokenizerConfig>,
+  ) {}
+
   private eqIndex = new Map<string, Map<WhereValue, DocId[]>>();
   private containsIndex = new Map<string, Map<WhereValue, DocId[]>>();
   private rangeIndex = new Map<string, RangeEntry[]>();
@@ -217,7 +224,10 @@ export class StructuredInMemoryIndex {
 
       addPosting(this.eqIndex, field, value, docId);
       if (typeof value === "string") {
-        for (const token of buildStructuredStringContainsTokens(value)) {
+        for (const token of buildStructuredStringContainsTokens(
+          value,
+          this.tokenizer,
+        )) {
           addPosting(this.containsIndex, field, token, docId);
         }
       }

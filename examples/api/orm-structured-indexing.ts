@@ -10,6 +10,12 @@ export const ormStructuredIndexingConfigExample: TypeInfoORMIndexingConfig = {
   structured: {
     reader: {} as any,
     writer: {} as any,
+    tokenizer: {
+      minNgramSize: 1,
+      maxNgramSize: 3,
+      maxIndexedStringLength: 128,
+      maxTokensPerValue: 256,
+    },
     indexedFieldsByType: {
       Person: ["firstName", "lastName", "age", "dietaryRestrictions"],
       Car: ["make", "model", "year"],
