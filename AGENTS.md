@@ -98,13 +98,16 @@
 ## Compiled Learnings Process
 
 - This process is special-purpose and must only be run when explicitly requested by the user.
-- Before running it, ensure there is an active plan in `planning/` that tracks the steps as a live checklist.
+- This process is exempt from the active-plan requirement; run it directly when requested.
+- Do not create a new active plan file solely to execute this process.
 - Steps:
   - Capture today’s date.
   - Create `planning/learnings/` and `planning/archived/` if they do not exist.
   - Create a dated learnings file in `planning/learnings/` (for example `YYYY-MM-DD.md`).
   - Read all current plans in `planning/complete/` and write a refined, condensed synthesis (not a raw concatenation).
   - Move all files from `planning/complete/` to `planning/archived/` after the synthesis file is complete.
+  - In the learnings file, reference source plans using `planning/archived/...` paths. (Never `planning/complete/...`,
+    because this process means that those plan files will have been archived.)
 - `planning/learnings/` is the canonical location for distilled project insights.
 - `planning/archived/` stores historical completed plans after they have been synthesized.
 
