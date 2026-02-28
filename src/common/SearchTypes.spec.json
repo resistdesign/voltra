@@ -48,12 +48,7 @@
             "field": "publishedAt",
             "reverse": true
           }
-        ],
-        "text": {
-          "query": "Voltra",
-          "mode": "exact",
-          "indexField": "title"
-        }
+        ]
       }
     },
     {

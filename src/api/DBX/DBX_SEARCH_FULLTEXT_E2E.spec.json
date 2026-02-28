@@ -29,26 +29,12 @@
       ]
     },
     {
-      "export": "runDbxFullTextSearchExactBodyDefaultIndexFieldIdsScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1"
-      ]
-    },
-    {
       "export": "runDbxFullTextSearchExactTitleFieldIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": [
         "post-1"
       ]
-    },
-    {
-      "export": "runDbxFullTextSearchExactTitleWithDefaultFieldIdsScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": []
     },
     {
       "export": "runDbxFullTextSearchExactSentenceNineDefaultIdsScenario",
