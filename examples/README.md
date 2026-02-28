@@ -18,8 +18,10 @@ Use this for client route usage via platform barrels:
 ## API Routing (Backend)
 
 - `examples/api/backend-routing.ts`
+- `examples/api/orm-structured-indexing.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
+Use `orm-structured-indexing.ts` as the starting point for explicit structured field-inclusion config.
 
 ## ORM Search + Indexing Reference
 
