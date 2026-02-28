@@ -1,0 +1,28 @@
+{
+  "file": "./StructuredWriter.test-utils.ts",
+  "tests": [
+    {
+      "export": "runStructuredWriterConcurrentRetryScenarioResult",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "loadCalls": 2,
+        "deletedStaleTermSeen": false,
+        "deletedLatestTermSeen": true,
+        "addedNextTermSeen": true,
+        "rangeDeleteCount": 1,
+        "rangeAddCount": 1
+      }
+    },
+    {
+      "export": "runStructuredWriterTokenizerConfigScenarioResult",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasBigramToken": true,
+        "hasUnigramToken": false
+      }
+    }
+  ]
+}
+

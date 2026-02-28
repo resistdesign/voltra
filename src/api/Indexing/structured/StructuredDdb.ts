@@ -100,6 +100,24 @@ export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
    * Structured fields stored for the document.
    */
   fields: StructuredDocFieldsRecord;
+  /**
+   * Monotonic version used for optimistic concurrency control.
+   */
+  version: number;
+};
+
+/**
+ * Loaded document fields state with version.
+ */
+export type StructuredDocFieldsState = {
+  /**
+   * Structured fields persisted for the document.
+   */
+  fields: StructuredDocFieldsRecord;
+  /**
+   * Monotonic version for optimistic writes.
+   */
+  version: number;
 };
 
 /**
@@ -129,6 +147,7 @@ export const structuredRangeIndexSchema = {
 export const structuredDocFieldsSchema = {
   partitionKey: "docId",
   fieldsAttribute: "fields",
+  versionAttribute: "version",
 } as const;
 
 /**
@@ -236,6 +255,7 @@ export function buildStructuredRangeItem(
 export function buildStructuredDocFieldsItem(
   docId: DocId,
   fields: StructuredDocFieldsRecord,
+  version: number,
 ): StructuredDocFieldsItem {
-  return { docId, fields };
+  return { docId, fields, version };
 }

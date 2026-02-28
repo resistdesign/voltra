@@ -14,6 +14,7 @@ import {
   fullTextBackend,
   relationalBackend,
   structuredReader,
+  structuredStringTokenizer,
   structuredWriter,
 } from "./indexing";
 
@@ -73,6 +74,7 @@ export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
         structured: {
           reader: structuredReader,
           writer: structuredWriter,
+          tokenizer: structuredStringTokenizer,
           indexedFieldsByType: {
             Person: ["firstName", "lastName", "age", "dietaryRestrictions"],
             Car: ["make", "model", "year"],

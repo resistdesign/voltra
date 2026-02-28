@@ -7,6 +7,7 @@ const stubClient: DynamoQueryClient = {
   batchWriteItem: async () => ({}),
   batchGetItem: async () => ({}),
   getItem: async () => ({}),
+  putItem: async () => ({}),
   query: async () => ({}),
 };
 

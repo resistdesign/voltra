@@ -241,6 +241,42 @@
           }
         ]
       }
+    },
+    {
+      "export": "criteriaToStructuredWhere",
+      "conditions": [
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "model",
+              "operator": "LIKE",
+              "value": "Hon"
+            }
+          ]
+        },
+        {
+          "minNgramSize": 2,
+          "maxNgramSize": 2
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "and": [
+          {
+            "type": "term",
+            "field": "model",
+            "mode": "contains",
+            "value": "__str__:ho"
+          },
+          {
+            "type": "term",
+            "field": "model",
+            "mode": "contains",
+            "value": "__str__:on"
+          }
+        ]
+      }
     }
   ]
 }

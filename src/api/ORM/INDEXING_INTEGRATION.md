@@ -14,8 +14,16 @@ This document captures current ORM list/search and relationship behaviors that m
   - Structured indexing is opt-in by field via `indexing.structured.indexedFieldsByType`.
   - Fields not included in `indexedFieldsByType` are excluded from structured index writes and structured query routing.
   - Excluded/unsupported criteria automatically use full scan + compare fallback.
+- Structured tokenizer config:
+  - `indexing.structured.tokenizer` configures structured string token generation used for contains/LIKE behavior.
+  - Supported keys: `minNgramSize`, `maxNgramSize`, `maxIndexedStringLength`, `maxTokensPerValue`.
+  - Safe defaults preserve current behavior (`1..3` ngrams, length `128`, max tokens `256`).
+- Structured write concurrency hardening:
+  - Structured DDB writes use optimistic compare-and-swap on `docFields` version state before applying term/range diffs.
+  - On version mismatch, writer retries using fresh state to prevent stale diff application under concurrent writes.
 - Structured observability:
   - `indexing.observability.onListRoutingDecision` can capture list routing decisions (`fullText`, `structured`, `fullScanCompare`) and reasons, without affecting runtime behavior.
+  - `indexing.observability.onStructuredIndexWrite` can capture structured upsert/remove events and indexed field counts.
 - Tokenizer correctness expectations for structured `LIKE`/`contains`:
   - Current structured string tokenization uses normalized unique 1/2/3-grams with bounded token count.
   - This preserves short-substring matching behavior for indexed string fields.

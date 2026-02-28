@@ -1,9 +1,11 @@
 import {
   BatchGetItemCommand,
   BatchWriteItemCommand,
+  ConditionalCheckFailedException,
   type AttributeValue,
   DynamoDBClient,
   GetItemCommand,
+  PutItemCommand,
   QueryCommand,
   type KeysAndAttributes as AwsKeysAndAttributes,
   type WriteRequest as AwsWriteRequest,
@@ -20,6 +22,8 @@ import type {
   GetItemInput,
   GetItemOutput,
   KeysAndAttributes,
+  PutItemInput,
+  PutItemOutput,
   QueryInput,
   QueryOutput,
   WriteRequest,
@@ -143,6 +147,27 @@ export const createAwsSdkV3DynamoClient = (
     return {
       Item: response.Item ? fromAwsKey(response.Item) : undefined,
     };
+  },
+  putItem: async (input: PutItemInput): Promise<PutItemOutput> => {
+    try {
+      await client.send(
+        new PutItemCommand({
+          TableName: input.TableName,
+          Item: toAwsKey(input.Item),
+          ConditionExpression: input.ConditionExpression,
+          ExpressionAttributeNames: input.ExpressionAttributeNames,
+          ExpressionAttributeValues: input.ExpressionAttributeValues
+            ? toAwsKey(input.ExpressionAttributeValues)
+            : undefined,
+        }),
+      );
+      return {};
+    } catch (error: unknown) {
+      if (error instanceof ConditionalCheckFailedException) {
+        return { conditionFailed: true };
+      }
+      throw error;
+    }
   },
   query: async (input: QueryInput): Promise<QueryOutput> => {
     const response = await client.send(

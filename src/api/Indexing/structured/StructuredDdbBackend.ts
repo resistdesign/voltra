@@ -8,12 +8,15 @@ import type { DocId } from "../Types";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
 import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
+import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import {
   buildStructuredTermKey,
+  buildStructuredDocFieldsItem,
   serializeStructuredValue,
   structuredDocFieldsSchema,
   structuredRangeIndexSchema,
   structuredTermIndexSchema,
+  type StructuredDocFieldsState,
   type StructuredDocFieldsRecord,
   type StructuredRangeIndexItem,
   type StructuredRangeIndexKey,
@@ -22,6 +25,7 @@ import {
 } from "./StructuredDdb";
 import {
   StructuredDdbWriter,
+  type StructuredWriterOptions,
   type StructuredWriterDependencies,
 } from "./StructuredWriter";
 
@@ -44,6 +48,8 @@ export type StructuredTableNames = {
 type StructuredDdbConfig = {
   client: DynamoQueryClient;
   tables: StructuredTableNames;
+  writerOptions?: StructuredWriterOptions;
+  tokenizer?: Partial<StructuredStringTokenizerConfig>;
 };
 
 const assertTableName = (label: string, value: string): void => {
@@ -277,9 +283,9 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     this.docFieldsTableName = config.tables.docFields;
   }
 
-  async loadDocFields(
+  async loadDocFieldsState(
     docId: DocId,
-  ): Promise<StructuredDocFieldsRecord | undefined> {
+  ): Promise<StructuredDocFieldsState | undefined> {
     const response = await this.client.getItem({
       TableName: this.docFieldsTableName,
       Key: { [structuredDocFieldsSchema.partitionKey]: docId },
@@ -291,28 +297,55 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
 
     const item = response.Item as {
       fields?: StructuredDocFieldsRecord;
+      version?: number;
     };
-    return item.fields;
+    if (!item.fields) {
+      return undefined;
+    }
+
+    return {
+      fields: item.fields,
+      version:
+        typeof item.version === "number" && Number.isFinite(item.version)
+          ? item.version
+          : 0,
+    };
   }
 
-  async putDocFields(
+  async putDocFieldsIfVersion(
     docId: DocId,
+    expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
-  ): Promise<void> {
-    const requestItems: Record<string, WriteRequest[]> = {
-      [this.docFieldsTableName]: [
-        {
-          PutRequest: {
-            Item: {
-              [structuredDocFieldsSchema.partitionKey]: docId,
-              [structuredDocFieldsSchema.fieldsAttribute]: fields,
-            },
-          },
+  ): Promise<boolean> {
+    if (typeof expectedVersion === "undefined") {
+      const createResult = await this.client.putItem({
+        TableName: this.docFieldsTableName,
+        Item: buildStructuredDocFieldsItem(docId, fields, 1),
+        ConditionExpression: "attribute_not_exists(#docId)",
+        ExpressionAttributeNames: {
+          "#docId": structuredDocFieldsSchema.partitionKey,
         },
-      ],
-    };
+      });
 
-    await batchWriteWithRetry(this.client, requestItems);
+      return !createResult.conditionFailed;
+    }
+
+    const nextVersion = expectedVersion + 1;
+    const updateResult = await this.client.putItem({
+      TableName: this.docFieldsTableName,
+      Item: buildStructuredDocFieldsItem(docId, fields, nextVersion),
+      ConditionExpression:
+        "(#version = :expectedVersion) OR (attribute_not_exists(#version) AND :expectedVersion = :zero)",
+      ExpressionAttributeNames: {
+        "#version": structuredDocFieldsSchema.versionAttribute,
+      },
+      ExpressionAttributeValues: {
+        ":expectedVersion": expectedVersion,
+        ":zero": 0,
+      },
+    });
+
+    return !updateResult.conditionFailed;
   }
 
   async putTermEntries(entries: StructuredTermIndexItem[]): Promise<void> {
@@ -404,6 +437,11 @@ export class StructuredDdbBackend {
     this.reader = new StructuredDdbReader(config);
     this.writer = new StructuredDdbWriter(
       new StructuredDdbWriterDependencies(config),
+      {
+        ...config.writerOptions,
+        tokenizer:
+          config.writerOptions?.tokenizer ?? config.tokenizer,
+      },
     );
   }
 }
