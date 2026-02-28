@@ -38,6 +38,33 @@ We will want to make sure that the following types of assets are updated around 
 6. Samples/Examples
 7. Any other related assets
 
+## Supported Search Criteria Operator Checklist
+
+Follow the list below to determine how fulltext search should be implemented for each operator:
+
+1. [ ] EQUALS: NOT A FULLTEXT OPERATOR
+2. [ ] NOT_EQUALS: NOT A FULLTEXT OPERATOR
+3. [ ] GREATER_THAN: NOT A FULLTEXT OPERATOR
+4. [ ] GREATER_THAN_OR_EQUAL: NOT A FULLTEXT OPERATOR
+5. [ ] LESS_THAN: NOT A FULLTEXT OPERATOR
+6. [ ] LESS_THAN_OR_EQUAL: NOT A FULLTEXT OPERATOR
+7. [ ] IN: NOT A FULLTEXT OPERATOR
+8. [ ] NOT_IN: NOT A FULLTEXT OPERATOR
+9. [ ] LIKE: YES, USE FULLTEXT TO SEARCH
+10. [ ] NOT_LIKE: YES, USE FULLTEXT TO SEARCH
+11. [ ] EXISTS: NOT A FULLTEXT OPERATOR
+12. [ ] NOT_EXISTS: NOT A FULLTEXT OPERATOR
+13. [ ] IS_NOT_EMPTY: NOT A FULLTEXT OPERATOR
+14. [ ] IS_EMPTY: NOT A FULLTEXT OPERATOR
+15. [ ] BETWEEN: NOT A FULLTEXT OPERATOR
+16. [ ] NOT_BETWEEN: NOT A FULLTEXT OPERATOR
+17. [ ] CONTAINS: YES, USE FULLTEXT TO SEARCH
+18. [ ] NOT_CONTAINS: YES, USE FULLTEXT TO SEARCH
+19. [ ] STARTS_WITH: YES, USE FULLTEXT TO SEARCH
+20. [ ] ENDS_WITH: YES, USE FULLTEXT TO SEARCH
+21. [ ] DOES_NOT_START_WITH: YES, USE FULLTEXT TO SEARCH
+22. [ ] DOES_NOT_END_WITH: YES, USE FULLTEXT TO SEARCH
+
 ## Checklist
 
 - [x] Phase 1: Core multi-field fulltext support
@@ -56,9 +83,12 @@ We will want to make sure that the following types of assets are updated around 
 - [x] Phase 4: Auto-fulltext search behavior in `list`
   - [x] Remove direct fulltext argument usage from `list` config and related request paths.
   - [x] Require field-targeted fulltext behavior via structured search criteria only.
-  - [x] Implement auto-selection of fulltext backend when criteria fields are fulltext-indexed and operators imply fulltext search semantics.
-  - [x] Keep non-fulltext-compatible operators/fields on structured or driver paths with explicit validation/error behavior where needed.
-  - [x] Add/update JSON specs covering required field targeting, automatic fulltext routing, and unsupported combinations.
+  - [x] Implement auto-selection of fulltext backend when criteria fields are fulltext-indexed and operators imply
+    fulltext search semantics.
+  - [x] Keep non-fulltext-compatible operators/fields on structured or driver paths with explicit validation/error
+    behavior where needed.
+  - [x] Add/update JSON specs covering required field targeting, automatic fulltext routing, and unsupported
+    combinations.
 - [x] Phase 5: Demo Site multi-field fulltext demonstration
   - [x] Update demo API indexing config to clearly demonstrate multi-field fulltext indexing for one or more types.
   - [x] Update demo app search flows to exercise the new auto-fulltext criteria-based behavior.
