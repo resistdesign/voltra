@@ -94,7 +94,10 @@ import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
 import type { Where, WhereValue } from "../Indexing/structured/Types";
-import { getSortedItems } from "../../common/SearchUtils";
+import {
+  getFilterTypeInfoDataItemsBySearchCriteria,
+  getSortedItems,
+} from "../../common/SearchUtils";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
 import { criteriaToStructuredWhere } from "./indexing/criteriaToStructuredWhere";
 import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
@@ -909,6 +912,153 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     return fullTextCandidates[0];
   };
+
+  /**
+   * @returns Encoded cursor for full-scan compare pagination.
+   */
+  protected encodeFullScanCompareCursor = (
+    /**
+     * Next offset in filtered/sorted results.
+     */
+    offset: number,
+  ): string => JSON.stringify({ fullScanCompareOffset: offset });
+
+  /**
+   * @returns Decoded offset for full-scan compare pagination.
+   */
+  protected decodeFullScanCompareCursor = (
+    /**
+     * Cursor from list config.
+     */
+    cursor?: string,
+  ): number => {
+    if (!cursor) {
+      return 0;
+    }
+
+    try {
+      const parsed = JSON.parse(cursor) as { fullScanCompareOffset?: number };
+      const offset = parsed.fullScanCompareOffset;
+
+      if (!Number.isFinite(offset) || (offset as number) < 0) {
+        throw new Error("Invalid full scan cursor offset");
+      }
+
+      return offset as number;
+    } catch (_error) {
+      throw {
+        message: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
+        cursor,
+      };
+    }
+  };
+
+  /**
+   * Execute a criteria list via full scan + in-memory compare.
+   *
+   * This is the universal fallback strategy for criteria/operators that are not
+   * supported by indexed query planners.
+   *
+   * @returns List results with cursor.
+   */
+  protected async listByFullScanAndCompare(
+    /**
+     * Type name to list.
+     */
+    typeName: string,
+    /**
+     * Original list config.
+     */
+    config: ListItemsConfig,
+    /**
+     * Selected fields for cleaned response.
+     */
+    cleanSelectedFields: (keyof TypeInfoDataItem)[] | undefined,
+    /**
+     * Whether DAC checks are enabled.
+     */
+    useDAC: boolean,
+    /**
+     * Optional request context.
+     */
+    context?: TypeInfoORMContext,
+  ): Promise<ListItemsResults<Partial<TypeInfoDataItem>>> {
+    const driver = this.getDriverInternal(typeName);
+    const { criteria, sortFields, itemsPerPage = 10, cursor } = config;
+    const allItems: Partial<TypeInfoDataItem>[] = [];
+    let scanCursor: string | undefined;
+
+    while (true) {
+      const page = await driver.listItems({
+        itemsPerPage: 250,
+        cursor: scanCursor,
+      });
+
+      allItems.push(...(page.items ?? []));
+
+      if (!page.cursor || page.cursor === scanCursor) {
+        break;
+      }
+
+      scanCursor = page.cursor;
+    }
+
+    const filtered = criteria
+      ? (getFilterTypeInfoDataItemsBySearchCriteria(
+          criteria,
+          allItems as TypeInfoDataItem[],
+          typeName,
+          this.config.typeInfoMap,
+        ) as TypeInfoDataItem[])
+      : (allItems as TypeInfoDataItem[]);
+    const sorted = getSortedItems(sortFields, filtered);
+    let index = this.decodeFullScanCompareCursor(cursor);
+    const cleanedItems: Partial<TypeInfoDataItem>[] = [];
+
+    while (index < sorted.length && cleanedItems.length < itemsPerPage) {
+      const item = sorted[index] as Partial<TypeInfoDataItem>;
+      index += 1;
+
+      let fieldsResources: Record<string, DACAccessResult> | undefined;
+
+      if (useDAC) {
+        const {
+          allowed: readAllowed,
+          denied: readDenied,
+          fieldsResources: nextFieldsResources = {},
+        } = await this.getItemDACValidation(
+          item,
+          typeName,
+          TypeOperation.READ,
+          context,
+        );
+        const listDenied = readDenied || !readAllowed;
+
+        if (listDenied) {
+          continue;
+        }
+
+        fieldsResources = nextFieldsResources;
+      }
+
+      cleanedItems.push(
+        this.getCleanItem(
+          typeName,
+          item,
+          fieldsResources,
+          cleanSelectedFields,
+        ),
+      );
+    }
+
+    return {
+      items: cleanedItems,
+      cursor:
+        index < sorted.length
+          ? this.encodeFullScanCompareCursor(index)
+          : undefined,
+    };
+  }
 
   /**
    * @param value Value to check.
@@ -2148,12 +2298,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       const hasStructured = !!indexing?.structured?.reader;
       const hasFullText = !!indexing?.fullText?.backend;
       const hasCriteria = !!criteria && fieldCriteria.length > 0;
-      const shouldUseIndexing = !!hasCriteria;
 
-      if (hasStructured || hasFullText) {
-        if (!shouldUseIndexing) {
-          // Fall back to driver list when no criteria are supplied.
-        } else {
+      if (hasCriteria && (hasStructured || hasFullText)) {
+        try {
           let docIds: Array<string | number> = [];
           let nextCursor: string | undefined = undefined;
 
@@ -2162,14 +2309,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             criteria,
           );
 
-          if (fullTextPlan) {
-            if (!hasFullText) {
-              throw {
-                message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-                typeName,
-                backend: "fullText",
-              };
-            }
+          if (fullTextPlan && hasFullText) {
 
             const qualifiedIndexField = qualifyIndexField(
               typeName,
@@ -2197,14 +2337,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
             docIds = searchResult.docIds;
             nextCursor = searchResult.nextCursor;
-          } else {
-            if (!hasStructured) {
-              throw {
-                message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-                typeName,
-                backend: "structured.reader",
-              };
-            }
+          } else if (hasStructured) {
 
             const where = criteriaToStructuredWhere(criteria);
 
@@ -2232,6 +2365,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
             docIds = page.candidateIds;
             nextCursor = page.cursor;
+          } else {
+            throw {
+              message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+              typeName,
+            };
           }
 
           const driver = this.getDriverInternal(typeName);
@@ -2297,7 +2435,25 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             items: sortedItems as Partial<TypeInfoDataItem>[],
             cursor: nextCursor,
           };
+        } catch (_error) {
+          return this.listByFullScanAndCompare(
+            typeName,
+            config,
+            cleanSelectedFields,
+            useDAC,
+            context,
+          );
         }
+      }
+
+      if (hasCriteria) {
+        return this.listByFullScanAndCompare(
+          typeName,
+          config,
+          cleanSelectedFields,
+          useDAC,
+          context,
+        );
       }
 
       const driver = this.getDriverInternal(typeName);
