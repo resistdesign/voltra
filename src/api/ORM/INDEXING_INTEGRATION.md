@@ -14,6 +14,12 @@ This document captures current ORM list/search and relationship behaviors that m
   - Structured indexing is opt-in by field via `indexing.structured.indexedFieldsByType`.
   - Fields not included in `indexedFieldsByType` are excluded from structured index writes and structured query routing.
   - Excluded/unsupported criteria automatically use full scan + compare fallback.
+- Structured observability:
+  - `indexing.observability.onListRoutingDecision` can capture list routing decisions (`fullText`, `structured`, `fullScanCompare`) and reasons, without affecting runtime behavior.
+- Tokenizer correctness expectations for structured `LIKE`/`contains`:
+  - Current structured string tokenization uses normalized unique 1/2/3-grams with bounded token count.
+  - This preserves short-substring matching behavior for indexed string fields.
+  - More aggressive token reduction strategies must be evaluated against correctness requirements before adoption.
 - Operators: the ORM expects the following comparison operators to be supported by the underlying list engine:
   - `EQUALS`, `NOT_EQUALS`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `IN`, `NOT_IN`, `LIKE`, `NOT_LIKE`, `EXISTS`, `NOT_EXISTS`, `IS_NOT_EMPTY`, `IS_EMPTY`, `BETWEEN`, `NOT_BETWEEN`, `CONTAINS`, `NOT_CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `DOES_NOT_START_WITH`, `DOES_NOT_END_WITH`.
 - Fulltext semantics:

@@ -72,6 +72,24 @@
       "conditions": [],
       "operation": "===",
       "expectation": "n-1"
+    },
+    {
+      "export": "runTypeInfoORMStructuredSawStructuredRoutingDecisionScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runTypeInfoORMStructuredSawFullScanFallbackRoutingDecisionScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runTypeInfoORMStructuredSawStructuredIndexWriteTelemetryScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }
