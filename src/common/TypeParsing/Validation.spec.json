@@ -2,34 +2,345 @@
   "file": "./Validation.test-utils.ts",
   "tests": [
     {
-      "export": "runValidateTypeInfoValueCreateTypeNameScenario",
-      "conditions": [],
-      "operation": "===",
-      "expectation": "Person"
-    },
-    {
-      "export": "runValidateTypeInfoValueCreateValidScenario",
-      "conditions": [],
-      "operation": "===",
-      "expectation": true
-    },
-    {
-      "export": "runValidateTypeInfoValueCreateErrorScenario",
+      "export": "runValidateTypeInfoValueCreateScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "code": "NONE"
+        "typeName": "Person",
+        "valid": true,
+        "error": {
+          "code": "NONE"
+        },
+        "errorMap": {
+          "name": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
       }
     },
     {
-      "export": "runValidateTypeInfoValueCreateErrorMapScenario",
+      "export": "runValidateTypeInfoValueCreateRequiredBooleanFalseScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "name": [
-          {
-            "code": "NONE"
-          }
+        "typeName": "Person",
+        "valid": true,
+        "error": {
+          "code": "NONE"
+        },
+        "errorMap": {
+          "likesCheese": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueCreateRequiredNumberZeroScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": true,
+        "error": {
+          "code": "NONE"
+        },
+        "errorMap": {
+          "age": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueCreateMissingRequiredBooleanScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "likesCheese": [
+            {
+              "code": "MISSING_FIELD_VALUE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValuePatternMismatchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "phoneNumber": [
+            {
+              "code": "VALUE_DOES_NOT_MATCH_PATTERN"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValuePatternMatchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": true,
+        "error": {
+          "code": "NONE"
+        },
+        "errorMap": {
+          "phoneNumber": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueMinimumScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "age": [
+            {
+              "code": "VALUE_BELOW_MINIMUM",
+              "values": [
+                "18"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueMaximumScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "age": [
+            {
+              "code": "VALUE_ABOVE_MAXIMUM",
+              "values": [
+                "65"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValuePossibleValuesMismatchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "status": [
+            {
+              "code": "INVALID_OPTION"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueStrictUnknownFieldScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "extra": [
+            {
+              "code": "INVALID_FIELD"
+            }
+          ],
+          "name": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueDeniedCreateOperationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "DENIED_TYPE_OPERATION_CREATE"
+        },
+        "errorMap": {
+          "name": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueRelationshipStrictExcludeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "car": [
+            {
+              "code": "RELATIONSHIP_VALUES_ARE_STRICTLY_EXCLUDED"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueRelationshipIncludeInvalidNestedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "car": [
+            {
+              "code": "INVALID_TYPE"
+            }
+          ],
+          "\"car\"/\"make\"": [
+            {
+              "code": "NOT_A_STRING"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueArrayElementTypeMismatchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "tags": [
+            {
+              "code": "NOT_A_STRING"
+            },
+            {
+              "itemErrorMap": {
+                "1": [
+                  {
+                    "code": "NOT_A_STRING"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runTypeInfoDataItemValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hiddenDefaultValid": true,
+        "hiddenValidatedCode": "MISSING_FIELD_VALUE",
+        "readonlyDefaultValid": true,
+        "readonlyValidatedCode": "MISSING_FIELD_VALUE",
+        "emptyArrayInvalidCode": "MISSING_FIELD_VALUE",
+        "emptyArrayValid": true,
+        "customValidatorInvalidCode": "RESERVED_NAME",
+        "customValidatorValid": true
+      }
+    },
+    {
+      "export": "runValidationErrorConstantsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "primitiveStringCode": "NOT_A_STRING",
+        "primitiveNumberCode": "NOT_A_NUMBER",
+        "primitiveBooleanCode": "NOT_A_BOOLEAN",
+        "primitiveStringMappedInErrorConstants": true,
+        "primitiveNumberMappedInErrorConstants": true,
+        "primitiveBooleanMappedInErrorConstants": true,
+        "deniedCreateMappedInErrorConstants": true,
+        "deniedReadMappedInErrorConstants": true,
+        "deniedUpdateMappedInErrorConstants": true,
+        "deniedDeleteMappedInErrorConstants": true,
+        "hasLegacyCreateProperty": false,
+        "hasLegacyReadProperty": false,
+        "hasLegacyUpdateProperty": false,
+        "hasLegacyDeleteProperty": false,
+        "hasLowercasePrimitiveStringProperty": false,
+        "hasLowercasePrimitiveNumberProperty": false,
+        "hasLowercasePrimitiveBooleanProperty": false
+      }
+    },
+    {
+      "export": "runArrayItemErrorMapScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "valid": false,
+        "topLevelCode": "INVALID_TYPE",
+        "fieldCode": "NOT_A_STRING",
+        "index1Codes": [
+          "NOT_A_STRING"
         ]
       }
     }

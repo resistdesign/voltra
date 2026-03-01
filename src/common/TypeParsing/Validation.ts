@@ -323,7 +323,17 @@ export const TYPE_KEYWORD_VALIDATORS: Record<
  * @param value - Value to check.
  * @returns Whether the value is present.
  */
-export const hasValue = (value: any): boolean => value ?? false;
+export const hasValue = (value: any): boolean => {
+  if (typeof value === "undefined" || value === null) {
+    return false;
+  }
+
+  if (typeof value === "string") {
+    return value.length > 0;
+  }
+
+  return true;
+};
 
 /**
  * Validates a primitive value.
