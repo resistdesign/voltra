@@ -154,6 +154,11 @@ Just run the TypeInfo validation on the failed item from above and show me the e
 
 - [x] Remove leading apostrophes from phone numbers in `scripts/seed-data/Person.csv`.
 
+## Mapping Fix Checklist
+
+- [x] Refactor seed row mapping to avoid manual per-field assignment except for type conversion.
+- [x] Ensure `likesCheese` from `Person.csv` is mapped and converted to boolean.
+
 ## Investigation Notes (No Code Changes Yet)
 
 - [ ] Verify whether phone number regex mismatch is due to data formatting vs pattern logic by testing seed values directly against the exact `Person.phoneNumber` regex from `site/common/DemoTypeInfoMap.ts`.

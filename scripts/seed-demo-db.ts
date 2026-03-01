@@ -16,6 +16,9 @@ import {
 import * as DemoTypeInfoMapModule from "../site/common/DemoTypeInfoMap";
 
 type SeedRow = Record<string, string>;
+type FieldInfo = {
+  type?: unknown;
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -177,38 +180,55 @@ const validateSeedItem = (
   return issues;
 };
 
-const asOptional = (v: string) => v || undefined;
+const parseBoolean = (v: string) => {
+  if (v === "true") return true;
+  if (v === "false") return false;
+  return undefined;
+};
 
-const toCarItem = ({ id: _id, make, model, year }: SeedRow) => ({
-  make,
-  model,
-  year: asNumber(year),
-});
+const normalizeSeedValue = (rawValue: string, fieldInfo?: FieldInfo) => {
+  if (rawValue === "") {
+    return undefined;
+  }
 
-const toPersonItem = ({
-  id: _id,
-  firstName,
-  lastName,
-  age,
-  phoneNumber,
-  email,
-  car,
-  dietaryRestrictions,
-}: SeedRow) => ({
-  firstName,
-  lastName,
-  age: asNumber(age),
-  phoneNumber,
-  email,
-  car: asOptional(car),
-  dietaryRestrictions,
-});
+  if (fieldInfo?.type === "number") {
+    return asNumber(rawValue);
+  }
+
+  if (fieldInfo?.type === "boolean") {
+    return parseBoolean(rawValue);
+  }
+
+  if (fieldInfo?.type === "true") {
+    return rawValue === "true" ? true : undefined;
+  }
+
+  if (fieldInfo?.type === "false") {
+    return rawValue === "false" ? false : undefined;
+  }
+
+  return rawValue;
+};
+
+const toSeedItem = (typeName: string, row: SeedRow) => {
+  const fields = demoTypeInfoMap?.[typeName]?.fields ?? {};
+
+  return Object.fromEntries(
+    Object.entries(row)
+      .filter(([fieldName]) => fieldName !== "id" && fields[fieldName])
+      .map(([fieldName, rawValue]) => [
+        fieldName,
+        normalizeSeedValue(rawValue, fields[fieldName]),
+      ])
+      .filter(([, value]) => value !== undefined),
+  );
+};
 
 const main = async () => {
   const cars = await readCsv("Car.csv");
   const people = await readCsv("Person.csv");
-  const carItems = cars.map(toCarItem);
-  const personItems = people.map(toPersonItem);
+  const carItems = cars.map((row) => toSeedItem("Car", row));
+  const personItems = people.map((row) => toSeedItem("Person", row));
   const validationIssues: ValidationIssue[] = [];
 
   if (!demoTypeInfoMap) {
