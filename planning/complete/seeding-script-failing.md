@@ -1,0 +1,240 @@
+# Seeding Script Failing
+
+The demo site seeding script `scripts/seed-demo-db.ts` is failing locally and in CI.
+This was not happening before the last plan `planning/archived/api-multi-field-fulltext-indexing.md` that was executed.
+
+Script Error:
+
+```
+yarn tsx ./scripts/seed-demo-db.ts
+yarn run v1.22.22
+
+node:internal/modules/run_main:122
+    triggerUncaughtException(
+    ^
+{
+  message: 'Failed to create or update Person',
+  typeName: 'Person',
+  item: {
+    id: '817180cc-1891-407a-a51f-41c4647e8466',
+    firstName: 'Diana',
+    lastName: 'Garcia',
+    age: 41,
+    phoneNumber: "'+1 (555) 880-9101",
+    email: 'diana.garcia@test.org',
+    car: undefined,
+    dietaryRestrictions: 'Vegetarian'
+  },
+  createError: { status: 'Internal Server Error' },
+  updateError: { status: 'Internal Server Error' }
+}
+
+Node.js v22.14.0
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
+```
+
+Cloud Watch API Lambda Logs:
+
+```
+INFO LOGGING_FUNCTION_CALL INPUT "db"/"create" : [ "Person", { "id": "817180cc-1891-407a-a51f-41c4647e8466", "firstName": "Diana", "lastName": "Garcia", "age": 41, "phoneNumber": "'+1 (555) 880-9101", "email": "diana.garcia@test.org", "dietaryRestrictions": "Vegetarian" } ]
+Link 
+2026-03-01T00:21:13.317Z	51305605-9a1e-4d96-aa7f-56d48932e461	INFO	LOGGING_FUNCTION_CALL INPUT "db"/"create" : [
+  "Person",
+  
+{
+    "id": "817180cc-1891-407a-a51f-41c4647e8466",
+    "firstName": "Diana",
+    "lastName": "Garcia",
+    "age": 41,
+    "phoneNumber": "'+1 (555) 880-9101",
+    "email": "diana.garcia@test.org",
+    "dietaryRestrictions": "Vegetarian"
+}
+
+]
+
+---
+
+ERROR	LOGGING_FUNCTION_CALL ERROR "db"/"create" : {
+  typeName: 'Person',
+  valid: false,
+  error: { code: 'INVALID_TYPE', values: undefined },
+  errorMap: {
+    firstName: [ [Object] ],
+    lastName: [ [Object] ],
+    age: [ [Object] ],
+    phoneNumber: [ [Object] ],
+    email: [ [Object] ],
+    car: [ [Object] ],
+    likesCheese: [ [Object] ],
+    dietaryRestrictions: [ [Object] ]
+  }
+}
+
+---
+
+INFO LOGGING_FUNCTION_CALL INPUT "db"/"update" : [ "Person", { "id": "817180cc-1891-407a-a51f-41c4647e8466", "firstName": "Diana", "lastName": "Garcia", "age": 41, "phoneNumber": "'+1 (555) 880-9101", "email": "diana.garcia@test.org", "dietaryRestrictions": "Vegetarian" } ]
+Link 
+2026-03-01T00:21:13.378Z	86084553-157f-450e-b9c1-3c0f9467709f	INFO	LOGGING_FUNCTION_CALL INPUT "db"/"update" : [
+  "Person",
+  
+{
+    "id": "817180cc-1891-407a-a51f-41c4647e8466",
+    "firstName": "Diana",
+    "lastName": "Garcia",
+    "age": 41,
+    "phoneNumber": "'+1 (555) 880-9101",
+    "email": "diana.garcia@test.org",
+    "dietaryRestrictions": "Vegetarian"
+}
+
+]
+
+---
+
+ERROR LOGGING_FUNCTION_CALL ERROR "db"/"update" : { typeName: 'Person', valid: false, error: { code: 'INVALID_TYPE', values: undefined }, errorMap: { id: [ [Object] ], firstName: [ [Object] ], lastName: [ [Object] ], age: [ [Object] ], phoneNumber: [ [Object] ], email: [ [Object] ], car: [ [Object] ], likesCheese: [ [Object] ], dietaryRestrictions: [ [Object] ] } }
+Link 
+2026-03-01T00:21:13.379Z	86084553-157f-450e-b9c1-3c0f9467709f	ERROR	LOGGING_FUNCTION_CALL ERROR "db"/"update" : {
+  typeName: 'Person',
+  valid: false,
+  error: { code: 'INVALID_TYPE', values: undefined },
+  errorMap: {
+    id: [ [Object] ],
+    firstName: [ [Object] ],
+    lastName: [ [Object] ],
+    age: [ [Object] ],
+    phoneNumber: [ [Object] ],
+    email: [ [Object] ],
+    car: [ [Object] ],
+    likesCheese: [ [Object] ],
+    dietaryRestrictions: [ [Object] ]
+  }
+}
+```
+
+The script tries _create_ and _update_ and both fail because of a data type validation issue.
+
+The first thing to do might be to run the same validation logic check on the given demo data, locally, and see what
+fields do not comply and why.
+
+My initial assumption is a bug because the data appears valid at first glance, but I don't know.
+
+**DO NOT DO ANY WORK OR CHANGE ANYTHING YET. JUST TELL ME THE PROBLEM.**
+
+## Primary Objective
+
+Just run the TypeInfo validation on the failed item from above and show me the erros.
+
+## Checklist
+
+- [x] Reproduce TypeInfo validation locally for the failing `Person` item.
+- [x] Capture the returned `error` and per-field `errorMap` for `CREATE`.
+- [x] Capture the returned `error` and per-field `errorMap` for `UPDATE`.
+
+## Follow-up Checklist
+
+- [x] Add preflight validation in `scripts/seed-demo-db.ts` for all seed items before any API create/update calls.
+- [x] Validate against demo site TypeInfo map from `site/common/DemoTypeInfoMap.ts`.
+- [x] Add `--dryrun`/`--dry-run` flag to run validation-only with no API writes.
+
+## Requested Adjustments Checklist
+
+- [x] Ensure validation and create errors accumulate and throw once at the end of each phase.
+- [x] Keep only a single dry-run flag: `--dryrun`.
+- [x] Remove all update API usage from the seeding script.
+- [x] Exclude `id` from seeded objects sent to create.
+- [x] Refactor object mapping to use destructuring/spread rather than repeated dot-notation field copies.
+
+## Execution Convenience Checklist
+
+- [x] Add a package script to run `scripts/seed-demo-db.ts`.
+
+## Seed Data Cleanup Checklist
+
+- [x] Remove leading apostrophes from phone numbers in `scripts/seed-data/Person.csv`.
+
+## Mapping Fix Checklist
+
+- [x] Refactor seed row mapping to avoid manual per-field assignment except for type conversion.
+- [x] Ensure `likesCheese` from `Person.csv` is mapped and converted to boolean.
+
+## Boolean Validation Red Test Checklist
+
+- [x] Add a validation test for required `boolean` field with value `false` expecting valid behavior.
+- [x] Run `Validation.spec.json` and confirm the new boolean test fails before validator changes.
+- [x] Convert validation spec expectations to full validation result objects per scenario.
+
+## Validation Expansion & Fix Checklist
+
+- [x] Fix required-value validation so `false` and `0` are treated as present values.
+- [x] Expand `Validation.spec.json` coverage with many full-result scenarios (pattern, ranges, options, strict fields,
+  denied operations, relationships, arrays, required primitives).
+- [x] Run `Validation.spec.json` and `ValidationDataItem.spec.json` and confirm all pass.
+- [x] Re-run seed preflight with `yarn tsx ./scripts/seed-demo-db.ts --dryrun` and confirm validation passes.
+- [x] Rename Validation data-item test files to names without `DataItem`.
+- [x] Consolidate all Validation scenarios into `Validation.spec.json` and `Validation.test-utils.ts` only.
+
+## Investigation Notes (No Code Changes Yet)
+
+- [ ] Verify whether phone number regex mismatch is due to data formatting vs pattern logic by testing seed values
+  directly against the exact `Person.phoneNumber` regex from `site/common/DemoTypeInfoMap.ts`.
+- [ ] Confirm whether this regression started after a recent change, since the seed script previously succeeded.
+- [ ] Evaluate validation behavior for required booleans where missing input often semantically means `false` in
+  checkbox UIs.
+- [ ] Proposed validation rule: for `optional: false` fields with type `boolean`, treat `undefined` as valid.
+- [ ] Proposed exception: if field type is explicitly `true`, still require `true` (e.g., ToS acceptance).
+- [ ] Proposed exception: if field type is explicitly `false`, treat `undefined` as valid because `false` is the only
+  allowed value.
+- [ ] Defer implementation until investigation confirms root cause and desired semantics.
+
+## Overall Voltra Type Handling Scenarios To Investigate
+
+How do *ALL* of the systems, in Voltra, handle the following field type scenarios?
+
+```
+export type HypotheticalType = {
+  myOneSidedBooleanA: false;
+  myOneSidedBooleanB: true;
+  myBrokenDownBoolean: true | false;
+  myOnlyOneDigit: 1;
+  myOnlyOneSpecifcString: "a";
+};
+```
+
+### Findings (Current Behavior)
+
+- TypeInfo parsing (`convertASTToMap` + `getTypeInfoFromTypeAlias`):
+  - `myOneSidedBooleanA: false` -> parsed as `type: "string"` with no `possibleValues` (incorrect).
+  - `myOneSidedBooleanB: true` -> parsed as `type: "string"` with no `possibleValues` (incorrect).
+  - `myBrokenDownBoolean: true | false` -> parsed as `type: "boolean"` with `possibleValues: [true, false]` (correct).
+  - `myOnlyOneDigit: 1` -> parsed as `type: "string"` with no `possibleValues` (incorrect).
+  - `myOnlyOneSpecifcString: "a"` -> parsed as `type: "string"` with no `possibleValues` (partially correct base type, missing literal constraint).
+
+- Validation (`validateTypeInfoValue`):
+  - Works correctly when a field is represented as primitive + `possibleValues` (including one-sided boolean/number/string).
+  - Fails for parser-produced one-sided literal fields above because parser currently drops literal constraints (or sets wrong primitive type for literal booleans/numbers).
+  - With manual TypeInfo (`type: "boolean", possibleValues: [false]` etc.), validation correctly enforces:
+    - value matches literal option -> valid,
+    - opposite boolean -> `INVALID_OPTION`,
+    - missing required value -> `MISSING_FIELD_VALUE`.
+
+- Forms (`app/web/native`):
+  - UI rendering kind is driven by `type` + `possibleValues`.
+  - `possibleValues` currently only drives enum-select for string/number values; booleans are filtered out of enum-select options.
+  - So one-sided boolean constraints (if represented via `possibleValues: [true]` / `[false]`) are not rendered as a constrained enum in current default form suites; they render as checkbox/switch via boolean field kind.
+
+- DBX seed generation (`DBXSeed`):
+  - Uses `possibleValues` when present and picks from them.
+  - If `possibleValues` missing, falls back to generator by primitive `type`.
+  - Therefore parser dropping one-sided literal constraints affects generated data realism/validity.
+
+- ORM/API enforcement:
+  - ORM validation uses shared TypeInfo validation path; behavior matches `validateTypeInfoValue`.
+  - So enforcement quality for these scenarios is currently limited primarily by TypeInfo parsing fidelity for single literal types.
+
+### Bottom Line
+
+- `true | false` is handled well end-to-end.
+- Single-literal fields (`true`, `false`, `1`, `"a"`) are not modeled correctly by current parser output.
+- Validation engine itself can enforce one-sided literals correctly if TypeInfo includes `possibleValues`, but parser currently fails to produce that for non-union literals.
