@@ -149,3 +149,17 @@ Just run the TypeInfo validation on the failed item from above and show me the e
 ## Execution Convenience Checklist
 
 - [x] Add a package script to run `scripts/seed-demo-db.ts`.
+
+## Seed Data Cleanup Checklist
+
+- [x] Remove leading apostrophes from phone numbers in `scripts/seed-data/Person.csv`.
+
+## Investigation Notes (No Code Changes Yet)
+
+- [ ] Verify whether phone number regex mismatch is due to data formatting vs pattern logic by testing seed values directly against the exact `Person.phoneNumber` regex from `site/common/DemoTypeInfoMap.ts`.
+- [ ] Confirm whether this regression started after a recent change, since the seed script previously succeeded.
+- [ ] Evaluate validation behavior for required booleans where missing input often semantically means `false` in checkbox UIs.
+- [ ] Proposed validation rule: for `optional: false` fields with type `boolean`, treat `undefined` as valid.
+- [ ] Proposed exception: if field type is explicitly `true`, still require `true` (e.g., ToS acceptance).
+- [ ] Proposed exception: if field type is explicitly `false`, treat `undefined` as valid because `false` is the only allowed value.
+- [ ] Defer implementation until investigation confirms root cause and desired semantics.
