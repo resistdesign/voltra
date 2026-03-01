@@ -12,7 +12,10 @@ import {
 } from "../../../common/SearchTypes";
 import type { Where } from "../../Indexing/structured/Types";
 import { TypeInfoORMServiceError } from "../../../common/TypeInfoORM";
-import { buildStructuredLikePatternTokens } from "../../Indexing/structured/StructuredStringLike";
+import {
+  type StructuredStringTokenizerConfig,
+  buildStructuredLikePatternTokens,
+} from "../../Indexing/structured/StructuredStringLike";
 
 const resolveBetweenBounds = (
   criterion: FieldCriterion,
@@ -44,7 +47,10 @@ const buildTerm = (
   value: value as any,
 });
 
-const buildWhereForCriterion = (criterion: FieldCriterion): Where => {
+const buildWhereForCriterion = (
+  criterion: FieldCriterion,
+  tokenizer?: Partial<StructuredStringTokenizerConfig>,
+): Where => {
   const { fieldName, operator = ComparisonOperators.EQUALS, value } = criterion;
 
   switch (operator) {
@@ -57,7 +63,7 @@ const buildWhereForCriterion = (criterion: FieldCriterion): Where => {
         return buildTerm(fieldName, "contains", value);
       }
 
-      const tokens = buildStructuredLikePatternTokens(value);
+      const tokens = buildStructuredLikePatternTokens(value, tokenizer);
       const tokenClauses = tokens.map((token) =>
         buildTerm(fieldName, "contains", token),
       );
@@ -122,13 +128,17 @@ export const criteriaToStructuredWhere = (
    * Search criteria to translate.
    */
   criteria?: SearchCriteria,
+  /**
+   * Optional tokenizer settings used to generate LIKE tokens.
+   */
+  tokenizer?: Partial<StructuredStringTokenizerConfig>,
 ): Where | undefined => {
   if (!criteria || !Array.isArray(criteria.fieldCriteria)) {
     return undefined;
   }
 
   const clauses = criteria.fieldCriteria.map((criterion) =>
-    buildWhereForCriterion(criterion),
+    buildWhereForCriterion(criterion, tokenizer),
   );
 
   if (clauses.length === 0) {

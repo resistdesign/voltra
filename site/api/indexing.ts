@@ -14,6 +14,13 @@ import { collectRequiredEnvironmentVariables } from "../../src/common";
 
 const ddbAdapter = createAwsSdkV3DynamoClient(ddbClient);
 
+export const structuredStringTokenizer = {
+  minNgramSize: 1,
+  maxNgramSize: 3,
+  maxIndexedStringLength: 128,
+  maxTokensPerValue: 256,
+} as const;
+
 collectRequiredEnvironmentVariables([
   ...Object.values(indexingTableEnvVars.fullText),
   ...Object.values(indexingTableEnvVars.structured),
@@ -30,6 +37,7 @@ export const fullTextBackend = new FullTextDdbBackend({
 const structuredBackend = new StructuredDdbBackend({
   client: ddbAdapter,
   tables: indexingTables.structured,
+  tokenizer: structuredStringTokenizer,
 });
 
 export const structuredReader = structuredBackend.reader;
