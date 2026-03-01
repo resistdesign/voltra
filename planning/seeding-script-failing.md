@@ -168,7 +168,8 @@ Just run the TypeInfo validation on the failed item from above and show me the e
 ## Validation Expansion & Fix Checklist
 
 - [x] Fix required-value validation so `false` and `0` are treated as present values.
-- [x] Expand `Validation.spec.json` coverage with many full-result scenarios (pattern, ranges, options, strict fields, denied operations, relationships, arrays, required primitives).
+- [x] Expand `Validation.spec.json` coverage with many full-result scenarios (pattern, ranges, options, strict fields,
+  denied operations, relationships, arrays, required primitives).
 - [x] Run `Validation.spec.json` and `ValidationDataItem.spec.json` and confirm all pass.
 - [x] Re-run seed preflight with `yarn tsx ./scripts/seed-demo-db.ts --dryrun` and confirm validation passes.
 - [x] Rename Validation data-item test files to names without `DataItem`.
@@ -176,10 +177,27 @@ Just run the TypeInfo validation on the failed item from above and show me the e
 
 ## Investigation Notes (No Code Changes Yet)
 
-- [ ] Verify whether phone number regex mismatch is due to data formatting vs pattern logic by testing seed values directly against the exact `Person.phoneNumber` regex from `site/common/DemoTypeInfoMap.ts`.
+- [ ] Verify whether phone number regex mismatch is due to data formatting vs pattern logic by testing seed values
+  directly against the exact `Person.phoneNumber` regex from `site/common/DemoTypeInfoMap.ts`.
 - [ ] Confirm whether this regression started after a recent change, since the seed script previously succeeded.
-- [ ] Evaluate validation behavior for required booleans where missing input often semantically means `false` in checkbox UIs.
+- [ ] Evaluate validation behavior for required booleans where missing input often semantically means `false` in
+  checkbox UIs.
 - [ ] Proposed validation rule: for `optional: false` fields with type `boolean`, treat `undefined` as valid.
 - [ ] Proposed exception: if field type is explicitly `true`, still require `true` (e.g., ToS acceptance).
-- [ ] Proposed exception: if field type is explicitly `false`, treat `undefined` as valid because `false` is the only allowed value.
+- [ ] Proposed exception: if field type is explicitly `false`, treat `undefined` as valid because `false` is the only
+  allowed value.
 - [ ] Defer implementation until investigation confirms root cause and desired semantics.
+
+## Overall Voltra Type Handling Scenarios To Investigate
+
+How do *ALL* of the systems, in Voltra, handle the following field type scenarios?
+
+```
+export type HypotheticalType = {
+  myOneSidedBooleanA: false;
+  myOneSidedBooleanB: true;
+  myBrokenDownBoolean: true | false;
+  myOnlyOneDigit: 1;
+  myOnlyOneSpecifcString: "a";
+};
+```
