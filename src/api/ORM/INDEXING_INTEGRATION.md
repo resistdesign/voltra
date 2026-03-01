@@ -8,8 +8,26 @@ This document captures current ORM list/search and relationship behaviors that m
 - Validation: `validateSearchFields` enforces that criteria field names exist in the type info map.
 - Execution path selection:
   - Auto fulltext path: used when criteria contains exactly one fulltext-indexed field criterion and the operator is fulltext-compatible (`LIKE`, `CONTAINS`, `STARTS_WITH`).
-  - Structured indexed path: used when criteria can be translated by `criteriaToStructuredWhere`.
+  - Structured indexed path: used only when all criteria fields are explicitly listed in `indexing.structured.indexedFieldsByType[typeName]` and every criterion's field type/operator pair is supported by structured indexing.
   - Full scan + compare fallback: used when indexed paths are unavailable or unsupported for a given operator/combination.
+- Structured field inclusion:
+  - Structured indexing is opt-in by field via `indexing.structured.indexedFieldsByType`.
+  - Fields not included in `indexedFieldsByType` are excluded from structured index writes and structured query routing.
+  - Excluded/unsupported criteria automatically use full scan + compare fallback.
+- Structured tokenizer config:
+  - `indexing.structured.tokenizer` configures structured string token generation used for contains/LIKE behavior.
+  - Supported keys: `minNgramSize`, `maxNgramSize`, `maxIndexedStringLength`, `maxTokensPerValue`.
+  - Safe defaults preserve current behavior (`1..3` ngrams, length `128`, max tokens `256`).
+- Structured write concurrency hardening:
+  - Structured DDB writes use optimistic compare-and-swap on `docFields` version state before applying term/range diffs.
+  - On version mismatch, writer retries using fresh state to prevent stale diff application under concurrent writes.
+- Structured observability:
+  - `indexing.observability.onListRoutingDecision` can capture list routing decisions (`fullText`, `structured`, `fullScanCompare`) and reasons, without affecting runtime behavior.
+  - `indexing.observability.onStructuredIndexWrite` can capture structured upsert/remove events and indexed field counts.
+- Tokenizer correctness expectations for structured `LIKE`/`contains`:
+  - Current structured string tokenization uses normalized unique 1/2/3-grams with bounded token count.
+  - This preserves short-substring matching behavior for indexed string fields.
+  - More aggressive token reduction strategies must be evaluated against correctness requirements before adoption.
 - Operators: the ORM expects the following comparison operators to be supported by the underlying list engine:
   - `EQUALS`, `NOT_EQUALS`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `IN`, `NOT_IN`, `LIKE`, `NOT_LIKE`, `EXISTS`, `NOT_EXISTS`, `IS_NOT_EMPTY`, `IS_EMPTY`, `BETWEEN`, `NOT_BETWEEN`, `CONTAINS`, `NOT_CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `DOES_NOT_START_WITH`, `DOES_NOT_END_WITH`.
 - Fulltext semantics:

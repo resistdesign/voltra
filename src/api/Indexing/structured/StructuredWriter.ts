@@ -1,6 +1,7 @@
 import type { DocId } from "../Types";
 import type { WhereValue } from "./Types";
 import type {
+  StructuredDocFieldsState,
   StructuredDocFieldsRecord,
   StructuredRangeIndexItem,
   StructuredRangeIndexKey,
@@ -11,7 +12,10 @@ import {
   buildStructuredRangeItem,
   buildStructuredTermItem,
 } from "./StructuredDdb";
-import { buildStructuredStringContainsTokens } from "./StructuredStringLike";
+import {
+  type StructuredStringTokenizerConfig,
+  buildStructuredStringContainsTokens,
+} from "./StructuredStringLike";
 
 /**
  * Dependencies required to persist structured index entries.
@@ -22,14 +26,19 @@ export type StructuredWriterDependencies = {
    * @param docId Document id to load.
    * @returns Stored fields or undefined when missing.
    */
-  loadDocFields(docId: DocId): Promise<StructuredDocFieldsRecord | undefined>;
+  loadDocFieldsState(docId: DocId): Promise<StructuredDocFieldsState | undefined>;
   /**
-   * Store the latest fields for a document.
+   * Compare-and-swap the latest fields for a document.
    * @param docId Document id to store.
+   * @param expectedVersion Version expected by the caller.
    * @param fields Structured fields to persist.
-   * @returns Promise resolved once stored.
+   * @returns True when swap succeeds, false on version mismatch.
    */
-  putDocFields(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void>;
+  putDocFieldsIfVersion(
+    docId: DocId,
+    expectedVersion: number | undefined,
+    fields: StructuredDocFieldsRecord,
+  ): Promise<boolean>;
   /**
    * Store term index entries.
    * @param entries Term entries to store.
@@ -60,6 +69,17 @@ type TermEntry = StructuredTermIndexItem;
 
 type RangeEntry = StructuredRangeIndexItem;
 
+export type StructuredWriterOptions = {
+  /**
+   * Optional tokenizer settings for string contains indexing.
+   */
+  tokenizer?: Partial<StructuredStringTokenizerConfig>;
+  /**
+   * Maximum compare-and-swap retries for concurrent writes.
+   */
+  maxConcurrentWriteRetries?: number;
+};
+
 function normalizeFields(
   fields: StructuredDocFieldsRecord,
 ): StructuredDocFieldsRecord {
@@ -80,6 +100,7 @@ function normalizeFields(
 function buildTermEntries(
   docId: DocId,
   fields: StructuredDocFieldsRecord,
+  options: StructuredWriterOptions,
 ): TermEntry[] {
   const entries: TermEntry[] = [];
 
@@ -92,7 +113,10 @@ function buildTermEntries(
     } else {
       entries.push(buildStructuredTermItem(field, value, "eq", docId));
       if (typeof value === "string") {
-        for (const token of buildStructuredStringContainsTokens(value)) {
+        for (const token of buildStructuredStringContainsTokens(
+          value,
+          options.tokenizer,
+        )) {
           entries.push(buildStructuredTermItem(field, token, "contains", docId));
         }
       }
@@ -171,10 +195,16 @@ function toRangeKeys(entries: RangeEntry[]): StructuredRangeIndexKey[] {
  * Writer that diffs structured fields and persists term/range entries.
  */
 export class StructuredDdbWriter {
+  private readonly options: StructuredWriterOptions;
   /**
    * @param dependencies Writer dependencies for persistence.
    */
-  constructor(private readonly dependencies: StructuredWriterDependencies) {}
+  constructor(
+    private readonly dependencies: StructuredWriterDependencies,
+    options: StructuredWriterOptions = {},
+  ) {
+    this.options = options;
+  }
 
   /**
    * Write structured fields for a document, diffing term/range entries.
@@ -184,37 +214,69 @@ export class StructuredDdbWriter {
    */
   async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
     const normalized = normalizeFields(fields);
-    const previousFields = await this.dependencies.loadDocFields(docId);
-    const previousNormalized = previousFields
-      ? normalizeFields(previousFields)
-      : {};
+    const maxRetries = this.options.maxConcurrentWriteRetries ?? 8;
+    let attempts = 0;
 
-    const previousTerms = buildTermEntries(docId, previousNormalized);
-    const nextTerms = buildTermEntries(docId, normalized);
-    const previousRanges = buildRangeEntries(docId, previousNormalized);
-    const nextRanges = buildRangeEntries(docId, normalized);
+    while (attempts <= maxRetries) {
+      const previousState = await this.dependencies.loadDocFieldsState(docId);
+      const previousNormalized = previousState
+        ? normalizeFields(previousState.fields)
+        : {};
+      const expectedVersion = previousState?.version;
 
-    const termDiff = diffEntries(previousTerms, nextTerms, termEntryKey);
-    const rangeDiff = diffEntries(previousRanges, nextRanges, rangeEntryKey);
-
-    if (termDiff.toDelete.length > 0) {
-      await this.dependencies.deleteTermEntries(toTermKeys(termDiff.toDelete));
-    }
-
-    if (rangeDiff.toDelete.length > 0) {
-      await this.dependencies.deleteRangeEntries(
-        toRangeKeys(rangeDiff.toDelete),
+      const previousTerms = buildTermEntries(
+        docId,
+        previousNormalized,
+        this.options,
       );
+      const nextTerms = buildTermEntries(docId, normalized, this.options);
+      const previousRanges = buildRangeEntries(docId, previousNormalized);
+      const nextRanges = buildRangeEntries(docId, normalized);
+
+      const termDiff = diffEntries(previousTerms, nextTerms, termEntryKey);
+      const rangeDiff = diffEntries(previousRanges, nextRanges, rangeEntryKey);
+      const noDiff =
+        termDiff.toAdd.length === 0 &&
+        termDiff.toDelete.length === 0 &&
+        rangeDiff.toAdd.length === 0 &&
+        rangeDiff.toDelete.length === 0;
+
+      if (noDiff) {
+        return;
+      }
+
+      const swapped = await this.dependencies.putDocFieldsIfVersion(
+        docId,
+        expectedVersion,
+        normalized,
+      );
+
+      if (!swapped) {
+        attempts += 1;
+        continue;
+      }
+
+      if (termDiff.toDelete.length > 0) {
+        await this.dependencies.deleteTermEntries(toTermKeys(termDiff.toDelete));
+      }
+
+      if (rangeDiff.toDelete.length > 0) {
+        await this.dependencies.deleteRangeEntries(
+          toRangeKeys(rangeDiff.toDelete),
+        );
+      }
+
+      if (termDiff.toAdd.length > 0) {
+        await this.dependencies.putTermEntries(termDiff.toAdd);
+      }
+
+      if (rangeDiff.toAdd.length > 0) {
+        await this.dependencies.putRangeEntries(rangeDiff.toAdd);
+      }
+
+      return;
     }
 
-    if (termDiff.toAdd.length > 0) {
-      await this.dependencies.putTermEntries(termDiff.toAdd);
-    }
-
-    if (rangeDiff.toAdd.length > 0) {
-      await this.dependencies.putRangeEntries(rangeDiff.toAdd);
-    }
-
-    await this.dependencies.putDocFields(docId, normalized);
+    throw new Error("Structured writer concurrent write retries exceeded.");
   }
 }

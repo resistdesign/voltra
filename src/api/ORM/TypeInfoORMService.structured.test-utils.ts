@@ -70,14 +70,68 @@ const runTypeInfoORMStructuredScenario = async () => {
     uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
   });
   const structuredBackend = new StructuredInMemoryBackend();
+  const routingEvents: Array<{
+    path: "fullText" | "structured" | "fullScanCompare";
+    reason:
+      | "fullTextPlan"
+      | "structuredEligible"
+      | "criteriaWithoutIndexedPath"
+      | "indexedPathFailedOrUnsupported";
+  }> = [];
+  const structuredIndexWriteEvents: Array<{
+    action: "upsert" | "remove";
+    indexedFieldCount: number;
+  }> = [];
+  const structuredReaderCalls = {
+    terms: 0,
+    ranges: 0,
+  };
+  const structuredReader = {
+    terms: {
+      query: async (...args: Parameters<typeof structuredBackend.terms.query>) => {
+        structuredReaderCalls.terms += 1;
+        return structuredBackend.terms.query(...args);
+      },
+    },
+    ranges: {
+      between: async (
+        ...args: Parameters<typeof structuredBackend.ranges.between>
+      ) => {
+        structuredReaderCalls.ranges += 1;
+        return structuredBackend.ranges.between(...args);
+      },
+      gte: async (...args: Parameters<typeof structuredBackend.ranges.gte>) => {
+        structuredReaderCalls.ranges += 1;
+        return structuredBackend.ranges.gte(...args);
+      },
+      lte: async (...args: Parameters<typeof structuredBackend.ranges.lte>) => {
+        structuredReaderCalls.ranges += 1;
+        return structuredBackend.ranges.lte(...args);
+      },
+    },
+  };
   const orm = new TypeInfoORMService({
     typeInfoMap,
     getDriver: () => driver as any,
     getRelationshipDriver: () => relationshipDriver,
     indexing: {
       structured: {
-        reader: structuredBackend,
+        reader: structuredReader,
         writer: structuredBackend,
+        indexedFieldsByType: {
+          Post: ["category", "score", "tags"],
+        },
+      },
+      observability: {
+        onListRoutingDecision: (event) => {
+          routingEvents.push({ path: event.path, reason: event.reason });
+        },
+        onStructuredIndexWrite: (event) => {
+          structuredIndexWriteEvents.push({
+            action: event.action,
+            indexedFieldCount: event.indexedFieldCount,
+          });
+        },
       },
     },
     useDAC: false,
@@ -193,6 +247,93 @@ const runTypeInfoORMStructuredScenario = async () => {
     },
   });
 
+  const structuredCallCountAfterConfiguredQuery =
+    structuredReaderCalls.terms + structuredReaderCalls.ranges;
+  const unindexedTitleQuery = await orm.list("Post", {
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "title",
+          operator: ComparisonOperators.EQUALS,
+          value: "World",
+        },
+      ],
+    },
+  });
+  const structuredCallCountAfterUnindexedQuery =
+    structuredReaderCalls.terms + structuredReaderCalls.ranges;
+
+  const noteTypeInfoMap: TypeInfoMap = {
+    Note: {
+      primaryField: "noteKey",
+      fields: {
+        noteKey: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: true,
+        },
+        title: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: true,
+        },
+        priority: {
+          type: "number",
+          array: false,
+          readonly: false,
+          optional: true,
+        },
+      },
+    },
+  };
+  let noteCounter = 0;
+  const noteDriver = new InMemoryDataItemDBDriver<any, "noteKey">({
+    tableName: "Notes",
+    uniquelyIdentifyingFieldName: "noteKey",
+    generateUniqueIdentifier: () => `n-${++noteCounter}`,
+  });
+  const noteStructuredBackend = new StructuredInMemoryBackend();
+  const noteOrm = new TypeInfoORMService({
+    typeInfoMap: noteTypeInfoMap,
+    getDriver: () => noteDriver as any,
+    getRelationshipDriver: () => relationshipDriver,
+    indexing: {
+      structured: {
+        reader: noteStructuredBackend,
+        writer: noteStructuredBackend,
+        indexedFieldsByType: {
+          Note: ["title", "priority"],
+        },
+      },
+    },
+    useDAC: false,
+  });
+  const noteId = await noteOrm.create("Note", {
+    title: "Roadmap",
+    priority: 2,
+  } as TypeInfoDataItem);
+  await noteOrm.create("Note", {
+    title: "Backlog",
+    priority: 5,
+  } as TypeInfoDataItem);
+  const noteByTitle = await noteOrm.list("Note", {
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "title",
+          operator: ComparisonOperators.EQUALS,
+          value: "Roadmap",
+        },
+      ],
+    },
+  });
+
   return {
     createdIds: [id1, id2, id3],
     newsIds: news.items.map((item) => item.id),
@@ -201,6 +342,26 @@ const runTypeInfoORMStructuredScenario = async () => {
     page1Ids: page1.items.map((item) => item.id),
     page2Ids: page2.items.map((item) => item.id),
     afterUpdateIds: afterUpdate.items.map((item) => item.id),
+    configuredQueryUsedStructured:
+      structuredCallCountAfterConfiguredQuery > 0,
+    unconfiguredQueryFellBackWithoutStructuredCall:
+      structuredCallCountAfterUnindexedQuery ===
+      structuredCallCountAfterConfiguredQuery,
+    unindexedTitleIds: unindexedTitleQuery.items.map((item) => item.id),
+    nonIdPrimaryFieldIds: noteByTitle.items.map((item) => item.noteKey),
+    generatedNonIdPrimaryFieldId: noteId,
+    sawStructuredRoutingDecision: routingEvents.some(
+      (event) => event.path === "structured",
+    ),
+    sawFullScanFallbackRoutingDecision: routingEvents.some(
+      (event) =>
+        event.path === "fullScanCompare" &&
+        (event.reason === "criteriaWithoutIndexedPath" ||
+          event.reason === "indexedPathFailedOrUnsupported"),
+    ),
+    sawStructuredIndexWriteTelemetry:
+      structuredIndexWriteEvents.some((event) => event.action === "upsert") &&
+      structuredIndexWriteEvents.some((event) => event.indexedFieldCount > 0),
   };
 };
 
@@ -224,3 +385,34 @@ export const runTypeInfoORMStructuredPage2IdsScenario = async () =>
 
 export const runTypeInfoORMStructuredAfterUpdateIdsScenario = async () =>
   (await runTypeInfoORMStructuredScenario()).afterUpdateIds;
+
+export const runTypeInfoORMStructuredConfiguredQueryUsedStructuredScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario()).configuredQueryUsedStructured;
+
+export const runTypeInfoORMStructuredUnconfiguredQueryFallbackScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario())
+      .unconfiguredQueryFellBackWithoutStructuredCall;
+
+export const runTypeInfoORMStructuredUnindexedTitleIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).unindexedTitleIds;
+
+export const runTypeInfoORMStructuredNonIdPrimaryFieldIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).nonIdPrimaryFieldIds;
+
+export const runTypeInfoORMStructuredGeneratedNonIdPrimaryFieldIdScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario()).generatedNonIdPrimaryFieldId;
+
+export const runTypeInfoORMStructuredSawStructuredRoutingDecisionScenario =
+  async () => (await runTypeInfoORMStructuredScenario()).sawStructuredRoutingDecision;
+
+export const runTypeInfoORMStructuredSawFullScanFallbackRoutingDecisionScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario())
+      .sawFullScanFallbackRoutingDecision;
+
+export const runTypeInfoORMStructuredSawStructuredIndexWriteTelemetryScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario()).sawStructuredIndexWriteTelemetry;

@@ -94,6 +94,7 @@ import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
 import type { Where, WhereValue } from "../Indexing/structured/Types";
+import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
@@ -231,6 +232,15 @@ export type TypeInfoORMIndexingConfig = {
      */
     writer?: StructuredWriter;
     /**
+     * Explicitly indexed field names by type. Fields not listed are excluded
+     * from structured indexing and structured query routing.
+     */
+    indexedFieldsByType?: Record<string, string[]>;
+    /**
+     * Optional tokenizer overrides for structured string contains/LIKE behavior.
+     */
+    tokenizer?: Partial<StructuredStringTokenizerConfig>;
+    /**
      * Field name mapping per type.
      */
     fieldMapByType?: Record<string, Record<string, string>>;
@@ -263,6 +273,33 @@ export type TypeInfoORMIndexingConfig = {
    * Optional search limits for indexing queries.
    */
   limits?: ResolvedSearchLimits;
+  /**
+   * Optional observability hooks for indexing/routing diagnostics.
+   */
+  observability?: {
+    /**
+     * Called when list routing chooses a query execution path.
+     */
+    onListRoutingDecision?: (event: {
+      typeName: string;
+      path: "fullText" | "structured" | "fullScanCompare";
+      reason:
+        | "fullTextPlan"
+        | "structuredEligible"
+        | "criteriaWithoutIndexedPath"
+        | "indexedPathFailedOrUnsupported";
+      criteriaCount: number;
+    }) => void;
+    /**
+     * Called when structured indexing writes/removes document entries.
+     */
+    onStructuredIndexWrite?: (event: {
+      typeName: string;
+      docId: string;
+      action: "upsert" | "remove";
+      indexedFieldCount: number;
+    }) => void;
+  };
 };
 
 /**
@@ -324,6 +361,83 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
   protected indexingRelationshipDriver?: IndexingRelationshipDriver;
+
+  /**
+   * Emit list routing decision observability events without impacting runtime behavior.
+   */
+  protected emitListRoutingDecision = (
+    /**
+     * Type being listed.
+     */
+    typeName: string,
+    /**
+     * Selected routing path.
+     */
+    path: "fullText" | "structured" | "fullScanCompare",
+    /**
+     * Why this path was selected.
+     */
+    reason:
+      | "fullTextPlan"
+      | "structuredEligible"
+      | "criteriaWithoutIndexedPath"
+      | "indexedPathFailedOrUnsupported",
+    /**
+     * Number of criteria considered.
+     */
+    criteriaCount: number,
+  ): void => {
+    const hook = this.config.indexing?.observability?.onListRoutingDecision;
+
+    if (!hook) {
+      return;
+    }
+
+    try {
+      hook({
+        typeName,
+        path,
+        reason,
+        criteriaCount,
+      });
+    } catch (_error) {
+      // Observability hooks must never alter ORM behavior.
+    }
+  };
+
+  /**
+   * Emit structured index write observability events without impacting behavior.
+   */
+  protected emitStructuredIndexWrite = (
+    /**
+     * Type being indexed.
+     */
+    typeName: string,
+    /**
+     * Indexed document id.
+     */
+    docId: string,
+    /**
+     * Structured indexing action.
+     */
+    action: "upsert" | "remove",
+    /**
+     * Number of indexed fields in the write payload.
+     */
+    indexedFieldCount: number,
+  ): void => {
+    const hook = this.config.indexing?.observability?.onStructuredIndexWrite;
+
+    if (!hook) {
+      return;
+    }
+
+    try {
+      hook({ typeName, docId, action, indexedFieldCount });
+    } catch (_error) {
+      // Observability hooks must never alter ORM behavior.
+    }
+  };
 
   /**
    * @param config ORM service configuration.
@@ -779,6 +893,132 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     operator === ComparisonOperators.STARTS_WITH;
 
   /**
+   * @returns Explicitly indexed structured field names for a type.
+   */
+  protected resolveStructuredIndexedFields = (
+    /**
+     * Type name used to resolve indexed structured fields.
+     */
+    typeName: string,
+  ): Set<string> => {
+    const configured =
+      this.config.indexing?.structured?.indexedFieldsByType?.[typeName];
+
+    if (!Array.isArray(configured)) {
+      return new Set<string>();
+    }
+
+    const fields = new Set<string>();
+
+    for (const field of configured) {
+      if (typeof field !== "string") {
+        continue;
+      }
+
+      const trimmed = field.trim();
+
+      if (trimmed) {
+        fields.add(trimmed);
+      }
+    }
+
+    return fields;
+  };
+
+  /**
+   * @returns True when the field type and operator can be served by structured indexing.
+   */
+  protected isStructuredOperatorSupportedForField = (
+    /**
+     * Field definition from TypeInfo.
+     */
+    field: TypeInfoField,
+    /**
+     * Search operator to evaluate.
+     */
+    operator: ComparisonOperators,
+  ): boolean => {
+    const { array: isArray = false, type } = field;
+
+    if (isArray) {
+      return operator === ComparisonOperators.CONTAINS;
+    }
+
+    if (type === "string") {
+      return (
+        operator === ComparisonOperators.EQUALS ||
+        operator === ComparisonOperators.IN ||
+        operator === ComparisonOperators.LIKE ||
+        operator === ComparisonOperators.GREATER_THAN_OR_EQUAL ||
+        operator === ComparisonOperators.LESS_THAN_OR_EQUAL ||
+        operator === ComparisonOperators.BETWEEN
+      );
+    }
+
+    if (type === "number") {
+      return (
+        operator === ComparisonOperators.EQUALS ||
+        operator === ComparisonOperators.IN ||
+        operator === ComparisonOperators.GREATER_THAN_OR_EQUAL ||
+        operator === ComparisonOperators.LESS_THAN_OR_EQUAL ||
+        operator === ComparisonOperators.BETWEEN
+      );
+    }
+
+    if (type === "boolean") {
+      return (
+        operator === ComparisonOperators.EQUALS ||
+        operator === ComparisonOperators.IN
+      );
+    }
+
+    return false;
+  };
+
+  /**
+   * @returns True when criteria can be evaluated using structured indexing.
+   */
+  protected canUseStructuredIndexForCriteria = (
+    /**
+     * Type being listed.
+     */
+    typeName: string,
+    /**
+     * Criteria to evaluate.
+     */
+    criteria?: SearchCriteria,
+  ): boolean => {
+    if (!criteria?.fieldCriteria?.length) {
+      return false;
+    }
+
+    const typeInfo = this.getTypeInfo(typeName);
+    const { fields = {} } = typeInfo;
+    const indexedFields = this.resolveStructuredIndexedFields(typeName);
+
+    if (indexedFields.size === 0) {
+      return false;
+    }
+
+    for (const criterion of criteria.fieldCriteria) {
+      const { fieldName } = criterion;
+      const field = fields[fieldName];
+
+      if (!field || field.typeReference || !indexedFields.has(fieldName)) {
+        return false;
+      }
+
+      const operator = criterion.operator ?? ComparisonOperators.EQUALS;
+
+      if (!this.isStructuredOperatorSupportedForField(field, operator)) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  /**
    * @returns Full-text query plan derived from a field criterion.
    */
   protected toFullTextSearchPlan = (
@@ -1086,10 +1326,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const typeInfo = this.getTypeInfo(typeName);
     const fieldMap =
       this.config.indexing?.structured?.fieldMapByType?.[typeName];
+    const indexedFields = this.resolveStructuredIndexedFields(typeName);
     const withoutRefs = removeTypeReferenceFieldsFromDataItem(typeInfo, item);
     const fields: StructuredDocFieldsRecord = {};
 
     for (const [fieldName, value] of Object.entries(withoutRefs)) {
+      if (!indexedFields.has(fieldName)) {
+        continue;
+      }
+
       if (typeof value === "undefined") {
         continue;
       }
@@ -1342,6 +1587,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       primaryFieldName,
     );
     const fields = this.buildStructuredFields(typeName, item);
+    this.emitStructuredIndexWrite(
+      typeName,
+      String(docId),
+      "upsert",
+      Object.keys(fields).length,
+    );
 
     await structured.writer.write(docId, fields);
   }
@@ -1379,6 +1630,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       item[primaryFieldName as keyof TypeInfoDataItem],
       primaryFieldName,
     );
+    this.emitStructuredIndexWrite(typeName, String(docId), "remove", 0);
 
     await structured.writer.write(docId, {});
   }
@@ -2310,6 +2562,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           );
 
           if (fullTextPlan && hasFullText) {
+            this.emitListRoutingDecision(
+              typeName,
+              "fullText",
+              "fullTextPlan",
+              fieldCriteria.length,
+            );
 
             const qualifiedIndexField = qualifyIndexField(
               typeName,
@@ -2338,10 +2596,26 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             docIds = searchResult.docIds;
             nextCursor = searchResult.nextCursor;
           } else if (hasStructured) {
+            if (!this.canUseStructuredIndexForCriteria(typeName, criteria)) {
+              throw {
+                message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
+                typeName,
+              };
+            }
+            this.emitListRoutingDecision(
+              typeName,
+              "structured",
+              "structuredEligible",
+              fieldCriteria.length,
+            );
 
-            const where = criteriaToStructuredWhere(criteria);
+            const tokenizer = indexing?.structured?.tokenizer;
+            const whereWithTokenizer = criteriaToStructuredWhere(
+              criteria,
+              tokenizer,
+            );
 
-            if (!where) {
+            if (!whereWithTokenizer) {
               throw {
                 message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
                 typeName,
@@ -2350,7 +2624,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
             const mappedWhere = this.applyStructuredFieldMap(
               typeName,
-              where,
+              whereWithTokenizer,
               indexing?.structured?.fieldMapByType?.[typeName],
             );
             const structuredReader = indexing?.structured?.reader;
@@ -2436,6 +2710,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             cursor: nextCursor,
           };
         } catch (_error) {
+          this.emitListRoutingDecision(
+            typeName,
+            "fullScanCompare",
+            "indexedPathFailedOrUnsupported",
+            fieldCriteria.length,
+          );
           return this.listByFullScanAndCompare(
             typeName,
             config,
@@ -2447,6 +2727,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       }
 
       if (hasCriteria) {
+        this.emitListRoutingDecision(
+          typeName,
+          "fullScanCompare",
+          "criteriaWithoutIndexedPath",
+          fieldCriteria.length,
+        );
         return this.listByFullScanAndCompare(
           typeName,
           config,
