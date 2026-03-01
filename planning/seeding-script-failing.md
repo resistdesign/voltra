@@ -119,3 +119,9 @@ The first thing to do might be to run the same validation logic check on the giv
 fields do not comply and why.
 
 My initial assumption is a bug because the data appears valid at first glance, but I don't know.
+
+**DO NOT DO ANY WORK OR CHANGE ANYTHING YET. JUST TELL ME THE PROBLEM.**
+
+## Primary Objective
+
+Just run the TypeInfo validation on the failed item from above and show me the erros.
