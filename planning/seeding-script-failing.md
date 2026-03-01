@@ -201,3 +201,40 @@ export type HypotheticalType = {
   myOnlyOneSpecifcString: "a";
 };
 ```
+
+### Findings (Current Behavior)
+
+- TypeInfo parsing (`convertASTToMap` + `getTypeInfoFromTypeAlias`):
+  - `myOneSidedBooleanA: false` -> parsed as `type: "string"` with no `possibleValues` (incorrect).
+  - `myOneSidedBooleanB: true` -> parsed as `type: "string"` with no `possibleValues` (incorrect).
+  - `myBrokenDownBoolean: true | false` -> parsed as `type: "boolean"` with `possibleValues: [true, false]` (correct).
+  - `myOnlyOneDigit: 1` -> parsed as `type: "string"` with no `possibleValues` (incorrect).
+  - `myOnlyOneSpecifcString: "a"` -> parsed as `type: "string"` with no `possibleValues` (partially correct base type, missing literal constraint).
+
+- Validation (`validateTypeInfoValue`):
+  - Works correctly when a field is represented as primitive + `possibleValues` (including one-sided boolean/number/string).
+  - Fails for parser-produced one-sided literal fields above because parser currently drops literal constraints (or sets wrong primitive type for literal booleans/numbers).
+  - With manual TypeInfo (`type: "boolean", possibleValues: [false]` etc.), validation correctly enforces:
+    - value matches literal option -> valid,
+    - opposite boolean -> `INVALID_OPTION`,
+    - missing required value -> `MISSING_FIELD_VALUE`.
+
+- Forms (`app/web/native`):
+  - UI rendering kind is driven by `type` + `possibleValues`.
+  - `possibleValues` currently only drives enum-select for string/number values; booleans are filtered out of enum-select options.
+  - So one-sided boolean constraints (if represented via `possibleValues: [true]` / `[false]`) are not rendered as a constrained enum in current default form suites; they render as checkbox/switch via boolean field kind.
+
+- DBX seed generation (`DBXSeed`):
+  - Uses `possibleValues` when present and picks from them.
+  - If `possibleValues` missing, falls back to generator by primitive `type`.
+  - Therefore parser dropping one-sided literal constraints affects generated data realism/validity.
+
+- ORM/API enforcement:
+  - ORM validation uses shared TypeInfo validation path; behavior matches `validateTypeInfoValue`.
+  - So enforcement quality for these scenarios is currently limited primarily by TypeInfo parsing fidelity for single literal types.
+
+### Bottom Line
+
+- `true | false` is handled well end-to-end.
+- Single-literal fields (`true`, `false`, `1`, `"a"`) are not modeled correctly by current parser output.
+- Validation engine itself can enforce one-sided literals correctly if TypeInfo includes `possibleValues`, but parser currently fails to produce that for non-union literals.
