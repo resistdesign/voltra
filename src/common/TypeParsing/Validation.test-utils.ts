@@ -135,7 +135,7 @@ const createRelationshipMap = (): TypeInfoMap => ({
   Person: {
     fields: {
       car: {
-        type: "Car",
+        type: "string",
         typeReference: "Car",
         array: false,
         readonly: false,
