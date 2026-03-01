@@ -159,6 +159,21 @@ Just run the TypeInfo validation on the failed item from above and show me the e
 - [x] Refactor seed row mapping to avoid manual per-field assignment except for type conversion.
 - [x] Ensure `likesCheese` from `Person.csv` is mapped and converted to boolean.
 
+## Boolean Validation Red Test Checklist
+
+- [x] Add a validation test for required `boolean` field with value `false` expecting valid behavior.
+- [x] Run `Validation.spec.json` and confirm the new boolean test fails before validator changes.
+- [x] Convert validation spec expectations to full validation result objects per scenario.
+
+## Validation Expansion & Fix Checklist
+
+- [x] Fix required-value validation so `false` and `0` are treated as present values.
+- [x] Expand `Validation.spec.json` coverage with many full-result scenarios (pattern, ranges, options, strict fields, denied operations, relationships, arrays, required primitives).
+- [x] Run `Validation.spec.json` and `ValidationDataItem.spec.json` and confirm all pass.
+- [x] Re-run seed preflight with `yarn tsx ./scripts/seed-demo-db.ts --dryrun` and confirm validation passes.
+- [x] Rename Validation data-item test files to names without `DataItem`.
+- [x] Consolidate all Validation scenarios into `Validation.spec.json` and `Validation.test-utils.ts` only.
+
 ## Investigation Notes (No Code Changes Yet)
 
 - [ ] Verify whether phone number regex mismatch is due to data formatting vs pattern logic by testing seed values directly against the exact `Person.phoneNumber` regex from `site/common/DemoTypeInfoMap.ts`.
