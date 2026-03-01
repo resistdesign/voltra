@@ -125,3 +125,27 @@ My initial assumption is a bug because the data appears valid at first glance, b
 ## Primary Objective
 
 Just run the TypeInfo validation on the failed item from above and show me the erros.
+
+## Checklist
+
+- [x] Reproduce TypeInfo validation locally for the failing `Person` item.
+- [x] Capture the returned `error` and per-field `errorMap` for `CREATE`.
+- [x] Capture the returned `error` and per-field `errorMap` for `UPDATE`.
+
+## Follow-up Checklist
+
+- [x] Add preflight validation in `scripts/seed-demo-db.ts` for all seed items before any API create/update calls.
+- [x] Validate against demo site TypeInfo map from `site/common/DemoTypeInfoMap.ts`.
+- [x] Add `--dryrun`/`--dry-run` flag to run validation-only with no API writes.
+
+## Requested Adjustments Checklist
+
+- [x] Ensure validation and create errors accumulate and throw once at the end of each phase.
+- [x] Keep only a single dry-run flag: `--dryrun`.
+- [x] Remove all update API usage from the seeding script.
+- [x] Exclude `id` from seeded objects sent to create.
+- [x] Refactor object mapping to use destructuring/spread rather than repeated dot-notation field copies.
+
+## Execution Convenience Checklist
+
+- [x] Add a package script to run `scripts/seed-demo-db.ts`.

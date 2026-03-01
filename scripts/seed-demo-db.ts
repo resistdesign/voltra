@@ -4,10 +4,16 @@ import { fileURLToPath } from "node:url";
 
 import { TypeInfoORMClient } from "../src/app/utils";
 import {
+  RelationshipValidationType,
+  validateTypeInfoValue,
+} from "../src/common/TypeParsing/Validation";
+import { TypeOperation } from "../src/common/TypeParsing/TypeInfo";
+import {
   BASE_DOMAIN,
   DEMO_ORM_ROUTE_PATH,
   DOMAINS,
 } from "../site/common/Constants";
+import * as DemoTypeInfoMapModule from "../site/common/DemoTypeInfoMap";
 
 type SeedRow = Record<string, string>;
 
@@ -15,6 +21,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const SEED_DIR = path.join(__dirname, "seed-data");
+const argv = new Set(process.argv.slice(2));
+const dryRun = argv.has("--dryrun");
+const demoTypeInfoMap =
+  (DemoTypeInfoMapModule as any).DemoTypeInfoMap ??
+  (DemoTypeInfoMapModule as any).default;
+
+type ValidationIssue = {
+  typeName: string;
+  operation: "create";
+  rowIndex: number;
+  item: any;
+  error: any;
+  errorMap: Record<string, any>;
+};
+
+type CreateIssue = {
+  typeName: string;
+  rowIndex: number;
+  item: any;
+  error: unknown;
+};
 
 const getApiDomain = (hostname: string) => {
   if (hostname === DOMAINS.API) {
@@ -110,70 +137,161 @@ const asNumber = (v: string) => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-const seedUpsert = async (
-  ormClient: TypeInfoORMClient,
-  typeName: string,
-  item: any,
-) => {
-  try {
-    await ormClient.create(typeName, item);
-    return { op: "create" as const };
-  } catch (createError) {
-    try {
-      await ormClient.update(typeName, item);
-      return { op: "update" as const, createError };
-    } catch (updateError) {
-      throw {
-        message: `Failed to create or update ${typeName}`,
-        typeName,
-        item,
-        createError,
-        updateError,
-      };
-    }
-  }
+const normalizeErrorMap = (errorMap: Record<string, any>) => {
+  return Object.fromEntries(
+    Object.entries(errorMap).map(([field, issues]) => [
+      field,
+      Array.isArray(issues) && issues.length > 0 ? issues[0] : undefined,
+    ]),
+  );
 };
 
-const main = async () => {
-  const config = getServiceConfig();
-  const ormClient = new TypeInfoORMClient(config);
+const validateSeedItem = (
+  typeName: string,
+  item: any,
+  rowIndex: number,
+): ValidationIssue[] => {
+  const createResult = validateTypeInfoValue(
+    item,
+    typeName,
+    demoTypeInfoMap,
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    RelationshipValidationType.STRICT_EXCLUDE,
+    false,
+  );
+  const issues: ValidationIssue[] = [];
 
-  const cars = await readCsv("Car.csv");
-  const people = await readCsv("Person.csv");
-
-  let carCreates = 0;
-  let carUpdates = 0;
-  let personCreates = 0;
-  let personUpdates = 0;
-
-  for (const row of cars) {
-    const item = {
-      id: row.id || undefined,
-      make: row.make,
-      model: row.model,
-      year: asNumber(row.year),
-    };
-
-    const r = await seedUpsert(ormClient, "Car", item);
-    if (r.op === "create") carCreates++;
-    if (r.op === "update") carUpdates++;
+  if (!createResult.valid) {
+    issues.push({
+      typeName,
+      operation: "create",
+      rowIndex,
+      item,
+      error: createResult.error,
+      errorMap: normalizeErrorMap(createResult.errorMap),
+    });
   }
 
-  for (const row of people) {
-    const item = {
-      id: row.id || undefined,
-      firstName: row.firstName,
-      lastName: row.lastName,
-      age: asNumber(row.age),
-      phoneNumber: row.phoneNumber,
-      email: row.email,
-      car: row.car,
-      dietaryRestrictions: row.dietaryRestrictions,
-    };
+  return issues;
+};
 
-    const r = await seedUpsert(ormClient, "Person", item);
-    if (r.op === "create") personCreates++;
-    if (r.op === "update") personUpdates++;
+const asOptional = (v: string) => v || undefined;
+
+const toCarItem = ({ id: _id, make, model, year }: SeedRow) => ({
+  make,
+  model,
+  year: asNumber(year),
+});
+
+const toPersonItem = ({
+  id: _id,
+  firstName,
+  lastName,
+  age,
+  phoneNumber,
+  email,
+  car,
+  dietaryRestrictions,
+}: SeedRow) => ({
+  firstName,
+  lastName,
+  age: asNumber(age),
+  phoneNumber,
+  email,
+  car: asOptional(car),
+  dietaryRestrictions,
+});
+
+const main = async () => {
+  const cars = await readCsv("Car.csv");
+  const people = await readCsv("Person.csv");
+  const carItems = cars.map(toCarItem);
+  const personItems = people.map(toPersonItem);
+  const validationIssues: ValidationIssue[] = [];
+
+  if (!demoTypeInfoMap) {
+    throw new Error("DemoTypeInfoMap is unavailable.");
+  }
+
+  for (let i = 0; i < carItems.length; i++) {
+    validationIssues.push(...validateSeedItem("Car", carItems[i], i));
+  }
+
+  for (let i = 0; i < personItems.length; i++) {
+    validationIssues.push(...validateSeedItem("Person", personItems[i], i));
+  }
+
+  if (validationIssues.length > 0) {
+    throw {
+      message:
+        "Seed data preflight validation failed. Fix validation errors before API create.",
+      dryRun,
+      counts: {
+        cars: carItems.length,
+        people: personItems.length,
+        totalIssues: validationIssues.length,
+      },
+      issues: validationIssues,
+    };
+  }
+
+  if (dryRun) {
+    console.log(
+      JSON.stringify(
+        {
+          dryRun: true,
+          message: "Seed data preflight validation passed.",
+          counts: {
+            cars: carItems.length,
+            people: personItems.length,
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  const config = getServiceConfig();
+  const ormClient = new TypeInfoORMClient(config);
+  const createIssues: CreateIssue[] = [];
+
+  let carCreates = 0;
+  let personCreates = 0;
+
+  for (const [rowIndex, item] of carItems.entries()) {
+    try {
+      await ormClient.create("Car", item);
+      carCreates++;
+    } catch (error) {
+      createIssues.push({ typeName: "Car", rowIndex, item, error });
+    }
+  }
+
+  for (const [rowIndex, item] of personItems.entries()) {
+    try {
+      await ormClient.create("Person", item);
+      personCreates++;
+    } catch (error) {
+      createIssues.push({ typeName: "Person", rowIndex, item, error });
+    }
+  }
+
+  if (createIssues.length > 0) {
+    throw {
+      message:
+        "Seed API create encountered one or more errors after preflight validation.",
+      dryRun: false,
+      counts: {
+        cars: carItems.length,
+        people: personItems.length,
+        totalCreateIssues: createIssues.length,
+      },
+      issues: createIssues,
+    };
   }
 
   console.log(
@@ -184,12 +302,10 @@ const main = async () => {
         counts: {
           cars: {
             creates: carCreates,
-            updates: carUpdates,
             total: cars.length,
           },
           people: {
             creates: personCreates,
-            updates: personUpdates,
             total: people.length,
           },
         },
