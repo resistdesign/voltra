@@ -1,22 +1,44 @@
 # Fix app service request path slash parsing
 
-When you set a `basePath` and a `path` on a `RemoteProcedureCall` and use `src/app/utils/Service.ts`
-`sendServiceRequest`, it will double up slashes if you prepend `path` with a slash.
+## Context
+
+When `RemoteProcedureCall.basePath` and `RemoteProcedureCall.path` are combined by
+`src/app/utils/Service.ts` `sendServiceRequest`, leading/trailing slash combinations can produce doubled
+slashes.
 
 Example:
 
-`basePath: "/api"`
-`path: "/method"`
+- `basePath: "/api"`
+- `path: "/method"`
+- Current bad request path: `/api//method`
 
-And then the request is made to `/api//method`.
+There are route/path parsing utils in the common barrel and `mergeStringPaths` appears involved already, so this plan
+tracks root-cause discovery, targeted tests, and regression checks.
 
-There are Route path parsing utils in the `common` barrel that it could be using to avoid these problems, and it should
-be using them.
+## Ordered Checklist
 
-And it actually does seem to be using `mergeStringPaths`, so I'm wondering what the issue is.
+- [ ] Phase 1: Reproduce and identify root cause
+  - [ ] Locate `sendServiceRequest` path construction flow and all path merge points.
+  - [ ] Reproduce the `"/api" + "/method" => "/api//method"` behavior in a focused test or existing spec.
+  - [ ] Document exact failure source in this plan before applying a fix.
 
-Please discover the source of the problem and let's:
+- [ ] Phase 2: Expand test coverage first
+  - [ ] Add/extend specs for path merge permutations (leading/trailing slash variants, empty path/basePath, existing query/path segments).
+  - [ ] Confirm tests fail for the bug scenario before the fix.
 
-1. Get some better tests around all of this.
-2. Fix it.
-3. Make sure we didn't regress anything else because of this fix.
+- [ ] Phase 3: Implement fix
+  - [ ] Update path-merge logic in `sendServiceRequest` (or the actual root source) to normalize slashes correctly.
+  - [ ] Keep behavior aligned with existing route/path utility semantics.
+  - [ ] Add doc comments for any newly introduced public helper/type in `src/` (if applicable).
+
+- [ ] Phase 4: Regression verification
+  - [ ] Run targeted tests for touched specs.
+  - [ ] Run broader relevant test suite (`yarn test` or closest scoped command) to confirm no regressions.
+  - [ ] Capture verification evidence (commands run + results) in the final update.
+
+## Run Notes
+
+- [ ] Root cause summary added
+- [ ] Test-first evidence captured
+- [ ] Fix applied
+- [ ] Regression checks captured
