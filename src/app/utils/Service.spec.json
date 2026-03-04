@@ -53,6 +53,20 @@
       "conditions": [],
       "operation": "===",
       "expectation": "nope"
+    },
+    {
+      "export": "runServiceTextSuccessResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "data": "Some Response"
+      }
+    },
+    {
+      "export": "runServiceTextErrorMessageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Unauthorized"
     }
   ]
 }
