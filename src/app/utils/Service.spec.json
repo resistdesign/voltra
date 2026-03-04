@@ -26,6 +26,36 @@
       "expectation": "https://example.com:443/api/v3"
     },
     {
+      "export": "runServiceSlashPrefixedPathUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api/method"
+    },
+    {
+      "export": "runServiceTrailingSlashBasePathUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api/method"
+    },
+    {
+      "export": "runServiceSlashBaseAndPathUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api/method"
+    },
+    {
+      "export": "runServiceTrailingSlashBaseOnlyUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/api"
+    },
+    {
+      "export": "runServiceRootPathWithLeadingSlashUrlScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "https://example.com:443/method"
+    },
+    {
       "export": "runServiceRequestInfoScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

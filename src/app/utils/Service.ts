@@ -58,14 +58,14 @@ export const getFullUrl = (
     path,
     PATH_DELIMITER,
     false,
-    false,
+    true,
     false,
   );
   const normalizedPath = fullPath
     ? fullPath.startsWith(PATH_DELIMITER)
       ? fullPath
       : `${PATH_DELIMITER}${fullPath}`
-    : "";
+    : PATH_DELIMITER;
 
   return `${normalizedProtocol}://${normalizedDomain}${portString}${normalizedPath}`;
 };
