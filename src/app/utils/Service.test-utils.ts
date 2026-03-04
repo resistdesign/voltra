@@ -30,6 +30,41 @@ const runServiceScenario = async () => {
     "v3",
     443,
   );
+  const slashPrefixedPathUrl = getFullUrl(
+    "https",
+    "example.com",
+    "/api",
+    "/method",
+    443,
+  );
+  const trailingSlashBasePathUrl = getFullUrl(
+    "https",
+    "example.com",
+    "/api/",
+    "method",
+    443,
+  );
+  const slashBaseAndPathUrl = getFullUrl(
+    "https",
+    "example.com",
+    "/api/",
+    "/method",
+    443,
+  );
+  const trailingSlashBaseOnlyUrl = getFullUrl(
+    "https",
+    "example.com",
+    "/api/",
+    "",
+    443,
+  );
+  const rootPathWithLeadingSlashUrl = getFullUrl(
+    "https",
+    "example.com",
+    "",
+    "/method",
+    443,
+  );
 
   const originalFetch = globalThis.fetch;
   let requestInfo: any = {};
@@ -68,6 +103,11 @@ const runServiceScenario = async () => {
     originUrl,
     normalizedProtocolUrl,
     normalizedDomainUrl,
+    slashPrefixedPathUrl,
+    trailingSlashBasePathUrl,
+    slashBaseAndPathUrl,
+    trailingSlashBaseOnlyUrl,
+    rootPathWithLeadingSlashUrl,
     requestInfo: {
       input: requestInfo.input,
       method: requestInfo.init?.method,
@@ -128,6 +168,21 @@ export const runServiceNormalizedProtocolUrlScenario = async () =>
 
 export const runServiceNormalizedDomainUrlScenario = async () =>
   (await runServiceScenario()).normalizedDomainUrl;
+
+export const runServiceSlashPrefixedPathUrlScenario = async () =>
+  (await runServiceScenario()).slashPrefixedPathUrl;
+
+export const runServiceTrailingSlashBasePathUrlScenario = async () =>
+  (await runServiceScenario()).trailingSlashBasePathUrl;
+
+export const runServiceSlashBaseAndPathUrlScenario = async () =>
+  (await runServiceScenario()).slashBaseAndPathUrl;
+
+export const runServiceTrailingSlashBaseOnlyUrlScenario = async () =>
+  (await runServiceScenario()).trailingSlashBaseOnlyUrl;
+
+export const runServiceRootPathWithLeadingSlashUrlScenario = async () =>
+  (await runServiceScenario()).rootPathWithLeadingSlashUrl;
 
 export const runServiceRequestInfoScenario = async () =>
   (await runServiceScenario()).requestInfo;
