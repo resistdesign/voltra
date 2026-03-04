@@ -36,12 +36,13 @@ const runServiceScenario = async () => {
 
   globalThis.fetch = async (input, init) => {
     requestInfo = { input, init };
+    const body = JSON.stringify({
+      ok: true,
+      args: JSON.parse((init?.body as string) ?? "[]"),
+    });
     return {
       ok: true,
-      json: async () => ({
-        ok: true,
-        args: JSON.parse((init?.body as string) ?? "[]"),
-      }),
+      text: async () => body,
     } as Response;
   };
 
@@ -50,7 +51,7 @@ const runServiceScenario = async () => {
   globalThis.fetch = async () =>
     ({
       ok: false,
-      json: async () => ({ error: "nope" }),
+      text: async () => JSON.stringify({ error: "nope" }),
     }) as Response;
 
   let errorMessage: string | undefined;
@@ -78,6 +79,45 @@ const runServiceScenario = async () => {
   };
 };
 
+const runServiceTextResponseScenario = async () => {
+  const config: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+    port: 443,
+    basePath: "api",
+  };
+
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () =>
+    ({
+      ok: true,
+      text: async () => "Some Response",
+    }) as Response;
+
+  const successResponse = await sendServiceRequest(config, "v1", ["a"]);
+
+  globalThis.fetch = async () =>
+    ({
+      ok: false,
+      text: async () => "Unauthorized",
+    }) as Response;
+
+  let errorMessage: string | undefined;
+  try {
+    await sendServiceRequest(config, "v1", ["a"]);
+  } catch (error: any) {
+    errorMessage = error?.message ?? String(error);
+  }
+
+  globalThis.fetch = originalFetch;
+
+  return {
+    successResponse,
+    errorMessage,
+  };
+};
+
 export const runServiceUrlScenario = async () => (await runServiceScenario()).url;
 
 export const runServiceOriginUrlScenario = async () =>
@@ -97,3 +137,9 @@ export const runServiceSuccessResponseScenario = async () =>
 
 export const runServiceErrorMessageScenario = async () =>
   (await runServiceScenario()).errorMessage;
+
+export const runServiceTextSuccessResponseScenario = async () =>
+  (await runServiceTextResponseScenario()).successResponse;
+
+export const runServiceTextErrorMessageScenario = async () =>
+  (await runServiceTextResponseScenario()).errorMessage;

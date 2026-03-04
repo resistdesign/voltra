@@ -100,11 +100,27 @@ export const sendServiceRequest = async (
     body: JSON.stringify(args),
   });
   const { ok: responseIsOk } = response;
-  const data = await response.json();
+  const textData = await response.text();
 
-  if (responseIsOk) {
-    return data;
+  let data: any = textData;
+
+  try {
+    data = JSON.parse(textData);
+  } catch (error) {
+    // Ignore.
+  }
+
+  if (typeof data === "object") {
+    if (responseIsOk) {
+      return data;
+    } else {
+      throw data;
+    }
   } else {
-    throw data;
+    if (responseIsOk) {
+      return { data };
+    } else {
+      throw { message: data };
+    }
   }
 };

@@ -27,9 +27,11 @@ const runTypeInfoORMClientScenario = async () => {
     const path = String(_input).split("/").pop() ?? "";
     calls.push({ path, args: parsed });
 
+    const body = JSON.stringify({ ok: true, path, args: parsed });
+
     return {
       ok: true,
-      json: async () => ({ ok: true, path, args: parsed }),
+      text: async () => body,
     } as Response;
   };
 
