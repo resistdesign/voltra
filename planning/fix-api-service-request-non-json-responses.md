@@ -22,3 +22,12 @@ Examples:
   message: "Unauthorized",
 }
 ```
+
+## Checklist
+
+- [x] Update `src/app/utils/Service.test-utils.ts` to mock text-based response parsing behavior.
+- [x] Add explicit non-JSON success and error test scenarios.
+- [x] Update `src/app/utils/Service.spec.json` expectations for non-JSON response handling.
+- [x] Run targeted verification for `src/app/utils/Service.spec.json`.
+- [x] Update dependent fetch mocks in `src/app/utils/TypeInfoORMClient.test-utils.ts` and `src/app/utils/ApplicationStateLoader.test-utils.ts` to provide `response.text()`.
+- [x] Run full `yarn test` and verify the suite passes.
