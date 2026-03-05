@@ -378,9 +378,9 @@ export const RouteProvider = ({
  */
 export type RouteProps<ParamsType extends Record<string, any>> = {
   /**
-   * Route path pattern, using `:` for params.
+   * Route path pattern(s), using `:` for params.
    */
-  path?: string;
+  path?: string | string[];
   /**
    * Callback when params update for this route.
    *
@@ -426,7 +426,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
 }: PropsWithChildren<
   Omit<RouteProps<ParamsType>, "path" | "initialPath" | "adapter"> & {
     runtimeIntegration?: never;
-    path: string;
+    path: string | string[];
   }
 >) => {
   const {
@@ -440,30 +440,44 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
     () => currentWindowPath,
     [currentWindowPath],
   );
-  const fullPath = useMemo(
-    () => mergeStringPaths(parentPath, path),
-    [parentPath, path],
+  const normalizedPaths = useMemo(
+    () => (Array.isArray(path) ? path : [path]),
+    [path],
   );
-  const newParams = useMemo(
-    () => getParamsAndTestPath(targetCurrentPath, fullPath, exact),
-    [targetCurrentPath, fullPath, exact],
+  const matchedRoute = useMemo(
+    () => {
+      for (const routePath of normalizedPaths) {
+        const fullPath = mergeStringPaths(parentPath, routePath);
+        const newParams = getParamsAndTestPath(targetCurrentPath, fullPath, exact);
+
+        if (newParams) {
+          return {
+            fullPath,
+            newParams,
+          };
+        }
+      }
+
+      return null;
+    },
+    [targetCurrentPath, parentPath, normalizedPaths, exact],
   );
   const params = useMemo(
     () => ({
       ...parentParams,
-      ...(newParams ? newParams : {}),
+      ...(matchedRoute?.newParams ? matchedRoute.newParams : {}),
     }),
-    [parentParams, newParams],
+    [parentParams, matchedRoute],
   );
   const newRouteContext = useMemo(
     () => ({
       currentWindowPath: targetCurrentPath,
-      parentPath: fullPath,
+      parentPath: matchedRoute?.fullPath ?? parentPath,
       params,
       isTopLevel: false,
       adapter,
     }),
-    [targetCurrentPath, fullPath, params, adapter],
+    [targetCurrentPath, matchedRoute, parentPath, params, adapter],
   );
 
   useEffect(() => {
@@ -472,7 +486,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
     }
   }, [params, onParamsChange]);
 
-  return newParams ? (
+  return matchedRoute?.newParams ? (
     <RouteContextProvider value={newRouteContext}>
       {children}
     </RouteContextProvider>

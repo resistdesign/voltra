@@ -197,3 +197,47 @@ export const runAppRouteAdapterWrapperRelativePathScenario = () => {
     finalPath: currentPath,
   };
 };
+
+export const runAppRouteMultiPathScenario = () => {
+  const originalWindow = (globalThis as any).window;
+  (globalThis as any).window = buildWindowMock("/app/movies/42");
+
+  const multiPathRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: ["books/:id", "movies/:id"], exact: true },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
+  const noMatchRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: ["books/:id", "authors/:id"], exact: true },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
+  (globalThis as any).window = originalWindow;
+
+  return {
+    matchedSecondPath: multiPathRender.includes("&quot;id&quot;:42"),
+    noMatchRenderIsEmpty: noMatchRender === "",
+  };
+};
