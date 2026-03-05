@@ -64,6 +64,53 @@ import { addDNS } from "@resistdesign/voltra/iac/packs";
 import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
 ```
 
+### IaC Auth/Gateway Example
+
+`addGateway` authorizer provider ARNs can use CloudFormation intrinsics:
+
+```ts
+import { addGateway } from "@resistdesign/voltra/iac/packs";
+import { SimpleCFT } from "@resistdesign/voltra/iac";
+
+new SimpleCFT().applyPack(addGateway, {
+  id: "ApiGateway",
+  hostedZoneId: { Ref: "HostedZoneId" },
+  domainName: { Ref: "ApiDomainName" },
+  certificateArn: { Ref: "ApiCertificateArn" },
+  cloudFunction: { id: "ApiFunction" },
+  authorizer: {
+    providerARNs: [{ "Fn::GetAtt": ["MyUserPool", "Arn"] }],
+  },
+});
+```
+
+`addAuth` can pass partial user-management id overrides without changing all defaults:
+
+```ts
+import { addAuth } from "@resistdesign/voltra/iac/packs";
+import { SimpleCFT } from "@resistdesign/voltra/iac";
+
+new SimpleCFT().applyPack(addAuth, {
+  userManagementId: "UserPool",
+  userManagementIds: {
+    userPool: "MyUserPool",
+    userPoolClient: "MyUserPoolClient",
+  },
+  authRoleName: "AuthRole",
+  unauthRoleName: "UnauthRole",
+  apiCloudFunctionGatewayId: "ApiGateway",
+  apiStageName: "prod",
+  adminGroupId: "AdminGroup",
+  userManagementAdminGroupName: "admins",
+  hostedZoneIdParameterName: "HostedZoneId",
+  domainNameParameterName: "DomainName",
+  sslCertificateId: "CertificateArn",
+  mainCDNCloudFrontId: "MainCDN",
+  callbackUrls: ["https://example.com/callback"],
+  logoutUrls: ["https://example.com/logout"],
+});
+```
+
 ------------
 
 ## Build-time Type Parsing (Advanced)

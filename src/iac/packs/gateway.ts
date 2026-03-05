@@ -19,8 +19,11 @@ export const DEFAULT_AUTH_TYPE = "COGNITO_USER_POOLS";
 export type AddGatewayAuthorizerConfig = {
   /**
    * Cognito provider ARNs for authorization.
+   *
+   * Accepts literal strings or CloudFormation intrinsics (for example
+   * `{"Fn::GetAtt": ["UserPool", "Arn"]}`).
    */
-  providerARNs?: string[];
+  providerARNs?: CloudFormationPrimitiveValue<string>[];
   /**
    * Authorization scopes to require.
    */
@@ -32,7 +35,7 @@ export type AddGatewayAuthorizerConfig = {
   /**
    * Identity source expression for authorization.
    */
-  identitySource?: string;
+  identitySource?: CloudFormationPrimitiveValue<string>;
 };
 
 /**
@@ -106,7 +109,7 @@ export const addGateway = createResourcePack(
       scopes: authScopes = ["phone", "email", "openid", "profile"],
       type: authType = "COGNITO_USER_POOLS",
       providerARNs,
-      identitySource = "method.request.header.authorization",
+      identitySource = "method.request.header.Authorization",
     }: Partial<AddGatewayAuthorizerConfig> = !!authorizer &&
     typeof authorizer === "object"
       ? authorizer
