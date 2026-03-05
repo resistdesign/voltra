@@ -108,6 +108,22 @@ export const runRouteScenario = async () => {
     ),
   );
 
+  const multiPathRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: ["magazines/:id", "books/:id"], exact: true },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
   (globalThis as any).window = originalWindow;
   (globalThis as any).CustomEvent = originalCustomEvent;
 
@@ -117,6 +133,7 @@ export const runRouteScenario = async () => {
     defaultContextRender,
     nestedRouteRender,
     exactMismatchRender,
+    multiPathRender,
   };
 };
 
@@ -134,3 +151,6 @@ export const runRouteNestedRouteRenderScenario = async () =>
 
 export const runRouteExactMismatchRenderScenario = async () =>
   (await runRouteScenario()).exactMismatchRender;
+
+export const runRouteMultiPathRenderScenario = async () =>
+  (await runRouteScenario()).multiPathRender.includes("&quot;id&quot;:42");
