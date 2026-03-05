@@ -8,6 +8,48 @@ import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 import { CloudFormationPrimitiveValue } from "../types/IaCTypes";
 
+type HashableValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | HashableValue[]
+  | { [key: string]: HashableValue };
+
+const canonicalizeHashableValue = (value: HashableValue): HashableValue => {
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalizeHashableValue(item));
+  }
+
+  if (value && typeof value === "object") {
+    const output: { [key: string]: HashableValue } = {};
+    Object.keys(value)
+      .sort()
+      .forEach((key) => {
+        output[key] = canonicalizeHashableValue(
+          (value as { [key: string]: HashableValue })[key],
+        );
+      });
+    return output;
+  }
+
+  return value;
+};
+
+const getDeterministicHash = (value: HashableValue): string => {
+  const canonical = JSON.stringify(canonicalizeHashableValue(value));
+  let hash = 0x811c9dc5;
+
+  for (let i = 0; i < canonical.length; i += 1) {
+    hash ^= canonical.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+    hash >>>= 0;
+  }
+
+  return hash.toString(16).toUpperCase().padStart(8, "0");
+};
+
 /**
  * Default API Gateway authorization type.
  */
@@ -71,7 +113,7 @@ export type AddGatewayConfig = {
    */
   authorizer?: AddGatewayAuthorizerConfig | boolean;
   /**
-   * Suffix to ensure unique deployment ids.
+   * Optional manual suffix appended after the deterministic deployment hash.
    */
   deploymentSuffix?: string;
 };
@@ -114,6 +156,28 @@ export const addGateway = createResourcePack(
     typeof authorizer === "object"
       ? authorizer
       : {};
+    const cloudFunctionIntegration = {
+      Type: "AWS_PROXY",
+      IntegrationHttpMethod: "POST",
+      Uri: cloudFunctionUri,
+    };
+    const gatewayResponseParameters = {
+      "gatewayresponse.header.Access-Control-Allow-Origin":
+        "method.request.header.origin",
+      "gatewayresponse.header.Access-Control-Allow-Credentials": "'true'",
+      "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+    };
+    const cloudFunctionPermissionSourceArn = {
+      "Fn::Sub": [
+        "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/*",
+        {
+          __Stage__: stageName,
+          __ApiId__: {
+            Ref: id,
+          },
+        },
+      ],
+    };
     const authorizerId = `${id}CustomAuthorizer`;
     const authProps = !!authorizer
       ? {
@@ -127,7 +191,35 @@ export const addGateway = createResourcePack(
       : {
           AuthorizationType: "NONE",
         };
-    const fullDeploymentId = `${id}GatewayRESTAPIDeployment${deploymentSuffix}`;
+    const gatewayDeploymentFingerprint: HashableValue = {
+      restApiEndpointTypes: ["EDGE"],
+      proxyPathPart: "{proxy+}",
+      anyMethod: {
+        ...authProps,
+        HttpMethod: "ANY",
+        Integration: cloudFunctionIntegration,
+      },
+      optionsMethod: {
+        AuthorizationType: "NONE",
+        HttpMethod: "OPTIONS",
+        Integration: cloudFunctionIntegration,
+      },
+      gatewayResponseDefault4XX: {
+        ResponseParameters: gatewayResponseParameters,
+        ResponseType: "DEFAULT_4XX",
+      },
+      stageName,
+      cloudFunctionPermissionSourceArn,
+      authorizer: !!authorizer
+        ? {
+            IdentitySource: identitySource,
+            ProviderARNs: providerARNs,
+            Type: "COGNITO_USER_POOLS",
+          }
+        : null,
+    };
+    const deploymentHash = getDeterministicHash(gatewayDeploymentFingerprint);
+    const fullDeploymentId = `${id}GatewayRESTAPIDeployment${deploymentHash}${deploymentSuffix}`;
 
     return new SimpleCFT()
       .patch({
@@ -171,9 +263,7 @@ export const addGateway = createResourcePack(
                 Ref: id,
               },
               Integration: {
-                Type: "AWS_PROXY",
-                IntegrationHttpMethod: "POST",
-                Uri: cloudFunctionUri,
+                ...cloudFunctionIntegration,
               },
             },
           },
@@ -190,9 +280,7 @@ export const addGateway = createResourcePack(
                 Ref: id,
               },
               Integration: {
-                Type: "AWS_PROXY",
-                IntegrationHttpMethod: "POST",
-                Uri: cloudFunctionUri,
+                ...cloudFunctionIntegration,
               },
             },
           },
@@ -214,9 +302,7 @@ export const addGateway = createResourcePack(
                 Ref: id,
               },
               Integration: {
-                Type: "AWS_PROXY",
-                IntegrationHttpMethod: "POST",
-                Uri: cloudFunctionUri,
+                ...cloudFunctionIntegration,
               },
             },
           },
@@ -233,23 +319,15 @@ export const addGateway = createResourcePack(
                 Ref: id,
               },
               Integration: {
-                Type: "AWS_PROXY",
-                IntegrationHttpMethod: "POST",
-                Uri: cloudFunctionUri,
+                ...cloudFunctionIntegration,
               },
             },
           },
           [`${id}GatewayResponseDefault4XX`]: {
             Type: "AWS::ApiGateway::GatewayResponse",
             Properties: {
-              ResponseParameters: {
-                // Not authorized, so just allow the current origin by mapping it into the header.
-                "gatewayresponse.header.Access-Control-Allow-Origin":
-                  "method.request.header.origin",
-                "gatewayresponse.header.Access-Control-Allow-Credentials":
-                  "'true'",
-                "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
-              },
+              // Not authorized, so just allow the current origin by mapping it into the header.
+              ResponseParameters: gatewayResponseParameters,
               ResponseType: "DEFAULT_4XX",
               RestApiId: {
                 Ref: id,
@@ -409,15 +487,7 @@ export const addGateway = createResourcePack(
                 "Fn::GetAtt": [cloudFunctionId, "Arn"],
               },
               SourceArn: {
-                "Fn::Sub": [
-                  "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/*/*",
-                  {
-                    __Stage__: stageName,
-                    __ApiId__: {
-                      Ref: id,
-                    },
-                  },
-                ],
+                ...cloudFunctionPermissionSourceArn,
               },
             },
           },
