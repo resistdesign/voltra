@@ -19,6 +19,15 @@
       }
     },
     {
+      "export": "runNativeManualAdapterMixedPathConfigScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "mixedRender": "ok",
+        "stringExactMismatchRender": ""
+      }
+    },
+    {
       "export": "runNativeNavigationStateAdapterScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

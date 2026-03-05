@@ -234,10 +234,51 @@ export const runAppRouteMultiPathScenario = () => {
     ),
   );
 
+  (globalThis as any).window = buildWindowMock("/app/movies/42/details");
+  const mixedPathConfigRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          {
+            path: [
+              { path: "books/:id", exact: true },
+              { path: "movies/:id", exact: false },
+            ],
+            exact: true,
+          },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
+  const stringArrayExactMismatchRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: ["movies/:id"], exact: true },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
   (globalThis as any).window = originalWindow;
 
   return {
     matchedSecondPath: multiPathRender.includes("&quot;id&quot;:42"),
     noMatchRenderIsEmpty: noMatchRender === "",
+    mixedPathConfigMatch: mixedPathConfigRender.includes("&quot;id&quot;:42"),
+    stringArrayUsesPropExact: stringArrayExactMismatchRender === "",
   };
 };

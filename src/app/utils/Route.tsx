@@ -79,6 +79,16 @@ export type RouteQueryValue =
 export type RouteQuery = Record<string, RouteQueryValue>;
 
 /**
+ * Route path matcher config.
+ */
+export type RoutePathConfig = {
+  /** Path pattern, using `:` for params. */
+  path: string;
+  /** Optional exact-match override for this path entry. */
+  exact?: boolean;
+};
+
+/**
  * Create a manual adapter for non-DOM runtimes (e.g., React Native).
  *
  * Call `updatePath` when navigation changes.
@@ -380,7 +390,7 @@ export type RouteProps<ParamsType extends Record<string, any>> = {
   /**
    * Route path pattern(s), using `:` for params.
    */
-  path?: string | string[];
+  path?: string | (string | RoutePathConfig)[];
   /**
    * Callback when params update for this route.
    *
@@ -426,7 +436,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
 }: PropsWithChildren<
   Omit<RouteProps<ParamsType>, "path" | "initialPath" | "adapter"> & {
     runtimeIntegration?: never;
-    path: string | string[];
+    path: string | (string | RoutePathConfig)[];
   }
 >) => {
   const {
@@ -440,15 +450,27 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
     () => currentWindowPath,
     [currentWindowPath],
   );
-  const normalizedPaths = useMemo(
-    () => (Array.isArray(path) ? path : [path]),
-    [path],
-  );
+  const normalizedPaths = useMemo<RoutePathConfig[]>(() => {
+    const routePaths = Array.isArray(path) ? path : [path];
+
+    return routePaths.map((routePath) =>
+      typeof routePath === "string"
+        ? {
+            path: routePath,
+            exact,
+          }
+        : routePath,
+    );
+  }, [path, exact]);
   const matchedRoute = useMemo(
     () => {
-      for (const routePath of normalizedPaths) {
-        const fullPath = mergeStringPaths(parentPath, routePath);
-        const newParams = getParamsAndTestPath(targetCurrentPath, fullPath, exact);
+      for (const routePathConfig of normalizedPaths) {
+        const fullPath = mergeStringPaths(parentPath, routePathConfig.path);
+        const newParams = getParamsAndTestPath(
+          targetCurrentPath,
+          fullPath,
+          routePathConfig.exact,
+        );
 
         if (newParams) {
           return {
@@ -460,7 +482,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
 
       return null;
     },
-    [targetCurrentPath, parentPath, normalizedPaths, exact],
+    [targetCurrentPath, parentPath, normalizedPaths],
   );
   const params = useMemo(
     () => ({

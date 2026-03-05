@@ -60,7 +60,9 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "matchedSecondPath": true,
-        "noMatchRenderIsEmpty": true
+        "noMatchRenderIsEmpty": true,
+        "mixedPathConfigMatch": true,
+        "stringArrayUsesPropExact": true
       }
     }
   ]

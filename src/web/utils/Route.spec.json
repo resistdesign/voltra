@@ -36,6 +36,18 @@
       "conditions": [],
       "operation": "===",
       "expectation": true
+    },
+    {
+      "export": "runRouteMixedPathConfigRenderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runRouteStringArrayExactScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }
