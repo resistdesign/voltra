@@ -11,6 +11,14 @@
       }
     },
     {
+      "export": "runNativeManualAdapterMultiPathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "render": "ok"
+      }
+    },
+    {
       "export": "runNativeNavigationStateAdapterScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

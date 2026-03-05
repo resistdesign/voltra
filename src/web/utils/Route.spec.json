@@ -30,6 +30,12 @@
       "conditions": [],
       "operation": "===",
       "expectation": ""
+    },
+    {
+      "export": "runRouteMultiPathRenderScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }

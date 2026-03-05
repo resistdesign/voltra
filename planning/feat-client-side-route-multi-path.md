@@ -14,3 +14,11 @@ Normalization is preferable. Meaning `Route` should receive `path` and convert i
 single string or an array of strings already.
 
 Then, `Route` can test the current navigation path against each path in it's array of paths.
+
+## Checklist
+
+- [x] Update core app `Route` matcher to support `path: string | string[]` with internal array normalization.
+- [x] Add/adjust app route specs to verify multi-path matching and non-match behavior.
+- [x] Add/adjust web route specs to verify wrapper behavior with multi-path route matching.
+- [x] Add/adjust native route specs to verify wrapper behavior with multi-path route matching.
+- [x] Run targeted tests for updated app/web/native route specs.
