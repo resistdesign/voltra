@@ -76,6 +76,28 @@
           "SignInWithApple"
         ]
       }
+    },
+    {
+      "export": "runUserManagementPackCustomIdsSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasCustomUserPoolClient": true,
+        "hasCustomAuthRole": true,
+        "hasCustomDomain": true,
+        "hasDefaultIdentityPool": true,
+        "hasDefaultDomainRecord": true,
+        "hasDefaultRoleAttachment": true,
+        "identityPoolClientRef": "CustomUserPoolClient",
+        "domainRecordAliasGetAtt": [
+          "CustomDomain",
+          "CloudFrontDistribution"
+        ],
+        "authRoleArnGetAtt": [
+          "CustomAuthRole",
+          "Arn"
+        ]
+      }
     }
   ]
 }

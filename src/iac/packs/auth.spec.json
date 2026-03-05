@@ -52,6 +52,19 @@
       }
     },
     {
+      "export": "runAuthPackWithCustomIdsSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasCustomUserPool": true,
+        "hasCustomUserPoolClient": true,
+        "hasDefaultUserPool": false,
+        "hasDefaultUserPoolClient": false,
+        "adminGroupUserPoolRef": "CustomUserPool",
+        "identityPoolClientRef": "CustomUserPoolClient"
+      }
+    },
+    {
       "export": "runAuthPackWithoutDomainSummaryScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

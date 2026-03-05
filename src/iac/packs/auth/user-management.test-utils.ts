@@ -113,11 +113,55 @@ export const runUserManagementPackScenario = () => {
     },
   };
 
+  const customIdsTemplate = new SimpleCFT()
+    .applyPack(addUserManagement, {
+      id: "UserPool",
+      ids: {
+        userPoolClient: "CustomUserPoolClient",
+        authRole: "CustomAuthRole",
+        domain: "CustomDomain",
+      },
+      authRoleName: "AuthRole",
+      unauthRoleName: "UnauthRole",
+      domainName: "example.com",
+      hostedZoneId: "HZ123",
+      sslCertificateArn: "arn:aws:acm:us-east-1:123:cert/1",
+      callbackUrls: ["https://example.com/callback"],
+      logoutUrls: ["https://example.com/logout"],
+      baseDomainRecordAliasTargetDNSName: "cdn.example.com",
+      apiGatewayRESTAPIId: "ApiGateway",
+      apiStageName: "prod",
+    })
+    .toJSON();
+
+  const customIdsResources = customIdsTemplate.Resources || {};
+  const customIdsIdentityPool = customIdsResources.UserPoolIdentityPool as any;
+  const customIdsDomainRecord = customIdsResources.UserPoolDomainRecord as any;
+  const customIdsRoleAttachment =
+    customIdsResources.UserPoolIdentityPoolRoles as any;
+
+  const customIdsSummary = {
+    hasCustomUserPoolClient: "CustomUserPoolClient" in customIdsResources,
+    hasCustomAuthRole: "CustomAuthRole" in customIdsResources,
+    hasCustomDomain: "CustomDomain" in customIdsResources,
+    hasDefaultIdentityPool: "UserPoolIdentityPool" in customIdsResources,
+    hasDefaultDomainRecord: "UserPoolDomainRecord" in customIdsResources,
+    hasDefaultRoleAttachment: "UserPoolIdentityPoolRoles" in customIdsResources,
+    identityPoolClientRef:
+      customIdsIdentityPool?.Properties?.CognitoIdentityProviders?.[0]?.ClientId
+        ?.Ref,
+    domainRecordAliasGetAtt:
+      customIdsDomainRecord?.Properties?.AliasTarget?.DNSName?.["Fn::GetAtt"],
+    authRoleArnGetAtt:
+      customIdsRoleAttachment?.Properties?.Roles?.authenticated?.["Fn::GetAtt"],
+  };
+
   return {
     minimalSummary,
     apiSummary,
     noDomainSummary,
     customProviderSummary,
+    customIdsSummary,
   };
 };
 
@@ -132,3 +176,6 @@ export const runUserManagementPackNoDomainSummaryScenario = async () =>
 
 export const runUserManagementPackCustomProviderSummaryScenario = async () =>
   (await runUserManagementPackScenario()).customProviderSummary;
+
+export const runUserManagementPackCustomIdsSummaryScenario = async () =>
+  (await runUserManagementPackScenario()).customIdsSummary;

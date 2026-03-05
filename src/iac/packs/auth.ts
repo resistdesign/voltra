@@ -5,8 +5,12 @@
  * Wraps {@link addUserManagement} and appends a group resource to the template.
  */
 import { addUserManagement } from "./auth/user-management";
+import { resolveUserManagementIds } from "./auth/user-management";
+import type { UserManagementIds } from "./auth/user-management";
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
+
+export type { UserManagementIds } from "./auth/user-management";
 
 /**
  * Configuration for the auth pack.
@@ -40,6 +44,19 @@ export type AddAuthConfigBase = {
    * Cognito group name for admins.
    */
   userManagementAdminGroupName: string;
+  /**
+   * Optional explicit logical ids for resources created by
+   * {@link addUserManagement}.
+   *
+   * @example
+   * ```ts
+   * userManagementIds: {
+   *   userPool: "MyUserPool",
+   *   userPoolClient: "MyUserPoolClient",
+   * }
+   * ```
+   */
+  userManagementIds?: UserManagementIds;
 };
 
 /**
@@ -146,6 +163,7 @@ export type AddAuthConfig =
 export const addAuth = createResourcePack((config: AddAuthConfig) => {
   const {
     userManagementId,
+    userManagementIds,
     authRoleName,
     unauthRoleName,
     callbackUrls,
@@ -156,10 +174,15 @@ export const addAuth = createResourcePack((config: AddAuthConfig) => {
     adminGroupId,
     userManagementAdminGroupName,
   } = config;
+  const resolvedUserManagementIds = resolveUserManagementIds(
+    userManagementId,
+    userManagementIds,
+  );
 
   return new SimpleCFT()
     .applyPack(addUserManagement, {
       id: userManagementId,
+      ids: userManagementIds,
       authRoleName,
       unauthRoleName,
       apiGatewayRESTAPIId: {
@@ -196,7 +219,7 @@ export const addAuth = createResourcePack((config: AddAuthConfig) => {
           Properties: {
             GroupName: userManagementAdminGroupName,
             UserPoolId: {
-              Ref: userManagementId,
+              Ref: resolvedUserManagementIds.userPool,
             },
             Description: "Application admin group.",
           },
