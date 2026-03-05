@@ -38,6 +38,30 @@ export const runNativeManualAdapterScenario = () => {
   };
 };
 
+export const runNativeManualAdapterMultiPathScenario = () => {
+  const manual = createManualRouteAdapter("/app/books/42");
+
+  const render = renderToString(
+    createElement(
+      RouteProvider,
+      { adapter: manual.adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: ["magazines/:id", "books/:id"], exact: true },
+          "ok",
+        ),
+      ),
+    ),
+  );
+
+  return {
+    render,
+  };
+};
+
 export const runNativeNavigationStateAdapterScenario = () => {
   let state = { index: 0, routes: [{ name: "Home" }] };
   const listeners = new Set<() => void>();

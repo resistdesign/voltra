@@ -53,6 +53,15 @@
         ],
         "finalPath": "/"
       }
+    },
+    {
+      "export": "runAppRouteMultiPathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "matchedSecondPath": true,
+        "noMatchRenderIsEmpty": true
+      }
     }
   ]
 }
