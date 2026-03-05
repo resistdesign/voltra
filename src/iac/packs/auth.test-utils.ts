@@ -88,6 +88,10 @@ export const runAuthPackScenario = () => {
   const withoutDomainClient = withoutDomainResources.UserPoolClient as any;
   const withCustomIdsAdminGroup = withCustomIdsResources.AdminGroup as any;
   const withCustomIdsIdentityPool = withCustomIdsResources.UserPoolIdentityPool as any;
+  const withCustomIdsDomainRecord =
+    withCustomIdsResources.UserPoolDomainRecord as any;
+  const withCustomIdsRoleAttachment =
+    withCustomIdsResources.UserPoolIdentityPoolRoles as any;
 
   return {
     withDomainSummary: {
@@ -118,10 +122,21 @@ export const runAuthPackScenario = () => {
       hasCustomUserPoolClient: "CustomUserPoolClient" in withCustomIdsResources,
       hasDefaultUserPool: "UserPool" in withCustomIdsResources,
       hasDefaultUserPoolClient: "UserPoolClient" in withCustomIdsResources,
+      hasDefaultIdentityPool: "UserPoolIdentityPool" in withCustomIdsResources,
+      hasDefaultDomainRecord: "UserPoolDomainRecord" in withCustomIdsResources,
+      hasDefaultRoleAttachment: "UserPoolIdentityPoolRoles" in withCustomIdsResources,
       adminGroupUserPoolRef: withCustomIdsAdminGroup?.Properties?.UserPoolId?.Ref,
       identityPoolClientRef:
         withCustomIdsIdentityPool?.Properties?.CognitoIdentityProviders?.[0]
           ?.ClientId?.Ref,
+      domainRecordAliasGetAtt:
+        withCustomIdsDomainRecord?.Properties?.AliasTarget?.DNSName?.[
+          "Fn::GetAtt"
+        ],
+      authRoleArnGetAtt:
+        withCustomIdsRoleAttachment?.Properties?.Roles?.authenticated?.[
+          "Fn::GetAtt"
+        ],
     },
     withoutDomainSummary: {
       resourceKeys: Object.keys(withoutDomainResources).sort(),

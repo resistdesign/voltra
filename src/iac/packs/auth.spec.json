@@ -60,8 +60,19 @@
         "hasCustomUserPoolClient": true,
         "hasDefaultUserPool": false,
         "hasDefaultUserPoolClient": false,
+        "hasDefaultIdentityPool": true,
+        "hasDefaultDomainRecord": true,
+        "hasDefaultRoleAttachment": true,
         "adminGroupUserPoolRef": "CustomUserPool",
-        "identityPoolClientRef": "CustomUserPoolClient"
+        "identityPoolClientRef": "CustomUserPoolClient",
+        "domainRecordAliasGetAtt": [
+          "UserPoolDomain",
+          "CloudFrontDistribution"
+        ],
+        "authRoleArnGetAtt": [
+          "UserPoolAuthRole",
+          "Arn"
+        ]
       }
     },
     {

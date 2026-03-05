@@ -144,3 +144,31 @@ Where:
 - [x] `addAuth` exposes the ids config pass-through. (Config allows configuring resource IDs directly in `addAuth`,
   also, if that's a thing.)
 - [x] Tests cover both default behavior and override behavior.
+
+---
+
+## Phase 4 — Consolidate addUserManagement into addAuth
+
+### Requirements
+
+- [x] `addAuth` becomes the single pack implementing user management + admin group resources.
+- [x] `addUserManagement` is retired from code, exports, docs, and dedicated specs.
+- [x] `UserManagementIds` and ID resolution are declared in `auth.ts` and exported there.
+- [x] All previous `addUserManagement` scenarios are covered inside `addAuth` tests.
+- [x] No regressions in existing `addAuth` behavior (domain/no-domain/custom-provider/id-override paths).
+
+### Implementation Steps
+
+- [x] Inline `addUserManagement` template construction into `addAuth`.
+- [x] Move `UserManagementIds` and `resolveUserManagementIds` to `auth.ts`.
+- [x] Remove `src/iac/packs/auth/user-management.ts`.
+- [x] Remove `src/iac/packs/auth/user-management.test-utils.ts`.
+- [x] Remove `src/iac/packs/auth/user-management.spec.json`.
+- [x] Update imports/exports and any references to retired `addUserManagement`.
+- [x] Merge user-management scenarios into `auth.test-utils.ts` + `auth.spec.json`.
+- [x] Update docs/examples/comments to reflect consolidated API.
+
+### Verification
+
+- [x] `yarn test` passes.
+- [x] `yarn build` passes.
