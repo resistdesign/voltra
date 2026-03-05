@@ -57,12 +57,41 @@ export const runAuthPackScenario = () => {
     })
     .toJSON();
 
+  const withCustomIdsTemplate = new SimpleCFT()
+    .applyPack(addAuth, {
+      userManagementId: "UserPool",
+      userManagementIds: {
+        userPool: "CustomUserPool",
+        userPoolClient: "CustomUserPoolClient",
+      },
+      authRoleName: "AuthRole",
+      unauthRoleName: "UnauthRole",
+      hostedZoneIdParameterName: "HostedZoneId",
+      domainNameParameterName: "DomainName",
+      sslCertificateId: "CertificateArn",
+      mainCDNCloudFrontId: "MainCDN",
+      apiCloudFunctionGatewayId: "ApiGateway",
+      apiStageName: "prod",
+      adminGroupId: "AdminGroup",
+      userManagementAdminGroupName: "admins",
+      callbackUrls: ["https://example.com/callback"],
+      logoutUrls: ["https://example.com/logout"],
+    })
+    .toJSON();
+
   const withoutDomainResources = withoutDomainTemplate.Resources || {};
   const withCustomProvidersResources = withCustomProvidersTemplate.Resources || {};
+  const withCustomIdsResources = withCustomIdsTemplate.Resources || {};
   const withDomainClient = withDomainResources.UserPoolClient as any;
   const withCustomProvidersClient =
     withCustomProvidersResources.UserPoolClient as any;
   const withoutDomainClient = withoutDomainResources.UserPoolClient as any;
+  const withCustomIdsAdminGroup = withCustomIdsResources.AdminGroup as any;
+  const withCustomIdsIdentityPool = withCustomIdsResources.UserPoolIdentityPool as any;
+  const withCustomIdsDomainRecord =
+    withCustomIdsResources.UserPoolDomainRecord as any;
+  const withCustomIdsRoleAttachment =
+    withCustomIdsResources.UserPoolIdentityPoolRoles as any;
 
   return {
     withDomainSummary: {
@@ -87,6 +116,27 @@ export const runAuthPackScenario = () => {
     withCustomProvidersSummary: {
       supportedIdentityProviders:
         withCustomProvidersClient?.Properties?.SupportedIdentityProviders,
+    },
+    withCustomIdsSummary: {
+      hasCustomUserPool: "CustomUserPool" in withCustomIdsResources,
+      hasCustomUserPoolClient: "CustomUserPoolClient" in withCustomIdsResources,
+      hasDefaultUserPool: "UserPool" in withCustomIdsResources,
+      hasDefaultUserPoolClient: "UserPoolClient" in withCustomIdsResources,
+      hasDefaultIdentityPool: "UserPoolIdentityPool" in withCustomIdsResources,
+      hasDefaultDomainRecord: "UserPoolDomainRecord" in withCustomIdsResources,
+      hasDefaultRoleAttachment: "UserPoolIdentityPoolRoles" in withCustomIdsResources,
+      adminGroupUserPoolRef: withCustomIdsAdminGroup?.Properties?.UserPoolId?.Ref,
+      identityPoolClientRef:
+        withCustomIdsIdentityPool?.Properties?.CognitoIdentityProviders?.[0]
+          ?.ClientId?.Ref,
+      domainRecordAliasGetAtt:
+        withCustomIdsDomainRecord?.Properties?.AliasTarget?.DNSName?.[
+          "Fn::GetAtt"
+        ],
+      authRoleArnGetAtt:
+        withCustomIdsRoleAttachment?.Properties?.Roles?.authenticated?.[
+          "Fn::GetAtt"
+        ],
     },
     withoutDomainSummary: {
       resourceKeys: Object.keys(withoutDomainResources).sort(),
@@ -116,6 +166,9 @@ export const runAuthPackWithDomainSummaryScenario = async () =>
 
 export const runAuthPackWithCustomProvidersSummaryScenario = async () =>
   (await runAuthPackScenario()).withCustomProvidersSummary;
+
+export const runAuthPackWithCustomIdsSummaryScenario = async () =>
+  (await runAuthPackScenario()).withCustomIdsSummary;
 
 export const runAuthPackWithoutDomainSummaryScenario = async () =>
   (await runAuthPackScenario()).withoutDomainSummary;

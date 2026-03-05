@@ -46,6 +46,28 @@ export const runGatewayPackScenario = () => {
     customResources.ApiGatewayGatewayRESTAPIEnvironment as any;
   const defaultRoute53 = defaultResources.ApiGatewayRoute53Record as any;
   const customAuthorizer = customResources.ApiGatewayCustomAuthorizer as any;
+  const intrinsicTemplate = new SimpleCFT()
+    .applyPack(addGateway, {
+      id: "ApiGateway",
+      hostedZoneId: "HZ789",
+      domainName: "api.example.com",
+      certificateArn: "arn:aws:acm:us-east-1:123:cert/3",
+      cloudFunction: {
+        id: "ApiFunction",
+        region: "us-east-1",
+      },
+      authorizer: {
+        providerARNs: [
+          {
+            "Fn::GetAtt": ["UserPool", "Arn"],
+          },
+        ],
+      },
+    })
+    .toJSON();
+  const intrinsicResources = intrinsicTemplate.Resources || {};
+  const intrinsicAuthorizer =
+    intrinsicResources.ApiGatewayCustomAuthorizer as any;
 
   return {
     resourceKeys: Object.keys(defaultResources).sort(),
@@ -61,6 +83,8 @@ export const runGatewayPackScenario = () => {
     customAuthorizerIdentitySource:
       customAuthorizer?.Properties?.IdentitySource,
     customAuthorizerProviderARNs: customAuthorizer?.Properties?.ProviderARNs,
+    intrinsicAuthorizerProviderARNs:
+      intrinsicAuthorizer?.Properties?.ProviderARNs,
     customStageName: customStage?.Properties?.StageName,
     customDeploymentId: customStage?.Properties?.DeploymentId?.Ref,
   };
@@ -98,6 +122,9 @@ export const runGatewayPackCustomAuthorizerIdentitySourceScenario = async () =>
 
 export const runGatewayPackCustomAuthorizerProviderARNsScenario = async () =>
   (await runGatewayPackScenario()).customAuthorizerProviderARNs;
+
+export const runGatewayPackIntrinsicAuthorizerProviderARNsScenario = async () =>
+  (await runGatewayPackScenario()).intrinsicAuthorizerProviderARNs;
 
 export const runGatewayPackCustomStageNameScenario = async () =>
   (await runGatewayPackScenario()).customStageName;

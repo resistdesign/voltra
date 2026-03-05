@@ -52,6 +52,30 @@
       }
     },
     {
+      "export": "runAuthPackWithCustomIdsSummaryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "hasCustomUserPool": true,
+        "hasCustomUserPoolClient": true,
+        "hasDefaultUserPool": false,
+        "hasDefaultUserPoolClient": false,
+        "hasDefaultIdentityPool": true,
+        "hasDefaultDomainRecord": true,
+        "hasDefaultRoleAttachment": true,
+        "adminGroupUserPoolRef": "CustomUserPool",
+        "identityPoolClientRef": "CustomUserPoolClient",
+        "domainRecordAliasGetAtt": [
+          "UserPoolDomain",
+          "CloudFrontDistribution"
+        ],
+        "authRoleArnGetAtt": [
+          "UserPoolAuthRole",
+          "Arn"
+        ]
+      }
+    },
+    {
       "export": "runAuthPackWithoutDomainSummaryScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

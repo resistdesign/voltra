@@ -89,6 +89,19 @@
       ]
     },
     {
+      "export": "runGatewayPackIntrinsicAuthorizerProviderARNsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "Fn::GetAtt": [
+            "UserPool",
+            "Arn"
+          ]
+        }
+      ]
+    },
+    {
       "export": "runGatewayPackCustomStageNameScenario",
       "conditions": [],
       "operation": "===",
