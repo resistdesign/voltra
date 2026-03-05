@@ -62,6 +62,49 @@ export const runNativeManualAdapterMultiPathScenario = () => {
   };
 };
 
+export const runNativeManualAdapterMixedPathConfigScenario = () => {
+  const manual = createManualRouteAdapter("/app/books/42/details");
+
+  const mixedRender = renderToString(
+    createElement(
+      RouteProvider,
+      { adapter: manual.adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          {
+            path: [
+              { path: "books/:id", exact: false },
+              { path: "movies/:id", exact: true },
+            ],
+            exact: true,
+          },
+          "ok",
+        ),
+      ),
+    ),
+  );
+
+  const stringExactMismatchRender = renderToString(
+    createElement(
+      RouteProvider,
+      { adapter: manual.adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(Route, { path: ["books/:id"], exact: true }, "ok"),
+      ),
+    ),
+  );
+
+  return {
+    mixedRender,
+    stringExactMismatchRender,
+  };
+};
+
 export const runNativeNavigationStateAdapterScenario = () => {
   let state = { index: 0, routes: [{ name: "Home" }] };
   const listeners = new Set<() => void>();

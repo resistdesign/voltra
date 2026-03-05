@@ -124,6 +124,47 @@ export const runRouteScenario = async () => {
     ),
   );
 
+  (globalThis as any).window = windowMock;
+  windowMock.location.pathname = "/app/books/42/details";
+
+  const mixedPathConfigRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          {
+            path: [
+              { path: "books/:id", exact: false },
+              { path: "movies/:id", exact: true },
+            ],
+            exact: true,
+          },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
+  const stringArrayExactMismatchRender = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: ["books/:id"], exact: true },
+          createElement(ContextProbe),
+        ),
+      ),
+    ),
+  );
+
   (globalThis as any).window = originalWindow;
   (globalThis as any).CustomEvent = originalCustomEvent;
 
@@ -134,6 +175,8 @@ export const runRouteScenario = async () => {
     nestedRouteRender,
     exactMismatchRender,
     multiPathRender,
+    mixedPathConfigRender,
+    stringArrayExactMismatchRender,
   };
 };
 
@@ -154,3 +197,9 @@ export const runRouteExactMismatchRenderScenario = async () =>
 
 export const runRouteMultiPathRenderScenario = async () =>
   (await runRouteScenario()).multiPathRender.includes("&quot;id&quot;:42");
+
+export const runRouteMixedPathConfigRenderScenario = async () =>
+  (await runRouteScenario()).mixedPathConfigRender.includes("&quot;id&quot;:42");
+
+export const runRouteStringArrayExactScenario = async () =>
+  (await runRouteScenario()).stringArrayExactMismatchRender === "";
