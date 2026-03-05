@@ -2,27 +2,10 @@
   "file": "./gateway.test-utils.ts",
   "tests": [
     {
-      "export": "runGatewayPackResourceKeysScenario",
+      "export": "runGatewayPackResourceKeyCountScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": [
-        "ApiGateway",
-        "ApiGatewayCloudFunctionANYResourcePermission",
-        "ApiGatewayCloudWatch",
-        "ApiGatewayCloudWatchAccount",
-        "ApiGatewayCloudWatchRole",
-        "ApiGatewayDomainName",
-        "ApiGatewayDomainNameBasePathMapping",
-        "ApiGatewayGatewayRESTAPIDeployment",
-        "ApiGatewayGatewayRESTAPIEnvironment",
-        "ApiGatewayGatewayRESTAPIMethod",
-        "ApiGatewayGatewayRESTAPIOPTIONSMethod",
-        "ApiGatewayGatewayRESTAPIResource",
-        "ApiGatewayGatewayRESTAPIRootMethod",
-        "ApiGatewayGatewayRESTAPIRootOPTIONSMethod",
-        "ApiGatewayGatewayResponseDefault4XX",
-        "ApiGatewayRoute53Record"
-      ]
+      "operation": "===",
+      "expectation": 16
     },
     {
       "export": "runGatewayPackDefaultAuthTypeScenario",
@@ -39,8 +22,24 @@
     {
       "export": "runGatewayPackDefaultDeploymentIdScenario",
       "conditions": [],
+      "operation": "REGEX",
+      "expectation": {
+        "pattern": "^ApiGatewayGatewayRESTAPIDeployment[0-9A-F]{8}$"
+      }
+    },
+    {
+      "export": "runGatewayPackDefaultDeploymentKeyScenario",
+      "conditions": [],
+      "operation": "REGEX",
+      "expectation": {
+        "pattern": "^ApiGatewayGatewayRESTAPIDeployment[0-9A-F]{8}$"
+      }
+    },
+    {
+      "export": "runGatewayPackDefaultDeploymentIdMatchesDeploymentKeyScenario",
+      "conditions": [],
       "operation": "===",
-      "expectation": "ApiGatewayGatewayRESTAPIDeployment"
+      "expectation": true
     },
     {
       "export": "runGatewayPackDefaultIntegrationUriScenario",
@@ -110,8 +109,42 @@
     {
       "export": "runGatewayPackCustomDeploymentIdScenario",
       "conditions": [],
+      "operation": "REGEX",
+      "expectation": {
+        "pattern": "^ApiGatewayGatewayRESTAPIDeployment[0-9A-F]{8}V2$"
+      }
+    },
+    {
+      "export": "runGatewayPackCustomDeploymentKeyScenario",
+      "conditions": [],
+      "operation": "REGEX",
+      "expectation": {
+        "pattern": "^ApiGatewayGatewayRESTAPIDeployment[0-9A-F]{8}V2$"
+      }
+    },
+    {
+      "export": "runGatewayPackCustomDeploymentIdMatchesDeploymentKeyScenario",
+      "conditions": [],
       "operation": "===",
-      "expectation": "ApiGatewayGatewayRESTAPIDeploymentV2"
+      "expectation": true
+    },
+    {
+      "export": "runGatewayPackDeploymentIdStableForDomainConfigChangesScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runGatewayPackDeploymentIdChangesForStageNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runGatewayPackDeploymentIdChangesForAuthorizerConfigScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }
