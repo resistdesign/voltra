@@ -6,10 +6,6 @@ Fix two problems when wiring API Gateway REST auth with Cognito User Pools:
 - **(2) Typing bug:** `addGateway(...).authorizer.providerARNs` must accept CloudFormation intrinsics (e.g. `Fn::GetAtt`) the same way other packs do.
 - **(3) ID coupling:** Consumers shouldn’t need to guess internal resource-id suffixes (or any naming conventions) to reference resources created inside `addAuth` / `addUserManagement`.
 
-Non-goals:
-- Changing pack return types or the `SimpleCFT.applyPack` contract.
-- Refactoring unrelated auth behavior.
-
 ---
 
 ## Phase 0 — Locate Current Types + Conventions
@@ -122,4 +118,3 @@ Give stack authors a no-guess helper for ids even when they don’t want to over
 - [ ] `addAuth` exposes the ids config pass-through.
 - [ ] Tests cover both default behavior and override behavior.
 - [ ] One new Voltra release can ship these changes.
-
