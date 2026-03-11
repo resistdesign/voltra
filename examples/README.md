@@ -19,18 +19,22 @@ Use this for client route usage via platform barrels:
 
 - `examples/api/backend-routing.ts`
 - `examples/api/orm-structured-indexing.ts`
+- `examples/api/orm-index-maintenance.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
 Use `orm-structured-indexing.ts` as the starting point for explicit structured field-inclusion config.
+Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup after out-of-band writes and schema-driven index changes.
 
 ## ORM Search + Indexing Reference
 
 - Multi-field fulltext indexing example: `site/api/routeMap.ts`
 - Criteria-driven search UI flow: `site/app/src/client/EndToEndDemo/screens/CarRelateScreen.tsx`
 - Runtime behavior contract: `src/api/ORM/INDEXING_INTEGRATION.md`
+- Manual maintenance example: `examples/api/orm-index-maintenance.ts`
 
 Use these references for the current pattern: configure fulltext fields per type, then query with `criteria` so `list`
-auto-selects fulltext/structured/fallback behavior.
+auto-selects fulltext/structured/fallback behavior. For maintenance flows, use the service-side index helpers with prior
+snapshots or prior fulltext field lists when removing old tokens.
 
 ## Forms
 
