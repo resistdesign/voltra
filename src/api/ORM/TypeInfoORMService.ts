@@ -303,6 +303,71 @@ export type TypeInfoORMIndexingConfig = {
 };
 
 /**
+ * Optional field overrides for manual indexing maintenance operations.
+ */
+export type TypeInfoORMManualIndexingConfig = {
+  /**
+   * Explicit full-text field name(s) to target instead of the configured defaults.
+   *
+   * Supply the previous field set when cleaning up after a schema/config change.
+   */
+  fullTextIndexFields?: string | string[];
+};
+
+/**
+ * Optional field overrides for manual index replacement/reindex operations.
+ */
+export type TypeInfoORMReplaceIndexingConfig = {
+  /**
+   * Full-text field name(s) to remove from the previous snapshot.
+   */
+  previousFullTextIndexFields?: string | string[];
+  /**
+   * Full-text field name(s) to add for the next snapshot.
+   */
+  nextFullTextIndexFields?: string | string[];
+};
+
+/**
+ * Options for reindexing a stored item from the backing driver.
+ */
+export type TypeInfoORMReindexStoredItemConfig =
+  TypeInfoORMReplaceIndexingConfig & {
+    /**
+     * Optional previous snapshot to remove before indexing the current stored item.
+     */
+    previousItem?: Partial<TypeInfoDataItem>;
+  };
+
+/**
+ * Options for reindexing all currently stored items of a type.
+ */
+export type TypeInfoORMReindexStoredTypeConfig =
+  TypeInfoORMReplaceIndexingConfig & {
+    /**
+     * Maximum number of items to load per driver page.
+     */
+    itemsPerPage?: number;
+    /**
+     * Optional previous snapshots keyed by primary field value.
+     *
+     * Use this when a schema/config change requires cleanup of previously indexed
+     * full-text fields before the current item is reindexed.
+     */
+    previousItemsByPrimaryField?: Record<string, Partial<TypeInfoDataItem>>;
+  };
+
+/**
+ * Results from reindexing all currently stored items of a type.
+ */
+export type TypeInfoORMReindexStoredTypeResults = {
+  /**
+   * Number of stored items that were reindexed.
+   */
+  processedCount: number;
+};
+
+/**
  * The basis for the configuration for the TypeInfoORMService.
  * */
 export type BaseTypeInfoORMServiceConfig = {
@@ -841,10 +906,32 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Optional override for the index field.
      */
-    override?: string,
+    override?: string | string[],
   ): string[] => {
-    if (override) {
-      return [override];
+    if (typeof override === "string") {
+      return this.resolveFullTextIndexFields(typeName, [override]);
+    }
+
+    if (Array.isArray(override)) {
+      const seen = new Set<string>();
+      const fields: string[] = [];
+
+      for (const field of override) {
+        if (typeof field !== "string") {
+          continue;
+        }
+
+        const trimmed = field.trim();
+
+        if (!trimmed || seen.has(trimmed)) {
+          continue;
+        }
+
+        seen.add(trimmed);
+        fields.push(trimmed);
+      }
+
+      return fields;
     }
 
     const defaults =
@@ -1359,6 +1446,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
+   * @returns Item snapshot normalized for indexing operations.
+   */
+  protected getIndexedItemSnapshot = (
+    /**
+     * Type name used to clean the item.
+     */
+    typeName: string,
+    /**
+     * Item snapshot to normalize.
+     */
+    item: Partial<TypeInfoDataItem>,
+  ): Partial<TypeInfoDataItem> => this.getCleanItem(typeName, item, {});
+
+  /**
    * @returns Mapped structured query.
    */
   protected applyStructuredFieldMap = (
@@ -1416,7 +1517,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Optional override for the index field.
      */
-    indexFieldOverride?: string,
+    indexFieldOverride?: string | string[],
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
     const indexFields = this.resolveFullTextIndexFields(
@@ -1465,7 +1566,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Optional override for the index field.
      */
-    indexFieldOverride?: string,
+    indexFieldOverride?: string | string[],
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
     const indexFields = this.resolveFullTextIndexFields(
@@ -1518,7 +1619,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Optional override for the index field.
      */
-    indexFieldOverride?: string,
+    indexFieldOverride?: string | string[],
   ): Promise<void> {
     const { fullText } = this.config.indexing ?? {};
     const indexFields = this.resolveFullTextIndexFields(
@@ -1552,6 +1653,171 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       });
     }
   }
+
+  /**
+   * Write the provided item snapshot into the configured indexes.
+   *
+   * Use this when data was created or modified outside `TypeInfoORMService`.
+   *
+   * @param typeName Type name for the indexed item.
+   * @param item Item snapshot to index.
+   * @param config Optional full-text field overrides.
+   * @returns Promise resolved when manual indexing completes.
+   */
+  indexItemIndexes = async (
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+    config: TypeInfoORMManualIndexingConfig = {},
+  ): Promise<void> => {
+    const indexedItem = this.getIndexedItemSnapshot(typeName, item);
+
+    await this.indexFullTextDocument(
+      typeName,
+      indexedItem,
+      config.fullTextIndexFields,
+    );
+    await this.indexStructuredDocument(typeName, indexedItem);
+  };
+
+  /**
+   * Remove the provided item snapshot from the configured indexes.
+   *
+   * Use this when data was deleted outside `TypeInfoORMService`.
+   *
+   * @param typeName Type name for the indexed item.
+   * @param item Item snapshot to remove from the indexes.
+   * @param config Optional full-text field overrides.
+   * @returns Promise resolved when index cleanup completes.
+   */
+  removeItemIndexes = async (
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+    config: TypeInfoORMManualIndexingConfig = {},
+  ): Promise<void> => {
+    const indexedItem = this.getIndexedItemSnapshot(typeName, item);
+
+    await this.removeFullTextDocument(
+      typeName,
+      indexedItem,
+      config.fullTextIndexFields,
+    );
+    await this.removeStructuredDocument(typeName, indexedItem);
+  };
+
+  /**
+   * Replace one indexed item snapshot with another.
+   *
+   * Use this when an existing stored item changed outside `TypeInfoORMService`
+   * or when a schema/config change requires removing old full-text fields and
+   * indexing a new field set.
+   *
+   * @param typeName Type name for the indexed item.
+   * @param previousItem Previous item snapshot to remove.
+   * @param nextItem Next item snapshot to index.
+   * @param config Optional previous/next full-text field overrides.
+   * @returns Promise resolved when replacement indexing completes.
+   */
+  replaceItemIndexes = async (
+    typeName: string,
+    previousItem: Partial<TypeInfoDataItem>,
+    nextItem: Partial<TypeInfoDataItem>,
+    config: TypeInfoORMReplaceIndexingConfig = {},
+  ): Promise<void> => {
+    const previousIndexedItem = this.getIndexedItemSnapshot(typeName, previousItem);
+    const nextIndexedItem = this.getIndexedItemSnapshot(typeName, nextItem);
+
+    await this.removeFullTextDocument(
+      typeName,
+      previousIndexedItem,
+      config.previousFullTextIndexFields,
+    );
+    await this.indexFullTextDocument(
+      typeName,
+      nextIndexedItem,
+      config.nextFullTextIndexFields,
+    );
+    await this.indexStructuredDocument(typeName, nextIndexedItem);
+  };
+
+  /**
+   * Reindex the current stored item using the configured driver.
+   *
+   * When no previous snapshot is supplied, the current stored item is used for
+   * both removal and indexing to refresh existing postings without duplication.
+   * Supply `previousItem` when an out-of-band update changed indexed field
+   * values, otherwise old full-text tokens cannot be removed safely.
+   *
+   * @param typeName Type name to reindex.
+   * @param primaryFieldValue Primary field value for the stored item.
+   * @param config Optional previous snapshot and full-text field overrides.
+   * @returns True when reindexing completed.
+   */
+  reindexStoredItem = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+    config: TypeInfoORMReindexStoredItemConfig = {},
+  ): Promise<boolean> => {
+    const driver = this.getDriverInternal(typeName);
+    const currentItem = await driver.readItem(primaryFieldValue as any);
+    const previousItem = config.previousItem ?? currentItem;
+
+    await this.replaceItemIndexes(typeName, previousItem, currentItem, {
+      previousFullTextIndexFields: config.previousFullTextIndexFields,
+      nextFullTextIndexFields: config.nextFullTextIndexFields,
+    });
+
+    return true;
+  };
+
+  /**
+   * Reindex all currently stored items for a type.
+   *
+   * This is intended for maintenance passes after out-of-band writes or
+   * schema/index configuration changes. Deleted items still require explicit
+   * cleanup via {@link removeItemIndexes}, because full-text token removal
+   * needs a prior snapshot of indexed field values. For out-of-band updates
+   * that changed indexed values, provide `previousItemsByPrimaryField`.
+   *
+   * @param typeName Type name to reindex.
+   * @param config Paging, previous snapshots, and full-text field overrides.
+   * @returns Count of processed stored items.
+   */
+  reindexStoredType = async (
+    typeName: string,
+    config: TypeInfoORMReindexStoredTypeConfig = {},
+  ): Promise<TypeInfoORMReindexStoredTypeResults> => {
+    const driver = this.getDriverInternal(typeName);
+    const primaryFieldName = String(this.getTypeInfo(typeName).primaryField);
+    const itemsPerPage = config.itemsPerPage ?? 100;
+    let processedCount = 0;
+    let cursor: string | undefined;
+
+    do {
+      const page = await driver.listItems({ itemsPerPage, cursor });
+
+      for (const item of page.items) {
+        const primaryFieldValue =
+          item[primaryFieldName as keyof TypeInfoDataItem];
+
+        if (typeof primaryFieldValue === "undefined") {
+          continue;
+        }
+
+        const previousItem =
+          config.previousItemsByPrimaryField?.[String(primaryFieldValue)] ?? item;
+
+        await this.replaceItemIndexes(typeName, previousItem, item, {
+          previousFullTextIndexFields: config.previousFullTextIndexFields,
+          nextFullTextIndexFields: config.nextFullTextIndexFields,
+        });
+        processedCount += 1;
+      }
+
+      cursor = page.cursor;
+    } while (cursor);
+
+    return { processedCount };
+  };
 
   /**
    * @returns Promise resolved once indexing is complete.
@@ -2281,8 +2547,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       [primaryField as keyof TypeInfoDataItem]: newIdentifier,
     };
 
-    await this.indexFullTextDocument(typeName, indexedItem);
-    await this.indexStructuredDocument(typeName, indexedItem);
+    await this.indexItemIndexes(typeName, indexedItem);
 
     return newIdentifier;
   };
@@ -2455,12 +2720,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         const updatedItem = await driver.readItem(primaryFieldValue);
 
         if (existingItem) {
-          await this.removeFullTextDocument(typeName, existingItem);
-          await this.indexFullTextDocument(typeName, updatedItem);
+          await this.replaceItemIndexes(typeName, existingItem, updatedItem);
         } else {
-          await this.indexFullTextDocument(typeName, updatedItem);
+          await this.indexItemIndexes(typeName, updatedItem);
         }
-        await this.indexStructuredDocument(typeName, updatedItem);
 
         return result;
       }
@@ -2506,8 +2769,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         fromTypeName: typeName,
         fromTypePrimaryFieldValue: primaryFieldValue,
       });
-      await this.removeFullTextDocument(typeName, existingItem);
-      await this.removeStructuredDocument(typeName, existingItem);
+      await this.removeItemIndexes(typeName, existingItem);
 
       return result;
     }

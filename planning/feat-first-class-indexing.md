@@ -30,7 +30,7 @@ created/tested/documented/etc and given samples/examples.
   - [x] Add a utility that derives `TypeInfoORMIndexingConfig` field lists from a `TypeInfoMap`.
   - [x] Add/update JSON spec coverage for nested indexing tags and generated ORM indexing config.
   - [x] Export the new utility from the ORM entrypoint.
-- [ ] Phase 2: Manual indexing and index maintenance
-  - [ ] Inventory the current ORM/indexing write and delete surfaces that can be reused for reconciliation flows.
-  - [ ] Design and implement explicit manual indexing/reindexing/cleanup utilities.
-  - [ ] Add tests, docs, and examples for manual index maintenance flows.
+- [x] Phase 2: Manual indexing and index maintenance
+  - [x] Inventory the current ORM/indexing write and delete surfaces that can be reused for reconciliation flows.
+  - [x] Design and implement explicit manual indexing/reindexing/cleanup utilities.
+  - [x] Add tests, docs, and examples for manual index maintenance flows.

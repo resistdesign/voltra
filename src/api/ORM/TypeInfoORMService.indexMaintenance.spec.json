@@ -1,0 +1,40 @@
+{
+  "file": "./TypeInfoORMService.indexMaintenance.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoORMIndexMaintenanceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "staleListBeforeRepairIds": ["book-1"],
+        "staleFullTextIdsBeforeRepair": ["book-1"],
+        "staleStructuredIdsBeforeRepair": ["book-1"],
+        "fullTextIdsAfterRepair": {
+          "titleAlpha": [],
+          "titleBeta": ["book-1"]
+        },
+        "structuredIdsAfterRepair": {
+          "rating1": [],
+          "rating2": ["book-1"]
+        },
+        "fullTextIdsAfterSchemaChange": {
+          "titleBeta": [],
+          "slugBeta": ["book-1"]
+        },
+        "fullTextIdsAfterDeleteCleanup": [],
+        "structuredIdsAfterDeleteCleanup": [],
+        "bulkReindexResults": {
+          "processedCount": 2
+        },
+        "bulkSlugIdsAfterReindex": {
+          "gamma": ["bulk-2"],
+          "delta": ["bulk-3"]
+        },
+        "bulkTitleIdsAfterReindex": {
+          "gamma": [],
+          "delta": []
+        }
+      }
+    }
+  ]
+}
