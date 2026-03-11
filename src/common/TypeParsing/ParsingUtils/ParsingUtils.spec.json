@@ -35,6 +35,15 @@
       }
     },
     {
+      "export": "runParsingUtilsTitleFieldIndexedTagsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fullText": true,
+        "structured": true
+      }
+    },
+    {
       "export": "runParsingUtilsRatingDetailsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
