@@ -22,3 +22,15 @@ When `TypeInfo`, `TypeInfoField` or `TypeInfoMap` definitions change, or data is
 
 Utilities that support all necessary indexing/reindexing/clean-up/etc operations will need to be
 created/tested/documented/etc and given samples/examples.
+
+## Checklist
+
+- [x] Phase 1: Officially supported indexing field tags
+  - [x] Add `indexed.fullText` and `indexed.structured` to `SupportedFieldTags` with public doc comments.
+  - [x] Add a utility that derives `TypeInfoORMIndexingConfig` field lists from a `TypeInfoMap`.
+  - [x] Add/update JSON spec coverage for nested indexing tags and generated ORM indexing config.
+  - [x] Export the new utility from the ORM entrypoint.
+- [ ] Phase 2: Manual indexing and index maintenance
+  - [ ] Inventory the current ORM/indexing write and delete surfaces that can be reused for reconciliation flows.
+  - [ ] Design and implement explicit manual indexing/reindexing/cleanup utilities.
+  - [ ] Add tests, docs, and examples for manual index maintenance flows.

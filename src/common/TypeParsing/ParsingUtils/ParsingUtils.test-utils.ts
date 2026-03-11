@@ -25,8 +25,9 @@ const getParsingUtilsScenarioData = () => {
     export type Book = {
       /** @primaryField */
       id: string;
-      /** @label Title */
+      /** @label Title @indexed.fullText @indexed.structured */
       readonly title?: string;
+      /** @indexed.structured */
       rating: 1 | 2 | 3;
       tags: string[];
       author: Person;
@@ -126,6 +127,11 @@ export const runParsingUtilsTitleFieldSummaryScenario = () => {
     label: titleField.tags?.label,
     deniedOperations: titleField.tags?.deniedOperations,
   };
+};
+
+export const runParsingUtilsTitleFieldIndexedTagsScenario = () => {
+  const { titleField } = getParsingUtilsScenarioData();
+  return titleField.tags?.indexed;
 };
 
 export const runParsingUtilsRatingDetailsScenario = () => {
