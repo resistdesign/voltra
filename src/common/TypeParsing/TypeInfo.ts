@@ -135,6 +135,19 @@ export type SupportedFieldTags = Partial<{
      */
     emptyArrayIsValid: boolean;
   }>;
+  /**
+   * Indexing behavior flags used to derive ORM indexing configuration.
+   * */
+  indexed: Partial<{
+    /**
+     * Whether this field should be added to the type's default full-text index fields.
+     * */
+    fullText: boolean;
+    /**
+     * Whether this field should be added to the type's structured indexed field list.
+     * */
+    structured: boolean;
+  }>;
 }>;
 
 /**

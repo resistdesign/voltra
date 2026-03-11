@@ -33,6 +33,13 @@ This document captures current ORM list/search and relationship behaviors that m
 - Fulltext semantics:
   - `EQUALS` is structural exact equality and is intentionally not treated as fulltext.
   - Fulltext routing is criteria-driven; `list` does not accept a separate fulltext argument.
+- Manual index maintenance:
+  - `indexItemIndexes` writes a supplied snapshot into the currently configured fulltext/structured indexes.
+  - `removeItemIndexes` removes a supplied snapshot from the current indexes and is the explicit cleanup path for out-of-band deletes.
+  - `replaceItemIndexes` removes one snapshot and indexes another, allowing old and new fulltext field sets to differ.
+  - `reindexStoredItem` refreshes a single current driver item without duplicating postings; when out-of-band writes changed indexed values, provide `previousItem`, and when schema/config changes removed old fulltext fields, provide `previousFullTextIndexFields`.
+  - `reindexStoredType` pages through the current driver items and reapplies indexing for each item; provide `previousItemsByPrimaryField` for out-of-band updates that changed indexed values, and deleted items still require explicit `removeItemIndexes` cleanup because fulltext removal needs prior field values.
+  - Structured cleanup can reconcile from the stored doc id, but fulltext cleanup cannot infer removed tokens for deleted/retagged fields without a prior snapshot or prior field list.
 - Paging: `itemsPerPage` and `cursor` are passed to the driver. The DynamoDB driver uses `Scan` and returns a JSON-serialized `LastEvaluatedKey` as the cursor.
 - Sorting: `sortFields` is applied in-memory in the DynamoDB driver after list results are loaded.
 - Selected fields: `selectedFields` is sanitized to always include the primary field; when DAC is enabled, reads ignore `selectedFields` at the driver level and are filtered after DAC validation.

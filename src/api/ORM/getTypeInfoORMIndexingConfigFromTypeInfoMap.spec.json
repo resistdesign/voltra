@@ -1,0 +1,39 @@
+{
+  "file": "./getTypeInfoORMIndexingConfigFromTypeInfoMap.test-utils.ts",
+  "tests": [
+    {
+      "export": "runGeneratedTypeInfoORMIndexingConfigScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fullTextFieldsByType": {
+          "Book": ["title", "summary"],
+          "Person": ["bio"]
+        },
+        "structuredFieldsByType": {
+          "Book": ["title", "rating"],
+          "Person": ["age"]
+        },
+        "preservedStructuredFieldMap": {
+          "Book": {
+            "title": "bookTitle"
+          }
+        },
+        "preservedStructuredWriter": true,
+        "preservedFullTextBackend": true
+      }
+    },
+    {
+      "export": "runGeneratedTypeInfoORMIndexingConfigMissingFullTextDependencyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Cannot generate fullText indexing config from tags without fullText.backend."
+    },
+    {
+      "export": "runGeneratedTypeInfoORMIndexingConfigMissingStructuredDependencyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Cannot generate structured indexing config from tags without structured.reader."
+    }
+  ]
+}
