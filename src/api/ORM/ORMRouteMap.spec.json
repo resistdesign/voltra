@@ -74,6 +74,8 @@
           "hasPersonBId": true,
           "updateResult": true,
           "updatedName": "Alice Updated",
+          "updatedScore": 7,
+          "scoreMatchesExpectation": true,
           "createRelationshipResult": true,
           "listRelationshipsBeforeDeleteCount": 1,
           "deleteRelationshipResult": {
@@ -88,6 +90,24 @@
           "hasPersonBId": true,
           "updateResult": true,
           "updatedName": "Alice Updated",
+          "updatedScore": 7,
+          "scoreMatchesExpectation": true,
+          "createRelationshipResult": true,
+          "listRelationshipsBeforeDeleteCount": 1,
+          "deleteRelationshipResult": {
+            "success": true,
+            "remainingItemsExist": false
+          },
+          "listRelationshipsAfterDeleteCount": 0,
+          "deletePersonResult": true
+        },
+        "withoutOperators": {
+          "hasPersonAId": true,
+          "hasPersonBId": true,
+          "updateResult": true,
+          "updatedName": "Alice Updated",
+          "updatedScore": 2,
+          "scoreMatchesExpectation": true,
           "createRelationshipResult": true,
           "listRelationshipsBeforeDeleteCount": 1,
           "deleteRelationshipResult": {

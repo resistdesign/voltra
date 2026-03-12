@@ -4,6 +4,7 @@ import {
   RelationshipOperation,
   TypeInfoORMAPIRoutePaths,
   TypeInfoORMServiceError,
+  TypeInfoORMUpdateOperators,
 } from "./Types";
 
 export const runTypeInfoORMTypesResourceNameScenario = () =>
@@ -17,6 +18,9 @@ export const runTypeInfoORMTypesOperationGroupsScenario = () =>
 
 export const runTypeInfoORMTypesApiRoutesScenario = () =>
   Object.values(TypeInfoORMAPIRoutePaths);
+
+export const runTypeInfoORMTypesUpdateOperatorsScenario = () =>
+  TypeInfoORMUpdateOperators;
 
 export const runTypeInfoORMTypesServiceErrorsScenario = () =>
   Object.values(TypeInfoORMServiceError);

@@ -20,6 +20,9 @@
           "name": "Alice"
         },
         "updatedAuthorName": "Alice Cooper",
+        "updatedAuthorScore": 2,
+        "invalidUpdateOperatorError": "INVALID_UPDATE_OPERATOR",
+        "invalidUpdateOperatorErrorExpected": "INVALID_UPDATE_OPERATOR",
         "listBookIds": ["book-1", "book-2"],
         "listBookTitles": ["Alpha", "Beta"],
         "relationshipTargets": ["book-1", "book-2"],

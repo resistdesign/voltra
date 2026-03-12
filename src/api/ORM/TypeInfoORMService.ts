@@ -42,6 +42,8 @@ import {
   TypeInfoORMAPI,
   TypeInfoORMContext,
   TypeInfoORMServiceError,
+  TypeInfoORMUpdateConfig,
+  TypeInfoORMUpdateOperators,
 } from "../../common/TypeInfoORM";
 import {
   DataItemDBDriver,
@@ -1997,6 +1999,57 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
+   * Validate update operator config against the target TypeInfo fields.
+   */
+  protected validateUpdateConfig = (
+    typeName: string,
+    item: TypeInfoDataItem,
+    updateConfig?: TypeInfoORMUpdateConfig,
+  ): void => {
+    const fieldOperators = updateConfig?.fieldOperators;
+
+    if (!fieldOperators) {
+      return;
+    }
+
+    const { fields = {}, primaryField } = this.getTypeInfo(typeName);
+
+    for (const [fieldName, operator] of Object.entries(fieldOperators)) {
+      const field = fields[fieldName];
+      const itemValue = item[fieldName];
+      const isNumberOperator = Object.values(
+        TypeInfoORMUpdateOperators.NUMBER,
+      ).includes(
+        operator as (typeof TypeInfoORMUpdateOperators.NUMBER)[keyof typeof TypeInfoORMUpdateOperators.NUMBER],
+      );
+
+      if (
+        !field ||
+        fieldName === primaryField ||
+        !isNumberOperator ||
+        field.array ||
+        field.type !== "number" ||
+        typeof itemValue !== "number"
+      ) {
+        const validationResults: TypeInfoValidationResults = {
+          typeName,
+          valid: false,
+          error: getErrorDescriptor(
+            TypeInfoORMServiceError.INVALID_UPDATE_OPERATOR,
+          ),
+          errorMap: {
+            [fieldName]: [
+              getErrorDescriptor(TypeInfoORMServiceError.INVALID_UPDATE_OPERATOR),
+            ],
+          },
+        };
+
+        throw validationResults;
+      }
+    }
+  };
+
+  /**
    * @returns Cleaned item with selected fields and DAC constraints applied.
    */
   protected getCleanItem = (
@@ -2620,14 +2673,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * The `item` **must always** contain its **primary field value**.
    * @param typeName Type name to update.
    * @param item Item payload to update.
+   * @param updateConfig Optional per-field operator config.
    * @returns True when the update succeeded.
    * */
   update = async (
     typeName: string,
     item: TypeInfoDataItem,
+    updateConfig?: TypeInfoORMUpdateConfig,
     context?: TypeInfoORMContext,
   ): Promise<boolean> => {
     this.validate(typeName, item, TypeOperation.UPDATE, true);
+    this.validateUpdateConfig(typeName, item, updateConfig);
 
     const { primaryField } = this.getTypeInfo(typeName);
     const primaryFieldValue =
@@ -2716,7 +2772,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             throw error;
           }
         }
-        const result = await driver.updateItem(primaryFieldValue, cleanItem);
+        const result = await driver.updateItem(
+          primaryFieldValue,
+          cleanItem,
+          updateConfig,
+        );
         const updatedItem = await driver.readItem(primaryFieldValue);
 
         if (existingItem) {

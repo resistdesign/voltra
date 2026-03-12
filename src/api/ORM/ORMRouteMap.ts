@@ -28,7 +28,19 @@ import {
   RouteMap,
 } from "../Router/Types";
 import { addRouteToRouteMap } from "../Router";
-import { TypeInfoORMAPI } from "../../common/TypeInfoORM";
+import { TypeInfoORMAPI, TypeInfoORMUpdateConfig } from "../../common/TypeInfoORM";
+
+/**
+ * Optional configuration for Type Info ORM route-map behavior.
+ */
+export type TypeInfoORMRouteMapConfig = {
+  /**
+   * Whether update handlers should forward field operators from request args.
+   *
+   * Defaults to `true`.
+   */
+  allowUpdateFieldOperators?: boolean;
+};
 
 /**
  * A collection of errors that can occur when creating or using a Type Info ORM Route Map.
@@ -81,6 +93,10 @@ export const getTypeInfoORMRouteMap = (
    * Optional route-level auth configuration.
    */
   authConfig?: RouteAuthConfig,
+  /**
+   * Optional route-map behavior config.
+   */
+  routeMapConfig?: TypeInfoORMRouteMapConfig,
 ): RouteMap => {
   if (dacConfig && !getAccessingRoleId) {
     throw {
@@ -103,6 +119,8 @@ export const getTypeInfoORMRouteMap = (
   const defaultAuthConfig: RouteAuthConfig = authConfig ?? {
     anyAuthorized: true,
   };
+  const allowUpdateFieldOperators =
+    routeMapConfig?.allowUpdateFieldOperators ?? true;
   const resolveContext = (
     eventData: NormalizedCloudFunctionEventData,
   ): ReturnType<typeof getContextFromEventData> =>
@@ -146,12 +164,27 @@ export const getTypeInfoORMRouteMap = (
     eventData: NormalizedCloudFunctionEventData,
   ): RouteHandler => {
     if (!dacConfig) {
-      return orm.update;
+      if (allowUpdateFieldOperators) {
+        return orm.update;
+      }
+
+      return ((typeName: string, item: any) =>
+        orm.update(typeName, item, undefined)) as RouteHandler;
     }
 
     const context = resolveContext(eventData);
 
-    return ((typeName: string, item: any) => orm.update(typeName, item, context)) as RouteHandler;
+    return ((
+      typeName: string,
+      item: any,
+      updateConfig?: TypeInfoORMUpdateConfig,
+    ) =>
+      orm.update(
+        typeName,
+        item,
+        allowUpdateFieldOperators ? updateConfig : undefined,
+        context,
+      )) as RouteHandler;
   };
   const deleteHandlerFactory = (
     eventData: NormalizedCloudFunctionEventData,

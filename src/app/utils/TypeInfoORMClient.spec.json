@@ -30,6 +30,21 @@
           ]
         },
         {
+          "path": "update",
+          "args": [
+            "Book",
+            {
+              "id": "book-1",
+              "score": 2
+            },
+            {
+              "fieldOperators": {
+                "score": "INCREMENT"
+              }
+            }
+          ]
+        },
+        {
           "path": "delete",
           "args": ["Book", "book-1"]
         },
@@ -141,6 +156,27 @@
         "ok": true,
         "path": "delete",
         "args": ["Book", "book-1"]
+      }
+    },
+    {
+      "export": "runTypeInfoORMClientUpdatedWithOperatorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ok": true,
+        "path": "update",
+        "args": [
+          "Book",
+          {
+            "id": "book-1",
+            "score": 2
+          },
+          {
+            "fieldOperators": {
+              "score": "INCREMENT"
+            }
+          }
+        ]
       }
     },
     {
