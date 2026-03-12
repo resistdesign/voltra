@@ -37,11 +37,16 @@ for later, and out of scope for this plan.
 And then the driver API interface/type will obviously need to support this, and the drivers will need to implement each
 operator.
 
+The Type Info ORM system will also validate that the operation is compatible with the field type in the Type Info. For
+example, you would not try to increment a string. So there needs to be a suite of utilities around this.
+
 The constants will be organized/grouped like this `TypeInfoORMUpdateOperators.NUMBER.INCREMENT`, for good organization.
 
 We will need to update the whole `getTypeInfoORMRouteMap` paradigm to use the update method properly. There should maybe
 be an option to turn off passing the update operators for though. Because this is exposing some low-level operations to
 potential end users who either don't care or shouldn't be allowed to use them.
+
+Make sure code is properly sectioned off into sensible files and folders, as needed, so that nothing gets bloated.
 
 Finally, we need to update all of the typical things around this and make sure they are well up to standards.
 Everything such as tests/doc-comments/documentation/READMEs/demos/examples/samples/call-sites/consumers/etc.
