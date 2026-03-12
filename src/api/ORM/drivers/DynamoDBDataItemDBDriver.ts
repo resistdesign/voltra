@@ -30,6 +30,10 @@ import {
   TypeInfoPack,
 } from "../../../common/TypeParsing/TypeInfo";
 import {
+  TypeInfoORMUpdateConfig,
+  TypeInfoORMUpdateOperators,
+} from "../../../common/TypeInfoORM";
+import {
   ComparisonOperators,
   FieldCriterion,
   ListItemsConfig,
@@ -136,8 +140,10 @@ const createFilterExpression = (
 const buildUpdateExpression = (
   updatedItem: Partial<TypeInfoDataItem>,
   uniquelyIdentifyingFieldName: any,
+  updateConfig?: TypeInfoORMUpdateConfig,
 ) => {
-  const updateExpressionParts: string[] = [];
+  const setExpressionParts: string[] = [];
+  const addExpressionParts: string[] = [];
   const attributeNames: Record<string, string> = {};
   const attributeValues: Record<string, any> = {};
 
@@ -148,15 +154,44 @@ const buildUpdateExpression = (
     if (f !== uniquelyIdentifyingFieldName && typeof value !== "undefined") {
       const placeholderName = `#${f}`;
       const placeholderValue = `:${f}`;
+      const operator = updateConfig?.fieldOperators?.[f];
 
-      updateExpressionParts.push(`${placeholderName} = ${placeholderValue}`);
       attributeNames[placeholderName] = f;
       attributeValues[placeholderValue] = marshall(value);
+
+      if (operator === TypeInfoORMUpdateOperators.NUMBER.INCREMENT) {
+        addExpressionParts.push(`${placeholderName} ${placeholderValue}`);
+        continue;
+      }
+
+      if (operator === TypeInfoORMUpdateOperators.NUMBER.DECREMENT) {
+        const decrementPlaceholderValue = `:${f}_decrement`;
+
+        addExpressionParts.push(
+          `${placeholderName} ${decrementPlaceholderValue}`,
+        );
+        attributeValues[decrementPlaceholderValue] = marshall(
+          -(value as number),
+        );
+        continue;
+      }
+
+      setExpressionParts.push(`${placeholderName} = ${placeholderValue}`);
     }
   }
 
+  const expressionParts: string[] = [];
+
+  if (setExpressionParts.length > 0) {
+    expressionParts.push(`SET ${setExpressionParts.join(", ")}`);
+  }
+
+  if (addExpressionParts.length > 0) {
+    expressionParts.push(`ADD ${addExpressionParts.join(", ")}`);
+  }
+
   return {
-    UpdateExpression: `SET ${updateExpressionParts.join(", ")}`,
+    UpdateExpression: expressionParts.join(" "),
     ExpressionAttributeNames: attributeNames,
     ExpressionAttributeValues: attributeValues,
   };
@@ -292,6 +327,7 @@ export class DynamoDBDataItemDBDriver<
      * Partial update payload for the item.
      */
     updatedItem: Partial<ItemType>,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ): Promise<boolean> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const {
@@ -309,6 +345,7 @@ export class DynamoDBDataItemDBDriver<
         ...buildUpdateExpression(
           cleanUpdatedItem,
           uniquelyIdentifyingFieldName,
+          updateConfig,
         ),
       });
       const { Attributes } = await this.dynamoDBClient.send(command);

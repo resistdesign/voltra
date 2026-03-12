@@ -10,6 +10,7 @@ import {
   ListItemsConfig,
   ListItemsResults,
 } from "../../../../common/SearchTypes";
+import type { TypeInfoORMUpdateConfig } from "../../../../common/TypeInfoORM/Types";
 
 /**
  * The errors that can be thrown by a {@link DataItemDBDriver}.
@@ -35,6 +36,10 @@ export enum DATA_ITEM_DB_DRIVER_ERRORS {
    * Search operator is not supported by the driver.
    */
   SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED = "SEARCH_COMPARISON_OPERATOR_NOT_SUPPORTED",
+  /**
+   * Update operator is not supported by the driver.
+   */
+  UPDATE_OPERATOR_NOT_SUPPORTED = "UPDATE_OPERATOR_NOT_SUPPORTED",
 }
 
 /**
@@ -96,6 +101,7 @@ export type DataItemDBDriver<
   updateItem: (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ) => Promise<boolean>;
   /**
    * Delete an item from the data store.

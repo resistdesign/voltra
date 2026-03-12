@@ -1,5 +1,19 @@
 # Feature: API ORM Update Operators
 
+- [x] Phase 1: Define the update-operator API shape
+  - [x] Add shared TypeInfoORM operator constants, update config types, and service error coverage.
+  - [x] Update server/client API contracts so `update` accepts config after `item` and before `context`.
+- [x] Phase 2: Implement operator-aware update behavior
+  - [x] Validate update operators against TypeInfo field definitions in `TypeInfoORMService`.
+  - [x] Extend data driver contracts and implementations to apply supported operators.
+  - [x] Keep indexing and DAC behavior correct for operator-based updates.
+- [x] Phase 3: Wire route-map and app client support
+  - [x] Update route-map binding to forward update config and optionally disable exposed field operators.
+  - [x] Update app client request serialization and route/client call-site coverage.
+- [x] Phase 4: Tests and docs
+  - [x] Add/update JSON spec coverage for shared types, service behavior, route-map behavior, and client behavior.
+  - [x] Update doc comments and any nearby documentation impacted by the new update flow.
+
 The Type Info ORM API update method needs an argument that allows the consumer to declare how each field will be updated
 with a map of field name to operator constant.
 

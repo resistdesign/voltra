@@ -40,6 +40,17 @@
       ]
     },
     {
+      "export": "runTypeInfoORMTypesUpdateOperatorsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "NUMBER": {
+          "INCREMENT": "INCREMENT",
+          "DECREMENT": "DECREMENT"
+        }
+      }
+    },
+    {
       "export": "runTypeInfoORMTypesServiceErrorsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
@@ -53,6 +64,7 @@
         "TYPE_INFO_MISSING_PRIMARY_FIELD",
         "INVALID_RELATIONSHIP",
         "INVALID_OPERATION",
+        "INVALID_UPDATE_OPERATOR",
         "MISSING_ACCESSING_ROLE",
         "INDEXING_UNSUPPORTED_CRITERIA",
         "INDEXING_UNSUPPORTED_COMBINATION",

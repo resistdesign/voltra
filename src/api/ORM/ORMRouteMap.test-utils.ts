@@ -12,6 +12,7 @@ import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
 import {
   ITEM_RELATIONSHIP_DAC_RESOURCE_NAME,
   OperationGroup,
+  TypeInfoORMUpdateOperators,
 } from "../../common/TypeInfoORM";
 import {
   DACConstraintType,
@@ -40,6 +41,12 @@ const buildConfig = (): BaseTypeInfoORMServiceConfig => ({
           array: false,
           readonly: false,
           optional: false,
+        },
+        score: {
+          type: "number",
+          array: false,
+          readonly: false,
+          optional: true,
         },
         friend: {
           type: "string",
@@ -399,11 +406,15 @@ export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
     );
 
     return {
+      config,
       routeMapWithoutDAC,
       routeMapWithRole,
     };
   };
-  const runFlow = async (routeMap: Record<string, Route>) => {
+  const runFlow = async (
+    routeMap: Record<string, Route>,
+    expectedScoreAfterUpdate: number,
+  ) => {
     const createPath = mergeStringPaths("", "create");
     const readPath = mergeStringPaths("", "read");
     const updatePath = mergeStringPaths("", "update");
@@ -426,7 +437,7 @@ export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
     const listRelationshipsHandler = getHandlerFactory(
       routeMap[listRelationshipsPath],
     )(eventData);
-    const personAId = await createHandler("Person", { name: "Alice" });
+    const personAId = await createHandler("Person", { name: "Alice", score: 5 });
     const personBId = await createHandler("Person", { name: "Bob" });
     const relationshipItem = {
       fromTypeName: "Person",
@@ -437,8 +448,13 @@ export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
     const updateResult = await updateHandler("Person", {
       id: personAId,
       name: "Alice Updated",
+      score: 2,
+    }, {
+      fieldOperators: {
+        score: TypeInfoORMUpdateOperators.NUMBER.INCREMENT,
+      },
     });
-    const updatedPerson = await readHandler("Person", personAId, ["name"]);
+    const updatedPerson = await readHandler("Person", personAId, ["name", "score"]);
     const createRelationshipResult =
       await createRelationshipHandler(relationshipItem);
     const listRelationshipsBeforeDelete = await listRelationshipsHandler({
@@ -466,6 +482,8 @@ export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
       hasPersonBId: !!personBId,
       updateResult,
       updatedName: updatedPerson.name,
+      updatedScore: updatedPerson.score,
+      scoreMatchesExpectation: updatedPerson.score === expectedScoreAfterUpdate,
       createRelationshipResult,
       listRelationshipsBeforeDeleteCount:
         listRelationshipsBeforeDelete.items.length,
@@ -474,13 +492,34 @@ export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
       deletePersonResult,
     };
   };
-  const { routeMapWithoutDAC, routeMapWithRole } = buildRouteMaps();
-  const withoutDAC = await runFlow(routeMapWithoutDAC);
-  const withDAC = await runFlow(routeMapWithRole);
+  const { config, routeMapWithoutDAC, routeMapWithRole } = buildRouteMaps();
+  const withoutOperatorsItemDriver = new InMemoryDataItemDBDriver({
+    tableName: "ExplicitHandlerNoOperatorsItems",
+    uniquelyIdentifyingFieldName: "id",
+  });
+  const withoutOperatorsRelationshipDriver = new InMemoryItemRelationshipDBDriver({
+    tableName: "ExplicitHandlerNoOperatorsRelationships",
+    uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
+  });
+  const routeMapWithoutOperators = getTypeInfoORMRouteMap(
+    {
+      ...config,
+      getDriver: () => withoutOperatorsItemDriver as DataItemDBDriver<any, any>,
+      getRelationshipDriver: () => withoutOperatorsRelationshipDriver,
+    },
+    undefined,
+    undefined,
+    undefined,
+    { allowUpdateFieldOperators: false },
+  );
+  const withoutDAC = await runFlow(routeMapWithoutDAC, 7);
+  const withDAC = await runFlow(routeMapWithRole, 7);
+  const withoutOperators = await runFlow(routeMapWithoutOperators, 2);
 
   return {
     withoutDAC,
     withDAC,
+    withoutOperators,
     parity: JSON.stringify(withoutDAC) === JSON.stringify(withDAC),
   };
 };

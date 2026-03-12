@@ -108,6 +108,10 @@ export enum TypeInfoORMServiceError {
    * */
   INVALID_OPERATION = "INVALID_OPERATION",
   /**
+   * Update operator config is invalid.
+   * */
+  INVALID_UPDATE_OPERATOR = "INVALID_UPDATE_OPERATOR",
+  /**
    * Accessing role is missing when DAC is required.
    * */
   MISSING_ACCESSING_ROLE = "MISSING_ACCESSING_ROLE",
@@ -202,6 +206,37 @@ export type TypeInfoORMContext = {
 };
 
 /**
+ * Supported numeric field update operators.
+ */
+export const TypeInfoORMUpdateOperators = {
+  NUMBER: {
+    INCREMENT: "INCREMENT",
+    DECREMENT: "DECREMENT",
+  },
+} as const;
+
+/**
+ * Supported numeric field update operator values.
+ */
+export type TypeInfoORMNumberFieldUpdateOperator =
+  (typeof TypeInfoORMUpdateOperators.NUMBER)[keyof typeof TypeInfoORMUpdateOperators.NUMBER];
+
+/**
+ * Supported field update operator values.
+ */
+export type TypeInfoORMFieldUpdateOperator = TypeInfoORMNumberFieldUpdateOperator;
+
+/**
+ * Optional config for TypeInfo ORM update calls.
+ */
+export type TypeInfoORMUpdateConfig = {
+  /**
+   * Optional per-field operator map applied during update.
+   */
+  fieldOperators?: Record<string, TypeInfoORMFieldUpdateOperator>;
+};
+
+/**
  * Server-side TypeInfoORM API contract.
  *
  * Methods that perform DAC-sensitive work may accept
@@ -280,11 +315,13 @@ export type TypeInfoORMAPI = {
    *
    * @param typeName - Type name to update.
    * @param item - Updated item payload.
+   * @param updateConfig - Optional per-field operator config.
    * @returns Whether the update succeeded.
    */
   update: (
     typeName: string,
     item: TypeInfoDataItem,
+    updateConfig?: TypeInfoORMUpdateConfig,
     context?: TypeInfoORMContext,
   ) => Promise<boolean>;
   /**
@@ -390,11 +427,13 @@ export type TypeInfoORMClientAPI = {
    *
    * @param typeName - Type name to update.
    * @param item - Updated item payload.
+   * @param updateConfig - Optional per-field operator config.
    * @returns Whether the update succeeded.
    */
   update: (
     typeName: string,
     item: TypeInfoDataItem,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ) => Promise<boolean>;
   /**
    * Delete an item by primary field value.

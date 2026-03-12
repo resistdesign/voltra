@@ -8,6 +8,7 @@ import {
   DeleteRelationshipResults,
   TypeInfoORMClientAPI,
   TypeInfoORMAPIRoutePaths,
+  TypeInfoORMUpdateConfig,
 } from "../../common/TypeInfoORM";
 import { sendServiceRequest, ServiceConfig } from "./Service";
 import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
@@ -100,15 +101,18 @@ export class TypeInfoORMClient implements TypeInfoORMClientAPI {
    *
    * @param typeName - TypeInfo type name.
    * @param item - Updated item payload.
+   * @param updateConfig - Optional per-field operator config.
    * @returns Whether the update succeeded.
    */
   update = async (
     typeName: string,
     item: TypeInfoDataItem,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ): Promise<boolean> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.UPDATE, [
       typeName,
       item,
+      updateConfig,
     ]);
   };
 

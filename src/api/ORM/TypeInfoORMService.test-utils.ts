@@ -6,6 +6,7 @@ import {
   OperationGroup,
   RelationshipOperation,
   TypeInfoORMServiceError,
+  TypeInfoORMUpdateOperators,
 } from "../../common/TypeInfoORM";
 import type { LiteralValue, TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../common/TypeParsing/TypeInfo";
@@ -21,6 +22,7 @@ import {
 type Author = {
   id: string;
   name: string;
+  score?: number;
 };
 
 type Book = {
@@ -40,6 +42,7 @@ const typeInfoMap: TypeInfoMap = {
         tags: { primaryField: true },
       },
       name: { type: "string", array: false, readonly: false, optional: false },
+      score: { type: "number", array: false, readonly: false, optional: true },
       books: {
         type: "string",
         array: true,
@@ -130,7 +133,40 @@ export const runTypeInfoORMServiceScenario = async () => {
 
   const readAuthorSelected = await orm.read("Author", authorId, ["name"]);
   await orm.update("Author", { id: authorId, name: "Alice Cooper" });
+  await orm.update(
+    "Author",
+    { id: authorId, score: 3 },
+    {
+      fieldOperators: {
+        score: TypeInfoORMUpdateOperators.NUMBER.INCREMENT,
+      },
+    },
+  );
+  await orm.update(
+    "Author",
+    { id: authorId, score: 1 },
+    {
+      fieldOperators: {
+        score: TypeInfoORMUpdateOperators.NUMBER.DECREMENT,
+      },
+    },
+  );
   const updatedAuthor = await orm.read("Author", authorId);
+  let invalidUpdateOperatorError: string | undefined;
+
+  try {
+    await orm.update(
+      "Author",
+      { id: authorId, name: "Wrong" },
+      {
+        fieldOperators: {
+          name: TypeInfoORMUpdateOperators.NUMBER.INCREMENT,
+        },
+      },
+    );
+  } catch (error: any) {
+    invalidUpdateOperatorError = error?.error?.code ?? error?.message;
+  }
 
   const listConfig: ListItemsConfig = {
     itemsPerPage: 10,
@@ -192,6 +228,10 @@ export const runTypeInfoORMServiceScenario = async () => {
     },
     readAuthorSelected,
     updatedAuthorName: updatedAuthor.name,
+    updatedAuthorScore: updatedAuthor.score,
+    invalidUpdateOperatorError,
+    invalidUpdateOperatorErrorExpected:
+      TypeInfoORMServiceError.INVALID_UPDATE_OPERATOR,
     listBookIds: listBooks.items.map((item) => item.id),
     listBookTitles: listBooks.items.map((item) => item.title),
     relationshipTargets: listRelationships.items.map(
@@ -290,11 +330,13 @@ export const runTypeInfoORMServiceDACScenario = async () => {
   const seedBook1 = await orm.update(
     "Book",
     { id: bookId1, title: "Alpha" },
+    undefined,
     context,
   );
   const seedBook2 = await orm.update(
     "Book",
     { id: bookId2, title: "Beta" },
+    undefined,
     context,
   );
   const seedAuthor = await orm.update(
@@ -303,6 +345,7 @@ export const runTypeInfoORMServiceDACScenario = async () => {
       id: authorId,
       name: "Alice",
     },
+    undefined,
     context,
   );
 
@@ -512,11 +555,13 @@ export const runTypeInfoORMServiceContextScenario = async () => {
   const seedBook = await orm.update(
     "Book",
     { id: bookId, title: "Alpha" },
+    undefined,
     context,
   );
   const seedAuthor = await orm.update(
     "Author",
     { id: authorId, name: "Alice" },
+    undefined,
     context,
   );
 
@@ -598,9 +643,9 @@ export const runTypeInfoORMServiceOwnerPrefixScenario = async () => {
   const authorId = "author-1";
   const bookId1 = "book-1";
   const bookId2 = "book-2";
-  await orm.update("Author", { id: authorId, name: "Alice" }, context);
-  await orm.update("Book", { id: bookId1, title: "Alpha" }, context);
-  await orm.update("Book", { id: bookId2, title: "Beta" }, context);
+  await orm.update("Author", { id: authorId, name: "Alice" }, undefined, context);
+  await orm.update("Book", { id: bookId1, title: "Alpha" }, undefined, context);
+  await orm.update("Book", { id: bookId2, title: "Beta" }, undefined, context);
 
   const readAuthorSelected = await orm.read(
     "Author",
@@ -673,7 +718,7 @@ export const runTypeInfoORMServiceOwnerPrefixDenyScenario = async () => {
   });
 
   const context = { accessingRoleId: "role-owner-deny" };
-  await orm.update("Book", { id: "book-1", title: "Alpha" }, context);
+  await orm.update("Book", { id: "book-1", title: "Alpha" }, undefined, context);
 
   let readError: string | undefined;
   try {
@@ -894,8 +939,8 @@ export const runTypeInfoORMServiceRelationshipGateScenario = async () => {
 
   const orm = buildOrm();
   const seedContext = { accessingRoleId: "role-rel-allow-all" };
-  await orm.update("Author", { id: "author-1", name: "Alice" }, seedContext);
-  await orm.update("Book", { id: "book-1", title: "Alpha" }, seedContext);
+  await orm.update("Author", { id: "author-1", name: "Alice" }, undefined, seedContext);
+  await orm.update("Book", { id: "book-1", title: "Alpha" }, undefined, seedContext);
 
   let endpointDeniedError: string | undefined;
   try {
