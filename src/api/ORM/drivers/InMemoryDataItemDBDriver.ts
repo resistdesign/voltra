@@ -15,6 +15,10 @@ import type {
   ListItemsResults,
 } from "../../../common/SearchTypes";
 import {
+  TypeInfoORMUpdateConfig,
+  TypeInfoORMUpdateOperators,
+} from "../../../common/TypeInfoORM";
+import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
 } from "../../../common/SearchUtils";
@@ -137,6 +141,7 @@ export class InMemoryDataItemDBDriver<
   public updateItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ): Promise<boolean> => {
     const { uniquelyIdentifyingFieldName } = this.config;
 
@@ -159,6 +164,26 @@ export class InMemoryDataItemDBDriver<
 
     for (const [key, value] of Object.entries(cleanUpdatedItem)) {
       if (typeof value !== "undefined") {
+        const operator = updateConfig?.fieldOperators?.[key];
+
+        if (operator === TypeInfoORMUpdateOperators.NUMBER.INCREMENT) {
+          const currentValue = (nextItem as Record<string, unknown>)[key];
+
+          (nextItem as Record<string, unknown>)[key] =
+            (typeof currentValue === "number" ? currentValue : 0) +
+            (value as number);
+          continue;
+        }
+
+        if (operator === TypeInfoORMUpdateOperators.NUMBER.DECREMENT) {
+          const currentValue = (nextItem as Record<string, unknown>)[key];
+
+          (nextItem as Record<string, unknown>)[key] =
+            (typeof currentValue === "number" ? currentValue : 0) -
+            (value as number);
+          continue;
+        }
+
         (nextItem as Record<string, unknown>)[key] = value;
       }
     }

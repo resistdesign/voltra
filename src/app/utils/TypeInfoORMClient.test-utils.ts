@@ -3,15 +3,22 @@ import type { ServiceConfig } from "./Service";
 import type { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
 import type { ListItemsConfig } from "../../common/SearchTypes";
 import type { BaseItemRelationshipInfo } from "../../common/ItemRelationshipInfoTypes";
-import type { TypeInfoORMClientAPI } from "../../common/TypeInfoORM";
+import {
+  TypeInfoORMUpdateOperators,
+  type TypeInfoORMClientAPI,
+} from "../../common/TypeInfoORM";
 
 const assertTypeInfoORMClientAPIRejectsContext = (
   clientAPI: TypeInfoORMClientAPI,
 ) => {
   // @ts-expect-error Client API must not accept server context arguments.
   clientAPI.read("Book", "book-1", undefined, { accessingRoleId: "role-1" });
-  // @ts-expect-error Client API must not accept server context arguments.
   clientAPI.update("Book", { id: "book-1", title: "Beta" }, {
+    fieldOperators: {
+      title: TypeInfoORMUpdateOperators.NUMBER.INCREMENT,
+    },
+  // @ts-expect-error Client API must not accept server context arguments.
+  }, {
     accessingRoleId: "role-1",
   });
   // @ts-expect-error Client API must not accept server context arguments.
@@ -47,6 +54,15 @@ const runTypeInfoORMClientScenario = async () => {
   } as TypeInfoDataItem);
   const read = await client.read("Book", "book-1");
   const updated = await client.update("Book", { id: "book-1", title: "Beta" });
+  const updatedWithOperators = await client.update(
+    "Book",
+    { id: "book-1", score: 2 } as TypeInfoDataItem,
+    {
+      fieldOperators: {
+        score: TypeInfoORMUpdateOperators.NUMBER.INCREMENT,
+      },
+    },
+  );
   const deleted = await client.delete("Book", "book-1");
 
   const listConfig: ListItemsConfig = { itemsPerPage: 5 };
@@ -86,6 +102,7 @@ const runTypeInfoORMClientScenario = async () => {
     created,
     read,
     updated,
+    updatedWithOperators,
     deleted,
     list,
     relCreated,
@@ -109,6 +126,9 @@ export const runTypeInfoORMClientUpdatedScenario = async () =>
 
 export const runTypeInfoORMClientDeletedScenario = async () =>
   (await runTypeInfoORMClientScenario()).deleted;
+
+export const runTypeInfoORMClientUpdatedWithOperatorsScenario = async () =>
+  (await runTypeInfoORMClientScenario()).updatedWithOperators;
 
 export const runTypeInfoORMClientListScenario = async () =>
   (await runTypeInfoORMClientScenario()).list;
