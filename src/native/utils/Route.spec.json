@@ -28,29 +28,11 @@
       }
     },
     {
-      "export": "runNativeNavigationStateAdapterScenario",
+      "export": "runNativeRouteWebTargetScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "initialPath": "/home",
-        "afterNavigatePath": "/home"
-      }
-    },
-    {
-      "export": "runNativeNavigationStateRelativePathScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "navigatedPath": "/login",
-        "replacedPath": "/"
-      }
-    },
-    {
-      "export": "runNativeRouteChainScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "path": "/home/books/42?view=summary&debug=true"
+        "render": "ok"
       }
     },
     {

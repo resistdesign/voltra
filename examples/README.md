@@ -14,6 +14,8 @@ Use this for client route usage via platform barrels:
 - `@resistdesign/voltra/web` for web Route roots/matchers
 - `@resistdesign/voltra/native` for native Route roots/matchers
 - `@resistdesign/voltra/app` only for adapter escape hatches (`createUniversalAdapter`)
+- Native routing is still path/history based; Voltra provides the mobile
+  history/deep-link pieces that browsers already have.
 
 ## API Routing (Backend)
 

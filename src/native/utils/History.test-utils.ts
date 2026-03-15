@@ -3,6 +3,7 @@ import {
   createMemoryHistory,
 } from "../../app/utils/History";
 import {
+  type NativeBackHandlerLike,
   createNativeHistory,
   mapNativeURLToPath,
 } from "./History";
@@ -199,5 +200,46 @@ export const runNativeHistoryLateInitialURLDoesNotOverrideScenario = async () =>
   return {
     afterLateInitialURLWithNavigation,
     afterLateInitialURLWithoutNavigation,
+  };
+};
+
+export const runNativeHistoryPlatformBackOwnershipScenario = async () => {
+  const backEvents: string[] = [];
+  let listener: (() => boolean) | undefined;
+  let removeCalls = 0;
+  const backHandler: NativeBackHandlerLike = {
+    addEventListener: (_eventName, nextListener) => {
+      backEvents.push("subscribed");
+      listener = nextListener;
+      return {
+        remove: () => {
+          if (listener === nextListener) {
+            listener = undefined;
+          }
+          removeCalls += 1;
+          backEvents.push("removed");
+        },
+      };
+    },
+  };
+  const history = createNativeHistory({
+    initialPath: "/home",
+    backHandler,
+  });
+
+  await history.start();
+  history.push("/details");
+  const firstBackConsumed = listener?.() ?? false;
+  const secondBackConsumed = listener?.() ?? false;
+  const pathAfterBacks = history.location.path;
+  history.stop();
+
+  return {
+    backEvents,
+    firstBackConsumed,
+    secondBackConsumed,
+    pathAfterBacks,
+    removeCalls,
+    listenerActiveAfterStop: typeof listener === "function",
   };
 };
