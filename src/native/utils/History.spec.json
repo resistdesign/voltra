@@ -87,6 +87,22 @@
           "index": 0
         }
       }
+    },
+    {
+      "export": "runNativeHistoryPlatformBackOwnershipScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "backEvents": [
+          "subscribed",
+          "removed"
+        ],
+        "firstBackConsumed": true,
+        "secondBackConsumed": false,
+        "pathAfterBacks": "/home",
+        "removeCalls": 1,
+        "listenerActiveAfterStop": false
+      }
     }
   ]
 }

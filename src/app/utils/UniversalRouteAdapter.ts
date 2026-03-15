@@ -2,6 +2,9 @@
  * @packageDocumentation
  *
  * Unified route-adapter factory for web and non-DOM runtimes.
+ *
+ * Keep this module platform-agnostic. Browser-specific or native-platform
+ * runtime hooks belong in the `web` or `native` barrels, not in `app`.
  */
 import {
   buildHistoryPath,

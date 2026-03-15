@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
+import { Platform } from "react-native";
 import {
   RouteProvider,
   createManualRouteAdapter,
@@ -60,6 +61,37 @@ export const runNativeManualAdapterMultiPathScenario = () => {
   };
 };
 
+const buildWindowMock = (pathname: string) => {
+  const listeners: Record<string, (event: any) => void> = {};
+
+  const windowMock = {
+    location: { pathname },
+    history: {
+      pushState: (_state: any, _title?: string, url?: string) => {
+        if (typeof url === "string") {
+          windowMock.location.pathname = url;
+        }
+      },
+      replaceState: (_state: any, _title?: string, url?: string) => {
+        if (typeof url === "string") {
+          windowMock.location.pathname = url;
+        }
+      },
+    },
+    addEventListener: (event: string, handler: (ev: any) => void) => {
+      listeners[event] = handler;
+    },
+    removeEventListener: (event: string) => {
+      delete listeners[event];
+    },
+    dispatchEvent: (event: { type: string }) => {
+      listeners[event.type]?.(event);
+    },
+  };
+
+  return windowMock;
+};
+
 export const runNativeManualAdapterMixedPathConfigScenario = () => {
   const manual = createManualRouteAdapter("/app/books/42/details");
 
@@ -100,6 +132,32 @@ export const runNativeManualAdapterMixedPathConfigScenario = () => {
   return {
     mixedRender,
     stringExactMismatchRender,
+  };
+};
+
+export const runNativeRouteWebTargetScenario = () => {
+  const originalWindow = (globalThis as any).window;
+  const originalOS = Platform.OS;
+  (Platform as { OS: string }).OS = "web";
+  (globalThis as any).window = buildWindowMock("/app/books/42");
+
+  const render = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(Route, { path: "books/:id", exact: true }, "ok"),
+      ),
+    ),
+  );
+
+  (globalThis as any).window = originalWindow;
+  (Platform as { OS: string }).OS = originalOS;
+
+  return {
+    render,
   };
 };
 
