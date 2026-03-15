@@ -28,6 +28,14 @@
       }
     },
     {
+      "export": "runNativeRouteWebTargetScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "render": "ok"
+      }
+    },
+    {
       "export": "runNativeBackIntegrationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

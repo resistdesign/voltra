@@ -4,31 +4,28 @@
  * Native routing helpers that keep shared app Route semantics intact on mobile.
  *
  * The primary native model is still Voltra path/history routing. These helpers
- * supply the mobile-only runtime pieces around that model, such as hardware
- * back integration.
+ * supply the runtime selection needed by the `native` barrel:
+ * - React Native mobile uses native history + deep-link + platform back
+ * - React Native web uses the browser adapter
+ *
+ * This separation keeps `app` free of native-platform code.
  */
-import { type PropsWithChildren } from "react";
+import { type PropsWithChildren, useRef } from "react";
 import { BackHandler, Platform } from "react-native";
 import type {
-  RouteAdapter,
   RouteProps,
   RouteRuntimeIntegration,
 } from "../../app/utils/Route";
+import type { RouteAdapter } from "../../app/utils/Route";
 import { Route as CoreRoute } from "../../app/utils/Route";
-
-/**
- * Contract for React Native BackHandler-like integrations.
- */
-export type NativeBackHandlerLike = {
-  addEventListener: (
-    eventName: "hardwareBackPress",
-    listener: () => boolean,
-  ) => { remove?: () => void } | void;
-  removeEventListener?: (
-    eventName: "hardwareBackPress",
-    listener: () => boolean,
-  ) => void;
-};
+import {
+  createBrowserRouteAdapter,
+} from "../../app/utils/UniversalRouteAdapter";
+import { createRouteAdapterFromHistory } from "../../app/utils/RouteHistory";
+import {
+  createNativeHistory,
+  type NativeBackHandlerLike,
+} from "./History";
 
 /**
  * Create a hardware-back listener from a route adapter.
@@ -68,7 +65,11 @@ export const registerNativeHardwareBackHandler = (
 };
 
 /**
- * Build a core Route runtime integration using a native BackHandler.
+ * Low-level helper to build a Route runtime integration from a BackHandler.
+ *
+ * Native Route no longer uses this for the default path because platform back
+ * ownership now lives with the native adapter/history layer. This remains
+ * available for manual integrations.
  */
 export const createNativeRouteBackIntegration = (
   backHandler: NativeBackHandlerLike,
@@ -78,17 +79,64 @@ export const createNativeRouteBackIntegration = (
   };
 };
 
+/**
+ * Native runtime environment inputs used by the native Route wrapper.
+ */
 type NativeRuntimeEnvironment = {
   platformOS: string;
   backHandler: NativeBackHandlerLike | undefined;
+};
+
+const createNativeHistoryRouteAdapter = (
+  initialPath?: string,
+  ingress?: RouteProps<Record<string, any>>["ingress"],
+  backHandler?: NativeBackHandlerLike,
+): RouteAdapter => {
+  const history = createNativeHistory({
+    initialPath,
+    backHandler,
+    ...(ingress
+      ? {
+          adapter: {
+            getInitialURL: async () =>
+              (await ingress.getInitialURL?.()) ?? null,
+            subscribe: (listener) => ingress.subscribe?.(listener) ?? (() => {}),
+          },
+          onIncomingURL: ingress.onIncomingURL,
+          mapURLToPath: ingress.mapURLToPath,
+        }
+      : {}),
+  });
+  const adapter = createRouteAdapterFromHistory(history);
+  let subscribers = 0;
+
+  return {
+    ...adapter,
+    subscribe: (listener) => {
+      subscribers += 1;
+      if (subscribers === 1) {
+        void history.start();
+      }
+
+      const unlisten = adapter.subscribe(listener);
+      return () => {
+        unlisten();
+        subscribers = Math.max(0, subscribers - 1);
+        if (subscribers === 0) {
+          history.stop();
+        }
+      };
+    },
+  };
 };
 
 /**
  * Native Route wrapper for root/provider mode.
  *
  * Behavior:
- * - On mobile native runtimes, injects back-handler integration into app Route.
- * - On web runtimes, passes no integration so app Route uses browser behavior.
+ * - On React Native mobile runtimes, auto-injects a native-history-backed
+ *   adapter so native history owns platform back actions.
+ * - On React Native web runtimes, auto-injects the browser adapter.
  */
 export const Route = <ParamsType extends Record<string, any>,>(
   props: PropsWithChildren<RouteProps<ParamsType>>,
@@ -101,23 +149,29 @@ export const Route = <ParamsType extends Record<string, any>,>(
     platformOS: String(Platform?.OS ?? ""),
     backHandler: BackHandler as NativeBackHandlerLike,
   };
-  const runtimeIntegration = (() => {
-    if (hasMatcherProps || nativeRuntime.platformOS === "web") {
-      return undefined;
-    }
+  const shouldUseAutoAdapter =
+    !hasMatcherProps &&
+    typeof props.adapter === "undefined";
+  const routeProps = props as RouteProps<ParamsType>;
+  const adapterRef = useRef<RouteAdapter | null>(null);
 
-    const backHandler = nativeRuntime.backHandler;
-    if (!backHandler) {
-      return undefined;
-    }
+  if (shouldUseAutoAdapter && !adapterRef.current) {
+    adapterRef.current =
+      nativeRuntime.platformOS === "web"
+        ? createBrowserRouteAdapter()
+        : createNativeHistoryRouteAdapter(
+            props.initialPath,
+            props.ingress,
+            nativeRuntime.backHandler,
+          );
+  }
 
-    return createNativeRouteBackIntegration(backHandler);
-  })();
-
-  return (
+  return shouldUseAutoAdapter ? (
     <CoreRoute
-      {...(props as RouteProps<ParamsType>)}
-      runtimeIntegration={runtimeIntegration}
+      {...routeProps}
+      adapter={adapterRef.current ?? undefined}
     />
+  ) : (
+    <CoreRoute {...routeProps} />
   );
 };

@@ -35,6 +35,20 @@ export type NativeLinkAdapter = {
 export type NativeIncomingURLMode = "push" | "replace";
 
 /**
+ * BackHandler-like contract for native platform back actions.
+ */
+export type NativeBackHandlerLike = {
+  addEventListener: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => { remove?: () => void } | void;
+  removeEventListener?: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => void;
+};
+
+/**
  * Native history controller with explicit lifecycle hooks.
  *
  * This is the native/mobile analogue to browser-backed history in web apps.
@@ -76,6 +90,10 @@ export type CreateNativeHistoryOptions = {
    * Default: {@link mapNativeURLToPath}.
    */
   mapURLToPath?: (url: string) => string;
+  /**
+   * Optional native platform back handler wired into this history runtime.
+   */
+  backHandler?: NativeBackHandlerLike;
 };
 
 /**
@@ -123,10 +141,13 @@ export const createNativeHistory = (
     initialPath = "/",
     onIncomingURL = "replace",
     mapURLToPath = mapNativeURLToPath,
+    backHandler,
   } = options;
 
   const history = createMemoryHistory(initialPath);
+  const historyBackHandler = createHistoryBackHandler(history);
   let unsubscribe: (() => void) | undefined;
+  let stopBackHandler: (() => void) | undefined;
   let started = false;
 
   const applyIncomingURL = (url: string | null | undefined) => {
@@ -169,6 +190,23 @@ export const createNativeHistory = (
 
       started = true;
 
+      if (backHandler && !stopBackHandler) {
+        const listener = () => historyBackHandler.handle();
+        const subscription = backHandler.addEventListener(
+          "hardwareBackPress",
+          listener,
+        );
+
+        stopBackHandler = () => {
+          if (typeof subscription?.remove === "function") {
+            subscription.remove();
+            return;
+          }
+
+          backHandler.removeEventListener?.("hardwareBackPress", listener);
+        };
+      }
+
       if (!adapter) {
         return;
       }
@@ -208,6 +246,8 @@ export const createNativeHistory = (
 
       unsubscribe?.();
       unsubscribe = undefined;
+      stopBackHandler?.();
+      stopBackHandler = undefined;
       started = false;
     },
   };

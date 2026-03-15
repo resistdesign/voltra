@@ -277,6 +277,8 @@ On native, Voltra provides the missing browser-like pieces:
 - history-style path state for environments without the browser History API
 - deep-link URL ingress so app opens behave like web navigations
 - hardware back wiring into that same history model
+- the `native` barrel auto-selects browser behavior on React Native web targets
+  and native-history behavior on mobile targets
 
 How it works:
 
