@@ -17,7 +17,6 @@ export const runNativeUtilsIndexScenario = () => {
     hasCreateNativeHistory: "createNativeHistory" in NativeUtils,
     hasMapNativeURLToPath: "mapNativeURLToPath" in NativeUtils,
     hasRoute: "Route" in NativeUtils,
-    hasBuildPathFromRouteChain: "buildPathFromRouteChain" in NativeUtils,
     hasNativeBackIntegration: "createNativeRouteBackIntegration" in NativeUtils,
   };
 };
@@ -39,9 +38,6 @@ export const runNativeUtilsIndexHasMapNativeURLToPathScenario = async () =>
 
 export const runNativeUtilsIndexHasRouteScenario = async () =>
   (await runNativeUtilsIndexScenario()).hasRoute;
-
-export const runNativeUtilsIndexHasBuildPathFromRouteChainScenario = async () =>
-  (await runNativeUtilsIndexScenario()).hasBuildPathFromRouteChain;
 
 export const runNativeUtilsIndexHasNativeBackIntegrationScenario = async () =>
   (await runNativeUtilsIndexScenario()).hasNativeBackIntegration;

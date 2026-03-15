@@ -1,7 +1,8 @@
 /**
  * @packageDocumentation
  *
- * Native history helpers that adapt deep links into the shared history state machine.
+ * Native history helpers that provide the mobile equivalent of browser
+ * location/history behavior for shared app Route matching.
  */
 import type { HistoryController } from "../../app/utils/History";
 import {
@@ -14,7 +15,8 @@ import {
 /**
  * Adapter contract for React Native deep-link APIs.
  *
- * Intended for RN `Linking` wrappers.
+ * Intended for RN `Linking` wrappers so native URL opens behave like browser
+ * navigations entering the shared Voltra history model.
  */
 export type NativeLinkAdapter = {
   /**
@@ -33,7 +35,23 @@ export type NativeLinkAdapter = {
 export type NativeIncomingURLMode = "push" | "replace";
 
 /**
+ * BackHandler-like contract for native platform back actions.
+ */
+export type NativeBackHandlerLike = {
+  addEventListener: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => { remove?: () => void } | void;
+  removeEventListener?: (
+    eventName: "hardwareBackPress",
+    listener: () => boolean,
+  ) => void;
+};
+
+/**
  * Native history controller with explicit lifecycle hooks.
+ *
+ * This is the native/mobile analogue to browser-backed history in web apps.
  */
 export type NativeHistoryController = HistoryController & {
   /**
@@ -72,18 +90,27 @@ export type CreateNativeHistoryOptions = {
    * Default: {@link mapNativeURLToPath}.
    */
   mapURLToPath?: (url: string) => string;
+  /**
+   * Optional native platform back handler wired into this history runtime.
+   */
+  backHandler?: NativeBackHandlerLike;
 };
 
 /**
  * Default native URL -> path mapping.
  *
- * Strips scheme and host, preserves path + query + hash.
+ * Strips scheme and host, preserves path + query + hash so incoming native URLs
+ * become the same route paths used on web.
  */
 export const mapNativeURLToPath = (url: string): string =>
   buildHistoryPath(parseHistoryPath(url));
 
 /**
  * Create a native history controller backed by in-memory history.
+ *
+ * This is the primary native routing primitive when the environment does not
+ * provide browser history. It gives shared Route matching a stable path/history
+ * source and applies incoming deep links as navigations in that same model.
  *
  * Lifecycle behavior:
  * - `start()` is idempotent.
@@ -114,10 +141,13 @@ export const createNativeHistory = (
     initialPath = "/",
     onIncomingURL = "replace",
     mapURLToPath = mapNativeURLToPath,
+    backHandler,
   } = options;
 
   const history = createMemoryHistory(initialPath);
+  const historyBackHandler = createHistoryBackHandler(history);
   let unsubscribe: (() => void) | undefined;
+  let stopBackHandler: (() => void) | undefined;
   let started = false;
 
   const applyIncomingURL = (url: string | null | undefined) => {
@@ -160,6 +190,23 @@ export const createNativeHistory = (
 
       started = true;
 
+      if (backHandler && !stopBackHandler) {
+        const listener = () => historyBackHandler.handle();
+        const subscription = backHandler.addEventListener(
+          "hardwareBackPress",
+          listener,
+        );
+
+        stopBackHandler = () => {
+          if (typeof subscription?.remove === "function") {
+            subscription.remove();
+            return;
+          }
+
+          backHandler.removeEventListener?.("hardwareBackPress", listener);
+        };
+      }
+
       if (!adapter) {
         return;
       }
@@ -199,6 +246,8 @@ export const createNativeHistory = (
 
       unsubscribe?.();
       unsubscribe = undefined;
+      stopBackHandler?.();
+      stopBackHandler = undefined;
       started = false;
     },
   };

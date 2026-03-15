@@ -7,14 +7,17 @@ import { Route as WebRoute } from "@resistdesign/voltra/web";
  *
  * Root Route is provider mode (no path); nested Route nodes are matchers.
  * Use platform barrels for the Route component so runtime mechanics are wired
- * for the current environment.
+ * for the current environment. The routing model is path/history based on both
+ * web and native. The `native` barrel handles both React Native mobile and
+ * React Native web targets without leaking native platform code into `app`.
  */
 export const webRouteComponentExample = WebRoute;
 export const nativeRouteComponentExample = NativeRoute;
 
 /**
- * Native default behavior (escape hatch):
- * - In native strategy, Android hardware back is auto-wired to route history.
+ * Native default behavior:
+ * - Voltra provides history-style path state for mobile environments.
+ * - Android hardware back is auto-wired to that route history.
  * - If route history cannot go back, the OS/native container handles the event.
  */
 export const appRouteNativeAdapterExample = createUniversalAdapter({
@@ -35,7 +38,8 @@ export const runAppRouteBackAction = () => {
 };
 
 /**
- * Escape-hatch reference for advanced environments.
+ * Native deep-link ingress reference:
+ * map native URL opens into the same path/history model that web uses.
  */
 export const appRouteIngressAdapterExample = createUniversalAdapter({
   initialPath: "/",

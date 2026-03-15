@@ -1,14 +1,13 @@
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
+import { Platform } from "react-native";
 import {
   RouteProvider,
   createManualRouteAdapter,
 } from "../../app/utils/Route";
 import {
   Route,
-  buildPathFromRouteChain,
   createNativeRouteBackIntegration,
-  createNavigationStateRouteAdapter,
   registerNativeHardwareBackHandler,
 } from "./Route";
 
@@ -62,6 +61,37 @@ export const runNativeManualAdapterMultiPathScenario = () => {
   };
 };
 
+const buildWindowMock = (pathname: string) => {
+  const listeners: Record<string, (event: any) => void> = {};
+
+  const windowMock = {
+    location: { pathname },
+    history: {
+      pushState: (_state: any, _title?: string, url?: string) => {
+        if (typeof url === "string") {
+          windowMock.location.pathname = url;
+        }
+      },
+      replaceState: (_state: any, _title?: string, url?: string) => {
+        if (typeof url === "string") {
+          windowMock.location.pathname = url;
+        }
+      },
+    },
+    addEventListener: (event: string, handler: (ev: any) => void) => {
+      listeners[event] = handler;
+    },
+    removeEventListener: (event: string) => {
+      delete listeners[event];
+    },
+    dispatchEvent: (event: { type: string }) => {
+      listeners[event.type]?.(event);
+    },
+  };
+
+  return windowMock;
+};
+
 export const runNativeManualAdapterMixedPathConfigScenario = () => {
   const manual = createManualRouteAdapter("/app/books/42/details");
 
@@ -105,75 +135,29 @@ export const runNativeManualAdapterMixedPathConfigScenario = () => {
   };
 };
 
-export const runNativeNavigationStateAdapterScenario = () => {
-  let state = { index: 0, routes: [{ name: "Home" }] };
-  const listeners = new Set<() => void>();
+export const runNativeRouteWebTargetScenario = () => {
+  const originalWindow = (globalThis as any).window;
+  const originalOS = Platform.OS;
+  (Platform as { OS: string }).OS = "web";
+  (globalThis as any).window = buildWindowMock("/app/books/42");
 
-  const adapter = createNavigationStateRouteAdapter({
-    getState: () => state,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    toPath: (nextState) => {
-      const route = nextState.routes[nextState.index];
-      return route.name === "Home" ? "/home" : "/unknown";
-    },
-    navigate: (path: string) => {
-      state = { index: 0, routes: [{ name: path === "/home" ? "Home" : "Other" }] };
-      listeners.forEach((listener) => listener());
-    },
-  });
-
-  const initialPath = adapter.getPath();
-  adapter.push?.("/home");
-  const afterNavigatePath = adapter.getPath();
-
-  return {
-    initialPath,
-    afterNavigatePath,
-  };
-};
-
-export const runNativeNavigationStateRelativePathScenario = () => {
-  let navigatedPath = "";
-  let replacedPath = "";
-  const adapter = createNavigationStateRouteAdapter({
-    getState: () => ({ path: "/signup/complete" }),
-    subscribe: () => () => {},
-    toPath: (state) => state.path,
-    navigate: (path: string) => {
-      navigatedPath = path;
-    },
-    replace: (path: string) => {
-      replacedPath = path;
-    },
-  });
-
-  adapter.push?.("../../login");
-  adapter.replace?.("");
-
-  return {
-    navigatedPath,
-    replacedPath,
-  };
-};
-
-export const runNativeRouteChainScenario = () => {
-  const path = buildPathFromRouteChain(
-    [
-      { name: "Home" },
-      { name: "Book", params: { id: 42 } },
-    ],
-    {
-      Home: "home",
-      Book: "books/:id",
-    },
-    { view: "summary", debug: true },
+  const render = renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(Route, { path: "books/:id", exact: true }, "ok"),
+      ),
+    ),
   );
 
+  (globalThis as any).window = originalWindow;
+  (Platform as { OS: string }).OS = originalOS;
+
   return {
-    path,
+    render,
   };
 };
 
