@@ -38,12 +38,6 @@
       "expectation": true
     },
     {
-      "export": "runNativeUtilsIndexHasBuildPathFromRouteChainScenario",
-      "conditions": [],
-      "operation": "===",
-      "expectation": true
-    },
-    {
       "export": "runNativeUtilsIndexHasNativeBackIntegrationScenario",
       "conditions": [],
       "operation": "===",

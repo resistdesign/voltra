@@ -242,6 +242,7 @@ const coords = layout.computeNativeCoords({
 
 Voltra routing uses the same `Route` API across app/web/native.
 Use the platform barrel for root `Route` so runtime mechanics are auto-wired.
+The routing model is path/history based on every platform.
 
 Reference example: `examples/routing/app-routing.ts`
 
@@ -271,10 +272,20 @@ import { Route } from "@resistdesign/voltra/native";
 </Route>;
 ```
 
+On native, Voltra provides the missing browser-like pieces:
+
+- history-style path state for environments without the browser History API
+- deep-link URL ingress so app opens behave like web navigations
+- hardware back wiring into that same history model
+
 How it works:
 
 - Root `<Route>` (no `path`) is provider mode.
 - Nested `<Route path="...">` entries are matcher mode.
+- Shared app routing matches normalized path strings on every platform.
+- Web already receives a browser pathname.
+- Native provides the browser-like history/path source that mobile lacks.
+- Native deep-link ingress is mapped into that same path/history model.
 - Strategy is auto-selected:
   - DOM + History API => browser history strategy.
   - Otherwise => in-memory native strategy.
