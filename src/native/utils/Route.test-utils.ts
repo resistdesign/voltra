@@ -6,9 +6,7 @@ import {
 } from "../../app/utils/Route";
 import {
   Route,
-  buildPathFromRouteChain,
   createNativeRouteBackIntegration,
-  createNavigationStateRouteAdapter,
   registerNativeHardwareBackHandler,
 } from "./Route";
 
@@ -102,78 +100,6 @@ export const runNativeManualAdapterMixedPathConfigScenario = () => {
   return {
     mixedRender,
     stringExactMismatchRender,
-  };
-};
-
-export const runNativeNavigationStateAdapterScenario = () => {
-  let state = { index: 0, routes: [{ name: "Home" }] };
-  const listeners = new Set<() => void>();
-
-  const adapter = createNavigationStateRouteAdapter({
-    getState: () => state,
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    toPath: (nextState) => {
-      const route = nextState.routes[nextState.index];
-      return route.name === "Home" ? "/home" : "/unknown";
-    },
-    navigate: (path: string) => {
-      state = { index: 0, routes: [{ name: path === "/home" ? "Home" : "Other" }] };
-      listeners.forEach((listener) => listener());
-    },
-  });
-
-  const initialPath = adapter.getPath();
-  adapter.push?.("/home");
-  const afterNavigatePath = adapter.getPath();
-
-  return {
-    initialPath,
-    afterNavigatePath,
-  };
-};
-
-export const runNativeNavigationStateRelativePathScenario = () => {
-  let navigatedPath = "";
-  let replacedPath = "";
-  const adapter = createNavigationStateRouteAdapter({
-    getState: () => ({ path: "/signup/complete" }),
-    subscribe: () => () => {},
-    toPath: (state) => state.path,
-    navigate: (path: string) => {
-      navigatedPath = path;
-    },
-    replace: (path: string) => {
-      replacedPath = path;
-    },
-  });
-
-  adapter.push?.("../../login");
-  adapter.replace?.("");
-
-  return {
-    navigatedPath,
-    replacedPath,
-  };
-};
-
-export const runNativeRouteChainScenario = () => {
-  const path = buildPathFromRouteChain(
-    [
-      { name: "Home" },
-      { name: "Book", params: { id: 42 } },
-    ],
-    {
-      Home: "home",
-      Book: "books/:id",
-    },
-    { view: "summary", debug: true },
-  );
-
-  return {
-    path,
   };
 };
 
