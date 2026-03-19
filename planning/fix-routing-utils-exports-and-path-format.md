@@ -1,21 +1,19 @@
 # Fix routing utils exports and path format
 
-## 3 major issues:
+## Goals
 
-1. When using `useRouteContext`, properties like `parentPath` are in the wrong, raw and unprocessed format. We should
-   see something like `main/details`, but what we see instead, is something like `"main"/"deatails"`. The quoted format
-   means we have JSON parts separated by a delimiter. This is correct for internal processing but confusing for
-   consumers. We need the parent path in a normalized "internal" format for handling, but we also need something for
-   consumers to use in their client side apps. And doc-comments will be clutch to help them understand what to expect.
-2. The second issue is in fact the doc-comments around this. `RouteContextType` does *not* have doc-comments but it
-   DEFINITELY SHOULD. As well as it's properties. Very nice, explanatory doc-comments.
-3. And lastly, we are *not* properly exporting utils like `getPathArray` and `getPathString` fromt he `common` barrel.
-   These are VERY useful utilities that MUST be exported for consumers. And ANY AND ALL utils, from the common Routing
-   collection, needs to be exported as well.
+- [x] Fix `useRouteContext()` so consumer-facing route path fields use readable slash-delimited strings instead of the
+      internal JSON-serialized path format.
+- [x] Preserve the internal route path format needed for matcher/path-resolution internals, with clear doc-comments about
+      which field is for consumers vs internal handling.
+- [x] Export the full `src/common/Routing.ts` utility surface from the `common` barrel.
+- [x] Update nearby docs/examples/package docs and add or update spec coverage for the changed route-context and common
+      export behavior.
 
-## Follow Through:
+## Current phase
 
-We want to be clean, explicit, professional and thorough.
-
-Make sure that tests/demos/examples/samples/docs/doc-comments/READMEs/exports/etc are all cleaned-up and updated to
-properly reflect all changes.
+- [x] Add a checklist-driven implementation plan to this file and keep it updated as work completes.
+- [x] Update route context shape, route matching internals, and doc-comments in `src/app/utils/Route.tsx`.
+- [x] Export common routing utilities from `src/common/index.ts`.
+- [x] Add or update specs/test-utils covering route context output and common barrel routing exports.
+- [x] Run focused verification for the affected specs.
