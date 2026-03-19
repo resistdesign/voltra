@@ -1,0 +1,53 @@
+{
+  "file": "./index.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCommonIndexHasPATHDelimiterScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasGetPotentialJSONValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasGetPathArrayScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasGetPathStringScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasMergeStringPathsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasResolvePathScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasResolveRouteAdapterPathScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runCommonIndexHasGetParamsAndTestPathScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}
