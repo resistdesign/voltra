@@ -14,8 +14,10 @@ import {
   useState,
 } from "react";
 import {
+  getPathArray,
   getParamsAndTestPath,
   getPathString,
+  PATH_DELIMITER,
   mergeStringPaths,
   resolveRouteAdapterPath,
 } from "../../common/Routing";
@@ -176,8 +178,25 @@ export const buildRoutePath = (
   return queryString ? `${basePath}?${queryString}` : basePath;
 };
 
+const getReadableRoutePath = (path: string): string =>
+  getPathString(
+    getPathArray(path, PATH_DELIMITER, true, true, true, false),
+    PATH_DELIMITER,
+    true,
+    false,
+    false,
+  );
+
 /**
- * Access values for the current Route.
+ * Access values for the current `Route`.
+ *
+ * `parentPath` is the consumer-facing route pattern for the currently matched
+ * parent route chain, expressed as plain slash-delimited segments such as
+ * `app/books/:id`.
+ *
+ * `parentPathInternal` carries the same logical route pattern in the
+ * JSON-serialized segment format used by the shared routing internals. Most
+ * consumers should prefer `parentPath`.
  */
 export type RouteContextType = {
   /**
@@ -185,9 +204,17 @@ export type RouteContextType = {
    */
   currentWindowPath: string;
   /**
-   * The parent path for this route level.
+   * Consumer-facing parent route pattern for this route level.
+   *
+   * Example: `app/books/:id`
    */
   parentPath: string;
+  /**
+   * Internal parent route pattern used by routing utilities and matcher logic.
+   *
+   * Example: `"app"/"books"/":id"`
+   */
+  parentPathInternal: string;
   /**
    * Aggregated route params from parent and current routes.
    */
@@ -208,6 +235,7 @@ export type RouteContextType = {
 export const RouteContext = createContext<RouteContextType>({
   currentWindowPath: "",
   parentPath: "",
+  parentPathInternal: "",
   params: {},
   isTopLevel: true,
 });
@@ -225,6 +253,10 @@ export const {
 
 /**
  * Access Route path and parameter information.
+ *
+ * Use `parentPath` for app-facing route logic. `parentPathInternal` is exposed
+ * so advanced integrations can align with the internal routing helpers when
+ * needed.
  *
  * @returns The current route context.
  */
@@ -369,6 +401,7 @@ export const RouteProvider = ({
     () => ({
       currentWindowPath: currentPath,
       parentPath: "",
+      parentPathInternal: "",
       params: {},
       isTopLevel: true,
       adapter: normalizedAdapter,
@@ -442,6 +475,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
   const {
     currentWindowPath = "",
     parentPath = "",
+    parentPathInternal = "",
     params: parentParams = {},
     adapter,
   } = useRouteContext();
@@ -465,7 +499,10 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
   const matchedRoute = useMemo(
     () => {
       for (const routePathConfig of normalizedPaths) {
-        const fullPath = mergeStringPaths(parentPath, routePathConfig.path);
+        const fullPath = mergeStringPaths(
+          parentPathInternal,
+          routePathConfig.path,
+        );
         const newParams = getParamsAndTestPath(
           targetCurrentPath,
           fullPath,
@@ -482,7 +519,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
 
       return null;
     },
-    [targetCurrentPath, parentPath, normalizedPaths],
+    [targetCurrentPath, parentPathInternal, normalizedPaths],
   );
   const params = useMemo(
     () => ({
@@ -494,12 +531,13 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
   const newRouteContext = useMemo(
     () => ({
       currentWindowPath: targetCurrentPath,
-      parentPath: matchedRoute?.fullPath ?? parentPath,
+      parentPath: getReadableRoutePath(matchedRoute?.fullPath ?? parentPathInternal),
+      parentPathInternal: matchedRoute?.fullPath ?? parentPathInternal,
       params,
       isTopLevel: false,
       adapter,
     }),
-    [targetCurrentPath, matchedRoute, parentPath, params, adapter],
+    [targetCurrentPath, matchedRoute, parentPathInternal, params, adapter],
   );
 
   useEffect(() => {
