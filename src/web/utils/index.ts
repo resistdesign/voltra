@@ -5,4 +5,5 @@
  */
 
 export * from "./EasyLayout";
+export * from "./NavLink";
 export * from "./Route";

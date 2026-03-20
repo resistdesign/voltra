@@ -32,6 +32,12 @@
       "expectation": true
     },
     {
+      "export": "runNativeUtilsIndexHasNavButtonScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
       "export": "runNativeUtilsIndexHasRouteScenario",
       "conditions": [],
       "operation": "===",

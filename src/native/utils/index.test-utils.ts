@@ -16,6 +16,7 @@ export const runNativeUtilsIndexScenario = () => {
     hasEasyLayoutView: "NativeEasyLayoutView" in NativeUtils,
     hasCreateNativeHistory: "createNativeHistory" in NativeUtils,
     hasMapNativeURLToPath: "mapNativeURLToPath" in NativeUtils,
+    hasNavButton: "NavButton" in NativeUtils,
     hasRoute: "Route" in NativeUtils,
     hasNativeBackIntegration: "createNativeRouteBackIntegration" in NativeUtils,
   };
@@ -35,6 +36,9 @@ export const runNativeUtilsIndexHasCreateNativeHistoryScenario = async () =>
 
 export const runNativeUtilsIndexHasMapNativeURLToPathScenario = async () =>
   (await runNativeUtilsIndexScenario()).hasMapNativeURLToPath;
+
+export const runNativeUtilsIndexHasNavButtonScenario = async () =>
+  (await runNativeUtilsIndexScenario()).hasNavButton;
 
 export const runNativeUtilsIndexHasRouteScenario = async () =>
   (await runNativeUtilsIndexScenario()).hasRoute;
