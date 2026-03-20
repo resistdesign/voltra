@@ -17,13 +17,13 @@
       "export": "runRouteDefaultContextRenderScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;&quot;,&quot;parentPathInternal&quot;:&quot;&quot;,&quot;params&quot;:{},&quot;isTopLevel&quot;:true,&quot;adapter&quot;:{}}</span>"
+      "expectation": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;&quot;,&quot;parentPathInternal&quot;:&quot;&quot;,&quot;params&quot;:{},&quot;isTopLevel&quot;:true,&quot;adapterBasePath&quot;:&quot;/app/books/42&quot;,&quot;adapter&quot;:{}}</span>"
     },
     {
       "export": "runRouteNestedRouteRenderScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;app/books/:id&quot;,&quot;parentPathInternal&quot;:&quot;\\&quot;app\\&quot;/\\&quot;books\\&quot;/\\&quot;:id\\&quot;&quot;,&quot;params&quot;:{&quot;id&quot;:42},&quot;isTopLevel&quot;:false,&quot;adapter&quot;:{}}</span>"
+      "expectation": "<span>{&quot;currentWindowPath&quot;:&quot;/app/books/42&quot;,&quot;parentPath&quot;:&quot;app/books/:id&quot;,&quot;parentPathInternal&quot;:&quot;\\&quot;app\\&quot;/\\&quot;books\\&quot;/\\&quot;:id\\&quot;&quot;,&quot;params&quot;:{&quot;id&quot;:42},&quot;isTopLevel&quot;:false,&quot;adapterBasePath&quot;:&quot;/app/books/42&quot;,&quot;adapter&quot;:{}}</span>"
     },
     {
       "export": "runRouteExactMismatchRenderScenario",
@@ -48,6 +48,15 @@
       "conditions": [],
       "operation": "===",
       "expectation": true
+    },
+    {
+      "export": "runRouteContextRelativeNavigationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "parentNavigation": "/app/books/42/review",
+        "childNavigation": "/app/books/42/details/review"
+      }
     }
   ]
 }

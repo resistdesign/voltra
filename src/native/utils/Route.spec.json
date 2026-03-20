@@ -48,6 +48,19 @@
         "finalPath": "/a",
         "removeFallbackCalls": 1
       }
+    },
+    {
+      "export": "runNativeRouteContextRelativeNavigationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "pushedFromParent": [
+          "/app/books/42/review"
+        ],
+        "pushedFromChild": [
+          "/app/books/42/details/review"
+        ]
+      }
     }
   ]
 }

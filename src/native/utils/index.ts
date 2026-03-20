@@ -18,4 +18,9 @@ export * from "./History";
  * @category native
  * @group Layout and Navigation
  */
+export * from "./NavButton";
+/**
+ * @category native
+ * @group Layout and Navigation
+ */
 export * from "./Route";

@@ -2,19 +2,19 @@
   "file": "./index.test-utils.ts",
   "tests": [
     {
-      "export": "runWebIndexHasFormsScenario",
+      "export": "runWebUtilsIndexHasEasyLayoutScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": false
+      "expectation": true
     },
     {
-      "export": "runWebIndexHasUtilsScenario",
+      "export": "runWebUtilsIndexHasRouteScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": false
+      "expectation": true
     },
     {
-      "export": "runWebIndexHasNavLinkTopLevelScenario",
+      "export": "runWebUtilsIndexHasNavLinkScenario",
       "conditions": [],
       "operation": "===",
       "expectation": true
