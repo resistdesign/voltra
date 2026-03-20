@@ -13,6 +13,7 @@ export const runWebIndexScenario = () => {
   return {
     hasForms: "Forms" in Web,
     hasUtils: "Utils" in Web,
+    hasNavLinkTopLevel: "NavLink" in Web,
   };
 };
 
@@ -21,3 +22,6 @@ export const runWebIndexHasFormsScenario = async () =>
 
 export const runWebIndexHasUtilsScenario = async () =>
   (await runWebIndexScenario()).hasUtils;
+
+export const runWebIndexHasNavLinkTopLevelScenario = async () =>
+  (await runWebIndexScenario()).hasNavLinkTopLevel;

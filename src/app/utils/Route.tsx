@@ -224,6 +224,11 @@ export type RouteContextType = {
    */
   isTopLevel: boolean;
   /**
+   * Absolute matched path used as the base for relative navigation at this
+   * route level.
+   */
+  adapterBasePath: string;
+  /**
    * Adapter driving route updates.
    */
   adapter?: RouteAdapter;
@@ -238,6 +243,7 @@ export const RouteContext = createContext<RouteContextType>({
   parentPathInternal: "",
   params: {},
   isTopLevel: true,
+  adapterBasePath: "/",
 });
 
 export const {
@@ -262,8 +268,6 @@ export const {
  */
 export const useRouteContext = () => useContext(RouteContext);
 
-const wrappedRouteAdapterCache = new WeakMap<RouteAdapter, RouteAdapter>();
-
 /**
  * Wrap a RouteAdapter so `push` and `replace` resolve relative paths.
  *
@@ -275,32 +279,57 @@ const wrappedRouteAdapterCache = new WeakMap<RouteAdapter, RouteAdapter>();
  */
 export const wrapRouteAdapterWithPathResolver = (
   adapter: RouteAdapter,
+  getBasePath: () => string = () => adapter.getPath(),
 ): RouteAdapter => {
   if (!adapter.push && !adapter.replace) {
     return adapter;
-  }
-
-  const cachedAdapter = wrappedRouteAdapterCache.get(adapter);
-  if (cachedAdapter) {
-    return cachedAdapter;
   }
 
   const wrappedAdapter: RouteAdapter = {
     ...adapter,
     push: adapter.push
       ? (path: string, title?: string) => {
-          adapter.push?.(resolveRouteAdapterPath(adapter.getPath(), path), title);
+          adapter.push?.(resolveRouteAdapterPath(getBasePath(), path), title);
         }
       : undefined,
     replace: adapter.replace
       ? (path: string, title?: string) => {
-          adapter.replace?.(resolveRouteAdapterPath(adapter.getPath(), path), title);
+          adapter.replace?.(resolveRouteAdapterPath(getBasePath(), path), title);
         }
       : undefined,
   };
 
-  wrappedRouteAdapterCache.set(adapter, wrappedAdapter);
   return wrappedAdapter;
+};
+
+const getAdapterBasePath = (currentPath: string): string => {
+  const normalizedPath = String(currentPath ?? "").trim();
+  if (normalizedPath === "") {
+    return "/";
+  }
+
+  const [pathOnly] = normalizedPath.split(/[?#]/, 1);
+  return pathOnly || "/";
+};
+
+const getMatchedRouteBasePath = (
+  currentPath: string,
+  matchedRoutePath: string,
+): string => {
+  const currentPathSegments = getPathArray(
+    getAdapterBasePath(currentPath),
+    PATH_DELIMITER,
+    true,
+    true,
+    false,
+    false,
+  ) as string[];
+  const matchedRouteSegments = getPathArray(matchedRoutePath) as string[];
+  const resolvedSegments = currentPathSegments.slice(0, matchedRouteSegments.length);
+
+  return resolvedSegments.length > 0
+    ? `/${resolvedSegments.join(PATH_DELIMITER)}`
+    : "/";
 };
 
 const getWindow = (): (Window & typeof globalThis) | undefined => {
@@ -390,6 +419,10 @@ export const RouteProvider = ({
   const [currentPath, setCurrentPath] = useState<string>(
     initialPath ?? normalizedAdapter.getPath(),
   );
+  const adapterBasePath = useMemo(
+    () => getAdapterBasePath(currentPath),
+    [currentPath],
+  );
 
   useEffect(() => {
     return normalizedAdapter.subscribe((nextPath) => {
@@ -404,9 +437,10 @@ export const RouteProvider = ({
       parentPathInternal: "",
       params: {},
       isTopLevel: true,
+      adapterBasePath,
       adapter: normalizedAdapter,
     }),
-    [currentPath, normalizedAdapter],
+    [currentPath, adapterBasePath, normalizedAdapter],
   );
 
   return (
@@ -477,6 +511,7 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
     parentPath = "",
     parentPathInternal = "",
     params: parentParams = {},
+    adapterBasePath: inheritedAdapterBasePath = "/",
     adapter,
   } = useRouteContext();
 
@@ -528,6 +563,20 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
     }),
     [parentParams, matchedRoute],
   );
+  const matchedAdapterBasePath = useMemo(
+    () =>
+      matchedRoute
+        ? getMatchedRouteBasePath(targetCurrentPath, matchedRoute.fullPath)
+        : inheritedAdapterBasePath,
+    [targetCurrentPath, matchedRoute, inheritedAdapterBasePath],
+  );
+  const scopedAdapter = useMemo(
+    () =>
+      adapter
+        ? wrapRouteAdapterWithPathResolver(adapter, () => matchedAdapterBasePath)
+        : adapter,
+    [adapter, matchedAdapterBasePath],
+  );
   const newRouteContext = useMemo(
     () => ({
       currentWindowPath: targetCurrentPath,
@@ -535,9 +584,17 @@ const RouteMatcher = <ParamsType extends Record<string, any>>({
       parentPathInternal: matchedRoute?.fullPath ?? parentPathInternal,
       params,
       isTopLevel: false,
-      adapter,
+      adapterBasePath: matchedAdapterBasePath,
+      adapter: scopedAdapter,
     }),
-    [targetCurrentPath, matchedRoute, parentPathInternal, params, adapter],
+    [
+      targetCurrentPath,
+      matchedRoute,
+      parentPathInternal,
+      params,
+      matchedAdapterBasePath,
+      scopedAdapter,
+    ],
   );
 
   useEffect(() => {

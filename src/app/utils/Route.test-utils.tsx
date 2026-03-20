@@ -282,3 +282,73 @@ export const runAppRouteMultiPathScenario = () => {
     stringArrayUsesPropExact: stringArrayExactMismatchRender === "",
   };
 };
+
+export const runAppRouteContextRelativeNavigationScenario = () => {
+  const pushedFromParent: string[] = [];
+  const pushedFromChild: string[] = [];
+  let currentPath = "/app/books/42/details";
+  const adapter = {
+    getPath: () => currentPath,
+    subscribe: () => () => {},
+    push: (path: string) => {
+      currentPath = path;
+    },
+  };
+
+  const ParentProbe = () => {
+    const { adapter: routeAdapter } = useRouteContext();
+    routeAdapter?.push?.("review");
+    pushedFromParent.push(currentPath);
+    return null;
+  };
+
+  const ChildProbe = () => {
+    const { adapter: routeAdapter } = useRouteContext();
+    routeAdapter?.push?.("review");
+    pushedFromChild.push(currentPath);
+    return null;
+  };
+
+  renderToString(
+    createElement(
+      Route,
+      { adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: "books/:id" },
+          createElement(ParentProbe),
+        ),
+      ),
+    ),
+  );
+
+  currentPath = "/app/books/42/details";
+
+  renderToString(
+    createElement(
+      Route,
+      { adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: "books/:id" },
+          createElement(
+            Route,
+            { path: "details", exact: true },
+            createElement(ChildProbe),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  return {
+    pushedFromParent,
+    pushedFromChild,
+  };
+};

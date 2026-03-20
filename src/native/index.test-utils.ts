@@ -20,11 +20,13 @@ export const runNativeIndexScenario = () => {
     hasCreateNativeFormRendererTopLevel: "createNativeFormRenderer" in Native,
     hasNativeSuiteTopLevel: "nativeSuite" in Native,
     hasCreateNativeHistoryTopLevel: "createNativeHistory" in Native,
+    hasNavButtonTopLevel: "NavButton" in Native,
     hasRouteTopLevel: "Route" in Native,
     hasMakeNativeEasyLayoutTopLevel: "makeNativeEasyLayout" in Native,
     hasFormsAutoForm: "AutoForm" in NativeForms,
     hasFormsCreateNativeFormRenderer: "createNativeFormRenderer" in NativeForms,
     hasUtilsCreateNativeHistory: "createNativeHistory" in NativeUtils,
+    hasUtilsNavButton: "NavButton" in NativeUtils,
     hasUtilsRoute: "Route" in NativeUtils,
   };
 };
@@ -50,6 +52,9 @@ export const runNativeIndexHasNativeSuiteTopLevelScenario = async () =>
 export const runNativeIndexHasCreateNativeHistoryTopLevelScenario = async () =>
   (await runNativeIndexScenario()).hasCreateNativeHistoryTopLevel;
 
+export const runNativeIndexHasNavButtonTopLevelScenario = async () =>
+  (await runNativeIndexScenario()).hasNavButtonTopLevel;
+
 export const runNativeIndexHasRouteTopLevelScenario = async () =>
   (await runNativeIndexScenario()).hasRouteTopLevel;
 
@@ -64,6 +69,9 @@ export const runNativeIndexHasFormsCreateNativeFormRendererScenario = async () =
 
 export const runNativeIndexHasUtilsCreateNativeHistoryScenario = async () =>
   (await runNativeIndexScenario()).hasUtilsCreateNativeHistory;
+
+export const runNativeIndexHasUtilsNavButtonScenario = async () =>
+  (await runNativeIndexScenario()).hasUtilsNavButton;
 
 export const runNativeIndexHasUtilsRouteScenario = async () =>
   (await runNativeIndexScenario()).hasUtilsRoute;
