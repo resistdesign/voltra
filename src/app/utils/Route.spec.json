@@ -64,6 +64,19 @@
         "mixedPathConfigMatch": true,
         "stringArrayUsesPropExact": true
       }
+    },
+    {
+      "export": "runAppRouteContextRelativeNavigationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "pushedFromParent": [
+          "/app/books/42/review"
+        ],
+        "pushedFromChild": [
+          "/app/books/42/details/review"
+        ]
+      }
     }
   ]
 }

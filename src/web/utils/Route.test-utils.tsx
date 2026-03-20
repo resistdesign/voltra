@@ -17,6 +17,9 @@ export const buildWindowMock = (pathname: string) => {
   const history = {
     pushState: (state: any, title?: string, url?: string) => {
       historyCalls.push({ state, title, url });
+      if (typeof url === "string") {
+        windowMock.location.pathname = url;
+      }
       return undefined;
     },
   };
@@ -203,3 +206,78 @@ export const runRouteMixedPathConfigRenderScenario = async () =>
 
 export const runRouteStringArrayExactScenario = async () =>
   (await runRouteScenario()).stringArrayExactMismatchRender === "";
+
+export const runRouteContextRelativeNavigationScenario = async () => {
+  const originalWindow = (globalThis as any).window;
+  const originalCustomEvent = (globalThis as any).CustomEvent;
+  const { windowMock, historyCalls } = buildWindowMock("/app/books/42/details");
+  (globalThis as any).window = windowMock;
+  (globalThis as any).CustomEvent = class CustomEvent {
+    type: string;
+    detail: any;
+
+    constructor(type: string, init: { detail?: any }) {
+      this.type = type;
+      this.detail = init.detail;
+    }
+  };
+
+  const { Route } = await loadRouteModule();
+
+  const ParentProbe = () => {
+    const { adapter } = useRouteContext();
+    adapter?.push?.("review");
+    return null;
+  };
+
+  const ChildProbe = () => {
+    const { adapter } = useRouteContext();
+    adapter?.push?.("review");
+    return null;
+  };
+
+  renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(Route, { path: "books/:id" }, createElement(ParentProbe)),
+      ),
+    ),
+  );
+
+  const parentNavigation = historyCalls.at(-1)?.url ?? null;
+  windowMock.location.pathname = "/app/books/42/details";
+
+  renderToString(
+    createElement(
+      Route,
+      null,
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: "books/:id" },
+          createElement(
+            Route,
+            { path: "details", exact: true },
+            createElement(ChildProbe),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  const childNavigation = historyCalls.at(-1)?.url ?? null;
+
+  (globalThis as any).window = originalWindow;
+  (globalThis as any).CustomEvent = originalCustomEvent;
+
+  return {
+    parentNavigation,
+    childNavigation,
+  };
+};

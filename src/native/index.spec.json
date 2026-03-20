@@ -44,6 +44,12 @@
       "expectation": true
     },
     {
+      "export": "runNativeIndexHasNavButtonTopLevelScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
       "export": "runNativeIndexHasRouteTopLevelScenario",
       "conditions": [],
       "operation": "===",
@@ -69,6 +75,12 @@
     },
     {
       "export": "runNativeIndexHasUtilsCreateNativeHistoryScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runNativeIndexHasUtilsNavButtonScenario",
       "conditions": [],
       "operation": "===",
       "expectation": true

@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 import {
   RouteProvider,
   createManualRouteAdapter,
+  useRouteContext,
 } from "../../app/utils/Route";
 import {
   Route,
@@ -204,5 +205,69 @@ export const runNativeBackIntegrationScenario = () => {
     backEvents,
     finalPath: currentPath,
     removeFallbackCalls,
+  };
+};
+
+export const runNativeRouteContextRelativeNavigationScenario = () => {
+  const pushedFromParent: string[] = [];
+  const pushedFromChild: string[] = [];
+  let currentPath = "/app/books/42/details";
+  const adapter = {
+    getPath: () => currentPath,
+    subscribe: () => () => {},
+    push: (path: string) => {
+      currentPath = path;
+    },
+  };
+
+  const ParentProbe = () => {
+    useRouteContext().adapter?.push?.("review");
+    pushedFromParent.push(currentPath);
+    return null;
+  };
+
+  const ChildProbe = () => {
+    useRouteContext().adapter?.push?.("review");
+    pushedFromChild.push(currentPath);
+    return null;
+  };
+
+  renderToString(
+    createElement(
+      RouteProvider,
+      { adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(Route, { path: "books/:id" }, createElement(ParentProbe)),
+      ),
+    ),
+  );
+
+  currentPath = "/app/books/42/details";
+
+  renderToString(
+    createElement(
+      RouteProvider,
+      { adapter },
+      createElement(
+        Route,
+        { path: "/app" },
+        createElement(
+          Route,
+          { path: "books/:id" },
+          createElement(
+            Route,
+            { path: "details", exact: true },
+            createElement(ChildProbe),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  return {
+    pushedFromParent,
+    pushedFromChild,
   };
 };

@@ -1,0 +1,21 @@
+{
+  "file": "./NavButton.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNavButtonScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "rendersPressableButton": true,
+        "passesIdProp": true,
+        "onPressCalls": 1,
+        "pushed": [
+          "/app/books/42/review"
+        ],
+        "replaced": [
+          "/app/books/42/review"
+        ]
+      }
+    }
+  ]
+}

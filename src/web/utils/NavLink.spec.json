@@ -1,0 +1,23 @@
+{
+  "file": "./NavLink.test-utils.tsx",
+  "tests": [
+    {
+      "export": "runNavLinkScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "pushHrefResolved": true,
+        "pushIdPropPassed": true,
+        "onClickCalls": 1,
+        "pushed": [
+          "/app/books/42/review"
+        ],
+        "replaced": [
+          "/app/books/42/review"
+        ],
+        "pushPreventedDefault": true,
+        "replacePreventedDefault": true
+      }
+    }
+  ]
+}
