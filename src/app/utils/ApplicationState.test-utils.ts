@@ -1,14 +1,19 @@
 import {
+  ApplicationStateContext,
   getApplicationStateIdentifier,
   getApplicationStateModified,
   getApplicationStateValue,
-  getApplicationStateValueStructure,
   setApplicationStateModified,
   setApplicationStateValue,
+  useApplicationStateValue,
   type ApplicationState,
   type ApplicationStateIdentifier,
   type ApplicationStateModificationState,
+  type ApplicationStateSetAction,
+  type ApplicationStateValueController,
 } from "./ApplicationState";
+import React, { createElement } from "react";
+import { renderToString } from "react-dom/server";
 
 const getApplicationStateScenarioData = () => {
   const identifierA: ApplicationStateIdentifier = { screen: { profile: {} } };
@@ -81,11 +86,76 @@ export const runApplicationStateModifiedBScenario = () => {
   return getApplicationStateModified(identifierB, modifiedWithBoth);
 };
 
-export const runApplicationStateStructureScenario = () => {
-  const { identifierA, identifierB, stateWithBoth } =
-    getApplicationStateScenarioData();
-  return getApplicationStateValueStructure(
-    { first: identifierA, second: identifierB },
-    stateWithBoth,
+const resolveStateAction = <ValueType,>(
+  action: ApplicationStateSetAction<ValueType>,
+  previousValue: ValueType,
+): ValueType =>
+  typeof action === "function"
+    ? (action as (value: ValueType) => ValueType)(previousValue)
+    : action;
+
+const buildValueControllerHarness = <ValueType,>(
+  identifier: ApplicationStateIdentifier<ValueType>,
+) => {
+  let controller: ApplicationStateValueController<ValueType> | undefined;
+  let currentValue: ApplicationState = new Map();
+  let currentModified: ApplicationStateModificationState = new Map();
+
+  const setValue = (newValue: ApplicationStateSetAction<ApplicationState>) => {
+    currentValue = resolveStateAction(newValue, currentValue);
+  };
+  const setModified = (
+    newValue: ApplicationStateSetAction<ApplicationStateModificationState>,
+  ) => {
+    currentModified = resolveStateAction(newValue, currentModified);
+  };
+
+  const Component = () => {
+    controller = useApplicationStateValue(identifier);
+    return null;
+  };
+
+  renderToString(
+    createElement(
+      ApplicationStateContext.Provider,
+      {
+        value: {
+          value: currentValue,
+          modified: currentModified,
+          onChange: setValue,
+          setModified,
+        },
+      },
+      createElement(Component),
+    ),
   );
+
+  if (!controller) {
+    throw new Error("Failed to initialize application state value controller.");
+  }
+
+  return {
+    controller,
+    getValueState: () => currentValue,
+    getModifiedState: () => currentModified,
+  };
+};
+
+export const runApplicationStateValueFunctionalUpdateScenario = () => {
+  const identifier = getApplicationStateIdentifier<number>();
+  const harness = buildValueControllerHarness(identifier);
+
+  harness.controller.onChange((previousValue = 0) => previousValue + 1);
+  harness.controller.onChange((previousValue = 0) => previousValue + 1);
+
+  return harness.getValueState().get(identifier);
+};
+
+export const runApplicationStateValueFunctionalUpdateModifiedScenario = () => {
+  const identifier = getApplicationStateIdentifier<number>();
+  const harness = buildValueControllerHarness(identifier);
+
+  harness.controller.onChange((previousValue = 0) => previousValue + 1);
+
+  return harness.getModifiedState().get(identifier);
 };

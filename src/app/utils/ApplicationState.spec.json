@@ -38,13 +38,16 @@
       "expectation": false
     },
     {
-      "export": "runApplicationStateStructureScenario",
+      "export": "runApplicationStateValueFunctionalUpdateScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "first": "alpha",
-        "second": "beta"
-      }
+      "operation": "===",
+      "expectation": 2
+    },
+    {
+      "export": "runApplicationStateValueFunctionalUpdateModifiedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
     }
   ]
 }
