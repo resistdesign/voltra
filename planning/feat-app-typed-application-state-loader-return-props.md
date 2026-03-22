@@ -40,6 +40,10 @@ These systems will need to be updated to align with the new functionality and re
 
 Update/create all related/necessary tests/docs/doc-comments/READMEs/demos/examples/samples/etc.
 
+# IMPORTANT NOTES:
+
+**YOU MAY ADD TO, BUT DO NOT OVERWRITE THIS DOCUMENT.**
+
 # Phase 1:
 
 Propose your implementation.
