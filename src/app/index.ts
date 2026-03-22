@@ -8,14 +8,15 @@
  * ```ts
  * import {
  *   createFormRenderer,
+ *   getApplicationStateIdentifier,
  *   useApplicationStateLoader,
- *   useApplicationStateValueStructure,
+ *   useApplicationStateValue,
  *   type RemoteProcedureCall,
  * } from "@resistdesign/voltra/app";
  * ```
  *
- * @see {@link useApplicationStateValueStructure} and
- * {@link useApplicationStateLoader} for good starting points.
+ * @see {@link useApplicationStateValue} and {@link useApplicationStateLoader}
+ * for good starting points.
  *
  * Reference examples:
  * - `examples/README.md`
@@ -24,17 +25,22 @@
  * @example
  * ```tsx
  * import {
+ *   getApplicationStateIdentifier,
  *   useApplicationStateLoader,
- *   useApplicationStateValueStructure,
+ *   useApplicationStateValue,
  *   type RemoteProcedureCall,
  * } from "@resistdesign/voltra/app";
  * import { useCallback } from "react";
  *
+ * const loginUsernameId = getApplicationStateIdentifier<string>();
+ * const loginPasswordId = getApplicationStateIdentifier<string>();
+ * const loginLoggedInId = getApplicationStateIdentifier<boolean>();
+ *
  * const APP_STATE_IDENTIFIERS = {
  *   LOGIN: {
- *     USERNAME: {},
- *     PASSWORD: {},
- *     LOGGED_IN: {},
+ *     USERNAME: loginUsernameId,
+ *     PASSWORD: loginPasswordId,
+ *     LOGGED_IN: loginLoggedInId,
  *   },
  * };
  *
@@ -52,27 +58,24 @@
  *
  * export const LoginController = () => {
  *   const {
- *     valueStructure: {
- *       username: username = "",
- *       password: password = "",
- *       loggedIn: loggedIn = false,
- *     },
- *     onChangeStructure: {
- *       username: setUsername,
- *       password: setPassword,
- *       loggedIn: setLoggedIn,
- *     },
- *   } = useApplicationStateValueStructure<{
- *     username: string;
- *     password: string;
- *     loggedIn: boolean;
- *   }>({
- *     username: APP_STATE_IDENTIFIERS.LOGIN.USERNAME,
- *     password: APP_STATE_IDENTIFIERS.LOGIN.PASSWORD,
- *     loggedIn: APP_STATE_IDENTIFIERS.LOGIN.LOGGED_IN,
- *   });
+ *     value: username = "",
+ *     onChange: setUsername,
+ *   } = useApplicationStateValue(APP_STATE_IDENTIFIERS.LOGIN.USERNAME);
+ *   const {
+ *     value: password = "",
+ *     onChange: setPassword,
+ *   } = useApplicationStateValue(APP_STATE_IDENTIFIERS.LOGIN.PASSWORD);
+ *   const {
+ *     value: loggedIn = false,
+ *     onChange: setLoggedIn,
+ *   } = useApplicationStateValue(APP_STATE_IDENTIFIERS.LOGIN.LOGGED_IN);
  *
- *   const { loading: loadingLogin, makeRemoteProcedureCall } =
+ *   const {
+ *     value: latestLoginState,
+ *     modified: loginStateModified,
+ *     loading: loadingLogin,
+ *     makeRemoteProcedureCall,
+ *   } =
  *     useApplicationStateLoader({
  *       identifier: APP_STATE_IDENTIFIERS.LOGIN.LOGGED_IN,
  *       remoteProcedureCall: LOGIN_RPC,
@@ -83,7 +86,18 @@
  *     makeRemoteProcedureCall(username, password);
  *   }, [username, password, makeRemoteProcedureCall]);
  *
- *   return { username, password, loggedIn, setUsername, setPassword, onSubmit, loadingLogin };
+ *   return {
+ *     username,
+ *     password,
+ *     loggedIn,
+ *     latestLoginState,
+ *     loginStateModified,
+ *     setUsername,
+ *     setPassword,
+ *     setLoggedIn,
+ *     onSubmit,
+ *     loadingLogin,
+ *   };
  * };
  * ```
  *
