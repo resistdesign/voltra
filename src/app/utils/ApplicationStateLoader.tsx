@@ -6,6 +6,8 @@
  */
 import {
   ApplicationStateIdentifier,
+  type ApplicationStateValue,
+  type ApplicationStateValueController,
   useApplicationStateValue,
 } from "./ApplicationState";
 import { sendServiceRequest, ServiceConfig } from "./Service";
@@ -14,7 +16,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 /**
  * Access and track the loading of an application state value.
  * */
-export type ApplicationStateLoader = {
+export type ApplicationStateLoader<
+  ValueType = ApplicationStateValue,
+  ArgsType extends any[] = any[],
+> = ApplicationStateValueController<ValueType> & {
   /**
    * Whether the current request is in flight.
    * */
@@ -32,13 +37,13 @@ export type ApplicationStateLoader = {
    *
    * @param args - Arguments to send with the request.
    * */
-  makeRemoteProcedureCall: (...args: any[]) => Promise<void>;
+  makeRemoteProcedureCall: (...args: ArgsType) => Promise<void>;
 };
 
 /**
  * The service, path and arguments to use for a remote procedure call.
  * */
-export type RemoteProcedureCall = {
+export type RemoteProcedureCall<ArgsType extends any[] = any[]> = {
   /**
    * Configuration for the target service endpoint.
    * */
@@ -50,21 +55,24 @@ export type RemoteProcedureCall = {
   /**
    * Default args to send when the call auto-runs.
    * */
-  args?: any[];
+  args?: ArgsType;
 };
 
 /**
  * The configuration for an application state loader.
  * */
-export type ApplicationStateLoaderConfig = {
+export type ApplicationStateLoaderConfig<
+  ValueType = ApplicationStateValue,
+  ArgsType extends any[] = any[],
+> = {
   /**
    * Identifier for the value to update in application state.
    * */
-  identifier: ApplicationStateIdentifier;
+  identifier: ApplicationStateIdentifier<ValueType>;
   /**
    * RPC target configuration and arguments.
    * */
-  remoteProcedureCall: RemoteProcedureCall;
+  remoteProcedureCall: RemoteProcedureCall<ArgsType>;
   /**
    * Clear the application state value on error.
    *
@@ -88,12 +96,20 @@ export type ApplicationStateLoaderConfig = {
 /**
  * Load, track and access an application state value.
  *
+ * The returned object intentionally combines the remote-loading lifecycle with
+ * the same stable local controller contract as
+ * {@link useApplicationStateValue}. That keeps a loader-backed state value
+ * usable like normal React state once it has been identified.
+ *
  * @param config - Loader configuration for state identifier and RPC details.
  * @returns Loader controls and request state.
  * */
-export const useApplicationStateLoader = (
-  config: ApplicationStateLoaderConfig,
-): ApplicationStateLoader => {
+export const useApplicationStateLoader = <
+  ValueType = ApplicationStateValue,
+  ArgsType extends any[] = any[],
+>(
+  config: ApplicationStateLoaderConfig<ValueType, ArgsType>,
+): ApplicationStateLoader<ValueType, ArgsType> => {
   const {
     identifier,
     remoteProcedureCall,
@@ -101,19 +117,20 @@ export const useApplicationStateLoader = (
     onLoadComplete,
     manual = false,
   } = config;
-  const { args = [] } = remoteProcedureCall;
-  const argsRef = useRef<any[]>(args);
+  const { args = [] as unknown as ArgsType } = remoteProcedureCall;
+  const argsRef = useRef<ArgsType>(args);
   argsRef.current = args;
   const [cacheValidity, setCacheValidity] = useState<{}>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [latestError, setLatestError] = useState<any>();
-  const { onChange, setModified } = useApplicationStateValue(identifier);
+  const valueController = useApplicationStateValue<ValueType>(identifier);
+  const { onChange, setModified } = valueController;
   const invalidate = useCallback(() => {
     setCacheValidity({});
   }, []);
   const makeRemoteProcedureCall = useCallback(
-    async (...directArgs: any[]) => {
-      let success;
+    async (...directArgs: ArgsType) => {
+      let success = false;
 
       setLoading(true);
       setLatestError(undefined);
@@ -149,12 +166,13 @@ export const useApplicationStateLoader = (
   );
   const appStateLoader = useMemo(
     () => ({
+      ...valueController,
       loading,
       latestError,
       invalidate,
       makeRemoteProcedureCall,
     }),
-    [loading, latestError, invalidate, makeRemoteProcedureCall],
+    [valueController, loading, latestError, invalidate, makeRemoteProcedureCall],
   );
 
   useEffect(() => {
