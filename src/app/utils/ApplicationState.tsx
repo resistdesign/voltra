@@ -3,37 +3,62 @@
  *
  * Application-level state container built on React context and maps. Use
  * {@link ApplicationStateProvider} to host state, then access values with
- * {@link useApplicationStateValue} or {@link useApplicationStateValueStructure}.
+ * {@link useApplicationStateValue}.
  */
 import {
   createContext,
   FC,
   PropsWithChildren,
+  type Dispatch,
+  type SetStateAction,
   useCallback,
   useContext,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
 /**
- * An object, nested or not, used as the identifier or identifier path for a state value.
+ * An object, nested or not, used as the identifier or identifier path for a
+ * state value.
+ *
+ * The generic parameter exists purely for TypeScript. It lets a consumer make
+ * the identifier itself the source of truth for what value type lives at that
+ * location in application state, without changing the runtime shape.
  * */
-export interface ApplicationStateIdentifier extends Record<
-  string,
-  ApplicationStateIdentifier | {}
-> {}
+declare const applicationStateIdentifierValueTypeSymbol: unique symbol;
+
+export interface ApplicationStateIdentifier<ValueType = unknown>
+  extends Record<string, ApplicationStateIdentifier<any> | {}> {
+  readonly [applicationStateIdentifierValueTypeSymbol]?: ValueType;
+}
 
 /**
  * The stored value type for application state entries.
  * */
-export type ApplicationStateValue = any;
+export type ApplicationStateValue = unknown;
+
+/**
+ * React-style state action for a specific application-state value.
+ *
+ * Passing a function follows the same contract as React `useState`: the
+ * function receives the previous value and returns the next value.
+ * */
+export type ApplicationStateSetAction<ValueType> =
+  | ValueType
+  | ((previousValue: ValueType) => ValueType);
+
+/**
+ * React-style stable setter for a specific application-state value.
+ * */
+export type ApplicationStateSetter<ValueType> = (
+  value: ApplicationStateSetAction<ValueType>,
+) => void;
 
 /**
  * Map of state identifiers to a "modified" boolean.
  * */
 export type ApplicationStateModificationState = Map<
-  ApplicationStateIdentifier,
+  ApplicationStateIdentifier<any>,
   boolean
 >;
 
@@ -41,34 +66,43 @@ export type ApplicationStateModificationState = Map<
  * Map of state identifiers to stored values.
  * */
 export type ApplicationState = Map<
-  ApplicationStateIdentifier,
+  ApplicationStateIdentifier<any>,
   ApplicationStateValue
 >;
 
 /**
- * Determines the identifier shape for a specific sub-state.
+ * Create or forward an application-state identifier.
  *
- * @typeParam SpecificType - The identifier shape, if provided.
+ * Call with no argument to create a new identifier object and attach a value
+ * type at the type level:
+ * `const profileId = getApplicationStateIdentifier<UserProfile>()`
+ *
+ * Call with an existing identifier object to preserve that exact object
+ * reference while keeping its type information intact.
  * */
-export type ApplicationStateIdentifierSubStateType<SpecificType> =
-  SpecificType extends undefined
-    ? ApplicationStateIdentifier
-    : SpecificType extends ApplicationStateIdentifier
-      ? SpecificType
-      : never;
+export function getApplicationStateIdentifier<
+  ValueType = ApplicationStateValue,
+>(): ApplicationStateIdentifier<ValueType>;
+export function getApplicationStateIdentifier<
+  IdentifierType extends ApplicationStateIdentifier<any>,
+>(subStateIdMap: IdentifierType): IdentifierType;
 
 /**
- * Normalize a sub-state identifier map to an ApplicationStateIdentifier.
- *
  * @param subStateIdMap - Optional sub-state identifier map.
  * @returns The identifier map or an empty identifier object.
  * */
-export const getApplicationStateIdentifier = <
-  SubStateIdStructure extends ApplicationStateIdentifier,
+export function getApplicationStateIdentifier<
+  ValueType = ApplicationStateValue,
+  IdentifierType extends ApplicationStateIdentifier<any> | undefined =
+    | ApplicationStateIdentifier<ValueType>
+    | undefined,
 >(
-  subStateIdMap?: SubStateIdStructure,
-): ApplicationStateIdentifierSubStateType<SubStateIdStructure> =>
-  (subStateIdMap ? subStateIdMap : {}) as any;
+  subStateIdMap?: IdentifierType,
+): IdentifierType extends ApplicationStateIdentifier<any>
+  ? IdentifierType
+  : ApplicationStateIdentifier<ValueType> {
+  return (subStateIdMap ? subStateIdMap : {}) as any;
+}
 
 /**
  * Read the modification status for a specific identifier.
@@ -78,7 +112,7 @@ export const getApplicationStateIdentifier = <
  * @returns Whether the identifier is marked as modified.
  * */
 export const getApplicationStateModified = (
-  identifier: ApplicationStateIdentifier,
+  identifier: ApplicationStateIdentifier<any>,
   modificationState: ApplicationStateModificationState,
 ): boolean => !!modificationState.get(identifier);
 
@@ -89,10 +123,12 @@ export const getApplicationStateModified = (
  * @param applicationState - The application state map.
  * @returns The stored value, if any.
  * */
-export const getApplicationStateValue = (
-  identifier: ApplicationStateIdentifier,
+export const getApplicationStateValue = <ValueType = ApplicationStateValue>(
+  identifier: ApplicationStateIdentifier<ValueType>,
   applicationState: ApplicationState,
-): ApplicationStateValue => applicationState.get(identifier);
+): ValueType | undefined => applicationState.get(identifier) as
+  | ValueType
+  | undefined;
 
 /**
  * Set the modification status for an identifier.
@@ -103,7 +139,7 @@ export const getApplicationStateValue = (
  * @returns A new modification map with the updated flag.
  * */
 export const setApplicationStateModified = (
-  identifier: ApplicationStateIdentifier,
+  identifier: ApplicationStateIdentifier<any>,
   value: boolean,
   modificationState: ApplicationStateModificationState,
 ): ApplicationStateModificationState =>
@@ -117,32 +153,11 @@ export const setApplicationStateModified = (
  * @param applicationState - The current application state map.
  * @returns A new application state map with the updated value.
  * */
-export const setApplicationStateValue = (
-  identifier: ApplicationStateIdentifier,
-  value: ApplicationStateValue,
+export const setApplicationStateValue = <ValueType = ApplicationStateValue>(
+  identifier: ApplicationStateIdentifier<ValueType>,
+  value: ValueType,
   applicationState: ApplicationState,
 ): ApplicationState => new Map(applicationState).set(identifier, value);
-
-/**
- * Resolve a structured map of identifiers into their current values.
- *
- * @param idStructure - Map of structure keys to identifiers.
- * @param applicationState - The application state map.
- * @returns An object of the same shape containing resolved values.
- * */
-export const getApplicationStateValueStructure = <
-  ReturnStructureType extends Record<string, any>,
->(
-  idStructure: Record<keyof ReturnStructureType, ApplicationStateIdentifier>,
-  applicationState: ApplicationState,
-): ReturnStructureType =>
-  Object.keys(idStructure).reduce(
-    (acc, k) => ({
-      ...acc,
-      [k]: getApplicationStateValue(idStructure[k], applicationState),
-    }),
-    {} as any,
-  );
 
 /**
  * Context state and updater hooks for application state.
@@ -159,11 +174,11 @@ export type ApplicationStateContextType = {
   /**
    * Replace the current application state map.
    * */
-  onChange: (newValue: ApplicationState) => void;
+  onChange: Dispatch<SetStateAction<ApplicationState>>;
   /**
    * Replace the current modification state map.
    * */
-  setModified: (newValue: ApplicationStateModificationState) => void;
+  setModified: Dispatch<SetStateAction<ApplicationStateModificationState>>;
 };
 
 /**
@@ -182,7 +197,9 @@ const { Provider } = ApplicationStateContext;
 /**
  * Used to access and update application state values.
  * */
-export type ApplicationStateValueController = {
+export type ApplicationStateValueController<
+  ValueType = ApplicationStateValue,
+> = {
   /**
    * Whether the value is marked as modified.
    * */
@@ -190,13 +207,17 @@ export type ApplicationStateValueController = {
   /**
    * The current value for the identifier.
    * */
-  value: ApplicationStateValue;
+  value: ValueType | undefined;
   /**
-   * Update the current value.
+   * Update the current value with React `useState` semantics.
    *
-   * @param value - The new value to store.
+   * The setter is intentionally stable so consumers can safely depend on it
+   * like a normal React state setter.
+   *
+   * @param value - The next value, or a function that derives it from the
+   * previous value.
    * */
-  onChange: (value: ApplicationStateValue) => void;
+  onChange: ApplicationStateSetter<ValueType | undefined>;
   /**
    * Update the modified flag.
    *
@@ -211,19 +232,17 @@ export type ApplicationStateValueController = {
  * @param identifier - Identifier to read and update.
  * @returns Controller for the identifier value and modified flag.
  * */
-export const useApplicationStateValue = (
-  identifier: ApplicationStateIdentifier,
-): ApplicationStateValueController => {
+export const useApplicationStateValue = <
+  ValueType = ApplicationStateValue,
+>(
+  identifier: ApplicationStateIdentifier<ValueType>,
+): ApplicationStateValueController<ValueType> => {
   const {
     modified: modificationState,
     value: applicationState,
     onChange: setApplicationState,
     setModified: setModificationState,
   } = useContext(ApplicationStateContext);
-  const appStateRef = useRef(applicationState);
-  appStateRef.current = applicationState;
-  const modificationStateRef = useRef(modificationState);
-  modificationStateRef.current = modificationState;
   const modified = useMemo(
     () => getApplicationStateModified(identifier, modificationState),
     [identifier, modificationState],
@@ -234,26 +253,39 @@ export const useApplicationStateValue = (
   );
   const setModified = useCallback(
     (isModified: boolean) => {
-      setModificationState(
-        setApplicationStateModified(
-          identifier,
-          isModified,
-          modificationStateRef.current,
-        ),
+      setModificationState((previousModified) =>
+        setApplicationStateModified(identifier, isModified, previousModified),
       );
     },
     [identifier, setModificationState],
   );
   const onChange = useCallback(
-    (newValue: ApplicationStateValue) => {
-      setApplicationState(
-        setApplicationStateValue(identifier, newValue, appStateRef.current),
+    (newValue: ApplicationStateSetAction<ValueType | undefined>) => {
+      setApplicationState((previousState) => {
+        const previousValue = getApplicationStateValue(
+          identifier,
+          previousState,
+        ) as ValueType | undefined;
+        const resolvedValue =
+          typeof newValue === "function"
+            ? (
+                newValue as (value: ValueType | undefined) => ValueType | undefined
+              )(previousValue)
+            : newValue;
+
+        return setApplicationStateValue<ValueType | undefined>(
+          identifier,
+          resolvedValue,
+          previousState,
+        );
+      });
+      setModificationState((previousModified) =>
+        setApplicationStateModified(identifier, true, previousModified),
       );
-      setModified(true);
     },
-    [identifier, setApplicationState],
+    [identifier, setApplicationState, setModificationState],
   );
-  const controller = useMemo<ApplicationStateValueController>(
+  const controller = useMemo<ApplicationStateValueController<ValueType>>(
     () => ({
       modified,
       value,
@@ -261,71 +293,6 @@ export const useApplicationStateValue = (
       setModified,
     }),
     [modified, onChange, setModified, value],
-  );
-
-  return controller;
-};
-
-/**
- * A mapped structure of application state value controllers.
- * */
-export type ApplicationStateValueStructureController<
-  StructureType extends Record<string, any>,
-> = {
-  /**
-   * The resolved value structure.
-   * */
-  valueStructure: StructureType;
-  /**
-   * Per-field change handlers for the structure.
-   * */
-  onChangeStructure: Record<keyof StructureType, (newValue: any) => void>;
-};
-/**
- * Use an object that is a collection of application state value controllers.
- *
- * @param idStructure - Map of structure keys to identifiers.
- * @returns Controller with the resolved values and per-field change handlers.
- * */
-export const useApplicationStateValueStructure = <
-  StructureType extends Record<string, any>,
->(
-  idStructure: Record<keyof StructureType, ApplicationStateIdentifier>,
-): ApplicationStateValueStructureController<StructureType> => {
-  const { value: applicationState, onChange: setApplicationState } = useContext(
-    ApplicationStateContext,
-  );
-  const valueStructure = useMemo(
-    () => getApplicationStateValueStructure(idStructure, applicationState),
-    [applicationState, idStructure],
-  );
-  const onChangeStructure = useMemo(
-    () =>
-      Object.keys(idStructure).reduce(
-        (acc, k) => ({
-          ...acc,
-          [k]: (newValue: any) => {
-            setApplicationState(
-              setApplicationStateValue(
-                idStructure[k],
-                newValue,
-                applicationState,
-              ),
-            );
-          },
-        }),
-        {} as any,
-      ),
-    [applicationState, idStructure, setApplicationState],
-  );
-  const controller = useMemo<
-    ApplicationStateValueStructureController<StructureType>
-  >(
-    () => ({
-      valueStructure,
-      onChangeStructure,
-    }),
-    [onChangeStructure, valueStructure],
   );
 
   return controller;

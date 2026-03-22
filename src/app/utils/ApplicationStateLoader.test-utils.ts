@@ -2,9 +2,11 @@ import React, { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import {
   ApplicationStateContext,
+  getApplicationStateIdentifier,
   type ApplicationState,
   type ApplicationStateModificationState,
   type ApplicationStateIdentifier,
+  type ApplicationStateSetAction,
 } from "./ApplicationState";
 import {
   useApplicationStateLoader,
@@ -20,17 +22,27 @@ type LoaderHarness = {
   onLoadCalls: boolean[];
 };
 
+const resolveStateAction = <ValueType,>(
+  action: ApplicationStateSetAction<ValueType>,
+  previousValue: ValueType,
+): ValueType =>
+  typeof action === "function"
+    ? (action as (value: ValueType) => ValueType)(previousValue)
+    : action;
+
 const buildHarness = (config: ApplicationStateLoaderConfig): LoaderHarness => {
   let controller: ApplicationStateLoader | undefined;
   let currentValue: ApplicationState = new Map();
   let currentModified: ApplicationStateModificationState = new Map();
   const onLoadCalls: boolean[] = [];
 
-  const setValue = (newValue: ApplicationState) => {
-    currentValue = newValue;
+  const setValue = (newValue: ApplicationStateSetAction<ApplicationState>) => {
+    currentValue = resolveStateAction(newValue, currentValue);
   };
-  const setModified = (newValue: ApplicationStateModificationState) => {
-    currentModified = newValue;
+  const setModified = (
+    newValue: ApplicationStateSetAction<ApplicationStateModificationState>,
+  ) => {
+    currentModified = resolveStateAction(newValue, currentModified);
   };
 
   const Component = () => {
@@ -173,3 +185,53 @@ export const runApplicationStateLoaderErrorModifiedScenario = async () =>
 
 export const runApplicationStateLoaderErrorOnLoadCallsScenario = async () =>
   (await runApplicationStateLoaderScenario()).errorOnLoadCalls;
+
+export const runApplicationStateLoaderHasValueControllerPropsScenario = () => {
+  const identifier = getApplicationStateIdentifier<{ count: number }>();
+  const serviceConfig: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+  };
+  const harness = buildHarness({
+    identifier,
+    manual: true,
+    remoteProcedureCall: {
+      serviceConfig,
+      path: "load",
+      args: [],
+    },
+  });
+
+  return (
+    "value" in harness.controller &&
+    "modified" in harness.controller &&
+    "onChange" in harness.controller &&
+    "setModified" in harness.controller
+  );
+};
+
+export const runApplicationStateLoaderLocalFunctionalUpdateScenario = () => {
+  const identifier = getApplicationStateIdentifier<{ count: number }>();
+  const serviceConfig: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+  };
+  const harness = buildHarness({
+    identifier,
+    manual: true,
+    remoteProcedureCall: {
+      serviceConfig,
+      path: "load",
+      args: [],
+    },
+  });
+
+  harness.controller.onChange((previousValue: { count: number } | undefined) => ({
+    count: (previousValue?.count ?? 0) + 1,
+  }));
+  harness.controller.onChange((previousValue: { count: number } | undefined) => ({
+    count: (previousValue?.count ?? 0) + 1,
+  }));
+
+  return harness.getValueState().get(identifier);
+};

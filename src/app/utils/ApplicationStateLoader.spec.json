@@ -63,6 +63,20 @@
       "conditions": [],
       "operation": "ARRAY_EQUALS",
       "expectation": [false]
+    },
+    {
+      "export": "runApplicationStateLoaderHasValueControllerPropsScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateLoaderLocalFunctionalUpdateScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "count": 2
+      }
     }
   ]
 }

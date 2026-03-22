@@ -57,7 +57,7 @@ Propose your implementation.
 - [x] Inspect the current `ApplicationState` / loader implementation and tests.
 - [x] Propose a typed, setter-compatible design for `useApplicationStateValue`.
 - [x] Propose follow-through updates for `useApplicationStateLoader`, `useApplicationStateValueStructure`, tests, and docs.
-- [ ] Await review / approval before Phase 2 implementation.
+- [x] Await review / approval before Phase 2 implementation.
 
 ### Proposed Design
 
@@ -197,3 +197,43 @@ The only meaningful change is that the context now exposes the raw React setters
    as bare `ValueType`.
 3. Whether to use a phantom property brand on `ApplicationStateIdentifier<ValueType>` or a unique symbol brand. I
    recommend a phantom optional property because it is simpler and does not affect runtime behavior.
+
+## Phase 2 Implementation Status
+
+### Phase 2 Checklist
+
+- [x] Make `ApplicationStateIdentifier` generic and preserve runtime identifier behavior.
+- [x] Change `ApplicationStateContext` to expose React setter-compatible map setters.
+- [x] Make `useApplicationStateValue` generic, stable, and functional-update compatible.
+- [x] Make `useApplicationStateValueStructure` preserve field types and use functional updates.
+- [x] Extend `useApplicationStateLoader` to return typed state-controller props alongside loader props.
+- [x] Update public docs/examples to explain the identifier-first contract.
+- [x] Add runtime coverage for functional update behavior and loader/controller integration.
+- [x] Run declaration build and focused app-state specs.
+
+### Implementation Notes
+
+- Implemented the identifier type brand with a unique symbol key rather than a string property so the brand remains
+  type-only and does not conflict with the identifier's string index signature.
+- Finalized `value` as `ValueType | undefined` to reflect the actual map-backed storage semantics.
+- Finalized `useApplicationStateLoader` as the combined remote-loader plus local-controller hook shape.
+
+## Phase 3
+
+Remove `useApplicationStateValueStructure` and its related API surface so `useApplicationStateValue` is the single
+championed application-state primitive.
+
+### Phase 3 Checklist
+
+- [x] Remove `useApplicationStateValueStructure` and related structure-controller types from the runtime exports.
+- [x] Update top-level docs/examples/comments to champion `useApplicationStateValue` instead.
+- [x] Remove or replace structure-specific tests/spec coverage.
+- [x] Run declaration build, docs build, and focused app-state tests after the removal.
+
+### Phase 3 Notes
+
+- Removed the structure-specific helper function and controller type from `ApplicationState.tsx` rather than leaving a
+  partial helper branch behind.
+- Rewrote the app package example to show the intended identifier-first contract with multiple
+  `useApplicationStateValue` calls.
+- Regenerated docs after the removal so the published API surface no longer advertises the deleted hook.
