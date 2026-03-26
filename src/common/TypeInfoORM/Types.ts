@@ -124,10 +124,6 @@ export enum TypeInfoORMServiceError {
    * */
   INDEXING_UNSUPPORTED_COMBINATION = "INDEXING_UNSUPPORTED_COMBINATION",
   /**
-   * Required index field is missing.
-   * */
-  INDEXING_MISSING_INDEX_FIELD = "INDEXING_MISSING_INDEX_FIELD",
-  /**
    * Indexing backend dependency is missing.
    * */
   INDEXING_MISSING_BACKEND = "INDEXING_MISSING_BACKEND",
