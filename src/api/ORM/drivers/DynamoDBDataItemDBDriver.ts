@@ -22,7 +22,7 @@ import {
   ScanCommandOutput,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { convertToAttr, marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { v4 as UUIDV4 } from "uuid";
 import {
   TypeInfoDataItem,
@@ -157,7 +157,7 @@ const buildUpdateExpression = (
       const operator = updateConfig?.fieldOperators?.[f];
 
       attributeNames[placeholderName] = f;
-      attributeValues[placeholderValue] = marshall(value);
+      attributeValues[placeholderValue] = convertToAttr(value);
 
       if (operator === TypeInfoORMUpdateOperators.NUMBER.INCREMENT) {
         addExpressionParts.push(`${placeholderName} ${placeholderValue}`);
@@ -170,7 +170,7 @@ const buildUpdateExpression = (
         addExpressionParts.push(
           `${placeholderName} ${decrementPlaceholderValue}`,
         );
-        attributeValues[decrementPlaceholderValue] = marshall(
+        attributeValues[decrementPlaceholderValue] = convertToAttr(
           -(value as number),
         );
         continue;

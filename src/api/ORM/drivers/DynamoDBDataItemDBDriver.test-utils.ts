@@ -18,6 +18,7 @@ type TestItem = {
   name: string;
   age: number;
   status?: string;
+  tags?: string[];
 };
 
 const buildDriver = () => {
@@ -228,6 +229,7 @@ const runDynamoDBDataItemDriverScenario = async () => {
 
   const readSelected = await driver.readItem(id1, ["id", "name"]);
   await driver.updateItem(id1, { name: "Alpha+" });
+  await driver.updateItem(id1, { tags: ["friendly", "quiet"] });
   const afterUpdate = await driver.readItem(id1);
 
   const filtered = await driver.listItems({
@@ -284,6 +286,7 @@ const runDynamoDBDataItemDriverScenario = async () => {
     afterUpdate: {
       name: afterUpdate.name,
       age: afterUpdate.age,
+      tags: afterUpdate.tags,
     },
     filteredIds: filtered.items.map((item) => item.id),
     page1Ids: page1.items.map((item) => item.id),

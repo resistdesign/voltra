@@ -22,7 +22,8 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "name": "Alpha+",
-        "age": 35
+        "age": 35,
+        "tags": ["friendly", "quiet"]
       }
     },
     {
