@@ -1535,14 +1535,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     for (const indexField of indexFields) {
       const qualifiedIndexField = qualifyIndexField(typeName, indexField);
 
-      if (!(indexField in item)) {
-        throw {
-          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-          typeName,
-          indexField,
-        };
-      }
-
       await indexDocument({
         backend: fullText.backend,
         document: item,
@@ -1583,14 +1575,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     for (const indexField of indexFields) {
       const qualifiedIndexField = qualifyIndexField(typeName, indexField);
-
-      if (!(indexField in item)) {
-        throw {
-          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-          typeName,
-          indexField,
-        };
-      }
 
       await removeDocument({
         backend: fullText.backend,
@@ -1636,14 +1620,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     for (const indexField of indexFields) {
       const qualifiedIndexField = qualifyIndexField(typeName, indexField);
-
-      if (!(indexField in previousItem)) {
-        throw {
-          message: TypeInfoORMServiceError.INDEXING_MISSING_INDEX_FIELD,
-          typeName,
-          indexField,
-        };
-      }
 
       await replaceFullTextDocumentIndex({
         backend: fullText.backend,

@@ -33,6 +33,13 @@
         "bulkTitleIdsAfterReindex": {
           "gamma": [],
           "delta": []
+        },
+        "optionalMissingFieldHandling": {
+          "createdId": "optional-4",
+          "summaryIdsAfterCreate": [],
+          "summaryIdsAfterRemoveMissing": [],
+          "summaryIdsAfterReplaceMissing": ["optional-4"],
+          "updatedSummary": "Summary Added Later"
         }
       }
     }
