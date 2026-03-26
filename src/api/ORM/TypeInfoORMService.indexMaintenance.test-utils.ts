@@ -20,6 +20,7 @@ type Book = {
   title: string;
   slug: string;
   rating: number;
+  summary?: string;
 };
 
 const getTypeInfoMapV1 = (): TypeInfoMap => ({
@@ -101,6 +102,50 @@ const getTypeInfoMapV2 = (): TypeInfoMap => ({
         tags: {
           indexed: {
             structured: true,
+          },
+        },
+      },
+    },
+  },
+});
+
+const getOptionalFullTextTypeInfoMap = (): TypeInfoMap => ({
+  Book: {
+    primaryField: "id",
+    fields: {
+      id: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+        tags: { primaryField: true },
+      },
+      title: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      slug: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      rating: {
+        type: "number",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      summary: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: true,
+        tags: {
+          indexed: {
+            fullText: true,
           },
         },
       },
@@ -325,6 +370,58 @@ const runIndexMaintenanceScenario = async () => {
     previousFullTextIndexFields: ["title"],
   });
 
+  const optionalDriver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "OptionalBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => `optional-${++counter}`,
+  });
+  const optionalFullTextBackend = new FullTextMemoryBackend();
+  const optionalStructuredBackend = new StructuredInMemoryBackend();
+  const optionalOrm = createOrm(
+    getOptionalFullTextTypeInfoMap(),
+    optionalDriver,
+    optionalFullTextBackend,
+    optionalStructuredBackend,
+  );
+  const optionalBookInput = {
+    title: "No Summary Yet",
+    slug: "no-summary-yet",
+    rating: 4,
+  } as TypeInfoDataItem;
+  const optionalBookId = await optionalOrm.create("Book", optionalBookInput);
+
+  const optionalSummaryIdsAfterCreate = await queryLossyIds(
+    optionalFullTextBackend,
+    "Book",
+    "summary",
+    "summary",
+  );
+
+  await optionalOrm.removeItemIndexes("Book", {
+    id: optionalBookId,
+    ...optionalBookInput,
+  });
+
+  const optionalSummaryIdsAfterRemoveMissing = await queryLossyIds(
+    optionalFullTextBackend,
+    "Book",
+    "summary",
+    "summary",
+  );
+
+  await optionalOrm.update("Book", {
+    id: optionalBookId,
+    summary: "Summary Added Later",
+  } as TypeInfoDataItem);
+
+  const optionalUpdatedItem = await optionalDriver.readItem(optionalBookId);
+  const optionalSummaryIdsAfterReplaceMissing = await queryLossyIds(
+    optionalFullTextBackend,
+    "Book",
+    "summary",
+    "summary",
+  );
+
   return {
     staleListBeforeRepairIds: staleListBeforeRepair.items.map((item) => item.id),
     staleFullTextIdsBeforeRepair,
@@ -352,6 +449,13 @@ const runIndexMaintenanceScenario = async () => {
         "title",
         "Delta",
       ),
+    },
+    optionalMissingFieldHandling: {
+      createdId: optionalBookId,
+      summaryIdsAfterCreate: optionalSummaryIdsAfterCreate,
+      summaryIdsAfterRemoveMissing: optionalSummaryIdsAfterRemoveMissing,
+      summaryIdsAfterReplaceMissing: optionalSummaryIdsAfterReplaceMissing,
+      updatedSummary: optionalUpdatedItem.summary,
     },
   };
 };
