@@ -1,5 +1,11 @@
 import { getFullUrl, sendServiceRequest, type ServiceConfig } from "./Service";
 
+const createAbortError = () => {
+  const error = new Error("Request was aborted.");
+  error.name = "AbortError";
+  return error;
+};
+
 const runServiceScenario = async () => {
   const config: ServiceConfig = {
     protocol: "https",
@@ -158,6 +164,81 @@ const runServiceTextResponseScenario = async () => {
   };
 };
 
+const runServiceCancellationScenario = async () => {
+  const config: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+    port: 443,
+    basePath: "api",
+  };
+  const originalFetch = globalThis.fetch;
+  const requestBodies: string[] = [];
+  const abortedBodies: string[] = [];
+  let requestCount = 0;
+  let resolveLatestRequest:
+    | ((value: Response | PromiseLike<Response>) => void)
+    | undefined;
+
+  globalThis.fetch = async (_input, init) => {
+    requestCount += 1;
+    const requestBody = String(init?.body ?? "");
+    requestBodies.push(requestBody);
+
+    return await new Promise<Response>((resolve, reject) => {
+      const signal = init?.signal;
+      const onAbort = () => {
+        abortedBodies.push(requestBody);
+        reject(createAbortError());
+      };
+
+      if (signal?.aborted) {
+        onAbort();
+        return;
+      }
+
+      signal?.addEventListener("abort", onAbort, { once: true });
+
+      if (requestCount === 2) {
+        resolveLatestRequest = (value) => {
+          signal?.removeEventListener("abort", onAbort);
+          resolve(value);
+        };
+      }
+    });
+  };
+
+  const firstRequest = sendServiceRequest(config, "v1", ["first"], {
+    cancelPendingOnNewRequest: true,
+  });
+  const secondRequest = sendServiceRequest(config, "v1", ["second"], {
+    cancelPendingOnNewRequest: true,
+  });
+
+  let firstRequestErrorName: string | undefined;
+
+  try {
+    await firstRequest;
+  } catch (error: any) {
+    firstRequestErrorName = error?.name ?? String(error);
+  }
+
+  resolveLatestRequest?.({
+    ok: true,
+    text: async () => JSON.stringify({ args: ["second"] }),
+  } as Response);
+
+  const latestResponse = await secondRequest;
+
+  globalThis.fetch = originalFetch;
+
+  return {
+    requestBodies,
+    abortedBodies,
+    firstRequestErrorName,
+    latestResponse,
+  };
+};
+
 export const runServiceUrlScenario = async () => (await runServiceScenario()).url;
 
 export const runServiceOriginUrlScenario = async () =>
@@ -198,3 +279,15 @@ export const runServiceTextSuccessResponseScenario = async () =>
 
 export const runServiceTextErrorMessageScenario = async () =>
   (await runServiceTextResponseScenario()).errorMessage;
+
+export const runServiceCancellationRequestBodiesScenario = async () =>
+  (await runServiceCancellationScenario()).requestBodies;
+
+export const runServiceCancellationAbortedBodiesScenario = async () =>
+  (await runServiceCancellationScenario()).abortedBodies;
+
+export const runServiceCancellationFirstRequestErrorNameScenario = async () =>
+  (await runServiceCancellationScenario()).firstRequestErrorName;
+
+export const runServiceCancellationLatestResponseScenario = async () =>
+  (await runServiceCancellationScenario()).latestResponse;

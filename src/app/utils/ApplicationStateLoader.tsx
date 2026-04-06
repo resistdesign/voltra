@@ -10,7 +10,11 @@ import {
   type ApplicationStateValueController,
   useApplicationStateValue,
 } from "./ApplicationState";
-import { sendServiceRequest, ServiceConfig } from "./Service";
+import {
+  sendServiceRequest,
+  type ServiceConfig,
+  type ServiceRequestConfig,
+} from "./Service";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
@@ -64,7 +68,7 @@ export type RemoteProcedureCall<ArgsType extends any[] = any[]> = {
 export type ApplicationStateLoaderConfig<
   ValueType = ApplicationStateValue,
   ArgsType extends any[] = any[],
-> = {
+> = ServiceRequestConfig & {
   /**
    * Identifier for the value to update in application state.
    * */
@@ -116,9 +120,11 @@ export const useApplicationStateLoader = <
     resetOnError = false,
     onLoadComplete,
     manual = false,
+    cancelPendingOnNewRequest = false,
   } = config;
   const { args = [] as unknown as ArgsType } = remoteProcedureCall;
   const argsRef = useRef<ArgsType>(args);
+  const requestSequenceRef = useRef(0);
   argsRef.current = args;
   const [cacheValidity, setCacheValidity] = useState<{}>({});
   const [loading, setLoading] = useState<boolean>(false);
@@ -130,6 +136,7 @@ export const useApplicationStateLoader = <
   }, []);
   const makeRemoteProcedureCall = useCallback(
     async (...directArgs: ArgsType) => {
+      const requestSequence = ++requestSequenceRef.current;
       let success = false;
 
       setLoading(true);
@@ -141,13 +148,24 @@ export const useApplicationStateLoader = <
           serviceConfig,
           path,
           directArgs,
+          {
+            cancelPendingOnNewRequest,
+          },
         );
+
+        if (requestSequence !== requestSequenceRef.current) {
+          return;
+        }
 
         success = true;
 
         onChange(result);
         setModified(false);
       } catch (error) {
+        if (requestSequence !== requestSequenceRef.current) {
+          return;
+        }
+
         success = false;
 
         setLatestError(error);
@@ -156,13 +174,24 @@ export const useApplicationStateLoader = <
           onChange(undefined);
           setModified(false);
         }
+      } finally {
+        if (requestSequence !== requestSequenceRef.current) {
+          return;
+        }
+
+        setLoading(false);
+
+        onLoadComplete?.(success);
       }
-
-      setLoading(false);
-
-      onLoadComplete?.(success);
     },
-    [remoteProcedureCall, onChange, setModified, resetOnError, onLoadComplete],
+    [
+      remoteProcedureCall,
+      onChange,
+      setModified,
+      resetOnError,
+      onLoadComplete,
+      cancelPendingOnNewRequest,
+    ],
   );
   const appStateLoader = useMemo(
     () => ({
