@@ -5,6 +5,8 @@
  */
 import { mergeStringPaths, PATH_DELIMITER } from "../../common/Routing";
 
+const activeRequestControllers = new Map<string, AbortController>();
+
 /**
  * The HTTP service configuration, including authorization, to be used for a service call.
  * */
@@ -29,6 +31,18 @@ export type ServiceConfig = {
    * Bearer token for authorization.
    * */
   authorization?: string;
+};
+
+/**
+ * Additional request behavior for a service call.
+ * */
+export type ServiceRequestConfig = {
+  /**
+   * Abort the prior in-flight request for the same service URL before starting a new one.
+   *
+   * @default false
+   * */
+  cancelPendingOnNewRequest?: boolean;
 };
 
 /**
@@ -76,15 +90,26 @@ export const getFullUrl = (
  * @param config - Service configuration for the request.
  * @param path - Endpoint path to call.
  * @param args - JSON-serializable arguments to send.
+ * @param requestConfig - Additional request behavior configuration.
  * @returns Parsed JSON response.
  */
 export const sendServiceRequest = async (
   config: ServiceConfig,
   path: string = "",
   args: any[] = [],
+  requestConfig: ServiceRequestConfig = {},
 ): Promise<any> => {
   const { protocol, domain, port, basePath = "", authorization = "" } = config;
+  const { cancelPendingOnNewRequest = false } = requestConfig;
   const fullUrl = getFullUrl(protocol, domain, basePath, path, port);
+  const abortController = new AbortController();
+  const previousRequestController = activeRequestControllers.get(fullUrl);
+
+  if (cancelPendingOnNewRequest) {
+    previousRequestController?.abort();
+    activeRequestControllers.set(fullUrl, abortController);
+  }
+
   const requestHeaders = {
     "Content-Type": "application/json",
     ...(!!authorization
@@ -93,34 +118,45 @@ export const sendServiceRequest = async (
         }
       : {}),
   };
-  const response = await fetch(fullUrl, {
-    headers: requestHeaders,
-    credentials: "same-origin",
-    method: "POST",
-    body: JSON.stringify(args),
-  });
-  const { ok: responseIsOk } = response;
-  const textData = await response.text();
-
-  let data: any = textData;
-
   try {
-    data = JSON.parse(textData);
-  } catch (error) {
-    // Ignore.
-  }
+    const response = await fetch(fullUrl, {
+      headers: requestHeaders,
+      credentials: "same-origin",
+      method: "POST",
+      body: JSON.stringify(args),
+      signal: abortController.signal,
+    });
+    const { ok: responseIsOk } = response;
+    const textData = await response.text();
 
-  if (typeof data === "object") {
-    if (responseIsOk) {
-      return data;
-    } else {
-      throw data;
+    let data: any = textData;
+
+    try {
+      data = JSON.parse(textData);
+    } catch (error) {
+      // Ignore.
     }
-  } else {
-    if (responseIsOk) {
-      return { data };
+
+    if (typeof data === "object") {
+      if (responseIsOk) {
+        return data;
+      } else {
+        throw data;
+      }
     } else {
-      throw { message: data };
+      if (responseIsOk) {
+        return { data };
+      } else {
+        throw { message: data };
+      }
+    }
+  } finally {
+    if (cancelPendingOnNewRequest) {
+      const activeRequestController = activeRequestControllers.get(fullUrl);
+
+      if (activeRequestController === abortController) {
+        activeRequestControllers.delete(fullUrl);
+      }
     }
   }
 };

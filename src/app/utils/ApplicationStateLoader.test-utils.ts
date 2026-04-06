@@ -15,6 +15,12 @@ import {
 } from "./ApplicationStateLoader";
 import type { ServiceConfig } from "./Service";
 
+const createAbortError = () => {
+  const error = new Error("Request was aborted.");
+  error.name = "AbortError";
+  return error;
+};
+
 type LoaderHarness = {
   controller: ApplicationStateLoader;
   getValueState: () => ApplicationState;
@@ -156,6 +162,85 @@ const runApplicationStateLoaderScenario = async () => {
   };
 };
 
+const runApplicationStateLoaderCancellationScenario = async () => {
+  const identifier: ApplicationStateIdentifier = { screen: { profile: {} } };
+  const serviceConfig: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+  };
+  const originalFetch = globalThis.fetch;
+  let requestCount = 0;
+  let resolveLatestRequest:
+    | ((value: Response | PromiseLike<Response>) => void)
+    | undefined;
+
+  const harness = buildHarness({
+    identifier,
+    manual: true,
+    cancelPendingOnNewRequest: true,
+    remoteProcedureCall: {
+      serviceConfig,
+      path: "load",
+      args: ["base"],
+    },
+  });
+
+  globalThis.fetch = async (_input, init) => {
+    requestCount += 1;
+    const requestBody = String(init?.body ?? "");
+
+    return await new Promise<Response>((resolve, reject) => {
+      const signal = init?.signal;
+      const onAbort = () => reject(createAbortError());
+
+      if (signal?.aborted) {
+        onAbort();
+        return;
+      }
+
+      signal?.addEventListener("abort", onAbort, { once: true });
+
+      if (requestCount === 2) {
+        resolveLatestRequest = (value) => {
+          signal?.removeEventListener("abort", onAbort);
+          resolve(value);
+        };
+      }
+
+      if (requestBody === "[\"second\"]") {
+        return;
+      }
+    });
+  };
+
+  const firstRequest = harness.controller.makeRemoteProcedureCall("first");
+  const secondRequest = harness.controller.makeRemoteProcedureCall("second");
+
+  await firstRequest;
+
+  resolveLatestRequest?.({
+    ok: true,
+    text: async () =>
+      JSON.stringify({
+        result: "ok",
+        args: ["second"],
+      }),
+  } as Response);
+
+  await secondRequest;
+
+  globalThis.fetch = originalFetch;
+
+  const valueState = harness.getValueState();
+
+  return {
+    loading: harness.controller.loading,
+    latestError: harness.controller.latestError ?? null,
+    value: valueState.get(identifier) ?? null,
+    onLoadCalls: harness.onLoadCalls,
+  };
+};
+
 export const runApplicationStateLoaderInitialLoadingScenario = async () =>
   (await runApplicationStateLoaderScenario()).initialLoading;
 
@@ -235,3 +320,15 @@ export const runApplicationStateLoaderLocalFunctionalUpdateScenario = () => {
 
   return harness.getValueState().get(identifier);
 };
+
+export const runApplicationStateLoaderCancellationLoadingScenario = async () =>
+  (await runApplicationStateLoaderCancellationScenario()).loading;
+
+export const runApplicationStateLoaderCancellationLatestErrorScenario = async () =>
+  (await runApplicationStateLoaderCancellationScenario()).latestError;
+
+export const runApplicationStateLoaderCancellationValueScenario = async () =>
+  (await runApplicationStateLoaderCancellationScenario()).value;
+
+export const runApplicationStateLoaderCancellationOnLoadCallsScenario = async () =>
+  (await runApplicationStateLoaderCancellationScenario()).onLoadCalls;
