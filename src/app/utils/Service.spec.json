@@ -97,6 +97,32 @@
       "conditions": [],
       "operation": "===",
       "expectation": "Unauthorized"
+    },
+    {
+      "export": "runServiceCancellationRequestBodiesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["[\"first\"]", "[\"second\"]"]
+    },
+    {
+      "export": "runServiceCancellationAbortedBodiesScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["[\"first\"]"]
+    },
+    {
+      "export": "runServiceCancellationFirstRequestErrorNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "AbortError"
+    },
+    {
+      "export": "runServiceCancellationLatestResponseScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "args": ["second"]
+      }
     }
   ]
 }

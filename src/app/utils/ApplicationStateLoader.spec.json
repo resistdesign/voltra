@@ -77,6 +77,33 @@
       "expectation": {
         "count": 2
       }
+    },
+    {
+      "export": "runApplicationStateLoaderCancellationLoadingScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runApplicationStateLoaderCancellationLatestErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runApplicationStateLoaderCancellationValueScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "result": "ok",
+        "args": ["second"]
+      }
+    },
+    {
+      "export": "runApplicationStateLoaderCancellationOnLoadCallsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [true]
     }
   ]
 }
