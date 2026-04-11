@@ -2,6 +2,7 @@ import {
   DeleteItemCommand,
   GetItemCommand,
   PutItemCommand,
+  QueryCommand,
   ScanCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
@@ -25,6 +26,7 @@ const buildDriver = () => {
   let counter = 0;
   const store = new Map<string, TestItem>();
   let lastScanInput: ScanCommand["input"] | undefined;
+  let lastQueryInput: QueryCommand["input"] | undefined;
 
   const driver = new DynamoDBDataItemDBDriver<TestItem, "id">({
     tableName: "TestItems",
@@ -199,17 +201,79 @@ const buildDriver = () => {
       };
     }
 
+    if (command instanceof QueryCommand) {
+      lastQueryInput = command.input;
+      const attributeValues = command.input.ExpressionAttributeValues
+        ? unmarshall(command.input.ExpressionAttributeValues as any)
+        : undefined;
+      const attributeNames = command.input.ExpressionAttributeNames;
+      const projectionExpression = command.input.ProjectionExpression;
+      const limit = command.input.Limit ?? Infinity;
+      const exclusiveStartKey = command.input.ExclusiveStartKey
+        ? (unmarshall(command.input.ExclusiveStartKey as any) as { id: string })
+        : undefined;
+      const indexName = command.input.IndexName;
+      const items = Array.from(store.values());
+      const sorted = indexName
+        ? [...items].sort((a, b) => {
+            const left = (a as any)[indexName];
+            const right = (b as any)[indexName];
+
+            if (left === right) {
+              return 0;
+            }
+
+            if (left === undefined) {
+              return -1;
+            }
+
+            if (right === undefined) {
+              return 1;
+            }
+
+            return left < right ? -1 : 1;
+          })
+        : items;
+      const ordered =
+        command.input.ScanIndexForward === false ? sorted.reverse() : sorted;
+      const filtered = ordered.filter((item) =>
+        parseFilterExpression(
+          item,
+          command.input.KeyConditionExpression,
+          attributeNames,
+          attributeValues,
+        ),
+      );
+      const startIndex = exclusiveStartKey
+        ? filtered.findIndex((item) => item.id === exclusiveStartKey.id) + 1
+        : 0;
+      const page = filtered.slice(startIndex, startIndex + limit);
+      const lastItem = page[page.length - 1];
+      const lastEvaluatedKey =
+        filtered.length > startIndex + page.length && lastItem
+          ? marshall({ id: lastItem.id })
+          : undefined;
+
+      return {
+        Items: page.map((item) =>
+          marshall(applyProjection(item, projectionExpression, attributeNames)),
+        ),
+        LastEvaluatedKey: lastEvaluatedKey,
+      };
+    }
+
     return {};
   };
 
   return {
     driver,
     getLastScanInput: () => lastScanInput,
+    getLastQueryInput: () => lastQueryInput,
   };
 };
 
 const runDynamoDBDataItemDriverScenario = async () => {
-  const { driver, getLastScanInput } = buildDriver();
+  const { driver, getLastScanInput, getLastQueryInput } = buildDriver();
 
   const id1 = await driver.createItem({
     name: "Alpha",
@@ -234,7 +298,6 @@ const runDynamoDBDataItemDriverScenario = async () => {
 
   const filtered = await driver.listItems({
     itemsPerPage: 10,
-    sortFields: [{ field: "age" }],
     criteria: {
       logicalOperator: LogicalOperators.AND,
       fieldCriteria: [
@@ -251,7 +314,39 @@ const runDynamoDBDataItemDriverScenario = async () => {
       ],
     },
   });
-  const lastScanInput = getLastScanInput();
+  const filteredScanInput = getLastScanInput();
+
+  const querySortedAsc = await driver.listItems({
+    itemsPerPage: 10,
+    sortFields: [{ field: "age" }, { field: "name", reverse: true }],
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "age",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 29,
+        },
+      ],
+    },
+  });
+  const queryAscInput = getLastQueryInput();
+
+  const querySortedDesc = await driver.listItems({
+    itemsPerPage: 10,
+    sortFields: [{ field: "age", reverse: true }],
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "age",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 29,
+        },
+      ],
+    },
+  });
+  const queryDescInput = getLastQueryInput();
 
   const page1 = await driver.listItems({ itemsPerPage: 2 });
   const page2 = await driver.listItems({
@@ -276,8 +371,8 @@ const runDynamoDBDataItemDriverScenario = async () => {
     invalidCursorError = error?.message ?? String(error);
   }
 
-  const expressionValues = lastScanInput?.ExpressionAttributeValues
-    ? unmarshall(lastScanInput.ExpressionAttributeValues as any)
+  const expressionValues = filteredScanInput?.ExpressionAttributeValues
+    ? unmarshall(filteredScanInput.ExpressionAttributeValues as any)
     : undefined;
 
   return {
@@ -297,9 +392,15 @@ const runDynamoDBDataItemDriverScenario = async () => {
     deleteResult,
     missingReadError,
     invalidCursorError,
-    listFilterExpression: lastScanInput?.FilterExpression,
-    listFilterAttributeNames: lastScanInput?.ExpressionAttributeNames,
+    listFilterExpression: filteredScanInput?.FilterExpression,
+    listFilterAttributeNames: filteredScanInput?.ExpressionAttributeNames,
     listFilterAttributeValues: expressionValues,
+    querySortedAscIds: querySortedAsc.items.map((item) => item.id),
+    querySortedDescIds: querySortedDesc.items.map((item) => item.id),
+    queryIndexName: queryAscInput?.IndexName,
+    queryKeyConditionExpression: queryAscInput?.KeyConditionExpression,
+    queryScanIndexForwardAsc: queryAscInput?.ScanIndexForward,
+    queryScanIndexForwardDesc: queryDescInput?.ScanIndexForward,
     missingReadErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND,
     invalidCursorErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
   };
@@ -343,6 +444,27 @@ export const runDynamoDBDataItemDriverListFilterAttributeNamesScenario = async (
 
 export const runDynamoDBDataItemDriverListFilterAttributeValuesScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).listFilterAttributeValues;
+
+export const runDynamoDBDataItemDriverQuerySortedAscIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).querySortedAscIds;
+
+export const runDynamoDBDataItemDriverQuerySortedDescIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).querySortedDescIds;
+
+export const runDynamoDBDataItemDriverQueryIndexNameScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).queryIndexName;
+
+export const runDynamoDBDataItemDriverQueryKeyConditionExpressionScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).queryKeyConditionExpression;
+
+export const runDynamoDBDataItemDriverQueryScanIndexForwardAscScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).queryScanIndexForwardAsc;
+
+export const runDynamoDBDataItemDriverQueryScanIndexForwardDescScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).queryScanIndexForwardDesc;
 
 export const runDynamoDBDataItemDriverMissingReadErrorExpectedScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).missingReadErrorExpected;

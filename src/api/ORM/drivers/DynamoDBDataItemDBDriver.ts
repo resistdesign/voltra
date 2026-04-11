@@ -1,8 +1,9 @@
 /**
  * @packageDocumentation
  *
- * DynamoDB-backed data item driver for TypeInfo ORM. Supports CRUD and scan-based
- * list operations with SearchCriteria filters.
+ * DynamoDB-backed data item driver for TypeInfo ORM. Supports CRUD and list
+ * operations using scans by default, or GSI-backed queries when a sort field is
+ * supplied.
  */
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
@@ -17,6 +18,9 @@ import {
   DynamoDBClientConfig,
   GetItemCommand,
   PutItemCommand,
+  QueryCommand,
+  QueryCommandInput,
+  QueryCommandOutput,
   ScanCommand,
   ScanCommandInput,
   ScanCommandOutput,
@@ -415,6 +419,8 @@ export class DynamoDBDataItemDBDriver<
       ExpressionAttributeNames,
       ExpressionAttributeValues,
     } = createFilterExpression(fieldCriteria, logicalOperator);
+    const primarySortField = sortFields?.[0];
+    const indexName = primarySortField?.field;
     // IMPORTANT: DynamoDB is VERY particular about whether to include
     // properties, AT ALL, based on expressions being used.
     const params: ScanCommandInput = {
@@ -466,17 +472,32 @@ export class DynamoDBDataItemDBDriver<
       }
     }
 
-    const command = new ScanCommand({
-      ...params,
-      ExclusiveStartKey: structuredCursor,
-      Limit: itemsPerPage,
-    });
-    const { Items = [], LastEvaluatedKey }: ScanCommandOutput =
-      await this.dynamoDBClient.send(command);
+    const commandInput = indexName
+      ? ({
+          ...params,
+          IndexName: indexName,
+          KeyConditionExpression: FilterExpression,
+          ExclusiveStartKey: structuredCursor,
+          Limit: itemsPerPage,
+          ScanIndexForward: !primarySortField?.reverse,
+        } satisfies QueryCommandInput)
+      : ({
+          ...params,
+          ExclusiveStartKey: structuredCursor,
+          Limit: itemsPerPage,
+        } satisfies ScanCommandInput);
+    const command = indexName
+      ? new QueryCommand(commandInput)
+      : new ScanCommand(commandInput);
+    const { Items = [], LastEvaluatedKey } = (await this.dynamoDBClient.send(
+      command,
+    )) as QueryCommandOutput | ScanCommandOutput;
     const unmarshalledItems = Items.map((item) => unmarshall(item) as ItemType);
 
-    // Sort the items.
-    const sortedItems = getSortedItems(sortFields, unmarshalledItems);
+    // Query results arrive in GSI order; scans still require in-memory sorting.
+    const sortedItems = indexName
+      ? unmarshalledItems
+      : getSortedItems(sortFields, unmarshalledItems);
 
     return {
       items: sortedItems as ItemType[],

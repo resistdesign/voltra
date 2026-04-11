@@ -18,24 +18,19 @@ Keep this summary and track progress below.
 
 ## Progress
 
-- [~] Phase 1: Validate requested DynamoDB GSI sort behavior and identify the first safe implementation slice.
-  - [~] Inspect the current DynamoDB list implementation and confirm whether the requested `sortFields[0] -> GSI Query`
+- [x] Phase 1: Validate requested DynamoDB GSI sort behavior and identify the first safe implementation slice.
+  - [x] Inspect the current DynamoDB list implementation and confirm whether the requested `sortFields[0] -> GSI Query`
     contract is technically valid.
-  - [ ] If technically valid, route DynamoDB list calls through the first sort field's GSI and honor `reverse`.
-  - [ ] Add/update driver spec coverage for GSI routing and reverse ordering.
-  - [ ] Update DynamoDB ORM documentation to explain the sort-field-to-GSI behavior and its requirements.
+  - [x] If technically valid, route DynamoDB list calls through the first sort field's GSI and honor `reverse`.
+  - [x] Add/update driver spec coverage for GSI routing and reverse ordering.
+  - [x] Update DynamoDB ORM documentation to explain the sort-field-to-GSI behavior and its requirements.
 
 ## Findings
 
-- [~] Serious challenge: DynamoDB `Query` requires a partition-key condition for the target table or GSI. The current
-  request only provides a sort field name and an optional `reverse` flag.
-- [~] The current generic `DynamoDBDataItemDBDriver` config only knows `tableName` and `uniquelyIdentifyingFieldName`;
-  it does not know any GSI partition-key field/value to build a valid `KeyConditionExpression`.
-- [~] The current driver writes plain items and scans them. There is no existing shared partition key, type
-  discriminator, or GSI query contract in driver config that would let the driver safely query an index just from
-  `sortFields[0].field`.
-- [~] Because of that, implementing the requested behavior exactly as written would either fail at runtime for most GSIs
-  or require guessing index schema. That is a scope change and needs confirmation before code changes.
+- [x] The Solution Example clarifies the contract: when `sortFields[0]` is present, the DynamoDB driver should treat its
+  `field` as the GSI `IndexName`, reuse the normal list `criteria` as the `KeyConditionExpression` input, and let
+  DynamoDB reject invalid criteria/index combinations at runtime.
+- [x] Additional sort fields are intentionally ignored by the DynamoDB driver.
 
 ## Solution Example:
 
