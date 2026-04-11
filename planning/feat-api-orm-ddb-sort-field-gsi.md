@@ -39,6 +39,12 @@ Keep this summary and track progress below.
 
 ## Solution Example:
 
+This is proper QueryCommnd. It works. And it only knows the IndexName of the GSI. In this example, things like
+`KeyConditionExpression` are hard coded, but in the Voltra TypeInfo ORM, we expect the right query fields to come in
+through the search criteria as normal. All required information is already supplied through the typical `list` call
+interface/api-surface. If an implementation call doesn't include the proper required fields in the search criteria, then
+the query will fail. And that's ok.
+
 ```typescript
 new QueryCommand({
   TableName: DATABASE_USER_INFO_TABLE_NAME,
