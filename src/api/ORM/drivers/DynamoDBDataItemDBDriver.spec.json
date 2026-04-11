@@ -93,6 +93,42 @@
       }
     },
     {
+      "export": "runDynamoDBDataItemDriverQuerySortedAscIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-2", "item-1", "item-3"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverQuerySortedDescIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-3", "item-1", "item-2"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverQueryIndexNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "age"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverQueryKeyConditionExpressionScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "#age >= :age"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverQueryScanIndexForwardAscScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runDynamoDBDataItemDriverQueryScanIndexForwardDescScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
       "export": "runDynamoDBDataItemDriverMissingReadErrorExpectedScenario",
       "conditions": [],
       "operation": "===",
