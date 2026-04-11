@@ -40,8 +40,15 @@ This document captures current ORM list/search and relationship behaviors that m
   - `reindexStoredItem` refreshes a single current driver item without duplicating postings; when out-of-band writes changed indexed values, provide `previousItem`, and when schema/config changes removed old fulltext fields, provide `previousFullTextIndexFields`.
   - `reindexStoredType` pages through the current driver items and reapplies indexing for each item; provide `previousItemsByPrimaryField` for out-of-band updates that changed indexed values, and deleted items still require explicit `removeItemIndexes` cleanup because fulltext removal needs prior field values.
   - Structured cleanup can reconcile from the stored doc id, but fulltext cleanup cannot infer removed tokens for deleted/retagged fields without a prior snapshot or prior field list.
-- Paging: `itemsPerPage` and `cursor` are passed to the driver. The DynamoDB driver uses `Scan` and returns a JSON-serialized `LastEvaluatedKey` as the cursor.
-- Sorting: `sortFields` is applied in-memory in the DynamoDB driver after list results are loaded.
+- Paging: `itemsPerPage` and `cursor` are passed to the driver. The DynamoDB driver returns a JSON-serialized `LastEvaluatedKey` as the cursor for either `Scan` or GSI-backed `Query` requests.
+- Sorting:
+  - Without `sortFields`, the DynamoDB driver uses `Scan`.
+  - With `sortFields`, the DynamoDB driver uses only the first sort field.
+  - The first sort field's `field` value is treated as the DynamoDB `IndexName`.
+  - The list `criteria` is reused as the `KeyConditionExpression` input for that `Query`.
+  - The first sort field's `reverse` flag maps to `ScanIndexForward = false`.
+  - Additional sort fields are ignored by the DynamoDB driver.
+  - Invalid criteria/index combinations are allowed to fail at DynamoDB runtime; the driver does not infer or validate GSI key schema.
 - Selected fields: `selectedFields` is sanitized to always include the primary field; when DAC is enabled, reads ignore `selectedFields` at the driver level and are filtered after DAC validation.
 
 ## Relationships
