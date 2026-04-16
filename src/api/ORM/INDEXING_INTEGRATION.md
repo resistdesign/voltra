@@ -43,11 +43,12 @@ This document captures current ORM list/search and relationship behaviors that m
 - Paging: `itemsPerPage` and `cursor` are passed to the driver. The DynamoDB driver returns a JSON-serialized `LastEvaluatedKey` as the cursor for either `Scan` or GSI-backed `Query` requests.
 - Sorting:
   - Without `sortFields`, the DynamoDB driver uses `Scan`.
-  - With `sortFields`, the DynamoDB driver uses only the first sort field.
-  - The first sort field's `field` value is treated as the DynamoDB `IndexName`.
-  - The list `criteria` is reused as the `KeyConditionExpression` input for that `Query`.
-  - The first sort field's `reverse` flag maps to `ScanIndexForward = false`.
-  - Additional sort fields are ignored by the DynamoDB driver.
+  - With `sortFields`, the DynamoDB driver defaults to `Scan` plus in-memory sorting.
+  - When `dbSpecificConfig.useFirstSortFieldAsIndexName` is `true`, the driver uses only the first sort field to build a DynamoDB `Query`.
+  - In that opt-in query mode, the first sort field's `field` value is treated as the DynamoDB `IndexName`.
+  - In that opt-in query mode, the list `criteria` is reused as the `KeyConditionExpression` input for the `Query`.
+  - In that opt-in query mode, the first sort field's `reverse` flag maps to `ScanIndexForward = false`.
+  - Additional sort fields are ignored only in the opt-in query mode; the in-memory fallback honors the provided sort fields.
   - Invalid criteria/index combinations are allowed to fail at DynamoDB runtime; the driver does not infer or validate GSI key schema.
 - Selected fields: `selectedFields` is sanitized to always include the primary field; when DAC is enabled, reads ignore `selectedFields` at the driver level and are filtered after DAC validation.
 

@@ -74,6 +74,10 @@ export type RetryStrategy = {
  */
 export type DynamoDBSpecificConfig = {
   /**
+   * When true, the first sort field is treated as the DynamoDB index name.
+   */
+  useFirstSortFieldAsIndexName?: boolean;
+  /**
    * Custom request handler override.
    */
   requestHandler?: string;
