@@ -22,7 +22,7 @@ type TestItem = {
   tags?: string[];
 };
 
-const buildDriver = () => {
+const buildDriver = (useFirstSortFieldAsIndexName = false) => {
   let counter = 0;
   const store = new Map<string, TestItem>();
   let lastScanInput: ScanCommand["input"] | undefined;
@@ -32,7 +32,9 @@ const buildDriver = () => {
     tableName: "TestItems",
     uniquelyIdentifyingFieldName: "id",
     generateUniqueIdentifier: () => `item-${++counter}`,
-    dbSpecificConfig: {},
+    dbSpecificConfig: {
+      useFirstSortFieldAsIndexName,
+    },
   });
 
   const client = (driver as any).dynamoDBClient as {
@@ -274,6 +276,10 @@ const buildDriver = () => {
 
 const runDynamoDBDataItemDriverScenario = async () => {
   const { driver, getLastScanInput, getLastQueryInput } = buildDriver();
+  const {
+    driver: indexedSortDriver,
+    getLastQueryInput: getIndexedSortQueryInput,
+  } = buildDriver(true);
 
   const id1 = await driver.createItem({
     name: "Alpha",
@@ -316,7 +322,7 @@ const runDynamoDBDataItemDriverScenario = async () => {
   });
   const filteredScanInput = getLastScanInput();
 
-  const querySortedAsc = await driver.listItems({
+  const inMemorySortedAsc = await driver.listItems({
     itemsPerPage: 10,
     sortFields: [{ field: "age" }, { field: "name", reverse: true }],
     criteria: {
@@ -330,9 +336,9 @@ const runDynamoDBDataItemDriverScenario = async () => {
       ],
     },
   });
-  const queryAscInput = getLastQueryInput();
+  const inMemorySortedAscQueryInput = getLastQueryInput();
 
-  const querySortedDesc = await driver.listItems({
+  const inMemorySortedDesc = await driver.listItems({
     itemsPerPage: 10,
     sortFields: [{ field: "age", reverse: true }],
     criteria: {
@@ -346,7 +352,55 @@ const runDynamoDBDataItemDriverScenario = async () => {
       ],
     },
   });
-  const queryDescInput = getLastQueryInput();
+  const inMemorySortedDescQueryInput = getLastQueryInput();
+
+  await indexedSortDriver.createItem({
+    name: "Alpha",
+    age: 35,
+    status: "active",
+  });
+  await indexedSortDriver.createItem({
+    name: "Beta",
+    age: 29,
+    status: "archived",
+  });
+  await indexedSortDriver.createItem({
+    name: "Gamma",
+    age: 42,
+    status: "active",
+  });
+
+  const querySortedAsc = await indexedSortDriver.listItems({
+    itemsPerPage: 10,
+    sortFields: [{ field: "age" }, { field: "name", reverse: true }],
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "age",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 29,
+        },
+      ],
+    },
+  });
+  const queryAscInput = getIndexedSortQueryInput();
+
+  const querySortedDesc = await indexedSortDriver.listItems({
+    itemsPerPage: 10,
+    sortFields: [{ field: "age", reverse: true }],
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "age",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 29,
+        },
+      ],
+    },
+  });
+  const queryDescInput = getIndexedSortQueryInput();
 
   const page1 = await driver.listItems({ itemsPerPage: 2 });
   const page2 = await driver.listItems({
@@ -395,6 +449,11 @@ const runDynamoDBDataItemDriverScenario = async () => {
     listFilterExpression: filteredScanInput?.FilterExpression,
     listFilterAttributeNames: filteredScanInput?.ExpressionAttributeNames,
     listFilterAttributeValues: expressionValues,
+    inMemorySortedAscIds: inMemorySortedAsc.items.map((item) => item.id),
+    inMemorySortedDescIds: inMemorySortedDesc.items.map((item) => item.id),
+    inMemorySortQueryInputUsed: typeof inMemorySortedAscQueryInput !== "undefined",
+    inMemorySortDescQueryInputUsed:
+      typeof inMemorySortedDescQueryInput !== "undefined",
     querySortedAscIds: querySortedAsc.items.map((item) => item.id),
     querySortedDescIds: querySortedDesc.items.map((item) => item.id),
     queryIndexName: queryAscInput?.IndexName,
@@ -450,6 +509,20 @@ export const runDynamoDBDataItemDriverQuerySortedAscIdsScenario = async () =>
 
 export const runDynamoDBDataItemDriverQuerySortedDescIdsScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).querySortedDescIds;
+
+export const runDynamoDBDataItemDriverInMemorySortedAscIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverScenario()).inMemorySortedAscIds;
+
+export const runDynamoDBDataItemDriverInMemorySortedDescIdsScenario =
+  async () => (await runDynamoDBDataItemDriverScenario()).inMemorySortedDescIds;
+
+export const runDynamoDBDataItemDriverInMemorySortQueryInputUsedScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).inMemorySortQueryInputUsed;
+
+export const runDynamoDBDataItemDriverInMemorySortDescQueryInputUsedScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).inMemorySortDescQueryInputUsed;
 
 export const runDynamoDBDataItemDriverQueryIndexNameScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).queryIndexName;

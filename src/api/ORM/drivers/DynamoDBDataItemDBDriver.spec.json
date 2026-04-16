@@ -93,6 +93,30 @@
       }
     },
     {
+      "export": "runDynamoDBDataItemDriverInMemorySortedAscIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-3", "item-2", "item-1"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInMemorySortedDescIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-3", "item-1", "item-2"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInMemorySortQueryInputUsedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInMemorySortDescQueryInputUsedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
       "export": "runDynamoDBDataItemDriverQuerySortedAscIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
