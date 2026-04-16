@@ -13,3 +13,10 @@ So it should:
 2. Otherwise, it should just do in-memory sorting.
 
 Keep this summary and track progress below.
+
+## Checklist
+
+- [x] Add a DynamoDB-specific config flag that controls whether the first sort field is used as an index name.
+- [x] Update the driver list path so sort fields default to in-memory sorting unless the flag is enabled.
+- [x] Expand DynamoDB driver tests to cover both the default fallback and the opt-in query behavior.
+- [x] Update the ORM indexing integration contract to describe the new sort/index behavior.
