@@ -2,8 +2,8 @@
  * @packageDocumentation
  *
  * DynamoDB-backed data item driver for TypeInfo ORM. Supports CRUD and list
- * operations using scans by default, or GSI-backed queries when a sort field is
- * supplied.
+ * operations using scans by default, with optional GSI-backed queries when the
+ * first sort field is configured to act as an index name.
  */
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
@@ -47,6 +47,7 @@ import {
 } from "../../../common/SearchTypes";
 import { getSortedItems } from "../../../common/SearchUtils";
 import ConfigTypeInfoMap from "./DynamoDBDataItemDBDriver/ConfigTypeInfoMap.json";
+import type { DynamoDBSpecificConfig } from "./DynamoDBDataItemDBDriver/ConfigTypes";
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>
@@ -234,6 +235,7 @@ export class DynamoDBDataItemDBDriver<
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> {
   protected dynamoDBClient: DynamoDBClient;
+  protected specificConfig: DynamoDBSpecificConfig;
 
   /**
    * @param config Driver configuration including DynamoDB client settings.
@@ -248,10 +250,14 @@ export class DynamoDBDataItemDBDriver<
     >,
   ) {
     const { dbSpecificConfig } = config;
+    const { useFirstSortFieldAsIndexName, ...clientConfig } =
+      (dbSpecificConfig ?? {}) as DynamoDBSpecificConfig;
 
-    this.dynamoDBClient = new DynamoDBClient(
-      dbSpecificConfig as DynamoDBClientConfig,
-    );
+    this.specificConfig = {
+      useFirstSortFieldAsIndexName,
+    };
+
+    this.dynamoDBClient = new DynamoDBClient(clientConfig as DynamoDBClientConfig);
   }
 
   /**
@@ -420,7 +426,9 @@ export class DynamoDBDataItemDBDriver<
       ExpressionAttributeValues,
     } = createFilterExpression(fieldCriteria, logicalOperator);
     const primarySortField = sortFields?.[0];
-    const indexName = primarySortField?.field;
+    const indexName = this.specificConfig.useFirstSortFieldAsIndexName
+      ? primarySortField?.field
+      : undefined;
     // IMPORTANT: DynamoDB is VERY particular about whether to include
     // properties, AT ALL, based on expressions being used.
     const params: ScanCommandInput = {

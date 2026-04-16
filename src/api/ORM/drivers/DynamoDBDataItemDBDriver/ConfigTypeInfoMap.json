@@ -108,6 +108,13 @@
   },
   "DynamoDBSpecificConfig": {
     "fields": {
+      "useFirstSortFieldAsIndexName": {
+        "type": "boolean",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
       "requestHandler": {
         "type": "string",
         "array": false,
