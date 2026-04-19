@@ -5,4 +5,7 @@ export * from "./InMemoryItemRelationshipDBDriver";
 export * from "./InMemoryFileItemDBDriver";
 export * from "./IndexingRelationshipDriver";
 export * from "./common";
-export * from "./S3FileItemDBDriver/ConfigTypes";
+export type { DynamoDBSpecificConfig } from "./DynamoDBDataItemDBDriver/ConfigTypes";
+export type { InMemorySpecificConfig } from "./InMemoryDataItemDBDriver/ConfigTypes";
+export type { InMemoryFileSpecificConfig } from "./InMemoryFileItemDBDriver";
+export type { S3SpecificConfig } from "./S3FileItemDBDriver/ConfigTypes";
