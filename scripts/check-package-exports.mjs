@@ -215,7 +215,13 @@ const checkRuntimeSymbolExports = async () => {
 const checkTypeContractWithTypeScript = async () => {
   const probeFilePath = path.join(repoRoot, ".cache", "export-contract-probe.ts");
   const probeSource = `
-import type { RouteMap } from "@resistdesign/voltra/api";
+import type {
+  DynamoDBSpecificConfig,
+  InMemoryFileSpecificConfig,
+  InMemorySpecificConfig,
+  RouteMap,
+  S3SpecificConfig,
+} from "@resistdesign/voltra/api";
 import { addRoutesToRouteMap, handleCloudFunctionEvent } from "@resistdesign/voltra/api";
 import type { TypeInfo, TypeInfoMap } from "@resistdesign/voltra/common";
 import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";
@@ -226,9 +232,17 @@ import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
 const routeMap: RouteMap = addRoutesToRouteMap({}, []);
 const t: TypeInfo = {};
 const tm: TypeInfoMap = {};
+const dynamoConfig: DynamoDBSpecificConfig = {};
+const inMemoryConfig: InMemorySpecificConfig = {};
+const inMemoryFileConfig: InMemoryFileSpecificConfig = {};
+const s3Config: S3SpecificConfig = { bucketName: "test-bucket", s3Config: {} };
 void routeMap;
 void t;
 void tm;
+void dynamoConfig;
+void inMemoryConfig;
+void inMemoryFileConfig;
+void s3Config;
 void handleCloudFunctionEvent;
 void TypeInfoORMServiceError;
 void createWebFormRenderer;
