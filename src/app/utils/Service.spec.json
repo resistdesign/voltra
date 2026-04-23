@@ -87,16 +87,20 @@
     {
       "export": "runServiceTextSuccessResponseScenario",
       "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "data": "Some Response"
-      }
+      "operation": "===",
+      "expectation": null
     },
     {
       "export": "runServiceTextErrorMessageScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "Unauthorized"
+      "expectation": null
+    },
+    {
+      "export": "runServiceEmptySuccessResponseScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
     },
     {
       "export": "runServiceCancellationRequestBodiesScenario",

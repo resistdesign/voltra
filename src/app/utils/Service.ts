@@ -129,26 +129,18 @@ export const sendServiceRequest = async (
     const { ok: responseIsOk } = response;
     const textData = await response.text();
 
-    let data: any = textData;
+    let data: any;
 
     try {
       data = JSON.parse(textData);
     } catch (error) {
-      // Ignore.
+      data = undefined;
     }
 
-    if (typeof data === "object") {
-      if (responseIsOk) {
-        return data;
-      } else {
-        throw data;
-      }
+    if (responseIsOk) {
+      return data;
     } else {
-      if (responseIsOk) {
-        return { data };
-      } else {
-        throw { message: data };
-      }
+      throw data;
     }
   } finally {
     if (cancelPendingOnNewRequest) {
