@@ -153,15 +153,37 @@ const runServiceTextResponseScenario = async () => {
   try {
     await sendServiceRequest(config, "v1", ["a"]);
   } catch (error: any) {
-    errorMessage = error?.message ?? String(error);
+    errorMessage = error?.message;
   }
 
   globalThis.fetch = originalFetch;
 
   return {
-    successResponse,
-    errorMessage,
+    successResponse: successResponse ?? null,
+    errorMessage: errorMessage ?? null,
   };
+};
+
+const runServiceEmptyResponseScenario = async () => {
+  const config: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+    port: 443,
+    basePath: "api",
+  };
+  const originalFetch = globalThis.fetch;
+
+  globalThis.fetch = async () =>
+    ({
+      ok: true,
+      text: async () => "",
+    }) as Response;
+
+  const successResponse = await sendServiceRequest(config, "v1", ["a"]);
+
+  globalThis.fetch = originalFetch;
+
+  return successResponse ?? null;
 };
 
 const runServiceCancellationScenario = async () => {
@@ -279,6 +301,9 @@ export const runServiceTextSuccessResponseScenario = async () =>
 
 export const runServiceTextErrorMessageScenario = async () =>
   (await runServiceTextResponseScenario()).errorMessage;
+
+export const runServiceEmptySuccessResponseScenario = async () =>
+  await runServiceEmptyResponseScenario();
 
 export const runServiceCancellationRequestBodiesScenario = async () =>
   (await runServiceCancellationScenario()).requestBodies;
