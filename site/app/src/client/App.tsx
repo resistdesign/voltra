@@ -172,6 +172,10 @@ const GridCard = styled.div`
       font-size: 0.75em;
     }
   }
+
+  & > .fall-off-fx {
+    margin-bottom: 2em;
+  }
 `;
 
 export const App: FC = () => {
