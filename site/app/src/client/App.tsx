@@ -11,8 +11,8 @@ const MenuToggle = styled.button<{ $isOpen: boolean }>`
   position: fixed;
   top: 1em;
   right: 1em;
-  width: 3.5em;
-  height: 3.5em;
+  width: 2em;
+  height: 2em;
   border-radius: 50%;
   background: var(--pico-primary-nav-background);
   border: none;
@@ -27,16 +27,16 @@ const MenuToggle = styled.button<{ $isOpen: boolean }>`
 
   & > span {
     display: block;
-    width: 1.5em;
+    width: 1em;
     height: 2px;
     background: var(--pico-primary-nav-color);
-    margin: 0.35em auto;
+    margin: 0.1em auto;
     transition: all 0.3s ease-in-out;
     border-radius: 2px;
 
     &:nth-child(1) {
       transform: ${(props: { $isOpen: boolean }) =>
-        props.$isOpen ? "rotate(45deg) translate(0.5em, 0.5em)" : "none"};
+        props.$isOpen ? "rotate(45deg) translate(0.2em, 0.25em)" : "none"};
     }
 
     &:nth-child(2) {
@@ -45,7 +45,7 @@ const MenuToggle = styled.button<{ $isOpen: boolean }>`
 
     &:nth-child(3) {
       transform: ${(props: { $isOpen: boolean }) =>
-        props.$isOpen ? "rotate(-45deg) translate(0.5em, -0.5em)" : "none"};
+        props.$isOpen ? "rotate(-45deg) translate(0.2em, -0.25em)" : "none"};
     }
   }
 
