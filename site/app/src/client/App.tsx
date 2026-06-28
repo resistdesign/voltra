@@ -27,6 +27,40 @@ const NavBar = styled.nav`
       }
     }
   }
+
+  @media screen and (max-width: 800px) {
+    margin-bottom: 2em;
+
+    & > ul:first-child {
+      display: none;
+    }
+
+    & > ul {
+      flex: 1 0 auto;
+      gap: 1em;
+      flex-direction: column;
+      align-items: stretch;
+
+      & > li {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 0;
+        margin: 0;
+
+        & > a {
+          flex: 1 0 auto;
+          padding: 1em;
+          margin: 0;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+    }
+  }
 `;
 
 const Content = styled.div`
@@ -73,35 +107,32 @@ const GridCard = styled.div`
       font-size: 0.75em;
     }
   }
-
-  & > img.fall-off-fx {
-  }
 `;
 
 export const App: FC = () => {
   return (
     <ApplicationStateProvider>
       <Route>
+        <NavBar>
+          <ul>
+            <li></li>
+          </ul>
+          <ul>
+            <li>
+              <a href="https://docs.voltra.app/docs">Docs</a>
+            </li>
+            <li>
+              <a href="/form-generation">Form Generation Demo</a>
+            </li>
+            <li>
+              <a href="/end-to-end-demo">End-to-End Demo</a>
+            </li>
+            <li>
+              <a href="/easy-layout-demo">EasyLayout Demo</a>
+            </li>
+          </ul>
+        </NavBar>
         <Content>
-          <NavBar>
-            <ul>
-              <li></li>
-            </ul>
-            <ul>
-              <li>
-                <a href="https://docs.voltra.app/docs">Docs</a>
-              </li>
-              <li>
-                <a href="/form-generation">Form Generation Demo</a>
-              </li>
-              <li>
-                <a href="/end-to-end-demo">End-to-End Demo</a>
-              </li>
-              <li>
-                <a href="/easy-layout-demo">EasyLayout Demo</a>
-              </li>
-            </ul>
-          </NavBar>
           <h3>
             <Route exact>Features</Route>
             <Route path="form-generation" exact>
