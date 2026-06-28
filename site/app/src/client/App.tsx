@@ -242,11 +242,6 @@ export const App: FC = () => {
                 <img src="/images/features/api.png" alt="API Features" />
                 <article>
                   <table>
-                    <thead>
-                      <tr>
-                        <th>API</th>
-                      </tr>
-                    </thead>
                     <tbody>
                       <tr>
                         <td>RPC</td>
@@ -276,11 +271,6 @@ export const App: FC = () => {
                 <img src="/images/features/app.png" alt="App Features" />
                 <article>
                   <table>
-                    <thead>
-                      <tr>
-                        <th>App</th>
-                      </tr>
-                    </thead>
                     <tbody>
                       <tr>
                         <td>Easy Layout</td>
@@ -304,11 +294,6 @@ export const App: FC = () => {
                 <img src="/images/features/iac.png" alt="IaC Features" />
                 <article>
                   <table>
-                    <thead>
-                      <tr>
-                        <th>IaC</th>
-                      </tr>
-                    </thead>
                     <tbody>
                       <tr>
                         <td>
