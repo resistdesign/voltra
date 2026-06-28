@@ -37,7 +37,7 @@ const NavBar = styled.nav`
 
     & > ul {
       flex: 1 0 auto;
-      gap: 1em;
+      gap: 0.5em;
       flex-direction: column;
       align-items: stretch;
 
