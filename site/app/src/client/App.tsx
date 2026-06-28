@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import styled from "styled-components";
 import { ApplicationStateProvider } from "../../../../src/app/utils";
 import { Route } from "../../../../src/web";
@@ -6,7 +6,58 @@ import { AdvancedDemo } from "./AdvancedDemo";
 import { EasyLayoutDemo } from "./EasyLayoutDemo";
 import { EndToEndDemo } from "./EndToEndDemo";
 
-const NavBar = styled.nav`
+const MenuToggle = styled.button<{ $isOpen: boolean }>`
+  display: none;
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  width: 3.5em;
+  height: 3.5em;
+  border-radius: 50%;
+  background: var(--pico-primary-nav-background);
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  padding: 0;
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  & > span {
+    display: block;
+    width: 1.5em;
+    height: 2px;
+    background: var(--pico-primary-nav-color);
+    margin: 0.35em auto;
+    transition: all 0.3s ease-in-out;
+    border-radius: 2px;
+
+    &:nth-child(1) {
+      transform: ${(props: { $isOpen: boolean }) =>
+        props.$isOpen ? "rotate(45deg) translate(0.5em, 0.5em)" : "none"};
+    }
+
+    &:nth-child(2) {
+      opacity: ${(props: { $isOpen: boolean }) => (props.$isOpen ? "0" : "1")};
+    }
+
+    &:nth-child(3) {
+      transform: ${(props: { $isOpen: boolean }) =>
+        props.$isOpen ? "rotate(-45deg) translate(0.5em, -0.5em)" : "none"};
+    }
+  }
+
+  @media screen and (max-width: 800px) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+`;
+
+const NavBar = styled.nav<{ $isOpen: boolean }>`
   & > ul {
     gap: 1em;
 
@@ -36,6 +87,16 @@ const NavBar = styled.nav`
     }
 
     & > ul {
+      display: ${(props: { $isOpen: boolean }) =>
+        props.$isOpen ? "flex" : "none"};
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--pico-background-color);
+      padding: 5em 1em 1em 1em;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 999;
       flex: 1 0 auto;
       gap: 0.5em;
       flex-direction: column;
@@ -114,25 +175,47 @@ const GridCard = styled.div`
 `;
 
 export const App: FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <ApplicationStateProvider>
       <Route>
-        <NavBar>
+        <MenuToggle $isOpen={isMenuOpen} onClick={toggleMenu}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </MenuToggle>
+        <NavBar $isOpen={isMenuOpen}>
           <ul>
             <li></li>
           </ul>
           <ul>
             <li>
-              <a href="https://docs.voltra.app/docs">Docs</a>
+              <a
+                href="https://docs.voltra.app/docs"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Docs
+              </a>
             </li>
             <li>
-              <a href="/form-generation">Form Generation Demo</a>
+              <a href="/form-generation" onClick={() => setIsMenuOpen(false)}>
+                Form Generation Demo
+              </a>
             </li>
             <li>
-              <a href="/end-to-end-demo">End-to-End Demo</a>
+              <a href="/end-to-end-demo" onClick={() => setIsMenuOpen(false)}>
+                End-to-End Demo
+              </a>
             </li>
             <li>
-              <a href="/easy-layout-demo">EasyLayout Demo</a>
+              <a href="/easy-layout-demo" onClick={() => setIsMenuOpen(false)}>
+                EasyLayout Demo
+              </a>
             </li>
           </ul>
         </NavBar>
