@@ -114,10 +114,6 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
         justify-content: flex-start;
         min-height: 100vh;
       }
-
-      body {
-        max-width: 1280px;
-      }
     </style>
   </head>
   <body>
@@ -127,9 +123,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
     }
 
     header {
-      background-color: #491A6E;
-
-      aspect-ratio: 16 / 6;
+      background: linear-gradient(170deg, #360e55 20%, #491A6E 70%, #662b93 90%);
 
       display: flex;
       flex-direction: column;
@@ -137,7 +131,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
       justify-content: center;
 
       margin: 0;
-      padding: 1em;
+      padding: 4em;
 
       & > a.logo-link {
         display: flex;
@@ -148,6 +142,7 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
 
         & > img.logo {
           max-width: 60%;
+          max-height: 10em;
         }
       }
     }
