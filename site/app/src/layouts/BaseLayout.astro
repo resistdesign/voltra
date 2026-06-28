@@ -124,26 +124,304 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
 
     header {
       background: linear-gradient(170deg, #360e55 20%, #491A6E 70%, #662b93 90%);
-
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-
       margin: 0;
       padding: 4em;
+    }
 
-      & > a.logo-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        width: 100%;
+    header > a.logo-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      outline: none;
+    }
 
-        & > img.logo {
-          max-width: 60%;
-          max-height: 10em;
-        }
+    header > a.logo-link > .logo-mark {
+      --logo-fault-angle: -11deg;
+      --logo-fault-primary: rgba(255, 0, 150, 0.9);
+      --logo-fault-secondary: rgba(0, 238, 255, 0.86);
+
+      display: grid;
+      isolation: isolate;
+      place-items: center;
+      position: relative;
+      max-height: 10em;
+      overflow: visible;
+      transform: translateZ(0);
+      transition:
+        filter 220ms ease,
+        transform 220ms ease;
+      width: min(60vw, 42rem);
+    }
+
+    header > a.logo-link > .logo-mark > .logo {
+      display: block;
+      grid-area: 1 / 1;
+      max-height: 10em;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    header > a.logo-link > .logo-mark > .logo-base {
+      filter: drop-shadow(0 1.2em 1.8em rgba(0, 0, 0, 0.24));
+      position: relative;
+      z-index: 2;
+    }
+
+    header > a.logo-link > .logo-mark > .logo-slice,
+    header > a.logo-link > .logo-mark > .logo-channel {
+      inset: 0;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      transform: translate3d(0, 0, 0);
+      transition:
+        opacity 160ms ease,
+        transform 160ms ease,
+        filter 160ms ease;
+      z-index: 3;
+    }
+
+    header > a.logo-link > .logo-mark > .logo-channel {
+      mix-blend-mode: screen;
+    }
+
+    header > a.logo-link > .logo-mark > .logo-channel-cyan {
+      filter:
+        drop-shadow(-0.1em 0 0 var(--logo-fault-secondary))
+        saturate(1.4)
+        hue-rotate(128deg);
+    }
+
+    header > a.logo-link > .logo-mark > .logo-channel-magenta {
+      filter:
+        drop-shadow(0.1em 0 0 var(--logo-fault-primary))
+        saturate(1.55)
+        hue-rotate(-42deg);
+    }
+
+    header > a.logo-link > .logo-mark > .logo-slice-top {
+      clip-path: polygon(0 0, 100% 0, 100% 35%, 69% 30%, 55% 40%, 37% 32%, 20% 39%, 0 34%);
+    }
+
+    header > a.logo-link > .logo-mark > .logo-slice-mid {
+      clip-path: polygon(0 32%, 20% 38%, 38% 31%, 55% 40%, 69% 30%, 100% 35%, 100% 63%, 73% 59%, 59% 69%, 43% 58%, 28% 66%, 0 60%);
+    }
+
+    header > a.logo-link > .logo-mark > .logo-slice-bottom {
+      clip-path: polygon(0 59%, 28% 65%, 43% 58%, 59% 69%, 73% 59%, 100% 63%, 100% 100%, 0 100%);
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark {
+      animation: logo-fault-shock 720ms steps(1, end) both;
+      filter:
+        drop-shadow(0 0 0.38em rgba(255, 255, 255, 0.5))
+        drop-shadow(0.34em 0.08em 0 rgba(255, 0, 150, 0.28))
+        drop-shadow(-0.32em -0.06em 0 rgba(0, 238, 255, 0.3));
+      transform: translate3d(0, -0.08em, 0) skewX(-0.8deg);
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-base {
+      animation: logo-base-shear 720ms steps(1, end) both;
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-channel-cyan {
+      animation: logo-channel-cyan 720ms steps(1, end) both;
+      opacity: 0.72;
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-channel-magenta {
+      animation: logo-channel-magenta 720ms steps(1, end) both;
+      opacity: 0.7;
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-slice-top {
+      animation: logo-slice-top 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      opacity: 1;
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-slice-mid {
+      animation: logo-slice-mid 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      opacity: 0.96;
+    }
+
+    header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-slice-bottom {
+      animation: logo-slice-bottom 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      opacity: 1;
+    }
+
+    @keyframes logo-fault-shock {
+      0%,
+      100% {
+        transform: translate3d(0, -0.08em, 0) skewX(-0.8deg);
+      }
+
+      8% {
+        transform: translate3d(-0.08em, -0.08em, 0) skewX(2.4deg);
+      }
+
+      16% {
+        transform: translate3d(0.12em, -0.1em, 0) skewX(-3deg);
+      }
+
+      28% {
+        transform: translate3d(-0.04em, -0.08em, 0) skewX(1.2deg);
+      }
+
+      44% {
+        transform: translate3d(0.04em, -0.08em, 0) skewX(-1.4deg);
+      }
+    }
+
+    @keyframes logo-base-shear {
+      0%,
+      100% {
+        clip-path: inset(0);
+        transform: translate3d(0, 0, 0);
+      }
+
+      10% {
+        clip-path: polygon(0 0, 100% 0, 100% 34%, 68% 29%, 54% 39%, 37% 31%, 19% 38%, 0 33%, 0 100%, 100% 100%, 100% 64%, 73% 60%, 59% 70%, 43% 59%, 28% 67%, 0 61%);
+      }
+
+      24% {
+        transform: translate3d(0.06em, 0, 0) skewX(-1.6deg);
+      }
+
+      50% {
+        clip-path: inset(0);
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    @keyframes logo-channel-cyan {
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0);
+      }
+
+      9% {
+        transform: translate3d(-0.38em, 0.02em, 0);
+      }
+
+      18% {
+        transform: translate3d(0.18em, -0.03em, 0);
+      }
+
+      34% {
+        transform: translate3d(-0.16em, 0.01em, 0);
+      }
+
+      56% {
+        transform: translate3d(-0.06em, 0, 0);
+      }
+    }
+
+    @keyframes logo-channel-magenta {
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0);
+      }
+
+      9% {
+        transform: translate3d(0.34em, -0.03em, 0);
+      }
+
+      18% {
+        transform: translate3d(-0.2em, 0.02em, 0);
+      }
+
+      34% {
+        transform: translate3d(0.18em, -0.01em, 0);
+      }
+
+      56% {
+        transform: translate3d(0.07em, 0, 0);
+      }
+    }
+
+    @keyframes logo-slice-top {
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0) skewX(0deg);
+      }
+
+      12% {
+        transform: translate3d(-0.58em, -0.1em, 0) skewX(-7deg);
+      }
+
+      32% {
+        transform: translate3d(0.22em, -0.03em, 0) skewX(2deg);
+      }
+
+      64% {
+        transform: translate3d(-0.08em, 0, 0) skewX(-1deg);
+      }
+    }
+
+    @keyframes logo-slice-mid {
+      0%,
+      100% {
+        filter: none;
+        transform: translate3d(0, 0, 0) skewX(0deg);
+      }
+
+      12% {
+        filter:
+          drop-shadow(0.18em 0 0 rgba(255, 0, 150, 0.64))
+          drop-shadow(-0.18em 0 0 rgba(0, 238, 255, 0.64));
+        transform: translate3d(0.66em, 0.03em, 0) skewX(8deg);
+      }
+
+      32% {
+        transform: translate3d(-0.28em, 0, 0) skewX(-2deg);
+      }
+
+      64% {
+        transform: translate3d(0.08em, 0, 0) skewX(1deg);
+      }
+    }
+
+    @keyframes logo-slice-bottom {
+      0%,
+      100% {
+        transform: translate3d(0, 0, 0) skewX(0deg);
+      }
+
+      12% {
+        transform: translate3d(-0.36em, 0.11em, 0) skewX(-4deg);
+      }
+
+      32% {
+        transform: translate3d(0.16em, 0.03em, 0) skewX(1.6deg);
+      }
+
+      64% {
+        transform: translate3d(-0.05em, 0, 0) skewX(-0.6deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      header > a.logo-link > .logo-mark,
+      header > a.logo-link > .logo-mark > .logo {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      header > a.logo-link:is(:hover, :focus-visible) > .logo-mark {
+        filter:
+          drop-shadow(0 0 0.32em rgba(255, 255, 255, 0.42))
+          drop-shadow(0.22em 0 0 rgba(255, 0, 150, 0.26))
+          drop-shadow(-0.22em 0 0 rgba(0, 238, 255, 0.28));
+        transform: none;
+      }
+
+      header > a.logo-link:is(:hover, :focus-visible) > .logo-mark > .logo-channel {
+        opacity: 0.28;
       }
     }
 
@@ -166,7 +444,14 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
   </style>
   <header>
     <a class="logo-link" href="/">
-      <img class="logo" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
+      <span class="logo-mark">
+        <img class="logo logo-base" src="/images/Voltra Logo 2025 No Background.svg" alt="Voltra Logo" />
+        <img class="logo logo-channel logo-channel-cyan" src="/images/Voltra Logo 2025 No Background.svg" alt="" aria-hidden="true" />
+        <img class="logo logo-channel logo-channel-magenta" src="/images/Voltra Logo 2025 No Background.svg" alt="" aria-hidden="true" />
+        <img class="logo logo-slice logo-slice-top" src="/images/Voltra Logo 2025 No Background.svg" alt="" aria-hidden="true" />
+        <img class="logo logo-slice logo-slice-mid" src="/images/Voltra Logo 2025 No Background.svg" alt="" aria-hidden="true" />
+        <img class="logo logo-slice logo-slice-bottom" src="/images/Voltra Logo 2025 No Background.svg" alt="" aria-hidden="true" />
+      </span>
     </a>
   </header>
     <slot />
