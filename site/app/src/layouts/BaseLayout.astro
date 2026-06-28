@@ -146,6 +146,23 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
         }
       }
     }
+
+    footer {
+      &.site-credit {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        & > .site-credit-link {
+          max-height: 8em;
+          & > .site-credit-logo {
+            width: 100%;
+          }
+        }
+      }
+    }
   </style>
   <header>
     <a class="logo-link" href="/">
@@ -153,5 +170,10 @@ const { title = "Voltra | With our powers combined!" } = Astro.props;
     </a>
   </header>
     <slot />
+    <footer class="site-credit" aria-label="Site credit">
+      <a class="site-credit-link" href="https://resist.design/" rel="noopener noreferrer">
+        <img class="site-credit-logo" src="/images/resist-design-logo.svg" alt="Resist Design" loading="lazy" />
+      </a>
+    </footer>
   </body>
 </html>
