@@ -70,6 +70,10 @@ const Content = styled.div`
   justify-content: flex-start;
   gap: 2em;
   padding: 0 2em 2em 2em;
+
+  table {
+    margin: 0;
+  }
 `;
 
 const ContentCardGrid = styled.div`
