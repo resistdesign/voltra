@@ -17,7 +17,11 @@ import { DemoTypeInfoMap } from "../../../common/DemoTypeInfoMap";
 import { BaseItemRelationshipInfo } from "../../../../src/common/ItemRelationshipInfoTypes";
 import { DebugLogPanel } from "./EndToEndDemo/components/DebugLogPanel";
 import { ContextBar } from "./EndToEndDemo/components/ContextBar";
-import { CarRelateScreen } from "./EndToEndDemo/screens/CarRelateScreen";
+import {
+  type CarSearchOperator,
+  CarRelateScreen,
+  type SearchFilter,
+} from "./EndToEndDemo/screens/CarRelateScreen";
 import { CreatePersonScreen } from "./EndToEndDemo/screens/CreatePersonScreen";
 import { PeopleHomeScreen } from "./EndToEndDemo/screens/PeopleHomeScreen";
 import { PersonDetailScreen } from "./EndToEndDemo/screens/PersonDetailScreen";
@@ -33,14 +37,16 @@ import { usePeople } from "./EndToEndDemo/hooks/usePeople";
 import { useCars } from "./EndToEndDemo/hooks/useCars";
 import { useRelationship } from "./EndToEndDemo/hooks/useRelationship";
 
-type SearchFilter = {
-  id: string;
-  fieldName: "make" | "model" | "year";
-  operator: ComparisonOperators;
-  value: string;
-};
-
 type CarSearchField = "make" | "model";
+
+const getFilterValues = (filter: SearchFilter) =>
+  (filter.operator === ComparisonOperators.IN
+    ? filter.value.split(",")
+    : [filter.value]
+  )
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => (filter.fieldName === "year" ? Number(value) : value));
 
 const getApiDomain = (hostname: string) => {
   if (hostname === DOMAINS.API) {
@@ -93,9 +99,9 @@ export const EndToEndDemo: FC = () => {
     "model",
   );
   const [carSearchOperator, setCarSearchOperator] =
-    useState<ComparisonOperators>(
+    useState<CarSearchOperator>(
       ComparisonOperators.LIKE,
-  );
+    );
   const [carSearchCursor, setCarSearchCursor] = useState<string | undefined>(
     undefined,
   );
@@ -403,14 +409,14 @@ export const EndToEndDemo: FC = () => {
         };
       } else {
         const activeFilters = filters.filter((filter) => {
-          const trimmed = filter.value.trim();
+          const values = getFilterValues(filter);
 
-          if (!trimmed) {
+          if (values.length === 0) {
             return false;
           }
 
           if (filter.fieldName === "year") {
-            return Number.isFinite(Number(trimmed));
+            return values.every(Number.isFinite);
           }
 
           return true;
@@ -420,13 +426,20 @@ export const EndToEndDemo: FC = () => {
           config.criteria = {
             logicalOperator: filtersOperator,
             fieldCriteria: activeFilters.map((filter) => {
-              const trimmed = filter.value.trim();
+              const values = getFilterValues(filter);
+
+              if (filter.operator === ComparisonOperators.IN) {
+                return {
+                  fieldName: filter.fieldName,
+                  operator: filter.operator,
+                  valueOptions: values,
+                };
+              }
 
               return {
                 fieldName: filter.fieldName,
                 operator: filter.operator,
-                value:
-                  filter.fieldName === "year" ? Number(trimmed) : trimmed,
+                value: values[0],
               };
             }),
           };

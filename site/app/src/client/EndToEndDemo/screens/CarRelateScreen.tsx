@@ -11,10 +11,23 @@ import { FormBlock } from "../components/FormBlock";
 import { Grid, InlineRow, List, ListItem, Section, Stack } from "../layout";
 import { formatCarLabel, toPositiveInt } from "../utils";
 
-type SearchFilter = {
+export type CarSearchOperator =
+  | ComparisonOperators.LIKE
+  | ComparisonOperators.EQUALS
+  | ComparisonOperators.STARTS_WITH;
+
+export type StructuredFilterOperator =
+  | ComparisonOperators.EQUALS
+  | ComparisonOperators.NOT_EQUALS
+  | ComparisonOperators.IN
+  | ComparisonOperators.LIKE
+  | ComparisonOperators.GREATER_THAN
+  | ComparisonOperators.LESS_THAN;
+
+export type SearchFilter = {
   id: string;
   fieldName: "make" | "model" | "year";
-  operator: ComparisonOperators;
+  operator: StructuredFilterOperator;
   value: string;
 };
 
@@ -32,7 +45,7 @@ type CarRelateScreenProps = {
   isCarUpdating?: boolean;
   isCarDeleting?: boolean;
   carSearchField: "make" | "model";
-  carSearchOperator: ComparisonOperators;
+  carSearchOperator: CarSearchOperator;
   carSearchQuery: string;
   carSearchCursor?: string;
   carSearchResults: any[];
@@ -47,7 +60,7 @@ type CarRelateScreenProps = {
   onDeleteCar: () => void;
   onCarSearchQueryChange: (value: string) => void;
   onCarSearchFieldChange: (value: "make" | "model") => void;
-  onCarSearchOperatorChange: (value: ComparisonOperators) => void;
+  onCarSearchOperatorChange: (value: CarSearchOperator) => void;
   onFiltersOperatorChange: (value: LogicalOperators) => void;
   onAddFilter: () => void;
   onUpdateFilter: (id: string, updates: Partial<SearchFilter>) => void;
@@ -129,7 +142,7 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
         return;
       }
       onUpdateFilter(filterId, {
-        operator: event.target.value as ComparisonOperators,
+        operator: event.target.value as StructuredFilterOperator,
       });
     },
     [onUpdateFilter],
@@ -167,7 +180,7 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
 
   const handleCarSearchOperatorChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
-      onCarSearchOperatorChange(event.target.value as ComparisonOperators);
+      onCarSearchOperatorChange(event.target.value as CarSearchOperator);
     },
     [onCarSearchOperatorChange],
   );
@@ -321,6 +334,9 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                       <option value={ComparisonOperators.NOT_EQUALS}>
                         Not Equals
                       </option>
+                      <option value={ComparisonOperators.IN}>
+                        In (comma-separated)
+                      </option>
                       <option value={ComparisonOperators.LIKE}>Like</option>
                       <option value={ComparisonOperators.GREATER_THAN}>
                         Greater Than
@@ -334,7 +350,11 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                       data-filter-id={filter.id}
                       value={filter.value}
                       onChange={handleFilterValueChange}
-                      placeholder="Value"
+                      placeholder={
+                        filter.operator === ComparisonOperators.IN
+                          ? "Value 1, Value 2"
+                          : "Value"
+                      }
                     />
                     <button
                       type="button"
@@ -346,6 +366,10 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                   </InlineRow>
                 ))
               )}
+              <small>
+                “In” accepts comma-separated values and sends them through the
+                canonical <code>valueOptions</code> criterion field.
+              </small>
             </fieldset>
             <InlineRow>
               <label>
