@@ -321,6 +321,9 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                       <option value={ComparisonOperators.NOT_EQUALS}>
                         Not Equals
                       </option>
+                      <option value={ComparisonOperators.IN}>
+                        In (comma-separated)
+                      </option>
                       <option value={ComparisonOperators.LIKE}>Like</option>
                       <option value={ComparisonOperators.GREATER_THAN}>
                         Greater Than
@@ -334,7 +337,11 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                       data-filter-id={filter.id}
                       value={filter.value}
                       onChange={handleFilterValueChange}
-                      placeholder="Value"
+                      placeholder={
+                        filter.operator === ComparisonOperators.IN
+                          ? "Value 1, Value 2"
+                          : "Value"
+                      }
                     />
                     <button
                       type="button"
@@ -346,6 +353,10 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                   </InlineRow>
                 ))
               )}
+              <small>
+                “In” accepts comma-separated values and sends them through the
+                canonical <code>valueOptions</code> criterion field.
+              </small>
             </fieldset>
             <InlineRow>
               <label>
