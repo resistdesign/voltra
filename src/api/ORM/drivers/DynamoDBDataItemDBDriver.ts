@@ -117,11 +117,7 @@ const createFilterExpression = (
       attributeNames[`#${fieldName}`] = fieldName;
 
       if (operator === ComparisonOperators.IN) {
-        const values = Array.isArray(valueOptions)
-          ? valueOptions
-          : Array.isArray(value)
-            ? value
-            : undefined;
+        const values = valueOptions;
 
         if (!values || values.length === 0) {
           throw {
@@ -287,7 +283,9 @@ export class DynamoDBDataItemDBDriver<
       useFirstSortFieldAsIndexName,
     };
 
-    this.dynamoDBClient = new DynamoDBClient(clientConfig as DynamoDBClientConfig);
+    this.dynamoDBClient = new DynamoDBClient(
+      clientConfig as DynamoDBClientConfig,
+    );
   }
 
   /**
