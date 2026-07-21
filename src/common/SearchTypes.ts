@@ -114,31 +114,97 @@ export enum ComparisonOperators {
   DOES_NOT_END_WITH = "DOES_NOT_END_WITH",
 }
 
-/**
- * The field criterion for a search criteria.
- * */
-export type FieldCriterion = {
+/** Comparison operators that require one `value`. */
+export type SingleValueComparisonOperator = Exclude<
+  ComparisonOperators,
+  | MultipleValueComparisonOperator
+  | RangeComparisonOperator
+  | ValuelessComparisonOperator
+>;
+
+/** Comparison operators that require a `valueOptions` array. */
+export type MultipleValueComparisonOperator =
+  ComparisonOperators.IN | ComparisonOperators.NOT_IN;
+
+/** Comparison operators that require exactly two `valueOptions`. */
+export type RangeComparisonOperator =
+  ComparisonOperators.BETWEEN | ComparisonOperators.NOT_BETWEEN;
+
+/** Comparison operators that do not accept comparison values. */
+export type ValuelessComparisonOperator =
+  | ComparisonOperators.EXISTS
+  | ComparisonOperators.NOT_EXISTS
+  | ComparisonOperators.IS_EMPTY
+  | ComparisonOperators.IS_NOT_EMPTY;
+
+type FieldCriterionBase = {
   /**
    * Field name to compare.
    * */
   fieldName: string;
+};
+
+/** A standard comparison criterion requiring one value. */
+export type SingleValueFieldCriterion = FieldCriterionBase & {
   /**
    * Comparison operator to apply.
    * */
-  operator?: ComparisonOperators;
+  operator: SingleValueComparisonOperator;
+  customOperator?: never;
+  /** Primary comparison value. */
+  value: any;
+  valueOptions?: never;
+};
+
+/** An `IN` or `NOT_IN` criterion requiring an options array. */
+export type MultipleValueFieldCriterion = FieldCriterionBase & {
+  operator: MultipleValueComparisonOperator;
+  customOperator?: never;
+  value?: never;
+  /** Candidate values to compare against. */
+  valueOptions: any[];
+};
+
+/** A range criterion requiring exactly two boundary values. */
+export type RangeFieldCriterion = FieldCriterionBase & {
+  operator: RangeComparisonOperator;
+  customOperator?: never;
+  value?: never;
+  /** Inclusive lower and upper range boundaries. */
+  valueOptions: [any, any];
+};
+
+/** A comparison criterion that accepts no values. */
+export type ValuelessFieldCriterion = FieldCriterionBase & {
+  operator: ValuelessComparisonOperator;
+  customOperator?: never;
+  value?: never;
+  valueOptions?: never;
+};
+
+/**
+ * Escape hatch for backend-specific operators whose operand shape is not known
+ * to Voltra.
+ * */
+export type CustomFieldCriterion = FieldCriterionBase & {
+  operator?: never;
   /**
    * Custom operator label when using backend-specific operators.
    * */
-  customOperator?: string;
-  /**
-   * Primary comparison value.
-   * */
+  customOperator: string;
   value?: any;
-  /**
-   * Comparison value options (e.g., IN/BETWEEN).
-   * */
   valueOptions?: any[];
 };
+
+/**
+ * A field criterion whose operand shape is determined by its operator.
+ * */
+export type FieldCriterion =
+  | SingleValueFieldCriterion
+  | MultipleValueFieldCriterion
+  | RangeFieldCriterion
+  | ValuelessFieldCriterion
+  | CustomFieldCriterion;
 
 /**
  * The criteria for a search.

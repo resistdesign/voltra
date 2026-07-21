@@ -1,5 +1,5 @@
 import { validateSearchFields } from "./SearchValidation";
-import { ComparisonOperators } from "./SearchTypes";
+import { ComparisonOperators, type FieldCriterion } from "./SearchTypes";
 import { TypeInfoMap } from "./TypeParsing/TypeInfo";
 import type {
   ArrayErrorDescriptorCollection,
@@ -97,7 +97,7 @@ export const runSearchValidationInvalidOperatorScenario = () => {
         fieldName: "title",
         operator: "NOT_A_REAL_OPERATOR" as ComparisonOperators,
         value: "Voltra",
-      },
+      } as FieldCriterion,
     ],
     false,
   );

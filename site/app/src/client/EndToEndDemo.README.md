@@ -40,6 +40,8 @@ Car search behavior (`CarRelateScreen`)
 - Fulltext operators demonstrated in UI are `LIKE` and `STARTS_WITH`.
 - `EQUALS` remains structural exact matching (non-fulltext).
 - Structured filters are combined with `AND`/`OR` and demonstrate non-fulltext operator flows.
+- The structured `IN` filter accepts comma-separated values and sends them as
+  `FieldCriterion.valueOptions`.
 - API-side routing is automatic: fulltext when applicable, otherwise structured/fallback paths.
 
 How to add a new entity type screen
