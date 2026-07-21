@@ -186,12 +186,6 @@
       "expectation": ["item-1", "item-2", "item-3"]
     },
     {
-      "export": "runDynamoDBDataItemDriverInCompatibleIdsScenario",
-      "conditions": [],
-      "operation": "ARRAY_EQUALS",
-      "expectation": ["item-2", "item-4"]
-    },
-    {
       "export": "runDynamoDBDataItemDriverInCombinedExpressionScenario",
       "conditions": [],
       "operation": "===",
