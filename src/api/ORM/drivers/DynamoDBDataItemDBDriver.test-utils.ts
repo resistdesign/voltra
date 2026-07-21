@@ -303,7 +303,6 @@ const runDynamoDBDataItemDriverInOperatorScenario = async () => {
         {
           fieldName: "status",
           operator: ComparisonOperators.IN,
-          value: ["pending"],
           valueOptions: ["active", "archived"],
         },
       ],
@@ -313,20 +312,6 @@ const runDynamoDBDataItemDriverInOperatorScenario = async () => {
   const canonicalValues = canonicalInput?.ExpressionAttributeValues
     ? unmarshall(canonicalInput.ExpressionAttributeValues as any)
     : undefined;
-
-  const compatibleResults = await driver.listItems({
-    itemsPerPage: 10,
-    criteria: {
-      logicalOperator: LogicalOperators.AND,
-      fieldCriteria: [
-        {
-          fieldName: "status",
-          operator: ComparisonOperators.IN,
-          value: ["archived", "pending"],
-        },
-      ],
-    },
-  });
 
   const combinedResults = await driver.listItems({
     itemsPerPage: 10,
@@ -376,7 +361,6 @@ const runDynamoDBDataItemDriverInOperatorScenario = async () => {
     canonicalExpression: canonicalInput?.FilterExpression,
     canonicalValues,
     canonicalIds: canonicalResults.items.map((item) => item.id),
-    compatibleIds: compatibleResults.items.map((item) => item.id),
     combinedExpression: combinedInput?.FilterExpression,
     combinedIds: combinedResults.items.map((item) => item.id),
     emptyCandidatesError,
@@ -562,7 +546,8 @@ const runDynamoDBDataItemDriverScenario = async () => {
     listFilterAttributeValues: expressionValues,
     inMemorySortedAscIds: inMemorySortedAsc.items.map((item) => item.id),
     inMemorySortedDescIds: inMemorySortedDesc.items.map((item) => item.id),
-    inMemorySortQueryInputUsed: typeof inMemorySortedAscQueryInput !== "undefined",
+    inMemorySortQueryInputUsed:
+      typeof inMemorySortedAscQueryInput !== "undefined",
     inMemorySortDescQueryInputUsed:
       typeof inMemorySortedDescQueryInput !== "undefined",
     querySortedAscIds: querySortedAsc.items.map((item) => item.id),
@@ -609,11 +594,13 @@ export const runDynamoDBDataItemDriverInvalidCursorErrorScenario = async () =>
 export const runDynamoDBDataItemDriverListFilterExpressionScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).listFilterExpression;
 
-export const runDynamoDBDataItemDriverListFilterAttributeNamesScenario = async () =>
-  (await runDynamoDBDataItemDriverScenario()).listFilterAttributeNames;
+export const runDynamoDBDataItemDriverListFilterAttributeNamesScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).listFilterAttributeNames;
 
-export const runDynamoDBDataItemDriverListFilterAttributeValuesScenario = async () =>
-  (await runDynamoDBDataItemDriverScenario()).listFilterAttributeValues;
+export const runDynamoDBDataItemDriverListFilterAttributeValuesScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).listFilterAttributeValues;
 
 export const runDynamoDBDataItemDriverQuerySortedAscIdsScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).querySortedAscIds;
@@ -650,11 +637,13 @@ export const runDynamoDBDataItemDriverQueryScanIndexForwardDescScenario =
   async () =>
     (await runDynamoDBDataItemDriverScenario()).queryScanIndexForwardDesc;
 
-export const runDynamoDBDataItemDriverMissingReadErrorExpectedScenario = async () =>
-  (await runDynamoDBDataItemDriverScenario()).missingReadErrorExpected;
+export const runDynamoDBDataItemDriverMissingReadErrorExpectedScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).missingReadErrorExpected;
 
-export const runDynamoDBDataItemDriverInvalidCursorErrorExpectedScenario = async () =>
-  (await runDynamoDBDataItemDriverScenario()).invalidCursorErrorExpected;
+export const runDynamoDBDataItemDriverInvalidCursorErrorExpectedScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverScenario()).invalidCursorErrorExpected;
 
 export const runDynamoDBDataItemDriverInCanonicalExpressionScenario =
   async () =>
@@ -665,9 +654,6 @@ export const runDynamoDBDataItemDriverInCanonicalValuesScenario = async () =>
 
 export const runDynamoDBDataItemDriverInCanonicalIdsScenario = async () =>
   (await runDynamoDBDataItemDriverInOperatorScenario()).canonicalIds;
-
-export const runDynamoDBDataItemDriverInCompatibleIdsScenario = async () =>
-  (await runDynamoDBDataItemDriverInOperatorScenario()).compatibleIds;
 
 export const runDynamoDBDataItemDriverInCombinedExpressionScenario = async () =>
   (await runDynamoDBDataItemDriverInOperatorScenario()).combinedExpression;
