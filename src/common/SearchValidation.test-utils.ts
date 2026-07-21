@@ -14,9 +14,7 @@ import {
 const toLegacyValidationShape = (results: TypeInfoValidationResults) => ({
   ...results,
   error:
-    results.error.code === ERROR_MESSAGE_CONSTANTS.NONE
-      ? ""
-      : results.error.code,
+    results.error.code === ERROR_MESSAGE_CONSTANTS.NONE ? "" : results.error.code,
   errorMap: Object.entries(results.errorMap).reduce(
     (
       acc,
