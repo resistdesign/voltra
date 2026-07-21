@@ -1,20 +1,31 @@
+import { type ChangeEvent, type FC, type MouseEvent, useCallback } from "react";
 import {
-  type ChangeEvent,
-  type FC,
-  type MouseEvent,
-  useCallback,
-} from "react";
-import { ComparisonOperators, LogicalOperators } from "../../../../../../src/common/SearchTypes";
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../../../../../src/common/SearchTypes";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { FormBlock } from "../components/FormBlock";
 import { Grid, InlineRow, List, ListItem, Section, Stack } from "../layout";
 import { formatCarLabel, toPositiveInt } from "../utils";
 
-type SearchFilter = {
+export type CarSearchOperator =
+  | ComparisonOperators.LIKE
+  | ComparisonOperators.EQUALS
+  | ComparisonOperators.STARTS_WITH;
+
+export type StructuredFilterOperator =
+  | ComparisonOperators.EQUALS
+  | ComparisonOperators.NOT_EQUALS
+  | ComparisonOperators.IN
+  | ComparisonOperators.LIKE
+  | ComparisonOperators.GREATER_THAN
+  | ComparisonOperators.LESS_THAN;
+
+export type SearchFilter = {
   id: string;
   fieldName: "make" | "model" | "year";
-  operator: ComparisonOperators;
+  operator: StructuredFilterOperator;
   value: string;
 };
 
@@ -32,7 +43,7 @@ type CarRelateScreenProps = {
   isCarUpdating?: boolean;
   isCarDeleting?: boolean;
   carSearchField: "make" | "model";
-  carSearchOperator: ComparisonOperators;
+  carSearchOperator: CarSearchOperator;
   carSearchQuery: string;
   carSearchCursor?: string;
   carSearchResults: any[];
@@ -47,7 +58,7 @@ type CarRelateScreenProps = {
   onDeleteCar: () => void;
   onCarSearchQueryChange: (value: string) => void;
   onCarSearchFieldChange: (value: "make" | "model") => void;
-  onCarSearchOperatorChange: (value: ComparisonOperators) => void;
+  onCarSearchOperatorChange: (value: CarSearchOperator) => void;
   onFiltersOperatorChange: (value: LogicalOperators) => void;
   onAddFilter: () => void;
   onUpdateFilter: (id: string, updates: Partial<SearchFilter>) => void;
@@ -129,7 +140,7 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
         return;
       }
       onUpdateFilter(filterId, {
-        operator: event.target.value as ComparisonOperators,
+        operator: event.target.value as StructuredFilterOperator,
       });
     },
     [onUpdateFilter],
@@ -167,7 +178,7 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
 
   const handleCarSearchOperatorChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
-      onCarSearchOperatorChange(event.target.value as ComparisonOperators);
+      onCarSearchOperatorChange(event.target.value as CarSearchOperator);
     },
     [onCarSearchOperatorChange],
   );
@@ -262,7 +273,9 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                   >
                     <option value={ComparisonOperators.LIKE}>Like</option>
                     <option value={ComparisonOperators.EQUALS}>Equals</option>
-                    <option value={ComparisonOperators.STARTS_WITH}>Starts With</option>
+                    <option value={ComparisonOperators.STARTS_WITH}>
+                      Starts With
+                    </option>
                   </select>
                 </label>
               </InlineRow>
@@ -276,13 +289,15 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                 />
               </label>
               <small>
-                This sends list criteria for a fulltext-indexed field and lets the
-                API auto-route to fulltext search.
+                This sends list criteria for a fulltext-indexed field and lets
+                the API auto-route to fulltext search.
               </small>
             </fieldset>
 
             <fieldset>
-              <legend>Structured Filters (used when quick query is empty)</legend>
+              <legend>
+                Structured Filters (used when quick query is empty)
+              </legend>
               <InlineRow>
                 <label>
                   Operator
@@ -368,7 +383,11 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                   onChange={handleCarItemsPerPageChange}
                 />
               </label>
-              <button type="button" onClick={handleRunSearch} disabled={isSearching}>
+              <button
+                type="button"
+                onClick={handleRunSearch}
+                disabled={isSearching}
+              >
                 Run Search
               </button>
               <button
@@ -416,7 +435,8 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
             {isRelating && <small>Saving...</small>}
             {selectedCarCandidate && (
               <small>
-                Selected: {formatCarLabel(selectedCarCandidate)} ({selectedCarCandidate.id})
+                Selected: {formatCarLabel(selectedCarCandidate)} (
+                {selectedCarCandidate.id})
               </small>
             )}
           </article>
