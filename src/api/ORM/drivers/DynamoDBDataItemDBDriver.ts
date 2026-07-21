@@ -46,6 +46,7 @@ import {
   SearchCriteria,
 } from "../../../common/SearchTypes";
 import { getSortedItems } from "../../../common/SearchUtils";
+import { SEARCH_VALIDATION_ERRORS } from "../../../common/SearchValidation";
 import ConfigTypeInfoMap from "./DynamoDBDataItemDBDriver/ConfigTypeInfoMap.json";
 import type { DynamoDBSpecificConfig } from "./DynamoDBDataItemDBDriver/ConfigTypes";
 
@@ -63,7 +64,6 @@ const DynamoDBOperatorMappings: Partial<
     `#${fieldName} < :${fieldName}`,
   [ComparisonOperators.LESS_THAN_OR_EQUAL]: (fieldName) =>
     `#${fieldName} <= :${fieldName}`,
-  [ComparisonOperators.IN]: (fieldName) => `#${fieldName} IN (:${fieldName})`,
   [ComparisonOperators.LIKE]: (fieldName) =>
     `contains(#${fieldName}, :${fieldName})`,
   [ComparisonOperators.EXISTS]: (fieldName) =>
@@ -111,8 +111,39 @@ const createFilterExpression = (
     const attributeNames: Record<string, string> = {};
     const attributeValues: Record<string, any> = {};
 
-    for (const criterion of fieldCriteria) {
-      const { fieldName, operator, value } = criterion;
+    for (const [criterionIndex, criterion] of fieldCriteria.entries()) {
+      const { fieldName, operator, value, valueOptions } = criterion;
+
+      attributeNames[`#${fieldName}`] = fieldName;
+
+      if (operator === ComparisonOperators.IN) {
+        const values = Array.isArray(valueOptions)
+          ? valueOptions
+          : Array.isArray(value)
+            ? value
+            : undefined;
+
+        if (!values || values.length === 0) {
+          throw {
+            message: SEARCH_VALIDATION_ERRORS.INVALID_VALUE_OPTION,
+            operator,
+            fieldName,
+          };
+        }
+
+        const placeholders = values.map((entry, valueIndex) => {
+          const placeholder = `:${fieldName}_${criterionIndex}_${valueIndex}`;
+
+          attributeValues[placeholder] = entry;
+
+          return placeholder;
+        });
+
+        expressions.push(`#${fieldName} IN (${placeholders.join(", ")})`);
+
+        continue;
+      }
+
       const createExpression =
         DynamoDBOperatorMappings[operator as ComparisonOperators];
 
@@ -126,7 +157,6 @@ const createFilterExpression = (
       }
 
       expressions.push(createExpression(fieldName));
-      attributeNames[`#${fieldName}`] = fieldName;
       attributeValues[`:${fieldName}`] = value;
     }
 

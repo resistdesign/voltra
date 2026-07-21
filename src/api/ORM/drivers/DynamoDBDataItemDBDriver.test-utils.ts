@@ -13,6 +13,7 @@ import {
   LogicalOperators,
 } from "../../../common/SearchTypes";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./common/Types";
+import { SEARCH_VALIDATION_ERRORS } from "../../../common/SearchValidation";
 
 type TestItem = {
   id: string;
@@ -78,6 +79,18 @@ const buildDriver = (useFirstSortFieldAsIndexName = false) => {
     const hasOr = expression.includes(" OR ");
     const parts = expression.split(hasOr ? " OR " : " AND ");
     const evaluate = (part: string) => {
+      const inMatch = part.match(/^(#[^\s]+)\s+IN\s+\(([^)]+)\)$/);
+
+      if (inMatch) {
+        const [, namePlaceholder, valuePlaceholderList] = inMatch;
+        const fieldName = attributeNames[namePlaceholder];
+        const values = valuePlaceholderList
+          .split(",")
+          .map((placeholder) => attributeValues[placeholder.trim()]);
+
+        return values.includes((item as any)[fieldName]);
+      }
+
       if (part.includes(" >= ")) {
         const [namePlaceholder, valuePlaceholder] = part.split(" >= ");
         const fieldName = attributeNames[namePlaceholder.trim()];
@@ -271,6 +284,104 @@ const buildDriver = (useFirstSortFieldAsIndexName = false) => {
     driver,
     getLastScanInput: () => lastScanInput,
     getLastQueryInput: () => lastQueryInput,
+  };
+};
+
+const runDynamoDBDataItemDriverInOperatorScenario = async () => {
+  const { driver, getLastScanInput } = buildDriver();
+
+  await driver.createItem({ name: "Alpha", age: 35, status: "active" });
+  await driver.createItem({ name: "Beta", age: 29, status: "archived" });
+  await driver.createItem({ name: "Gamma", age: 42, status: "active" });
+  await driver.createItem({ name: "Delta", age: 24, status: "pending" });
+
+  const canonicalResults = await driver.listItems({
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "status",
+          operator: ComparisonOperators.IN,
+          value: ["pending"],
+          valueOptions: ["active", "archived"],
+        },
+      ],
+    },
+  });
+  const canonicalInput = getLastScanInput();
+  const canonicalValues = canonicalInput?.ExpressionAttributeValues
+    ? unmarshall(canonicalInput.ExpressionAttributeValues as any)
+    : undefined;
+
+  const compatibleResults = await driver.listItems({
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "status",
+          operator: ComparisonOperators.IN,
+          value: ["archived", "pending"],
+        },
+      ],
+    },
+  });
+
+  const combinedResults = await driver.listItems({
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "status",
+          operator: ComparisonOperators.IN,
+          valueOptions: ["active", "archived"],
+        },
+        {
+          fieldName: "age",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 35,
+        },
+      ],
+    },
+  });
+  const combinedInput = getLastScanInput();
+
+  const {
+    driver: emptyCandidatesDriver,
+    getLastScanInput: getEmptyCandidatesScanInput,
+  } = buildDriver();
+  let emptyCandidatesError: string | undefined;
+
+  try {
+    await emptyCandidatesDriver.listItems({
+      itemsPerPage: 10,
+      criteria: {
+        logicalOperator: LogicalOperators.AND,
+        fieldCriteria: [
+          {
+            fieldName: "status",
+            operator: ComparisonOperators.IN,
+            valueOptions: [],
+          },
+        ],
+      },
+    });
+  } catch (error: any) {
+    emptyCandidatesError = error?.message ?? String(error);
+  }
+
+  return {
+    canonicalExpression: canonicalInput?.FilterExpression,
+    canonicalValues,
+    canonicalIds: canonicalResults.items.map((item) => item.id),
+    compatibleIds: compatibleResults.items.map((item) => item.id),
+    combinedExpression: combinedInput?.FilterExpression,
+    combinedIds: combinedResults.items.map((item) => item.id),
+    emptyCandidatesError,
+    emptyCandidatesCommandSent:
+      typeof getEmptyCandidatesScanInput() !== "undefined",
   };
 };
 
@@ -544,3 +655,34 @@ export const runDynamoDBDataItemDriverMissingReadErrorExpectedScenario = async (
 
 export const runDynamoDBDataItemDriverInvalidCursorErrorExpectedScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).invalidCursorErrorExpected;
+
+export const runDynamoDBDataItemDriverInCanonicalExpressionScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverInOperatorScenario()).canonicalExpression;
+
+export const runDynamoDBDataItemDriverInCanonicalValuesScenario = async () =>
+  (await runDynamoDBDataItemDriverInOperatorScenario()).canonicalValues;
+
+export const runDynamoDBDataItemDriverInCanonicalIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverInOperatorScenario()).canonicalIds;
+
+export const runDynamoDBDataItemDriverInCompatibleIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverInOperatorScenario()).compatibleIds;
+
+export const runDynamoDBDataItemDriverInCombinedExpressionScenario = async () =>
+  (await runDynamoDBDataItemDriverInOperatorScenario()).combinedExpression;
+
+export const runDynamoDBDataItemDriverInCombinedIdsScenario = async () =>
+  (await runDynamoDBDataItemDriverInOperatorScenario()).combinedIds;
+
+export const runDynamoDBDataItemDriverInEmptyCandidatesErrorScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverInOperatorScenario()).emptyCandidatesError;
+
+export const runDynamoDBDataItemDriverInEmptyCandidatesCommandSentScenario =
+  async () =>
+    (await runDynamoDBDataItemDriverInOperatorScenario())
+      .emptyCandidatesCommandSent;
+
+export const runDynamoDBDataItemDriverInEmptyCandidatesErrorExpectedScenario =
+  () => SEARCH_VALIDATION_ERRORS.INVALID_VALUE_OPTION;

@@ -42,6 +42,15 @@ type SearchFilter = {
 
 type CarSearchField = "make" | "model";
 
+const getFilterValues = (filter: SearchFilter) =>
+  (filter.operator === ComparisonOperators.IN
+    ? filter.value.split(",")
+    : [filter.value]
+  )
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => (filter.fieldName === "year" ? Number(value) : value));
+
 const getApiDomain = (hostname: string) => {
   if (hostname === DOMAINS.API) {
     return hostname;
@@ -403,14 +412,14 @@ export const EndToEndDemo: FC = () => {
         };
       } else {
         const activeFilters = filters.filter((filter) => {
-          const trimmed = filter.value.trim();
+          const values = getFilterValues(filter);
 
-          if (!trimmed) {
+          if (values.length === 0) {
             return false;
           }
 
           if (filter.fieldName === "year") {
-            return Number.isFinite(Number(trimmed));
+            return values.every(Number.isFinite);
           }
 
           return true;
@@ -420,13 +429,20 @@ export const EndToEndDemo: FC = () => {
           config.criteria = {
             logicalOperator: filtersOperator,
             fieldCriteria: activeFilters.map((filter) => {
-              const trimmed = filter.value.trim();
+              const values = getFilterValues(filter);
+
+              if (filter.operator === ComparisonOperators.IN) {
+                return {
+                  fieldName: filter.fieldName,
+                  operator: filter.operator,
+                  valueOptions: values,
+                };
+              }
 
               return {
                 fieldName: filter.fieldName,
                 operator: filter.operator,
-                value:
-                  filter.fieldName === "year" ? Number(trimmed) : trimmed,
+                value: values[0],
               };
             }),
           };

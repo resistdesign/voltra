@@ -163,6 +163,63 @@
       "conditions": [],
       "operation": "===",
       "expectation": "INVALID_CURSOR"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInCanonicalExpressionScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "#status IN (:status_0_0, :status_0_1)"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInCanonicalValuesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        ":status_0_0": "active",
+        ":status_0_1": "archived"
+      }
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInCanonicalIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-2", "item-3"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInCompatibleIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-2", "item-4"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInCombinedExpressionScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "#status IN (:status_0_0, :status_0_1) AND #age >= :age"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInCombinedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["item-1", "item-3"]
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInEmptyCandidatesErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INVALID_VALUE_OPTION"
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInEmptyCandidatesCommandSentScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runDynamoDBDataItemDriverInEmptyCandidatesErrorExpectedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INVALID_VALUE_OPTION"
     }
   ]
 }
