@@ -22,4 +22,4 @@ Make DynamoDB-backed ORM lists expand `IN` candidates into valid, collision-safe
 - [x] Add compile-time contract assertions for valid and invalid operand shapes.
 - [x] Remove array-valued `value` compatibility from the DynamoDB driver and its tests.
 - [x] Run the core, package, consumer/export, and docs-site checks; inspect the final diff.
-- [ ] Publish the follow-up commit to PR #386 and update its validation evidence.
+- [x] Publish the follow-up changes to PR #386 and update its validation evidence.
