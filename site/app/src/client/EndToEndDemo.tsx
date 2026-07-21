@@ -1,11 +1,4 @@
-import {
-  FC,
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useState,
-} from "react";
+import { FC, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { TypeInfoORMClient } from "../../../../src/app/utils";
 import { getSimpleId } from "../../../../src/common/IdGeneration";
 import {
@@ -85,7 +78,10 @@ export const EndToEndDemo: FC = () => {
   const typeInfoMap = DemoTypeInfoMap;
   const personTypeInfo = typeInfoMap.Person;
   const carTypeInfo = typeInfoMap.Car;
-  const [demoState, dispatch] = useReducer(demoAppReducer, demoInitialState);
+  const [demoState, dispatch] = useReducer(
+    demoAppReducer,
+    demoInitialState,
+  );
   const { requestLog, logRequest, clearLog } = useDemoLogger();
   const [personList, setPersonList] = useState<any[]>([]);
   const [personListCursor, setPersonListCursor] = useState<string | undefined>(
@@ -99,10 +95,13 @@ export const EndToEndDemo: FC = () => {
   const [relatedCar, setRelatedCar] = useState<any | null>(null);
   const [relatedCarSummary, setRelatedCarSummary] = useState<any | null>(null);
   const [carSearchQuery, setCarSearchQuery] = useState("");
-  const [carSearchField, setCarSearchField] = useState<CarSearchField>("model");
-  const [carSearchOperator, setCarSearchOperator] = useState<CarSearchOperator>(
-    ComparisonOperators.LIKE,
+  const [carSearchField, setCarSearchField] = useState<CarSearchField>(
+    "model",
   );
+  const [carSearchOperator, setCarSearchOperator] =
+    useState<CarSearchOperator>(
+      ComparisonOperators.LIKE,
+    );
   const [carSearchCursor, setCarSearchCursor] = useState<string | undefined>(
     undefined,
   );
@@ -383,13 +382,7 @@ export const EndToEndDemo: FC = () => {
       setRelatedCar(null);
       setRelatedCarSummary(null);
     });
-  }, [
-    deleteRelationship,
-    deleteCar,
-    relatedCarId,
-    selectedPersonId,
-    withPending,
-  ]);
+  }, [deleteRelationship, deleteCar, relatedCarId, selectedPersonId, withPending]);
 
   const buildCarSearchConfig = useCallback(
     (cursor?: string): ListItemsConfig => {
@@ -561,16 +554,13 @@ export const EndToEndDemo: FC = () => {
     ]);
   }, []);
 
-  const updateFilter = useCallback(
-    (id: string, updates: Partial<SearchFilter>) => {
-      setFilters((prev) =>
-        prev.map((filter) =>
-          filter.id === id ? { ...filter, ...updates } : filter,
-        ),
-      );
-    },
-    [],
-  );
+  const updateFilter = useCallback((id: string, updates: Partial<SearchFilter>) => {
+    setFilters((prev) =>
+      prev.map((filter) =>
+        filter.id === id ? { ...filter, ...updates } : filter,
+      ),
+    );
+  }, []);
 
   const removeFilter = useCallback((id: string) => {
     setFilters((prev) => prev.filter((filter) => filter.id !== id));
@@ -738,6 +728,7 @@ export const EndToEndDemo: FC = () => {
       )}
 
       <DebugLogPanel requestLog={requestLog} onClear={clearLog} />
+
     </Stack>
   );
 };
