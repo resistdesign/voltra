@@ -19,7 +19,7 @@ Preserve the current structured-index pagination, filtering, and global-sorting 
 - [x] Preserve numeric ordering in persisted range keys.
 - [x] Add exhaustion, compound, sorting, numeric, and ORM regression coverage.
 - [x] Run focused specs, the full core suite, and the build.
-- [ ] Commit, push, and open a draft PR targeting `feat/link-and-lock`.
+- [x] Commit, push, and open a draft PR targeting `feat/link-and-lock`.
 
 ## Scope Boundary
 
