@@ -13,6 +13,7 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - [x] Type-tag string and numeric document/entity identities so `123` and `"123"` cannot share a physical key.
 - [x] Reuse the versioned structural identity codec and isolate occupancy records with their own namespace.
 - [ ] Define public numeric and string block/chunk configuration and defaults.
+- [ ] Define the public TypeInfo configuration that explicitly links criterion fields to supported sort fields.
 - [ ] Define the summary-before-range-entry write protocol and failure recovery.
 - [ ] Define immediate derived-row cleanup plus safe occupancy compaction/rebuild generations.
 
@@ -44,6 +45,7 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - [ ] Add mutation/failure/concurrency tests proving no false negatives.
 - [ ] Add sparse large-data tests that measure examined candidates and skipped blocks.
 - [ ] Add multi-criterion and multi-page cursor regressions.
+- [ ] Define and test migration/backfill, generation activation, and old-generation retirement.
 - [ ] Update the ledger, indexing guide, demo/E2E cases, and IaC-facing configuration.
 - [ ] Run the complete package, test, documentation, IaC, API, and demo validation matrix.
 
