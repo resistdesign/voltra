@@ -1,4 +1,7 @@
-import { buildStructuredTermKey } from "./StructuredDdb";
+import {
+  buildStructuredTermKey,
+  serializeStructuredValue,
+} from "./StructuredDdb";
 import { StructuredDdbWriter } from "./StructuredWriter";
 
 const runStructuredWriterConcurrentRetryScenario = async () => {
@@ -108,3 +111,24 @@ export const runStructuredWriterConcurrentRetryScenarioResult = async () =>
 export const runStructuredWriterTokenizerConfigScenarioResult = async () =>
   runStructuredWriterTokenizerConfigScenario();
 
+export const runStructuredNumericKeyOrderingScenario = () => {
+  const values = [-230, -10, -1, 0, 0.5, 2, 23, 34, 230];
+  const ordered = values
+    .map((value) => ({ value, key: serializeStructuredValue(value) }))
+    .sort((left, right) => left.key.localeCompare(right.key))
+    .map(({ value }) => value);
+
+  let rejectsInfinity = false;
+  try {
+    serializeStructuredValue(Number.POSITIVE_INFINITY);
+  } catch (_error) {
+    rejectsInfinity = true;
+  }
+
+  return {
+    ordered,
+    negativeZeroNormalized:
+      serializeStructuredValue(-0) === serializeStructuredValue(0),
+    rejectsInfinity,
+  };
+};

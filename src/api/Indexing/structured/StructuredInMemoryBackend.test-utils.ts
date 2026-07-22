@@ -200,3 +200,87 @@ export const runStructuredInMemoryBackendAfterUpdateIdsScenario = async () =>
 
 export const runStructuredInMemoryBackendAfterRemoveIdsScenario = async () =>
   (await runStructuredInMemoryBackendScenario()).afterRemoveIds;
+
+const collectAllPages = async (
+  backend: StructuredInMemoryBackend,
+  where: Parameters<typeof searchStructured>[1],
+  options: Parameters<typeof searchStructured>[2],
+) => {
+  const ids: Array<string | number> = [];
+  let cursor: string | undefined;
+
+  do {
+    const page = await searchStructured(backend, where, {
+      ...options,
+      cursor,
+    });
+    ids.push(...page.candidateIds);
+    cursor = page.cursor;
+  } while (cursor);
+
+  return { ids, terminalCursor: cursor ?? null };
+};
+
+export const runStructuredCompoundPaginationReferenceScenario = async () => {
+  const backend = new StructuredInMemoryBackend();
+  await backend.write("1", { status: "public", age: 25, name: "Zed" });
+  await backend.write("2", { status: "public", age: 50, name: "Amy" });
+  await backend.write("3", { status: "private", age: 30, name: "Bea" });
+  await backend.write("4", { status: "public", age: 30, name: "Cal" });
+  await backend.write("5", { status: "public", age: 31, name: "Dee" });
+
+  const ageRange = {
+    type: "between" as const,
+    field: "age",
+    lower: 23,
+    upper: 34,
+  };
+  const publicTerm = {
+    type: "term" as const,
+    field: "status",
+    mode: "eq" as const,
+    value: "public",
+  };
+
+  const andResult = await collectAllPages(
+    backend,
+    { and: [publicTerm, ageRange] },
+    { limit: 1, backendPageSize: 2 },
+  );
+  const orResult = await collectAllPages(
+    backend,
+    { or: [publicTerm, ageRange] },
+    { limit: 1, backendPageSize: 2 },
+  );
+  const sortedResult = await collectAllPages(backend, ageRange, {
+    limit: 2,
+    backendPageSize: 3,
+    orderBy: { field: "name" },
+  });
+  const nestedAndOrResult = await collectAllPages(
+    backend,
+    {
+      and: [
+        {
+          or: [
+            publicTerm,
+            { type: "term", field: "name", mode: "eq", value: "Bea" },
+          ],
+        },
+        ageRange,
+      ],
+    },
+    { limit: 1, backendPageSize: 2 },
+  );
+
+  return {
+    andIds: andResult.ids,
+    andTerminalCursor: andResult.terminalCursor,
+    orIds: orResult.ids,
+    orUniqueCount: new Set(orResult.ids).size,
+    orTerminalCursor: orResult.terminalCursor,
+    sortedIds: sortedResult.ids,
+    sortedTerminalCursor: sortedResult.terminalCursor,
+    nestedAndOrIds: nestedAndOrResult.ids,
+  };
+};

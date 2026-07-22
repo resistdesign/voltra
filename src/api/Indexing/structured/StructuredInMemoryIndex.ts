@@ -178,6 +178,33 @@ function paginate(
   return { candidateIds };
 }
 
+function paginateInNativeOrder(
+  docIds: DocId[],
+  options: StructuredQueryOptions = {},
+): CandidatePage {
+  const ordered = options.reverse ? docIds.slice().reverse() : docIds;
+  const cursorState = decodeStructuredCursor(options.cursor);
+  const cursorIndex =
+    cursorState?.lastDocId === undefined
+      ? -1
+      : ordered.findIndex((docId) => docId === cursorState.lastDocId);
+  if (cursorState?.lastDocId !== undefined && cursorIndex < 0) {
+    throw new Error("Invalid structured cursor token.");
+  }
+  const startIndex = cursorIndex + 1;
+  const limit = options.limit ?? ordered.length;
+  const candidateIds = ordered.slice(startIndex, startIndex + limit);
+
+  return startIndex + candidateIds.length < ordered.length
+    ? {
+        candidateIds,
+        cursor: encodeStructuredCursor({
+          lastDocId: candidateIds[candidateIds.length - 1],
+        }),
+      }
+    : { candidateIds };
+}
+
 function addPosting(
   index: Map<string, Map<WhereValue, DocId[]>>,
   field: string,
@@ -333,5 +360,18 @@ export class StructuredInMemoryIndex {
       .map((entry) => entry.docId)
       .sort(compareDocId);
     return paginate(docIds, options);
+  }
+
+  /**
+   * Traverse every scalar value for a field in native value/doc-id order.
+   * @param field Field name supplying the order.
+   * @param options Optional paging and direction options.
+   * @returns Candidate page in global field order.
+   */
+  all(field: string, options: StructuredQueryOptions = {}): CandidatePage {
+    const docIds = (this.rangeIndex.get(field) ?? []).map(
+      (entry) => entry.docId,
+    );
+    return paginateInNativeOrder(docIds, options);
   }
 }

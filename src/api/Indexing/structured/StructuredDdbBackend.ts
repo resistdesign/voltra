@@ -17,6 +17,7 @@ import {
   structuredRangeIndexSchema,
   structuredTermIndexSchema,
   type StructuredDocFieldsState,
+  type StructuredDocFieldsItem,
   type StructuredDocFieldsRecord,
   type StructuredRangeIndexItem,
   type StructuredRangeIndexKey,
@@ -104,6 +105,8 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
   private readonly client: DynamoQueryClient;
   private readonly termTableName: string;
   private readonly rangeTableName: string;
+  private readonly docFieldsTableName: string;
+  readonly tokenizer?: Partial<StructuredStringTokenizerConfig>;
 
   /**
    * @param config DynamoDB config for structured tables.
@@ -113,6 +116,8 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     this.client = config.client;
     this.termTableName = config.tables.termIndex;
     this.rangeTableName = config.tables.rangeIndex;
+    this.docFieldsTableName = config.tables.docFields;
+    this.tokenizer = config.tokenizer;
   }
 
   /**
@@ -265,6 +270,41 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         candidateIds,
         lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
       };
+    },
+    /** Traverse a scalar field in native range-key order. */
+    all: async (
+      field: string,
+      options: StructuredQueryOptions = {},
+    ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }> => {
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#field = :field",
+        ExpressionAttributeNames: {
+          "#field": structuredRangeIndexSchema.partitionKey,
+        },
+        ExpressionAttributeValues: { ":field": field },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+        ScanIndexForward: !options.reverse,
+      });
+      const items = (response.Items ?? []) as StructuredRangeIndexItem[];
+      return {
+        candidateIds: items.map((item) => item.docId),
+        lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
+  };
+
+  /** Canonical structured fields used for exact candidate verification. */
+  documents = {
+    get: async (
+      docId: DocId,
+    ): Promise<StructuredDocFieldsRecord | undefined> => {
+      const response = await this.client.getItem({
+        TableName: this.docFieldsTableName,
+        Key: { [structuredDocFieldsSchema.partitionKey]: docId },
+      });
+      return (response.Item as StructuredDocFieldsItem | undefined)?.fields;
     },
   };
 }
@@ -439,8 +479,7 @@ export class StructuredDdbBackend {
       new StructuredDdbWriterDependencies(config),
       {
         ...config.writerOptions,
-        tokenizer:
-          config.writerOptions?.tokenizer ?? config.tokenizer,
+        tokenizer: config.writerOptions?.tokenizer ?? config.tokenizer,
       },
     );
   }

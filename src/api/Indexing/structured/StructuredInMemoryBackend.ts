@@ -42,7 +42,7 @@ export class StructuredInMemoryBackend
   /**
    * @param tokenizer Optional tokenizer overrides for structured string contains behavior.
    */
-  constructor(private readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {
+  constructor(readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {
     this.index = new StructuredInMemoryIndex(tokenizer);
   }
 
@@ -137,6 +137,17 @@ export class StructuredInMemoryBackend
     ): Promise<StructuredPage> => {
       return this.buildPage(this.index.lte(field, upper, options));
     },
+    /** Traverse a scalar field in its native order. */
+    all: async (
+      field: string,
+      options: StructuredQueryOptions = {},
+    ): Promise<StructuredPage> =>
+      this.buildPage(this.index.all(field, options)),
+  };
+
+  /** Canonical structured fields used by compound verification. */
+  documents: StructuredSearchDependencies["documents"] = {
+    get: async (docId: DocId) => this.docFields.get(docId),
   };
 
   /**

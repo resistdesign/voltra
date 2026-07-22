@@ -22,7 +22,16 @@
         "hasBigramToken": true,
         "hasUnigramToken": false
       }
+    },
+    {
+      "export": "runStructuredNumericKeyOrderingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ordered": [-230, -10, -1, 0, 0.5, 2, 23, 34, 230],
+        "negativeZeroNormalized": true,
+        "rejectsInfinity": true
+      }
     }
   ]
 }
-
