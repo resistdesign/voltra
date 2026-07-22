@@ -6,10 +6,9 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 
 ## Remaining design decisions
 
-1. String criterion chunk prefix width and boundary encoding.
-2. `AND`/`OR` token-set composition, fan-out budget, and baseline fallback threshold.
-3. Ascending/descending block-aware cursor state.
-4. Occupancy generation activation/retention, including migration and backfill cutover.
+1. `AND`/`OR` token-set composition, fan-out budget, and baseline fallback threshold.
+2. Ascending/descending block-aware cursor state.
+3. Occupancy generation activation/retention, including migration and backfill cutover.
 
 ## Phase 1: Resolve the storage and correctness model
 
@@ -20,7 +19,7 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - [x] Type-tag string and numeric document/entity identities so `123` and `"123"` cannot share a physical key.
 - [x] Reuse the versioned structural identity codec and isolate occupancy records with their own namespace.
 - [x] Use decade-sized criterion chunks for ordinary numbers and unit-sized chunks for fields tagged `tags.indexed.decimal`.
-- [ ] Define the string criterion prefix/chunk width and boundary encoding.
+- [x] Use a case-preserving prefix of at most three Unicode code points for string criterion chunks, with exact short-value buckets and versioned order-preserving boundary encoding.
 - [x] Use each persisted exact sortable field token as the immutable sort block; add no second sort-block quantization layer.
 - [x] Derive criterion/sort eligibility automatically from scalar structured-indexed string/number TypeInfo fields; add no separate links, opt-in, or opt-out.
 - [x] Keep one scalar comparison type per field; mixed string/number unions do not receive a range-ordering contract.
@@ -89,6 +88,9 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - An occupancy cell is a compressed existence fact such as `(age, 20-29, name, token("Zoe")) = occupied`; it allows Voltra to seek directly to that exact token in the existing name range stream, while canonical fields still decide exact matches.
 - Every scalar structured-indexed string/number field automatically participates as both a range criterion axis and a sort axis. Arrays, booleans, references, and mixed-type unions do not.
 - A field may be both full-text and structurally indexed; full-text participation does not change range-chunk behavior.
+- Structured string criterion chunks use the first one to three Unicode code points of the exact sortable value, preserving case. Values longer than three code points share their three-code-point prefix bucket; shorter values, including the empty string, use an exact short-value bucket.
+- String chunking uses the structured sortable value and order-preserving codec. It does not lowercase, tokenize, or inherit widths from full-text or structured `LIKE`; the existing case-sensitive fallback behavior for `LIKE` remains outside this subsystem.
+- A three-code-point prefix bucket represents its contiguous lexicographic prefix interval. The versioned chunk identity distinguishes exact short-value buckets from prefix intervals and never splits a Unicode surrogate pair.
 - Ordinary numeric values use decade chunks such as `[20, 30)`. A number field tagged `tags.indexed.decimal: true` uses unit chunks, so `22.4549126` belongs to `[22, 23)`.
 - The sort side is not separately quantized: its existing exact order-preserving string/number token is the immutable target block. Multiple documents with the same criterion chunk and sort token share one occupancy cell.
 - Optional fields with values use their normal range entry. Missing optional sort values remain query-visible through a deterministic missing-value stream and stable document-id ordering.
