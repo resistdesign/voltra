@@ -133,6 +133,16 @@ All scalar, non-reference `string` and `number` fields marked `tags.indexed.stru
 
 A string field may also be marked for full-text indexing; that does not change its structural range behavior. The one-type-per-field rule remains authoritative, including literal unions: Voltra does not define a mixed string/number ordering.
 
+String criterion quantization is fixed and derived from the exact structured sortable value:
+
+- use the first **up to three Unicode code points**, preserving case;
+- `"K" -> exact("K")` and `"Ki" -> exact("Ki")`;
+- `"Kim"` and `"Kimberly" -> prefix("Kim")`;
+- `"kimberly" -> prefix("kim")`, distinct from `prefix("Kim")`;
+- the empty string uses an exact empty-value bucket.
+
+A three-code-point prefix bucket denotes the contiguous lexicographic interval containing values with that prefix. Exact short-value buckets are distinct from prefix intervals, and the versioned order-preserving codec operates on Unicode code points rather than splitting UTF-16 surrogate pairs. This is structural range metadata: it does not lowercase values or inherit token sizes from full-text or structured `LIKE`. Existing case-insensitive indexed search and case-sensitive `LIKE` fallback behavior remain separate and unchanged.
+
 Numeric criterion quantization is derived from TypeInfo:
 
 ```ts
@@ -147,7 +157,7 @@ tags: {
 - ordinary `number`: decade chunk, e.g. `23 -> [20, 30)`;
 - `decimal: true`: unit chunk, e.g. `22.4549126 -> [22, 23)`.
 
-Many distinct decimal values inside the same criterion chunk and sort token share one occupancy cell. Cardinality depends on occupied criterion-chunk/sort-token pairs, not on the number of distinct decimal values alone. String criterion chunk width/encoding remains an open design choice.
+Many distinct decimal values inside the same criterion chunk and sort token share one occupancy cell. Cardinality depends on occupied criterion-chunk/sort-token pairs, not on the number of distinct decimal values alone.
 
 With `F` eligible structured fields, one document contributes to at most `F(F - 1)` cross-field criterion-chunk/sort-token pairs before shared-cell deduplication. Same-field range-and-sort queries need no cell because the criterion's ordered stream already provides both filtering and order. This write/storage amplification is deliberately governed by the existing per-field `structured: true` opt-in rather than a second chunk-index flag.
 
