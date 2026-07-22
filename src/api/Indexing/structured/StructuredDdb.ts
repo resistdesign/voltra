@@ -5,6 +5,21 @@
  */
 import type { DocId } from "../Types";
 import type { WhereValue } from "./Types";
+import {
+  INDEX_ITEM_KINDS,
+  INDEX_KEY_PARTS,
+  INDEX_TABLE_KIND_ATTRIBUTE,
+  INDEX_TABLE_PARTITION_KEY,
+  INDEX_TABLE_SORT_KEY,
+  assertIndexTableKey,
+  buildIndexDocumentSortKey,
+  buildIndexKey,
+  encodeExactIndexValue,
+  encodeIndexIdentity,
+  encodeSortableIndexNumber,
+  encodeSortableIndexValue,
+  type IndexTableKey,
+} from "../IndexTable";
 
 /**
  * Document fields stored for structured indexing. Keys should be type-qualified
@@ -23,21 +38,16 @@ export type StructuredTermMode = "eq" | "contains";
 /**
  * DynamoDB key shape for term index entries.
  */
-export type StructuredTermIndexKey = {
-  /**
-   * Partition key for term index entries.
-   */
-  termKey: string;
-  /**
-   * Document id containing the term.
-   */
-  docId: DocId;
-};
+export type StructuredTermIndexKey = IndexTableKey;
 
 /**
  * DynamoDB item shape for term index entries.
  */
 export type StructuredTermIndexItem = StructuredTermIndexKey & {
+  /** Logical item kind in the shared physical table. */
+  kind: typeof INDEX_ITEM_KINDS.structuredTerm;
+  /** Document id containing the term. */
+  docId: DocId;
   /**
    * Field name being indexed. Use a type-qualified field name when multiple
    * types share fields.
@@ -56,22 +66,16 @@ export type StructuredTermIndexItem = StructuredTermIndexKey & {
 /**
  * DynamoDB key shape for range index entries.
  */
-export type StructuredRangeIndexKey = {
-  /**
-   * Field name being indexed. Use a type-qualified field name when multiple
-   * types share fields.
-   */
-  field: string;
-  /**
-   * Range key used for ordering.
-   */
-  rangeKey: string;
-};
+export type StructuredRangeIndexKey = IndexTableKey;
 
 /**
  * DynamoDB item shape for range index entries.
  */
 export type StructuredRangeIndexItem = StructuredRangeIndexKey & {
+  /** Logical item kind in the shared physical table. */
+  kind: typeof INDEX_ITEM_KINDS.structuredRange;
+  /** Field identity being indexed. */
+  field: string;
   /**
    * Stored field value.
    */
@@ -85,17 +89,16 @@ export type StructuredRangeIndexItem = StructuredRangeIndexKey & {
 /**
  * DynamoDB key shape for structured doc fields entries.
  */
-export type StructuredDocFieldsKey = {
-  /**
-   * Document id for the record.
-   */
-  docId: DocId;
-};
+export type StructuredDocFieldsKey = IndexTableKey;
 
 /**
  * DynamoDB item shape for structured doc fields entries.
  */
 export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
+  /** Logical item kind in the shared physical table. */
+  kind: typeof INDEX_ITEM_KINDS.structuredDocument;
+  /** Document id for the record. */
+  docId: DocId;
   /**
    * Structured fields stored for the document.
    */
@@ -124,8 +127,9 @@ export type StructuredDocFieldsState = {
  * Schema metadata for the structured term index table.
  */
 export const structuredTermIndexSchema = {
-  partitionKey: "termKey",
-  sortKey: "docId",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   fieldAttribute: "field",
   valueAttribute: "value",
   modeAttribute: "mode",
@@ -135,8 +139,9 @@ export const structuredTermIndexSchema = {
  * Schema metadata for the structured range index table.
  */
 export const structuredRangeIndexSchema = {
-  partitionKey: "field",
-  sortKey: "rangeKey",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   valueAttribute: "value",
   docIdAttribute: "docId",
 } as const;
@@ -145,13 +150,12 @@ export const structuredRangeIndexSchema = {
  * Schema metadata for the structured document fields table.
  */
 export const structuredDocFieldsSchema = {
-  partitionKey: "docId",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   fieldsAttribute: "fields",
   versionAttribute: "version",
 } as const;
-
-const FLOAT_SIGN_BIT = 0x8000000000000000n;
-const FLOAT_MASK = 0xffffffffffffffffn;
 
 /**
  * Encode a finite IEEE-754 number so lexicographic key order equals numeric order.
@@ -159,19 +163,7 @@ const FLOAT_MASK = 0xffffffffffffffffn;
  * @returns Fixed-width hexadecimal representation.
  */
 export function encodeStructuredNumber(value: number): string {
-  if (!Number.isFinite(value)) {
-    throw new Error("Structured numeric index values must be finite.");
-  }
-
-  const normalized = Object.is(value, -0) ? 0 : value;
-  const buffer = new ArrayBuffer(8);
-  const view = new DataView(buffer);
-  view.setFloat64(0, normalized, false);
-  const bits = view.getBigUint64(0, false);
-  const ordered =
-    bits & FLOAT_SIGN_BIT ? ~bits & FLOAT_MASK : bits ^ FLOAT_SIGN_BIT;
-
-  return ordered.toString(16).padStart(16, "0");
+  return encodeSortableIndexNumber(value);
 }
 
 /**
@@ -180,20 +172,7 @@ export function encodeStructuredNumber(value: number): string {
  * @returns Serialized string representation.
  */
 export function serializeStructuredValue(value: WhereValue): string {
-  if (value === null) {
-    return "null";
-  }
-
-  switch (typeof value) {
-    case "number":
-      return `n:${encodeStructuredNumber(value)}`;
-    case "string":
-      return `s:${value}`;
-    case "boolean":
-      return `b:${value ? "1" : "0"}`;
-    default:
-      return `u:${String(value)}`;
-  }
+  return encodeSortableIndexValue(value);
 }
 
 /**
@@ -209,7 +188,12 @@ export function buildStructuredTermKey(
   value: WhereValue,
   mode: StructuredTermMode,
 ): string {
-  return `${field}#${mode}#${serializeStructuredValue(value)}`;
+  return buildIndexKey(
+    INDEX_ITEM_KINDS.structuredTerm,
+    field,
+    mode,
+    encodeExactIndexValue(value),
+  );
 }
 
 /**
@@ -222,7 +206,7 @@ export function buildStructuredRangeKey(
   value: WhereValue,
   docId: DocId,
 ): string {
-  return `${serializeStructuredValue(value)}#${docId}`;
+  return `${encodeSortableIndexValue(value)}#${buildIndexDocumentSortKey(docId)}`;
 }
 
 /**
@@ -240,8 +224,13 @@ export function buildStructuredTermItem(
   mode: StructuredTermMode,
   docId: DocId,
 ): StructuredTermIndexItem {
+  const key = assertIndexTableKey({
+    pk: buildStructuredTermKey(field, value, mode),
+    sk: buildIndexDocumentSortKey(docId),
+  });
   return {
-    termKey: buildStructuredTermKey(field, value, mode),
+    ...key,
+    kind: INDEX_ITEM_KINDS.structuredTerm,
     docId,
     field,
     value,
@@ -262,9 +251,14 @@ export function buildStructuredRangeItem(
   value: WhereValue,
   docId: DocId,
 ): StructuredRangeIndexItem {
+  const key = assertIndexTableKey({
+    pk: buildIndexKey(INDEX_ITEM_KINDS.structuredRange, field),
+    sk: buildStructuredRangeKey(value, docId),
+  });
   return {
+    ...key,
+    kind: INDEX_ITEM_KINDS.structuredRange,
     field,
-    rangeKey: buildStructuredRangeKey(value, docId),
     value,
     docId,
   };
@@ -281,5 +275,28 @@ export function buildStructuredDocFieldsItem(
   fields: StructuredDocFieldsRecord,
   version: number,
 ): StructuredDocFieldsItem {
-  return { docId, fields, version };
+  const key = assertIndexTableKey({
+    pk: buildIndexKey(INDEX_ITEM_KINDS.structuredDocument, docId),
+    sk: INDEX_KEY_PARTS.state,
+  });
+  return {
+    ...key,
+    kind: INDEX_ITEM_KINDS.structuredDocument,
+    docId,
+    fields,
+    version,
+  };
+}
+
+/** Build the physical key for canonical structured document state. */
+export function buildStructuredDocFieldsKey(docId: DocId): IndexTableKey {
+  return assertIndexTableKey({
+    pk: buildIndexKey(INDEX_ITEM_KINDS.structuredDocument, docId),
+    sk: INDEX_KEY_PARTS.state,
+  });
+}
+
+/** Build the partition key for a structured range stream. */
+export function buildStructuredRangePartitionKey(field: string): string {
+  return buildIndexKey(INDEX_ITEM_KINDS.structuredRange, field);
 }

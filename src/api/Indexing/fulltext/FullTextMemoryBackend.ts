@@ -33,7 +33,7 @@ export class FullTextMemoryBackend
     indexField: string,
     token: string,
   ): string {
-    return `${indexField}|${docId}|${token}`;
+    return JSON.stringify([String(docId), indexField, token]);
   }
 
   /**

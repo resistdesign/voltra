@@ -1,7 +1,9 @@
 import type { DocId } from "./Types";
+import { buildIndexDocumentSortKey } from "./IndexTable";
 
 /**
- * Compare two document ids for sorting.
+ * Compare two document identities using the same string ordering used by
+ * persisted index keys. Numeric primary values are identifiers, not quantities.
  * @returns -1 if left < right, 1 if left > right, or 0 if equal.
  * */
 export function compareDocId(
@@ -14,11 +16,12 @@ export function compareDocId(
    */
   right: DocId,
 ): number {
-  if (left === right) {
+  const leftIdentity = buildIndexDocumentSortKey(left);
+  const rightIdentity = buildIndexDocumentSortKey(right);
+  if (leftIdentity === rightIdentity) {
     return 0;
   }
-
-  return left < right ? -1 : 1;
+  return leftIdentity < rightIdentity ? -1 : 1;
 }
 
 /**

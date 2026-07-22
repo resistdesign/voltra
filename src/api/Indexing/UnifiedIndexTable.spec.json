@@ -1,0 +1,38 @@
+{
+  "file": "./UnifiedIndexTable.test-utils.ts",
+  "tests": [
+    {
+      "export": "runUnifiedIndexTableIntegrationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "touchedTables": ["UnifiedIndex"],
+        "termIds": ["doc#1", "doc/2"],
+        "rangeIds": ["doc#1", "doc/2"],
+        "lossy": ["doc#1"],
+        "exact": [0, 2],
+        "related": ["doc/2"],
+        "kinds": {
+          "fe": 1,
+          "fl": 1,
+          "fp": 1,
+          "fs": 1,
+          "ft": 1,
+          "re": 2,
+          "sd": 2,
+          "sr": 4,
+          "st": 34
+        }
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableNumericCursorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": { "docIds": [0], "lastEvaluatedDocId": 0 },
+        "second": { "docIds": [2] }
+      }
+    }
+  ]
+}

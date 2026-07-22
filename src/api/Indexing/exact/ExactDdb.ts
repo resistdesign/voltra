@@ -5,11 +5,24 @@
  * The exact index stores token positions per document to support phrase queries.
  */
 import type { DocId } from "../Types";
+import {
+  INDEX_ITEM_KINDS,
+  INDEX_TABLE_KIND_ATTRIBUTE,
+  INDEX_TABLE_PARTITION_KEY,
+  INDEX_TABLE_SORT_KEY,
+  assertIndexTableKey,
+  buildIndexDocumentSortKey,
+  buildIndexKey,
+  type IndexTableKey,
+} from "../IndexTable";
 
 /**
  * DynamoDB key shape for exact postings items.
  */
-export type ExactDdbKey = {
+export type ExactDdbKey = IndexTableKey;
+
+/** Semantic attributes retained on exact posting records. */
+export type ExactDdbIdentity = {
   /**
    * Token value stored in the exact index.
    */
@@ -27,19 +40,23 @@ export type ExactDdbKey = {
 /**
  * DynamoDB item shape for exact postings entries.
  */
-export type ExactDdbItem = ExactDdbKey & {
-  /**
-   * Token positions within the document.
-   */
-  positions: number[];
-};
+export type ExactDdbItem = ExactDdbKey &
+  ExactDdbIdentity & {
+    /** Logical record family in the unified table. */
+    kind: typeof INDEX_ITEM_KINDS.fullTextExactPosting;
+    /**
+     * Token positions within the document.
+     */
+    positions: number[];
+  };
 
 /**
  * Schema metadata for the exact postings table.
  */
 export const exactDdbSchema = {
-  partitionKey: "token",
-  sortKey: "docId",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   positionsAttribute: "positions",
 } as const;
 
@@ -55,7 +72,10 @@ export function buildExactDdbKey(
   indexField: string,
   docId: DocId,
 ): ExactDdbKey {
-  return { token, indexField, docId };
+  return assertIndexTableKey({
+    pk: buildIndexKey(INDEX_ITEM_KINDS.fullTextExactPosting, indexField, token),
+    sk: buildIndexDocumentSortKey(docId),
+  });
 }
 
 /**
@@ -72,5 +92,12 @@ export function buildExactDdbItem(
   docId: DocId,
   positions: number[],
 ): ExactDdbItem {
-  return { token, indexField, docId, positions: [...positions] };
+  return {
+    ...buildExactDdbKey(token, indexField, docId),
+    kind: INDEX_ITEM_KINDS.fullTextExactPosting,
+    token,
+    indexField,
+    docId,
+    positions: [...positions],
+  };
 }

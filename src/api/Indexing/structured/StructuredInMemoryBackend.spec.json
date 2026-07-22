@@ -62,6 +62,17 @@
       "expectation": null
     },
     {
+      "export": "runStructuredInMemoryBackendNumericRangeCursorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstIds": [0],
+        "cursorPresent": true,
+        "secondIds": [2],
+        "terminalCursor": null
+      }
+    },
+    {
       "export": "runStructuredInMemoryBackendTerminalHandlerBodyScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

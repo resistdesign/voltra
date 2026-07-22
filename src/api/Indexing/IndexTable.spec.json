@@ -1,0 +1,64 @@
+{
+  "file": "./IndexTable.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexTableIdentityRoundTripScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["plain", "a#b/c?d", "100%", "éclair", "emoji-💜"]
+    },
+    {
+      "export": "runIndexTableIdentityCollisionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "keys": [
+          "v1#st#Thing%23field#value",
+          "v1#st#Thing#field%23value",
+          "v1#sr#Thing%23field#value"
+        ],
+        "uniqueCount": 3
+      }
+    },
+    {
+      "export": "runIndexTableLogicalIsolationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": { "count": 10, "uniqueCount": 10 }
+    },
+    {
+      "export": "runIndexTableSortableNumberScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [-230, -10, -1, 0, 0, 0.5, 2, 23, 34, 230]
+    },
+    {
+      "export": "runIndexTableSortableStringScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["a", "a#", "aa", "z", "é", "💜"]
+    },
+    {
+      "export": "runIndexTableStructuredCollisionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "termKeysDiffer": true,
+        "rangeKeysDiffer": true,
+        "nullKeysDiffer": true
+      }
+    },
+    {
+      "export": "runIndexTableRejectsMalformedUnicodeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runIndexTableRejectsOversizedKeyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}

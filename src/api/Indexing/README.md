@@ -1,90 +1,94 @@
-# serverless-db-index-and-query
+# Voltra Indexing
 
-A serverless-friendly toolkit for building multi-modal indexes (lossy and exact full-text, structured filters, and graph relations) on top of DynamoDB or in-memory backends. It exposes small building blocks and handler helpers so Lambdas or other functions can index documents, run different query modes, and page through results with lightweight cursors.
+A serverless-friendly toolkit for building multi-modal indexes—lossy and exact full-text, structured filters, and graph relations—on top of one DynamoDB table or the matching in-memory backends.
 
 ## Architecture at a Glance
 
 The project layers three complementary index types that can be combined in application code:
 
-- **Full-text (lossy)** — Inverted index keyed by field + tokens. Great for recall-heavy searches; uses a lossy postings table (`pk=f#qualifiedField#t#token`, `sk=d#docId`) whose name is injected per deployment. Implementation lives in `src/lossy` and shared full-text schema helpers in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L1-L42】
-- **Full-text (exact)** — Tracks token positions to support phrase queries. Stored alongside lossy data in an exact postings table (`pk=f#qualifiedField#t#token`, `sk=d#docId`, `positions`) whose name is injected per deployment. Helpers in `src/exact` and schema in `src/fulltext/Schema.ts`.【F:src/fulltext/Schema.ts†L16-L33】【F:src/exact/ExactDdb.ts†L1-L22】
-- **Structured filters** — Term and range indexes per field for equality/contains or numeric/string comparisons. Schemas in `src/structured/StructuredDdb.ts`. Query composition happens in `src/structured/SearchStructured.ts` using AND/OR trees and cursor-based paging.【F:src/structured/StructuredDdb.ts†L1-L78】【F:src/structured/Types.ts†L1-L34】【F:src/structured/SearchStructured.ts†L1-L90】
-- **Relational edges** — Simple graph edges (outgoing/incoming) stored twice for each relation to support directional traversals. Schema and cursor encoding live in `src/rel/RelationalDdb.ts`.【F:src/rel/RelationalDdb.ts†L1-L108】
+- **Full-text (lossy)** — Inverted index keyed by field + tokens for recall-heavy searches.
+- **Full-text (exact)** — Token positions for phrase queries and exact verification.
+- **Structured filters** — Term and range indexes per field for equality/contains or numeric/string comparisons. Schemas and query composition live in `src/api/Indexing/structured`.
+- **Relational edges** — Simple graph edges (outgoing/incoming) stored twice for each relation to support directional traversals. Schema and cursor encoding live in `src/api/Indexing/rel`.
 
-Serverless handlers (`src/Handler.ts`) wrap these primitives. Use `setHandlerDependencies` to inject a concrete backend (DynamoDB, in-memory for tests), then dispatch index/search events by `action`.【F:src/Handler.ts†L1-L78】
+Serverless handlers (`src/api/Indexing/Handler.ts`) wrap these primitives. Use `setHandlerDependencies` to inject a concrete backend (DynamoDB or in-memory for tests), then dispatch index/search events by `action`.
 
-## DynamoDB Schemas
+## One DynamoDB Table
 
-Table names are deployment-specific; the schemas below describe key and attribute
-shapes. The demo IaC uses `site/common/IndexingTableNames.ts` and wires names into
-Lambda via `INDEXING_*` env vars consumed in `site/api/indexing.ts`.
+Provision one table with string partition and sort keys:
 
-### Full-text tables
+```ts
+const table = {
+  attributes: { pk: "S", sk: "S" },
+  keys: { pk: "HASH", sk: "RANGE" },
+};
+```
 
-- **LossyPostings** (`pk`, `sk`): `pk=f#<qualifiedField>#t#<token>`, `sk=d#<docId>`
-- **ExactPostings** (`pk`, `sk`, `positions`): `pk=f#<qualifiedField>#t#<token>`, `sk=d#<docId>`, `positions` array
-- **FullTextDocMirror** (`pk`, `content`): optional mirror of full docs keyed by `pk=d#<docId>#f#<qualifiedField>`
-- **FullTextTokenStats** (`pk`, `df`): token document frequency by `pk=f#<qualifiedField>#t#<token>`
-- **DocTokens** (`pk`, `sk`): optional doc→token mapping `pk=d#<docId>`, `sk=f#<qualifiedField>#t#<token>`
-- **DocTokenPositions** (`pk`, `sk`, `positions`): optional doc→token positions `pk=d#<docId>`, `sk=f#<qualifiedField>#t#<token>`
+Every logical index is an explicitly namespaced candidate stream. The `kind` attribute helps diagnostics and migration tooling; application fields remain nested in Voltra-owned attributes and can never collide with `pk`, `sk`, or `kind`.
 
-### Structured tables
+| Record family       | `pk` stream                             | `sk` member order           |
+| ------------------- | --------------------------------------- | --------------------------- |
+| Structured term     | `v1#st#<field>#<mode>#<value>`          | `d#<docId>`                 |
+| Structured range    | `v1#sr#<field>`                         | `<sortableValue>#d#<docId>` |
+| Structured document | `v1#sd#<docId>`                         | `state`                     |
+| Lossy posting       | `v1#fl#<field>#<token>`                 | `d#<docId>`                 |
+| Exact posting       | `v1#fe#<field>#<token>`                 | `d#<docId>`                 |
+| Document mirror     | `v1#fm#<docId>`                         | `f#<field>`                 |
+| Token statistics    | `v1#fs#<field>#<token>`                 | `state`                     |
+| Document token      | `v1#ft#<docId>`                         | `f#<field>#t#<token>`       |
+| Token positions     | `v1#fp#<docId>`                         | `f#<field>#t#<token>`       |
+| Relationship edge   | `v1#re#<entity>#<relation>#<direction>` | `e#<otherId>`               |
 
-- **StructuredTermIndex** (`termKey`, `docId`, `field`, `value`, `mode`): `termKey=<qualifiedField>#<mode>#<serializedValue>` supports `eq` and `contains` lookups.【F:src/structured/StructuredDdb.ts†L1-L53】
-- **StructuredRangeIndex** (`field`, `rangeKey`, `value`, `docId`): `field=<qualifiedField>` and `rangeKey=<serializedValue>#<docId padded>` for ordered range scans.【F:src/structured/StructuredDdb.ts†L55-L76】
-- **StructuredDocFields** (`docId`, `fields`): optional per-document field mirror.【F:src/structured/StructuredDdb.ts†L78-L82】
+All physical keys must be created through the exported key utilities. Identity segments use URI-component encoding for collision safety. Sortable values do not: finite numbers use an order-preserving IEEE-754 transform and other range-capable values use UTF-8 hex so DynamoDB byte order matches the comparison contract.
 
-### Relational table
+```ts
+const table = { tableName: process.env.INDEXING_TABLE as string };
 
-- **RelationEdges** (`edgeKey`, `otherId`, `metadata`): `edgeKey=<entityId>\u0000<relation>\u0000<direction>` where direction is `in` or `out`; every edge is stored twice (forward/backward).【F:src/rel/RelationalDdb.ts†L1-L62】
+const fullText = new FullTextDdbBackend({ client, table });
+const structured = new StructuredDdbBackend({ client, table });
+const relationships = new RelationalDdbBackend(
+  createRelationEdgesDdbDependencies({ client, table }),
+);
+```
 
 ## Configuration and Limits
 
-Search operations enforce soft guards via `SearchLimits` (tokens processed, postings pages, verified candidates, and time budget). Defaults and hard caps live in `src/Handler/Config.ts`:
+Search operations enforce soft guards via `SearchLimits` (tokens processed, postings pages, verified candidates, and time budget). Defaults and hard caps live in `src/api/Indexing/Handler/Config.ts`:
 
 - Defaults: `maxTokens` 6; `maxPostingsPages` 4; `maxCandidatesVerified` 200; `softTimeBudgetMs` 150.
 - Caps: `maxTokens` 12; `maxPostingsPages` 12; `maxCandidatesVerified` 1_000; `softTimeBudgetMs` 500.
 
-Override per request by passing a `limits` object to search calls or handler events; the handler resolver merges overrides with defaults and clamps to the caps to prevent runaway workloads.【F:src/Handler/Config.ts†L1-L51】【F:src/Handler.ts†L16-L116】
+Override per request by passing a `limits` object to search calls or handler events; the handler resolver merges overrides with defaults and clamps to the caps to prevent runaway workloads.
 
-No mandatory environment variables are required by the library itself; configure your DynamoDB client and table names in the backend wiring for your runtime. The demo uses `site/common/IndexingTableNames.ts` to define table names and `INDEXING_*` env vars that are read in `site/api/indexing.ts`.
+No environment variable name is imposed by the library. The demo uses one `INDEXING_TABLE` variable through `site/common/IndexingTable.ts` and passes the resulting `IndexTableConfig` to every backend.
 
 ## Indexing Fields and IDs
 
 - `primaryField` identifies the document ID and is stringified (`String(value)`); missing or empty values throw.
-- `indexField` scopes tokens and postings. When multiple types share a field name, pass a type-qualified key (for example `Article.title`) via `indexFieldQualified` and use the same qualified key for searches.
+- `indexField` scopes tokens and postings. ORM integrations use `qualifyIndexField(typeName, fieldName)`; consumers should not concatenate type and field names themselves.
 - Changing index-field behavior or upgrading from the legacy schema requires re-indexing; old entries are not migrated automatically.
 
 ## Setup
 
-1. Install dependencies: `yarn install --immutable`
+1. Install dependencies: `yarn install`
 2. Build TypeScript: `yarn build`
 3. Run tests: `yarn test`
 
-## Demo UI (isolated Astro site)
+## Demo UI
 
-An Astro + React demo lives in `demo/` and is not part of the library build. Use the helper scripts to explore it locally:
-
-```bash
-yarn demo:install
-yarn --cwd demo astro dev
-```
-
-You can also build or preview the static output without touching the package artifacts:
+The Astro + React demo lives in `site/app`. Build the API and static application with:
 
 ```bash
-yarn --cwd demo astro build
-yarn --cwd demo astro preview
+yarn site:build:api
+yarn site:build:app
 ```
-
-Vitest runs the unit suite covering tokenization, full-text modes, structured filters, and handler dispatch.
 
 ## Serverless Handler Examples
 
 Configure the handler once at cold start:
 
 ```ts
-import { handler, setHandlerDependencies } from "./src/Handler";
+import { handler, setHandlerDependencies } from "@resistdesign/voltra/api";
 import { createDynamoBackend } from "./your-backend-factory";
 
 setHandlerDependencies({ backend: createDynamoBackend() });
@@ -133,7 +137,7 @@ Example payloads (invoke via Lambda, Functions, or tests):
   }
   ```
 
-The handler logs a compact trace with elapsed time and resolved limits for observability.【F:src/Handler.ts†L80-L123】
+The handler logs a compact trace with elapsed time and resolved limits for observability.
 
 ## Indexing and Query Recipes
 
@@ -219,11 +223,23 @@ const outgoing = await relationalBackend.getOutgoing("user#1", "LIKES", {
 // outgoing.edges => [{ key: { from, to, relation }, metadata }]; outgoing.nextCursor for the next page
 ```
 
+## Global Range Criteria with Unrelated Sorting
+
+For `age BETWEEN 23 AND 34` sorted by `name`, the exact baseline traverses the already ordered `name` range stream, verifies each candidate's canonical structured fields, stops when the page is full, and resumes from that stream cursor. Sparse compliance can still require many reads; that is a cost distribution problem, not a correctness problem.
+
+The planned optimization is a data-skipping layer:
+
+```text
+criterion value chunks -> ordered sort-index blocks -> exact candidate IDs
+```
+
+Block summaries may produce false positives but never false negatives. They are intentionally not materialized in this change; the one-table key namespaces leave room for a future versioned block family without changing current records.
+
 ## Troubleshooting
 
-- **Missing backend configuration**: Calls without `setIndexBackend`/`setHandlerDependencies` throw an error to prevent accidental no-op usage.【F:src/Api.ts†L25-L44】【F:src/Handler.ts†L40-L56】
-- **Throttling/large scans**: Tune `limits` on search requests to reduce token processing or postings pages per query.【F:src/Api.ts†L69-L118】
-- **Unexpected empty results**: For exact searches ensure documents were indexed with position data (ExactPostings, DocTokenPositions if used). For structured queries, verify field values are serialized consistently (see `serializeStructuredValue`).【F:src/structured/StructuredDdb.ts†L84-L115】
-- **Cursor errors**: Cursors are JSON-encoded; tampered or invalid tokens throw `Invalid ... cursor token` errors in cursor decoders (structured and relational). Re-run the query without the cursor to reset paging.【F:src/structured/SearchStructured.ts†L1-L63】【F:src/rel/RelationalDdb.ts†L85-L108】
+- **Missing backend configuration**: Calls without `setIndexBackend` or `setHandlerDependencies` throw instead of silently skipping indexing.
+- **Throttling/large scans**: Tune request `limits` to reduce token processing, postings pages, or verified candidates.
+- **Unexpected empty results**: Ensure exact searches were indexed with position data. For structured queries, ensure the indexed field and query bounds use the same TypeInfo-driven comparison type.
+- **Cursor errors**: Cursors are opaque continuation state. Do not edit them or reuse them with a different query; restart without a cursor after a query-shape change.
 
-With these building blocks and examples, you can provision the DynamoDB tables, wire in your client, and run index/search flows confidently in serverless environments.
+With these building blocks and examples, you can provision the DynamoDB table, wire in your client, and run index/search flows confidently in serverless environments.

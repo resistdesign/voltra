@@ -26,7 +26,9 @@ export type StructuredWriterDependencies = {
    * @param docId Document id to load.
    * @returns Stored fields or undefined when missing.
    */
-  loadDocFieldsState(docId: DocId): Promise<StructuredDocFieldsState | undefined>;
+  loadDocFieldsState(
+    docId: DocId,
+  ): Promise<StructuredDocFieldsState | undefined>;
   /**
    * Compare-and-swap the latest fields for a document.
    * @param docId Document id to store.
@@ -117,7 +119,9 @@ function buildTermEntries(
           value,
           options.tokenizer,
         )) {
-          entries.push(buildStructuredTermItem(field, token, "contains", docId));
+          entries.push(
+            buildStructuredTermItem(field, token, "contains", docId),
+          );
         }
       }
     }
@@ -144,11 +148,11 @@ function buildRangeEntries(
 }
 
 function termEntryKey(entry: TermEntry): string {
-  return `${entry.termKey}#${entry.docId}`;
+  return `${entry.pk}\u0000${entry.sk}`;
 }
 
 function rangeEntryKey(entry: RangeEntry): string {
-  return `${entry.field}#${entry.rangeKey}`;
+  return `${entry.pk}\u0000${entry.sk}`;
 }
 
 function diffEntries<T>(
@@ -178,17 +182,11 @@ function diffEntries<T>(
 }
 
 function toTermKeys(entries: TermEntry[]): StructuredTermIndexKey[] {
-  return entries.map((entry) => ({
-    termKey: entry.termKey,
-    docId: entry.docId,
-  }));
+  return entries.map(({ pk, sk }) => ({ pk, sk }));
 }
 
 function toRangeKeys(entries: RangeEntry[]): StructuredRangeIndexKey[] {
-  return entries.map((entry) => ({
-    field: entry.field,
-    rangeKey: entry.rangeKey,
-  }));
+  return entries.map(({ pk, sk }) => ({ pk, sk }));
 }
 
 /**
@@ -257,7 +255,9 @@ export class StructuredDdbWriter {
       }
 
       if (termDiff.toDelete.length > 0) {
-        await this.dependencies.deleteTermEntries(toTermKeys(termDiff.toDelete));
+        await this.dependencies.deleteTermEntries(
+          toTermKeys(termDiff.toDelete),
+        );
       }
 
       if (rangeDiff.toDelete.length > 0) {

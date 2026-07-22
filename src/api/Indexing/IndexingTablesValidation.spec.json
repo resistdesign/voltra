@@ -5,19 +5,19 @@
       "export": "runIndexingTablesValidationMissingFullTextTableErrorScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "Missing table name for fulltext.lossyPostings."
+      "expectation": "Missing table name for indexing.tableName."
     },
     {
       "export": "runIndexingTablesValidationMissingStructuredTableErrorScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "Missing table name for structured.rangeIndex."
+      "expectation": "Missing table name for indexing.tableName."
     },
     {
       "export": "runIndexingTablesValidationMissingRelationsTableErrorScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "Missing table name for relations.relationEdges."
+      "expectation": "Missing table name for indexing.tableName."
     }
   ]
 }

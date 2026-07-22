@@ -90,7 +90,7 @@ age chunks 20s + 30s -> name blocks 001, 003, 010
 
 Voltra traverses only those name blocks in name order, verifies exact ages, and stops when the page is full. Numeric chunks can be hierarchical magnitude/prefix ranges rather than fixed groups of ten. String chunks can use normalized prefix/token ranges. The required invariant is no false negatives.
 
-This is intentionally not materialized in the current reference PR because the next design phase will decide whether term, range, document, and skipping records can share one physical index table with a deliberately overloaded primary key.
+This is intentionally not materialized in the current reference PR. The term, range, document, full-text, and relationship records now share one physical index table with explicitly namespaced primary keys; skipping summaries can be added later as another namespaced record family without adding a table.
 
 ## Numeric Ordering Contract
 
@@ -131,4 +131,4 @@ Multiple sort fields, optional/missing sort values, array/reference fields, and 
 - **16 implemented in the Link & Lock reference implementation**
 - **1 solved design intentionally deferred:** data-skipping block materialization (#19)
 
-All 19 now have a concrete solution. The next open problem is physical representation: whether these records and traversals can be expressed cleanly with **one index table** and a deliberately overloaded primary key.
+All 19 now have a concrete solution. The physical representation is one index table with a versioned, deliberately overloaded primary key. The remaining optional optimization is materializing #19's data-skipping block summaries when production selectivity data justifies their write and maintenance cost.
