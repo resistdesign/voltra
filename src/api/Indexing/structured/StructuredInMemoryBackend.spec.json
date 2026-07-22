@@ -80,6 +80,21 @@
       "conditions": [],
       "operation": "ARRAY_EQUALS",
       "expectation": []
+    },
+    {
+      "export": "runStructuredCompoundPaginationReferenceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "andIds": ["1", "4", "5"],
+        "andTerminalCursor": null,
+        "orIds": ["1", "2", "4", "5", "3"],
+        "orUniqueCount": 5,
+        "orTerminalCursor": null,
+        "sortedIds": ["3", "4", "5", "1"],
+        "sortedTerminalCursor": null,
+        "nestedAndOrIds": ["1", "4", "5", "3"]
+      }
     }
   ]
 }

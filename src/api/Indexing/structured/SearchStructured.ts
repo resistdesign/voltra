@@ -1,14 +1,28 @@
-import { decodeStructuredCursor, encodeStructuredCursor } from "./Cursor";
 import type { DocId } from "../Types";
-import { compareDocId } from "../docId";
+import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import {
+  decodeStructuredSearchCursor,
+  encodeStructuredSearchCursor,
+  type StructuredSearchCursorState,
+} from "./StructuredSearchCursor";
+import {
+  buildStructuredStringContainsTokens,
+  type StructuredStringTokenizerConfig,
+} from "./StructuredStringLike";
 import type {
   CandidatePage,
   StructuredQueryOptions,
   StructuredRangeWhere,
+  StructuredSearchOptions,
   StructuredTermWhere,
   Where,
   WhereValue,
 } from "./Types";
+
+type BackendCandidatePage = {
+  candidateIds: DocId[];
+  lastEvaluatedKey?: string;
+};
 
 type StructuredTermIndex = {
   query(
@@ -16,7 +30,7 @@ type StructuredTermIndex = {
     mode: StructuredTermWhere["mode"],
     value: WhereValue,
     options?: StructuredQueryOptions,
-  ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }>;
+  ): Promise<BackendCandidatePage>;
 };
 
 type StructuredRangeIndex = {
@@ -25,281 +39,307 @@ type StructuredRangeIndex = {
     lower: WhereValue,
     upper: WhereValue,
     options?: StructuredQueryOptions,
-  ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }>;
+  ): Promise<BackendCandidatePage>;
   gte(
     field: string,
     lower: WhereValue,
     options?: StructuredQueryOptions,
-  ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }>;
+  ): Promise<BackendCandidatePage>;
   lte(
     field: string,
     upper: WhereValue,
     options?: StructuredQueryOptions,
-  ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }>;
+  ): Promise<BackendCandidatePage>;
+  all(
+    field: string,
+    options?: StructuredQueryOptions,
+  ): Promise<BackendCandidatePage>;
 };
 
-/**
- * Dependencies required to run structured searches.
- */
+/** Dependencies required to run structured searches. */
 export type StructuredSearchDependencies = {
-  /**
-   * Term query dependency for equality/contains lookups.
-   */
+  /** Term query dependency for equality/contains lookups. */
   terms: StructuredTermIndex;
-  /**
-   * Range query dependency for between/gte/lte lookups.
-   */
+  /** Range and globally ordered field traversal dependency. */
   ranges: StructuredRangeIndex;
+  /** Canonical structured fields used for exact candidate verification. */
+  documents?: {
+    get(docId: DocId): Promise<StructuredDocFieldsRecord | undefined>;
+  };
+  /** Tokenizer used by string contains/LIKE verification. */
+  tokenizer?: Partial<StructuredStringTokenizerConfig>;
 };
 
 type CandidateSource = {
-  size: number;
-  candidateIds: DocId[];
+  leaf: StructuredTermWhere | StructuredRangeWhere;
+  owner: Where;
+  orderBy?: { field: string; reverse?: boolean };
 };
 
-type CursorState = {
-  lastDocId?: DocId;
-  termToken?: string;
-  rangeToken?: string;
+const isLeaf = (
+  where: Where,
+): where is StructuredTermWhere | StructuredRangeWhere => "type" in where;
+
+const firstLeaf = (
+  where: Where,
+): StructuredTermWhere | StructuredRangeWhere => {
+  if (isLeaf(where)) {
+    return where;
+  }
+
+  const children = "and" in where ? where.and : where.or;
+  if (children.length === 0) {
+    throw new Error("Structured compound criteria cannot be empty.");
+  }
+  return firstLeaf(children[0]);
 };
 
-function intersectSorted(left: DocId[], right: DocId[]): DocId[] {
-  const results: DocId[] = [];
-  let leftIndex = 0;
-  let rightIndex = 0;
+const toConjunctiveBranches = (where: Where): Where[][] => {
+  if (isLeaf(where)) {
+    return [[where]];
+  }
+  if ("or" in where) {
+    return where.or.flatMap(toConjunctiveBranches);
+  }
 
-  while (leftIndex < left.length && rightIndex < right.length) {
-    const leftValue = left[leftIndex];
-    const rightValue = right[rightIndex];
-
-    if (leftValue === rightValue) {
-      results.push(leftValue);
-      leftIndex += 1;
-      rightIndex += 1;
-    } else if (compareDocId(leftValue, rightValue) < 0) {
-      leftIndex += 1;
-    } else {
-      rightIndex += 1;
+  let branches: Where[][] = [[]];
+  for (const child of where.and) {
+    const childBranches = toConjunctiveBranches(child);
+    branches = branches.flatMap((branch) =>
+      childBranches.map((childBranch) => [...branch, ...childBranch]),
+    );
+    if (branches.length > 256) {
+      throw new Error(
+        "Structured criteria expand to too many candidate sources.",
+      );
     }
   }
+  return branches;
+};
 
-  return results;
-}
+const branchWhere = (branch: Where[]): Where =>
+  branch.length === 1 ? branch[0] : { and: branch };
 
-function mergeOrSorted(lists: DocId[][]): DocId[] {
-  const unique = new Set<DocId>();
-  lists.forEach((list) => list.forEach((docId) => unique.add(docId)));
-  return Array.from(unique).sort(compareDocId);
-}
-
-function applyCursor(candidates: DocId[], lastDocId?: DocId): DocId[] {
-  if (lastDocId === undefined) {
-    return candidates;
+const buildSources = (
+  where: Where,
+  options: StructuredSearchOptions,
+): CandidateSource[] => {
+  if (options.orderBy) {
+    return [
+      {
+        leaf: firstLeaf(where),
+        owner: where,
+        orderBy: options.orderBy,
+      },
+    ];
   }
 
-  let low = 0;
-  let high = candidates.length;
+  return toConjunctiveBranches(where)
+    .filter((branch) => branch.length > 0)
+    .map((branch) => {
+      const owner = branchWhere(branch);
+      return { leaf: firstLeaf(owner), owner };
+    });
+};
 
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    if (compareDocId(candidates[mid], lastDocId) <= 0) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
+const compareValues = (left: WhereValue, right: WhereValue): number => {
+  if (typeof left === "number" && typeof right === "number") {
+    return left === right ? 0 : left < right ? -1 : 1;
   }
+  const leftString = String(left);
+  const rightString = String(right);
+  return leftString === rightString ? 0 : leftString < rightString ? -1 : 1;
+};
 
-  return candidates.slice(low);
-}
-
-async function evaluateTerm(
-  dependencies: StructuredSearchDependencies,
+const matchesTerm = (
   where: StructuredTermWhere,
-  options: StructuredQueryOptions,
-  cursorState: CursorState | undefined,
-): Promise<CandidateSource & { nextCursor?: string }> {
-  const response = await dependencies.terms.query(
-    where.field,
-    where.mode,
-    where.value,
-    {
-      limit: options.limit,
-      cursor: cursorState?.termToken,
-    },
-  );
+  fields: StructuredDocFieldsRecord,
+  tokenizer?: Partial<StructuredStringTokenizerConfig>,
+): boolean => {
+  const value = fields[where.field];
 
-  const candidateIds = response.candidateIds.slice().sort(compareDocId);
-  const nextCursor = response.lastEvaluatedKey
-    ? encodeStructuredCursor({
-        lastDocId: candidateIds[candidateIds.length - 1],
-        backendToken: response.lastEvaluatedKey,
-      })
-    : undefined;
+  if (where.mode === "eq") {
+    return !Array.isArray(value) && value === where.value;
+  }
 
-  return { size: candidateIds.length, candidateIds, nextCursor };
-}
+  if (Array.isArray(value)) {
+    return value.includes(where.value);
+  }
+  if (typeof value === "string") {
+    return buildStructuredStringContainsTokens(value, tokenizer).includes(
+      String(where.value),
+    );
+  }
+  return false;
+};
 
-async function evaluateRange(
-  dependencies: StructuredSearchDependencies,
+const matchesRange = (
   where: StructuredRangeWhere,
-  options: StructuredQueryOptions,
-  cursorState: CursorState | undefined,
-): Promise<CandidateSource & { nextCursor?: string }> {
-  const rangeOptions = {
-    limit: options.limit,
-    cursor: cursorState?.rangeToken,
-  };
-  let response: { candidateIds: DocId[]; lastEvaluatedKey?: string };
+  fields: StructuredDocFieldsRecord,
+): boolean => {
+  const value = fields[where.field];
+  if (Array.isArray(value) || value === undefined) {
+    return false;
+  }
 
   if (where.type === "between") {
-    response = await dependencies.ranges.between(
-      where.field,
-      where.lower,
-      where.upper,
-      rangeOptions,
-    );
-  } else if (where.type === "gte") {
-    response = await dependencies.ranges.gte(
-      where.field,
-      where.value,
-      rangeOptions,
-    );
-  } else {
-    response = await dependencies.ranges.lte(
-      where.field,
-      where.value,
-      rangeOptions,
+    return (
+      compareValues(value, where.lower) >= 0 &&
+      compareValues(value, where.upper) <= 0
     );
   }
+  return where.type === "gte"
+    ? compareValues(value, where.value) >= 0
+    : compareValues(value, where.value) <= 0;
+};
 
-  const candidateIds = response.candidateIds.slice().sort(compareDocId);
-  const nextCursor = response.lastEvaluatedKey
-    ? encodeStructuredCursor({
-        lastDocId: candidateIds[candidateIds.length - 1],
-        backendToken: response.lastEvaluatedKey,
-      })
-    : undefined;
-
-  return { size: candidateIds.length, candidateIds, nextCursor };
-}
-
-async function evaluateLeaf(
-  dependencies: StructuredSearchDependencies,
-  where: StructuredTermWhere | StructuredRangeWhere,
-  options: StructuredQueryOptions,
-  cursorState: CursorState | undefined,
-): Promise<CandidateSource & { nextCursor?: string }> {
-  if (where.type === "term") {
-    return evaluateTerm(dependencies, where, options, cursorState);
-  }
-
-  return evaluateRange(dependencies, where, options, cursorState);
-}
-
-async function evaluateWhere(
-  dependencies: StructuredSearchDependencies,
+const matchesWhere = (
   where: Where,
-  options: StructuredQueryOptions,
-  cursorState: CursorState | undefined,
-): Promise<CandidateSource & { nextCursor?: string }> {
+  fields: StructuredDocFieldsRecord,
+  tokenizer?: Partial<StructuredStringTokenizerConfig>,
+): boolean => {
   if ("and" in where) {
-    if (where.and.length === 0) {
-      return { size: 0, candidateIds: [] };
-    }
-
-    const childResults = await Promise.all(
-      where.and.map((child) =>
-        evaluateWhere(dependencies, child, {}, undefined),
-      ),
-    );
-    const ordered = childResults.slice().sort((a, b) => a.size - b.size);
-    let candidates = ordered[0]?.candidateIds ?? [];
-
-    for (let index = 1; index < ordered.length; index += 1) {
-      candidates = intersectSorted(candidates, ordered[index].candidateIds);
-      if (candidates.length === 0) {
-        break;
-      }
-    }
-
-    const filtered = applyCursor(candidates, cursorState?.lastDocId);
-    const limit = options.limit ?? filtered.length;
-    const candidateIds = filtered.slice(0, limit);
-    const hasMore = filtered.length > limit;
-    const nextCursor = hasMore
-      ? encodeStructuredCursor({
-          lastDocId: candidateIds[candidateIds.length - 1],
-        })
-      : undefined;
-
-    return { size: candidates.length, candidateIds, nextCursor };
+    return where.and.every((child) => matchesWhere(child, fields, tokenizer));
   }
-
   if ("or" in where) {
-    if (where.or.length === 0) {
-      return { size: 0, candidateIds: [] };
-    }
-
-    const childResults = await Promise.all(
-      where.or.map((child) =>
-        evaluateWhere(dependencies, child, {}, undefined),
-      ),
-    );
-    const candidates = mergeOrSorted(
-      childResults.map((result) => result.candidateIds),
-    );
-    const filtered = applyCursor(candidates, cursorState?.lastDocId);
-    const limit = options.limit ?? filtered.length;
-    const candidateIds = filtered.slice(0, limit);
-    const hasMore = filtered.length > limit;
-    const nextCursor = hasMore
-      ? encodeStructuredCursor({
-          lastDocId: candidateIds[candidateIds.length - 1],
-        })
-      : undefined;
-
-    return { size: candidates.length, candidateIds, nextCursor };
+    return where.or.some((child) => matchesWhere(child, fields, tokenizer));
   }
+  return where.type === "term"
+    ? matchesTerm(where, fields, tokenizer)
+    : matchesRange(where, fields);
+};
 
-  return evaluateLeaf(dependencies, where, options, cursorState);
-}
-
-function parseCursor(cursor?: string): CursorState | undefined {
-  if (!cursor) {
-    return undefined;
-  }
-
-  const decoded = decodeStructuredCursor(cursor);
-
-  if (!decoded) {
-    return undefined;
-  }
-
-  return {
-    lastDocId: decoded.lastDocId,
-    termToken: decoded.backendToken,
-    rangeToken: decoded.backendToken,
+const readSourcePage = async (
+  dependencies: StructuredSearchDependencies,
+  source: CandidateSource,
+  cursor: string | undefined,
+  limit: number,
+): Promise<BackendCandidatePage> => {
+  const options: StructuredQueryOptions = {
+    cursor,
+    limit,
+    reverse: source.orderBy?.reverse,
   };
-}
 
-/**
- * Execute a structured query using the provided term/range dependencies.
- * @param dependencies Query dependencies for term and range lookups.
- * @param where Structured query expression to evaluate.
- * @param options Optional paging options.
- * @returns Candidate page with optional cursor.
- */
+  if (source.orderBy) {
+    return dependencies.ranges.all(source.orderBy.field, options);
+  }
+  if (source.leaf.type === "term") {
+    return dependencies.terms.query(
+      source.leaf.field,
+      source.leaf.mode,
+      source.leaf.value,
+      options,
+    );
+  }
+  if (source.leaf.type === "between") {
+    return dependencies.ranges.between(
+      source.leaf.field,
+      source.leaf.lower,
+      source.leaf.upper,
+      options,
+    );
+  }
+  return source.leaf.type === "gte"
+    ? dependencies.ranges.gte(source.leaf.field, source.leaf.value, options)
+    : dependencies.ranges.lte(source.leaf.field, source.leaf.value, options);
+};
+
+const hasContinuation = (
+  state: StructuredSearchCursorState,
+  sourceCount: number,
+): boolean => state.readyDocIds.length > 0 || state.sourceIndex < sourceCount;
+
+/** Execute a deterministic, bounded structured candidate composition plan. */
 export async function searchStructured(
   dependencies: StructuredSearchDependencies,
   where: Where,
-  options: StructuredQueryOptions = {},
+  options: StructuredSearchOptions = {},
 ): Promise<CandidatePage> {
-  const cursorState = parseCursor(options.cursor);
-  const result = await evaluateWhere(dependencies, where, options, cursorState);
+  const limit = Math.max(1, options.limit ?? 10);
+  const backendPageSize = Math.max(
+    1,
+    Math.min(options.backendPageSize ?? 100, 500),
+  );
+  const sources = buildSources(where, options);
+  const state = decodeStructuredSearchCursor(options.cursor) ?? {
+    hits: [],
+    sourceIndex: 0,
+    readyDocIds: [],
+  };
 
-  if (result.candidateIds.length === 0) {
-    return { candidateIds: [] };
+  if (
+    state.sourceIndex > sources.length ||
+    state.hits.length > sources.length
+  ) {
+    throw new Error("Structured search cursor does not match the query plan.");
   }
 
-  return { candidateIds: result.candidateIds, cursor: result.nextCursor };
+  const candidateIds = state.readyDocIds.splice(0, limit);
+
+  while (candidateIds.length < limit && state.sourceIndex < sources.length) {
+    const sourceIndex = state.sourceIndex;
+    const source = sources[sourceIndex];
+    const hit = state.hits[sourceIndex];
+
+    if (hit?.next === null) {
+      state.sourceIndex += 1;
+      continue;
+    }
+
+    const page = await readSourcePage(
+      dependencies,
+      source,
+      hit?.next,
+      backendPageSize,
+    );
+
+    state.hits[sourceIndex] = { next: page.lastEvaluatedKey ?? null };
+    if (!page.lastEvaluatedKey) {
+      state.sourceIndex += 1;
+    }
+
+    const uniquePageIds = Array.from(new Set(page.candidateIds));
+    const requiresVerification =
+      !!source.orderBy || sources.length > 1 || !isLeaf(source.owner);
+
+    for (const docId of uniquePageIds) {
+      let qualifies = true;
+
+      if (requiresVerification) {
+        if (!dependencies.documents) {
+          throw new Error(
+            "Structured compound and ordered searches require document fields.",
+          );
+        }
+        const fields = await dependencies.documents.get(docId);
+        qualifies =
+          !!fields &&
+          matchesWhere(source.owner, fields, dependencies.tokenizer);
+
+        if (qualifies && sources.length > 1 && fields) {
+          qualifies = !sources
+            .slice(0, sourceIndex)
+            .some((earlier) =>
+              matchesWhere(earlier.owner, fields, dependencies.tokenizer),
+            );
+        }
+      }
+
+      if (qualifies) {
+        state.readyDocIds.push(docId);
+      }
+    }
+
+    candidateIds.push(
+      ...state.readyDocIds.splice(0, limit - candidateIds.length),
+    );
+  }
+
+  return {
+    candidateIds,
+    cursor: hasContinuation(state, sources.length)
+      ? encodeStructuredSearchCursor(state)
+      : undefined,
+  };
 }

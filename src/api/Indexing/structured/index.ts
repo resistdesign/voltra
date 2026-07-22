@@ -3,6 +3,7 @@ export * from "./Handlers";
 export * from "./StructuredInMemoryIndex";
 export * from "./StructuredInMemoryBackend";
 export * from "./SearchStructured";
+export * from "./StructuredSearchCursor";
 export * from "./StructuredDdb";
 export * from "./StructuredDdbBackend";
 export * from "./StructuredWriter";

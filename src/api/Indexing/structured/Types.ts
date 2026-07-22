@@ -107,10 +107,7 @@ export type WhereOr = {
  * Structured query expression.
  */
 export type Where =
-  | WhereAnd
-  | WhereOr
-  | StructuredTermWhere
-  | StructuredRangeWhere;
+  WhereAnd | WhereOr | StructuredTermWhere | StructuredRangeWhere;
 
 /**
  * Paging options for structured queries.
@@ -124,6 +121,30 @@ export type StructuredQueryOptions = {
    * Optional cursor string for pagination.
    */
   cursor?: string;
+  /**
+   * Traverse an ordered backend stream in reverse order.
+   */
+  reverse?: boolean;
+};
+
+/**
+ * Globally ordered structured candidate stream.
+ */
+export type StructuredOrderBy = {
+  /** Type-qualified structured field supplying the native order. */
+  field: string;
+  /** Traverse the field index from greatest to least. */
+  reverse?: boolean;
+};
+
+/**
+ * Structured search composition options.
+ */
+export type StructuredSearchOptions = StructuredQueryOptions & {
+  /** Optional globally ordered candidate stream. */
+  orderBy?: StructuredOrderBy;
+  /** Bounded physical page consumed atomically from each backend source. */
+  backendPageSize?: number;
 };
 
 /**

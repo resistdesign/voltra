@@ -21,6 +21,13 @@ This document captures current ORM list/search and relationship behaviors that m
 - Structured write concurrency hardening:
   - Structured DDB writes use optimistic compare-and-swap on `docFields` version state before applying term/range diffs.
   - On version mismatch, writer retries using fresh state to prevent stale diff application under concurrent writes.
+- Structured compound paging:
+  - Candidate sources are regenerated deterministically and resumed by positional source cursor.
+  - Backend pages are internally bounded and consumed atomically; qualified overflow is retained in the structured cursor.
+  - `AND` uses one candidate stream and verifies the complete predicate against canonical `docFields`.
+  - `OR` assigns each result to its first matching source, preventing cross-source duplicates without an unbounded seen set.
+  - ORM hydration continues until the requested visible page is full or structured candidates are exhausted.
+  - Invalid cursors and backend failures propagate; only explicit unsupported-plan errors use full scan + compare.
 - Structured observability:
   - `indexing.observability.onListRoutingDecision` can capture list routing decisions (`fullText`, `structured`, `fullScanCompare`) and reasons, without affecting runtime behavior.
   - `indexing.observability.onStructuredIndexWrite` can capture structured upsert/remove events and indexed field counts.
@@ -42,6 +49,10 @@ This document captures current ORM list/search and relationship behaviors that m
   - Structured cleanup can reconcile from the stored doc id, but fulltext cleanup cannot infer removed tokens for deleted/retagged fields without a prior snapshot or prior field list.
 - Paging: `itemsPerPage` and `cursor` are passed to the driver. The DynamoDB driver returns a JSON-serialized `LastEvaluatedKey` as the cursor for either `Scan` or GSI-backed `Query` requests.
 - Sorting:
+  - On the structured path, one required scalar indexed sort field selects that field's globally ordered range stream before criteria verification.
+  - Structured sorting can traverse forward or backward and resumes from that ordered stream's cursor.
+  - Multiple, optional, array/reference, or unindexed structured sort fields use full scan + compare rather than page-local sorting.
+  - Numeric range/sort keys use a fixed-width order-preserving encoding and require reindexing when upgrading from decimal string keys.
   - Without `sortFields`, the DynamoDB driver uses `Scan`.
   - With `sortFields`, the DynamoDB driver defaults to `Scan` plus in-memory sorting.
   - When `dbSpecificConfig.useFirstSortFieldAsIndexName` is `true`, the driver uses only the first sort field to build a DynamoDB `Query`.

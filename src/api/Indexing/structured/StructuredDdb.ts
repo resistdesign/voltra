@@ -150,6 +150,30 @@ export const structuredDocFieldsSchema = {
   versionAttribute: "version",
 } as const;
 
+const FLOAT_SIGN_BIT = 0x8000000000000000n;
+const FLOAT_MASK = 0xffffffffffffffffn;
+
+/**
+ * Encode a finite IEEE-754 number so lexicographic key order equals numeric order.
+ * @param value Finite number to encode.
+ * @returns Fixed-width hexadecimal representation.
+ */
+export function encodeStructuredNumber(value: number): string {
+  if (!Number.isFinite(value)) {
+    throw new Error("Structured numeric index values must be finite.");
+  }
+
+  const normalized = Object.is(value, -0) ? 0 : value;
+  const buffer = new ArrayBuffer(8);
+  const view = new DataView(buffer);
+  view.setFloat64(0, normalized, false);
+  const bits = view.getBigUint64(0, false);
+  const ordered =
+    bits & FLOAT_SIGN_BIT ? ~bits & FLOAT_MASK : bits ^ FLOAT_SIGN_BIT;
+
+  return ordered.toString(16).padStart(16, "0");
+}
+
 /**
  * Serialize a structured value for DynamoDB key usage.
  * @param value Structured value to serialize.
@@ -162,7 +186,7 @@ export function serializeStructuredValue(value: WhereValue): string {
 
   switch (typeof value) {
     case "number":
-      return `n:${value}`;
+      return `n:${encodeStructuredNumber(value)}`;
     case "string":
       return `s:${value}`;
     case "boolean":
