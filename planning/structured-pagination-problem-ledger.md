@@ -2,7 +2,7 @@
 
 Date: 2026-07-22
 
-This ledger preserves the current **Link & Lock** solutions before the physical index layout is reconsidered. It distinguishes working reference implementations from the data-skipping optimization that is designed but not yet materialized.
+This ledger preserves the current **Link & Lock** solutions while the physical index layout is implemented. It distinguishes working reference implementations from the required data-skipping subsystem now tracked in `planning/feat-link-and-lock-chunk-skipping.md`.
 
 ## Current Execution Model
 
@@ -59,22 +59,22 @@ type StructuredSearchCursorState = {
 |  16 | `sortFields` sorted only hydrated page candidates, not the global result set.             | One required, scalar, structured-indexed sort field selects the native ordered range stream; criteria verify candidates before paging. Unsupported sort shapes fall back to exhaustive compare/sort.                    | Reference implementation                     |
 |  17 | Cursor composition state could grow with result history.                                  | Bounded atomic backend pages, bounded ready overflow, and stateless first-source OR ownership.                                                                                                                          | Reference implementation                     |
 |  18 | Decimal numeric keys sort lexicographically (`23`, `230`, `34`).                          | TypeInfo number fields use a fixed-width order-preserving IEEE-754 transform; all other fields retain string-oriented key comparison. Normalize `-0`, reject non-finite numbers, and rebuild persisted numeric entries. | Reference implementation; migration required |
-|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Add a data-skipping layer mapping coarse criterion chunks to blocks of the ordered sort index, then verify exact values inside candidate blocks. Summaries may yield false positives but never false negatives.         | Solved design; physical layout deferred      |
+|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.                | Required implementation in progress          |
 
 ## Range and Sort
 
 `BETWEEN`, `>=`, and `<=` are range-selection operations because ordering makes matching values contiguous and seekable. When sorting by another field, a single index cannot both seek the criterion interval and independently provide the unrelated global order.
 
-The correct baseline is still efficient and exact:
+The baseline remains exact but can be prohibitively expensive:
 
 1. Traverse the unrelated sort field's already ordered stream.
 2. Verify each range criterion against `docFields`.
 3. Stop when the caller page is full.
 4. Resume from the same ordered stream cursor.
 
-No full result-set examination is required unless matches are so sparse that filling the page reaches the end. That is a performance distribution problem, not a correctness problem.
+Sparse matches can force Voltra to examine most or all of the ordered index stream merely to fill one visible page. Chunk skipping is therefore required for practical large-index operation, not an optional micro-optimization.
 
-## Data-Skipping Optimization
+## Data-Skipping Subsystem
 
 The proposed optimization indexes **ordered-index blocks**, not document IDs:
 
@@ -90,7 +90,19 @@ age chunks 20s + 30s -> name blocks 001, 003, 010
 
 Voltra traverses only those name blocks in name order, verifies exact ages, and stops when the page is full. Numeric chunks can be hierarchical magnitude/prefix ranges rather than fixed groups of ten. String chunks can use normalized prefix/token ranges. The required invariant is no false negatives.
 
-This is intentionally not materialized in the current reference PR. The term, range, document, full-text, and relationship records now share one physical index table with explicitly namespaced primary keys; skipping summaries can be added later as another namespaced record family without adding a table.
+This is being materialized as another namespaced record family in the unified index table. Blocks are immutable sortable-value intervals, and sparse occupancy cells are written before corresponding range entries become visible. Obsolete term/range rows are removed immediately. An occupancy cell is also removed immediately when Voltra can prove no live entry still contributes to it; otherwise a generation rebuild safely reclaims it later. Stale occupancy can therefore increase reads but cannot hide a match.
+
+## Unified Key Safety
+
+Every physical key is produced by one versioned codec from structural identity segments; callers never concatenate or parse raw type, field, token, relationship, value, or document identities.
+
+- Record-family namespace constants isolate structured, full-text, relationship, and occupancy records.
+- URI-component encoding protects identity segments containing delimiters such as `#`, `%`, `/`, and `?`.
+- Sortable range values use dedicated order-preserving codecs instead of URI encoding.
+- The required document/entity identity form adds a scalar type tag so numeric `123` and string `"123"` cannot collide; the current codec must be updated before chunk implementation lands.
+- A collision requires the same complete encoded `pk` and `sk`, not merely a repeated segment.
+
+The chunk-skipping subsystem must reuse this codec and add its own record-family namespace.
 
 ## Numeric Ordering Contract
 
@@ -129,6 +141,6 @@ Multiple sort fields, optional/missing sort values, array/reference fields, and 
 - **19 known correctness/performance obligations**
 - **2 implemented in PR #387**
 - **16 implemented in the Link & Lock reference implementation**
-- **1 solved design intentionally deferred:** data-skipping block materialization (#19)
+- **1 required implementation in progress:** data-skipping block materialization (#19)
 
-All 19 now have a concrete solution. The physical representation is one index table with a versioned, deliberately overloaded primary key. The remaining optional optimization is materializing #19's data-skipping block summaries when production selectivity data justifies their write and maintenance cost.
+All 19 have a concrete solution direction. The physical representation is one index table with a versioned, deliberately overloaded primary key. #19 is required because sparse criteria can otherwise force traversal across enormous unrelated-sort streams.
