@@ -5,12 +5,19 @@
  */
 import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
 import type { DocId } from "../Types";
+import {
+  assertIndexSortKey,
+  assertIndexTableConfig,
+  type IndexTableConfig,
+} from "../IndexTable";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
 import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import {
   buildStructuredTermKey,
+  buildStructuredDocFieldsKey,
+  buildStructuredRangePartitionKey,
   buildStructuredDocFieldsItem,
   serializeStructuredValue,
   structuredDocFieldsSchema,
@@ -33,36 +40,20 @@ import {
 type DynamoKey = Record<string, unknown>;
 
 /**
- * Deployment-specific DynamoDB table names required for structured indexing.
+ * @deprecated Use {@link IndexTableConfig}. All structured records share one table.
  */
-export type StructuredTableNames = {
-  termIndex: string;
-  rangeIndex: string;
-  docFields: string;
-};
+export type StructuredTableNames = IndexTableConfig;
 
 /**
  * Configuration for structured DynamoDB backends.
  *
- * Table names are required and should be injected per deployment.
+ * One table name is required and should be injected per deployment.
  */
-type StructuredDdbConfig = {
+export type StructuredDdbConfig = {
   client: DynamoQueryClient;
-  tables: StructuredTableNames;
+  table: IndexTableConfig;
   writerOptions?: StructuredWriterOptions;
   tokenizer?: Partial<StructuredStringTokenizerConfig>;
-};
-
-const assertTableName = (label: string, value: string): void => {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`Missing table name for ${label}.`);
-  }
-};
-
-const assertStructuredTables = (tables: StructuredTableNames): void => {
-  assertTableName("structured.termIndex", tables.termIndex);
-  assertTableName("structured.rangeIndex", tables.rangeIndex);
-  assertTableName("structured.docFields", tables.docFields);
 };
 
 const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
@@ -93,10 +84,10 @@ const chunk = <T>(items: T[], size: number): T[][] => {
 };
 
 const buildRangeLowerKey = (value: WhereValue): string =>
-  `${serializeStructuredValue(value)}#`;
+  assertIndexSortKey(`${serializeStructuredValue(value)}#`);
 
 const buildRangeUpperKey = (value: WhereValue): string =>
-  `${serializeStructuredValue(value)}#\uffff`;
+  assertIndexSortKey(`${serializeStructuredValue(value)}#\uffff`);
 
 /**
  * Read-only structured queries against DynamoDB term/range indexes.
@@ -109,14 +100,14 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
   readonly tokenizer?: Partial<StructuredStringTokenizerConfig>;
 
   /**
-   * @param config DynamoDB config for structured tables.
+   * @param config DynamoDB config for the unified index table.
    */
   constructor(config: StructuredDdbConfig) {
-    assertStructuredTables(config.tables);
+    assertIndexTableConfig(config.table);
     this.client = config.client;
-    this.termTableName = config.tables.termIndex;
-    this.rangeTableName = config.tables.rangeIndex;
-    this.docFieldsTableName = config.tables.docFields;
+    this.termTableName = config.table.tableName;
+    this.rangeTableName = config.table.tableName;
+    this.docFieldsTableName = config.table.tableName;
     this.tokenizer = config.tokenizer;
   }
 
@@ -187,7 +178,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           "#rangeKey": structuredRangeIndexSchema.sortKey,
         },
         ExpressionAttributeValues: {
-          ":field": field,
+          ":field": buildStructuredRangePartitionKey(field),
           ":lower": buildRangeLowerKey(lower),
           ":upper": buildRangeUpperKey(upper),
         },
@@ -222,7 +213,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           "#rangeKey": structuredRangeIndexSchema.sortKey,
         },
         ExpressionAttributeValues: {
-          ":field": field,
+          ":field": buildStructuredRangePartitionKey(field),
           ":lower": buildRangeLowerKey(lower),
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
@@ -256,7 +247,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           "#rangeKey": structuredRangeIndexSchema.sortKey,
         },
         ExpressionAttributeValues: {
-          ":field": field,
+          ":field": buildStructuredRangePartitionKey(field),
           ":upper": buildRangeUpperKey(upper),
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
@@ -282,7 +273,9 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         ExpressionAttributeNames: {
           "#field": structuredRangeIndexSchema.partitionKey,
         },
-        ExpressionAttributeValues: { ":field": field },
+        ExpressionAttributeValues: {
+          ":field": buildStructuredRangePartitionKey(field),
+        },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
         ScanIndexForward: !options.reverse,
@@ -302,7 +295,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     ): Promise<StructuredDocFieldsRecord | undefined> => {
       const response = await this.client.getItem({
         TableName: this.docFieldsTableName,
-        Key: { [structuredDocFieldsSchema.partitionKey]: docId },
+        Key: buildStructuredDocFieldsKey(docId),
       });
       return (response.Item as StructuredDocFieldsItem | undefined)?.fields;
     },
@@ -316,11 +309,11 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   private readonly docFieldsTableName: string;
 
   constructor(config: StructuredDdbConfig) {
-    assertStructuredTables(config.tables);
+    assertIndexTableConfig(config.table);
     this.client = config.client;
-    this.termTableName = config.tables.termIndex;
-    this.rangeTableName = config.tables.rangeIndex;
-    this.docFieldsTableName = config.tables.docFields;
+    this.termTableName = config.table.tableName;
+    this.rangeTableName = config.table.tableName;
+    this.docFieldsTableName = config.table.tableName;
   }
 
   async loadDocFieldsState(
@@ -328,7 +321,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   ): Promise<StructuredDocFieldsState | undefined> {
     const response = await this.client.getItem({
       TableName: this.docFieldsTableName,
-      Key: { [structuredDocFieldsSchema.partitionKey]: docId },
+      Key: buildStructuredDocFieldsKey(docId),
     });
 
     if (!response.Item) {
@@ -361,9 +354,9 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
       const createResult = await this.client.putItem({
         TableName: this.docFieldsTableName,
         Item: buildStructuredDocFieldsItem(docId, fields, 1),
-        ConditionExpression: "attribute_not_exists(#docId)",
+        ConditionExpression: "attribute_not_exists(#pk)",
         ExpressionAttributeNames: {
-          "#docId": structuredDocFieldsSchema.partitionKey,
+          "#pk": structuredDocFieldsSchema.partitionKey,
         },
       });
 
@@ -404,8 +397,8 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         request: {
           DeleteRequest: {
             Key: {
-              [structuredTermIndexSchema.partitionKey]: entry.termKey,
-              [structuredTermIndexSchema.sortKey]: entry.docId,
+              [structuredTermIndexSchema.partitionKey]: entry.pk,
+              [structuredTermIndexSchema.sortKey]: entry.sk,
             },
           },
         },
@@ -429,8 +422,8 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         request: {
           DeleteRequest: {
             Key: {
-              [structuredRangeIndexSchema.partitionKey]: entry.field,
-              [structuredRangeIndexSchema.sortKey]: entry.rangeKey,
+              [structuredRangeIndexSchema.partitionKey]: entry.pk,
+              [structuredRangeIndexSchema.sortKey]: entry.sk,
             },
           },
         },
@@ -471,7 +464,7 @@ export class StructuredDdbBackend {
   readonly writer: StructuredDdbWriter;
 
   /**
-   * @param config DynamoDB config for structured tables.
+   * @param config DynamoDB config for the unified index table.
    */
   constructor(config: StructuredDdbConfig) {
     this.reader = new StructuredDdbReader(config);

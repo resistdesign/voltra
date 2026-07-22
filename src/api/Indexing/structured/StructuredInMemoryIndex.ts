@@ -15,6 +15,8 @@ import type {
   StructuredQueryOptions,
   WhereValue,
 } from "./Types";
+import { encodeSortableIndexValue } from "../IndexTable";
+import { buildStructuredRangeKey } from "./StructuredDdb";
 
 type RangeEntry = {
   value: WhereValue;
@@ -60,31 +62,9 @@ function findStartIndex(values: DocId[], lastDocId?: DocId): number {
 }
 
 function compareValues(left: WhereValue, right: WhereValue): number {
-  if (left === right) {
-    return 0;
-  }
-
-  if (left === null || right === null) {
-    return left === null ? -1 : 1;
-  }
-
-  const leftType = typeof left;
-  const rightType = typeof right;
-
-  if (leftType === rightType) {
-    if (leftType === "number") {
-      return (left as number) - (right as number);
-    }
-
-    if (leftType === "boolean") {
-      return Number(left) - Number(right);
-    }
-
-    return String(left).localeCompare(String(right));
-  }
-
-  const order = ["number", "string", "boolean", "object"];
-  return order.indexOf(leftType) - order.indexOf(rightType);
+  const leftKey = encodeSortableIndexValue(left);
+  const rightKey = encodeSortableIndexValue(right);
+  return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
 }
 
 function compareRangeEntry(
@@ -179,27 +159,31 @@ function paginate(
 }
 
 function paginateInNativeOrder(
-  docIds: DocId[],
+  entries: RangeEntry[],
   options: StructuredQueryOptions = {},
 ): CandidatePage {
-  const ordered = options.reverse ? docIds.slice().reverse() : docIds;
+  const ordered = options.reverse ? entries.slice().reverse() : entries;
   const cursorState = decodeStructuredCursor(options.cursor);
-  const cursorIndex =
-    cursorState?.lastDocId === undefined
-      ? -1
-      : ordered.findIndex((docId) => docId === cursorState.lastDocId);
-  if (cursorState?.lastDocId !== undefined && cursorIndex < 0) {
-    throw new Error("Invalid structured cursor token.");
-  }
-  const startIndex = cursorIndex + 1;
+  const cursorKey = cursorState?.backendToken;
+  const startIndex = cursorKey
+    ? ordered.findIndex((entry) => {
+        const key = buildStructuredRangeKey(entry.value, entry.docId);
+        return options.reverse ? key < cursorKey : key > cursorKey;
+      })
+    : 0;
   const limit = options.limit ?? ordered.length;
-  const candidateIds = ordered.slice(startIndex, startIndex + limit);
+  const pageEntries =
+    startIndex < 0 ? [] : ordered.slice(startIndex, startIndex + limit);
+  const candidateIds = pageEntries.map((entry) => entry.docId);
 
-  return startIndex + candidateIds.length < ordered.length
+  return startIndex >= 0 && startIndex + candidateIds.length < ordered.length
     ? {
         candidateIds,
         cursor: encodeStructuredCursor({
-          lastDocId: candidateIds[candidateIds.length - 1],
+          backendToken: buildStructuredRangeKey(
+            pageEntries[pageEntries.length - 1].value,
+            pageEntries[pageEntries.length - 1].docId,
+          ),
         }),
       }
     : { candidateIds };
@@ -313,11 +297,7 @@ export class StructuredInMemoryIndex {
     const entries = this.rangeIndex.get(field) ?? [];
     const start = lowerBound(entries, lower);
     const end = upperBound(entries, upper);
-    const docIds = entries
-      .slice(start, end)
-      .map((entry) => entry.docId)
-      .sort(compareDocId);
-    return paginate(docIds, options);
+    return paginateInNativeOrder(entries.slice(start, end), options);
   }
 
   /**
@@ -334,11 +314,7 @@ export class StructuredInMemoryIndex {
   ): CandidatePage {
     const entries = this.rangeIndex.get(field) ?? [];
     const start = lowerBound(entries, lower);
-    const docIds = entries
-      .slice(start)
-      .map((entry) => entry.docId)
-      .sort(compareDocId);
-    return paginate(docIds, options);
+    return paginateInNativeOrder(entries.slice(start), options);
   }
 
   /**
@@ -355,11 +331,7 @@ export class StructuredInMemoryIndex {
   ): CandidatePage {
     const entries = this.rangeIndex.get(field) ?? [];
     const end = upperBound(entries, upper);
-    const docIds = entries
-      .slice(0, end)
-      .map((entry) => entry.docId)
-      .sort(compareDocId);
-    return paginate(docIds, options);
+    return paginateInNativeOrder(entries.slice(0, end), options);
   }
 
   /**
@@ -369,9 +341,6 @@ export class StructuredInMemoryIndex {
    * @returns Candidate page in global field order.
    */
   all(field: string, options: StructuredQueryOptions = {}): CandidatePage {
-    const docIds = (this.rangeIndex.get(field) ?? []).map(
-      (entry) => entry.docId,
-    );
-    return paginateInNativeOrder(docIds, options);
+    return paginateInNativeOrder(this.rangeIndex.get(field) ?? [], options);
   }
 }

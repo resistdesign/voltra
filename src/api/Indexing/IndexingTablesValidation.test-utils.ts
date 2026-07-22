@@ -12,21 +12,14 @@ const stubClient: DynamoQueryClient = {
 };
 
 /**
- * Validate that DDB backends fail fast when required table names are missing.
+ * Validate that every DDB backend fails fast when the unified table is missing.
  */
 const runIndexingTablesValidationScenario = () => {
   let missingFullTextTableError: string | undefined;
   try {
     new FullTextDdbBackend({
       client: stubClient,
-      tables: {
-        lossyPostings: "",
-        exactPostings: "ExactPostings",
-        docMirror: "FullTextDocMirror",
-        tokenStats: "FullTextTokenStats",
-        docTokens: "DocTokens",
-        docTokenPositions: "DocTokenPositions",
-      },
+      table: { tableName: "" },
     });
   } catch (error) {
     missingFullTextTableError = (error as Error).message ?? String(error);
@@ -36,11 +29,7 @@ const runIndexingTablesValidationScenario = () => {
   try {
     new StructuredDdbBackend({
       client: stubClient,
-      tables: {
-        termIndex: "StructuredTermIndex",
-        rangeIndex: "",
-        docFields: "StructuredDocFields",
-      },
+      table: { tableName: "" },
     });
   } catch (error) {
     missingStructuredTableError = (error as Error).message ?? String(error);
@@ -50,7 +39,7 @@ const runIndexingTablesValidationScenario = () => {
   try {
     createRelationEdgesDdbDependencies({
       client: stubClient,
-      tables: { relationEdges: "" },
+      table: { tableName: "" },
     });
   } catch (error) {
     missingRelationsTableError = (error as Error).message ?? String(error);
@@ -63,11 +52,11 @@ const runIndexingTablesValidationScenario = () => {
   };
 };
 
-export const runIndexingTablesValidationMissingFullTextTableErrorScenario = () =>
-  runIndexingTablesValidationScenario().missingFullTextTableError;
+export const runIndexingTablesValidationMissingFullTextTableErrorScenario =
+  () => runIndexingTablesValidationScenario().missingFullTextTableError;
 
-export const runIndexingTablesValidationMissingStructuredTableErrorScenario = () =>
-  runIndexingTablesValidationScenario().missingStructuredTableError;
+export const runIndexingTablesValidationMissingStructuredTableErrorScenario =
+  () => runIndexingTablesValidationScenario().missingStructuredTableError;
 
-export const runIndexingTablesValidationMissingRelationsTableErrorScenario = () =>
-  runIndexingTablesValidationScenario().missingRelationsTableError;
+export const runIndexingTablesValidationMissingRelationsTableErrorScenario =
+  () => runIndexingTablesValidationScenario().missingRelationsTableError;

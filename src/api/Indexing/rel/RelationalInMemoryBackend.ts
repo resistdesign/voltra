@@ -5,6 +5,11 @@
  */
 import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
 import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./Types";
+import {
+  INDEX_ITEM_KINDS,
+  buildIndexDocumentSortKey,
+  buildIndexKey,
+} from "../IndexTable";
 
 type EdgeMetadata = Record<string, unknown>;
 
@@ -25,7 +30,7 @@ type EdgeLookup<TMetadata extends EdgeMetadata> = Map<
 >;
 
 function edgeKey(entityId: string, relation: string): string {
-  return `${entityId}\u0000${relation}`;
+  return buildIndexKey(INDEX_ITEM_KINDS.relationshipEdge, entityId, relation);
 }
 
 function findStartIndex(ids: string[], lastId?: string): number {
@@ -38,7 +43,9 @@ function findStartIndex(ids: string[], lastId?: string): number {
 
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
-    if (ids[mid].localeCompare(lastId) <= 0) {
+    if (
+      buildIndexDocumentSortKey(ids[mid]) <= buildIndexDocumentSortKey(lastId)
+    ) {
       low = mid + 1;
     } else {
       high = mid;
@@ -135,7 +142,11 @@ export class RelationalInMemoryBackend<
     const forwardKey = edgeKey(fromId, relation);
     const map = this.forward.get(forwardKey);
     const ids = map
-      ? Array.from(map.keys()).sort((a, b) => a.localeCompare(b))
+      ? Array.from(map.keys()).sort((a, b) =>
+          buildIndexDocumentSortKey(a).localeCompare(
+            buildIndexDocumentSortKey(b),
+          ),
+        )
       : [];
 
     return paginateIds(ids, options, (otherId) => ({
@@ -159,7 +170,11 @@ export class RelationalInMemoryBackend<
     const reverseKey = edgeKey(toId, relation);
     const map = this.reverse.get(reverseKey);
     const ids = map
-      ? Array.from(map.keys()).sort((a, b) => a.localeCompare(b))
+      ? Array.from(map.keys()).sort((a, b) =>
+          buildIndexDocumentSortKey(a).localeCompare(
+            buildIndexDocumentSortKey(b),
+          ),
+        )
       : [];
 
     return paginateIds(ids, options, (otherId) => ({

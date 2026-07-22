@@ -78,9 +78,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "tokenKey": "f#text#t#hello",
-        "docKey": "d#doc-1",
-        "docMirrorKey": "d#doc-1#f#text",
+        "tokenKey": "v1#fl#text#hello",
+        "docKey": "v1#ft#doc-1",
+        "docMirrorKey": "v1#fm#doc-1",
         "tokenDocSortKey": "d#doc-1",
         "docTokenSortKey": "f#text#t#hello",
         "docTokenPositionSortKey": "f#text#t#hello#p#2"

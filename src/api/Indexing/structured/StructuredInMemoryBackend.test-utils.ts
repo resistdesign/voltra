@@ -191,6 +191,24 @@ export const runStructuredInMemoryBackendPage2CursorScenario = async () =>
 export const runStructuredInMemoryBackendRangePage2CursorScenario = async () =>
   (await runStructuredInMemoryBackendScenario()).rangePage2Cursor;
 
+export const runStructuredInMemoryBackendNumericRangeCursorScenario =
+  async () => {
+    const backend = new StructuredInMemoryBackend();
+    await backend.write(0, { score: 1 });
+    await backend.write(2, { score: 2 });
+    const first = await backend.ranges.all("score", { limit: 1 });
+    const second = await backend.ranges.all("score", {
+      limit: 1,
+      cursor: first.lastEvaluatedKey,
+    });
+    return {
+      firstIds: first.candidateIds,
+      cursorPresent: typeof first.lastEvaluatedKey === "string",
+      secondIds: second.candidateIds,
+      terminalCursor: second.lastEvaluatedKey ?? null,
+    };
+  };
+
 export const runStructuredInMemoryBackendTerminalHandlerBodyScenario =
   async () =>
     (await runStructuredInMemoryBackendScenario()).terminalHandlerBody;

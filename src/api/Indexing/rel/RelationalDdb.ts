@@ -6,6 +6,19 @@
  */
 import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
 import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
+import {
+  INDEX_ITEM_KINDS,
+  INDEX_KEY_PARTS,
+  INDEX_TABLE_KIND_ATTRIBUTE,
+  INDEX_TABLE_PARTITION_KEY,
+  INDEX_TABLE_SORT_KEY,
+  assertIndexTableConfig,
+  assertIndexTableKey,
+  buildIndexKey,
+  encodeIndexIdentity,
+  type IndexTableConfig,
+  type IndexTableKey,
+} from "../IndexTable";
 import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
 import type {
   Direction,
@@ -20,16 +33,7 @@ type EdgeMetadata = Record<string, unknown>;
 /**
  * DynamoDB key shape for relation edges.
  */
-export type RelationEdgesDdbKey = {
-  /**
-   * Partition key encoding entity/relation/direction.
-   */
-  edgeKey: string;
-  /**
-   * Sort key identifying the opposite entity id.
-   */
-  otherId: string;
-};
+export type RelationEdgesDdbKey = IndexTableKey;
 
 /**
  * DynamoDB item shape for relation edges.
@@ -37,6 +41,10 @@ export type RelationEdgesDdbKey = {
 export type RelationEdgesDdbItem<
   TMetadata extends EdgeMetadata = EdgeMetadata,
 > = RelationEdgesDdbKey & {
+  /** Logical item kind in the shared physical table. */
+  kind: typeof INDEX_ITEM_KINDS.relationshipEdge;
+  /** Opposite entity id for consumer-facing edge reconstruction. */
+  otherId: string;
   /**
    * Optional metadata stored with the edge.
    */
@@ -47,17 +55,16 @@ export type RelationEdgesDdbItem<
  * Schema metadata for relational edges stored in DynamoDB.
  */
 export const relationEdgesSchema = {
-  partitionKey: "edgeKey",
-  sortKey: "otherId",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   metadataAttribute: "metadata",
 } as const;
 
 /**
- * Deployment-specific DynamoDB table names required for relational edges.
+ * @deprecated Use {@link IndexTableConfig}. Relationship edges share the index table.
  */
-export type RelationsTableNames = {
-  relationEdges: string;
-};
+export type RelationsTableNames = IndexTableConfig;
 
 /**
  * Configuration for relational DynamoDB backends.
@@ -66,7 +73,7 @@ export type RelationsTableNames = {
  */
 export type RelationsDdbConfig = {
   client: DynamoQueryClient;
-  tables: RelationsTableNames;
+  table: IndexTableConfig;
   batchSize?: number;
 };
 
@@ -75,13 +82,10 @@ type TableWrite = {
   request: WriteRequest;
 };
 
-const assertTableName = (label: string, value: string): void => {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`Missing table name for ${label}.`);
-  }
-};
-
-const chunkRequests = (requests: TableWrite[], size: number): TableWrite[][] => {
+const chunkRequests = (
+  requests: TableWrite[],
+  size: number,
+): TableWrite[][] => {
   const chunks: TableWrite[][] = [];
   for (let index = 0; index < requests.length; index += size) {
     chunks.push(requests.slice(index, index + size));
@@ -107,8 +111,8 @@ export const createRelationEdgesDdbDependencies = <
 >(
   config: RelationsDdbConfig,
 ): RelationEdgesDdbDependencies<TMetadata> => {
-  assertTableName("relations.relationEdges", config.tables.relationEdges);
-  const tableName = config.tables.relationEdges;
+  assertIndexTableConfig(config.table);
+  const tableName = config.table.tableName;
   const batchSize = config.batchSize ?? 25;
 
   return {
@@ -151,8 +155,7 @@ export const createRelationEdgesDdbDependencies = <
       return {
         items: (response.Items ?? []) as RelationEdgesDdbItem<TMetadata>[],
         lastEvaluatedKey: response.LastEvaluatedKey as
-          | RelationEdgesDdbKey
-          | undefined,
+          RelationEdgesDdbKey | undefined,
       };
     },
   };
@@ -170,7 +173,12 @@ export function encodeRelationEdgePartitionKey(
   relation: string,
   direction: Direction,
 ): string {
-  return `${entityId}\u0000${relation}\u0000${direction}`;
+  return buildIndexKey(
+    INDEX_ITEM_KINDS.relationshipEdge,
+    entityId,
+    relation,
+    direction,
+  );
 }
 
 /**
@@ -187,10 +195,10 @@ export function buildRelationEdgeDdbKey(
   direction: Direction,
   otherId: string,
 ): RelationEdgesDdbKey {
-  return {
-    edgeKey: encodeRelationEdgePartitionKey(entityId, relation, direction),
-    otherId,
-  };
+  return assertIndexTableKey({
+    pk: encodeRelationEdgePartitionKey(entityId, relation, direction),
+    sk: `${INDEX_KEY_PARTS.entity}#${encodeIndexIdentity(otherId)}`,
+  });
 }
 
 /**
@@ -211,6 +219,8 @@ export function buildRelationEdgeDdbItem<TMetadata extends EdgeMetadata>(
 ): RelationEdgesDdbItem<TMetadata> {
   return {
     ...buildRelationEdgeDdbKey(entityId, relation, direction, otherId),
+    kind: INDEX_ITEM_KINDS.relationshipEdge,
+    otherId,
     ...(metadata !== undefined ? { metadata } : {}),
   };
 }
@@ -277,10 +287,7 @@ export type RelationEdgesDdbDependencies<
   ): Promise<RelationEdgesQueryResult<TMetadata>>;
 };
 
-type RelationEdgesCursorToken = {
-  edgeKey: string;
-  otherId: string;
-};
+type RelationEdgesCursorToken = RelationEdgesDdbKey;
 
 function encodeRelationEdgesToken(
   key?: RelationEdgesDdbKey,
@@ -301,14 +308,11 @@ function decodeRelationEdgesToken(
 
   const parsed = JSON.parse(token) as Partial<RelationEdgesCursorToken>;
 
-  if (
-    typeof parsed.edgeKey !== "string" ||
-    typeof parsed.otherId !== "string"
-  ) {
+  if (typeof parsed.pk !== "string" || typeof parsed.sk !== "string") {
     throw new Error("Invalid relation edges cursor token.");
   }
 
-  return { edgeKey: parsed.edgeKey, otherId: parsed.otherId };
+  return { pk: parsed.pk, sk: parsed.sk };
 }
 
 /**

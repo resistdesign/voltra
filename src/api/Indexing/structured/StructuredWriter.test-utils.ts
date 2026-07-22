@@ -34,16 +34,16 @@ const runStructuredWriterConcurrentRetryScenario = async () => {
       putDocFieldsIfVersion: async (_docId, expectedVersion) =>
         expectedVersion === 2,
       putTermEntries: async (entries) => {
-        addedTermKeys.push(...entries.map((entry) => entry.termKey));
+        addedTermKeys.push(...entries.map((entry) => entry.pk));
       },
       deleteTermEntries: async (entries) => {
-        deletedTermKeys.push(...entries.map((entry) => entry.termKey));
+        deletedTermKeys.push(...entries.map((entry) => entry.pk));
       },
       putRangeEntries: async (entries) => {
-        addedRangeKeys.push(...entries.map((entry) => entry.rangeKey));
+        addedRangeKeys.push(...entries.map((entry) => entry.sk));
       },
       deleteRangeEntries: async (entries) => {
-        deletedRangeKeys.push(...entries.map((entry) => entry.rangeKey));
+        deletedRangeKeys.push(...entries.map((entry) => entry.sk));
       },
     },
     {
