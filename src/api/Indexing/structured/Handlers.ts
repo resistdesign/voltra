@@ -251,8 +251,7 @@ export async function structuredHandler(
         limit: event.limit,
         cursor: event.cursor,
       });
-      const cursor = result.cursor ?? event.cursor;
-      return { statusCode: 200, body: JSON.stringify({ ...result, cursor }) };
+      return { statusCode: 200, body: JSON.stringify(result) };
     }
     default:
       return errorResponse("Unsupported action.");

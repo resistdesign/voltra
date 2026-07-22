@@ -1,5 +1,9 @@
 import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
 import { searchStructured } from "./SearchStructured";
+import {
+  setStructuredHandlerDependencies,
+  structuredHandler,
+} from "./Handlers";
 
 const runStructuredInMemoryBackendScenario = async () => {
   const backend = new StructuredInMemoryBackend();
@@ -107,6 +111,24 @@ const runStructuredInMemoryBackendScenario = async () => {
     { type: "term", field: "category", mode: "eq", value: "news" },
     { limit: 1, cursor: page1.cursor },
   );
+  const rangePage1 = await searchStructured(
+    backend,
+    { type: "gte", field: "score", value: 10 },
+    { limit: 1 },
+  );
+  const rangePage2 = await searchStructured(
+    backend,
+    { type: "gte", field: "score", value: 10 },
+    { limit: 1, cursor: rangePage1.cursor },
+  );
+
+  setStructuredHandlerDependencies({ reader: backend, writer: backend });
+  const terminalHandlerResponse = await structuredHandler({
+    action: "SearchStructured",
+    where: { type: "term", field: "category", mode: "eq", value: "news" },
+    limit: 1,
+    cursor: page1.cursor,
+  });
 
   await backend.write("1", { category: "archive", tags: ["a"], score: 11 });
   const afterUpdate = await searchStructured(
@@ -131,6 +153,9 @@ const runStructuredInMemoryBackendScenario = async () => {
     modelLikeToyIds: modelLikeToy.candidateIds,
     page1Ids: page1.candidateIds,
     page2Ids: page2.candidateIds,
+    page2Cursor: page2.cursor ?? null,
+    rangePage2Cursor: rangePage2.cursor ?? null,
+    terminalHandlerBody: JSON.parse(terminalHandlerResponse.body),
     afterUpdateIds: afterUpdate.candidateIds,
     afterRemoveIds: afterRemove.candidateIds,
   };
@@ -159,6 +184,16 @@ export const runStructuredInMemoryBackendPage1IdsScenario = async () =>
 
 export const runStructuredInMemoryBackendPage2IdsScenario = async () =>
   (await runStructuredInMemoryBackendScenario()).page2Ids;
+
+export const runStructuredInMemoryBackendPage2CursorScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).page2Cursor;
+
+export const runStructuredInMemoryBackendRangePage2CursorScenario = async () =>
+  (await runStructuredInMemoryBackendScenario()).rangePage2Cursor;
+
+export const runStructuredInMemoryBackendTerminalHandlerBodyScenario =
+  async () =>
+    (await runStructuredInMemoryBackendScenario()).terminalHandlerBody;
 
 export const runStructuredInMemoryBackendAfterUpdateIdsScenario = async () =>
   (await runStructuredInMemoryBackendScenario()).afterUpdateIds;
