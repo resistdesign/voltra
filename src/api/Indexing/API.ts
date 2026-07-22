@@ -37,6 +37,7 @@ import { type ResolvedSearchLimits, SEARCH_DEFAULTS } from "./Handler/Config";
 import type { SearchTrace } from "./Trace";
 import { createHash } from "./hashUniversal";
 import { compareDocId, normalizeDocId } from "./docId";
+import { encodeIndexScalarIdentity } from "./IndexTable";
 
 type TraceableIndexBackend = IndexBackend & {
   setActiveTrace(trace?: SearchTrace): void;
@@ -408,7 +409,7 @@ class SearchLimitTracker {
 }
 
 function createDocTokenKey({ docId, indexField, token }: DocTokenKey): string {
-  return `${indexField}#${docId}#${token}`;
+  return JSON.stringify([encodeIndexScalarIdentity(docId), indexField, token]);
 }
 
 function buildDocTokenMembershipChecker(

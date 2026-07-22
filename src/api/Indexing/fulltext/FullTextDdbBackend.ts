@@ -350,7 +350,6 @@ export class FullTextDdbWriter {
                 token,
               ),
               [lossyPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
-              [lossyPostingsSchema.docIdAttribute]: docId,
             },
           },
         },

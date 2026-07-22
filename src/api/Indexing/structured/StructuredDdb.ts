@@ -14,6 +14,7 @@ import {
   assertIndexTableKey,
   buildIndexDocumentSortKey,
   buildIndexKey,
+  buildIndexScalarKey,
   encodeExactIndexValue,
   encodeIndexIdentity,
   encodeSortableIndexNumber,
@@ -276,7 +277,11 @@ export function buildStructuredDocFieldsItem(
   version: number,
 ): StructuredDocFieldsItem {
   const key = assertIndexTableKey({
-    pk: buildIndexKey(INDEX_ITEM_KINDS.structuredDocument, docId),
+    pk: buildIndexScalarKey(
+      INDEX_ITEM_KINDS.structuredDocument,
+      "document",
+      docId,
+    ),
     sk: INDEX_KEY_PARTS.state,
   });
   return {
@@ -291,7 +296,11 @@ export function buildStructuredDocFieldsItem(
 /** Build the physical key for canonical structured document state. */
 export function buildStructuredDocFieldsKey(docId: DocId): IndexTableKey {
   return assertIndexTableKey({
-    pk: buildIndexKey(INDEX_ITEM_KINDS.structuredDocument, docId),
+    pk: buildIndexScalarKey(
+      INDEX_ITEM_KINDS.structuredDocument,
+      "document",
+      docId,
+    ),
     sk: INDEX_KEY_PARTS.state,
   });
 }

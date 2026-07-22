@@ -61,7 +61,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "pk": "v1#fe#text#token",
-        "sk": "d#doc-1"
+        "sk": "d#s#doc-1"
       }
     },
     {
@@ -70,7 +70,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "pk": "v1#fe#text#token",
-        "sk": "d#doc-1",
+        "sk": "d#s#doc-1",
         "kind": "fe",
         "token": "token",
         "indexField": "text",

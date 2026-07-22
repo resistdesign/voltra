@@ -120,13 +120,9 @@ type ExactCursorPayloadV3 = {
 };
 
 type LossyCursorPayload =
-  | LossyCursorPayloadV1
-  | LossyCursorPayloadV2
-  | LossyCursorPayloadV3;
+  LossyCursorPayloadV1 | LossyCursorPayloadV2 | LossyCursorPayloadV3;
 type ExactCursorPayload =
-  | ExactCursorPayloadV1
-  | ExactCursorPayloadV2
-  | ExactCursorPayloadV3;
+  ExactCursorPayloadV1 | ExactCursorPayloadV2 | ExactCursorPayloadV3;
 type CursorPayload = LossyCursorPayload | ExactCursorPayload;
 
 const textEncoder = new TextEncoder();
@@ -230,7 +226,14 @@ function normalizeDocId(value: string | number | undefined): DocId | undefined {
     return undefined;
   }
 
-  return String(value);
+  if (
+    (typeof value !== "string" && typeof value !== "number") ||
+    (typeof value === "number" && !Number.isFinite(value))
+  ) {
+    throw new Error("Invalid document identity in cursor payload.");
+  }
+
+  return Object.is(value, -0) ? 0 : value;
 }
 
 function normalizeDocIdList(
@@ -240,7 +243,7 @@ function normalizeDocIdList(
     return undefined;
   }
 
-  return values.map((value) => String(value));
+  return values.map((value) => normalizeDocId(value) as DocId);
 }
 
 /**

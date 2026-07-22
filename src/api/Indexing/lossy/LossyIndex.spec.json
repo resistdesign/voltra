@@ -48,7 +48,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "pk": "v1#fl#text#token",
-        "sk": "d#doc-1"
+        "sk": "d#s#doc-1"
       }
     }
   ]

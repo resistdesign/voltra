@@ -90,8 +90,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "pk": "v1#re#a#owns#out",
-        "sk": "e#b"
+        "pk": "v1#re#e#s#a#owns#out",
+        "sk": "e#s#b"
       }
     },
     {
@@ -99,8 +99,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "pk": "v1#re#a#owns#out",
-        "sk": "e#b",
+        "pk": "v1#re#e#s#a#owns#out",
+        "sk": "e#s#b",
         "kind": "re",
         "otherId": "b",
         "metadata": {
@@ -112,7 +112,7 @@
       "export": "runRelationalIndexingDdbPartitionKeyScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "v1#re#a#owns#out"
+      "expectation": "v1#re#e#s#a#owns#out"
     },
     {
       "export": "runRelationalIndexingDdbPage1Scenario",
@@ -131,7 +131,7 @@
             }
           }
         ],
-        "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwiY29udGludWF0aW9uVG9rZW4iOiJ7XCJwa1wiOlwidjEjcmUjYSNvd25zI291dFwiLFwic2tcIjpcImUjYlwifSJ9"
+        "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwiY29udGludWF0aW9uVG9rZW4iOiJ7XCJwa1wiOlwidjEjcmUjZSNzI2Ejb3ducyNvdXRcIixcInNrXCI6XCJlI3MjYlwifSJ9"
       }
     },
     {

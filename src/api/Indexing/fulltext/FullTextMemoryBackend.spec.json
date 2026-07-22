@@ -79,12 +79,29 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "tokenKey": "v1#fl#text#hello",
-        "docKey": "v1#ft#doc-1",
-        "docMirrorKey": "v1#fm#doc-1",
-        "tokenDocSortKey": "d#doc-1",
+        "docKey": "v1#ft#d#s#doc-1",
+        "docMirrorKey": "v1#fm#d#s#doc-1",
+        "tokenDocSortKey": "d#s#doc-1",
         "docTokenSortKey": "f#text#t#hello",
         "docTokenPositionSortKey": "f#text#t#hello#p#2"
       }
+    },
+    {
+      "export": "runFullTextMemoryBackendTypedIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "numericMembership": true,
+        "stringMembership": true,
+        "numericPositions": [1],
+        "stringPositions": [2]
+      }
+    },
+    {
+      "export": "runFullTextMemoryBackendTypedSearchCacheScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [123]
     }
   ]
 }

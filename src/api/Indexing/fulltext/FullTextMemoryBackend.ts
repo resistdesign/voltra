@@ -6,6 +6,7 @@
  */
 import { ExactIndex } from "../exact/ExactIndex";
 import { LossyIndex } from "../lossy/LossyIndex";
+import { encodeIndexScalarIdentity } from "../IndexTable";
 import type {
   DocId,
   DocTokenBatchReader,
@@ -33,7 +34,11 @@ export class FullTextMemoryBackend
     indexField: string,
     token: string,
   ): string {
-    return JSON.stringify([String(docId), indexField, token]);
+    return JSON.stringify([
+      encodeIndexScalarIdentity(docId),
+      indexField,
+      token,
+    ]);
   }
 
   /**

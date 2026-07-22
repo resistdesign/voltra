@@ -14,8 +14,8 @@ import {
   INDEX_TABLE_SORT_KEY,
   assertIndexTableConfig,
   assertIndexTableKey,
-  buildIndexKey,
-  encodeIndexIdentity,
+  buildIndexScalarKey,
+  encodeIndexScalarIdentity,
   type IndexTableConfig,
   type IndexTableKey,
 } from "../IndexTable";
@@ -173,8 +173,9 @@ export function encodeRelationEdgePartitionKey(
   relation: string,
   direction: Direction,
 ): string {
-  return buildIndexKey(
+  return buildIndexScalarKey(
     INDEX_ITEM_KINDS.relationshipEdge,
+    "entity",
     entityId,
     relation,
     direction,
@@ -197,7 +198,7 @@ export function buildRelationEdgeDdbKey(
 ): RelationEdgesDdbKey {
   return assertIndexTableKey({
     pk: encodeRelationEdgePartitionKey(entityId, relation, direction),
-    sk: `${INDEX_KEY_PARTS.entity}#${encodeIndexIdentity(otherId)}`,
+    sk: `${INDEX_KEY_PARTS.entity}#${encodeIndexScalarIdentity(otherId)}`,
   });
 }
 

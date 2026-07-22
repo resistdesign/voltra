@@ -58,6 +58,13 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - Therefore stale occupancy metadata can increase reads but cannot hide a matching document, and stale cells are reclaimable rather than permanent.
 - Query planning has a bounded fan-out. If a safe skipping plan cannot be produced within the budget, Voltra resumes the correct baseline ordered traversal.
 
+## Runtime prerequisites completed in PR #389
+
+- [x] Implement typed scalar identity encoding across unified Dynamo keys, S3 exact keys, in-memory membership/cache keys, and cursors.
+- [x] Preserve numeric document IDs through indexing, search results, and cursor continuation.
+- [x] Verify immediate cleanup of obsolete structured term/range and full-text posting/position rows in the Dynamo-shaped shared-map client.
+- [x] Enforce exact `pk`/`sk` delete-key shape in that client and remove the invalid extra lossy-posting delete attribute.
+
 ## Resolved key and lifecycle decisions
 
 - User-controlled identity segments are URI-component encoded exactly once by centralized key factories; raw delimiters such as `#` never define structure.

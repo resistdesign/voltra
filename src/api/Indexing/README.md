@@ -26,20 +26,20 @@ const table = {
 
 Every logical index is an explicitly namespaced candidate stream. The `kind` attribute helps diagnostics and migration tooling; application fields remain nested in Voltra-owned attributes and can never collide with `pk`, `sk`, or `kind`.
 
-| Record family       | `pk` stream                             | `sk` member order           |
-| ------------------- | --------------------------------------- | --------------------------- |
-| Structured term     | `v1#st#<field>#<mode>#<value>`          | `d#<docId>`                 |
-| Structured range    | `v1#sr#<field>`                         | `<sortableValue>#d#<docId>` |
-| Structured document | `v1#sd#<docId>`                         | `state`                     |
-| Lossy posting       | `v1#fl#<field>#<token>`                 | `d#<docId>`                 |
-| Exact posting       | `v1#fe#<field>#<token>`                 | `d#<docId>`                 |
-| Document mirror     | `v1#fm#<docId>`                         | `f#<field>`                 |
-| Token statistics    | `v1#fs#<field>#<token>`                 | `state`                     |
-| Document token      | `v1#ft#<docId>`                         | `f#<field>#t#<token>`       |
-| Token positions     | `v1#fp#<docId>`                         | `f#<field>#t#<token>`       |
-| Relationship edge   | `v1#re#<entity>#<relation>#<direction>` | `e#<otherId>`               |
+| Record family       | `pk` stream                                 | `sk` member order                  |
+| ------------------- | ------------------------------------------- | ---------------------------------- |
+| Structured term     | `v1#st#<field>#<mode>#<value>`              | `d#<type>#<docId>`                 |
+| Structured range    | `v1#sr#<field>`                             | `<sortableValue>#d#<type>#<docId>` |
+| Structured document | `v1#sd#d#<type>#<docId>`                    | `state`                            |
+| Lossy posting       | `v1#fl#<field>#<token>`                     | `d#<type>#<docId>`                 |
+| Exact posting       | `v1#fe#<field>#<token>`                     | `d#<type>#<docId>`                 |
+| Document mirror     | `v1#fm#d#<type>#<docId>`                    | `f#<field>`                        |
+| Token statistics    | `v1#fs#<field>#<token>`                     | `state`                            |
+| Document token      | `v1#ft#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
+| Token positions     | `v1#fp#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
+| Relationship edge   | `v1#re#e#s#<entity>#<relation>#<direction>` | `e#s#<otherId>`                    |
 
-All physical keys must be created through the exported key utilities. Identity segments use URI-component encoding for collision safety. Sortable values do not: finite numbers use an order-preserving IEEE-754 transform and other range-capable values use UTF-8 hex so DynamoDB byte order matches the comparison contract.
+All physical keys must be created through the exported key utilities. Identity segments use URI-component encoding for delimiter safety. Document identities additionally carry `n`/`s` type tags, so numeric `123` and string `"123"` cannot collide and retain their type through cursors. Sortable values do not use URI encoding: finite numbers use an order-preserving IEEE-754 transform and other range-capable values use UTF-8 hex so DynamoDB byte order matches the comparison contract.
 
 ```ts
 const table = { tableName: process.env.INDEXING_TABLE as string };
@@ -64,7 +64,7 @@ No environment variable name is imposed by the library. The demo uses one `INDEX
 
 ## Indexing Fields and IDs
 
-- `primaryField` identifies the document ID and is stringified (`String(value)`); missing or empty values throw.
+- `primaryField` identifies the document ID. Non-empty strings and finite numbers retain their scalar type; other values throw.
 - `indexField` scopes tokens and postings. ORM integrations use `qualifyIndexField(typeName, fieldName)`; consumers should not concatenate type and field names themselves.
 - Changing index-field behavior or upgrading from the legacy schema requires re-indexing; old entries are not migrated automatically.
 
@@ -143,7 +143,7 @@ The handler logs a compact trace with elapsed time and resolved limits for obser
 
 ### Indexing
 
-Use `indexDocument` to tokenize text and populate lossy/exact postings. Documents can use string IDs (numeric IDs are stringified), and callers choose which field to index via `indexField`.
+Use `indexDocument` to tokenize text and populate lossy/exact postings. Documents can use string or finite numeric IDs, and callers choose which field to index via `indexField`.
 
 ```ts
 await indexDocument({
@@ -227,13 +227,13 @@ const outgoing = await relationalBackend.getOutgoing("user#1", "LIKES", {
 
 For `age BETWEEN 23 AND 34` sorted by `name`, the exact baseline traverses the already ordered `name` range stream, verifies each candidate's canonical structured fields, stops when the page is full, and resumes from that stream cursor. Sparse compliance can still require many reads; that is a cost distribution problem, not a correctness problem.
 
-The planned optimization is a data-skipping layer:
+The required next indexing subsystem is a data-skipping layer:
 
 ```text
 criterion value chunks -> ordered sort-index blocks -> exact candidate IDs
 ```
 
-Block summaries may produce false positives but never false negatives. They are intentionally not materialized in this change; the one-table key namespaces leave room for a future versioned block family without changing current records.
+Block summaries may produce false positives but never false negatives. The remaining block/chunk configuration, concurrency, generation, query-composition, cursor, and backfill decisions are tracked in `planning/feat-link-and-lock-chunk-skipping.md`. Collision-safe typed identities and immediate cleanup of obsolete real term/range/full-text rows are already implemented and tested in both Dynamo-shaped and in-memory paths.
 
 ## Troubleshooting
 

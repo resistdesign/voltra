@@ -33,6 +33,31 @@
         "first": { "docIds": [0], "lastEvaluatedDocId": 0 },
         "second": { "docIds": [2] }
       }
+    },
+    {
+      "export": "runUnifiedIndexTableTypedIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "terms": [123, "123"],
+        "postings": [123, "123"],
+        "numericPositions": [1],
+        "stringPositions": [2],
+        "structuredStateCount": 2
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableCleanupScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "oldTerms": [],
+        "newTerms": ["cleanup"],
+        "oldRange": [],
+        "newRange": ["cleanup"],
+        "oldPositions": null,
+        "newPositions": [0]
+      }
     }
   ]
 }
