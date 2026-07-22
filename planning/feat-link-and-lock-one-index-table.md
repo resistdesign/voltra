@@ -41,7 +41,7 @@ Replace Voltra's ten physical indexing tables with one collision-safe, versioned
 - [x] Run focused indexing, ORM, IaC, demo, and export tests.
 - [x] Run the complete test suite, build, type build, docs, and site/demo builds.
 - [x] Review the complete diff for correctness, compatibility, key limits, hot paths, and stale multi-table references.
-- [ ] Publish the committed branch and open a professional draft PR targeting `feat/link-and-lock` (blocked by the environment's push approval/usage limit).
+- [x] Publish the committed branch and open a professional draft PR targeting `feat/link-and-lock`.
 
 ## Scope notes
 
