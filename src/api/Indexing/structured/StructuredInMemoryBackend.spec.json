@@ -50,6 +50,26 @@
       "expectation": ["2"]
     },
     {
+      "export": "runStructuredInMemoryBackendPage2CursorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runStructuredInMemoryBackendRangePage2CursorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runStructuredInMemoryBackendTerminalHandlerBodyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "candidateIds": ["2"]
+      }
+    },
+    {
       "export": "runStructuredInMemoryBackendAfterUpdateIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",

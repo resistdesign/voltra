@@ -129,13 +129,12 @@ async function evaluateTerm(
   );
 
   const candidateIds = response.candidateIds.slice().sort(compareDocId);
-  const nextCursor =
-    response.lastEvaluatedKey || candidateIds.length > 0
-      ? encodeStructuredCursor({
-          lastDocId: candidateIds[candidateIds.length - 1],
-          backendToken: response.lastEvaluatedKey,
-        })
-      : undefined;
+  const nextCursor = response.lastEvaluatedKey
+    ? encodeStructuredCursor({
+        lastDocId: candidateIds[candidateIds.length - 1],
+        backendToken: response.lastEvaluatedKey,
+      })
+    : undefined;
 
   return { size: candidateIds.length, candidateIds, nextCursor };
 }
@@ -174,13 +173,12 @@ async function evaluateRange(
   }
 
   const candidateIds = response.candidateIds.slice().sort(compareDocId);
-  const nextCursor =
-    response.lastEvaluatedKey || candidateIds.length > 0
-      ? encodeStructuredCursor({
-          lastDocId: candidateIds[candidateIds.length - 1],
-          backendToken: response.lastEvaluatedKey,
-        })
-      : undefined;
+  const nextCursor = response.lastEvaluatedKey
+    ? encodeStructuredCursor({
+        lastDocId: candidateIds[candidateIds.length - 1],
+        backendToken: response.lastEvaluatedKey,
+      })
+    : undefined;
 
   return { size: candidateIds.length, candidateIds, nextCursor };
 }
