@@ -10,7 +10,7 @@ Prevent structured leaf searches and the structured action handler from returnin
 - [x] Stop the `SearchStructured` action handler from restoring an exhausted incoming cursor.
 - [x] Add term, range, and handler regression coverage for terminal pages.
 - [x] Run the focused structured specs, full core suite, and build.
-- [ ] Commit, push, and open a draft pull request.
+- [x] Commit, push, and open a draft pull request.
 
 ## Scope Boundary
 
