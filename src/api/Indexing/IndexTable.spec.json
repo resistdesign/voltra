@@ -21,6 +21,21 @@
       }
     },
     {
+      "export": "runIndexTableTypedIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "numberIdentity": "n#123",
+        "stringIdentity": "s#123",
+        "identitiesDiffer": true,
+        "decodedNumber": 123,
+        "decodedString": "123",
+        "documentKeysDiffer": true,
+        "decodedNumberDocument": 123,
+        "decodedStringDocument": "123"
+      }
+    },
+    {
       "export": "runIndexTableLogicalIsolationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

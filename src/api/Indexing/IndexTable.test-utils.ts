@@ -2,8 +2,12 @@ import {
   INDEX_ITEM_KINDS,
   assertIndexTableKey,
   buildIndexKey,
+  buildIndexDocumentSortKey,
+  decodeIndexDocumentSortKey,
   decodeIndexIdentity,
+  decodeIndexScalarIdentity,
   encodeIndexIdentity,
+  encodeIndexScalarIdentity,
   encodeSortableIndexValue,
 } from "./IndexTable";
 import {
@@ -23,6 +27,24 @@ export const runIndexTableIdentityCollisionScenario = () => {
     buildIndexKey(INDEX_ITEM_KINDS.structuredRange, "Thing#field", "value"),
   ];
   return { keys, uniqueCount: new Set(keys).size };
+};
+
+export const runIndexTableTypedIdentityScenario = () => {
+  const numberIdentity = encodeIndexScalarIdentity(123);
+  const stringIdentity = encodeIndexScalarIdentity("123");
+  const numberDocumentKey = buildIndexDocumentSortKey(123);
+  const stringDocumentKey = buildIndexDocumentSortKey("123");
+
+  return {
+    numberIdentity,
+    stringIdentity,
+    identitiesDiffer: numberIdentity !== stringIdentity,
+    decodedNumber: decodeIndexScalarIdentity(numberIdentity),
+    decodedString: decodeIndexScalarIdentity(stringIdentity),
+    documentKeysDiffer: numberDocumentKey !== stringDocumentKey,
+    decodedNumberDocument: decodeIndexDocumentSortKey(numberDocumentKey),
+    decodedStringDocument: decodeIndexDocumentSortKey(stringDocumentKey),
+  };
 };
 
 export const runIndexTableLogicalIsolationScenario = () => {

@@ -12,6 +12,7 @@ import {
   INDEX_TABLE_SORT_KEY,
   buildIndexDocumentSortKey,
   buildIndexKey,
+  buildIndexScalarKey,
   assertIndexSortKey,
   encodeIndexIdentity,
 } from "../IndexTable";
@@ -179,10 +180,11 @@ export function encodeDocKey(
   docId: string | number,
   kind: "tokens" | "positions" = "tokens",
 ): string {
-  return buildIndexKey(
+  return buildIndexScalarKey(
     kind === "positions"
       ? INDEX_ITEM_KINDS.fullTextTokenPositions
       : INDEX_ITEM_KINDS.fullTextDocumentToken,
+    "document",
     docId,
   );
 }
@@ -198,7 +200,11 @@ export function encodeDocMirrorKey(
   indexField: string | number,
   docId: string | number,
 ): string {
-  return buildIndexKey(INDEX_ITEM_KINDS.fullTextDocumentMirror, docId);
+  return buildIndexScalarKey(
+    INDEX_ITEM_KINDS.fullTextDocumentMirror,
+    "document",
+    docId,
+  );
 }
 
 /** Sort key for one field mirror within a document mirror partition. */

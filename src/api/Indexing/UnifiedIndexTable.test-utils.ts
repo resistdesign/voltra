@@ -39,6 +39,16 @@ class InMemoryDynamoIndexClient implements DynamoQueryClient {
           table.set(keyOf(item), item);
         }
         if (request.DeleteRequest) {
+          const keyAttributes = Object.keys(request.DeleteRequest.Key).sort();
+          if (
+            keyAttributes.length !== 2 ||
+            keyAttributes[0] !== "pk" ||
+            keyAttributes[1] !== "sk"
+          ) {
+            throw new Error(
+              "Unified index deletes must contain exactly the pk/sk key.",
+            );
+          }
           table.delete(keyOf(request.DeleteRequest.Key));
         }
       }
@@ -67,7 +77,7 @@ class InMemoryDynamoIndexClient implements DynamoQueryClient {
     const table = this.table(input.TableName);
     const current = table.get(keyOf(input.Item));
     if (
-      input.ConditionExpression?.includes("attribute_not_exists") &&
+      input.ConditionExpression?.includes("attribute_not_exists(#pk)") &&
       current
     ) {
       return { conditionFailed: true };
@@ -223,4 +233,97 @@ export const runUnifiedIndexTableNumericCursorScenario = async () => {
     exclusiveStartDocId: first.lastEvaluatedDocId,
   });
   return { first, second };
+};
+
+export const runUnifiedIndexTableTypedIdentityScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const fullText = new FullTextDdbBackend({ client, table });
+
+  await structured.writer.write(123, { "Record.status": "ACTIVE" });
+  await structured.writer.write("123", { "Record.status": "ACTIVE" });
+  await fullText.addLossyPosting("same", "Record.value", 123);
+  await fullText.addLossyPosting("same", "Record.value", "123");
+  await fullText.addExactPositions("same", "Record.value", 123, [1]);
+  await fullText.addExactPositions("same", "Record.value", "123", [2]);
+
+  const terms = await structured.reader.terms.query(
+    "Record.status",
+    "eq",
+    "ACTIVE",
+  );
+  const postings = await fullText.loadLossyPostings("same", "Record.value");
+
+  return {
+    terms: terms.candidateIds,
+    postings,
+    numericPositions: await fullText.loadExactPositions(
+      "same",
+      "Record.value",
+      123,
+    ),
+    stringPositions: await fullText.loadExactPositions(
+      "same",
+      "Record.value",
+      "123",
+    ),
+    structuredStateCount: client
+      .snapshot(table.tableName)
+      .filter((item) => item.kind === "sd").length,
+  };
+};
+
+export const runUnifiedIndexTableCleanupScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const fullText = new FullTextDdbBackend({ client, table });
+
+  await structured.writer.write("cleanup", {
+    "Record.status": "OLD",
+    "Record.score": 1,
+  });
+  await structured.writer.write("cleanup", {
+    "Record.status": "NEW",
+    "Record.score": 2,
+  });
+  await fullText.writeDocument(
+    { id: "cleanup", "Record.text": "alpha" },
+    "id",
+    "Record.text",
+  );
+  await fullText.writeDocument(
+    { id: "cleanup", "Record.text": "beta" },
+    "id",
+    "Record.text",
+  );
+
+  const oldTerms = await structured.reader.terms.query(
+    "Record.status",
+    "eq",
+    "OLD",
+  );
+  const newTerms = await structured.reader.terms.query(
+    "Record.status",
+    "eq",
+    "NEW",
+  );
+  const oldRange = await structured.reader.ranges.between("Record.score", 1, 1);
+  const newRange = await structured.reader.ranges.between("Record.score", 2, 2);
+
+  return {
+    oldTerms: oldTerms.candidateIds,
+    newTerms: newTerms.candidateIds,
+    oldRange: oldRange.candidateIds,
+    newRange: newRange.candidateIds,
+    oldPositions:
+      (await fullText.loadExactPositions("alpha", "Record.text", "cleanup")) ??
+      null,
+    newPositions: await fullText.loadExactPositions(
+      "beta",
+      "Record.text",
+      "cleanup",
+    ),
+  };
 };

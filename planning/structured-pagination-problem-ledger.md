@@ -59,7 +59,7 @@ type StructuredSearchCursorState = {
 |  16 | `sortFields` sorted only hydrated page candidates, not the global result set.             | One required, scalar, structured-indexed sort field selects the native ordered range stream; criteria verify candidates before paging. Unsupported sort shapes fall back to exhaustive compare/sort.                    | Reference implementation                     |
 |  17 | Cursor composition state could grow with result history.                                  | Bounded atomic backend pages, bounded ready overflow, and stateless first-source OR ownership.                                                                                                                          | Reference implementation                     |
 |  18 | Decimal numeric keys sort lexicographically (`23`, `230`, `34`).                          | TypeInfo number fields use a fixed-width order-preserving IEEE-754 transform; all other fields retain string-oriented key comparison. Normalize `-0`, reject non-finite numbers, and rebuild persisted numeric entries. | Reference implementation; migration required |
-|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.                | Required implementation in progress          |
+|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.      | Required implementation in progress          |
 
 ## Range and Sort
 
@@ -99,10 +99,18 @@ Every physical key is produced by one versioned codec from structural identity s
 - Record-family namespace constants isolate structured, full-text, relationship, and occupancy records.
 - URI-component encoding protects identity segments containing delimiters such as `#`, `%`, `/`, and `?`.
 - Sortable range values use dedicated order-preserving codecs instead of URI encoding.
-- The required document/entity identity form adds a scalar type tag so numeric `123` and string `"123"` cannot collide; the current codec must be updated before chunk implementation lands.
+- Document/entity identities carry scalar type tags, so numeric `123` and string `"123"` cannot collide. The codec, document-owned partitions, posting/range sort keys, S3 exact keys, in-memory membership keys, and cursors now preserve that distinction.
 - A collision requires the same complete encoded `pk` and `sk`, not merely a repeated segment.
 
 The chunk-skipping subsystem must reuse this codec and add its own record-family namespace.
+
+## Implemented Cleanup Guarantees
+
+- Structured updates compare-and-swap canonical fields, then delete obsolete term/range rows and write their replacements.
+- Full-text updates diff the prior document mirror, delete obsolete lossy/exact/membership/position rows, update statistics, and write the new mirror.
+- Unified-table delete requests contain exactly the physical `pk` and `sk`; the Dynamo-shaped in-memory client rejects malformed keys.
+- Shared-map regressions prove stale structured and full-text rows disappear after an update.
+- Occupancy-cell cleanup remains part of #19 because occupancy records do not exist until the remaining chunk-generation protocol is resolved.
 
 ## Numeric Ordering Contract
 

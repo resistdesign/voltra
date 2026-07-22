@@ -8,7 +8,7 @@ import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./Types";
 import {
   INDEX_ITEM_KINDS,
   buildIndexDocumentSortKey,
-  buildIndexKey,
+  buildIndexScalarKey,
 } from "../IndexTable";
 
 type EdgeMetadata = Record<string, unknown>;
@@ -30,7 +30,12 @@ type EdgeLookup<TMetadata extends EdgeMetadata> = Map<
 >;
 
 function edgeKey(entityId: string, relation: string): string {
-  return buildIndexKey(INDEX_ITEM_KINDS.relationshipEdge, entityId, relation);
+  return buildIndexScalarKey(
+    INDEX_ITEM_KINDS.relationshipEdge,
+    "entity",
+    entityId,
+    relation,
+  );
 }
 
 function findStartIndex(ids: string[], lastId?: string): number {

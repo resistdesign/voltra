@@ -66,6 +66,9 @@ export type IndexTableKey = {
   [INDEX_TABLE_SORT_KEY]: string;
 };
 
+/** Scalar identity types supported by Voltra index keys. */
+export type IndexScalarIdentity = string | number;
+
 const utf8Length = (value: string): number =>
   new TextEncoder().encode(value).length;
 
@@ -98,14 +101,85 @@ export function decodeIndexIdentity(value: string): string {
   }
 }
 
+/**
+ * Encode a scalar identity without collapsing numeric and string values.
+ *
+ * The type tag is part of the persisted identity: numeric `123` and string
+ * `"123"` intentionally produce different keys. Numeric identities must be
+ * finite; `-0` is normalized to `0` because JavaScript treats them as the same
+ * map identity and DynamoDB cannot expose a useful distinction between them.
+ */
+export function encodeIndexScalarIdentity(value: IndexScalarIdentity): string {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new Error("Numeric index identities must be finite.");
+    }
+    const normalized = Object.is(value, -0) ? 0 : value;
+    return `${INDEX_KEY_PARTS.number}${INDEX_KEY_SEPARATOR}${encodeIndexIdentity(normalized)}`;
+  }
+
+  return `${INDEX_KEY_PARTS.string}${INDEX_KEY_SEPARATOR}${encodeIndexIdentity(value)}`;
+}
+
+/** Decode a scalar identity produced by {@link encodeIndexScalarIdentity}. */
+export function decodeIndexScalarIdentity(value: string): IndexScalarIdentity {
+  const separatorIndex = value.indexOf(INDEX_KEY_SEPARATOR);
+  if (separatorIndex < 0) {
+    throw new Error("Invalid encoded scalar index identity.");
+  }
+
+  const tag = value.slice(0, separatorIndex);
+  const decoded = decodeIndexIdentity(value.slice(separatorIndex + 1));
+
+  if (tag === INDEX_KEY_PARTS.string) {
+    return decoded;
+  }
+  if (tag === INDEX_KEY_PARTS.number) {
+    const numeric = Number(decoded);
+    if (
+      !Number.isFinite(numeric) ||
+      encodeIndexScalarIdentity(numeric) !== value
+    ) {
+      throw new Error("Invalid encoded numeric index identity.");
+    }
+    return numeric;
+  }
+
+  throw new Error("Invalid scalar index identity type tag.");
+}
+
 /** Join already semantic identity segments into a versioned physical key. */
 export function buildIndexKey(
   kind: IndexItemKind,
-  ...segments: Array<string | number>
+  ...segments: string[]
 ): string {
   const key = [
     INDEX_KEY_VERSION,
     kind,
+    ...segments.map(encodeIndexIdentity),
+  ].join(INDEX_KEY_SEPARATOR);
+  return assertIndexPartitionKey(key);
+}
+
+/**
+ * Build a partition key whose first semantic identity is a typed scalar.
+ * Use this for document/entity-owned partitions instead of passing an id to
+ * {@link buildIndexKey}, which intentionally treats ordinary segments as
+ * untyped opaque strings.
+ */
+export function buildIndexScalarKey(
+  kind: IndexItemKind,
+  scope: "document" | "entity",
+  identity: IndexScalarIdentity,
+  ...segments: string[]
+): string {
+  const scopePart =
+    scope === "document" ? INDEX_KEY_PARTS.document : INDEX_KEY_PARTS.entity;
+  const key = [
+    INDEX_KEY_VERSION,
+    kind,
+    scopePart,
+    encodeIndexScalarIdentity(identity),
     ...segments.map(encodeIndexIdentity),
   ].join(INDEX_KEY_SEPARATOR);
   return assertIndexPartitionKey(key);
@@ -196,15 +270,15 @@ export function encodeExactIndexValue(value: WhereValue): string {
 /** Build a deterministic document member sort key. */
 export function buildIndexDocumentSortKey(docId: DocId): string {
   return assertIndexSortKey(
-    `${INDEX_KEY_PARTS.document}${INDEX_KEY_SEPARATOR}${encodeIndexIdentity(docId)}`,
+    `${INDEX_KEY_PARTS.document}${INDEX_KEY_SEPARATOR}${encodeIndexScalarIdentity(docId)}`,
   );
 }
 
-/** Recover the string document identity from a document member sort key. */
-export function decodeIndexDocumentSortKey(sortKey: string): string {
+/** Recover the typed document identity from a document member sort key. */
+export function decodeIndexDocumentSortKey(sortKey: string): DocId {
   const prefix = `${INDEX_KEY_PARTS.document}${INDEX_KEY_SEPARATOR}`;
   if (!sortKey.startsWith(prefix)) {
     throw new Error("Invalid index document sort key.");
   }
-  return decodeIndexIdentity(sortKey.slice(prefix.length));
+  return decodeIndexScalarIdentity(sortKey.slice(prefix.length));
 }
