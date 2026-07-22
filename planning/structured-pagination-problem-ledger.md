@@ -39,27 +39,27 @@ type StructuredSearchCursorState = {
 
 ## Problem/Solution Table
 
-|   # | Known problem                                                                             | Current solution                                                                                                                                                                                                        | Status                                       |
-| --: | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-|   1 | A terminal term page emitted a cursor without backend continuation and replayed page one. | Emit continuation only when the backend returns continuation state.                                                                                                                                                     | Implemented in PR #387                       |
-|   2 | The `SearchStructured` handler resurrected an exhausted incoming cursor.                  | Return the search result cursor exactly.                                                                                                                                                                                | Implemented in PR #387                       |
-|   3 | One `backendToken` cannot represent compound search state.                                | Deterministic positional source-hit cursors.                                                                                                                                                                            | Reference implementation                     |
-|   4 | Missing backend state ambiguously meant unstarted or exhausted.                           | Absent positional entry means unstarted; `next: null` means exhausted.                                                                                                                                                  | Reference implementation                     |
-|   5 | Partially consumed backend pages require offsets or replay buffers.                       | Consume each internally bounded backend page atomically.                                                                                                                                                                | Reference implementation                     |
-|   6 | Generated hits require stable cursor identity.                                            | Regenerate them in stable criterion/hit order and align positionally.                                                                                                                                                   | Reference implementation                     |
-|   7 | Atomic work can produce more qualified IDs than the caller page accepts.                  | Store bounded overflow in `readyDocIds`.                                                                                                                                                                                | Reference implementation                     |
-|   8 | Compound evaluation discarded child continuation state.                                   | Advance and persist every started source independently.                                                                                                                                                                 | Reference implementation                     |
-|   9 | Page-local `AND` intersection misses matches across pages or differently ordered indexes. | Use one candidate source and verify the complete predicate against `docFields`.                                                                                                                                         | Reference implementation                     |
-|  10 | Intersection may need to exhaust another index merely to prove false.                     | Candidate-local `docFields` verification proves truth or falsity directly.                                                                                                                                              | Reference implementation                     |
-|  11 | `OR` stopped while alternative sources still had pages.                                   | Advance sources deterministically until all are exhausted.                                                                                                                                                              | Reference implementation                     |
-|  12 | `OR` duplicates documents emitted by several sources.                                     | First matching source owns the document; later sources verify earlier ownership and skip it.                                                                                                                            | Reference implementation                     |
-|  13 | Empty intermediate work was mistaken for exhaustion.                                      | Exhaustion requires no ready IDs and no remaining source.                                                                                                                                                               | Reference implementation                     |
-|  14 | Missing records or DAC rejection shrink visible ORM pages.                                | Continue structured search/hydration until the visible page is full or search is exhausted.                                                                                                                             | Reference implementation                     |
-|  15 | Broad ORM fallback swallowed cursor and backend failures.                                 | Fall back only for explicit unsupported-plan errors; propagate operational failures.                                                                                                                                    | Reference implementation                     |
-|  16 | `sortFields` sorted only hydrated page candidates, not the global result set.             | One required, scalar, structured-indexed sort field selects the native ordered range stream; criteria verify candidates before paging. Unsupported sort shapes fall back to exhaustive compare/sort.                    | Reference implementation                     |
-|  17 | Cursor composition state could grow with result history.                                  | Bounded atomic backend pages, bounded ready overflow, and stateless first-source OR ownership.                                                                                                                          | Reference implementation                     |
-|  18 | Decimal numeric keys sort lexicographically (`23`, `230`, `34`).                          | TypeInfo number fields use a fixed-width order-preserving IEEE-754 transform; all other fields retain string-oriented key comparison. Normalize `-0`, reject non-finite numbers, and rebuild persisted numeric entries. | Reference implementation; migration required |
-|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.      | Required implementation in progress          |
+|   # | Known problem                                                                             | Current solution                                                                                                                                                                                                                           | Status                                             |
+| --: | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+|   1 | A terminal term page emitted a cursor without backend continuation and replayed page one. | Emit continuation only when the backend returns continuation state.                                                                                                                                                                        | Implemented in PR #387                             |
+|   2 | The `SearchStructured` handler resurrected an exhausted incoming cursor.                  | Return the search result cursor exactly.                                                                                                                                                                                                   | Implemented in PR #387                             |
+|   3 | One `backendToken` cannot represent compound search state.                                | Deterministic positional source-hit cursors.                                                                                                                                                                                               | Reference implementation                           |
+|   4 | Missing backend state ambiguously meant unstarted or exhausted.                           | Absent positional entry means unstarted; `next: null` means exhausted.                                                                                                                                                                     | Reference implementation                           |
+|   5 | Partially consumed backend pages require offsets or replay buffers.                       | Consume each internally bounded backend page atomically.                                                                                                                                                                                   | Reference implementation                           |
+|   6 | Generated hits require stable cursor identity.                                            | Regenerate them in stable criterion/hit order and align positionally.                                                                                                                                                                      | Reference implementation                           |
+|   7 | Atomic work can produce more qualified IDs than the caller page accepts.                  | Store bounded overflow in `readyDocIds`.                                                                                                                                                                                                   | Reference implementation                           |
+|   8 | Compound evaluation discarded child continuation state.                                   | Advance and persist every started source independently.                                                                                                                                                                                    | Reference implementation                           |
+|   9 | Page-local `AND` intersection misses matches across pages or differently ordered indexes. | Use one candidate source and verify the complete predicate against `docFields`.                                                                                                                                                            | Reference implementation                           |
+|  10 | Intersection may need to exhaust another index merely to prove false.                     | Candidate-local `docFields` verification proves truth or falsity directly.                                                                                                                                                                 | Reference implementation                           |
+|  11 | `OR` stopped while alternative sources still had pages.                                   | Advance sources deterministically until all are exhausted.                                                                                                                                                                                 | Reference implementation                           |
+|  12 | `OR` duplicates documents emitted by several sources.                                     | First matching source owns the document; later sources verify earlier ownership and skip it.                                                                                                                                               | Reference implementation                           |
+|  13 | Empty intermediate work was mistaken for exhaustion.                                      | Exhaustion requires no ready IDs and no remaining source.                                                                                                                                                                                  | Reference implementation                           |
+|  14 | Missing records or DAC rejection shrink visible ORM pages.                                | Continue structured search/hydration until the visible page is full or search is exhausted.                                                                                                                                                | Reference implementation                           |
+|  15 | Broad ORM fallback swallowed cursor and backend failures.                                 | Fall back only for explicit unsupported-plan errors; propagate operational failures.                                                                                                                                                       | Reference implementation                           |
+|  16 | `sortFields` sorted only hydrated page candidates, not the global result set.             | One scalar, structured-indexed sort field selects the native ordered range stream; criteria verify candidates before paging. Optional fields require an additional deterministic missing-value stream so missing documents remain visible. | Reference implementation; optional stream required |
+|  17 | Cursor composition state could grow with result history.                                  | Bounded atomic backend pages, bounded ready overflow, and stateless first-source OR ownership.                                                                                                                                             | Reference implementation                           |
+|  18 | Decimal numeric keys sort lexicographically (`23`, `230`, `34`).                          | TypeInfo number fields use a fixed-width order-preserving IEEE-754 transform; all other fields retain string-oriented key comparison. Normalize `-0`, reject non-finite numbers, and rebuild persisted numeric entries.                    | Reference implementation; migration required       |
+|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.                         | Required implementation in progress                |
 
 ## Range and Sort
 
@@ -76,21 +76,29 @@ Sparse matches can force Voltra to examine most or all of the ordered index stre
 
 ## Data-Skipping Subsystem
 
-The proposed optimization indexes **ordered-index blocks**, not document IDs:
+The data-skipping subsystem indexes **criterion chunks to exact tokens in an existing ordered index**, not document IDs:
 
 ```text
-criterion chunk -> ordered sort-index blocks -> exact candidate IDs
+criterion chunk -> occupied exact sort tokens -> existing sort-index rows -> exact verification
 ```
 
 Example for `age BETWEEN 23 AND 34 ORDER BY name`:
 
 ```text
-age chunks 20s + 30s -> name blocks 001, 003, 010
+age chunks [20, 30) + [30, 40) -> encoded name tokens for "Alice", "Mary", "Zoe"
 ```
 
-Voltra traverses only those name blocks in name order, verifies exact ages, and stops when the page is full. Numeric chunks can be hierarchical magnitude/prefix ranges rather than fixed groups of ten. String chunks can use normalized prefix/token ranges. The required invariant is no false negatives.
+An occupancy cell such as `(age, [20, 30), name, token("Zoe"))` contains no document pointer. It states that at least one item in that age chunk has the exact persisted name sort token. Voltra orders the occupied tokens, seeks directly to each token's rows in the existing name range index, obtains document IDs there, verifies exact ages from canonical `docFields`, and stops when the page is full. A broader second layer of name blocks is unnecessary.
 
-This is being materialized as another namespaced record family in the unified index table. Blocks are immutable sortable-value intervals, and sparse occupancy cells are written before corresponding range entries become visible. Obsolete term/range rows are removed immediately. An occupancy cell is also removed immediately when Voltra can prove no live entry still contributes to it; otherwise a generation rebuild safely reclaims it later. Stale occupancy can therefore increase reads but cannot hide a match.
+For item `123` with `age: 23` and `name: "Zoe"`, the conceptual chain is:
+
+```text
+age 23 -> age chunk [20, 30) -> encoded name token "Zoe" -> name range row -> item 123 -> verify exact age
+```
+
+For `age BETWEEN 23 AND 34 ORDER BY name`, both edge chunks are consulted, but canonical verification rejects values below `23` or above `34`.
+
+This is being materialized as another namespaced record family in the unified index table. Criterion chunks and exact sort tokens are stable value-derived identities, never positional pages. Obsolete real index rows are removed during successful updates/deletes. An occupancy cell is removed immediately only when Voltra can prove no live entry still contributes to it; otherwise a generation rebuild safely reclaims it later. Stale occupancy can therefore increase reads but cannot itself hide a match.
 
 ## Unified Key Safety
 
@@ -119,17 +127,50 @@ TypeInfo determines comparison semantics:
 - `number` field: store/query an order-preserving numeric encoding and compare numerically.
 - every other currently range-capable field: store/query and compare using its string representation.
 
-There is no mixed-type `BETWEEN` ordering contract. Query bounds must conform to the field's TypeInfo type.
+There is no mixed-type `BETWEEN` ordering contract. Query bounds must conform to the field's single TypeInfo comparison type.
+
+All scalar, non-reference `string` and `number` fields marked `tags.indexed.structured` automatically participate as criterion and sort axes. There is no additional range-chunk opt-in, opt-out, or explicit field-pair configuration. Arrays and booleans do not participate.
+
+A string field may also be marked for full-text indexing; that does not change its structural range behavior. The one-type-per-field rule remains authoritative, including literal unions: Voltra does not define a mixed string/number ordering.
+
+Numeric criterion quantization is derived from TypeInfo:
+
+```ts
+tags: {
+  indexed: {
+    structured: true,
+    decimal: true,
+  },
+}
+```
+
+- ordinary `number`: decade chunk, e.g. `23 -> [20, 30)`;
+- `decimal: true`: unit chunk, e.g. `22.4549126 -> [22, 23)`.
+
+Many distinct decimal values inside the same criterion chunk and sort token share one occupancy cell. Cardinality depends on occupied criterion-chunk/sort-token pairs, not on the number of distinct decimal values alone. String criterion chunk width/encoding remains an open design choice.
+
+With `F` eligible structured fields, one document contributes to at most `F(F - 1)` cross-field criterion-chunk/sort-token pairs before shared-cell deduplication. Same-field range-and-sort queries need no cell because the criterion's ordered stream already provides both filtering and order. This write/storage amplification is deliberately governed by the existing per-field `structured: true` opt-in rather than a second chunk-index flag.
 
 ## Current Supported Global Sort Shape
 
 - exactly one sort field;
 - field is structured-indexed;
-- field is scalar and required, so every qualifying item appears in the ordered stream;
+- field is scalar; present values appear in the ordinary ordered stream and missing optional values use a deterministic missing-value stream after present values;
 - ascending or descending traversal;
 - document ID encoded after the value as deterministic tie-breaker.
 
-Multiple sort fields, optional/missing sort values, array/reference fields, and unindexed sort fields use the exhaustive fallback until a provably correct ordered plan exists.
+Multiple sort fields, array/reference fields, and unindexed sort fields use the exhaustive fallback. Optional/missing sort values currently use that fallback until the missing-value stream is implemented; they must never be omitted from results.
+
+## Optimistic Mutation Contract
+
+Voltra intentionally does not provide transactions or rollback across index families.
+
+1. Calculate the complete forward delta for canonical fields plus structured, full-text, relationship, range-chunk, and cleanup records.
+2. Use the existing conditional `docFields` version swap for optimistic concurrency; retry from fresh canonical state on a version mismatch.
+3. Apply derived puts/deletes forward and retry DynamoDB unprocessed items; do not undo already-applied writes when a later write fails.
+4. Remove obsolete real index rows during successful updates/deletes. Exact canonical-field verification rejects stale rows whose indexed criteria no longer match; repair/reindex and occupancy compaction converge residual derived state.
+
+The unified table enables a single higher-level coordinator to combine compatible derived mutations across index families into `BatchWriteItem` requests of at most 25 operations. Conditional canonical writes remain separate. This reduces calls and improves throughput without pretending the batches are atomic.
 
 ## Regression Obligations
 
