@@ -11,6 +11,7 @@ import {
   STRUCTURED_OCCUPANCY_PAGE_BUDGET,
   STRUCTURED_OCCUPANCY_PAGE_SIZE,
   buildStructuredChunkBounds,
+  isStructuredOccupancyFieldValue,
   type StructuredOccupancyPage,
 } from "./StructuredOccupancy";
 import {
@@ -127,6 +128,28 @@ const firstLeaf = (
   return firstLeaf(children[0]);
 };
 
+const findDirectOrderLeaf = (
+  where: Where,
+  field: string,
+): StructuredTermWhere | StructuredRangeWhere | undefined => {
+  if (isLeaf(where)) {
+    return where.field === field &&
+      (where.type !== "term" || where.mode === "eq")
+      ? where
+      : undefined;
+  }
+  if ("or" in where) {
+    return undefined;
+  }
+  for (const child of where.and) {
+    const leaf = findDirectOrderLeaf(child, field);
+    if (leaf) {
+      return leaf;
+    }
+  }
+  return undefined;
+};
+
 const toConjunctiveBranches = (where: Where): Where[][] => {
   if (isLeaf(where)) {
     return [[where]];
@@ -158,9 +181,10 @@ const buildSources = (
   options: StructuredSearchOptions,
 ): CandidateSource[] => {
   if (options.orderBy) {
+    const directLeaf = findDirectOrderLeaf(where, options.orderBy.field);
     return [
       {
-        leaf: firstLeaf(where),
+        leaf: directLeaf ?? firstLeaf(where),
         owner: where,
         orderBy: options.orderBy,
       },
@@ -255,6 +279,38 @@ const readSourcePage = async (
   };
 
   if (source.orderBy) {
+    if (source.leaf.field === source.orderBy.field) {
+      if (source.leaf.type === "term" && source.leaf.mode === "eq") {
+        return dependencies.ranges.between(
+          source.leaf.field,
+          source.leaf.value,
+          source.leaf.value,
+          options,
+        );
+      }
+      if (source.leaf.type === "between") {
+        return dependencies.ranges.between(
+          source.leaf.field,
+          source.leaf.lower,
+          source.leaf.upper,
+          options,
+        );
+      }
+      if (source.leaf.type === "gte") {
+        return dependencies.ranges.gte(
+          source.leaf.field,
+          source.leaf.value,
+          options,
+        );
+      }
+      if (source.leaf.type === "lte") {
+        return dependencies.ranges.lte(
+          source.leaf.field,
+          source.leaf.value,
+          options,
+        );
+      }
+    }
     return dependencies.ranges.all(source.orderBy.field, options);
   }
   if (source.leaf.type === "term") {
@@ -433,6 +489,55 @@ const nextTokenIndex = (
   );
 };
 
+const matchesMissingCandidate = async (
+  dependencies: StructuredSearchDependencies,
+  where: Where,
+  options: StructuredSearchOptions,
+  docId: DocId,
+): Promise<boolean> => {
+  const sortField = options.orderBy?.field;
+  const sortConfig = sortField
+    ? options.occupancyFields?.[sortField]
+    : undefined;
+  const fields = await dependencies.documents?.get(docId);
+  return !!(
+    fields &&
+    sortField &&
+    sortConfig &&
+    !isStructuredOccupancyFieldValue(fields[sortField], sortConfig) &&
+    matchesWhere(where, fields, dependencies.tokenizer)
+  );
+};
+
+const findMissingContinuation = async (
+  dependencies: StructuredSearchDependencies,
+  where: Where,
+  options: StructuredSearchOptions,
+  generation: string,
+  cursor?: string,
+): Promise<{ found: boolean; cursor?: string }> => {
+  let next = cursor;
+  while (true) {
+    const resume = next;
+    const page = await dependencies.missing!.all(
+      generation,
+      options.orderBy!.field,
+      { limit: 1, cursor: next },
+    );
+    const docId = page.candidateIds[0];
+    if (
+      docId !== undefined &&
+      (await matchesMissingCandidate(dependencies, where, options, docId))
+    ) {
+      return { found: true, ...(resume ? { cursor: resume } : {}) };
+    }
+    next = page.lastEvaluatedKey;
+    if (!next) {
+      return { found: false };
+    }
+  }
+};
+
 const searchWithOccupancy = async (
   dependencies: StructuredSearchDependencies,
   where: Where,
@@ -538,10 +643,64 @@ const searchWithOccupancy = async (
     }
 
     if (results.length >= limit) {
+      const hasMorePresent = !!cursor.blockCursor || index < tokens.length;
+      if (!hasMorePresent && !options.orderBy.optional) {
+        return {
+          page: {
+            candidateIds: results,
+            diagnostics: {
+              strategy: "occupancy",
+              occupancyCellsRead: planContext.cellsRead,
+              occupancyPagesRead: planContext.pagesRead,
+              occupiedSortTokens: tokens.length,
+            },
+          },
+        };
+      }
+      if (!hasMorePresent) {
+        const continuation = await findMissingContinuation(
+          dependencies,
+          where,
+          options,
+          generation,
+        );
+        if (!continuation.found) {
+          return {
+            page: {
+              candidateIds: results,
+              diagnostics: {
+                strategy: "occupancy",
+                occupancyCellsRead: planContext.cellsRead,
+                occupancyPagesRead: planContext.pagesRead,
+                occupiedSortTokens: tokens.length,
+              },
+            },
+          };
+        }
+        cursor = {
+          mode: "occupancy",
+          generation,
+          phase: "missing",
+          ...(continuation.cursor ? { blockCursor: continuation.cursor } : {}),
+        };
+      }
       return {
         page: {
           candidateIds: results,
           cursor: encodeStructuredSearchCursor(cursor),
+          diagnostics: {
+            strategy: "occupancy",
+            occupancyCellsRead: planContext.cellsRead,
+            occupancyPagesRead: planContext.pagesRead,
+            occupiedSortTokens: tokens.length,
+          },
+        },
+      };
+    }
+    if (!options.orderBy.optional) {
+      return {
+        page: {
+          candidateIds: results,
           diagnostics: {
             strategy: "occupancy",
             occupancyCellsRead: planContext.cellsRead,
@@ -562,8 +721,7 @@ const searchWithOccupancy = async (
       { limit: limit - results.length, cursor: missingCursor },
     );
     for (const docId of page.candidateIds) {
-      const fields = await dependencies.documents.get(docId);
-      if (fields && matchesWhere(where, fields, dependencies.tokenizer)) {
+      if (await matchesMissingCandidate(dependencies, where, options, docId)) {
         results.push(docId);
       }
     }
@@ -571,6 +729,17 @@ const searchWithOccupancy = async (
     if (!missingCursor) {
       break;
     }
+  }
+
+  if (results.length >= limit && missingCursor) {
+    const continuation = await findMissingContinuation(
+      dependencies,
+      where,
+      options,
+      generation,
+      missingCursor,
+    );
+    missingCursor = continuation.found ? continuation.cursor : undefined;
   }
 
   return {
@@ -618,7 +787,10 @@ export async function searchStructured(
   if ("page" in occupancyOutcome) {
     return occupancyOutcome.page;
   }
-  if (options.orderBy?.optional) {
+  if (
+    options.orderBy?.optional &&
+    !findDirectOrderLeaf(where, options.orderBy.field)
+  ) {
     throw new Error(STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY);
   }
   if (decoded?.mode === "occupancy") {

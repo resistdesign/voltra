@@ -31,7 +31,7 @@ import {
   decodeIndexDocumentSortKey,
   type IndexTableConfig,
 } from "../IndexTable";
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
+import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
 import type {
   DynamoBatchWriter,
   DynamoQueryClient,
@@ -59,6 +59,8 @@ export type FullTextDdbWriterConfig = {
    * Unified table for fulltext indexing storage.
    */
   table: IndexTableConfig;
+  /** Shared coordinator for compatible derived writes. */
+  mutationCoordinator?: IndexMutationCoordinator;
 };
 
 type TableWrite = {
@@ -102,34 +104,12 @@ function arraysEqual(left: number[], right: number[]): boolean {
   return true;
 }
 
-function chunkRequests(requests: TableWrite[], size: number): TableWrite[][] {
-  const chunks: TableWrite[][] = [];
-  for (let index = 0; index < requests.length; index += size) {
-    chunks.push(requests.slice(index, index + size));
-  }
-  return chunks;
-}
-
 function chunkArray<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let index = 0; index < items.length; index += size) {
     chunks.push(items.slice(index, index + size));
   }
   return chunks;
-}
-
-function buildRequestItems(
-  chunk: TableWrite[],
-): Record<string, WriteRequest[]> {
-  return chunk.reduce<Record<string, WriteRequest[]>>(
-    (accumulator, { tableName, request }) => {
-      const tableRequests = accumulator[tableName] ?? [];
-      tableRequests.push(request);
-      accumulator[tableName] = tableRequests;
-      return accumulator;
-    },
-    {},
-  );
 }
 
 function decodeDocKey(value: unknown): DocId | undefined {
@@ -158,6 +138,7 @@ export class FullTextDdbWriter {
   protected docTokensTableName: string;
   protected docTokenPositionsTableName: string;
   protected tokenStatsTableName: string;
+  protected mutationCoordinator: IndexMutationCoordinator;
 
   /**
    * @param config Writer configuration including client and unified table.
@@ -171,6 +152,8 @@ export class FullTextDdbWriter {
     this.docTokensTableName = config.table.tableName;
     this.docTokenPositionsTableName = config.table.tableName;
     this.tokenStatsTableName = config.table.tableName;
+    this.mutationCoordinator =
+      config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
   }
 
   /**
@@ -274,12 +257,21 @@ export class FullTextDdbWriter {
     document: DocumentRecord,
     primaryField: string,
     indexField: string,
+    indexFieldQualified = indexField,
+    previousDocument?: DocumentRecord,
   ): Promise<void> {
+    const sourceIndexField = indexField;
     const docId = normalizeDocId(document[primaryField], primaryField);
     const text = resolveIndexText(document, indexField);
+    const persistedIndexField = indexFieldQualified;
     const { tokens: lossyTokens } = tokenizeLossyTrigrams(text);
     const { normalized, tokens } = tokenize(text);
-    const previousContent = await this.loadMirrorContent(docId, indexField);
+    const previousContent =
+      (await this.loadMirrorContent(docId, persistedIndexField)) ??
+      (previousDocument
+        ? resolveIndexText(previousDocument, sourceIndexField)
+        : undefined);
+    indexField = persistedIndexField;
     const previousTokens = previousContent
       ? tokenize(previousContent).tokens
       : [];
@@ -500,29 +492,30 @@ export class FullTextDdbWriter {
       });
     }
 
+    const mirrorKey = {
+      [fullTextDocMirrorSchema.partitionKey]: encodeDocMirrorKey(
+        indexField,
+        docId,
+      ),
+      [fullTextDocMirrorSchema.sortKey]: encodeDocMirrorSortKey(indexField),
+    };
     writes.push({
       tableName: this.mirrorTableName,
-      request: {
-        PutRequest: {
-          Item: {
-            [fullTextDocMirrorSchema.partitionKey]: encodeDocMirrorKey(
-              indexField,
-              docId,
-            ),
-            [fullTextDocMirrorSchema.sortKey]:
-              encodeDocMirrorSortKey(indexField),
-            [INDEX_TABLE_KIND_ATTRIBUTE]:
-              INDEX_ITEM_KINDS.fullTextDocumentMirror,
-            [fullTextDocMirrorSchema.contentAttribute]: normalized,
-          },
-        },
-      },
+      request: normalized
+        ? {
+            PutRequest: {
+              Item: {
+                ...mirrorKey,
+                [INDEX_TABLE_KIND_ATTRIBUTE]:
+                  INDEX_ITEM_KINDS.fullTextDocumentMirror,
+                [fullTextDocMirrorSchema.contentAttribute]: normalized,
+              },
+            },
+          }
+        : { DeleteRequest: { Key: mirrorKey } },
     });
 
-    const chunks = chunkRequests(writes, 25);
-    for (const chunk of chunks) {
-      await batchWriteWithRetry(this.client, buildRequestItems(chunk));
-    }
+    await this.mutationCoordinator.write(writes);
   }
 }
 
@@ -665,7 +658,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       writes.push(statWrite);
     }
 
-    await batchWriteWithRetry(this.client, buildRequestItems(writes));
+    await this.mutationCoordinator.write(writes);
   }
 
   /**
@@ -717,7 +710,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       writes.push(statWrite);
     }
 
-    await batchWriteWithRetry(this.client, buildRequestItems(writes));
+    await this.mutationCoordinator.write(writes);
   }
 
   /**
@@ -869,7 +862,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       },
     ];
 
-    await batchWriteWithRetry(this.client, buildRequestItems(writes));
+    await this.mutationCoordinator.write(writes);
   }
 
   /**
@@ -932,7 +925,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       },
     ];
 
-    await batchWriteWithRetry(this.client, buildRequestItems(writes));
+    await this.mutationCoordinator.write(writes);
   }
 
   /**

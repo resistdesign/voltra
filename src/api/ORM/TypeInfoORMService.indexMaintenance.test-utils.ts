@@ -11,9 +11,13 @@ import {
   ComparisonOperators,
   LogicalOperators,
 } from "../../common/SearchTypes";
-import type { TypeInfoDataItem, TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import type {
+  TypeInfoDataItem,
+  TypeInfoMap,
+} from "../../common/TypeParsing/TypeInfo";
 import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "./getTypeInfoORMIndexingConfigFromTypeInfoMap";
 import { TypeInfoORMService } from "./TypeInfoORMService";
+import { rebuildStructuredOccupancy } from "./rebuildStructuredOccupancy";
 
 type Book = {
   id: string;
@@ -423,7 +427,9 @@ const runIndexMaintenanceScenario = async () => {
   );
 
   return {
-    staleListBeforeRepairIds: staleListBeforeRepair.items.map((item) => item.id),
+    staleListBeforeRepairIds: staleListBeforeRepair.items.map(
+      (item) => item.id,
+    ),
     staleFullTextIdsBeforeRepair,
     staleStructuredIdsBeforeRepair,
     fullTextIdsAfterRepair,
@@ -437,18 +443,8 @@ const runIndexMaintenanceScenario = async () => {
       delta: await queryLossyIds(bulkFullTextBackend, "Book", "slug", "delta"),
     },
     bulkTitleIdsAfterReindex: {
-      gamma: await queryLossyIds(
-        bulkFullTextBackend,
-        "Book",
-        "title",
-        "Gamma",
-      ),
-      delta: await queryLossyIds(
-        bulkFullTextBackend,
-        "Book",
-        "title",
-        "Delta",
-      ),
+      gamma: await queryLossyIds(bulkFullTextBackend, "Book", "title", "Gamma"),
+      delta: await queryLossyIds(bulkFullTextBackend, "Book", "title", "Delta"),
     },
     optionalMissingFieldHandling: {
       createdId: optionalBookId,
@@ -462,3 +458,108 @@ const runIndexMaintenanceScenario = async () => {
 
 export const runTypeInfoORMIndexMaintenanceScenario = async () =>
   runIndexMaintenanceScenario();
+
+export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
+  let counter = 0;
+  const typeInfoMap: TypeInfoMap = {
+    Book: {
+      primaryField: "id",
+      fields: {
+        id: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { primaryField: true },
+        },
+        title: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { indexed: { structured: true } },
+        },
+        rating: {
+          type: "number",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { indexed: { structured: true } },
+        },
+      },
+    },
+  };
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "OccupancyBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => `occupancy-${++counter}`,
+  });
+  const structuredBackend = new StructuredInMemoryBackend();
+  const orm = createOrm(
+    typeInfoMap,
+    driver,
+    new FullTextMemoryBackend(),
+    structuredBackend,
+  );
+  await orm.create("Book", {
+    title: "Zoe",
+    rating: 2,
+  } as TypeInfoDataItem);
+  await orm.create("Book", {
+    title: "Amy",
+    rating: 1,
+  } as TypeInfoDataItem);
+
+  const ratingField = qualifyIndexField("Book", "rating");
+  const titleField = qualifyIndexField("Book", "title");
+  const where = {
+    type: "between" as const,
+    field: ratingField,
+    lower: 1,
+    upper: 2,
+  };
+  const options = {
+    limit: 10,
+    orderBy: { field: titleField },
+    occupancyFields: {
+      [ratingField]: { type: "number" as const },
+      [titleField]: { type: "string" as const },
+    },
+  };
+  const before = await searchStructured(structuredBackend, where, options);
+  const rebuilt = await rebuildStructuredOccupancy({
+    controller: structuredBackend.occupancyMaintenance,
+    orm,
+    generation: "g1",
+    typeNames: ["Book", "Book"],
+    itemsPerPage: 1,
+  });
+  const after = await searchStructured(structuredBackend, where, options);
+  const repeated = await rebuildStructuredOccupancy({
+    controller: structuredBackend.occupancyMaintenance,
+    orm,
+    generation: "g1",
+    typeNames: ["Book"],
+  });
+  let emptyScopeError: string | undefined;
+  try {
+    await rebuildStructuredOccupancy({
+      controller: structuredBackend.occupancyMaintenance,
+      orm,
+      generation: "g2",
+      typeNames: [],
+    });
+  } catch (error) {
+    emptyScopeError = error instanceof Error ? error.message : String(error);
+  }
+
+  return {
+    beforeStrategy: before.diagnostics?.strategy,
+    rebuilt,
+    afterStrategy: after.diagnostics?.strategy,
+    afterIds: after.candidateIds,
+    repeated,
+    state: await structuredBackend.occupancyMaintenance.getState(),
+    emptyScopeError,
+  };
+};

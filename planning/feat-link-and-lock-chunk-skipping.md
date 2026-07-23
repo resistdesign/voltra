@@ -48,17 +48,35 @@ None. The storage, query, cursor, consistency, and lifecycle contracts are resol
 - [x] Implement equivalent in-memory block/chunk indexes and cursors.
 - [x] Extend the DynamoDB-shaped shared-map client to cover skipping access patterns.
 - [x] Integrate block traversal into structured sort-first search.
-- [x] Add one unified structured-derived mutation coordinator that batches term, range, occupancy, and missing-value puts/deletes in requests of at most 25 operations and retries unprocessed items.
+- [x] Add the promised unified mutation coordinator across compatible structured, full-text, relationship, and chunk derived writes, batching requests in groups of at most 25 with unprocessed-item retry.
 
 ## Phase 5: Validate and demonstrate
 
 - [x] Add correctness tests for boundaries, Unicode, negative/decimal numbers, ties, and reverse order.
 - [x] Add mutation/failure/concurrency tests proving no false negatives.
 - [x] Add sparse large-data tests that measure examined candidates and skipped blocks.
-- [x] Add multi-criterion and multi-page cursor regressions.
+- [x] Add multi-criterion and multi-page cursor regressions, including truthful terminal cursor behavior.
 - [x] Define and test migration/backfill, generation activation, and old-generation retirement.
-- [x] Update the ledger, indexing guide, demo/E2E cases, and IaC-facing configuration.
-- [x] Run the complete package, test, documentation, IaC, API, and demo validation matrix.
+- [x] Update the ledger, indexing guide, real demo/E2E cases, migration tooling, and IaC-facing configuration.
+- [x] Run the complete package, test, documentation, IaC, API, and demo validation matrix after audit remediation.
+
+## Deep-audit remediation (2026-07-22)
+
+- [x] Reconcile the attached main/gh-pages snapshots, local implementation tree, and published PR #389 tree.
+- [x] Reproduce and repair stale missing-row duplicates, descending Dynamo tie order, same-field range seeking, typed missing-ID ordering, and terminal occupancy cursors.
+- [x] Complete cross-family derived-write coordination without adding transactions or rollback.
+- [x] Wire TypeInfo-derived occupancy into the real demo and add ORM/E2E coverage for ordered skipping.
+- [x] Make rebuild reconciliation and activation operationally complete, then document the exact migration command/path.
+- [~] Remove stale implementation-status prose and update the PR description/test evidence. Repository prose is repaired; PR metadata updates with publication.
+- [~] Run the complete validation matrix and publish the audited tree. Validation is clean; publication remains.
+
+## Deep-audit validation evidence (2026-07-22)
+
+- Core: 916 passed, 0 failed.
+- Native: 58 passed, 0 failed.
+- Medium DBX: 6 passed, 0 failed.
+- TypeScript, package bundle, declarations, package exports, consumer install/import smoke, TypeDoc, demo API/type generation, IaC generation, and Astro production build passed.
+- Focused regressions cover stale missing rows, descending Dynamo ties, typed missing-ID order, direct same-field seeks, truthful terminal cursors, real ORM occupancy routing, generation rebuild/no-op/empty-scope behavior, 25-operation batch caps, concurrent coordinator isolation, and the first post-upgrade full-text mutation of legacy pre-mirror rows.
 
 ## Initial invariants
 

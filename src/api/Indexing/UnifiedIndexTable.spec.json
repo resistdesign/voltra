@@ -91,6 +91,44 @@
         "retiredCount": 4,
         "retiredCellsRemaining": 0
       }
+    },
+    {
+      "export": "runUnifiedIndexTableDescendingTieScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["b", "a"]
+    },
+    {
+      "export": "runUnifiedIndexTableStaleBackfillMissingScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["doc"]
+    },
+    {
+      "export": "runUnifiedIndexTableCoordinatedMutationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "batchCount": 1,
+        "batchSize": 20,
+        "kinds": ["fe", "fl", "fm", "fp", "fs", "ft", "re", "so", "sr", "st"],
+        "maxBatchSize": 20,
+        "capBatchSizes": [25, 25, 10],
+        "concurrentBatchSizes": [1, 1]
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableLegacyFullTextUpgradeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "mirrorsBefore": 0,
+        "mirrorsAfter": 1,
+        "oldExact": null,
+        "newExact": [0],
+        "oldLossy": [],
+        "newLossy": ["legacy"]
+      }
     }
   ]
 }

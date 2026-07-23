@@ -4,7 +4,7 @@
  * DynamoDB backend for relational edges. Stores each edge twice (out/in) to
  * support directional traversal with cursor-based paging.
  */
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
+import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
 import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
 import {
   INDEX_ITEM_KINDS,
@@ -75,6 +75,8 @@ export type RelationsDdbConfig = {
   client: DynamoQueryClient;
   table: IndexTableConfig;
   batchSize?: number;
+  /** Shared coordinator for compatible derived writes. */
+  mutationCoordinator?: IndexMutationCoordinator;
 };
 
 type TableWrite = {
@@ -93,19 +95,6 @@ const chunkRequests = (
   return chunks;
 };
 
-const buildRequestItems = (
-  chunk: TableWrite[],
-): Record<string, WriteRequest[]> =>
-  chunk.reduce<Record<string, WriteRequest[]>>(
-    (accumulator, { tableName, request }) => {
-      const tableRequests = accumulator[tableName] ?? [];
-      tableRequests.push(request);
-      accumulator[tableName] = tableRequests;
-      return accumulator;
-    },
-    {},
-  );
-
 export const createRelationEdgesDdbDependencies = <
   TMetadata extends EdgeMetadata = EdgeMetadata,
 >(
@@ -114,6 +103,8 @@ export const createRelationEdgesDdbDependencies = <
   assertIndexTableConfig(config.table);
   const tableName = config.table.tableName;
   const batchSize = config.batchSize ?? 25;
+  const mutationCoordinator =
+    config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
 
   return {
     putEdges: async (items) => {
@@ -123,7 +114,7 @@ export const createRelationEdgesDdbDependencies = <
       }));
       const chunks = chunkRequests(writes, batchSize);
       for (const chunk of chunks) {
-        await batchWriteWithRetry(config.client, buildRequestItems(chunk));
+        await mutationCoordinator.write(chunk);
       }
     },
     deleteEdges: async (keys) => {
@@ -133,7 +124,7 @@ export const createRelationEdgesDdbDependencies = <
       }));
       const chunks = chunkRequests(writes, batchSize);
       for (const chunk of chunks) {
-        await batchWriteWithRetry(config.client, buildRequestItems(chunk));
+        await mutationCoordinator.write(chunk);
       }
     },
     queryEdges: async ({ edgeKey, limit, exclusiveStartKey }) => {

@@ -5,6 +5,7 @@ import {
   type StructuredOccupancyFieldMap,
 } from "./StructuredOccupancy";
 import type { Where } from "./Types";
+import { rebuildStructuredOccupancy } from "../../ORM/rebuildStructuredOccupancy";
 
 const occupancyFields: StructuredOccupancyFieldMap = {
   age: { type: "number" },
@@ -69,7 +70,7 @@ const collect = async (
     const page = await searchStructured(backend, where, {
       limit: 2,
       cursor,
-      orderBy: { field: "name", reverse },
+      orderBy: { field: "name", reverse, optional: true },
       occupancyFields,
     });
     ids.push(...page.candidateIds);
@@ -264,4 +265,124 @@ export const runStructuredOptionalWithoutGenerationScenario = async () => {
     return error instanceof Error ? error.message : String(error);
   }
   return "NO_ERROR";
+};
+
+export const runStructuredOccupancyTerminalCursorScenario = async () => {
+  const backend = new StructuredInMemoryBackend();
+  await backend.write("only", { age: 23, name: "Amy" }, { occupancyFields });
+  backend.beginOccupancyRebuild("g1");
+  backend.activateOccupancyRebuild();
+  const page = await searchStructured(backend, ageRange, {
+    limit: 1,
+    orderBy: { field: "name" },
+    occupancyFields,
+  });
+  return {
+    ids: page.candidateIds,
+    cursor: page.cursor ?? null,
+  };
+};
+
+export const runStructuredOccupancyStaleMissingScenario = async () => {
+  const backend = new StructuredInMemoryBackend();
+  await backend.write("present", { age: 23, name: "Amy" }, { occupancyFields });
+  backend.beginOccupancyRebuild("g1");
+  backend.activateOccupancyRebuild();
+  const page = await searchStructured(
+    {
+      terms: backend.terms,
+      ranges: backend.ranges,
+      occupancy: backend.occupancy,
+      documents: backend.documents,
+      missing: {
+        all: async () => ({ candidateIds: ["present"] }),
+      },
+    },
+    ageRange,
+    {
+      limit: 10,
+      orderBy: { field: "name", optional: true },
+      occupancyFields,
+    },
+  );
+  return page.candidateIds;
+};
+
+export const runStructuredSameFieldSeekScenario = async () => {
+  const backend = new StructuredInMemoryBackend();
+  await backend.write("low", { age: 10 }, { occupancyFields });
+  await backend.write("inside", { age: 23 }, { occupancyFields });
+  await backend.write("high", { age: 50 }, { occupancyFields });
+  let betweenCalls = 0;
+  let allCalls = 0;
+  const page = await searchStructured(
+    {
+      terms: backend.terms,
+      documents: backend.documents,
+      ranges: {
+        ...backend.ranges,
+        between: async (...args) => {
+          betweenCalls += 1;
+          return backend.ranges.between(...args);
+        },
+        all: async (...args) => {
+          allCalls += 1;
+          return backend.ranges.all(...args);
+        },
+      },
+    },
+    ageRange,
+    {
+      limit: 10,
+      orderBy: { field: "age" },
+      occupancyFields,
+    },
+  );
+  return { ids: page.candidateIds, betweenCalls, allCalls };
+};
+
+export const runStructuredMissingTypedIdOrderScenario = async () => {
+  const backend = new StructuredInMemoryBackend();
+  await backend.write("1", { age: 23 }, { occupancyFields });
+  await backend.write(1, { age: 23 }, { occupancyFields });
+  backend.beginOccupancyRebuild("g1");
+  backend.activateOccupancyRebuild();
+  const page = await searchStructured(backend, ageRange, {
+    limit: 10,
+    orderBy: { field: "name", optional: true },
+    occupancyFields,
+  });
+  return page.candidateIds;
+};
+
+export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
+  const backend = new StructuredInMemoryBackend();
+  const reindexed: string[] = [];
+  const result = await rebuildStructuredOccupancy({
+    controller: backend.occupancyMaintenance,
+    generation: "g1",
+    typeNames: ["Person", "Person", "Car"],
+    itemsPerPage: 25,
+    orm: {
+      reindexStoredType: async (typeName, config) => {
+        reindexed.push(`${typeName}:${config?.itemsPerPage}`);
+        if (typeName === "Person") {
+          await backend.write(
+            "person",
+            { age: 23, name: "Amy" },
+            { occupancyFields },
+          );
+        }
+        return { processedCount: typeName === "Person" ? 1 : 2 };
+      },
+    },
+  });
+  const active = await backend.occupancy.getActiveGeneration();
+  const repeated = await rebuildStructuredOccupancy({
+    controller: backend.occupancyMaintenance,
+    generation: "g1",
+    typeNames: ["Person", "Car"],
+    orm: { reindexStoredType: async () => ({ processedCount: 99 }) },
+  });
+  return { result, reindexed, active, repeated };
 };

@@ -42,6 +42,33 @@
           "updatedSummary": "Summary Added Later"
         }
       }
+    },
+    {
+      "export": "runStructuredOccupancyRebuildWorkflowScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "beforeStrategy": "baseline",
+        "rebuilt": {
+          "generation": "g1",
+          "alreadyActive": false,
+          "processedByType": { "Book": 2 },
+          "processedCount": 2
+        },
+        "afterStrategy": "occupancy",
+        "afterIds": ["occupancy-2", "occupancy-1"],
+        "repeated": {
+          "generation": "g1",
+          "previousGeneration": "g1",
+          "alreadyActive": true,
+          "processedByType": {},
+          "processedCount": 0
+        },
+        "state": {
+          "activeGeneration": "g1"
+        },
+        "emptyScopeError": "At least one type is required to rebuild structured occupancy."
+      }
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
   FullTextMemoryBackend,
   TypeInfoORMService,
   getTypeInfoORMIndexingConfigFromTypeInfoMap,
+  rebuildStructuredOccupancy,
 } from "@resistdesign/voltra/api";
 import type { TypeInfoMap } from "@resistdesign/voltra/common";
 
@@ -31,6 +32,7 @@ const currentTypeInfoMap: TypeInfoMap = {
         type: "string",
         array: false,
         readonly: false,
+        tags: { indexed: { structured: true } },
         optional: false,
       },
       slug: {
@@ -151,7 +153,17 @@ async function runMaintenanceExamples() {
     itemsPerPage: 100,
   });
 
-  // Example 3: an out-of-band delete requires an explicit cleanup snapshot.
+  // Example 3: build and activate the first Link & Lock occupancy generation.
+  // Reusing the same generation safely resumes an interrupted rebuild.
+  await rebuildStructuredOccupancy({
+    controller: structuredBackend.occupancyMaintenance,
+    orm,
+    generation: "g1",
+    typeNames: ["Book"],
+    itemsPerPage: 100,
+  });
+
+  // Example 4: an out-of-band delete requires an explicit cleanup snapshot.
   const deletedItemSnapshot = await driver.readItem(createdId);
   await driver.deleteItem(createdId);
   await orm.removeItemIndexes("Book", deletedItemSnapshot, {

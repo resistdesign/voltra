@@ -12,7 +12,7 @@ import {
 } from "../IndexTable";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
+import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import {
   buildStructuredTermKey,
@@ -66,6 +66,8 @@ export type StructuredDdbConfig = {
   table: IndexTableConfig;
   writerOptions?: StructuredWriterOptions;
   tokenizer?: Partial<StructuredStringTokenizerConfig>;
+  /** Shared coordinator for compatible derived writes. */
+  mutationCoordinator?: IndexMutationCoordinator;
 };
 
 const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
@@ -86,14 +88,6 @@ const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
 
 const encodeCursorKey = (key?: DynamoKey): string | undefined =>
   key ? JSON.stringify(key) : undefined;
-
-const chunk = <T>(items: T[], size: number): T[][] => {
-  const batches: T[][] = [];
-  for (let index = 0; index < items.length; index += size) {
-    batches.push(items.slice(index, index + size));
-  }
-  return batches;
-};
 
 const buildRangeLowerKey = (value: WhereValue): string =>
   assertIndexSortKey(`${serializeStructuredValue(value)}#`);
@@ -152,6 +146,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredTermIndexItem[];
@@ -196,6 +191,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredRangeIndexItem[];
@@ -230,6 +226,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredRangeIndexItem[];
@@ -264,6 +261,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredRangeIndexItem[];
@@ -333,6 +331,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
       const items = (response.Items ?? []) as StructuredOccupancyItem[];
       return {
@@ -385,6 +384,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   private readonly termTableName: string;
   private readonly rangeTableName: string;
   private readonly docFieldsTableName: string;
+  private readonly mutationCoordinator: IndexMutationCoordinator;
 
   constructor(config: StructuredDdbConfig) {
     assertIndexTableConfig(config.table);
@@ -392,6 +392,8 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     this.termTableName = config.table.tableName;
     this.rangeTableName = config.table.tableName;
     this.docFieldsTableName = config.table.tableName;
+    this.mutationCoordinator =
+      config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
   }
 
   async loadDocFieldsState(
@@ -564,29 +566,25 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   private async batchWrite(
     requests: Array<{ tableName: string; request: Record<string, unknown> }>,
   ): Promise<void> {
-    const batches = chunk(requests, 25);
-
-    for (const batch of batches) {
-      const requestItems = batch.reduce<Record<string, WriteRequest[]>>(
-        (acc, { tableName, request }) => {
-          acc[tableName] = acc[tableName] ?? [];
-          acc[tableName].push(request as WriteRequest);
-          return acc;
-        },
-        {},
-      );
-      await batchWriteWithRetry(this.client, requestItems);
-    }
+    await this.mutationCoordinator.write(
+      requests.map(({ tableName, request }) => ({
+        tableName,
+        request: request as WriteRequest,
+      })),
+    );
   }
 }
 
 /** Explicit lifecycle operations for occupancy rebuilds and activation. */
 export class StructuredDdbOccupancyMaintenance {
   private readonly tableName: string;
+  private readonly mutationCoordinator: IndexMutationCoordinator;
 
   constructor(private readonly config: StructuredDdbConfig) {
     assertIndexTableConfig(config.table);
     this.tableName = config.table.tableName;
+    this.mutationCoordinator =
+      config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
   }
 
   /** Load the current generation pointer, synthesizing the initial state. */
@@ -670,11 +668,9 @@ export class StructuredDdbOccupancyMaintenance {
     const requests = [...items, ...missing].map((item) => ({
       PutRequest: { Item: item },
     }));
-    for (const batch of chunk(requests, 25)) {
-      await batchWriteWithRetry(this.config.client, {
-        [this.tableName]: batch,
-      });
-    }
+    await this.mutationCoordinator.write(
+      requests.map((request) => ({ tableName: this.tableName, request })),
+    );
   }
 
   /** Backfill canonical snapshots idempotently into the building generation. */
@@ -753,11 +749,9 @@ export class StructuredDdbOccupancyMaintenance {
         const requests = (response.Items ?? []).map((item) => ({
           DeleteRequest: { Key: { pk: item.pk, sk: item.sk } },
         }));
-        for (const batch of chunk(requests, 25)) {
-          await batchWriteWithRetry(this.config.client, {
-            [this.tableName]: batch,
-          });
-        }
+        await this.mutationCoordinator.write(
+          requests.map((request) => ({ tableName: this.tableName, request })),
+        );
         deletedCount += requests.length;
         cursor = response.LastEvaluatedKey;
       } while (cursor);

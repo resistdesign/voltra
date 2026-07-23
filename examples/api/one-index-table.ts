@@ -2,6 +2,7 @@ import {
   FullTextDdbBackend,
   RelationalDdbBackend,
   StructuredDdbBackend,
+  IndexMutationCoordinator,
   createAwsSdkV3DynamoClient,
   createRelationEdgesDdbDependencies,
   type IndexTableConfig,
@@ -14,13 +15,27 @@ export const createIndexingBackends = (
   table: IndexTableConfig,
 ) => {
   const client = createAwsSdkV3DynamoClient(ddbClient);
-  const structured = new StructuredDdbBackend({ client, table });
+  const mutationCoordinator = new IndexMutationCoordinator(client);
+  const structured = new StructuredDdbBackend({
+    client,
+    table,
+    mutationCoordinator,
+  });
 
   return {
-    fullText: new FullTextDdbBackend({ client, table }),
+    fullText: new FullTextDdbBackend({
+      client,
+      table,
+      mutationCoordinator,
+    }),
     structured,
     relationships: new RelationalDdbBackend(
-      createRelationEdgesDdbDependencies({ client, table }),
+      createRelationEdgesDdbDependencies({
+        client,
+        table,
+        mutationCoordinator,
+      }),
     ),
+    mutationCoordinator,
   };
 };

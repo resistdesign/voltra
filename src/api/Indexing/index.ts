@@ -25,6 +25,7 @@ export * from "./IndexTable";
 export * from "./fieldQualification";
 export * from "./ddb/AwsSdkV3Adapter";
 export * from "./ddb/Types";
+export * from "./ddb/IndexMutationCoordinator";
 export * from "./exact/ExactDdb";
 export * from "./exact/ExactIndex";
 export * from "./exact/ExactS3";

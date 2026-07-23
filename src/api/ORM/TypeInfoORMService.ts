@@ -87,6 +87,7 @@ import {
 } from "../Indexing/API";
 import { qualifyIndexField } from "../Indexing/fieldQualification";
 import type { IndexBackend } from "../Indexing/Types";
+import type { IndexMutationCoordinator } from "../Indexing/ddb/IndexMutationCoordinator";
 import {
   searchStructured,
   type StructuredSearchDependencies,
@@ -213,6 +214,8 @@ export type TypeInfoORMDACConfig = {
  * Configuration for TypeInfoORM indexing integrations.
  */
 export type TypeInfoORMIndexingConfig = {
+  /** Shared scope that combines compatible derived writes across backends. */
+  mutationCoordinator?: Pick<IndexMutationCoordinator, "run">;
   /**
    * Full text indexing configuration.
    */
@@ -1705,12 +1708,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<void> => {
     const indexedItem = this.getIndexedItemSnapshot(typeName, item);
 
-    await this.indexFullTextDocument(
-      typeName,
-      indexedItem,
-      config.fullTextIndexFields,
-    );
-    await this.indexStructuredDocument(typeName, indexedItem);
+    const operation = async () => {
+      await Promise.all([
+        this.indexFullTextDocument(
+          typeName,
+          indexedItem,
+          config.fullTextIndexFields,
+        ),
+        this.indexStructuredDocument(typeName, indexedItem),
+      ]);
+    };
+    const coordinator = this.config.indexing?.mutationCoordinator;
+    await (coordinator ? coordinator.run(operation) : operation());
   };
 
   /**
@@ -1730,12 +1739,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<void> => {
     const indexedItem = this.getIndexedItemSnapshot(typeName, item);
 
-    await this.removeFullTextDocument(
-      typeName,
-      indexedItem,
-      config.fullTextIndexFields,
-    );
-    await this.removeStructuredDocument(typeName, indexedItem);
+    const operation = async () => {
+      await Promise.all([
+        this.removeFullTextDocument(
+          typeName,
+          indexedItem,
+          config.fullTextIndexFields,
+        ),
+        this.removeStructuredDocument(typeName, indexedItem),
+      ]);
+    };
+    const coordinator = this.config.indexing?.mutationCoordinator;
+    await (coordinator ? coordinator.run(operation) : operation());
   };
 
   /**
@@ -1763,17 +1778,44 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     );
     const nextIndexedItem = this.getIndexedItemSnapshot(typeName, nextItem);
 
-    await this.removeFullTextDocument(
-      typeName,
-      previousIndexedItem,
-      config.previousFullTextIndexFields,
-    );
-    await this.indexFullTextDocument(
-      typeName,
-      nextIndexedItem,
-      config.nextFullTextIndexFields,
-    );
-    await this.indexStructuredDocument(typeName, nextIndexedItem);
+    const operation = async () => {
+      const previousFullTextFields = this.resolveFullTextIndexFields(
+        typeName,
+        config.previousFullTextIndexFields,
+      );
+      const nextFullTextFields = this.resolveFullTextIndexFields(
+        typeName,
+        config.nextFullTextIndexFields,
+      );
+      const sameFullTextFields =
+        JSON.stringify(previousFullTextFields) ===
+        JSON.stringify(nextFullTextFields);
+      const fullTextOperation = sameFullTextFields
+        ? this.replaceFullTextDocument(
+            typeName,
+            previousIndexedItem,
+            nextIndexedItem,
+            nextFullTextFields,
+          )
+        : (async () => {
+            await this.removeFullTextDocument(
+              typeName,
+              previousIndexedItem,
+              previousFullTextFields,
+            );
+            await this.indexFullTextDocument(
+              typeName,
+              nextIndexedItem,
+              nextFullTextFields,
+            );
+          })();
+      await Promise.all([
+        fullTextOperation,
+        this.indexStructuredDocument(typeName, nextIndexedItem),
+      ]);
+    };
+    const coordinator = this.config.indexing?.mutationCoordinator;
+    await (coordinator ? coordinator.run(operation) : operation());
   };
 
   /**

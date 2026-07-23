@@ -679,6 +679,16 @@ export async function indexDocument({
   const text = resolveIndexText(document, indexField);
   const indexFieldKey = indexFieldQualified ?? indexField;
 
+  if (writer.writeDocument) {
+    await writer.writeDocument(
+      document,
+      primaryField,
+      indexField,
+      indexFieldKey,
+    );
+    return;
+  }
+
   if (!text) {
     return;
   }
@@ -720,6 +730,17 @@ export async function removeDocument({
   const text = resolveIndexText(document, indexField);
   const indexFieldKey = indexFieldQualified ?? indexField;
 
+  if (writer.writeDocument) {
+    await writer.writeDocument(
+      { ...document, [indexField]: "" },
+      primaryField,
+      indexField,
+      indexFieldKey,
+      document,
+    );
+    return;
+  }
+
   if (!text) {
     return;
   }
@@ -759,6 +780,17 @@ export async function replaceFullTextDocument({
   indexFieldQualified,
   backend,
 }: ReplaceDocumentInput): Promise<void> {
+  const writer = resolveBackend(backend);
+  if (writer.writeDocument) {
+    await writer.writeDocument(
+      nextDocument,
+      primaryField,
+      indexField,
+      indexFieldQualified ?? indexField,
+      previousDocument,
+    );
+    return;
+  }
   await removeDocument({
     backend,
     document: previousDocument,
