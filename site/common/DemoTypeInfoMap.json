@@ -23,7 +23,11 @@
         "readonly": false,
         "optional": false,
         "tags": {
-          "label": "Make"
+          "label": "Make",
+          "indexed": {
+            "fullText": true,
+            "structured": true
+          }
         }
       },
       "model": {
@@ -32,7 +36,11 @@
         "readonly": false,
         "optional": false,
         "tags": {
-          "label": "Model"
+          "label": "Model",
+          "indexed": {
+            "fullText": true,
+            "structured": true
+          }
         }
       },
       "year": {
@@ -46,6 +54,9 @@
             "min": 1900,
             "max": 2022,
             "step": 1
+          },
+          "indexed": {
+            "structured": true
           }
         }
       }
@@ -79,7 +90,11 @@
         "readonly": false,
         "optional": false,
         "tags": {
-          "label": "First Name"
+          "label": "First Name",
+          "indexed": {
+            "fullText": true,
+            "structured": true
+          }
         }
       },
       "lastName": {
@@ -88,7 +103,11 @@
         "readonly": false,
         "optional": false,
         "tags": {
-          "label": "Last Name"
+          "label": "Last Name",
+          "indexed": {
+            "fullText": true,
+            "structured": true
+          }
         }
       },
       "age": {
@@ -105,6 +124,10 @@
             "min": 18,
             "max": 150,
             "pattern": "\\d+"
+          },
+          "indexed": {
+            "structured": true,
+            "decimal": true
           }
         }
       },
@@ -172,7 +195,10 @@
           "None"
         ],
         "tags": {
-          "label": "Dietary Restrictions"
+          "label": "Dietary Restrictions",
+          "indexed": {
+            "structured": true
+          }
         }
       }
     },

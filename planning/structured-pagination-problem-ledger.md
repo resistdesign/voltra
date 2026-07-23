@@ -2,7 +2,7 @@
 
 Date: 2026-07-22
 
-This ledger preserves the current **Link & Lock** solutions while the physical index layout is implemented. It distinguishes working reference implementations from the required data-skipping subsystem now tracked in `planning/feat-link-and-lock-chunk-skipping.md`.
+This ledger preserves the completed **Link & Lock** solution and its audit evidence. The implementation and validation record is tracked in `planning/feat-link-and-lock-chunk-skipping.md`.
 
 ## Current Execution Model
 
@@ -56,10 +56,10 @@ type StructuredSearchCursorState = {
 |  13 | Empty intermediate work was mistaken for exhaustion.                                      | Exhaustion requires no ready IDs and no remaining source.                                                                                                                                                                  | Reference implementation                     |
 |  14 | Missing records or DAC rejection shrink visible ORM pages.                                | Continue structured search/hydration until the visible page is full or search is exhausted.                                                                                                                                | Reference implementation                     |
 |  15 | Broad ORM fallback swallowed cursor and backend failures.                                 | Fall back only for explicit unsupported-plan errors; propagate operational failures.                                                                                                                                       | Reference implementation                     |
-|  16 | `sortFields` sorted only hydrated page candidates, not the global result set.             | One scalar, structured-indexed sort field selects the native ordered range stream; criteria verify candidates before paging. Optional fields use a deterministic missing-value stream so missing documents remain visible. | Implemented                                  |
+|  16 | `sortFields` sorted only hydrated page candidates, not the global result set.             | One scalar, structured-indexed sort field selects the native ordered range stream; criteria verify candidates before paging. Optional fields use a deterministic missing-value stream so missing documents remain visible. | Implemented and deep-audited                 |
 |  17 | Cursor composition state could grow with result history.                                  | Bounded atomic backend pages, bounded ready overflow, and stateless first-source OR ownership.                                                                                                                             | Reference implementation                     |
 |  18 | Decimal numeric keys sort lexicographically (`23`, `230`, `34`).                          | TypeInfo number fields use a fixed-width order-preserving IEEE-754 transform; all other fields retain string-oriented key comparison. Normalize `-0`, reject non-finite numbers, and rebuild persisted numeric entries.    | Reference implementation; migration required |
-|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.         | Implemented                                  |
+|  19 | Sort-first can examine enormous non-matching stretches when criteria are sparse.          | Map criterion chunks to immutable value-space blocks of the ordered sort index, traverse only occupied blocks, and verify exact values inside them. Occupancy may yield false positives but never false negatives.         | Implemented and deep-audited                 |
 
 ## Range and Sort
 
@@ -243,10 +243,23 @@ The unified table enables a single higher-level coordinator to combine compatibl
 - Numeric ordering across sign, digit length, decimal values, zero/negative-zero, and inclusive boundaries.
 - Cursor size remains bounded by one backend work unit, not result history.
 
+## Deep-audit closure
+
+The 2026-07-22 audit compared the attached `main` and `gh-pages` snapshots, the local implementation tree, and published PR #389. It reproduced and repaired gaps that the first completion claim missed:
+
+- stale missing-sort rows are canonically rejected and cannot duplicate or misorder documents;
+- DynamoDB range/tie traversal honors descending direction, and in-memory missing IDs preserve typed ordering parity;
+- same-field range-and-sort plans seek the direct bounded range instead of scanning `.all`;
+- terminal occupancy pages emit no empty successor cursor;
+- one concurrency-isolated coordinator batches compatible structured, full-text, relationship, and occupancy mutations, coalesces repeated physical keys, caps each request at 25, and retains forward-only retry semantics;
+- document-level full-text batching falls back to the caller's previous snapshot when legacy indexes have no document mirror, so the first upgraded mutation removes obsolete postings instead of preserving them;
+- TypeInfo-derived occupancy is generated from the real demo model source, routed through the demo ORM, and exercised through an ORM/router E2E;
+- `rebuildStructuredOccupancy` provides a resumable first-build/rebuild path, rejects empty migration scopes, activates only after all named types are reindexed, and exposes the prior generation for cleanup. The demo command performs activation and old-generation retirement against the existing `pk`/`sk` table schema.
+
 ## Count
 
 - **19 known correctness/performance obligations**
 - **2 implemented in PR #387**
 - **17 implemented in Link & Lock**, including the completed data-skipping subsystem (#19)
 
-All 19 are implemented. The physical representation is one index table with versioned, namespaced key families; sparse criteria can now skip enormous unrelated-sort stretches without sacrificing canonical verification.
+All 19 solutions are implemented. The post-implementation audit checklist and complete validation matrix are clean; only publication and PR metadata reconciliation remain outside the code contract.

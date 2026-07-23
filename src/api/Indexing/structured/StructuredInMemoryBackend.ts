@@ -12,6 +12,7 @@ import type { StructuredDocFieldsRecord } from "./StructuredDdb";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import { StructuredInMemoryIndex } from "./StructuredInMemoryIndex";
 import {
+  buildStructuredMissingItem,
   buildStructuredMissingItems,
   buildStructuredOccupancyItems,
   type StructuredOccupancyFieldMap,
@@ -47,6 +48,20 @@ export class StructuredInMemoryBackend
   private occupancyFieldsByDoc = new Map<DocId, StructuredOccupancyFieldMap>();
   private activeGeneration?: string;
   private buildingGeneration?: string;
+
+  /** Structural parity with Dynamo-backed occupancy maintenance. */
+  readonly occupancyMaintenance = {
+    getState: async () => ({
+      activeGeneration: this.activeGeneration,
+      buildingGeneration: this.buildingGeneration,
+    }),
+    beginRebuild: async (generation: string) => {
+      this.beginOccupancyRebuild(generation);
+    },
+    activateRebuild: async () => {
+      this.activateOccupancyRebuild();
+    },
+  };
 
   /**
    * @param tokenizer Optional tokenizer overrides for structured string contains behavior.
@@ -225,14 +240,14 @@ export class StructuredInMemoryBackend
             this.occupancyFieldsByDoc.get(docId) ?? {},
           ).some((item) => item.sortField === sortField),
         )
-        .map(([docId]) => docId)
-        .sort((left, right) =>
-          String(left) < String(right)
-            ? -1
-            : String(left) > String(right)
-              ? 1
-              : 0,
-        );
+        .map(([docId]) => ({
+          docId,
+          sortKey: buildStructuredMissingItem(generation, sortField, docId).sk,
+        }))
+        .sort(({ sortKey: left }, { sortKey: right }) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+        .map(({ docId }) => docId);
       const start = options.cursor ? Number(options.cursor) : 0;
       const limit = options.limit ?? ids.length;
       const candidateIds = ids.slice(start, start + limit);

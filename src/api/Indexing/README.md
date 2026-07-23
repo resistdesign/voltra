@@ -46,11 +46,16 @@ All physical keys must be created through the exported key utilities. Identity s
 
 ```ts
 const table = { tableName: process.env.INDEXING_TABLE as string };
+const mutationCoordinator = new IndexMutationCoordinator(client);
 
-const fullText = new FullTextDdbBackend({ client, table });
-const structured = new StructuredDdbBackend({ client, table });
+const fullText = new FullTextDdbBackend({ client, table, mutationCoordinator });
+const structured = new StructuredDdbBackend({
+  client,
+  table,
+  mutationCoordinator,
+});
 const relationships = new RelationalDdbBackend(
-  createRelationEdgesDdbDependencies({ client, table }),
+  createRelationEdgesDdbDependencies({ client, table, mutationCoordinator }),
 );
 ```
 
@@ -73,17 +78,35 @@ rating: {
 ```
 
 An existing table remains on exact baseline traversal until its first occupancy
-generation is explicitly built and activated:
+generation is explicitly built and activated. The ORM helper starts or resumes
+the building generation, reindexes every named type, and activates only after
+all types complete:
 
 ```ts
-await structured.occupancyMaintenance.beginRebuild("g1");
-// Page canonical docFields and call backfillDocument(...) for each document.
-await structured.occupancyMaintenance.activateRebuild();
+await rebuildStructuredOccupancy({
+  controller: structured.occupancyMaintenance,
+  orm,
+  generation: "g1",
+  typeNames: ["Car", "Person"],
+  itemsPerPage: 100,
+});
 ```
 
 During later rebuilds, normal writers dual-write the active and building
 generations. Activation invalidates old occupancy cursors; they return no rows
 and no successor cursor. Ordinary document writes never change the generation.
+After activation, reclaim the old physical cells asynchronously with
+`retireGeneration(previousGeneration, qualifiedOccupancyFields)`. The demo's
+operational command performs that cleanup before it exits:
+
+```bash
+INDEXING_TABLE=your-table \
+STRUCTURED_OCCUPANCY_GENERATION=g1 \
+yarn rebuild:demo-occupancy
+```
+
+Link & Lock adds record families under the existing string `pk`/`sk` schema; it
+does not require another table, attribute definition, key, or IaC resource.
 
 ## Configuration and Limits
 
@@ -261,13 +284,17 @@ const outgoing = await relationalBackend.getOutgoing("user#1", "LIKES", {
 
 For `age BETWEEN 23 AND 34` sorted by `name`, the exact baseline traverses the already ordered `name` range stream, verifies each candidate's canonical structured fields, stops when the page is full, and resumes from that stream cursor. Sparse compliance can still require many reads; that is a cost distribution problem, not a correctness problem.
 
-The required next indexing subsystem is a data-skipping layer:
+Link & Lock adds an exact data-skipping layer:
 
 ```text
 criterion value chunks -> ordered sort-index blocks -> exact candidate IDs
 ```
 
-Block summaries may produce false positives but never false negatives. The remaining block/chunk configuration, concurrency, generation, query-composition, cursor, and backfill decisions are tracked in `planning/feat-link-and-lock-chunk-skipping.md`. Collision-safe typed identities and immediate cleanup of obsolete real term/range/full-text rows are already implemented and tested in both Dynamo-shaped and in-memory paths.
+Occupancy hints may produce false positives but never false negatives. Voltra
+reads only occupied criterion-chunk/sort-token cells, combines `AND`/`OR` token
+plans, seeks the existing ordered range stream, and verifies canonical fields.
+The implementation, lifecycle contract, and audit evidence are tracked in
+`planning/feat-link-and-lock-chunk-skipping.md`.
 
 ## Troubleshooting
 

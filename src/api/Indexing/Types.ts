@@ -247,10 +247,23 @@ export type ExactWriter = {
   ): Promise<void>;
 };
 
+/** Optional document-level writer that can diff and batch a whole field. */
+export type DocumentIndexWriter = {
+  writeDocument(
+    document: DocumentRecord,
+    primaryField: string,
+    indexField: string,
+    indexFieldQualified?: string,
+    previousDocument?: DocumentRecord,
+  ): Promise<void>;
+};
+
 /**
  * Combined writer interface for lossy and exact indexing.
  */
-export type IndexWriter = LossyWriter & ExactWriter;
+export type IndexWriter = LossyWriter &
+  ExactWriter &
+  Partial<DocumentIndexWriter>;
 
 /**
  * Full index backend interface for reading and writing.

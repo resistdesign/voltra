@@ -8,6 +8,7 @@ import type {
   QueryInput,
 } from "./ddb/Types";
 import { INDEX_TABLE_KIND_ATTRIBUTE } from "./IndexTable";
+import { IndexMutationCoordinator } from "./ddb/IndexMutationCoordinator";
 import { FullTextDdbBackend } from "./fulltext/FullTextDdbBackend";
 import {
   RelationalDdbBackend,
@@ -16,6 +17,8 @@ import {
 import { StructuredDdbBackend } from "./structured/StructuredDdbBackend";
 import { searchStructured } from "./structured/SearchStructured";
 import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
+import { replaceFullTextDocument } from "./API";
+import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
 
 const keyOf = (item: AttributeMap): string =>
   JSON.stringify([item.pk, item.sk]);
@@ -24,6 +27,7 @@ const keyOf = (item: AttributeMap): string =>
 class InMemoryDynamoIndexClient implements DynamoQueryClient {
   private readonly tables = new Map<string, Map<string, AttributeMap>>();
   readonly touchedTables = new Set<string>();
+  readonly batchKinds: string[][] = [];
 
   private table(name: string): Map<string, AttributeMap> {
     this.touchedTables.add(name);
@@ -33,6 +37,15 @@ class InMemoryDynamoIndexClient implements DynamoQueryClient {
   }
 
   async batchWriteItem(input: BatchWriteItemInput) {
+    this.batchKinds.push(
+      Object.values(input.RequestItems)
+        .flat()
+        .map((request) =>
+          String(
+            request.PutRequest?.Item[INDEX_TABLE_KIND_ATTRIBUTE] ?? "delete",
+          ),
+        ),
+    );
     for (const [tableName, requests] of Object.entries(input.RequestItems)) {
       const table = this.table(tableName);
       for (const request of requests) {
@@ -308,7 +321,7 @@ export const runUnifiedIndexTableOccupancyScenario = async () => {
     { type: "between", field: "age", lower: 23, upper: 34 },
     {
       limit: 2,
-      orderBy: { field: "name" },
+      orderBy: { field: "name", optional: true },
       occupancyFields,
     },
   );
@@ -318,7 +331,7 @@ export const runUnifiedIndexTableOccupancyScenario = async () => {
     {
       limit: 2,
       cursor: first.cursor,
-      orderBy: { field: "name" },
+      orderBy: { field: "name", optional: true },
       occupancyFields,
     },
   );
@@ -419,6 +432,186 @@ export const runUnifiedIndexTableLiveRebuildScenario = async () => {
   };
 };
 
+export const runUnifiedIndexTableDescendingTieScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const occupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+  await structured.occupancyMaintenance.beginRebuild("g1");
+  await structured.writer.write(
+    "a",
+    { age: 23, name: "Same" },
+    { occupancyFields },
+  );
+  await structured.writer.write(
+    "b",
+    { age: 24, name: "Same" },
+    { occupancyFields },
+  );
+  await structured.occupancyMaintenance.activateRebuild();
+  const page = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 20, upper: 29 },
+    {
+      limit: 10,
+      orderBy: { field: "name", reverse: true },
+      occupancyFields,
+    },
+  );
+  return page.candidateIds;
+};
+
+export const runUnifiedIndexTableStaleBackfillMissingScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const occupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+  await structured.occupancyMaintenance.beginRebuild("g1");
+  await structured.writer.write(
+    "doc",
+    { age: 23, name: "Amy" },
+    { occupancyFields },
+  );
+  await structured.occupancyMaintenance.activateRebuild();
+  await structured.occupancyMaintenance.beginRebuild("g2");
+  await structured.occupancyMaintenance.backfillDocument({
+    docId: "doc",
+    fields: { age: 23, name: "Amy" },
+    occupancyFields,
+  });
+  await structured.occupancyMaintenance.backfillDocument({
+    docId: "doc",
+    fields: { age: 23 },
+    occupancyFields,
+  });
+  await structured.occupancyMaintenance.activateRebuild();
+  const page = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 20, upper: 29 },
+    {
+      limit: 10,
+      orderBy: { field: "name", optional: true },
+      occupancyFields,
+    },
+  );
+  return page.candidateIds;
+};
+
+export const runUnifiedIndexTableCoordinatedMutationScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const mutationCoordinator = new IndexMutationCoordinator(client);
+  const structured = new StructuredDdbBackend({
+    client,
+    table,
+    mutationCoordinator,
+  });
+  const fullText = new FullTextDdbBackend({
+    client,
+    table,
+    mutationCoordinator,
+  });
+  const relationships = new RelationalDdbBackend(
+    createRelationEdgesDdbDependencies({
+      client,
+      table,
+      mutationCoordinator,
+    }),
+  );
+  const occupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+  await structured.occupancyMaintenance.beginRebuild("g1");
+  await structured.occupancyMaintenance.activateRebuild();
+
+  await mutationCoordinator.run(async () => {
+    await Promise.all([
+      structured.writer.write(
+        "doc",
+        { age: 23, name: "Amy" },
+        { occupancyFields },
+      ),
+      fullText.writeDocument(
+        { id: "doc", title: "hi" },
+        "id",
+        "title",
+        "Article#title",
+      ),
+      relationships.putEdge({
+        key: { from: "user", to: "doc", relation: "likes" },
+      }),
+    ]);
+  });
+
+  const crossFamilyBatches = client.batchKinds.map((batch) => [...batch]);
+  client.batchKinds.length = 0;
+  await mutationCoordinator.run(async () => {
+    await mutationCoordinator.write(
+      Array.from({ length: 60 }, (_, index) => ({
+        tableName: table.tableName,
+        request: {
+          PutRequest: {
+            Item: { pk: `cap-${index}`, sk: "state", kind: "st" },
+          },
+        },
+      })),
+    );
+  });
+  const capBatchSizes = client.batchKinds.map((batch) => batch.length);
+
+  client.batchKinds.length = 0;
+  let releaseFirst!: () => void;
+  let markFirstStarted!: () => void;
+  const firstStarted = new Promise<void>((resolve) => {
+    markFirstStarted = resolve;
+  });
+  const releaseFirstPromise = new Promise<void>((resolve) => {
+    releaseFirst = resolve;
+  });
+  const first = mutationCoordinator.run(async () => {
+    await mutationCoordinator.write([
+      {
+        tableName: table.tableName,
+        request: {
+          PutRequest: { Item: { pk: "concurrent-a", sk: "state", kind: "st" } },
+        },
+      },
+    ]);
+    markFirstStarted();
+    await releaseFirstPromise;
+  });
+  await firstStarted;
+  const second = mutationCoordinator.run(async () => {
+    await mutationCoordinator.write([
+      {
+        tableName: table.tableName,
+        request: {
+          PutRequest: { Item: { pk: "concurrent-b", sk: "state", kind: "st" } },
+        },
+      },
+    ]);
+  });
+  await second;
+  releaseFirst();
+  await first;
+
+  return {
+    batchCount: crossFamilyBatches.length,
+    batchSize: crossFamilyBatches[0]?.length,
+    kinds: Array.from(new Set(crossFamilyBatches.flat())).sort(),
+    maxBatchSize: Math.max(...crossFamilyBatches.map((batch) => batch.length)),
+    capBatchSizes,
+    concurrentBatchSizes: client.batchKinds.map((batch) => batch.length),
+  };
+};
+
 export const runUnifiedIndexTableCleanupScenario = async () => {
   const client = new InMemoryDynamoIndexClient();
   const table = { tableName: "UnifiedIndex" };
@@ -470,5 +663,61 @@ export const runUnifiedIndexTableCleanupScenario = async () => {
       "Record.text",
       "cleanup",
     ),
+  };
+};
+
+export const runUnifiedIndexTableLegacyFullTextUpgradeScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const fullText = new FullTextDdbBackend({ client, table });
+  const docId = "legacy";
+  const indexField = "Record#text";
+  const previousText = "legacy alpha";
+  const nextText = "modern beta";
+
+  for (const token of new Set(tokenizeLossyTrigrams(previousText).tokens)) {
+    await fullText.addLossyPosting(token, indexField, docId);
+  }
+  const positionsByToken = new Map<string, number[]>();
+  for (const token of tokenize(previousText).tokens) {
+    const positions = positionsByToken.get(token) ?? [];
+    positions.push(positionsByToken.size);
+    positionsByToken.set(token, positions);
+  }
+  for (const [token, positions] of positionsByToken) {
+    await fullText.addExactPositions(token, indexField, docId, positions);
+  }
+
+  const mirrorsBefore = client
+    .snapshot(table.tableName)
+    .filter((item) => item.kind === "fm").length;
+  await replaceFullTextDocument({
+    backend: fullText,
+    previousDocument: { id: docId, text: previousText },
+    nextDocument: { id: docId, text: nextText },
+    primaryField: "id",
+    indexField: "text",
+    indexFieldQualified: indexField,
+  });
+
+  const previousLossy = new Set(tokenizeLossyTrigrams(previousText).tokens);
+  const nextLossy = new Set(tokenizeLossyTrigrams(nextText).tokens);
+  const removedLossyToken = [...previousLossy].find(
+    (token) => !nextLossy.has(token),
+  )!;
+  const addedLossyToken = [...nextLossy].find(
+    (token) => !previousLossy.has(token),
+  )!;
+
+  return {
+    mirrorsBefore,
+    mirrorsAfter: client
+      .snapshot(table.tableName)
+      .filter((item) => item.kind === "fm").length,
+    oldExact:
+      (await fullText.loadExactPositions("legacy", indexField, docId)) ?? null,
+    newExact: await fullText.loadExactPositions("modern", indexField, docId),
+    oldLossy: await fullText.loadLossyPostings(removedLossyToken, indexField),
+    newLossy: await fullText.loadLossyPostings(addedLossyToken, indexField),
   };
 };

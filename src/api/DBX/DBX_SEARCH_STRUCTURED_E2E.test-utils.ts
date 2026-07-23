@@ -1,8 +1,17 @@
-import type { ListItemsResults, SearchCriteria } from "../../common/SearchTypes";
-import { ComparisonOperators, LogicalOperators } from "../../common/SearchTypes";
+import type {
+  ListItemsResults,
+  SearchCriteria,
+} from "../../common/SearchTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../common/SearchTypes";
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
+import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
+import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "../ORM/getTypeInfoORMIndexingConfigFromTypeInfoMap";
+import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
 
 type Post = {
   id: string;
@@ -237,10 +246,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-02T00:00:00.000Z",
-          "2024-04-03T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-02T00:00:00.000Z", "2024-04-03T00:00:00.000Z"],
       },
     ],
   });
@@ -276,10 +282,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-03T00:00:00.000Z",
-          "2024-04-04T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-03T00:00:00.000Z", "2024-04-04T00:00:00.000Z"],
       },
     ],
   });
@@ -310,10 +313,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-01T00:00:00.000Z",
-          "2024-04-02T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-01T00:00:00.000Z", "2024-04-02T00:00:00.000Z"],
       },
     ],
   });
@@ -370,10 +370,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-04T00:00:00.000Z",
-          "2024-04-04T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-04T00:00:00.000Z", "2024-04-04T00:00:00.000Z"],
       },
       {
         fieldName: "title",
@@ -419,10 +416,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-01T00:00:00.000Z",
-          "2024-04-03T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-01T00:00:00.000Z", "2024-04-03T00:00:00.000Z"],
       },
       {
         fieldName: "title",
@@ -494,18 +488,12 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-01T00:00:00.000Z",
-          "2024-04-01T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-01T00:00:00.000Z", "2024-04-01T00:00:00.000Z"],
       },
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-03T00:00:00.000Z",
-          "2024-04-03T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-03T00:00:00.000Z", "2024-04-03T00:00:00.000Z"],
       },
       {
         fieldName: "tags",
@@ -551,10 +539,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-01T00:00:00.000Z",
-          "2024-04-02T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-01T00:00:00.000Z", "2024-04-02T00:00:00.000Z"],
       },
       {
         fieldName: "title",
@@ -605,10 +590,7 @@ export const runDbxStructuredSearchScenario = async () => {
       {
         fieldName: "createdAt",
         operator: ComparisonOperators.BETWEEN,
-        valueOptions: [
-          "2024-04-02T00:00:00.000Z",
-          "2024-04-03T00:00:00.000Z",
-        ],
+        valueOptions: ["2024-04-02T00:00:00.000Z", "2024-04-03T00:00:00.000Z"],
       },
       {
         fieldName: "title",
@@ -722,14 +704,15 @@ export const runDbxStructuredSearchPublishedPage1IdsScenario = async () =>
 export const runDbxStructuredSearchPublishedPage2IdsScenario = async () =>
   (await runDbxStructuredSearchScenario()).publishedPage2Ids;
 
-export const runDbxStructuredSearchDenseAndPublishedNewsIdsScenario = async () =>
-  (await runDbxStructuredSearchScenario()).denseAndPublishedNewsIds;
+export const runDbxStructuredSearchDenseAndPublishedNewsIdsScenario =
+  async () => (await runDbxStructuredSearchScenario()).denseAndPublishedNewsIds;
 
-export const runDbxStructuredSearchDenseAndPublishedAlphaIdsScenario = async () =>
-  (await runDbxStructuredSearchScenario()).denseAndPublishedAlphaIds;
+export const runDbxStructuredSearchDenseAndPublishedAlphaIdsScenario =
+  async () =>
+    (await runDbxStructuredSearchScenario()).denseAndPublishedAlphaIds;
 
-export const runDbxStructuredSearchDenseAndContradictionIdsScenario = async () =>
-  (await runDbxStructuredSearchScenario()).denseAndContradictionIds;
+export const runDbxStructuredSearchDenseAndContradictionIdsScenario =
+  async () => (await runDbxStructuredSearchScenario()).denseAndContradictionIds;
 
 export const runDbxStructuredSearchDenseOrWideIdsScenario = async () =>
   (await runDbxStructuredSearchScenario()).denseOrWideIds;
@@ -763,3 +746,97 @@ export const runDbxStructuredSearchDeleteResultScenario = async () =>
 
 export const runDbxStructuredSearchAfterDeletePublishedIdsScenario = async () =>
   (await runDbxStructuredSearchScenario()).afterDeletePublishedIds;
+
+export const runDbxStructuredOccupancyE2EScenario = async () => {
+  const typeInfoMap: TypeInfoMap = {
+    Person: {
+      primaryField: "id",
+      fields: {
+        id: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { primaryField: true },
+        },
+        name: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { indexed: { structured: true } },
+        },
+        age: {
+          type: "number",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { indexed: { structured: true } },
+        },
+      },
+    },
+  };
+  const structured = new StructuredInMemoryBackend();
+  structured.beginOccupancyRebuild("g1");
+  structured.activateOccupancyRebuild();
+  const queryOccupancy = structured.occupancy.query;
+  let occupancyReads = 0;
+  structured.occupancy.query = async (...args) => {
+    occupancyReads += 1;
+    return queryOccupancy(...args);
+  };
+  let personCounter = 0;
+  const runtime = createDbxRuntime({
+    typeInfoMap,
+    idGeneratorsByType: {
+      Person: () => `person-${++personCounter}`,
+    },
+    useInMemoryIndexing: false,
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      structured: { reader: structured, writer: structured },
+    }),
+  });
+
+  for (const person of [
+    { name: "Zoe", age: 23 },
+    { name: "Amy", age: 24 },
+    { name: "Outside", age: 50 },
+    { name: "Bob", age: 25 },
+  ]) {
+    await runDbxRequest(runtime, {
+      method: "POST",
+      path: "create",
+      args: ["Person", person],
+    });
+  }
+
+  const response = await runDbxRequest<ListItemsResults<Record<string, any>>>(
+    runtime,
+    {
+      method: "POST",
+      path: "list",
+      args: [
+        "Person",
+        {
+          itemsPerPage: 10,
+          criteria: {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              {
+                fieldName: "age",
+                operator: ComparisonOperators.BETWEEN,
+                valueOptions: [20, 29],
+              },
+            ],
+          },
+          sortFields: [{ field: "name" }],
+        },
+      ],
+    },
+  );
+
+  return {
+    names: (response.parsedBody?.items ?? []).map((item) => item.name),
+    occupancyReads,
+  };
+};

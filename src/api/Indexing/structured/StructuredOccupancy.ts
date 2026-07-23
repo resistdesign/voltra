@@ -97,6 +97,20 @@ export type StructuredChunkBounds = {
   upper: string;
 };
 
+/** True when a canonical value belongs in one eligible scalar axis. */
+export function isStructuredOccupancyFieldValue(
+  value: WhereValue | WhereValue[] | undefined,
+  field: StructuredOccupancyField,
+): value is string | number {
+  return (
+    !Array.isArray(value) &&
+    ((field.type === "number" &&
+      typeof value === "number" &&
+      Number.isFinite(value)) ||
+      (field.type === "string" && typeof value === "string"))
+  );
+}
+
 const firstCodePoints = (value: string, count: number): string =>
   Array.from(value).slice(0, count).join("");
 
@@ -281,9 +295,7 @@ export function buildStructuredOccupancyItems(
   const items = new Map<string, StructuredOccupancyItem>();
   const present = Object.entries(occupancyFields).flatMap(([field, config]) => {
     const value = fields[field];
-    return !Array.isArray(value) &&
-      ((config.type === "number" && typeof value === "number") ||
-        (config.type === "string" && typeof value === "string"))
+    return isStructuredOccupancyFieldValue(value, config)
       ? [{ field, config, value }]
       : [];
   });
@@ -314,9 +326,9 @@ export function buildStructuredMissingItems(
   fields: StructuredDocFieldsRecord,
   occupancyFields: StructuredOccupancyFieldMap,
 ): StructuredMissingItem[] {
-  return Object.keys(occupancyFields).flatMap((field) => {
+  return Object.entries(occupancyFields).flatMap(([field, config]) => {
     const value = fields[field];
-    return value === undefined || Array.isArray(value)
+    return !isStructuredOccupancyFieldValue(value, config)
       ? [buildStructuredMissingItem(generation, field, docId)]
       : [];
   });

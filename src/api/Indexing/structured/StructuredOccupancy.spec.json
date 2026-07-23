@@ -104,6 +104,56 @@
       "conditions": [],
       "operation": "===",
       "expectation": "Structured optional ordering requires an active occupancy generation."
+    },
+    {
+      "export": "runStructuredOccupancyTerminalCursorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": { "ids": ["only"], "cursor": null }
+    },
+    {
+      "export": "runStructuredOccupancyStaleMissingScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["present"]
+    },
+    {
+      "export": "runStructuredSameFieldSeekScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["inside"],
+        "betweenCalls": 1,
+        "allCalls": 0
+      }
+    },
+    {
+      "export": "runStructuredMissingTypedIdOrderScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [1, "1"]
+    },
+    {
+      "export": "runStructuredOccupancyRebuildWorkflowScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "result": {
+          "generation": "g1",
+          "alreadyActive": false,
+          "processedByType": { "Person": 1, "Car": 2 },
+          "processedCount": 3
+        },
+        "reindexed": ["Person:25", "Car:25"],
+        "active": "g1",
+        "repeated": {
+          "generation": "g1",
+          "previousGeneration": "g1",
+          "alreadyActive": true,
+          "processedByType": {},
+          "processedCount": 0
+        }
+      }
     }
   ]
 }
