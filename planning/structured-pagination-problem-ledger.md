@@ -128,9 +128,23 @@ The block-aware cursor stores only the state needed to resume the ordered stream
 }
 ```
 
-`generation` pins the occupancy view used to rebuild the deterministic token plan. `sortToken` is an exclusive directional resume boundary, and `blockCursor` is the backend continuation used only while the same exact token is still being consumed. The cursor never stores the complete token set.
+`generation` identifies the occupancy build used to create the cursor. It remains valid only while that generation is active. `sortToken` is an exclusive directional resume boundary, and `blockCursor` is the backend continuation used only while the same exact token is still being consumed. The cursor never stores the complete token set.
 
 The original unchanged query supplies traversal direction: ascending resumes toward higher tokens and descending toward lower tokens. If optimistic mutation removed the boundary token between pages, Voltra seeks from its encoded boundary and continues; the token need not still exist. Present values are traversed in the requested direction, followed by the deterministic missing-value phase in both directions. Reusing an opaque cursor with different criteria or direction remains invalid.
+
+Normal document creates, updates, and deletes mutate the active occupancy generation in place and do not invalidate cursors. Only an explicit occupancy rebuild or schema migration changes the active generation. A cursor naming any non-active generation is stale and deterministically returns zero results with no successor cursor.
+
+### Occupancy generation lifecycle
+
+An occupancy generation is a version/epoch of the complete occupancy index, not a document revision or a set of permutations.
+
+1. Create a new generation in `building` state while queries continue using the current active generation. If no active generation exists during initial migration, queries use the exact baseline sort-first traversal.
+2. While the rebuild runs, document mutations write occupancy into both the active and building generations. The existing optimistic retry/repair contract applies; no transactional cutover or rollback is introduced.
+3. Backfill the building generation idempotently from canonical `docFields`, then reconcile mutations and incomplete derived writes before activation.
+4. Atomically compare-and-swap the single active-generation pointer to the completed generation. Only this explicit switch invalidates cursors from the prior generation.
+5. Stop writing the prior generation and reclaim its records asynchronously. Its query retention is zero: requests carrying its cursors return zero results and no next cursor even if physical deletion has not finished.
+
+Occupancy cells remain boolean existence hints. They do not maintain contributor counts, because optimistic concurrent increments/decrements would add correctness risk without improving query truth. Cells that cannot be proven empty remain safe false positives until the next generation rebuild omits them.
 
 ## Unified Key Safety
 
@@ -150,7 +164,7 @@ The chunk-skipping subsystem must reuse this codec and add its own record-family
 - Full-text updates diff the prior document mirror, delete obsolete lossy/exact/membership/position rows, update statistics, and write the new mirror.
 - Unified-table delete requests contain exactly the physical `pk` and `sk`; the Dynamo-shaped in-memory client rejects malformed keys.
 - Shared-map regressions prove stale structured and full-text rows disappear after an update.
-- Occupancy-cell cleanup remains part of #19 because occupancy records do not exist until the remaining chunk-generation protocol is resolved.
+- Occupancy-cell cleanup remains part of #19: provably empty cells may be removed immediately, while unprovable stale cells are omitted by the next generation rebuild.
 
 ## Numeric Ordering Contract
 
@@ -225,6 +239,7 @@ The unified table enables a single higher-level coordinator to combine compatibl
 - Invalid cursors and backend failures propagate.
 - Global ascending/descending sort pages with criteria on another field.
 - Multi-page skipping across exact-token ties, removed boundary tokens, the present-to-missing transition, and both traversal directions.
+- Active-generation rebuilds, live dual-writing/backfill, activation, stale-generation cursor termination, and asynchronous old-generation reclamation.
 - Numeric ordering across sign, digit length, decimal values, zero/negative-zero, and inclusive boundaries.
 - Cursor size remains bounded by one backend work unit, not result history.
 

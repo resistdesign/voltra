@@ -6,7 +6,7 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 
 ## Remaining design decisions
 
-1. Occupancy generation activation/retention, including migration and backfill cutover.
+None. The storage, query, cursor, consistency, and lifecycle contracts are resolved; the remaining checklist is implementation and validation work.
 
 ## Phase 1: Resolve the storage and correctness model
 
@@ -24,7 +24,7 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - [x] Include optional sort fields through a deterministic missing-value stream instead of omitting missing documents; present values enter the ordinary ordered stream as soon as they exist.
 - [x] Use optimistic, forward-only writes with retries and repair; do not add cross-family transactions, rollback, or atomicity guarantees.
 - [x] Remove obsolete derived rows during successful updates/deletes and reclaim unprovably empty occupancy through safe compaction/rebuild generations.
-- [ ] Define occupancy generation rebuild activation and retention mechanics.
+- [x] Define occupancy generation rebuild activation and retention mechanics.
 
 ## Phase 2: Resolve query execution
 
@@ -70,6 +70,7 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - Stale occupancy metadata can increase reads but cannot itself hide a matching document, and stale cells are reclaimable rather than permanent.
 - Query planning performs sparse range reads and is bounded by actual occupancy cells/pages read, never by the theoretical count of possible chunks. If the internal metadata budget is exceeded, Voltra discards the partial skip plan and restarts with the correct baseline ordered traversal before emitting results.
 - A skipping cursor stores the pinned occupancy generation, `present`/`missing` phase, last exact sort-token boundary, and backend continuation within that token. The unchanged query supplies direction. Ascending resumes after the boundary toward higher tokens; descending resumes before it toward lower tokens. If mutation removed the boundary token, traversal seeks from that boundary rather than requiring the token to still exist.
+- Normal document mutations update the active generation in place and do not invalidate cursors. Only explicit occupancy rebuild/schema activation changes the generation; a cursor for any non-active generation returns zero results and no successor cursor.
 
 ## Runtime prerequisites completed in PR #389
 
@@ -105,4 +106,9 @@ Make sparse criteria plus unrelated global sorting performant at large index siz
 - Canonical `docFields` optimistic compare-and-swap remains separate from bulk derived writes. Voltra does not provide multi-index transactions or rollback.
 - Obsolete derived term/range rows are removed immediately after the canonical state changes.
 - Empty occupancy is removed immediately only when a concurrency-safe proof is available; all other stale cells are reclaimed by a generation rebuild, activation, and retirement cycle.
-- Queries and cursors pin the active occupancy generation until that generation's retention window expires.
+- An occupancy generation is one version/epoch of the complete occupancy index. It is unrelated to ordinary document revisions or combinatorial permutations.
+- Initial migration builds the first generation from canonical `docFields` while queries continue through the exact baseline sort-first traversal.
+- A later rebuild creates a separate `building` generation. Writers dual-write the active and building generations while an idempotent canonical backfill and reconciliation complete; queries continue using only the active generation.
+- Activation compare-and-swaps the single active-generation pointer. This explicit switch is the only event that invalidates existing occupancy cursors.
+- Old-generation query retention is zero. Requests carrying an old-generation cursor return zero results with no next cursor. Physical reclamation may proceed asynchronously after writers stop targeting that generation.
+- Occupancy cells remain boolean hints rather than contributor counts. Concurrent count maintenance is unnecessary: unprovably empty cells remain safe false positives until a rebuilt generation omits them.
