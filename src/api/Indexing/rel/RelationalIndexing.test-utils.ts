@@ -2,6 +2,7 @@ import { RelationalInMemoryBackend } from "./RelationalInMemoryBackend";
 import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
 import {
   RelationalDdbBackend,
+  type RelationEdgesDdbItem,
   buildRelationEdgeDdbItem,
   buildRelationEdgeDdbKey,
   encodeRelationEdgePartitionKey,
@@ -11,14 +12,6 @@ import {
   handler as relationalHandler,
   setRelationalHandlerDependencies,
 } from "./Handlers";
-
-type RelationEdgeStoreItem<
-  TMetadata extends Record<string, unknown> = Record<string, unknown>,
-> = {
-  edgeKey: string;
-  otherId: string;
-  metadata?: TMetadata;
-};
 
 export const runRelationalIndexingScenario = async () => {
   const inMemoryBackend = new RelationalInMemoryBackend<{ weight: number }>();
@@ -44,25 +37,25 @@ export const runRelationalIndexingScenario = async () => {
   });
   const relationalCursorDecoded = decodeRelationalCursor(relationalCursor);
 
-  const store = new Map<string, RelationEdgeStoreItem<{ weight: number }>[]>();
+  const store = new Map<string, RelationEdgesDdbItem<{ weight: number }>[]>();
   const ddbBackend = new RelationalDdbBackend<{ weight: number }>({
     putEdges: async (items) => {
       for (const item of items) {
-        const list = store.get(item.edgeKey) ?? [];
-        const filtered = list.filter((entry) => entry.otherId !== item.otherId);
+        const list = store.get(item.pk) ?? [];
+        const filtered = list.filter((entry) => entry.sk !== item.sk);
         filtered.push(item);
-        filtered.sort((a, b) => a.otherId.localeCompare(b.otherId));
-        store.set(item.edgeKey, filtered);
+        filtered.sort((a, b) => a.sk.localeCompare(b.sk));
+        store.set(item.pk, filtered);
       }
     },
     deleteEdges: async (keys) => {
       for (const key of keys) {
-        const list = store.get(key.edgeKey) ?? [];
-        const filtered = list.filter((entry) => entry.otherId !== key.otherId);
+        const list = store.get(key.pk) ?? [];
+        const filtered = list.filter((entry) => entry.sk !== key.sk);
         if (filtered.length === 0) {
-          store.delete(key.edgeKey);
+          store.delete(key.pk);
         } else {
-          store.set(key.edgeKey, filtered);
+          store.set(key.pk, filtered);
         }
       }
     },
@@ -70,7 +63,7 @@ export const runRelationalIndexingScenario = async () => {
       const list = store.get(request.edgeKey) ?? [];
       const startIndex = request.exclusiveStartKey
         ? list.findIndex(
-            (entry) => entry.otherId === request.exclusiveStartKey?.otherId,
+            (entry) => entry.sk === request.exclusiveStartKey?.sk,
           ) + 1
         : 0;
       const limit = request.limit ?? list.length;
@@ -78,8 +71,8 @@ export const runRelationalIndexingScenario = async () => {
       const lastEvaluatedKey =
         startIndex + limit < list.length && items.length > 0
           ? {
-              edgeKey: request.edgeKey,
-              otherId: items[items.length - 1].otherId,
+              pk: request.edgeKey,
+              sk: items[items.length - 1].sk,
             }
           : undefined;
 

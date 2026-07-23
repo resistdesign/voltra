@@ -10,6 +10,7 @@ import { normalizeDocId } from "../docId";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredDocFieldsRecord } from "./StructuredDdb";
 import type { StructuredQueryOptions, Where } from "./Types";
+import type { StructuredWriteContext } from "./StructuredOccupancy";
 
 /**
  * Document payload for structured indexing.
@@ -67,8 +68,7 @@ export type StructuredSearchEvent = {
  * Union of structured handler events.
  */
 export type StructuredHandlerEvent =
-  | StructuredIndexDocumentEvent
-  | StructuredSearchEvent;
+  StructuredIndexDocumentEvent | StructuredSearchEvent;
 
 /**
  * Writer interface for structured indexing.
@@ -80,7 +80,11 @@ export type StructuredWriter = {
    * @param fields Structured fields to store.
    * @returns Promise resolved once stored.
    */
-  write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void>;
+  write(
+    docId: DocId,
+    fields: StructuredDocFieldsRecord,
+    context?: StructuredWriteContext,
+  ): Promise<void>;
 };
 
 /**
@@ -251,8 +255,7 @@ export async function structuredHandler(
         limit: event.limit,
         cursor: event.cursor,
       });
-      const cursor = result.cursor ?? event.cursor;
-      return { statusCode: 200, body: JSON.stringify({ ...result, cursor }) };
+      return { statusCode: 200, body: JSON.stringify(result) };
     }
     default:
       return errorResponse("Unsupported action.");

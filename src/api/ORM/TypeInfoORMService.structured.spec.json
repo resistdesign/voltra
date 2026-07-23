@@ -38,6 +38,24 @@
       "expectation": ["2"]
     },
     {
+      "export": "runTypeInfoORMStructuredGloballySortedIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2", "3", "1"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredHydrationFilledIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2"]
+    },
+    {
+      "export": "runTypeInfoORMStructuredInvalidCursorPropagatedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
       "export": "runTypeInfoORMStructuredAfterUpdateIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",

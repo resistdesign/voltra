@@ -50,6 +50,37 @@
       "expectation": ["2"]
     },
     {
+      "export": "runStructuredInMemoryBackendPage2CursorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runStructuredInMemoryBackendRangePage2CursorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runStructuredInMemoryBackendNumericRangeCursorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstIds": [0],
+        "cursorPresent": true,
+        "secondIds": [2],
+        "terminalCursor": null
+      }
+    },
+    {
+      "export": "runStructuredInMemoryBackendTerminalHandlerBodyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "candidateIds": ["2"]
+      }
+    },
+    {
       "export": "runStructuredInMemoryBackendAfterUpdateIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
@@ -60,6 +91,21 @@
       "conditions": [],
       "operation": "ARRAY_EQUALS",
       "expectation": []
+    },
+    {
+      "export": "runStructuredCompoundPaginationReferenceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "andIds": ["1", "4", "5"],
+        "andTerminalCursor": null,
+        "orIds": ["1", "2", "4", "5", "3"],
+        "orUniqueCount": 5,
+        "orTerminalCursor": null,
+        "sortedIds": ["3", "4", "5", "1"],
+        "sortedTerminalCursor": null,
+        "nestedAndOrIds": ["1", "4", "5", "3"]
+      }
     }
   ]
 }

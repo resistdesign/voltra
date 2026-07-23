@@ -1,153 +1,112 @@
 /**
  * @packageDocumentation
  *
- * In-memory backend that wires {@link StructuredInMemoryIndex} to the structured
- * search interfaces and write contract.
+ * Inspectable in-memory structured backend with DynamoDB record parity.
  */
-import type { DocId } from "../Types";
+import type { AttributeMap } from "../ddb/Types";
+import { InMemoryDynamoQueryClient } from "../ddb/InMemoryDynamoQueryClient";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredWriter } from "./Handlers";
-import type { StructuredQueryOptions, WhereValue } from "./Types";
 import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import {
+  StructuredDdbBackend,
+  type StructuredDdbConfig,
+} from "./StructuredDdbBackend";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
-import { StructuredInMemoryIndex } from "./StructuredInMemoryIndex";
+import type { StructuredWriteContext } from "./StructuredOccupancy";
+import type { DocId } from "../Types";
 
-type StructuredPage = { candidateIds: DocId[]; lastEvaluatedKey?: string };
-
-const normalizeFields = (
-  fields: StructuredDocFieldsRecord,
-): StructuredDocFieldsRecord => {
-  const normalized: StructuredDocFieldsRecord = {};
-
-  for (const [field, value] of Object.entries(fields)) {
-    if (Array.isArray(value)) {
-      normalized[field] = Array.from(new Set(value)) as WhereValue[];
-    } else {
-      normalized[field] = value;
-    }
-  }
-
-  return normalized;
-};
+const STRUCTURED_IN_MEMORY_TABLE = "StructuredInMemoryIndex";
 
 /**
- * In-memory structured backend for tests and local usage.
+ * Structured backend that runs the DynamoDB implementation over an inspectable
+ * in-memory `pk`/`sk` table.
+ *
+ * It deliberately does not maintain a separate logical indexing algorithm.
+ * Normal writes, derived records, conditional versions, queries, cursors, and
+ * rebuilds therefore exercise the same mechanism used by
+ * {@link StructuredDdbBackend}.
  */
 export class StructuredInMemoryBackend
   implements StructuredSearchDependencies, StructuredWriter
 {
-  private docFields = new Map<DocId, StructuredDocFieldsRecord>();
-  private index: StructuredInMemoryIndex;
+  private readonly client = new InMemoryDynamoQueryClient();
+  private readonly backend: StructuredDdbBackend;
+  private readonly tableName = STRUCTURED_IN_MEMORY_TABLE;
+
+  /** Term lookup implementation backed by persisted structured-term records. */
+  readonly terms: StructuredSearchDependencies["terms"];
+
+  /** Range traversal backed by persisted structured-range records. */
+  readonly ranges: StructuredSearchDependencies["ranges"];
+
+  /** Sparse occupancy traversal backed by persisted occupancy cells. */
+  readonly occupancy: NonNullable<StructuredSearchDependencies["occupancy"]>;
+
+  /** Optional-value traversal backed by persisted missing-value records. */
+  readonly missing: NonNullable<StructuredSearchDependencies["missing"]>;
+
+  /** Canonical structured fields persisted alongside derived records. */
+  readonly documents: StructuredSearchDependencies["documents"];
+
+  /** Optional repair/compaction lifecycle with DynamoDB-equivalent state. */
+  readonly occupancyMaintenance: StructuredDdbBackend["occupancyMaintenance"];
 
   /**
-   * @param tokenizer Optional tokenizer overrides for structured string contains behavior.
+   * @param tokenizer Optional tokenizer overrides for structured contains
+   * indexing.
    */
-  constructor(private readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {
-    this.index = new StructuredInMemoryIndex(tokenizer);
-  }
-
-  private rebuildIndex(): void {
-    const nextIndex = new StructuredInMemoryIndex(this.tokenizer);
-
-    for (const [docId, fields] of this.docFields.entries()) {
-      nextIndex.addDocument(docId, fields);
-    }
-
-    this.index = nextIndex;
-  }
-
-  private buildPage(page: {
-    candidateIds: DocId[];
-    cursor?: string;
-  }): StructuredPage {
-    return {
-      candidateIds: page.candidateIds,
-      lastEvaluatedKey: page.cursor,
+  constructor(readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {
+    const config: StructuredDdbConfig = {
+      client: this.client,
+      table: { tableName: this.tableName },
+      tokenizer,
     };
+    this.backend = new StructuredDdbBackend(config);
+    this.terms = this.backend.reader.terms;
+    this.ranges = this.backend.reader.ranges;
+    this.occupancy = this.backend.reader.occupancy!;
+    this.missing = this.backend.reader.missing!;
+    this.documents = this.backend.reader.documents;
+    this.occupancyMaintenance = this.backend.occupancyMaintenance;
   }
 
   /**
-   * Term query implementation for structured search.
+   * Write one canonical document and every Dynamo-equivalent derived record.
    */
-  terms: StructuredSearchDependencies["terms"] = {
-    /**
-     * @param field Field name to query.
-     * @param mode Term match mode.
-     * @param value Value to match.
-     * @param options Optional paging options.
-     * @returns Candidate page with optional cursor token.
-     */
-    query: async (
-      field: string,
-      mode: "eq" | "contains",
-      value: WhereValue,
-      options: StructuredQueryOptions = {},
-    ): Promise<StructuredPage> => {
-      const page =
-        mode === "contains"
-          ? this.index.contains(field, value, options)
-          : this.index.eq(field, value, options);
-
-      return this.buildPage(page);
-    },
-  };
+  async write(
+    docId: DocId,
+    fields: StructuredDocFieldsRecord,
+    context: StructuredWriteContext = {},
+  ): Promise<void> {
+    await this.backend.writer.write(docId, fields, context);
+  }
 
   /**
-   * Range query implementation for structured search.
+   * Begin an optional replacement-generation repair/compaction.
+   *
+   * @deprecated Prefer {@link occupancyMaintenance}.
    */
-  ranges: StructuredSearchDependencies["ranges"] = {
-    /**
-     * @param field Field name to query.
-     * @param lower Inclusive lower bound.
-     * @param upper Inclusive upper bound.
-     * @param options Optional paging options.
-     * @returns Candidate page with optional cursor token.
-     */
-    between: async (
-      field: string,
-      lower: WhereValue,
-      upper: WhereValue,
-      options: StructuredQueryOptions = {},
-    ): Promise<StructuredPage> => {
-      return this.buildPage(this.index.between(field, lower, upper, options));
-    },
-    /**
-     * @param field Field name to query.
-     * @param lower Inclusive lower bound.
-     * @param options Optional paging options.
-     * @returns Candidate page with optional cursor token.
-     */
-    gte: async (
-      field: string,
-      lower: WhereValue,
-      options: StructuredQueryOptions = {},
-    ): Promise<StructuredPage> => {
-      return this.buildPage(this.index.gte(field, lower, options));
-    },
-    /**
-     * @param field Field name to query.
-     * @param upper Inclusive upper bound.
-     * @param options Optional paging options.
-     * @returns Candidate page with optional cursor token.
-     */
-    lte: async (
-      field: string,
-      upper: WhereValue,
-      options: StructuredQueryOptions = {},
-    ): Promise<StructuredPage> => {
-      return this.buildPage(this.index.lte(field, upper, options));
-    },
-  };
+  async beginOccupancyRebuild(generation: string): Promise<void> {
+    await this.occupancyMaintenance.beginRebuild(generation);
+  }
 
   /**
-   * Write structured fields for a document.
-   * @param docId Document id to write.
-   * @param fields Structured fields to store.
-   * @returns Promise resolved once stored.
+   * Activate an optional replacement generation.
+   *
+   * @deprecated Prefer {@link occupancyMaintenance}.
    */
-  async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
-    const normalized = normalizeFields(fields);
-    this.docFields.set(docId, normalized);
-    this.rebuildIndex();
+  async activateOccupancyRebuild(): Promise<void> {
+    await this.occupancyMaintenance.activateRebuild();
+  }
+
+  /** Deep-cloned raw objects currently stored in the in-memory index table. */
+  snapshotIndexRecords(): AttributeMap[] {
+    return this.client.snapshot(this.tableName);
+  }
+
+  /** Deep-cloned `pk`/`sk` keyed map of the in-memory index table. */
+  snapshotIndexRecordMap(): ReadonlyMap<string, AttributeMap> {
+    return this.client.snapshotMap(this.tableName);
   }
 }

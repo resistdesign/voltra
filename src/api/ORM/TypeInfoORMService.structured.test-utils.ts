@@ -34,7 +34,7 @@ const typeInfoMap: TypeInfoMap = {
         type: "string",
         array: false,
         readonly: false,
-        optional: true,
+        optional: false,
       },
       category: {
         type: "string",
@@ -88,7 +88,9 @@ const runTypeInfoORMStructuredScenario = async () => {
   };
   const structuredReader = {
     terms: {
-      query: async (...args: Parameters<typeof structuredBackend.terms.query>) => {
+      query: async (
+        ...args: Parameters<typeof structuredBackend.terms.query>
+      ) => {
         structuredReaderCalls.terms += 1;
         return structuredBackend.terms.query(...args);
       },
@@ -108,7 +110,13 @@ const runTypeInfoORMStructuredScenario = async () => {
         structuredReaderCalls.ranges += 1;
         return structuredBackend.ranges.lte(...args);
       },
+      all: async (...args: Parameters<typeof structuredBackend.ranges.all>) => {
+        structuredReaderCalls.ranges += 1;
+        return structuredBackend.ranges.all(...args);
+      },
     },
+    documents: structuredBackend.documents,
+    tokenizer: structuredBackend.tokenizer,
   };
   const orm = new TypeInfoORMService({
     typeInfoMap,
@@ -119,7 +127,7 @@ const runTypeInfoORMStructuredScenario = async () => {
         reader: structuredReader,
         writer: structuredBackend,
         indexedFieldsByType: {
-          Post: ["category", "score", "tags"],
+          Post: ["title", "category", "score", "tags"],
         },
       },
       observability: {
@@ -226,6 +234,62 @@ const runTypeInfoORMStructuredScenario = async () => {
     },
   });
 
+  const globallySorted = await orm.list("Post", {
+    itemsPerPage: 3,
+    sortFields: [{ field: "title", reverse: true }],
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "score",
+          operator: ComparisonOperators.BETWEEN,
+          valueOptions: [0, 100],
+        },
+      ],
+    },
+  });
+
+  await structuredBackend.write("0", {
+    title: "Ghost",
+    category: "news",
+    score: 99,
+  });
+  const hydrationFilled = await orm.list("Post", {
+    itemsPerPage: 2,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "category",
+          operator: ComparisonOperators.EQUALS,
+          value: "news",
+        },
+      ],
+    },
+  });
+  await structuredBackend.write("0", {});
+
+  let invalidCursorPropagated = false;
+  try {
+    await orm.list("Post", {
+      itemsPerPage: 1,
+      cursor: "not-a-structured-cursor",
+      criteria: {
+        logicalOperator: LogicalOperators.AND,
+        fieldCriteria: [
+          {
+            fieldName: "category",
+            operator: ComparisonOperators.EQUALS,
+            value: "news",
+          },
+        ],
+      },
+    });
+  } catch (error: any) {
+    invalidCursorPropagated =
+      error?.message === "Invalid structured search cursor.";
+  }
+
   await orm.update("Post", {
     id: id1,
     title: "Hello",
@@ -255,9 +319,9 @@ const runTypeInfoORMStructuredScenario = async () => {
       logicalOperator: LogicalOperators.AND,
       fieldCriteria: [
         {
-          fieldName: "title",
+          fieldName: "id",
           operator: ComparisonOperators.EQUALS,
-          value: "World",
+          value: "2",
         },
       ],
     },
@@ -341,9 +405,11 @@ const runTypeInfoORMStructuredScenario = async () => {
     scoreBetweenIds: scoreBetween.items.map((item) => item.id),
     page1Ids: page1.items.map((item) => item.id),
     page2Ids: page2.items.map((item) => item.id),
+    globallySortedIds: globallySorted.items.map((item) => item.id),
+    hydrationFilledIds: hydrationFilled.items.map((item) => item.id),
+    invalidCursorPropagated,
     afterUpdateIds: afterUpdate.items.map((item) => item.id),
-    configuredQueryUsedStructured:
-      structuredCallCountAfterConfiguredQuery > 0,
+    configuredQueryUsedStructured: structuredCallCountAfterConfiguredQuery > 0,
     unconfiguredQueryFellBackWithoutStructuredCall:
       structuredCallCountAfterUnindexedQuery ===
       structuredCallCountAfterConfiguredQuery,
@@ -383,6 +449,16 @@ export const runTypeInfoORMStructuredPage1IdsScenario = async () =>
 export const runTypeInfoORMStructuredPage2IdsScenario = async () =>
   (await runTypeInfoORMStructuredScenario()).page2Ids;
 
+export const runTypeInfoORMStructuredGloballySortedIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).globallySortedIds;
+
+export const runTypeInfoORMStructuredHydrationFilledIdsScenario = async () =>
+  (await runTypeInfoORMStructuredScenario()).hydrationFilledIds;
+
+export const runTypeInfoORMStructuredInvalidCursorPropagatedScenario =
+  async () =>
+    (await runTypeInfoORMStructuredScenario()).invalidCursorPropagated;
+
 export const runTypeInfoORMStructuredAfterUpdateIdsScenario = async () =>
   (await runTypeInfoORMStructuredScenario()).afterUpdateIds;
 
@@ -406,7 +482,8 @@ export const runTypeInfoORMStructuredGeneratedNonIdPrimaryFieldIdScenario =
     (await runTypeInfoORMStructuredScenario()).generatedNonIdPrimaryFieldId;
 
 export const runTypeInfoORMStructuredSawStructuredRoutingDecisionScenario =
-  async () => (await runTypeInfoORMStructuredScenario()).sawStructuredRoutingDecision;
+  async () =>
+    (await runTypeInfoORMStructuredScenario()).sawStructuredRoutingDecision;
 
 export const runTypeInfoORMStructuredSawFullScanFallbackRoutingDecisionScenario =
   async () =>

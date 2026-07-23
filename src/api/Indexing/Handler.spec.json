@@ -8,8 +8,8 @@
       "expectation": {
         "normalized": "hello",
         "tokens": ["hel", "ell", "llo", "hell*"],
-        "docIds": ["1"],
-        "nextCursor": "eyJ2IjoxLCJ0IjoibG9zc3kiLCJsYXN0RG9jSWQiOiIxIn0"
+        "docIds": [1],
+        "nextCursor": "eyJ2IjoxLCJ0IjoibG9zc3kiLCJsYXN0RG9jSWQiOjF9"
       }
     },
     {
@@ -19,7 +19,7 @@
       "expectation": {
         "normalized": "hello",
         "tokens": ["hel", "ell", "llo", "hell*"],
-        "docIds": ["2"]
+        "docIds": [2]
       }
     },
     {
@@ -29,7 +29,7 @@
       "expectation": {
         "normalized": "hello world",
         "tokens": ["hello", "world"],
-        "docIds": ["1"]
+        "docIds": [1]
       }
     },
     {
@@ -48,7 +48,7 @@
       "expectation": {
         "normalized": "hello world",
         "tokens": ["hello", "world"],
-        "docIds": ["1", "4"]
+        "docIds": [1, 4]
       }
     },
     {
@@ -67,7 +67,7 @@
       "expectation": {
         "normalized": "hello",
         "tokens": ["hel", "ell", "llo", "hell*"],
-        "docIds": ["1", "4"]
+        "docIds": [1, 4]
       }
     },
     {
@@ -77,7 +77,7 @@
       "expectation": {
         "normalized": "worldly",
         "tokens": ["wor", "orl", "rld", "ldl", "dly", "worl*"],
-        "docIds": ["1", "4"]
+        "docIds": [1, 4]
       }
     }
   ]

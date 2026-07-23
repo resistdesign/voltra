@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 import { collectRequiredEnvironmentVariables } from "../../src/common";
 import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
-import { indexingTableEnvVars } from "../common/IndexingTableNames";
+import { INDEXING_TABLE_ENV_VAR } from "../common/IndexingTable";
 
 const moduleDirname =
   typeof __dirname === "string"
@@ -124,87 +124,12 @@ const IaC = new SimpleCFT({
       }
     }
 
-    const indexingTableIds = {
-      fullText: {
-        lossyPostings: "LossyPostingsTable",
-        exactPostings: "ExactPostingsTable",
-        docMirror: "FullTextDocMirrorTable",
-        tokenStats: "FullTextTokenStatsTable",
-        docTokens: "DocTokensTable",
-        docTokenPositions: "DocTokenPositionsTable",
-      },
-      structured: {
-        termIndex: "StructuredTermIndexTable",
-        rangeIndex: "StructuredRangeIndexTable",
-        docFields: "StructuredDocFieldsTable",
-      },
-      relations: {
-        relationEdges: "RelationEdgesTable",
-      },
-    } as const;
-
-    const addIndexingTable = (
-      tableId: string,
-      attributes: Record<string, "S">,
-      keys: Record<string, "HASH" | "RANGE">,
-    ) => {
-      cft.applyPack(addDatabase, {
-        tableId,
-        attributes,
-        keys,
-      });
-    };
-
-    addIndexingTable(
-      indexingTableIds.fullText.lossyPostings,
-      { pk: "S", sk: "S" },
-      { pk: "HASH", sk: "RANGE" },
-    );
-    addIndexingTable(
-      indexingTableIds.fullText.exactPostings,
-      { pk: "S", sk: "S" },
-      { pk: "HASH", sk: "RANGE" },
-    );
-    addIndexingTable(
-      indexingTableIds.fullText.docMirror,
-      { pk: "S" },
-      { pk: "HASH" },
-    );
-    addIndexingTable(
-      indexingTableIds.fullText.tokenStats,
-      { pk: "S" },
-      { pk: "HASH" },
-    );
-    addIndexingTable(
-      indexingTableIds.fullText.docTokens,
-      { pk: "S", sk: "S" },
-      { pk: "HASH", sk: "RANGE" },
-    );
-    addIndexingTable(
-      indexingTableIds.fullText.docTokenPositions,
-      { pk: "S", sk: "S" },
-      { pk: "HASH", sk: "RANGE" },
-    );
-    addIndexingTable(
-      indexingTableIds.structured.termIndex,
-      { termKey: "S", docId: "S" },
-      { termKey: "HASH", docId: "RANGE" },
-    );
-    addIndexingTable(
-      indexingTableIds.structured.rangeIndex,
-      { field: "S", rangeKey: "S" },
-      { field: "HASH", rangeKey: "RANGE" },
-    );
-    addIndexingTable(
-      indexingTableIds.structured.docFields,
-      { docId: "S" },
-      { docId: "HASH" },
-    );
-    addIndexingTable(
-      indexingTableIds.relations.relationEdges,
-      { edgeKey: "S", otherId: "S" },
-      { edgeKey: "HASH", otherId: "RANGE" },
-    );
+    const indexingTableId = "IndexingTable";
+    cft.applyPack(addDatabase, {
+      tableId: indexingTableId,
+      attributes: { pk: "S", sk: "S" },
+      keys: { pk: "HASH", sk: "RANGE" },
+    });
 
     cft.applyPack(addCloudFunction, {
       id: IDS.API.FUNCTION,
@@ -231,35 +156,8 @@ const IaC = new SimpleCFT({
             },
             {},
           ),
-          [indexingTableEnvVars.fullText.lossyPostings]: {
-            Ref: indexingTableIds.fullText.lossyPostings,
-          },
-          [indexingTableEnvVars.fullText.exactPostings]: {
-            Ref: indexingTableIds.fullText.exactPostings,
-          },
-          [indexingTableEnvVars.fullText.docMirror]: {
-            Ref: indexingTableIds.fullText.docMirror,
-          },
-          [indexingTableEnvVars.fullText.tokenStats]: {
-            Ref: indexingTableIds.fullText.tokenStats,
-          },
-          [indexingTableEnvVars.fullText.docTokens]: {
-            Ref: indexingTableIds.fullText.docTokens,
-          },
-          [indexingTableEnvVars.fullText.docTokenPositions]: {
-            Ref: indexingTableIds.fullText.docTokenPositions,
-          },
-          [indexingTableEnvVars.structured.termIndex]: {
-            Ref: indexingTableIds.structured.termIndex,
-          },
-          [indexingTableEnvVars.structured.rangeIndex]: {
-            Ref: indexingTableIds.structured.rangeIndex,
-          },
-          [indexingTableEnvVars.structured.docFields]: {
-            Ref: indexingTableIds.structured.docFields,
-          },
-          [indexingTableEnvVars.relations.relationEdges]: {
-            Ref: indexingTableIds.relations.relationEdges,
+          [INDEXING_TABLE_ENV_VAR]: {
+            Ref: indexingTableId,
           },
         },
       },

@@ -147,6 +147,12 @@ export type SupportedFieldTags = Partial<{
      * Whether this field should be added to the type's structured indexed field list.
      * */
     structured: boolean;
+    /**
+     * Use unit-sized numeric criterion chunks for structured Link & Lock
+     * occupancy. This flag has effect only on scalar number fields that are
+     * also structurally indexed.
+     * */
+    decimal: boolean;
   }>;
 }>;
 
