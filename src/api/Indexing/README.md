@@ -26,18 +26,21 @@ const table = {
 
 Every logical index is an explicitly namespaced candidate stream. The `kind` attribute helps diagnostics and migration tooling; application fields remain nested in Voltra-owned attributes and can never collide with `pk`, `sk`, or `kind`.
 
-| Record family       | `pk` stream                                 | `sk` member order                  |
-| ------------------- | ------------------------------------------- | ---------------------------------- |
-| Structured term     | `v1#st#<field>#<mode>#<value>`              | `d#<type>#<docId>`                 |
-| Structured range    | `v1#sr#<field>`                             | `<sortableValue>#d#<type>#<docId>` |
-| Structured document | `v1#sd#d#<type>#<docId>`                    | `state`                            |
-| Lossy posting       | `v1#fl#<field>#<token>`                     | `d#<type>#<docId>`                 |
-| Exact posting       | `v1#fe#<field>#<token>`                     | `d#<type>#<docId>`                 |
-| Document mirror     | `v1#fm#d#<type>#<docId>`                    | `f#<field>`                        |
-| Token statistics    | `v1#fs#<field>#<token>`                     | `state`                            |
-| Document token      | `v1#ft#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
-| Token positions     | `v1#fp#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
-| Relationship edge   | `v1#re#e#s#<entity>#<relation>#<direction>` | `e#s#<otherId>`                    |
+| Record family        | `pk` stream                                 | `sk` member order                  |
+| -------------------- | ------------------------------------------- | ---------------------------------- |
+| Structured term      | `v1#st#<field>#<mode>#<value>`              | `d#<type>#<docId>`                 |
+| Structured range     | `v1#sr#<field>`                             | `<sortableValue>#d#<type>#<docId>` |
+| Structured document  | `v1#sd#d#<type>#<docId>`                    | `state`                            |
+| Structured occupancy | `v1#so#<generation>#<criterion>#<sort>`     | `<criterionChunk>#<sortToken>`     |
+| Structured missing   | `v1#sm#<generation>#<sort>`                 | `d#<type>#<docId>`                 |
+| Occupancy generation | `v1#sg#occupancy`                           | `state`                            |
+| Lossy posting        | `v1#fl#<field>#<token>`                     | `d#<type>#<docId>`                 |
+| Exact posting        | `v1#fe#<field>#<token>`                     | `d#<type>#<docId>`                 |
+| Document mirror      | `v1#fm#d#<type>#<docId>`                    | `f#<field>`                        |
+| Token statistics     | `v1#fs#<field>#<token>`                     | `state`                            |
+| Document token       | `v1#ft#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
+| Token positions      | `v1#fp#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
+| Relationship edge    | `v1#re#e#s#<entity>#<relation>#<direction>` | `e#s#<otherId>`                    |
 
 All physical keys must be created through the exported key utilities. Identity segments use URI-component encoding for delimiter safety. Document identities additionally carry `n`/`s` type tags, so numeric `123` and string `"123"` cannot collide and retain their type through cursors. Sortable values do not use URI encoding: finite numbers use an order-preserving IEEE-754 transform and other range-capable values use UTF-8 hex so DynamoDB byte order matches the comparison contract.
 
@@ -50,6 +53,37 @@ const relationships = new RelationalDdbBackend(
   createRelationEdgesDdbDependencies({ client, table }),
 );
 ```
+
+## Link & Lock Structured Pagination
+
+Scalar string/number fields tagged `indexed.structured` automatically form
+sparse criterion-chunk/sort-token occupancy hints. Strings use case-preserving
+prefixes of up to three Unicode code points. Numbers use decade chunks; add
+`indexed.decimal: true` for unit chunks. Exact canonical fields still verify
+every result.
+
+```ts
+rating: {
+  type: "number",
+  array: false,
+  optional: true,
+  readonly: false,
+  tags: { indexed: { structured: true, decimal: true } },
+}
+```
+
+An existing table remains on exact baseline traversal until its first occupancy
+generation is explicitly built and activated:
+
+```ts
+await structured.occupancyMaintenance.beginRebuild("g1");
+// Page canonical docFields and call backfillDocument(...) for each document.
+await structured.occupancyMaintenance.activateRebuild();
+```
+
+During later rebuilds, normal writers dual-write the active and building
+generations. Activation invalidates old occupancy cursors; they return no rows
+and no successor cursor. Ordinary document writes never change the generation.
 
 ## Configuration and Limits
 

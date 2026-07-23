@@ -5,6 +5,7 @@
  */
 import type { DocId } from "../Types";
 import type { WhereValue } from "./Types";
+import type { StructuredOccupancyFieldMap } from "./StructuredOccupancy";
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
@@ -108,6 +109,8 @@ export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
    * Monotonic version used for optimistic concurrency control.
    */
   version: number;
+  /** Field eligibility/chunk policy used by occupancy rebuilds. */
+  occupancyFields?: StructuredOccupancyFieldMap;
 };
 
 /**
@@ -122,6 +125,8 @@ export type StructuredDocFieldsState = {
    * Monotonic version for optimistic writes.
    */
   version: number;
+  /** Field eligibility/chunk policy used by occupancy rebuilds. */
+  occupancyFields?: StructuredOccupancyFieldMap;
 };
 
 /**
@@ -275,6 +280,7 @@ export function buildStructuredDocFieldsItem(
   docId: DocId,
   fields: StructuredDocFieldsRecord,
   version: number,
+  occupancyFields?: StructuredOccupancyFieldMap,
 ): StructuredDocFieldsItem {
   const key = assertIndexTableKey({
     pk: buildIndexScalarKey(
@@ -290,6 +296,7 @@ export function buildStructuredDocFieldsItem(
     docId,
     fields,
     version,
+    ...(occupancyFields ? { occupancyFields } : {}),
   };
 }
 

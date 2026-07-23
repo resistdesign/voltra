@@ -44,6 +44,15 @@
       }
     },
     {
+      "export": "runParsingUtilsRatingFieldIndexedTagsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "structured": true,
+        "decimal": true
+      }
+    },
+    {
       "export": "runParsingUtilsRatingDetailsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
@@ -82,10 +91,7 @@
       "export": "runParsingUtilsUnionFieldSetsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [
-        ["id", "title", "rating", "tags", "author"],
-        ["name"]
-      ]
+      "expectation": [["id", "title", "rating", "tags", "author"], ["name"]]
     },
     {
       "export": "runParsingUtilsUnionFieldKeysScenario",

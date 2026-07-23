@@ -14,6 +14,8 @@ import {
   createRelationEdgesDdbDependencies,
 } from "./rel/RelationalDdb";
 import { StructuredDdbBackend } from "./structured/StructuredDdbBackend";
+import { searchStructured } from "./structured/SearchStructured";
+import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
 
 const keyOf = (item: AttributeMap): string =>
   JSON.stringify([item.pk, item.sk]);
@@ -271,6 +273,149 @@ export const runUnifiedIndexTableTypedIdentityScenario = async () => {
     structuredStateCount: client
       .snapshot(table.tableName)
       .filter((item) => item.kind === "sd").length,
+  };
+};
+
+export const runUnifiedIndexTableOccupancyScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const occupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+  await structured.occupancyMaintenance.beginRebuild("g1");
+  await structured.writer.write(
+    "a",
+    { age: 23, name: "Zoe" },
+    { occupancyFields },
+  );
+  await structured.writer.write(
+    "b",
+    { age: 34, name: "Amy" },
+    { occupancyFields },
+  );
+  await structured.writer.write("c", { age: 28 }, { occupancyFields });
+  await structured.writer.write(
+    "d",
+    { age: 50, name: "Bob" },
+    { occupancyFields },
+  );
+  await structured.occupancyMaintenance.activateRebuild();
+
+  const first = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 23, upper: 34 },
+    {
+      limit: 2,
+      orderBy: { field: "name" },
+      occupancyFields,
+    },
+  );
+  const second = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 23, upper: 34 },
+    {
+      limit: 2,
+      cursor: first.cursor,
+      orderBy: { field: "name" },
+      occupancyFields,
+    },
+  );
+  const kinds = client
+    .snapshot(table.tableName)
+    .reduce<Record<string, number>>((counts, item) => {
+      const kind = String(item.kind);
+      counts[kind] = (counts[kind] ?? 0) + 1;
+      return counts;
+    }, {});
+  return {
+    ids: [...first.candidateIds, ...second.candidateIds],
+    strategies: [first.diagnostics?.strategy, second.diagnostics?.strategy],
+    occupancyCells: kinds.so,
+    missingRows: kinds.sm,
+  };
+};
+
+export const runUnifiedIndexTableGenerationScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  await structured.occupancyMaintenance.beginRebuild("g2");
+  const building = await structured.occupancyMaintenance.getState();
+  await structured.occupancyMaintenance.activateRebuild();
+  const active = await structured.occupancyMaintenance.getState();
+  return {
+    building: {
+      active: building.activeGeneration ?? null,
+      building: building.buildingGeneration,
+    },
+    active: {
+      active: active.activeGeneration,
+      building: active.buildingGeneration ?? null,
+    },
+  };
+};
+
+export const runUnifiedIndexTableLiveRebuildScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const occupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+  await structured.occupancyMaintenance.beginRebuild("g1");
+  await structured.writer.write(
+    "historical",
+    { age: 34, name: "Amy" },
+    { occupancyFields },
+  );
+  const beforeInitialActivation = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 23, upper: 34 },
+    { limit: 10, orderBy: { field: "name" }, occupancyFields },
+  );
+  await structured.occupancyMaintenance.activateRebuild();
+  await structured.occupancyMaintenance.beginRebuild("g2");
+  await structured.occupancyMaintenance.backfillDocument({
+    docId: "historical",
+    fields: { age: 34, name: "Amy" },
+    occupancyFields,
+  });
+  await structured.writer.write(
+    "live",
+    { age: 23, name: "Zoe" },
+    { occupancyFields },
+  );
+  const generationCounts = client
+    .snapshot(table.tableName)
+    .filter((item) => item.kind === "so")
+    .reduce<Record<string, number>>((counts, item) => {
+      const generation = String(item.generation);
+      counts[generation] = (counts[generation] ?? 0) + 1;
+      return counts;
+    }, {});
+  await structured.occupancyMaintenance.activateRebuild();
+  const page = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 23, upper: 34 },
+    { limit: 10, orderBy: { field: "name" }, occupancyFields },
+  );
+  const retiredCount = await structured.occupancyMaintenance.retireGeneration(
+    "g1",
+    ["age", "name"],
+  );
+  return {
+    beforeInitialActivationStrategy:
+      beforeInitialActivation.diagnostics?.strategy,
+    generationCounts,
+    ids: page.candidateIds,
+    strategy: page.diagnostics?.strategy,
+    retiredCount,
+    retiredCellsRemaining: client
+      .snapshot(table.tableName)
+      .filter((item) => item.kind === "so" && item.generation === "g1").length,
   };
 };
 

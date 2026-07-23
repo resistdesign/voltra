@@ -11,6 +11,12 @@ import type { StructuredQueryOptions, WhereValue } from "./Types";
 import type { StructuredDocFieldsRecord } from "./StructuredDdb";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import { StructuredInMemoryIndex } from "./StructuredInMemoryIndex";
+import {
+  buildStructuredMissingItems,
+  buildStructuredOccupancyItems,
+  type StructuredOccupancyFieldMap,
+  type StructuredWriteContext,
+} from "./StructuredOccupancy";
 
 type StructuredPage = { candidateIds: DocId[]; lastEvaluatedKey?: string };
 
@@ -38,6 +44,9 @@ export class StructuredInMemoryBackend
 {
   private docFields = new Map<DocId, StructuredDocFieldsRecord>();
   private index: StructuredInMemoryIndex;
+  private occupancyFieldsByDoc = new Map<DocId, StructuredOccupancyFieldMap>();
+  private activeGeneration?: string;
+  private buildingGeneration?: string;
 
   /**
    * @param tokenizer Optional tokenizer overrides for structured string contains behavior.
@@ -145,6 +154,97 @@ export class StructuredInMemoryBackend
       this.buildPage(this.index.all(field, options)),
   };
 
+  /** Sparse in-memory occupancy metadata with Dynamo-equivalent ordering. */
+  occupancy: NonNullable<StructuredSearchDependencies["occupancy"]> = {
+    getActiveGeneration: async () => this.activeGeneration,
+    query: async (
+      generation,
+      criterionField,
+      sortField,
+      lowerChunk,
+      upperChunk,
+      options = {},
+    ) => {
+      if (
+        generation !== this.activeGeneration &&
+        generation !== this.buildingGeneration
+      ) {
+        return { cells: [] };
+      }
+      const cells = new Map<
+        string,
+        { sortToken: string; sortValue: string | number }
+      >();
+      for (const [docId, fields] of this.docFields) {
+        const fieldConfig = this.occupancyFieldsByDoc.get(docId) ?? {};
+        for (const item of buildStructuredOccupancyItems(
+          generation,
+          fields,
+          fieldConfig,
+        )) {
+          if (
+            item.criterionField === criterionField &&
+            item.sortField === sortField &&
+            item.criterionChunk >= lowerChunk &&
+            item.criterionChunk <= upperChunk
+          ) {
+            cells.set(item.sk, {
+              sortToken: item.sortToken,
+              sortValue: item.sortValue,
+            });
+          }
+        }
+      }
+      const ordered = Array.from(cells.entries()).sort(([left], [right]) =>
+        left < right ? -1 : left > right ? 1 : 0,
+      );
+      const start = options.cursor ? Number(options.cursor) : 0;
+      const limit = options.limit ?? ordered.length;
+      const page = ordered.slice(start, start + limit);
+      return {
+        cells: page.map(([, cell]) => cell),
+        ...(start + page.length < ordered.length
+          ? { cursor: String(start + page.length) }
+          : {}),
+      };
+    },
+  };
+
+  /** Stable document-id stream for missing eligible sort values. */
+  missing: NonNullable<StructuredSearchDependencies["missing"]> = {
+    all: async (generation, sortField, options = {}) => {
+      if (generation !== this.activeGeneration) {
+        return { candidateIds: [] };
+      }
+      const ids = Array.from(this.docFields)
+        .filter(([docId, fields]) =>
+          buildStructuredMissingItems(
+            generation,
+            docId,
+            fields,
+            this.occupancyFieldsByDoc.get(docId) ?? {},
+          ).some((item) => item.sortField === sortField),
+        )
+        .map(([docId]) => docId)
+        .sort((left, right) =>
+          String(left) < String(right)
+            ? -1
+            : String(left) > String(right)
+              ? 1
+              : 0,
+        );
+      const start = options.cursor ? Number(options.cursor) : 0;
+      const limit = options.limit ?? ids.length;
+      const candidateIds = ids.slice(start, start + limit);
+      return {
+        candidateIds,
+        ...(start + candidateIds.length < ids.length
+          ? { lastEvaluatedKey: String(start + candidateIds.length) }
+          : {}),
+      };
+    },
+  };
+
   /** Canonical structured fields used by compound verification. */
   documents: StructuredSearchDependencies["documents"] = {
     get: async (docId: DocId) => this.docFields.get(docId),
@@ -156,9 +256,44 @@ export class StructuredInMemoryBackend
    * @param fields Structured fields to store.
    * @returns Promise resolved once stored.
    */
-  async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
+  async write(
+    docId: DocId,
+    fields: StructuredDocFieldsRecord,
+    context: StructuredWriteContext = {},
+  ): Promise<void> {
     const normalized = normalizeFields(fields);
-    this.docFields.set(docId, normalized);
+    if (context.deleted) {
+      this.docFields.delete(docId);
+      this.occupancyFieldsByDoc.delete(docId);
+    } else {
+      this.docFields.set(docId, normalized);
+      this.occupancyFieldsByDoc.set(docId, context.occupancyFields ?? {});
+    }
     this.rebuildIndex();
+  }
+
+  /** Begin an explicit in-memory rebuild; writes dual-target until activation. */
+  beginOccupancyRebuild(generation: string): void {
+    if (!generation) {
+      throw new Error("A structured occupancy generation is required.");
+    }
+    if (this.buildingGeneration) {
+      throw new Error("A structured occupancy rebuild is already active.");
+    }
+    if (generation === this.activeGeneration) {
+      throw new Error(
+        "A rebuild generation must differ from the active generation.",
+      );
+    }
+    this.buildingGeneration = generation;
+  }
+
+  /** Activate the building generation and invalidate older occupancy cursors. */
+  activateOccupancyRebuild(): void {
+    if (!this.buildingGeneration) {
+      throw new Error("No structured occupancy generation is building.");
+    }
+    this.activeGeneration = this.buildingGeneration;
+    this.buildingGeneration = undefined;
   }
 }

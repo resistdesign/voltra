@@ -8,6 +8,8 @@ export type StructuredIndexHitCursor = {
 
 /** Bounded structured-search composition state. */
 export type StructuredSearchCursorState = {
+  /** Baseline deterministic candidate-source cursor. */
+  mode?: "baseline";
   /** Positional cursor prefix for sources that have started or completed. */
   hits: StructuredIndexHitCursor[];
   /** Current deterministic source position. */
@@ -15,6 +17,23 @@ export type StructuredSearchCursorState = {
   /** Qualified overflow produced by the last atomically consumed page. */
   readyDocIds: DocId[];
 };
+
+/** Cursor for Link & Lock ordered occupancy traversal. */
+export type StructuredOccupancyCursorState = {
+  mode: "occupancy";
+  /** Occupancy generation used to build the deterministic token plan. */
+  generation: string;
+  /** Present sort tokens are always exhausted before missing values. */
+  phase: "present" | "missing";
+  /** Current/exhausted exact sort-token boundary. */
+  sortToken?: string;
+  /** Backend continuation while consuming one token or missing stream. */
+  blockCursor?: string;
+};
+
+/** All structured search cursor formats accepted by the current codec. */
+export type AnyStructuredSearchCursorState =
+  StructuredSearchCursorState | StructuredOccupancyCursorState;
 
 const encodeBase64Url = (value: string): string => {
   const binary = encodeURIComponent(value).replace(
@@ -43,13 +62,13 @@ const decodeBase64Url = (value: string): string => {
 
 /** Encode structured composition state without query identity metadata. */
 export const encodeStructuredSearchCursor = (
-  state: StructuredSearchCursorState,
+  state: AnyStructuredSearchCursorState,
 ): string => encodeBase64Url(JSON.stringify(state));
 
 /** Decode and minimally validate structured composition state. */
 export const decodeStructuredSearchCursor = (
   cursor?: string,
-): StructuredSearchCursorState | undefined => {
+): AnyStructuredSearchCursorState | undefined => {
   if (!cursor) {
     return undefined;
   }
@@ -57,7 +76,20 @@ export const decodeStructuredSearchCursor = (
   try {
     const parsed = JSON.parse(
       decodeBase64Url(cursor),
-    ) as StructuredSearchCursorState;
+    ) as AnyStructuredSearchCursorState;
+    if (parsed?.mode === "occupancy") {
+      if (
+        typeof parsed.generation !== "string" ||
+        (parsed.phase !== "present" && parsed.phase !== "missing") ||
+        (parsed.sortToken !== undefined &&
+          typeof parsed.sortToken !== "string") ||
+        (parsed.blockCursor !== undefined &&
+          typeof parsed.blockCursor !== "string")
+      ) {
+        throw new Error("Invalid structured occupancy cursor.");
+      }
+      return parsed;
+    }
     if (
       !parsed ||
       !Array.isArray(parsed.hits) ||

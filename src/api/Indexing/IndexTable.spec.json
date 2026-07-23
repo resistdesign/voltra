@@ -39,7 +39,7 @@
       "export": "runIndexTableLogicalIsolationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": { "count": 10, "uniqueCount": 10 }
+      "expectation": { "count": 13, "uniqueCount": 13 }
     },
     {
       "export": "runIndexTableSortableNumberScenario",

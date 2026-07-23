@@ -3,12 +3,21 @@ import type { StructuredDocFieldsRecord } from "./StructuredDdb";
 import {
   decodeStructuredSearchCursor,
   encodeStructuredSearchCursor,
+  type StructuredOccupancyCursorState,
   type StructuredSearchCursorState,
 } from "./StructuredSearchCursor";
+import {
+  STRUCTURED_OCCUPANCY_CELL_BUDGET,
+  STRUCTURED_OCCUPANCY_PAGE_BUDGET,
+  STRUCTURED_OCCUPANCY_PAGE_SIZE,
+  buildStructuredChunkBounds,
+  type StructuredOccupancyPage,
+} from "./StructuredOccupancy";
 import {
   buildStructuredStringContainsTokens,
   type StructuredStringTokenizerConfig,
 } from "./StructuredStringLike";
+import { STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY } from "./Types";
 import type {
   CandidatePage,
   StructuredQueryOptions,
@@ -56,6 +65,26 @@ type StructuredRangeIndex = {
   ): Promise<BackendCandidatePage>;
 };
 
+type StructuredOccupancyIndex = {
+  getActiveGeneration(): Promise<string | undefined>;
+  query(
+    generation: string,
+    criterionField: string,
+    sortField: string,
+    lowerChunk: string,
+    upperChunk: string,
+    options?: StructuredQueryOptions,
+  ): Promise<StructuredOccupancyPage>;
+};
+
+type StructuredMissingIndex = {
+  all(
+    generation: string,
+    sortField: string,
+    options?: StructuredQueryOptions,
+  ): Promise<BackendCandidatePage>;
+};
+
 /** Dependencies required to run structured searches. */
 export type StructuredSearchDependencies = {
   /** Term query dependency for equality/contains lookups. */
@@ -68,6 +97,10 @@ export type StructuredSearchDependencies = {
   };
   /** Tokenizer used by string contains/LIKE verification. */
   tokenizer?: Partial<StructuredStringTokenizerConfig>;
+  /** Sparse Link & Lock occupancy metadata, when supported by the backend. */
+  occupancy?: StructuredOccupancyIndex;
+  /** Deterministic missing-sort stream, when supported by the backend. */
+  missing?: StructuredMissingIndex;
 };
 
 type CandidateSource = {
@@ -250,6 +283,319 @@ const hasContinuation = (
   sourceCount: number,
 ): boolean => state.readyDocIds.length > 0 || state.sourceIndex < sourceCount;
 
+type OccupancyPlanContext = {
+  dependencies: StructuredSearchDependencies;
+  options: StructuredSearchOptions;
+  generation: string;
+  sortField: string;
+  cellsRead: number;
+  pagesRead: number;
+};
+
+type OccupancyTokenPlan = Map<string, string | number>;
+
+class OccupancyBudgetExceededError extends Error {}
+
+const intersectTokenPlans = (
+  left: OccupancyTokenPlan,
+  right: OccupancyTokenPlan,
+): OccupancyTokenPlan =>
+  new Map(Array.from(left).filter(([token]) => right.has(token)));
+
+const unionTokenPlans = (plans: OccupancyTokenPlan[]): OccupancyTokenPlan => {
+  const combined = new Map<string, string | number>();
+  for (const plan of plans) {
+    for (const [token, value] of plan) {
+      combined.set(token, value);
+    }
+  }
+  return combined;
+};
+
+const readLeafOccupancy = async (
+  leaf: StructuredTermWhere | StructuredRangeWhere,
+  context: OccupancyPlanContext,
+): Promise<OccupancyTokenPlan | undefined> => {
+  const fieldConfig = context.options.occupancyFields?.[leaf.field];
+  if (
+    !fieldConfig ||
+    leaf.field === context.sortField ||
+    (leaf.type === "term" && leaf.mode !== "eq")
+  ) {
+    return undefined;
+  }
+
+  let lower: string | number | undefined;
+  let upper: string | number | undefined;
+  if (leaf.type === "term") {
+    if (typeof leaf.value !== fieldConfig.type) {
+      return undefined;
+    }
+    lower = leaf.value as string | number;
+    upper = lower;
+  } else if (leaf.type === "between") {
+    if (
+      typeof leaf.lower !== fieldConfig.type ||
+      typeof leaf.upper !== fieldConfig.type
+    ) {
+      return undefined;
+    }
+    lower = leaf.lower as string | number;
+    upper = leaf.upper as string | number;
+  } else {
+    const value = leaf.value;
+    if (typeof value !== fieldConfig.type) {
+      return undefined;
+    }
+    if (leaf.type === "gte") {
+      lower = value as string | number;
+    } else {
+      upper = value as string | number;
+    }
+  }
+
+  const bounds = buildStructuredChunkBounds(lower, upper, fieldConfig);
+  const plan = new Map<string, string | number>();
+  let cursor: string | undefined;
+  do {
+    const page = await context.dependencies.occupancy?.query(
+      context.generation,
+      leaf.field,
+      context.sortField,
+      bounds.lower,
+      bounds.upper,
+      { cursor, limit: STRUCTURED_OCCUPANCY_PAGE_SIZE },
+    );
+    if (!page) {
+      return undefined;
+    }
+    context.pagesRead += 1;
+    context.cellsRead += page.cells.length;
+    if (
+      context.cellsRead > STRUCTURED_OCCUPANCY_CELL_BUDGET ||
+      context.pagesRead > STRUCTURED_OCCUPANCY_PAGE_BUDGET
+    ) {
+      throw new OccupancyBudgetExceededError();
+    }
+    for (const cell of page.cells) {
+      plan.set(cell.sortToken, cell.sortValue);
+    }
+    cursor = page.cursor;
+  } while (cursor);
+  return plan;
+};
+
+const buildOccupancyPlan = async (
+  where: Where,
+  context: OccupancyPlanContext,
+): Promise<OccupancyTokenPlan | undefined> => {
+  if (isLeaf(where)) {
+    return readLeafOccupancy(where, context);
+  }
+
+  if ("or" in where) {
+    const plans = await Promise.all(
+      where.or.map((child) => buildOccupancyPlan(child, context)),
+    );
+    return plans.some((plan) => !plan)
+      ? undefined
+      : unionTokenPlans(plans as OccupancyTokenPlan[]);
+  }
+
+  const plans = (
+    await Promise.all(
+      where.and.map((child) => buildOccupancyPlan(child, context)),
+    )
+  ).filter((plan): plan is OccupancyTokenPlan => !!plan);
+  if (plans.length === 0) {
+    return undefined;
+  }
+  return plans.slice(1).reduce(intersectTokenPlans, plans[0]);
+};
+
+const nextTokenIndex = (
+  tokens: Array<[string, string | number]>,
+  cursor: StructuredOccupancyCursorState,
+  reverse: boolean,
+): number => {
+  if (!cursor.sortToken) {
+    return 0;
+  }
+  const exact = tokens.findIndex(([token]) => token === cursor.sortToken);
+  if (cursor.blockCursor && exact >= 0) {
+    return exact;
+  }
+  if (exact >= 0) {
+    return exact + 1;
+  }
+  return tokens.findIndex(([token]) =>
+    reverse ? token < cursor.sortToken! : token > cursor.sortToken!,
+  );
+};
+
+const searchWithOccupancy = async (
+  dependencies: StructuredSearchDependencies,
+  where: Where,
+  options: StructuredSearchOptions,
+  decodedCursor: StructuredOccupancyCursorState | undefined,
+): Promise<
+  | { page: CandidatePage }
+  | { fallbackReason: "unsupported" | "budget" | "unavailable" }
+> => {
+  if (
+    !options.orderBy ||
+    !options.occupancyFields ||
+    !dependencies.occupancy ||
+    !dependencies.missing ||
+    !dependencies.documents
+  ) {
+    return { fallbackReason: "unavailable" };
+  }
+  const generation = await dependencies.occupancy.getActiveGeneration();
+  if (decodedCursor && decodedCursor.generation !== generation) {
+    return {
+      page: {
+        candidateIds: [],
+        diagnostics: {
+          strategy: "occupancy",
+          occupancyCellsRead: 0,
+          occupancyPagesRead: 0,
+          occupiedSortTokens: 0,
+        },
+      },
+    };
+  }
+  if (!generation) {
+    return { fallbackReason: "unavailable" };
+  }
+
+  const planContext: OccupancyPlanContext = {
+    dependencies,
+    options,
+    generation,
+    sortField: options.orderBy.field,
+    cellsRead: 0,
+    pagesRead: 0,
+  };
+  let plan: OccupancyTokenPlan | undefined;
+  try {
+    plan = await buildOccupancyPlan(where, planContext);
+  } catch (error) {
+    if (error instanceof OccupancyBudgetExceededError) {
+      return { fallbackReason: "budget" };
+    }
+    throw error;
+  }
+  if (!plan) {
+    return { fallbackReason: "unsupported" };
+  }
+
+  const reverse = !!options.orderBy.reverse;
+  const tokens = Array.from(plan).sort(([left], [right]) =>
+    left < right ? (reverse ? 1 : -1) : left > right ? (reverse ? -1 : 1) : 0,
+  );
+  const limit = Math.max(1, options.limit ?? 10);
+  const results: DocId[] = [];
+  let cursor: StructuredOccupancyCursorState = decodedCursor ?? {
+    mode: "occupancy",
+    generation,
+    phase: "present",
+  };
+
+  if (cursor.phase === "present") {
+    let index = nextTokenIndex(tokens, cursor, reverse);
+    while (index >= 0 && index < tokens.length && results.length < limit) {
+      const [sortToken, sortValue] = tokens[index];
+      const sameToken = cursor.sortToken === sortToken;
+      const page = await dependencies.ranges.between(
+        options.orderBy.field,
+        sortValue,
+        sortValue,
+        {
+          limit: limit - results.length,
+          cursor: sameToken ? cursor.blockCursor : undefined,
+          reverse,
+        },
+      );
+      for (const docId of page.candidateIds) {
+        const fields = await dependencies.documents.get(docId);
+        if (fields && matchesWhere(where, fields, dependencies.tokenizer)) {
+          results.push(docId);
+        }
+      }
+      cursor = {
+        mode: "occupancy",
+        generation,
+        phase: "present",
+        sortToken,
+        ...(page.lastEvaluatedKey
+          ? { blockCursor: page.lastEvaluatedKey }
+          : {}),
+      };
+      if (!page.lastEvaluatedKey) {
+        index += 1;
+      }
+    }
+
+    if (results.length >= limit) {
+      return {
+        page: {
+          candidateIds: results,
+          cursor: encodeStructuredSearchCursor(cursor),
+          diagnostics: {
+            strategy: "occupancy",
+            occupancyCellsRead: planContext.cellsRead,
+            occupancyPagesRead: planContext.pagesRead,
+            occupiedSortTokens: tokens.length,
+          },
+        },
+      };
+    }
+    cursor = { mode: "occupancy", generation, phase: "missing" };
+  }
+
+  let missingCursor = cursor.blockCursor;
+  while (results.length < limit) {
+    const page = await dependencies.missing.all(
+      generation,
+      options.orderBy.field,
+      { limit: limit - results.length, cursor: missingCursor },
+    );
+    for (const docId of page.candidateIds) {
+      const fields = await dependencies.documents.get(docId);
+      if (fields && matchesWhere(where, fields, dependencies.tokenizer)) {
+        results.push(docId);
+      }
+    }
+    missingCursor = page.lastEvaluatedKey;
+    if (!missingCursor) {
+      break;
+    }
+  }
+
+  return {
+    page: {
+      candidateIds: results,
+      ...(missingCursor
+        ? {
+            cursor: encodeStructuredSearchCursor({
+              mode: "occupancy",
+              generation,
+              phase: "missing",
+              blockCursor: missingCursor,
+            }),
+          }
+        : {}),
+      diagnostics: {
+        strategy: "occupancy",
+        occupancyCellsRead: planContext.cellsRead,
+        occupancyPagesRead: planContext.pagesRead,
+        occupiedSortTokens: tokens.length,
+      },
+    },
+  };
+};
+
 /** Execute a deterministic, bounded structured candidate composition plan. */
 export async function searchStructured(
   dependencies: StructuredSearchDependencies,
@@ -262,7 +608,25 @@ export async function searchStructured(
     Math.min(options.backendPageSize ?? 100, 500),
   );
   const sources = buildSources(where, options);
-  const state = decodeStructuredSearchCursor(options.cursor) ?? {
+  const decoded = decodeStructuredSearchCursor(options.cursor);
+  const occupancyOutcome = await searchWithOccupancy(
+    dependencies,
+    where,
+    options,
+    decoded?.mode === "occupancy" ? decoded : undefined,
+  );
+  if ("page" in occupancyOutcome) {
+    return occupancyOutcome.page;
+  }
+  if (options.orderBy?.optional) {
+    throw new Error(STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY);
+  }
+  if (decoded?.mode === "occupancy") {
+    throw new Error(
+      "Structured occupancy cursor cannot use baseline traversal.",
+    );
+  }
+  const state: StructuredSearchCursorState = decoded ?? {
     hits: [],
     sourceIndex: 0,
     readyDocIds: [],
@@ -341,5 +705,16 @@ export async function searchStructured(
     cursor: hasContinuation(state, sources.length)
       ? encodeStructuredSearchCursor(state)
       : undefined,
+    ...(options.orderBy && options.occupancyFields
+      ? {
+          diagnostics: {
+            strategy: "baseline" as const,
+            occupancyCellsRead: 0,
+            occupancyPagesRead: 0,
+            occupiedSortTokens: 0,
+            fallbackReason: occupancyOutcome.fallbackReason,
+          },
+        }
+      : {}),
   };
 }

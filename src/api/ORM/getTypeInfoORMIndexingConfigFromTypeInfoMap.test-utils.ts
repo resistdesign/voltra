@@ -44,6 +44,7 @@ const getScenarioTypeInfoMap = (): TypeInfoMap => ({
         tags: {
           indexed: {
             structured: true,
+            decimal: true,
           },
         },
       },
@@ -106,9 +107,9 @@ const runGeneratedConfigScenario = () => {
   return {
     fullTextFieldsByType: config.fullText?.defaultIndexFieldByType,
     structuredFieldsByType: config.structured?.indexedFieldsByType,
+    occupancyFieldsByType: config.structured?.occupancyFieldsByType,
     preservedStructuredFieldMap: config.structured?.fieldMapByType,
-    preservedStructuredWriter:
-      config.structured?.writer === structuredBackend,
+    preservedStructuredWriter: config.structured?.writer === structuredBackend,
     preservedFullTextBackend: config.fullText?.backend === fullTextBackend,
   };
 };
