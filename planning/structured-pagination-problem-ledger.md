@@ -138,7 +138,7 @@ Normal document creates, updates, and deletes mutate the active occupancy genera
 
 An occupancy generation is a version/epoch of the complete occupancy index, not a document revision or a set of permutations.
 
-1. Create a new generation in `building` state while queries continue using the current active generation. If no active generation exists during initial migration, queries use the exact baseline sort-first traversal.
+1. The initial generation is active by default and is maintained by normal CRUD from the first item write. An explicit repair/compaction creates a replacement generation in `building` state while queries continue using the active generation.
 2. While the rebuild runs, document mutations write occupancy into both the active and building generations. The existing optimistic retry/repair contract applies; no transactional cutover or rollback is introduced.
 3. Backfill the building generation idempotently from canonical `docFields`, then reconcile mutations and incomplete derived writes before activation.
 4. Atomically compare-and-swap the single active-generation pointer to the completed generation. Only this explicit switch invalidates cursors from the prior generation.
@@ -215,7 +215,7 @@ With `F` eligible structured fields, one document contributes to at most `F(F - 
 - ascending or descending traversal;
 - document ID encoded after the value as deterministic tie-breaker.
 
-Multiple sort fields, array/reference fields, and unindexed sort fields use the exhaustive fallback. Optional/missing sort values use the generation-pinned missing stream after present values. Before initial activation or when an optional skip plan is unavailable, ORM routing uses exhaustive full-scan comparison so they are never omitted.
+Multiple sort fields, array/reference fields, and unindexed sort fields use the exhaustive fallback. Optional/missing sort values use the generation-pinned missing stream after present values. When an optional skip plan is unavailable, ORM routing uses exhaustive full-scan comparison so they are never omitted.
 
 ## Optimistic Mutation Contract
 

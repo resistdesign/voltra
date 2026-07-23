@@ -777,8 +777,6 @@ export const runDbxStructuredOccupancyE2EScenario = async () => {
     },
   };
   const structured = new StructuredInMemoryBackend();
-  structured.beginOccupancyRebuild("g1");
-  structured.activateOccupancyRebuild();
   const queryOccupancy = structured.occupancy.query;
   let occupancyReads = 0;
   structured.occupancy.query = async (...args) => {

@@ -1,14 +1,6 @@
-import type {
-  AttributeMap,
-  BatchGetItemInput,
-  BatchWriteItemInput,
-  DynamoQueryClient,
-  GetItemInput,
-  PutItemInput,
-  QueryInput,
-} from "./ddb/Types";
-import { INDEX_TABLE_KIND_ATTRIBUTE } from "./IndexTable";
+import { InMemoryDynamoQueryClient as InMemoryDynamoIndexClient } from "./ddb/InMemoryDynamoQueryClient";
 import { IndexMutationCoordinator } from "./ddb/IndexMutationCoordinator";
+import { INDEX_TABLE_KIND_ATTRIBUTE } from "./IndexTable";
 import { FullTextDdbBackend } from "./fulltext/FullTextDdbBackend";
 import {
   RelationalDdbBackend,
@@ -19,152 +11,6 @@ import { searchStructured } from "./structured/SearchStructured";
 import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
 import { replaceFullTextDocument } from "./API";
 import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
-
-const keyOf = (item: AttributeMap): string =>
-  JSON.stringify([item.pk, item.sk]);
-
-/** Minimal DynamoDB semantics used to exercise all unified index backends. */
-class InMemoryDynamoIndexClient implements DynamoQueryClient {
-  private readonly tables = new Map<string, Map<string, AttributeMap>>();
-  readonly touchedTables = new Set<string>();
-  readonly batchKinds: string[][] = [];
-
-  private table(name: string): Map<string, AttributeMap> {
-    this.touchedTables.add(name);
-    const table = this.tables.get(name) ?? new Map<string, AttributeMap>();
-    this.tables.set(name, table);
-    return table;
-  }
-
-  async batchWriteItem(input: BatchWriteItemInput) {
-    this.batchKinds.push(
-      Object.values(input.RequestItems)
-        .flat()
-        .map((request) =>
-          String(
-            request.PutRequest?.Item[INDEX_TABLE_KIND_ATTRIBUTE] ?? "delete",
-          ),
-        ),
-    );
-    for (const [tableName, requests] of Object.entries(input.RequestItems)) {
-      const table = this.table(tableName);
-      for (const request of requests) {
-        if (request.PutRequest) {
-          const item = { ...request.PutRequest.Item };
-          table.set(keyOf(item), item);
-        }
-        if (request.DeleteRequest) {
-          const keyAttributes = Object.keys(request.DeleteRequest.Key).sort();
-          if (
-            keyAttributes.length !== 2 ||
-            keyAttributes[0] !== "pk" ||
-            keyAttributes[1] !== "sk"
-          ) {
-            throw new Error(
-              "Unified index deletes must contain exactly the pk/sk key.",
-            );
-          }
-          table.delete(keyOf(request.DeleteRequest.Key));
-        }
-      }
-    }
-    return {};
-  }
-
-  async batchGetItem(input: BatchGetItemInput) {
-    const responses: Record<string, AttributeMap[]> = {};
-    for (const [tableName, request] of Object.entries(input.RequestItems)) {
-      const table = this.table(tableName);
-      responses[tableName] = request.Keys.flatMap((key) => {
-        const item = table.get(keyOf(key));
-        return item ? [{ ...item }] : [];
-      });
-    }
-    return { Responses: responses };
-  }
-
-  async getItem(input: GetItemInput) {
-    const item = this.table(input.TableName).get(keyOf(input.Key));
-    return item ? { Item: { ...item } } : {};
-  }
-
-  async putItem(input: PutItemInput) {
-    const table = this.table(input.TableName);
-    const current = table.get(keyOf(input.Item));
-    if (
-      input.ConditionExpression?.includes("attribute_not_exists(#pk)") &&
-      current
-    ) {
-      return { conditionFailed: true };
-    }
-    const expected = input.ExpressionAttributeValues?.[":expectedVersion"];
-    if (expected !== undefined && (current?.version ?? 0) !== expected) {
-      return { conditionFailed: true };
-    }
-    table.set(keyOf(input.Item), { ...input.Item });
-    return {};
-  }
-
-  async query(input: QueryInput) {
-    const pkName =
-      input.ExpressionAttributeNames?.["#pk"] ??
-      input.ExpressionAttributeNames?.["#termKey"] ??
-      input.ExpressionAttributeNames?.["#field"] ??
-      input.ExpressionAttributeNames?.["#edgeKey"] ??
-      "pk";
-    const pkValue =
-      input.ExpressionAttributeValues[":pk"] ??
-      input.ExpressionAttributeValues[":termKey"] ??
-      input.ExpressionAttributeValues[":field"] ??
-      input.ExpressionAttributeValues[":edgeKey"];
-    const skName = input.ExpressionAttributeNames?.["#rangeKey"] ?? "sk";
-    let items = Array.from(this.table(input.TableName).values())
-      .filter((item) => item[pkName] === pkValue)
-      .sort((left, right) =>
-        String(left[skName]) < String(right[skName]) ? -1 : 1,
-      );
-
-    if (input.KeyConditionExpression.includes("BETWEEN")) {
-      const lower = String(input.ExpressionAttributeValues[":lower"]);
-      const upper = String(input.ExpressionAttributeValues[":upper"]);
-      items = items.filter((item) => {
-        const key = String(item[skName]);
-        return key >= lower && key <= upper;
-      });
-    } else if (input.KeyConditionExpression.includes(">=")) {
-      const lower = String(input.ExpressionAttributeValues[":lower"]);
-      items = items.filter((item) => String(item[skName]) >= lower);
-    } else if (input.KeyConditionExpression.includes("<=")) {
-      const upper = String(input.ExpressionAttributeValues[":upper"]);
-      items = items.filter((item) => String(item[skName]) <= upper);
-    }
-
-    if (input.ScanIndexForward === false) {
-      items.reverse();
-    }
-    if (input.ExclusiveStartKey) {
-      const cursorIndex = items.findIndex(
-        (item) =>
-          keyOf(item) === keyOf(input.ExclusiveStartKey as AttributeMap),
-      );
-      items = items.slice(cursorIndex + 1);
-    }
-    const limit = input.Limit ?? items.length;
-    const page = items.slice(0, limit);
-    const last = page[page.length - 1];
-    return {
-      Items: page.map((item) => ({ ...item })),
-      LastEvaluatedKey:
-        page.length < items.length && last
-          ? { pk: last.pk, sk: last.sk }
-          : undefined,
-    };
-  }
-
-  snapshot(tableName: string): AttributeMap[] {
-    return Array.from(this.table(tableName).values());
-  }
-}
 
 export const runUnifiedIndexTableIntegrationScenario = async () => {
   const client = new InMemoryDynamoIndexClient();
@@ -297,7 +143,6 @@ export const runUnifiedIndexTableOccupancyScenario = async () => {
     age: { type: "number" },
     name: { type: "string" },
   };
-  await structured.occupancyMaintenance.beginRebuild("g1");
   await structured.writer.write(
     "a",
     { age: 23, name: "Zoe" },
@@ -314,8 +159,6 @@ export const runUnifiedIndexTableOccupancyScenario = async () => {
     { age: 50, name: "Bob" },
     { occupancyFields },
   );
-  await structured.occupancyMaintenance.activateRebuild();
-
   const first = await searchStructured(
     structured.reader,
     { type: "between", field: "age", lower: 23, upper: 34 },
@@ -350,6 +193,76 @@ export const runUnifiedIndexTableOccupancyScenario = async () => {
   };
 };
 
+export const runUnifiedIndexTableNormalCrudOccupancyScenario = async () => {
+  const client = new InMemoryDynamoIndexClient();
+  const table = { tableName: "UnifiedIndex" };
+  const structured = new StructuredDdbBackend({ client, table });
+  const occupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+
+  await structured.writer.write("doc", { age: 23 }, { occupancyFields });
+  const created = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 20, upper: 29 },
+    {
+      limit: 10,
+      orderBy: { field: "name", optional: true },
+      occupancyFields,
+    },
+  );
+  const missingAfterCreate = client
+    .snapshot(table.tableName)
+    .filter((item) => item.kind === "sm").length;
+
+  await structured.writer.write(
+    "doc",
+    { age: 23, name: "Amy" },
+    { occupancyFields },
+  );
+  const updated = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 20, upper: 29 },
+    {
+      limit: 10,
+      orderBy: { field: "name", optional: true },
+      occupancyFields,
+    },
+  );
+  const afterUpdate = client.snapshot(table.tableName);
+
+  await structured.writer.write("doc", {}, { occupancyFields, deleted: true });
+  const deleted = await searchStructured(
+    structured.reader,
+    { type: "between", field: "age", lower: 20, upper: 29 },
+    {
+      limit: 10,
+      orderBy: { field: "name", optional: true },
+      occupancyFields,
+    },
+  );
+  const afterDelete = client.snapshot(table.tableName);
+
+  return {
+    activeGeneration: await structured.reader.occupancy?.getActiveGeneration(),
+    created: created.candidateIds,
+    createdStrategy: created.diagnostics?.strategy,
+    missingAfterCreate,
+    updated: updated.candidateIds,
+    updatedStrategy: updated.diagnostics?.strategy,
+    missingAfterUpdate: afterUpdate.filter((item) => item.kind === "sm").length,
+    occupancyAfterUpdate: afterUpdate.filter((item) => item.kind === "so")
+      .length,
+    deleted: deleted.candidateIds,
+    liveRangeRowsAfterDelete: afterDelete.filter((item) => item.kind === "sr")
+      .length,
+    conservativeOccupancyAfterDelete: afterDelete.filter(
+      (item) => item.kind === "so",
+    ).length,
+  };
+};
+
 export const runUnifiedIndexTableGenerationScenario = async () => {
   const client = new InMemoryDynamoIndexClient();
   const table = { tableName: "UnifiedIndex" };
@@ -378,18 +291,16 @@ export const runUnifiedIndexTableLiveRebuildScenario = async () => {
     age: { type: "number" },
     name: { type: "string" },
   };
-  await structured.occupancyMaintenance.beginRebuild("g1");
   await structured.writer.write(
     "historical",
     { age: 34, name: "Amy" },
     { occupancyFields },
   );
-  const beforeInitialActivation = await searchStructured(
+  const beforeRebuild = await searchStructured(
     structured.reader,
     { type: "between", field: "age", lower: 23, upper: 34 },
     { limit: 10, orderBy: { field: "name" }, occupancyFields },
   );
-  await structured.occupancyMaintenance.activateRebuild();
   await structured.occupancyMaintenance.beginRebuild("g2");
   await structured.occupancyMaintenance.backfillDocument({
     docId: "historical",
@@ -420,8 +331,7 @@ export const runUnifiedIndexTableLiveRebuildScenario = async () => {
     ["age", "name"],
   );
   return {
-    beforeInitialActivationStrategy:
-      beforeInitialActivation.diagnostics?.strategy,
+    beforeRebuildStrategy: beforeRebuild.diagnostics?.strategy,
     generationCounts,
     ids: page.candidateIds,
     strategy: page.diagnostics?.strategy,
@@ -440,7 +350,6 @@ export const runUnifiedIndexTableDescendingTieScenario = async () => {
     age: { type: "number" },
     name: { type: "string" },
   };
-  await structured.occupancyMaintenance.beginRebuild("g1");
   await structured.writer.write(
     "a",
     { age: 23, name: "Same" },
@@ -451,7 +360,6 @@ export const runUnifiedIndexTableDescendingTieScenario = async () => {
     { age: 24, name: "Same" },
     { occupancyFields },
   );
-  await structured.occupancyMaintenance.activateRebuild();
   const page = await searchStructured(
     structured.reader,
     { type: "between", field: "age", lower: 20, upper: 29 },
@@ -472,13 +380,11 @@ export const runUnifiedIndexTableStaleBackfillMissingScenario = async () => {
     age: { type: "number" },
     name: { type: "string" },
   };
-  await structured.occupancyMaintenance.beginRebuild("g1");
   await structured.writer.write(
     "doc",
     { age: 23, name: "Amy" },
     { occupancyFields },
   );
-  await structured.occupancyMaintenance.activateRebuild();
   await structured.occupancyMaintenance.beginRebuild("g2");
   await structured.occupancyMaintenance.backfillDocument({
     docId: "doc",
@@ -528,9 +434,6 @@ export const runUnifiedIndexTableCoordinatedMutationScenario = async () => {
     age: { type: "number" },
     name: { type: "string" },
   };
-  await structured.occupancyMaintenance.beginRebuild("g1");
-  await structured.occupancyMaintenance.activateRebuild();
-
   await mutationCoordinator.run(async () => {
     await Promise.all([
       structured.writer.write(

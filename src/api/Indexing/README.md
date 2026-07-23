@@ -13,6 +13,18 @@ The project layers three complementary index types that can be combined in appli
 
 Serverless handlers (`src/api/Indexing/Handler.ts`) wrap these primitives. Use `setHandlerDependencies` to inject a concrete backend (DynamoDB or in-memory for tests), then dispatch index/search events by `action`.
 
+`StructuredInMemoryBackend` runs the real DynamoDB structured backend over an
+inspectable in-memory `pk`/`sk` table. It does not maintain an independent
+approximation of indexing behavior. `snapshotIndexRecords()` returns deep-cloned
+raw objects and `snapshotIndexRecordMap()` returns their keyed map, allowing
+tests to assert the exact term, range, occupancy, missing-value, document, and
+generation records written by normal CRUD.
+
+`InMemoryDynamoQueryClient` is also public and can host the structured,
+full-text, exact, and relationship DynamoDB backends together. This provides
+unified-table record, query, cursor, conditional-write, and batch behavior
+without AWS.
+
 ## One DynamoDB Table
 
 Provision one table with string partition and sort keys:
@@ -77,31 +89,35 @@ rating: {
 }
 ```
 
-An existing table remains on exact baseline traversal until its first occupancy
-generation is explicitly built and activated. The ORM helper starts or resumes
-the building generation, reindexes every named type, and activates only after
-all types complete:
+The initial occupancy generation is active by default. Ordinary item
+create/update/delete operations maintain its occupancy and missing-value records
+through the same derived-write lifecycle as all other indexes. No initialization
+or post-seed rebuild is required.
+
+The ORM helper is optional repair/compaction tooling. It starts or resumes a
+replacement generation, reindexes every named type, and activates only after all
+types complete:
 
 ```ts
 await rebuildStructuredOccupancy({
   controller: structured.occupancyMaintenance,
   orm,
-  generation: "g1",
+  generation: "g2",
   typeNames: ["Car", "Person"],
   itemsPerPage: 100,
 });
 ```
 
-During later rebuilds, normal writers dual-write the active and building
+During a rebuild, normal writers dual-write the active and building
 generations. Activation invalidates old occupancy cursors; they return no rows
 and no successor cursor. Ordinary document writes never change the generation.
 After activation, reclaim the old physical cells asynchronously with
-`retireGeneration(previousGeneration, qualifiedOccupancyFields)`. The demo's
-operational command performs that cleanup before it exits:
+`retireGeneration(previousGeneration, qualifiedOccupancyFields)`. The demo has
+an optional maintenance command that performs that cleanup before it exits:
 
 ```bash
 INDEXING_TABLE=your-table \
-STRUCTURED_OCCUPANCY_GENERATION=g1 \
+STRUCTURED_OCCUPANCY_GENERATION=g2 \
 yarn rebuild:demo-occupancy
 ```
 

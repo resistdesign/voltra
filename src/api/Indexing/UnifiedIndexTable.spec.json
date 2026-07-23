@@ -71,11 +71,29 @@
       }
     },
     {
+      "export": "runUnifiedIndexTableNormalCrudOccupancyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "activeGeneration": "g1",
+        "created": ["doc"],
+        "createdStrategy": "occupancy",
+        "missingAfterCreate": 1,
+        "updated": ["doc"],
+        "updatedStrategy": "occupancy",
+        "missingAfterUpdate": 0,
+        "occupancyAfterUpdate": 2,
+        "deleted": [],
+        "liveRangeRowsAfterDelete": 0,
+        "conservativeOccupancyAfterDelete": 2
+      }
+    },
+    {
       "export": "runUnifiedIndexTableGenerationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "building": { "active": null, "building": "g2" },
+        "building": { "active": "g1", "building": "g2" },
         "active": { "active": "g2", "building": null }
       }
     },
@@ -84,7 +102,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "beforeInitialActivationStrategy": "baseline",
+        "beforeRebuildStrategy": "occupancy",
         "generationCounts": { "g1": 4, "g2": 4 },
         "ids": ["historical", "live"],
         "strategy": "occupancy",
