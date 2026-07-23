@@ -13,10 +13,14 @@ type PersistableItem = {
 export type Car = PersistableItem & {
   /**
    * @label Make
+   * @indexed.fullText
+   * @indexed.structured
    */
   make: string;
   /**
    * @label Model
+   * @indexed.fullText
+   * @indexed.structured
    */
   model: string;
   /**
@@ -24,6 +28,7 @@ export type Car = PersistableItem & {
    * @constraints.min 1900
    * @constraints.max 2022
    * @constraints.step 1
+   * @indexed.structured
    */
   year: number;
 };
@@ -34,10 +39,14 @@ export type Car = PersistableItem & {
 export type Person = PersistableItem & {
   /**
    * @label First Name
+   * @indexed.fullText
+   * @indexed.structured
    */
   firstName: string;
   /**
    * @label Last Name
+   * @indexed.fullText
+   * @indexed.structured
    */
   lastName: string;
   /**
@@ -48,6 +57,8 @@ export type Person = PersistableItem & {
    * @constraints.min 18.0
    * @constraints.max 150.0
    * @constraints.pattern \d+
+   * @indexed.structured
+   * @indexed.decimal
    */
   age: number;
   /**
@@ -72,12 +83,8 @@ export type Person = PersistableItem & {
   readonly likesCheese: boolean;
   /**
    * @label Dietary Restrictions
+   * @indexed.structured
    */
   dietaryRestrictions:
-    | "Vegan"
-    | "Vegetarian"
-    | "Pescatarian"
-    | "Keto"
-    | "Paleo"
-    | "None";
+    "Vegan" | "Vegetarian" | "Pescatarian" | "Keto" | "Paleo" | "None";
 };

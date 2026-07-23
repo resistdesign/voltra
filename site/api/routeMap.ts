@@ -4,14 +4,17 @@ import {
   addRouteMapToRouteMap,
   addRoutesToRouteMap,
   getTypeInfoORMRouteMap,
+  getTypeInfoORMIndexingConfigFromTypeInfoMap,
   type RouteMap,
   type DACRole,
+  type BaseTypeInfoORMServiceConfig,
 } from "../../src/api";
 import type { TypeInfo } from "../../src/common";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import {
   fullTextBackend,
+  indexMutationCoordinator,
   relationalBackend,
   structuredReader,
   structuredStringTokenizer,
@@ -39,57 +42,51 @@ export const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
 /**
  * Route map augmented with DynamoDB-backed ORM routes and indexing integrations.
  */
+export const DEMO_ORM_CONFIG = {
+  typeInfoMap: DemoTypeInfoMap,
+  /**
+   * Supplies a DynamoDB driver keyed by the demo type's primary field.
+   */
+  getDriver: (typeName: string) => {
+    const { primaryField }: Partial<TypeInfo> = DemoTypeInfoMap[typeName] || {};
+
+    if (primaryField) {
+      const tableName =
+        process.env[`TABLE_${typeName.toUpperCase()}`] ?? typeName;
+
+      return new DynamoDBDataItemDBDriver({
+        tableName,
+        uniquelyIdentifyingFieldName: primaryField,
+      });
+    }
+
+    throw new Error("Invalid type.");
+  },
+  indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(DemoTypeInfoMap, {
+    mutationCoordinator: indexMutationCoordinator,
+    fullText: {
+      backend: fullTextBackend,
+    },
+    structured: {
+      reader: structuredReader,
+      writer: structuredWriter,
+      tokenizer: structuredStringTokenizer,
+    },
+    relations: {
+      backend: relationalBackend,
+      /**
+       * Generates a stable relation name for an origin type and field pair.
+       */
+      relationNameFor: (fromTypeName, fromTypeFieldName) =>
+        `${fromTypeName}.${fromTypeFieldName}`,
+    },
+  }),
+} satisfies BaseTypeInfoORMServiceConfig;
+
 export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
   ROUTE_MAP,
   getTypeInfoORMRouteMap(
-    {
-      typeInfoMap: DemoTypeInfoMap,
-      /**
-       * Supplies a DynamoDB driver keyed by the demo type's primary field.
-       */
-      getDriver: (typeName: string) => {
-        const { primaryField }: Partial<TypeInfo> =
-          DemoTypeInfoMap[typeName] || {};
-
-        if (primaryField) {
-          const tableName =
-            process.env[`TABLE_${typeName.toUpperCase()}`] ?? typeName;
-
-          return new DynamoDBDataItemDBDriver({
-            tableName,
-            uniquelyIdentifyingFieldName: primaryField,
-          });
-        }
-
-        throw new Error("Invalid type.");
-      },
-      indexing: {
-        fullText: {
-          backend: fullTextBackend,
-          defaultIndexFieldByType: {
-            Person: ["lastName", "firstName"],
-            Car: ["model", "make"],
-          },
-        },
-        structured: {
-          reader: structuredReader,
-          writer: structuredWriter,
-          tokenizer: structuredStringTokenizer,
-          indexedFieldsByType: {
-            Person: ["firstName", "lastName", "age", "dietaryRestrictions"],
-            Car: ["make", "model", "year"],
-          },
-        },
-        relations: {
-          backend: relationalBackend,
-          /**
-           * Generates a stable relation name for an origin type and field pair.
-           */
-          relationNameFor: (fromTypeName, fromTypeFieldName) =>
-            `${fromTypeName}.${fromTypeFieldName}`,
-        },
-      },
-    },
+    DEMO_ORM_CONFIG,
     {
       itemResourcePathPrefix: ["ORM"],
       relationshipResourcePathPrefix: ["REL"],

@@ -1,5 +1,6 @@
 import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
 import type { TypeInfoORMIndexingConfig } from "./TypeInfoORMService";
+import type { StructuredOccupancyFieldMap } from "../Indexing/structured/StructuredOccupancy";
 
 /**
  * Base indexing config accepted by {@link getTypeInfoORMIndexingConfigFromTypeInfoMap}.
@@ -103,6 +104,7 @@ export const getTypeInfoORMIndexingConfigFromTypeInfoMap = (
 ): TypeInfoORMIndexingConfig => {
   const generatedFullText: Record<string, string[]> = {};
   const generatedStructured: Record<string, string[]> = {};
+  const generatedOccupancy: Record<string, StructuredOccupancyFieldMap> = {};
 
   for (const [typeName, typeInfo] of Object.entries(typeInfoMap)) {
     const fields = typeInfo.fields ?? {};
@@ -122,6 +124,22 @@ export const getTypeInfoORMIndexingConfigFromTypeInfoMap = (
           ...(generatedStructured[typeName] ?? []),
           fieldName,
         ];
+
+        if (
+          !field.array &&
+          !field.typeReference &&
+          (field.type === "string" || field.type === "number")
+        ) {
+          generatedOccupancy[typeName] = {
+            ...(generatedOccupancy[typeName] ?? {}),
+            [fieldName]: {
+              type: field.type,
+              ...(field.type === "number" && indexed.decimal
+                ? { decimal: true }
+                : {}),
+            },
+          };
+        }
       }
     }
   }
@@ -163,6 +181,20 @@ export const getTypeInfoORMIndexingConfigFromTypeInfoMap = (
           ...(hasIndexedFields(mergedStructuredByType)
             ? { indexedFieldsByType: mergedStructuredByType }
             : {}),
+          occupancyFieldsByType: {
+            ...(baseConfig.structured.occupancyFieldsByType ?? {}),
+            ...Object.fromEntries(
+              Object.entries(generatedOccupancy).map(([typeName, fields]) => [
+                typeName,
+                {
+                  ...(baseConfig.structured?.occupancyFieldsByType?.[
+                    typeName
+                  ] ?? {}),
+                  ...fields,
+                },
+              ]),
+            ),
+          },
         }
       : undefined,
   };

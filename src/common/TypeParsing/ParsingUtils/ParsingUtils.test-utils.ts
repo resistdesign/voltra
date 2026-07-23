@@ -27,7 +27,7 @@ const getParsingUtilsScenarioData = () => {
       id: string;
       /** @label Title @indexed.fullText @indexed.structured */
       readonly title?: string;
-      /** @indexed.structured */
+      /** @indexed.structured @indexed.decimal */
       rating: 1 | 2 | 3;
       tags: string[];
       author: Person;
@@ -61,6 +61,7 @@ const getParsingUtilsScenarioData = () => {
     (member: any) => member.name?.getText() === "rating",
   );
   const titleField = getTypeInfoField(titleProperty);
+  const ratingField = getTypeInfoField(ratingProperty);
   const ratingType = ratingProperty.type;
 
   const pickedTypeRef = pickedNode.type as TypeReferenceNode;
@@ -69,7 +70,10 @@ const getParsingUtilsScenarioData = () => {
     unionNode.type as UnionTypeNode,
     typeMap,
   );
-  const unionPickedTypeInfo = getTypeInfoFromTypeAlias(unionPickedNode, typeMap);
+  const unionPickedTypeInfo = getTypeInfoFromTypeAlias(
+    unionPickedNode,
+    typeMap,
+  );
   const unionExcludedTypeInfo = getTypeInfoFromTypeAlias(
     unionExcludedNode,
     typeMap,
@@ -99,6 +103,7 @@ const getParsingUtilsScenarioData = () => {
     bookNode,
     typeInfo,
     titleField,
+    ratingField,
     ratingType,
     pickedTypeRef,
     unionTypeInfo,
@@ -132,6 +137,11 @@ export const runParsingUtilsTitleFieldSummaryScenario = () => {
 export const runParsingUtilsTitleFieldIndexedTagsScenario = () => {
   const { titleField } = getParsingUtilsScenarioData();
   return titleField.tags?.indexed;
+};
+
+export const runParsingUtilsRatingFieldIndexedTagsScenario = () => {
+  const { ratingField } = getParsingUtilsScenarioData();
+  return ratingField.tags?.indexed;
 };
 
 export const runParsingUtilsRatingDetailsScenario = () => {

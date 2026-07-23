@@ -5,7 +5,7 @@
       "export": "runExactS3MemoryKeyScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "exact/text/hello%20world/doc-1.json"
+      "expectation": "exact/text/hello%20world/s%23doc-1.json"
     },
     {
       "export": "runExactS3MemoryLoadedScenario",

@@ -79,8 +79,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "partitionKey": "edgeKey",
-        "sortKey": "otherId",
+        "partitionKey": "pk",
+        "sortKey": "sk",
+        "kindAttribute": "kind",
         "metadataAttribute": "metadata"
       }
     },
@@ -89,8 +90,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "edgeKey": "a\u0000owns\u0000out",
-        "otherId": "b"
+        "pk": "v1#re#e#s#a#owns#out",
+        "sk": "e#s#b"
       }
     },
     {
@@ -98,7 +99,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "edgeKey": "a\u0000owns\u0000out",
+        "pk": "v1#re#e#s#a#owns#out",
+        "sk": "e#s#b",
+        "kind": "re",
         "otherId": "b",
         "metadata": {
           "weight": 1
@@ -109,7 +112,7 @@
       "export": "runRelationalIndexingDdbPartitionKeyScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "a\u0000owns\u0000out"
+      "expectation": "v1#re#e#s#a#owns#out"
     },
     {
       "export": "runRelationalIndexingDdbPage1Scenario",
@@ -128,7 +131,7 @@
             }
           }
         ],
-        "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwiY29udGludWF0aW9uVG9rZW4iOiJ7XCJlZGdlS2V5XCI6XCJhXFx1MDAwMG93bnNcXHUwMDAwb3V0XCIsXCJvdGhlcklkXCI6XCJiXCJ9In0"
+        "nextCursor": "eyJ2IjoxLCJ0IjoicmVsIiwiY29udGludWF0aW9uVG9rZW4iOiJ7XCJwa1wiOlwidjEjcmUjZSNzI2Ejb3ducyNvdXRcIixcInNrXCI6XCJlI3MjYlwifSJ9"
       }
     },
     {
