@@ -1,5 +1,7 @@
 import { searchStructured } from "./SearchStructured";
 import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
+import { StructuredDdbBackend } from "./StructuredDdbBackend";
+import { InMemoryDynamoQueryClient } from "../ddb/InMemoryDynamoQueryClient";
 import {
   encodeStructuredCriterionChunk,
   type StructuredOccupancyFieldMap,
@@ -46,8 +48,6 @@ const seed = async () => {
     { age: 25, score: 90, name: "kim" },
     { occupancyFields },
   );
-  backend.beginOccupancyRebuild("g1");
-  backend.activateOccupancyRebuild();
   return backend;
 };
 
@@ -149,8 +149,8 @@ export const runStructuredOccupancyStaleCursorScenario = async () => {
     orderBy: { field: "name" },
     occupancyFields,
   });
-  backend.beginOccupancyRebuild("g2");
-  backend.activateOccupancyRebuild();
+  await backend.beginOccupancyRebuild("g2");
+  await backend.activateOccupancyRebuild();
   const stale = await searchStructured(backend, ageRange, {
     limit: 1,
     cursor: first.cursor,
@@ -212,8 +212,6 @@ export const runStructuredOccupancyTieScenario = async () => {
   await backend.write("1", { age: 23, name: "Same" }, { occupancyFields });
   await backend.write("2", { age: 24, name: "Same" }, { occupancyFields });
   await backend.write("3", { age: 25, name: "Other" }, { occupancyFields });
-  backend.beginOccupancyRebuild("g1");
-  backend.activateOccupancyRebuild();
   const ascending = await collect(backend, ageRange);
   const descending = await collect(backend, ageRange, true);
   return { ascending: ascending.ids, descending: descending.ids };
@@ -238,8 +236,6 @@ export const runStructuredOccupancySparseScenario = async () => {
     { age: 34, score: 2, name: "Zoe" },
     { occupancyFields },
   );
-  backend.beginOccupancyRebuild("g1");
-  backend.activateOccupancyRebuild();
   const page = await searchStructured(backend, ageRange, {
     limit: 10,
     orderBy: { field: "name" },
@@ -252,26 +248,39 @@ export const runStructuredOccupancySparseScenario = async () => {
   };
 };
 
-export const runStructuredOptionalWithoutGenerationScenario = async () => {
+export const runStructuredOccupancyNormalCrudScenario = async () => {
   const backend = new StructuredInMemoryBackend();
   await backend.write("1", { age: 23 }, { occupancyFields });
-  try {
-    await searchStructured(backend, ageRange, {
-      limit: 10,
-      orderBy: { field: "name", optional: true },
-      occupancyFields,
-    });
-  } catch (error) {
-    return error instanceof Error ? error.message : String(error);
-  }
-  return "NO_ERROR";
+  const created = await searchStructured(backend, ageRange, {
+    limit: 10,
+    orderBy: { field: "name", optional: true },
+    occupancyFields,
+  });
+  await backend.write("1", { age: 23, name: "Amy" }, { occupancyFields });
+  const updated = await searchStructured(backend, ageRange, {
+    limit: 10,
+    orderBy: { field: "name", optional: true },
+    occupancyFields,
+  });
+  await backend.write("1", {}, { occupancyFields, deleted: true });
+  const deleted = await searchStructured(backend, ageRange, {
+    limit: 10,
+    orderBy: { field: "name", optional: true },
+    occupancyFields,
+  });
+  return {
+    activeGeneration: await backend.occupancy.getActiveGeneration(),
+    created: created.candidateIds,
+    createdStrategy: created.diagnostics?.strategy,
+    updated: updated.candidateIds,
+    updatedStrategy: updated.diagnostics?.strategy,
+    deleted: deleted.candidateIds,
+  };
 };
 
 export const runStructuredOccupancyTerminalCursorScenario = async () => {
   const backend = new StructuredInMemoryBackend();
   await backend.write("only", { age: 23, name: "Amy" }, { occupancyFields });
-  backend.beginOccupancyRebuild("g1");
-  backend.activateOccupancyRebuild();
   const page = await searchStructured(backend, ageRange, {
     limit: 1,
     orderBy: { field: "name" },
@@ -286,8 +295,6 @@ export const runStructuredOccupancyTerminalCursorScenario = async () => {
 export const runStructuredOccupancyStaleMissingScenario = async () => {
   const backend = new StructuredInMemoryBackend();
   await backend.write("present", { age: 23, name: "Amy" }, { occupancyFields });
-  backend.beginOccupancyRebuild("g1");
-  backend.activateOccupancyRebuild();
   const page = await searchStructured(
     {
       terms: backend.terms,
@@ -345,8 +352,6 @@ export const runStructuredMissingTypedIdOrderScenario = async () => {
   const backend = new StructuredInMemoryBackend();
   await backend.write("1", { age: 23 }, { occupancyFields });
   await backend.write(1, { age: 23 }, { occupancyFields });
-  backend.beginOccupancyRebuild("g1");
-  backend.activateOccupancyRebuild();
   const page = await searchStructured(backend, ageRange, {
     limit: 10,
     orderBy: { field: "name", optional: true },
@@ -360,7 +365,7 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
   const reindexed: string[] = [];
   const result = await rebuildStructuredOccupancy({
     controller: backend.occupancyMaintenance,
-    generation: "g1",
+    generation: "g2",
     typeNames: ["Person", "Person", "Car"],
     itemsPerPage: 25,
     orm: {
@@ -380,9 +385,207 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
   const active = await backend.occupancy.getActiveGeneration();
   const repeated = await rebuildStructuredOccupancy({
     controller: backend.occupancyMaintenance,
-    generation: "g1",
+    generation: "g2",
     typeNames: ["Person", "Car"],
     orm: { reindexStoredType: async () => ({ processedCount: 99 }) },
   });
   return { result, reindexed, active, repeated };
+};
+
+const orderedRecords = (records: Array<Record<string, unknown>>) =>
+  records.slice().sort((left, right) => {
+    const leftKey = `${String(left.pk)}\u0000${String(left.sk)}`;
+    const rightKey = `${String(right.pk)}\u0000${String(right.sk)}`;
+    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+  });
+
+const countKinds = (records: Array<Record<string, unknown>>) =>
+  records.reduce<Record<string, number>>((counts, record) => {
+    const kind = String(record.kind);
+    counts[kind] = (counts[kind] ?? 0) + 1;
+    return counts;
+  }, {});
+
+export const runStructuredInMemoryDynamoParityScenario = async () => {
+  const memory = new StructuredInMemoryBackend();
+  const dynamoClient = new InMemoryDynamoQueryClient();
+  const dynamoTable = "ParityIndex";
+  const parityOccupancyFields: StructuredOccupancyFieldMap = {
+    age: { type: "number" },
+    name: { type: "string" },
+  };
+  const dynamo = new StructuredDdbBackend({
+    client: dynamoClient,
+    table: { tableName: dynamoTable },
+  });
+  const writeBoth = async (
+    docId: string,
+    fields: Record<string, string | number>,
+    deleted = false,
+  ) => {
+    await Promise.all([
+      memory.write(docId, fields, {
+        occupancyFields: parityOccupancyFields,
+        deleted,
+      }),
+      dynamo.writer.write(docId, fields, {
+        occupancyFields: parityOccupancyFields,
+        deleted,
+      }),
+    ]);
+  };
+
+  await writeBoth("a", { age: 23, name: "Amy" });
+  await writeBoth("b", { age: 25 });
+  const missingAfterCreate = memory
+    .snapshotIndexRecords()
+    .filter((record) => record.kind === "sm");
+  await writeBoth("b", { age: 25, name: "Zoe" });
+  await writeBoth("a", {}, true);
+
+  const memoryBefore = orderedRecords(memory.snapshotIndexRecords());
+  const dynamoBefore = orderedRecords(dynamoClient.snapshot(dynamoTable));
+  const memoryMapBefore = memory.snapshotIndexRecordMap();
+  const dynamoMapBefore = dynamoClient.snapshotMap(dynamoTable);
+  const mutableSnapshot = memory.snapshotIndexRecords();
+  const mutableDocument = mutableSnapshot.find(
+    (record) => record.kind === "sd" && record.docId === "b",
+  );
+  if (mutableDocument) {
+    (mutableDocument.fields as Record<string, unknown>).age = 999;
+  }
+  const protectedDocument = memory
+    .snapshotIndexRecords()
+    .find((record) => record.kind === "sd" && record.docId === "b");
+
+  await Promise.all([
+    memory.occupancyMaintenance.beginRebuild("g2"),
+    dynamo.occupancyMaintenance.beginRebuild("g2"),
+  ]);
+  const backfillDocument = {
+    docId: "b",
+    fields: { age: 25, name: "Zoe" },
+    occupancyFields: parityOccupancyFields,
+  };
+  await Promise.all([
+    memory.occupancyMaintenance.backfillDocument(backfillDocument),
+    dynamo.occupancyMaintenance.backfillDocument(backfillDocument),
+  ]);
+  await writeBoth("c", { age: 27, name: "Cal" });
+  await Promise.all([
+    memory.occupancyMaintenance.activateRebuild(),
+    dynamo.occupancyMaintenance.activateRebuild(),
+  ]);
+
+  const query = {
+    type: "between" as const,
+    field: "age",
+    lower: 20,
+    upper: 29,
+  };
+  const options = {
+    limit: 1,
+    orderBy: { field: "name" },
+    occupancyFields: parityOccupancyFields,
+  };
+  const memoryFirst = await searchStructured(memory, query, options);
+  const dynamoFirst = await searchStructured(dynamo.reader, query, options);
+  await writeBoth("c", {}, true);
+  const memorySecond = await searchStructured(memory, query, {
+    ...options,
+    cursor: memoryFirst.cursor,
+  });
+  const dynamoSecond = await searchStructured(dynamo.reader, query, {
+    ...options,
+    cursor: dynamoFirst.cursor,
+  });
+
+  const memoryAfter = orderedRecords(memory.snapshotIndexRecords());
+  const dynamoAfter = orderedRecords(dynamoClient.snapshot(dynamoTable));
+  const project = (record: Record<string, unknown>) => {
+    if (record.kind === "sd") {
+      return {
+        kind: record.kind,
+        docId: record.docId,
+        fields: record.fields,
+        version: record.version,
+      };
+    }
+    if (record.kind === "sr") {
+      return {
+        kind: record.kind,
+        field: record.field,
+        value: record.value,
+        docId: record.docId,
+      };
+    }
+    if (record.kind === "so") {
+      return {
+        kind: record.kind,
+        generation: record.generation,
+        criterionField: record.criterionField,
+        sortField: record.sortField,
+        sortValue: record.sortValue,
+      };
+    }
+    return undefined;
+  };
+
+  return {
+    before: {
+      rawRecordsEqual:
+        JSON.stringify(memoryBefore) === JSON.stringify(dynamoBefore),
+      rawMapsEqual:
+        JSON.stringify(Array.from(memoryMapBefore)) ===
+        JSON.stringify(Array.from(dynamoMapBefore)),
+      snapshotIsolated:
+        (protectedDocument?.fields as Record<string, unknown>)?.age === 25,
+      kinds: countKinds(memoryBefore),
+      missingLifecycle: {
+        created: missingAfterCreate,
+        afterUpdate: memoryBefore.filter((record) => record.kind === "sm")
+          .length,
+      },
+      documents: memoryBefore
+        .map(project)
+        .filter(Boolean)
+        .filter((record) => (record as { kind: string }).kind === "sd"),
+      equalityTerms: memoryBefore
+        .filter((record) => record.kind === "st" && record.mode === "eq")
+        .map(({ kind, field, value, mode, docId }) => ({
+          kind,
+          field,
+          value,
+          mode,
+          docId,
+        })),
+      ranges: memoryBefore
+        .map(project)
+        .filter(Boolean)
+        .filter((record) => (record as { kind: string }).kind === "sr"),
+      occupancy: memoryBefore
+        .map(project)
+        .filter(Boolean)
+        .filter((record) => (record as { kind: string }).kind === "so"),
+    },
+    afterRebuild: {
+      rawRecordsEqual:
+        JSON.stringify(memoryAfter) === JSON.stringify(dynamoAfter),
+      kinds: countKinds(memoryAfter),
+      generationState: await memory.occupancyMaintenance.getState(),
+      firstIdsEqual:
+        JSON.stringify(memoryFirst.candidateIds) ===
+        JSON.stringify(dynamoFirst.candidateIds),
+      firstCursorEqual: memoryFirst.cursor === dynamoFirst.cursor,
+      secondIdsEqual:
+        JSON.stringify(memorySecond.candidateIds) ===
+        JSON.stringify(dynamoSecond.candidateIds),
+      secondCursorEqual: memorySecond.cursor === dynamoSecond.cursor,
+      ids: [...memoryFirst.candidateIds, ...memorySecond.candidateIds],
+      strategies: [
+        memoryFirst.diagnostics?.strategy,
+        memorySecond.diagnostics?.strategy,
+      ],
+    },
+  };
 };

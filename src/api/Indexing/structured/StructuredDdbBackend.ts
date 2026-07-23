@@ -37,6 +37,7 @@ import {
   type StructuredWriterDependencies,
 } from "./StructuredWriter";
 import {
+  INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
   buildStructuredGenerationStateItem,
   buildStructuredGenerationStateKey,
   buildStructuredMissingPartitionKey,
@@ -305,8 +306,10 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         TableName: this.docFieldsTableName,
         Key: buildStructuredGenerationStateKey(),
       });
-      return (response.Item as StructuredOccupancyGenerationState | undefined)
-        ?.activeGeneration;
+      return (
+        (response.Item as StructuredOccupancyGenerationState | undefined)
+          ?.activeGeneration ?? INITIAL_STRUCTURED_OCCUPANCY_GENERATION
+      );
     },
     query: async (
       generation,
@@ -526,7 +529,14 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
       TableName: this.docFieldsTableName,
       Key: buildStructuredGenerationStateKey(),
     });
-    return response.Item as StructuredOccupancyGenerationState | undefined;
+    return (
+      (response.Item as StructuredOccupancyGenerationState | undefined) ?? {
+        ...buildStructuredGenerationStateKey(),
+        kind: "sg",
+        activeGeneration: INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
+        version: 0,
+      }
+    );
   }
 
   async writeDerivedEntries(
@@ -587,7 +597,7 @@ export class StructuredDdbOccupancyMaintenance {
       config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
   }
 
-  /** Load the current generation pointer, synthesizing the initial state. */
+  /** Load the current generation pointer, synthesizing the normal active generation. */
   async getState(): Promise<StructuredOccupancyGenerationState> {
     const response = await this.config.client.getItem({
       TableName: this.tableName,
@@ -597,6 +607,7 @@ export class StructuredDdbOccupancyMaintenance {
       (response.Item as StructuredOccupancyGenerationState | undefined) ?? {
         ...buildStructuredGenerationStateKey(),
         kind: "sg",
+        activeGeneration: INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
         version: 0,
       }
     );

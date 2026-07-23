@@ -100,10 +100,17 @@
       }
     },
     {
-      "export": "runStructuredOptionalWithoutGenerationScenario",
+      "export": "runStructuredOccupancyNormalCrudScenario",
       "conditions": [],
-      "operation": "===",
-      "expectation": "Structured optional ordering requires an active occupancy generation."
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "activeGeneration": "g1",
+        "created": ["1"],
+        "createdStrategy": "occupancy",
+        "updated": ["1"],
+        "updatedStrategy": "occupancy",
+        "deleted": []
+      }
     },
     {
       "export": "runStructuredOccupancyTerminalCursorScenario",
@@ -139,19 +146,151 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "result": {
-          "generation": "g1",
+          "generation": "g2",
+          "previousGeneration": "g1",
           "alreadyActive": false,
           "processedByType": { "Person": 1, "Car": 2 },
           "processedCount": 3
         },
         "reindexed": ["Person:25", "Car:25"],
-        "active": "g1",
+        "active": "g2",
         "repeated": {
-          "generation": "g1",
-          "previousGeneration": "g1",
+          "generation": "g2",
+          "previousGeneration": "g2",
           "alreadyActive": true,
           "processedByType": {},
           "processedCount": 0
+        }
+      }
+    },
+    {
+      "export": "runStructuredInMemoryDynamoParityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "before": {
+          "rawRecordsEqual": true,
+          "rawMapsEqual": true,
+          "snapshotIsolated": true,
+          "kinds": {
+            "sd": 2,
+            "so": 4,
+            "sr": 2,
+            "st": 8
+          },
+          "missingLifecycle": {
+            "created": [
+              {
+                "pk": "v1#sm#g1#name",
+                "sk": "d#s#b",
+                "kind": "sm",
+                "generation": "g1",
+                "sortField": "name",
+                "docId": "b"
+              }
+            ],
+            "afterUpdate": 0
+          },
+          "documents": [
+            {
+              "kind": "sd",
+              "docId": "a",
+              "fields": {},
+              "version": 2
+            },
+            {
+              "kind": "sd",
+              "docId": "b",
+              "fields": {
+                "age": 25,
+                "name": "Zoe"
+              },
+              "version": 2
+            }
+          ],
+          "equalityTerms": [
+            {
+              "kind": "st",
+              "field": "age",
+              "value": 25,
+              "mode": "eq",
+              "docId": "b"
+            },
+            {
+              "kind": "st",
+              "field": "name",
+              "value": "Zoe",
+              "mode": "eq",
+              "docId": "b"
+            }
+          ],
+          "ranges": [
+            {
+              "kind": "sr",
+              "field": "age",
+              "value": 25,
+              "docId": "b"
+            },
+            {
+              "kind": "sr",
+              "field": "name",
+              "value": "Zoe",
+              "docId": "b"
+            }
+          ],
+          "occupancy": [
+            {
+              "kind": "so",
+              "generation": "g1",
+              "criterionField": "age",
+              "sortField": "name",
+              "sortValue": "Amy"
+            },
+            {
+              "kind": "so",
+              "generation": "g1",
+              "criterionField": "age",
+              "sortField": "name",
+              "sortValue": "Zoe"
+            },
+            {
+              "kind": "so",
+              "generation": "g1",
+              "criterionField": "name",
+              "sortField": "age",
+              "sortValue": 23
+            },
+            {
+              "kind": "so",
+              "generation": "g1",
+              "criterionField": "name",
+              "sortField": "age",
+              "sortValue": 25
+            }
+          ]
+        },
+        "afterRebuild": {
+          "rawRecordsEqual": true,
+          "kinds": {
+            "sd": 3,
+            "sg": 1,
+            "so": 10,
+            "sr": 2,
+            "st": 8
+          },
+          "generationState": {
+            "pk": "v1#sg#occupancy",
+            "sk": "state",
+            "kind": "sg",
+            "activeGeneration": "g2",
+            "version": 2
+          },
+          "firstIdsEqual": true,
+          "firstCursorEqual": true,
+          "secondIdsEqual": true,
+          "secondCursorEqual": true,
+          "ids": ["c", "b"],
+          "strategies": ["occupancy", "occupancy"]
         }
       }
     }

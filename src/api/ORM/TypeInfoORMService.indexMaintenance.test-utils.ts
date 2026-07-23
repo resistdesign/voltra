@@ -530,7 +530,7 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
   const rebuilt = await rebuildStructuredOccupancy({
     controller: structuredBackend.occupancyMaintenance,
     orm,
-    generation: "g1",
+    generation: "g2",
     typeNames: ["Book", "Book"],
     itemsPerPage: 1,
   });
@@ -538,7 +538,7 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
   const repeated = await rebuildStructuredOccupancy({
     controller: structuredBackend.occupancyMaintenance,
     orm,
-    generation: "g1",
+    generation: "g2",
     typeNames: ["Book"],
   });
   let emptyScopeError: string | undefined;

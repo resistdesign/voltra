@@ -24,6 +24,7 @@ export * from "./Cursor";
 export * from "./IndexTable";
 export * from "./fieldQualification";
 export * from "./ddb/AwsSdkV3Adapter";
+export * from "./ddb/InMemoryDynamoQueryClient";
 export * from "./ddb/Types";
 export * from "./ddb/IndexMutationCoordinator";
 export * from "./exact/ExactDdb";

@@ -36,7 +36,7 @@ This document captures current ORM list/search and relationship behaviors that m
   - Sparse range reads return only occupied chunk/token cells. `OR` unions token sets; `AND` intersects them; canonical verification remains authoritative.
   - Planning is limited by actual cells/pages read. Over-budget or unsupported plans restart exact baseline traversal before emitting results.
   - Optional sort values use a missing stream after all present values in either direction. Adding a value moves the document into normal order immediately.
-  - Initial deployments use baseline traversal until a generation is explicitly activated. Normal CRUD does not invalidate cursors; rebuild activation does.
+  - The initial generation is active automatically and normal CRUD maintains it. No occupancy initialization or post-seed rebuild is required. Optional rebuild activation invalidates old occupancy cursors; normal CRUD does not.
 - Structured observability:
   - `indexing.observability.onListRoutingDecision` can capture list routing decisions (`fullText`, `structured`, `fullScanCompare`) and reasons, without affecting runtime behavior.
   - `indexing.observability.onStructuredIndexWrite` can capture structured upsert/remove events and indexed field counts.

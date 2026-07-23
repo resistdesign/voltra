@@ -153,12 +153,12 @@ async function runMaintenanceExamples() {
     itemsPerPage: 100,
   });
 
-  // Example 3: build and activate the first Link & Lock occupancy generation.
-  // Reusing the same generation safely resumes an interrupted rebuild.
+  // Example 3: optionally rebuild Link & Lock occupancy for repair/compaction.
+  // Normal CRUD already maintains g1. Reusing g2 safely resumes this rebuild.
   await rebuildStructuredOccupancy({
     controller: structuredBackend.occupancyMaintenance,
     orm,
-    generation: "g1",
+    generation: "g2",
     typeNames: ["Book"],
     itemsPerPage: 100,
   });

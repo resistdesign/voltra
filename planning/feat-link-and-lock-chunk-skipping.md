@@ -70,6 +70,16 @@ None. The storage, query, cursor, consistency, and lifecycle contracts are resol
 - [x] Remove stale implementation-status prose and update the PR description/test evidence.
 - [x] Run the complete validation matrix and publish the audited tree.
 
+## Normal CRUD occupancy correction (2026-07-23)
+
+- [x] Make the initial occupancy generation active by default in every backend.
+- [x] Prove ordinary create/update/delete maintains occupancy from an empty database without initialization or backfill.
+- [x] Keep rebuild tooling optional for repair, compaction, and index-rule changes only.
+- [x] Remove setup and demo instructions that require an initial occupancy rebuild.
+- [x] Make the in-memory backend persist and query the Dynamo-equivalent structured record model.
+- [x] Add snapshot/probe APIs and structural parity tests for maps, records, results, cursors, and rebuild behavior.
+- [ ] Run focused and complete validation, then publish the correction.
+
 ## Deep-audit validation evidence (2026-07-22)
 
 - Core: 916 passed, 0 failed.
@@ -125,8 +135,8 @@ None. The storage, query, cursor, consistency, and lifecycle contracts are resol
 - Obsolete derived term/range rows are removed immediately after the canonical state changes.
 - Empty occupancy is removed immediately only when a concurrency-safe proof is available; all other stale cells are reclaimed by a generation rebuild, activation, and retirement cycle.
 - An occupancy generation is one version/epoch of the complete occupancy index. It is unrelated to ordinary document revisions or combinatorial permutations.
-- Initial migration builds the first generation from canonical `docFields` while queries continue through the exact baseline sort-first traversal.
-- A later rebuild creates a separate `building` generation. Writers dual-write the active and building generations while an idempotent canonical backfill and reconciliation complete; queries continue using only the active generation.
+- The initial generation is active by default and ordinary CRUD maintains it from the first item write; deployment and seeding require no occupancy initialization or backfill.
+- An optional repair/compaction rebuild creates a separate `building` generation. Writers dual-write the active and building generations while canonical reindexing and reconciliation complete; queries continue using only the active generation.
 - Activation compare-and-swaps the single active-generation pointer. This explicit switch is the only event that invalidates existing occupancy cursors.
 - Old-generation query retention is zero. Requests carrying an old-generation cursor return zero results with no next cursor. Physical reclamation may proceed asynchronously after writers stop targeting that generation.
 - Occupancy cells remain boolean hints rather than contributor counts. Concurrent count maintenance is unnecessary: unprovably empty cells remain safe false positives until a rebuilt generation omits them.
