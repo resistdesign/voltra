@@ -58,6 +58,39 @@
         "oldPositions": null,
         "newPositions": [0]
       }
+    },
+    {
+      "export": "runUnifiedIndexTableOccupancyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["b", "a", "c"],
+        "strategies": ["occupancy", "occupancy"],
+        "occupancyCells": 6,
+        "missingRows": 1
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableGenerationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "building": { "active": null, "building": "g2" },
+        "active": { "active": "g2", "building": null }
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableLiveRebuildScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "beforeInitialActivationStrategy": "baseline",
+        "generationCounts": { "g1": 4, "g2": 4 },
+        "ids": ["historical", "live"],
+        "strategy": "occupancy",
+        "retiredCount": 4,
+        "retiredCellsRemaining": 0
+      }
     }
   ]
 }

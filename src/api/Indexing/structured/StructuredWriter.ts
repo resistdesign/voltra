@@ -16,6 +16,15 @@ import {
   type StructuredStringTokenizerConfig,
   buildStructuredStringContainsTokens,
 } from "./StructuredStringLike";
+import {
+  buildStructuredMissingItems,
+  buildStructuredOccupancyItems,
+  type StructuredMissingItem,
+  type StructuredOccupancyFieldMap,
+  type StructuredOccupancyGenerationState,
+  type StructuredOccupancyItem,
+  type StructuredWriteContext,
+} from "./StructuredOccupancy";
 
 /**
  * Dependencies required to persist structured index entries.
@@ -40,6 +49,7 @@ export type StructuredWriterDependencies = {
     docId: DocId,
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
+    occupancyFields?: StructuredOccupancyFieldMap,
   ): Promise<boolean>;
   /**
    * Store term index entries.
@@ -65,6 +75,23 @@ export type StructuredWriterDependencies = {
    * @returns Promise resolved once deleted.
    */
   deleteRangeEntries(entries: StructuredRangeIndexKey[]): Promise<void>;
+  /** Load active/building occupancy generations. */
+  loadOccupancyGenerationState?(): Promise<
+    StructuredOccupancyGenerationState | undefined
+  >;
+  /** Apply all derived structured mutations through one batched coordinator. */
+  writeDerivedEntries?(mutation: StructuredDerivedMutation): Promise<void>;
+};
+
+/** Complete non-canonical mutation delta produced by one structured write. */
+export type StructuredDerivedMutation = {
+  putTerms: StructuredTermIndexItem[];
+  deleteTerms: StructuredTermIndexKey[];
+  putRanges: StructuredRangeIndexItem[];
+  deleteRanges: StructuredRangeIndexKey[];
+  putOccupancy: StructuredOccupancyItem[];
+  putMissing: StructuredMissingItem[];
+  deleteMissing: StructuredMissingItem[];
 };
 
 type TermEntry = StructuredTermIndexItem;
@@ -210,7 +237,11 @@ export class StructuredDdbWriter {
    * @param fields Structured fields to store.
    * @returns Promise resolved once all writes complete.
    */
-  async write(docId: DocId, fields: StructuredDocFieldsRecord): Promise<void> {
+  async write(
+    docId: DocId,
+    fields: StructuredDocFieldsRecord,
+    context: StructuredWriteContext = {},
+  ): Promise<void> {
     const normalized = normalizeFields(fields);
     const maxRetries = this.options.maxConcurrentWriteRetries ?? 8;
     let attempts = 0;
@@ -221,6 +252,7 @@ export class StructuredDdbWriter {
         ? normalizeFields(previousState.fields)
         : {};
       const expectedVersion = previousState?.version;
+      const occupancyFields = context.occupancyFields ?? {};
 
       const previousTerms = buildTermEntries(
         docId,
@@ -233,20 +265,11 @@ export class StructuredDdbWriter {
 
       const termDiff = diffEntries(previousTerms, nextTerms, termEntryKey);
       const rangeDiff = diffEntries(previousRanges, nextRanges, rangeEntryKey);
-      const noDiff =
-        termDiff.toAdd.length === 0 &&
-        termDiff.toDelete.length === 0 &&
-        rangeDiff.toAdd.length === 0 &&
-        rangeDiff.toDelete.length === 0;
-
-      if (noDiff) {
-        return;
-      }
-
       const swapped = await this.dependencies.putDocFieldsIfVersion(
         docId,
         expectedVersion,
         normalized,
+        occupancyFields,
       );
 
       if (!swapped) {
@@ -254,27 +277,92 @@ export class StructuredDdbWriter {
         continue;
       }
 
-      if (termDiff.toDelete.length > 0) {
-        await this.dependencies.deleteTermEntries(
-          toTermKeys(termDiff.toDelete),
-        );
+      const generationState =
+        await this.dependencies.loadOccupancyGenerationState?.();
+      const generations = Array.from(
+        new Set(
+          [
+            generationState?.activeGeneration,
+            generationState?.buildingGeneration,
+          ].filter((value): value is string => !!value),
+        ),
+      );
+      const putOccupancy = generations.flatMap((generation) =>
+        buildStructuredOccupancyItems(generation, normalized, occupancyFields),
+      );
+      const previousMissing = previousState
+        ? generations.flatMap((generation) =>
+            buildStructuredMissingItems(
+              generation,
+              docId,
+              previousNormalized,
+              previousState.occupancyFields ?? occupancyFields,
+            ),
+          )
+        : [];
+      const nextMissing = context.deleted
+        ? []
+        : generations.flatMap((generation) =>
+            buildStructuredMissingItems(
+              generation,
+              docId,
+              normalized,
+              occupancyFields,
+            ),
+          );
+      const missingDiff = diffEntries(
+        previousMissing,
+        nextMissing,
+        (entry) => `${entry.pk}\u0000${entry.sk}`,
+      );
+      const mutation: StructuredDerivedMutation = {
+        // Re-put the complete next state so an idempotent caller retry repairs
+        // additions after a prior partial derived-write failure.
+        putTerms: nextTerms,
+        deleteTerms: toTermKeys(termDiff.toDelete),
+        putRanges: nextRanges,
+        deleteRanges: toRangeKeys(rangeDiff.toDelete),
+        putOccupancy,
+        putMissing: nextMissing,
+        deleteMissing: missingDiff.toDelete,
+      };
+
+      if (this.dependencies.writeDerivedEntries) {
+        await this.dependencies.writeDerivedEntries(mutation);
+      } else {
+        if (termDiff.toDelete.length > 0) {
+          await this.dependencies.deleteTermEntries(
+            toTermKeys(termDiff.toDelete),
+          );
+        }
+
+        if (rangeDiff.toDelete.length > 0) {
+          await this.dependencies.deleteRangeEntries(
+            toRangeKeys(rangeDiff.toDelete),
+          );
+        }
+
+        if (nextTerms.length > 0) {
+          await this.dependencies.putTermEntries(nextTerms);
+        }
+
+        if (nextRanges.length > 0) {
+          await this.dependencies.putRangeEntries(nextRanges);
+        }
       }
 
-      if (rangeDiff.toDelete.length > 0) {
-        await this.dependencies.deleteRangeEntries(
-          toRangeKeys(rangeDiff.toDelete),
-        );
+      const confirmed = await this.dependencies.loadDocFieldsState(docId);
+      const writtenVersion = (expectedVersion ?? 0) + 1;
+      if (
+        confirmed?.version === writtenVersion &&
+        JSON.stringify(normalizeFields(confirmed.fields)) ===
+          JSON.stringify(normalized) &&
+        JSON.stringify(confirmed.occupancyFields ?? {}) ===
+          JSON.stringify(occupancyFields)
+      ) {
+        return;
       }
-
-      if (termDiff.toAdd.length > 0) {
-        await this.dependencies.putTermEntries(termDiff.toAdd);
-      }
-
-      if (rangeDiff.toAdd.length > 0) {
-        await this.dependencies.putRangeEntries(rangeDiff.toAdd);
-      }
-
-      return;
+      attempts += 1;
     }
 
     throw new Error("Structured writer concurrent write retries exceeded.");

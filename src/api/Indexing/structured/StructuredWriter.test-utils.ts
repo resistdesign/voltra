@@ -3,6 +3,7 @@ import {
   serializeStructuredValue,
 } from "./StructuredDdb";
 import { StructuredDdbWriter } from "./StructuredWriter";
+import type { StructuredDocFieldsState } from "./StructuredDdb";
 
 const runStructuredWriterConcurrentRetryScenario = async () => {
   const deletedTermKeys: string[] = [];
@@ -10,11 +11,19 @@ const runStructuredWriterConcurrentRetryScenario = async () => {
   const deletedRangeKeys: string[] = [];
   const addedRangeKeys: string[] = [];
   let loadCalls = 0;
+  let written = false;
 
   const writer = new StructuredDdbWriter(
     {
       loadDocFieldsState: async () => {
         loadCalls += 1;
+        if (written) {
+          return {
+            fields: { "Post.score": 3 },
+            version: 3,
+            occupancyFields: {},
+          };
+        }
         if (loadCalls === 1) {
           return {
             fields: {
@@ -31,8 +40,10 @@ const runStructuredWriterConcurrentRetryScenario = async () => {
           version: 2,
         };
       },
-      putDocFieldsIfVersion: async (_docId, expectedVersion) =>
-        expectedVersion === 2,
+      putDocFieldsIfVersion: async (_docId, expectedVersion) => {
+        written = expectedVersion === 2;
+        return written;
+      },
       putTermEntries: async (entries) => {
         addedTermKeys.push(...entries.map((entry) => entry.pk));
       },
@@ -71,11 +82,21 @@ const runStructuredWriterConcurrentRetryScenario = async () => {
 
 const runStructuredWriterTokenizerConfigScenario = async () => {
   const addedContainsValues: string[] = [];
+  let state:
+    | { fields: { "Post.title": string }; version: number; occupancyFields: {} }
+    | undefined;
 
   const writer = new StructuredDdbWriter(
     {
-      loadDocFieldsState: async () => undefined,
-      putDocFieldsIfVersion: async () => true,
+      loadDocFieldsState: async () => state,
+      putDocFieldsIfVersion: async (_docId, _version, fields) => {
+        state = {
+          fields: fields as { "Post.title": string },
+          version: 1,
+          occupancyFields: {},
+        };
+        return true;
+      },
       putTermEntries: async (entries) => {
         addedContainsValues.push(
           ...entries
@@ -130,5 +151,70 @@ export const runStructuredNumericKeyOrderingScenario = () => {
     negativeZeroNormalized:
       serializeStructuredValue(-0) === serializeStructuredValue(0),
     rejectsInfinity,
+  };
+};
+
+export const runStructuredWriterPartialFailureRepairScenario = async () => {
+  let state: StructuredDocFieldsState | undefined;
+  let derivedCalls = 0;
+  let repairedRangePuts = 0;
+  let repairedOccupancyPuts = 0;
+  const writer = new StructuredDdbWriter({
+    loadDocFieldsState: async () => state,
+    putDocFieldsIfVersion: async (
+      _docId,
+      expectedVersion,
+      fields,
+      occupancyFields,
+    ) => {
+      if ((state?.version ?? undefined) !== expectedVersion) {
+        return false;
+      }
+      state = {
+        fields,
+        occupancyFields,
+        version: (expectedVersion ?? 0) + 1,
+      };
+      return true;
+    },
+    putTermEntries: async () => {},
+    deleteTermEntries: async () => {},
+    putRangeEntries: async () => {},
+    deleteRangeEntries: async () => {},
+    loadOccupancyGenerationState: async () => ({
+      pk: "generation",
+      sk: "state",
+      kind: "sg",
+      activeGeneration: "g1",
+      version: 1,
+    }),
+    writeDerivedEntries: async (mutation) => {
+      derivedCalls += 1;
+      if (derivedCalls === 1) {
+        throw new Error("simulated partial batch failure");
+      }
+      repairedRangePuts = mutation.putRanges.length;
+      repairedOccupancyPuts = mutation.putOccupancy.length;
+    },
+  });
+  const context = {
+    occupancyFields: {
+      age: { type: "number" as const },
+      name: { type: "string" as const },
+    },
+  };
+  let failed = false;
+  try {
+    await writer.write("repair", { age: 23, name: "Zoe" }, context);
+  } catch (_error) {
+    failed = true;
+  }
+  await writer.write("repair", { age: 23, name: "Zoe" }, context);
+  return {
+    failed,
+    derivedCalls,
+    repairedRangePuts,
+    repairedOccupancyPuts,
+    finalVersion: state?.version,
   };
 };

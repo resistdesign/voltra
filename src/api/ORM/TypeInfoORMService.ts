@@ -96,7 +96,12 @@ import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
 import type { Where, WhereValue } from "../Indexing/structured/Types";
+import { STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY } from "../Indexing/structured/Types";
 import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";
+import type {
+  StructuredOccupancyFieldMap,
+  StructuredWriteContext,
+} from "../Indexing/structured/StructuredOccupancy";
 import {
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
@@ -238,6 +243,8 @@ export type TypeInfoORMIndexingConfig = {
      * from structured indexing and structured query routing.
      */
     indexedFieldsByType?: Record<string, string[]>;
+    /** Eligible scalar range fields and chunk policies derived from TypeInfo. */
+    occupancyFieldsByType?: Record<string, StructuredOccupancyFieldMap>;
     /**
      * Optional tokenizer overrides for structured string contains/LIKE behavior.
      */
@@ -1106,7 +1113,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   protected resolveStructuredOrderBy = (
     typeName: string,
     sortFields: ListItemsConfig["sortFields"],
-  ): { field: string; reverse?: boolean } | undefined => {
+  ): { field: string; reverse?: boolean; optional?: boolean } | undefined => {
     if (!sortFields?.length) {
       return undefined;
     }
@@ -1122,8 +1129,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (
       !typeInfoField ||
       typeInfoField.array ||
-      typeInfoField.optional ||
       typeInfoField.typeReference ||
+      (typeInfoField.type !== "string" && typeInfoField.type !== "number") ||
       !this.resolveStructuredIndexedFields(typeName).has(field)
     ) {
       throw {
@@ -1139,6 +1146,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return {
       field: qualifyIndexField(typeName, mappedField),
       reverse,
+      optional: typeInfoField.optional,
     };
   };
 
@@ -1475,6 +1483,24 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     return fields;
+  };
+
+  /** Build qualified Link & Lock field metadata, including optional fields. */
+  protected buildStructuredWriteContext = (
+    typeName: string,
+  ): StructuredWriteContext => {
+    const configured =
+      this.config.indexing?.structured?.occupancyFieldsByType?.[typeName];
+    const fieldMap =
+      this.config.indexing?.structured?.fieldMapByType?.[typeName];
+    const occupancyFields: StructuredOccupancyFieldMap = {};
+
+    for (const [fieldName, config] of Object.entries(configured ?? {})) {
+      const mappedField = fieldMap?.[fieldName] ?? fieldName;
+      occupancyFields[qualifyIndexField(typeName, mappedField)] = config;
+    }
+
+    return { occupancyFields };
   };
 
   /**
@@ -1872,7 +1898,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       Object.keys(fields).length,
     );
 
-    await structured.writer.write(docId, fields);
+    await structured.writer.write(
+      docId,
+      fields,
+      this.buildStructuredWriteContext(typeName),
+    );
   }
 
   /**
@@ -1910,7 +1940,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     );
     this.emitStructuredIndexWrite(typeName, String(docId), "remove", 0);
 
-    await structured.writer.write(docId, {});
+    await structured.writer.write(
+      docId,
+      {},
+      { ...this.buildStructuredWriteContext(typeName), deleted: true },
+    );
   }
 
   /**
@@ -2985,6 +3019,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                 limit: itemsPerPage,
                 cursor,
                 orderBy: structuredOrderBy,
+                occupancyFields:
+                  this.buildStructuredWriteContext(typeName).occupancyFields,
               },
             );
 
@@ -3056,6 +3092,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                 limit: (itemsPerPage ?? 10) - items.length,
                 cursor: nextCursor,
                 orderBy: structuredOrderBy,
+                occupancyFields:
+                  this.buildStructuredWriteContext(typeName).occupancyFields,
               },
             );
             docIds = nextPage.candidateIds;
@@ -3088,7 +3126,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             error?.message !==
               TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA &&
             error?.message !==
-              TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION
+              TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION &&
+            error?.message !== STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY
           ) {
             throw error;
           }

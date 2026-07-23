@@ -36,6 +36,18 @@ import {
   type StructuredWriterOptions,
   type StructuredWriterDependencies,
 } from "./StructuredWriter";
+import {
+  buildStructuredGenerationStateItem,
+  buildStructuredGenerationStateKey,
+  buildStructuredMissingPartitionKey,
+  buildStructuredMissingItems,
+  buildStructuredOccupancyItems,
+  buildStructuredOccupancyPartitionKey,
+  type StructuredOccupancyBackfillDocument,
+  type StructuredOccupancyGenerationState,
+  type StructuredOccupancyItem,
+} from "./StructuredOccupancy";
+import type { StructuredDerivedMutation } from "./StructuredWriter";
 
 type DynamoKey = Record<string, unknown>;
 
@@ -288,6 +300,72 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     },
   };
 
+  /** Sparse criterion-chunk/sort-token occupancy queries. */
+  occupancy: NonNullable<StructuredSearchDependencies["occupancy"]> = {
+    getActiveGeneration: async (): Promise<string | undefined> => {
+      const response = await this.client.getItem({
+        TableName: this.docFieldsTableName,
+        Key: buildStructuredGenerationStateKey(),
+      });
+      return (response.Item as StructuredOccupancyGenerationState | undefined)
+        ?.activeGeneration;
+    },
+    query: async (
+      generation,
+      criterionField,
+      sortField,
+      lowerChunk,
+      upperChunk,
+      options = {},
+    ) => {
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#pk = :pk AND #sk BETWEEN :lower AND :upper",
+        ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
+        ExpressionAttributeValues: {
+          ":pk": buildStructuredOccupancyPartitionKey(
+            generation,
+            criterionField,
+            sortField,
+          ),
+          ":lower": assertIndexSortKey(lowerChunk),
+          ":upper": assertIndexSortKey(upperChunk),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
+      const items = (response.Items ?? []) as StructuredOccupancyItem[];
+      return {
+        cells: items.map(({ sortToken, sortValue }) => ({
+          sortToken,
+          sortValue,
+        })),
+        cursor: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
+  };
+
+  /** Documents whose eligible sort field is currently missing. */
+  missing: NonNullable<StructuredSearchDependencies["missing"]> = {
+    all: async (generation, sortField, options = {}) => {
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#pk = :pk",
+        ExpressionAttributeNames: { "#pk": "pk" },
+        ExpressionAttributeValues: {
+          ":pk": buildStructuredMissingPartitionKey(generation, sortField),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
+      const items = (response.Items ?? []) as Array<{ docId: DocId }>;
+      return {
+        candidateIds: items.map((item) => item.docId),
+        lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
+  };
+
   /** Canonical structured fields used for exact candidate verification. */
   documents = {
     get: async (
@@ -331,6 +409,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const item = response.Item as {
       fields?: StructuredDocFieldsRecord;
       version?: number;
+      occupancyFields?: StructuredDocFieldsState["occupancyFields"];
     };
     if (!item.fields) {
       return undefined;
@@ -342,6 +421,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         typeof item.version === "number" && Number.isFinite(item.version)
           ? item.version
           : 0,
+      occupancyFields: item.occupancyFields,
     };
   }
 
@@ -349,11 +429,12 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     docId: DocId,
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
+    occupancyFields?: StructuredDocFieldsState["occupancyFields"],
   ): Promise<boolean> {
     if (typeof expectedVersion === "undefined") {
       const createResult = await this.client.putItem({
         TableName: this.docFieldsTableName,
-        Item: buildStructuredDocFieldsItem(docId, fields, 1),
+        Item: buildStructuredDocFieldsItem(docId, fields, 1, occupancyFields),
         ConditionExpression: "attribute_not_exists(#pk)",
         ExpressionAttributeNames: {
           "#pk": structuredDocFieldsSchema.partitionKey,
@@ -366,7 +447,12 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const nextVersion = expectedVersion + 1;
     const updateResult = await this.client.putItem({
       TableName: this.docFieldsTableName,
-      Item: buildStructuredDocFieldsItem(docId, fields, nextVersion),
+      Item: buildStructuredDocFieldsItem(
+        docId,
+        fields,
+        nextVersion,
+        occupancyFields,
+      ),
       ConditionExpression:
         "(#version = :expectedVersion) OR (attribute_not_exists(#version) AND :expectedVersion = :zero)",
       ExpressionAttributeNames: {
@@ -431,6 +517,50 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     );
   }
 
+  async loadOccupancyGenerationState(): Promise<
+    StructuredOccupancyGenerationState | undefined
+  > {
+    const response = await this.client.getItem({
+      TableName: this.docFieldsTableName,
+      Key: buildStructuredGenerationStateKey(),
+    });
+    return response.Item as StructuredOccupancyGenerationState | undefined;
+  }
+
+  async writeDerivedEntries(
+    mutation: StructuredDerivedMutation,
+  ): Promise<void> {
+    const requests: Array<{
+      tableName: string;
+      request: WriteRequest;
+    }> = [];
+    const put = (items: Array<Record<string, unknown>>) => {
+      for (const item of items) {
+        requests.push({
+          tableName: this.docFieldsTableName,
+          request: { PutRequest: { Item: item } },
+        });
+      }
+    };
+    const remove = (items: Array<{ pk: string; sk: string }>) => {
+      for (const item of items) {
+        requests.push({
+          tableName: this.docFieldsTableName,
+          request: { DeleteRequest: { Key: { pk: item.pk, sk: item.sk } } },
+        });
+      }
+    };
+
+    remove(mutation.deleteTerms);
+    remove(mutation.deleteRanges);
+    remove(mutation.deleteMissing);
+    put(mutation.putTerms);
+    put(mutation.putRanges);
+    put(mutation.putOccupancy);
+    put(mutation.putMissing);
+    await this.batchWrite(requests);
+  }
+
   private async batchWrite(
     requests: Array<{ tableName: string; request: Record<string, unknown> }>,
   ): Promise<void> {
@@ -450,6 +580,192 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   }
 }
 
+/** Explicit lifecycle operations for occupancy rebuilds and activation. */
+export class StructuredDdbOccupancyMaintenance {
+  private readonly tableName: string;
+
+  constructor(private readonly config: StructuredDdbConfig) {
+    assertIndexTableConfig(config.table);
+    this.tableName = config.table.tableName;
+  }
+
+  /** Load the current generation pointer, synthesizing the initial state. */
+  async getState(): Promise<StructuredOccupancyGenerationState> {
+    const response = await this.config.client.getItem({
+      TableName: this.tableName,
+      Key: buildStructuredGenerationStateKey(),
+    });
+    return (
+      (response.Item as StructuredOccupancyGenerationState | undefined) ?? {
+        ...buildStructuredGenerationStateKey(),
+        kind: "sg",
+        version: 0,
+      }
+    );
+  }
+
+  private async compareAndSwap(
+    expectedVersion: number | undefined,
+    next: StructuredOccupancyGenerationState,
+  ): Promise<void> {
+    const result = await this.config.client.putItem({
+      TableName: this.tableName,
+      Item: next,
+      ...(expectedVersion === undefined
+        ? {
+            ConditionExpression: "attribute_not_exists(#pk)",
+            ExpressionAttributeNames: { "#pk": "pk" },
+          }
+        : {
+            ConditionExpression: "#version = :expectedVersion",
+            ExpressionAttributeNames: { "#version": "version" },
+            ExpressionAttributeValues: { ":expectedVersion": expectedVersion },
+          }),
+    });
+    if (result.conditionFailed) {
+      throw new Error("Structured occupancy generation changed concurrently.");
+    }
+  }
+
+  /** Open a separate building generation; ordinary writers then dual-write. */
+  async beginRebuild(generation: string): Promise<void> {
+    const state = await this.getState();
+    if (state.buildingGeneration) {
+      throw new Error("A structured occupancy rebuild is already active.");
+    }
+    if (generation === state.activeGeneration) {
+      throw new Error(
+        "A rebuild generation must differ from the active generation.",
+      );
+    }
+    await this.compareAndSwap(
+      state.version === 0 ? undefined : state.version,
+      buildStructuredGenerationStateItem(
+        state.activeGeneration,
+        generation,
+        state.version + 1,
+      ),
+    );
+  }
+
+  /** Idempotently add one canonical document to the building generation. */
+  async backfillDocument(
+    document: StructuredOccupancyBackfillDocument,
+  ): Promise<void> {
+    const state = await this.getState();
+    if (!state.buildingGeneration) {
+      throw new Error("No structured occupancy generation is building.");
+    }
+    const items = buildStructuredOccupancyItems(
+      state.buildingGeneration,
+      document.fields,
+      document.occupancyFields,
+    );
+    const missing = buildStructuredMissingItems(
+      state.buildingGeneration,
+      document.docId,
+      document.fields,
+      document.occupancyFields,
+    );
+    const requests = [...items, ...missing].map((item) => ({
+      PutRequest: { Item: item },
+    }));
+    for (const batch of chunk(requests, 25)) {
+      await batchWriteWithRetry(this.config.client, {
+        [this.tableName]: batch,
+      });
+    }
+  }
+
+  /** Backfill canonical snapshots idempotently into the building generation. */
+  async backfill(
+    documents:
+      | Iterable<StructuredOccupancyBackfillDocument>
+      | AsyncIterable<StructuredOccupancyBackfillDocument>,
+  ): Promise<number> {
+    let processedCount = 0;
+    for await (const document of documents) {
+      await this.backfillDocument(document);
+      processedCount += 1;
+    }
+    return processedCount;
+  }
+
+  /** Activate the completed generation; old cursors immediately become stale. */
+  async activateRebuild(): Promise<void> {
+    const state = await this.getState();
+    if (!state.buildingGeneration) {
+      throw new Error("No structured occupancy generation is building.");
+    }
+    await this.compareAndSwap(
+      state.version,
+      buildStructuredGenerationStateItem(
+        state.buildingGeneration,
+        undefined,
+        state.version + 1,
+      ),
+    );
+  }
+
+  /** Physically reclaim an inactive generation after its zero-retention switch. */
+  async retireGeneration(
+    generation: string,
+    fields: string[],
+  ): Promise<number> {
+    const state = await this.getState();
+    if (
+      generation === state.activeGeneration ||
+      generation === state.buildingGeneration
+    ) {
+      throw new Error(
+        "Cannot retire an active structured occupancy generation.",
+      );
+    }
+    const uniqueFields = Array.from(new Set(fields));
+    const partitions = [
+      ...uniqueFields.map((sortField) =>
+        buildStructuredMissingPartitionKey(generation, sortField),
+      ),
+      ...uniqueFields.flatMap((criterionField) =>
+        uniqueFields
+          .filter((sortField) => sortField !== criterionField)
+          .map((sortField) =>
+            buildStructuredOccupancyPartitionKey(
+              generation,
+              criterionField,
+              sortField,
+            ),
+          ),
+      ),
+    ];
+    let deletedCount = 0;
+    for (const partition of partitions) {
+      let cursor: DynamoKey | undefined;
+      do {
+        const response = await this.config.client.query({
+          TableName: this.tableName,
+          KeyConditionExpression: "#pk = :pk",
+          ExpressionAttributeNames: { "#pk": "pk" },
+          ExpressionAttributeValues: { ":pk": partition },
+          ExclusiveStartKey: cursor,
+          Limit: 250,
+        });
+        const requests = (response.Items ?? []).map((item) => ({
+          DeleteRequest: { Key: { pk: item.pk, sk: item.sk } },
+        }));
+        for (const batch of chunk(requests, 25)) {
+          await batchWriteWithRetry(this.config.client, {
+            [this.tableName]: batch,
+          });
+        }
+        deletedCount += requests.length;
+        cursor = response.LastEvaluatedKey;
+      } while (cursor);
+    }
+    return deletedCount;
+  }
+}
+
 /**
  * Convenience wrapper that exposes both the reader and writer.
  */
@@ -462,6 +778,8 @@ export class StructuredDdbBackend {
    * Writer implementation for structured indexing.
    */
   readonly writer: StructuredDdbWriter;
+  /** Explicit occupancy rebuild/activation operations. */
+  readonly occupancyMaintenance: StructuredDdbOccupancyMaintenance;
 
   /**
    * @param config DynamoDB config for the unified index table.
@@ -475,5 +793,6 @@ export class StructuredDdbBackend {
         tokenizer: config.writerOptions?.tokenizer ?? config.tokenizer,
       },
     );
+    this.occupancyMaintenance = new StructuredDdbOccupancyMaintenance(config);
   }
 }

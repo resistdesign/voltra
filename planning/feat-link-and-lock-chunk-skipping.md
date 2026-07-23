@@ -32,33 +32,33 @@ None. The storage, query, cursor, consistency, and lifecycle contracts are resol
 - [x] Union occupied sort-token sets within `OR` branches and intersect them across `AND` branches; verify the complete predicate against canonical fields after traversal.
 - [x] Resume ordered skipping with an occupancy-generation-pinned phase/token/block cursor; interpret the token boundary in the query's existing ascending or descending direction.
 - [x] Bound planning by actual occupancy metadata read, not theoretical range width; restart with exact baseline sort-first traversal when the internal budget is exceeded.
-- [ ] Prove steady-state correctness for completed writes and bounded, repairable behavior for interrupted/concurrent optimistic writes.
+- [x] Prove steady-state correctness for completed writes and bounded, repairable behavior for interrupted/concurrent optimistic writes.
 
 ## Phase 3: Implement public contracts and codecs
 
-- [ ] Add versioned unified-table namespaces and key factories for occupancy cells and generations.
-- [ ] Add `tags.indexed.decimal` to the public TypeInfo contract and derived indexing configuration.
-- [ ] Export identities, cursors, diagnostics, and maintenance types; chunking otherwise derives from TypeInfo without separate public configuration.
-- [ ] Implement order-preserving block/chunk codecs with key-size validation.
-- [ ] Add API comments describing costs, guarantees, and configuration tradeoffs.
+- [x] Add versioned unified-table namespaces and key factories for occupancy cells and generations.
+- [x] Add `tags.indexed.decimal` to the public TypeInfo contract and derived indexing configuration.
+- [x] Export identities, cursors, diagnostics, and maintenance types; chunking otherwise derives from TypeInfo without separate public configuration.
+- [x] Implement order-preserving block/chunk codecs with key-size validation.
+- [x] Add API comments describing costs, guarantees, and configuration tradeoffs.
 
 ## Phase 4: Implement backend parity
 
-- [ ] Implement DynamoDB occupancy writes, queries, retries, and generation activation.
-- [ ] Implement equivalent in-memory block/chunk indexes and cursors.
-- [ ] Extend the DynamoDB-shaped shared-map client to cover skipping access patterns.
-- [ ] Integrate block traversal into structured sort-first search.
-- [ ] Add one unified mutation coordinator that batches puts/deletes across index families in requests of at most 25 operations and retries unprocessed items.
+- [x] Implement DynamoDB occupancy writes, queries, retries, and generation activation.
+- [x] Implement equivalent in-memory block/chunk indexes and cursors.
+- [x] Extend the DynamoDB-shaped shared-map client to cover skipping access patterns.
+- [x] Integrate block traversal into structured sort-first search.
+- [x] Add one unified structured-derived mutation coordinator that batches term, range, occupancy, and missing-value puts/deletes in requests of at most 25 operations and retries unprocessed items.
 
 ## Phase 5: Validate and demonstrate
 
-- [ ] Add correctness tests for boundaries, Unicode, negative/decimal numbers, ties, and reverse order.
-- [ ] Add mutation/failure/concurrency tests proving no false negatives.
-- [ ] Add sparse large-data tests that measure examined candidates and skipped blocks.
-- [ ] Add multi-criterion and multi-page cursor regressions.
-- [ ] Define and test migration/backfill, generation activation, and old-generation retirement.
-- [ ] Update the ledger, indexing guide, demo/E2E cases, and IaC-facing configuration.
-- [ ] Run the complete package, test, documentation, IaC, API, and demo validation matrix.
+- [x] Add correctness tests for boundaries, Unicode, negative/decimal numbers, ties, and reverse order.
+- [x] Add mutation/failure/concurrency tests proving no false negatives.
+- [x] Add sparse large-data tests that measure examined candidates and skipped blocks.
+- [x] Add multi-criterion and multi-page cursor regressions.
+- [x] Define and test migration/backfill, generation activation, and old-generation retirement.
+- [x] Update the ledger, indexing guide, demo/E2E cases, and IaC-facing configuration.
+- [x] Run the complete package, test, documentation, IaC, API, and demo validation matrix.
 
 ## Initial invariants
 
