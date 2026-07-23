@@ -100,6 +100,38 @@ For `age BETWEEN 23 AND 34 ORDER BY name`, both edge chunks are consulted, but c
 
 This is being materialized as another namespaced record family in the unified index table. Criterion chunks and exact sort tokens are stable value-derived identities, never positional pages. Obsolete real index rows are removed during successful updates/deletes. An occupancy cell is removed immediately only when Voltra can prove no live entry still contributes to it; otherwise a generation rebuild safely reclaims it later. Stale occupancy can therefore increase reads but cannot itself hide a match.
 
+### Compound criteria and sparse range reads
+
+Occupancy cells are range-queryable by encoded criterion chunk beneath a partition identity containing the occupancy generation, type, criterion field, and sort field. A broad range therefore performs sparse backend range reads and returns only cells that exist; Voltra never synthesizes every possible chunk key. The cost of `age BETWEEN 0 AND 99999999999` depends on the occupancy metadata actually present in that range, not ten billion hypothetical decade chunks.
+
+Each criterion leaf yields its occupied exact sort-token set. Nested criteria compose those sets structurally:
+
+- `OR` unions child token sets;
+- `AND` intersects child token sets;
+- repeated tokens are deduplicated;
+- the resulting tokens are globally ordered before their existing sort-index rows are traversed.
+
+This composition is intentionally coarse: two different documents may cause the same sort token to appear in two child sets. It may therefore admit false-positive blocks, but cannot exclude a token containing a completed-write match. Voltra verifies the full original predicate against canonical `docFields` for every candidate.
+
+Planning is bounded by an internal budget on actual occupancy cells read plus a backend-page guard. The limit is an implementation constant tuned by scale tests, not TypeInfo or query configuration. Voltra emits no results until the token plan is complete. If the budget is crossed, the partial plan is discarded and the query restarts with the exact baseline sort-first traversal. The theoretical width of the criterion range is not itself a fallback trigger.
+
+### Ordered skipping cursor
+
+The block-aware cursor stores only the state needed to resume the ordered stream:
+
+```ts
+{
+  generation,
+  phase: "present" | "missing",
+  sortToken,
+  blockCursor,
+}
+```
+
+`generation` pins the occupancy view used to rebuild the deterministic token plan. `sortToken` is an exclusive directional resume boundary, and `blockCursor` is the backend continuation used only while the same exact token is still being consumed. The cursor never stores the complete token set.
+
+The original unchanged query supplies traversal direction: ascending resumes toward higher tokens and descending toward lower tokens. If optimistic mutation removed the boundary token between pages, Voltra seeks from its encoded boundary and continues; the token need not still exist. Present values are traversed in the requested direction, followed by the deterministic missing-value phase in both directions. Reusing an opaque cursor with different criteria or direction remains invalid.
+
 ## Unified Key Safety
 
 Every physical key is produced by one versioned codec from structural identity segments; callers never concatenate or parse raw type, field, token, relationship, value, or document identities.
@@ -192,6 +224,7 @@ The unified table enables a single higher-level coordinator to combine compatibl
 - Visible-page filling through missing records and DAC rejection.
 - Invalid cursors and backend failures propagate.
 - Global ascending/descending sort pages with criteria on another field.
+- Multi-page skipping across exact-token ties, removed boundary tokens, the present-to-missing transition, and both traversal directions.
 - Numeric ordering across sign, digit length, decimal values, zero/negative-zero, and inclusive boundaries.
 - Cursor size remains bounded by one backend work unit, not result history.
 
