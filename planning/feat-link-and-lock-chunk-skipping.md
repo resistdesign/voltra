@@ -67,8 +67,8 @@ None. The storage, query, cursor, consistency, and lifecycle contracts are resol
 - [x] Complete cross-family derived-write coordination without adding transactions or rollback.
 - [x] Wire TypeInfo-derived occupancy into the real demo and add ORM/E2E coverage for ordered skipping.
 - [x] Make rebuild reconciliation and activation operationally complete, then document the exact migration command/path.
-- [~] Remove stale implementation-status prose and update the PR description/test evidence. Repository prose is repaired; PR metadata updates with publication.
-- [~] Run the complete validation matrix and publish the audited tree. Validation is clean; publication remains.
+- [x] Remove stale implementation-status prose and update the PR description/test evidence.
+- [x] Run the complete validation matrix and publish the audited tree.
 
 ## Deep-audit validation evidence (2026-07-22)
 
