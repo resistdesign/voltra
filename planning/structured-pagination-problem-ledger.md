@@ -262,4 +262,4 @@ The 2026-07-22 audit compared the attached `main` and `gh-pages` snapshots, the 
 - **2 implemented in PR #387**
 - **17 implemented in Link & Lock**, including the completed data-skipping subsystem (#19)
 
-All 19 solutions are implemented. The post-implementation audit checklist and complete validation matrix are clean; only publication and PR metadata reconciliation remain outside the code contract.
+All 19 solutions are implemented. The post-implementation audit checklist and complete validation matrix are clean, and the audited tree and PR metadata are published.
