@@ -23,4 +23,4 @@ Preserve the current structured-index pagination, filtering, and global-sorting 
 
 ## Scope Boundary
 
-The data-skipping/index-block layer is captured as a designed optimization. Its physical table layout remains intentionally separate from this reference implementation because the next design phase will evaluate consolidating the current physical index tables.
+At this historical checkpoint, the data-skipping/index-block layer was captured as a designed optimization and intentionally kept separate while the next phase evaluated a unified physical table. The one-table and Link & Lock chunk-skipping phases were subsequently implemented and deep-audited in `planning/feat-link-and-lock-chunk-skipping.md`.

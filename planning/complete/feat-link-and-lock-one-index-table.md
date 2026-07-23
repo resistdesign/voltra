@@ -46,5 +46,5 @@ Replace Voltra's ten physical indexing tables with one collision-safe, versioned
 ## Scope notes
 
 - The one-table implementation is the production direction, while PR #388 remains the behavioral reference implementation.
-- Data-skipping blocks were documented but not materialized in this completed phase; they are now required work in `planning/feat-link-and-lock-chunk-skipping.md`.
+- Data-skipping blocks were deferred from this historical checkpoint and were subsequently implemented and deep-audited in `planning/feat-link-and-lock-chunk-skipping.md`.
 - URI-component encoding may be used only where it provides collision-safe identity encoding. Sortable value encoders must preserve the comparison contract instead.
