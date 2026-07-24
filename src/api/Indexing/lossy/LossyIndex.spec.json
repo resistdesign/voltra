@@ -47,9 +47,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "token": "token",
-        "indexField": "text",
-        "docId": "doc-1"
+        "pk": "v1#fl#text#token",
+        "sk": "d#s#doc-1"
       }
     }
   ]

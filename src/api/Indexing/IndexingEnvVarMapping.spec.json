@@ -5,36 +5,31 @@
       "export": "runIndexingEnvVarMappingEnvVarsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [
-        "INDEXING_FULLTEXT_DOC_MIRROR_TABLE",
-        "INDEXING_FULLTEXT_DOC_TOKENS_TABLE",
-        "INDEXING_FULLTEXT_DOC_TOKEN_POSITIONS_TABLE",
-        "INDEXING_FULLTEXT_EXACT_POSTINGS_TABLE",
-        "INDEXING_FULLTEXT_LOSSY_POSTINGS_TABLE",
-        "INDEXING_FULLTEXT_TOKEN_STATS_TABLE",
-        "INDEXING_RELATION_EDGES_TABLE",
-        "INDEXING_STRUCTURED_DOC_FIELDS_TABLE",
-        "INDEXING_STRUCTURED_RANGE_INDEX_TABLE",
-        "INDEXING_STRUCTURED_TERM_INDEX_TABLE"
-      ]
+      "expectation": ["INDEXING_TABLE"]
     },
     {
       "export": "runIndexingEnvVarMappingUniqueCountScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": 10
+      "expectation": 1
     },
     {
       "export": "runIndexingEnvVarMappingTotalCountScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": 10
+      "expectation": 1
     },
     {
       "export": "runIndexingEnvVarMappingAllPrefixedScenario",
       "conditions": [],
       "operation": "===",
       "expectation": true
+    },
+    {
+      "export": "runIndexingEnvVarMappingTableNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "VoltraIndex"
     }
   ]
 }

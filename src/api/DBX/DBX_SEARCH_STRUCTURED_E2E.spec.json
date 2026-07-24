@@ -5,97 +5,67 @@
       "export": "runDbxStructuredSearchCreatedPostIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-2",
-        "post-3",
-        "post-4"
-      ]
+      "expectation": ["post-1", "post-2", "post-3", "post-4"]
     },
     {
       "export": "runDbxStructuredSearchPublishedIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-2",
-        "post-3"
-      ]
+      "expectation": ["post-2", "post-3"]
     },
     {
       "export": "runDbxStructuredSearchAlphaTagIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-3"
-      ]
+      "expectation": ["post-1", "post-3"]
     },
     {
       "export": "runDbxStructuredSearchScoreBetweenIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-2",
-        "post-3"
-      ]
+      "expectation": ["post-2", "post-3"]
     },
     {
       "export": "runDbxStructuredSearchStatusInIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-4"
-      ]
+      "expectation": ["post-1", "post-4"]
     },
     {
       "export": "runDbxStructuredSearchPublishedAlphaIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-3"
-      ]
+      "expectation": ["post-3"]
     },
     {
       "export": "runDbxStructuredSearchDraftOrHighScoreIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-4"
-      ]
+      "expectation": ["post-1", "post-4"]
     },
     {
       "export": "runDbxStructuredSearchPublishedPage1IdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-2"
-      ]
+      "expectation": ["post-2"]
     },
     {
       "export": "runDbxStructuredSearchPublishedPage2IdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-3"
-      ]
+      "expectation": ["post-3"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndPublishedNewsIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-2"
-      ]
+      "expectation": ["post-2"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndPublishedAlphaIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-3"
-      ]
+      "expectation": ["post-3"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndContradictionIdsScenario",
@@ -107,61 +77,43 @@
       "export": "runDbxStructuredSearchDenseOrWideIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-2",
-        "post-3",
-        "post-4"
-      ]
+      "expectation": ["post-1", "post-2", "post-3", "post-4"]
     },
     {
       "export": "runDbxStructuredSearchDenseOrDeltaOnlyIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-4"
-      ]
+      "expectation": ["post-4"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndWithInIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-2"
-      ]
+      "expectation": ["post-2"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndWithLikeIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1"
-      ]
+      "expectation": ["post-1"]
     },
     {
       "export": "runDbxStructuredSearchDenseOrAlphaGammaIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-3"
-      ]
+      "expectation": ["post-1", "post-3"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndAlphaDraftIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1"
-      ]
+      "expectation": ["post-1"]
     },
     {
       "export": "runDbxStructuredSearchDenseAndBetaExactIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-2"
-      ]
+      "expectation": ["post-2"]
     },
     {
       "export": "runDbxStructuredSearchUpdateResultScenario",
@@ -173,11 +125,7 @@
       "export": "runDbxStructuredSearchAfterUpdatePublishedIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-2",
-        "post-3"
-      ]
+      "expectation": ["post-1", "post-2", "post-3"]
     },
     {
       "export": "runDbxStructuredSearchDeleteResultScenario",
@@ -189,10 +137,16 @@
       "export": "runDbxStructuredSearchAfterDeletePublishedIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [
-        "post-1",
-        "post-3"
-      ]
+      "expectation": ["post-1", "post-3"]
+    },
+    {
+      "export": "runDbxStructuredOccupancyE2EScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "names": ["Amy", "Bob", "Zoe"],
+        "occupancyReads": 1
+      }
     }
   ]
 }

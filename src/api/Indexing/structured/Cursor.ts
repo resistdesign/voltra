@@ -94,8 +94,7 @@ export function decodeStructuredCursor(
   const payload = decodePayload(cursor);
 
   return {
-    lastDocId:
-      payload.lastDocId === undefined ? undefined : String(payload.lastDocId),
+    lastDocId: payload.lastDocId,
     backendToken: payload.backendToken,
   };
 }

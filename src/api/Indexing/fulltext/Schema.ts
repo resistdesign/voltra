@@ -1,8 +1,22 @@
 /**
  * @packageDocumentation
  *
- * DynamoDB schema constants and key encoders for fulltext tables.
+ * DynamoDB schema constants and key encoders for fulltext records in the
+ * unified Voltra index table.
  */
+import {
+  INDEX_ITEM_KINDS,
+  INDEX_KEY_PARTS,
+  INDEX_TABLE_KIND_ATTRIBUTE,
+  INDEX_TABLE_PARTITION_KEY,
+  INDEX_TABLE_SORT_KEY,
+  buildIndexDocumentSortKey,
+  buildIndexKey,
+  buildIndexScalarKey,
+  assertIndexSortKey,
+  encodeIndexIdentity,
+} from "../IndexTable";
+
 export const fullTextKeyPrefixes = {
   /**
    * Prefix for index field values.
@@ -31,11 +45,14 @@ export const lossyPostingsSchema = {
   /**
    * Partition key attribute for lossy postings.
    */
-  partitionKey: "pk",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
   /**
    * Sort key attribute for lossy postings.
    */
-  sortKey: "sk",
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
+  /** Original document id retained so numeric identities preserve their type. */
+  docIdAttribute: "docId",
 } as const;
 
 /**
@@ -47,11 +64,12 @@ export const exactPostingsSchema = {
   /**
    * Partition key attribute for exact postings.
    */
-  partitionKey: "pk",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
   /**
    * Sort key attribute for exact postings.
    */
-  sortKey: "sk",
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   /**
    * Attribute name holding position arrays.
    */
@@ -66,7 +84,10 @@ export const fullTextDocMirrorSchema = {
   /**
    * Partition key attribute for document mirrors.
    */
-  partitionKey: "pk",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  /** Sort key distinguishes field mirrors within a document partition. */
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   /**
    * Attribute name for stored normalized content.
    */
@@ -81,7 +102,10 @@ export const fullTextTokenStatsSchema = {
   /**
    * Partition key attribute for token stats.
    */
-  partitionKey: "pk",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
+  /** Singleton state member within the token statistics partition. */
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   /**
    * Attribute name for document frequency values.
    */
@@ -97,11 +121,12 @@ export const docTokensSchema = {
   /**
    * Partition key attribute for doc token membership.
    */
-  partitionKey: "pk",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
   /**
    * Sort key attribute for doc token membership.
    */
-  sortKey: "sk",
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
 } as const;
 
 /**
@@ -113,11 +138,12 @@ export const docTokenPositionsSchema = {
   /**
    * Partition key attribute for doc token positions.
    */
-  partitionKey: "pk",
+  partitionKey: INDEX_TABLE_PARTITION_KEY,
   /**
    * Sort key attribute for doc token positions.
    */
-  sortKey: "sk",
+  sortKey: INDEX_TABLE_SORT_KEY,
+  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   /**
    * Attribute name holding position arrays.
    */
@@ -131,8 +157,18 @@ export const docTokenPositionsSchema = {
  * @param token Token value.
  * @returns Encoded token key.
  */
-export function encodeTokenKey(indexField: string, token: string): string {
-  return `${fullTextKeyPrefixes.field}${indexField}#${fullTextKeyPrefixes.token}${token}`;
+export function encodeTokenKey(
+  indexField: string,
+  token: string,
+  kind: "lossy" | "exact" | "stats" = "lossy",
+): string {
+  const itemKind =
+    kind === "exact"
+      ? INDEX_ITEM_KINDS.fullTextExactPosting
+      : kind === "stats"
+        ? INDEX_ITEM_KINDS.fullTextTokenStats
+        : INDEX_ITEM_KINDS.fullTextLossyPosting;
+  return buildIndexKey(itemKind, indexField, token);
 }
 
 /**
@@ -140,8 +176,17 @@ export function encodeTokenKey(indexField: string, token: string): string {
  * @param docId Document id to encode.
  * @returns Encoded document key.
  */
-export function encodeDocKey(docId: string | number): string {
-  return `${fullTextKeyPrefixes.doc}${docId}`;
+export function encodeDocKey(
+  docId: string | number,
+  kind: "tokens" | "positions" = "tokens",
+): string {
+  return buildIndexScalarKey(
+    kind === "positions"
+      ? INDEX_ITEM_KINDS.fullTextTokenPositions
+      : INDEX_ITEM_KINDS.fullTextDocumentToken,
+    "document",
+    docId,
+  );
 }
 
 /**
@@ -155,8 +200,22 @@ export function encodeDocMirrorKey(
   indexField: string | number,
   docId: string | number,
 ): string {
-  return `${encodeDocKey(docId.toString())}#${fullTextKeyPrefixes.field}${indexField}`;
+  return buildIndexScalarKey(
+    INDEX_ITEM_KINDS.fullTextDocumentMirror,
+    "document",
+    docId,
+  );
 }
+
+/** Sort key for one field mirror within a document mirror partition. */
+export function encodeDocMirrorSortKey(indexField: string | number): string {
+  return assertIndexSortKey(
+    `${INDEX_KEY_PARTS.field}#${encodeIndexIdentity(indexField)}`,
+  );
+}
+
+/** Singleton sort key used by token-stat records. */
+export const FULL_TEXT_TOKEN_STATS_SORT_KEY = INDEX_KEY_PARTS.state;
 
 /**
  * Encode sort key for token-to-document tables.
@@ -164,7 +223,7 @@ export function encodeDocMirrorKey(
  * @returns Encoded sort key for token docs.
  */
 export function encodeTokenDocSortKey(docId: string | number): string {
-  return encodeDocKey(docId);
+  return buildIndexDocumentSortKey(docId);
 }
 
 /**
@@ -178,7 +237,9 @@ export function encodeDocTokenSortKey(
   indexField: string,
   token: string,
 ): string {
-  return encodeTokenKey(indexField, token);
+  return assertIndexSortKey(
+    `${INDEX_KEY_PARTS.field}#${encodeIndexIdentity(indexField)}#${INDEX_KEY_PARTS.token}#${encodeIndexIdentity(token)}`,
+  );
 }
 
 /**
@@ -194,5 +255,5 @@ export function encodeDocTokenPositionSortKey(
   token: string,
   position: number,
 ): string {
-  return `${encodeTokenKey(indexField, token)}#${fullTextKeyPrefixes.position}${position}`;
+  return `${encodeDocTokenSortKey(indexField, token)}#${fullTextKeyPrefixes.position}${position}`;
 }

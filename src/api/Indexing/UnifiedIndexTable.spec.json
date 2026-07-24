@@ -1,0 +1,152 @@
+{
+  "file": "./UnifiedIndexTable.test-utils.ts",
+  "tests": [
+    {
+      "export": "runUnifiedIndexTableIntegrationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "touchedTables": ["UnifiedIndex"],
+        "termIds": ["doc#1", "doc/2"],
+        "rangeIds": ["doc#1", "doc/2"],
+        "lossy": ["doc#1"],
+        "exact": [0, 2],
+        "related": ["doc/2"],
+        "kinds": {
+          "fe": 1,
+          "fl": 1,
+          "fp": 1,
+          "fs": 1,
+          "ft": 1,
+          "re": 2,
+          "sd": 2,
+          "sr": 4,
+          "st": 34
+        }
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableNumericCursorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": { "docIds": [0], "lastEvaluatedDocId": 0 },
+        "second": { "docIds": [2] }
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableTypedIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "terms": [123, "123"],
+        "postings": [123, "123"],
+        "numericPositions": [1],
+        "stringPositions": [2],
+        "structuredStateCount": 2
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableCleanupScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "oldTerms": [],
+        "newTerms": ["cleanup"],
+        "oldRange": [],
+        "newRange": ["cleanup"],
+        "oldPositions": null,
+        "newPositions": [0]
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableOccupancyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["b", "a", "c"],
+        "strategies": ["occupancy", "occupancy"],
+        "occupancyCells": 6,
+        "missingRows": 1
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableNormalCrudOccupancyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "activeGeneration": "g1",
+        "created": ["doc"],
+        "createdStrategy": "occupancy",
+        "missingAfterCreate": 1,
+        "updated": ["doc"],
+        "updatedStrategy": "occupancy",
+        "missingAfterUpdate": 0,
+        "occupancyAfterUpdate": 2,
+        "deleted": [],
+        "liveRangeRowsAfterDelete": 0,
+        "conservativeOccupancyAfterDelete": 2
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableGenerationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "building": { "active": "g1", "building": "g2" },
+        "active": { "active": "g2", "building": null }
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableLiveRebuildScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "beforeRebuildStrategy": "occupancy",
+        "generationCounts": { "g1": 4, "g2": 4 },
+        "ids": ["historical", "live"],
+        "strategy": "occupancy",
+        "retiredCount": 4,
+        "retiredCellsRemaining": 0
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableDescendingTieScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["b", "a"]
+    },
+    {
+      "export": "runUnifiedIndexTableStaleBackfillMissingScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["doc"]
+    },
+    {
+      "export": "runUnifiedIndexTableCoordinatedMutationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "batchCount": 1,
+        "batchSize": 20,
+        "kinds": ["fe", "fl", "fm", "fp", "fs", "ft", "re", "so", "sr", "st"],
+        "maxBatchSize": 20,
+        "capBatchSizes": [25, 25, 10],
+        "concurrentBatchSizes": [1, 1]
+      }
+    },
+    {
+      "export": "runUnifiedIndexTableLegacyFullTextUpgradeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "mirrorsBefore": 0,
+        "mirrorsAfter": 1,
+        "oldExact": null,
+        "newExact": [0],
+        "oldLossy": [],
+        "newLossy": ["legacy"]
+      }
+    }
+  ]
+}

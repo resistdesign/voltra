@@ -1,4 +1,6 @@
 import { FullTextMemoryBackend } from "./FullTextMemoryBackend";
+import { searchExact } from "../API";
+import { tokenizeLossyTrigrams } from "../tokenize";
 import {
   encodeDocKey,
   encodeDocMirrorKey,
@@ -115,3 +117,45 @@ export const runFullTextMemoryBackendExactAfterRemoveScenario = async () =>
 
 export const runFullTextMemoryBackendSchemaScenario = async () =>
   (await runFullTextMemoryBackendScenario()).schema;
+
+export const runFullTextMemoryBackendTypedIdentityScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+  await backend.addExactPositions("same", "Record.value", 123, [1]);
+  await backend.addExactPositions("same", "Record.value", "123", [2]);
+
+  return {
+    numericMembership: await backend.hasDocToken(123, "Record.value", "same"),
+    stringMembership: await backend.hasDocToken("123", "Record.value", "same"),
+    numericPositions: await backend.loadExactPositions(
+      "same",
+      "Record.value",
+      123,
+    ),
+    stringPositions: await backend.loadExactPositions(
+      "same",
+      "Record.value",
+      "123",
+    ),
+  };
+};
+
+export const runFullTextMemoryBackendTypedSearchCacheScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+  const lossyTokens = tokenizeLossyTrigrams('"same token"').tokens;
+  for (const docId of [123, "123"] as const) {
+    for (const token of lossyTokens) {
+      await backend.addLossyPosting(token, "Record.value", docId);
+    }
+    await backend.addExactPositions("same", "Record.value", docId, [0]);
+  }
+  await backend.addExactPositions("token", "Record.value", 123, [1]);
+  await backend.addExactPositions("token", "Record.value", "123", [2]);
+
+  const result = await searchExact({
+    query: '"same token"',
+    indexField: "Record.value",
+    backend,
+  });
+
+  return result.docIds;
+};
