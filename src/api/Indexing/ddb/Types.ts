@@ -190,6 +190,10 @@ export type QueryInput = {
    * Maximum number of items to return.
    */
   Limit?: number;
+  /**
+   * True for ascending sort-key traversal; false for descending traversal.
+   */
+  ScanIndexForward?: boolean;
 };
 
 /**

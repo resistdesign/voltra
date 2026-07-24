@@ -12,7 +12,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "lastDocId": "5",
+        "lastDocId": 5,
         "plan": {
           "primaryToken": "token",
           "statsVersion": 2,
@@ -29,8 +29,8 @@
           "lastDocId": "a"
         },
         "verification": {
-          "lastDocId": "2",
-          "pendingCandidates": ["1", "2"],
+          "lastDocId": 2,
+          "pendingCandidates": [1, "2"],
           "pendingOffset": 3
         },
         "plan": {
@@ -79,7 +79,7 @@
       "export": "runIndexingCoreNormalizedDocIdScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "0"
+      "expectation": 0
     },
     {
       "export": "runIndexingCoreNormalizeErrorScenario",

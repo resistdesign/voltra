@@ -5,63 +5,70 @@
  */
 import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
 import type { DocId } from "../Types";
+import {
+  assertIndexSortKey,
+  assertIndexTableConfig,
+  type IndexTableConfig,
+} from "../IndexTable";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
-import { batchWriteWithRetry } from "../ddb/AwsSdkV3Adapter";
+import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
 import {
   buildStructuredTermKey,
+  buildStructuredDocFieldsKey,
+  buildStructuredRangePartitionKey,
   buildStructuredDocFieldsItem,
   serializeStructuredValue,
   structuredDocFieldsSchema,
   structuredRangeIndexSchema,
   structuredTermIndexSchema,
   type StructuredDocFieldsState,
+  type StructuredDocFieldsItem,
   type StructuredDocFieldsRecord,
   type StructuredRangeIndexItem,
   type StructuredRangeIndexKey,
   type StructuredTermIndexItem,
   type StructuredTermIndexKey,
-} from "./StructuredDdb";
+} from "./StructuredIndexRecords";
 import {
   StructuredDdbWriter,
   type StructuredWriterOptions,
   type StructuredWriterDependencies,
 } from "./StructuredWriter";
+import {
+  INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
+  buildStructuredGenerationStateItem,
+  buildStructuredGenerationStateKey,
+  buildStructuredMissingPartitionKey,
+  buildStructuredMissingItems,
+  buildStructuredOccupancyItems,
+  buildStructuredOccupancyPartitionKey,
+  type StructuredOccupancyBackfillDocument,
+  type StructuredOccupancyGenerationState,
+  type StructuredOccupancyItem,
+} from "./StructuredOccupancy";
+import type { StructuredDerivedMutation } from "./StructuredWriter";
 
 type DynamoKey = Record<string, unknown>;
 
 /**
- * Deployment-specific DynamoDB table names required for structured indexing.
+ * @deprecated Use {@link IndexTableConfig}. All structured records share one table.
  */
-export type StructuredTableNames = {
-  termIndex: string;
-  rangeIndex: string;
-  docFields: string;
-};
+export type StructuredTableNames = IndexTableConfig;
 
 /**
  * Configuration for structured DynamoDB backends.
  *
- * Table names are required and should be injected per deployment.
+ * One table name is required and should be injected per deployment.
  */
-type StructuredDdbConfig = {
+export type StructuredDdbConfig = {
   client: DynamoQueryClient;
-  tables: StructuredTableNames;
+  table: IndexTableConfig;
   writerOptions?: StructuredWriterOptions;
   tokenizer?: Partial<StructuredStringTokenizerConfig>;
-};
-
-const assertTableName = (label: string, value: string): void => {
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`Missing table name for ${label}.`);
-  }
-};
-
-const assertStructuredTables = (tables: StructuredTableNames): void => {
-  assertTableName("structured.termIndex", tables.termIndex);
-  assertTableName("structured.rangeIndex", tables.rangeIndex);
-  assertTableName("structured.docFields", tables.docFields);
+  /** Shared coordinator for compatible derived writes. */
+  mutationCoordinator?: IndexMutationCoordinator;
 };
 
 const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
@@ -83,19 +90,11 @@ const decodeCursorKey = (cursor?: string): DynamoKey | undefined => {
 const encodeCursorKey = (key?: DynamoKey): string | undefined =>
   key ? JSON.stringify(key) : undefined;
 
-const chunk = <T>(items: T[], size: number): T[][] => {
-  const batches: T[][] = [];
-  for (let index = 0; index < items.length; index += size) {
-    batches.push(items.slice(index, index + size));
-  }
-  return batches;
-};
-
 const buildRangeLowerKey = (value: WhereValue): string =>
-  `${serializeStructuredValue(value)}#`;
+  assertIndexSortKey(`${serializeStructuredValue(value)}#`);
 
 const buildRangeUpperKey = (value: WhereValue): string =>
-  `${serializeStructuredValue(value)}#\uffff`;
+  assertIndexSortKey(`${serializeStructuredValue(value)}#\uffff`);
 
 /**
  * Read-only structured queries against DynamoDB term/range indexes.
@@ -104,15 +103,19 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
   private readonly client: DynamoQueryClient;
   private readonly termTableName: string;
   private readonly rangeTableName: string;
+  private readonly docFieldsTableName: string;
+  readonly tokenizer?: Partial<StructuredStringTokenizerConfig>;
 
   /**
-   * @param config DynamoDB config for structured tables.
+   * @param config DynamoDB config for the unified index table.
    */
   constructor(config: StructuredDdbConfig) {
-    assertStructuredTables(config.tables);
+    assertIndexTableConfig(config.table);
     this.client = config.client;
-    this.termTableName = config.tables.termIndex;
-    this.rangeTableName = config.tables.rangeIndex;
+    this.termTableName = config.table.tableName;
+    this.rangeTableName = config.table.tableName;
+    this.docFieldsTableName = config.table.tableName;
+    this.tokenizer = config.tokenizer;
   }
 
   /**
@@ -144,6 +147,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredTermIndexItem[];
@@ -182,12 +186,13 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           "#rangeKey": structuredRangeIndexSchema.sortKey,
         },
         ExpressionAttributeValues: {
-          ":field": field,
+          ":field": buildStructuredRangePartitionKey(field),
           ":lower": buildRangeLowerKey(lower),
           ":upper": buildRangeUpperKey(upper),
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredRangeIndexItem[];
@@ -217,11 +222,12 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           "#rangeKey": structuredRangeIndexSchema.sortKey,
         },
         ExpressionAttributeValues: {
-          ":field": field,
+          ":field": buildStructuredRangePartitionKey(field),
           ":lower": buildRangeLowerKey(lower),
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredRangeIndexItem[];
@@ -251,11 +257,12 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           "#rangeKey": structuredRangeIndexSchema.sortKey,
         },
         ExpressionAttributeValues: {
-          ":field": field,
+          ":field": buildStructuredRangePartitionKey(field),
           ":upper": buildRangeUpperKey(upper),
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
+        ScanIndexForward: !options.reverse,
       });
 
       const items = (response.Items ?? []) as StructuredRangeIndexItem[];
@@ -266,6 +273,112 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
       };
     },
+    /** Traverse a scalar field in native range-key order. */
+    all: async (
+      field: string,
+      options: StructuredQueryOptions = {},
+    ): Promise<{ candidateIds: DocId[]; lastEvaluatedKey?: string }> => {
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#field = :field",
+        ExpressionAttributeNames: {
+          "#field": structuredRangeIndexSchema.partitionKey,
+        },
+        ExpressionAttributeValues: {
+          ":field": buildStructuredRangePartitionKey(field),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+        ScanIndexForward: !options.reverse,
+      });
+      const items = (response.Items ?? []) as StructuredRangeIndexItem[];
+      return {
+        candidateIds: items.map((item) => item.docId),
+        lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
+  };
+
+  /** Sparse criterion-chunk/sort-token occupancy queries. */
+  occupancy: NonNullable<StructuredSearchDependencies["occupancy"]> = {
+    getActiveGeneration: async (): Promise<string | undefined> => {
+      const response = await this.client.getItem({
+        TableName: this.docFieldsTableName,
+        Key: buildStructuredGenerationStateKey(),
+      });
+      return (
+        (response.Item as StructuredOccupancyGenerationState | undefined)
+          ?.activeGeneration ?? INITIAL_STRUCTURED_OCCUPANCY_GENERATION
+      );
+    },
+    query: async (
+      generation,
+      criterionField,
+      sortField,
+      lowerChunk,
+      upperChunk,
+      options = {},
+    ) => {
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#pk = :pk AND #sk BETWEEN :lower AND :upper",
+        ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
+        ExpressionAttributeValues: {
+          ":pk": buildStructuredOccupancyPartitionKey(
+            generation,
+            criterionField,
+            sortField,
+          ),
+          ":lower": assertIndexSortKey(lowerChunk),
+          ":upper": assertIndexSortKey(upperChunk),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+        ScanIndexForward: !options.reverse,
+      });
+      const items = (response.Items ?? []) as StructuredOccupancyItem[];
+      return {
+        cells: items.map(({ sortToken, sortValue }) => ({
+          sortToken,
+          sortValue,
+        })),
+        cursor: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
+  };
+
+  /** Documents whose eligible sort field is currently missing. */
+  missing: NonNullable<StructuredSearchDependencies["missing"]> = {
+    all: async (generation, sortField, options = {}) => {
+      const response = await this.client.query({
+        TableName: this.rangeTableName,
+        KeyConditionExpression: "#pk = :pk",
+        ExpressionAttributeNames: { "#pk": "pk" },
+        ExpressionAttributeValues: {
+          ":pk": buildStructuredMissingPartitionKey(generation, sortField),
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: options.limit,
+      });
+      const items = (response.Items ?? []) as Array<{ docId: DocId }>;
+      return {
+        candidateIds: items.map((item) => item.docId),
+        lastEvaluatedKey: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
+  };
+
+  /** Canonical structured fields used for exact candidate verification. */
+  documents = {
+    get: async (
+      docId: DocId,
+    ): Promise<StructuredDocFieldsRecord | undefined> => {
+      const response = await this.client.getItem({
+        TableName: this.docFieldsTableName,
+        Key: buildStructuredDocFieldsKey(docId),
+      });
+      return (response.Item as StructuredDocFieldsItem | undefined)?.fields;
+    },
   };
 }
 
@@ -274,13 +387,16 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   private readonly termTableName: string;
   private readonly rangeTableName: string;
   private readonly docFieldsTableName: string;
+  private readonly mutationCoordinator: IndexMutationCoordinator;
 
   constructor(config: StructuredDdbConfig) {
-    assertStructuredTables(config.tables);
+    assertIndexTableConfig(config.table);
     this.client = config.client;
-    this.termTableName = config.tables.termIndex;
-    this.rangeTableName = config.tables.rangeIndex;
-    this.docFieldsTableName = config.tables.docFields;
+    this.termTableName = config.table.tableName;
+    this.rangeTableName = config.table.tableName;
+    this.docFieldsTableName = config.table.tableName;
+    this.mutationCoordinator =
+      config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
   }
 
   async loadDocFieldsState(
@@ -288,7 +404,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
   ): Promise<StructuredDocFieldsState | undefined> {
     const response = await this.client.getItem({
       TableName: this.docFieldsTableName,
-      Key: { [structuredDocFieldsSchema.partitionKey]: docId },
+      Key: buildStructuredDocFieldsKey(docId),
     });
 
     if (!response.Item) {
@@ -298,6 +414,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const item = response.Item as {
       fields?: StructuredDocFieldsRecord;
       version?: number;
+      occupancyFields?: StructuredDocFieldsState["occupancyFields"];
     };
     if (!item.fields) {
       return undefined;
@@ -309,6 +426,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         typeof item.version === "number" && Number.isFinite(item.version)
           ? item.version
           : 0,
+      occupancyFields: item.occupancyFields,
     };
   }
 
@@ -316,14 +434,15 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     docId: DocId,
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
+    occupancyFields?: StructuredDocFieldsState["occupancyFields"],
   ): Promise<boolean> {
     if (typeof expectedVersion === "undefined") {
       const createResult = await this.client.putItem({
         TableName: this.docFieldsTableName,
-        Item: buildStructuredDocFieldsItem(docId, fields, 1),
-        ConditionExpression: "attribute_not_exists(#docId)",
+        Item: buildStructuredDocFieldsItem(docId, fields, 1, occupancyFields),
+        ConditionExpression: "attribute_not_exists(#pk)",
         ExpressionAttributeNames: {
-          "#docId": structuredDocFieldsSchema.partitionKey,
+          "#pk": structuredDocFieldsSchema.partitionKey,
         },
       });
 
@@ -333,7 +452,12 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const nextVersion = expectedVersion + 1;
     const updateResult = await this.client.putItem({
       TableName: this.docFieldsTableName,
-      Item: buildStructuredDocFieldsItem(docId, fields, nextVersion),
+      Item: buildStructuredDocFieldsItem(
+        docId,
+        fields,
+        nextVersion,
+        occupancyFields,
+      ),
       ConditionExpression:
         "(#version = :expectedVersion) OR (attribute_not_exists(#version) AND :expectedVersion = :zero)",
       ExpressionAttributeNames: {
@@ -364,8 +488,8 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         request: {
           DeleteRequest: {
             Key: {
-              [structuredTermIndexSchema.partitionKey]: entry.termKey,
-              [structuredTermIndexSchema.sortKey]: entry.docId,
+              [structuredTermIndexSchema.partitionKey]: entry.pk,
+              [structuredTermIndexSchema.sortKey]: entry.sk,
             },
           },
         },
@@ -389,8 +513,8 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         request: {
           DeleteRequest: {
             Key: {
-              [structuredRangeIndexSchema.partitionKey]: entry.field,
-              [structuredRangeIndexSchema.sortKey]: entry.rangeKey,
+              [structuredRangeIndexSchema.partitionKey]: entry.pk,
+              [structuredRangeIndexSchema.sortKey]: entry.sk,
             },
           },
         },
@@ -398,22 +522,252 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     );
   }
 
+  async loadOccupancyGenerationState(): Promise<
+    StructuredOccupancyGenerationState | undefined
+  > {
+    const response = await this.client.getItem({
+      TableName: this.docFieldsTableName,
+      Key: buildStructuredGenerationStateKey(),
+    });
+    return (
+      (response.Item as StructuredOccupancyGenerationState | undefined) ?? {
+        ...buildStructuredGenerationStateKey(),
+        kind: "sg",
+        activeGeneration: INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
+        version: 0,
+      }
+    );
+  }
+
+  async writeDerivedEntries(
+    mutation: StructuredDerivedMutation,
+  ): Promise<void> {
+    const requests: Array<{
+      tableName: string;
+      request: WriteRequest;
+    }> = [];
+    const put = (items: Array<Record<string, unknown>>) => {
+      for (const item of items) {
+        requests.push({
+          tableName: this.docFieldsTableName,
+          request: { PutRequest: { Item: item } },
+        });
+      }
+    };
+    const remove = (items: Array<{ pk: string; sk: string }>) => {
+      for (const item of items) {
+        requests.push({
+          tableName: this.docFieldsTableName,
+          request: { DeleteRequest: { Key: { pk: item.pk, sk: item.sk } } },
+        });
+      }
+    };
+
+    remove(mutation.deleteTerms);
+    remove(mutation.deleteRanges);
+    remove(mutation.deleteMissing);
+    put(mutation.putTerms);
+    put(mutation.putRanges);
+    put(mutation.putOccupancy);
+    put(mutation.putMissing);
+    await this.batchWrite(requests);
+  }
+
   private async batchWrite(
     requests: Array<{ tableName: string; request: Record<string, unknown> }>,
   ): Promise<void> {
-    const batches = chunk(requests, 25);
+    await this.mutationCoordinator.write(
+      requests.map(({ tableName, request }) => ({
+        tableName,
+        request: request as WriteRequest,
+      })),
+    );
+  }
+}
 
-    for (const batch of batches) {
-      const requestItems = batch.reduce<Record<string, WriteRequest[]>>(
-        (acc, { tableName, request }) => {
-          acc[tableName] = acc[tableName] ?? [];
-          acc[tableName].push(request as WriteRequest);
-          return acc;
-        },
-        {},
-      );
-      await batchWriteWithRetry(this.client, requestItems);
+/** Explicit lifecycle operations for occupancy rebuilds and activation. */
+export class StructuredDdbOccupancyMaintenance {
+  private readonly tableName: string;
+  private readonly mutationCoordinator: IndexMutationCoordinator;
+
+  constructor(private readonly config: StructuredDdbConfig) {
+    assertIndexTableConfig(config.table);
+    this.tableName = config.table.tableName;
+    this.mutationCoordinator =
+      config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
+  }
+
+  /** Load the current generation pointer, synthesizing the normal active generation. */
+  async getState(): Promise<StructuredOccupancyGenerationState> {
+    const response = await this.config.client.getItem({
+      TableName: this.tableName,
+      Key: buildStructuredGenerationStateKey(),
+    });
+    return (
+      (response.Item as StructuredOccupancyGenerationState | undefined) ?? {
+        ...buildStructuredGenerationStateKey(),
+        kind: "sg",
+        activeGeneration: INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
+        version: 0,
+      }
+    );
+  }
+
+  private async compareAndSwap(
+    expectedVersion: number | undefined,
+    next: StructuredOccupancyGenerationState,
+  ): Promise<void> {
+    const result = await this.config.client.putItem({
+      TableName: this.tableName,
+      Item: next,
+      ...(expectedVersion === undefined
+        ? {
+            ConditionExpression: "attribute_not_exists(#pk)",
+            ExpressionAttributeNames: { "#pk": "pk" },
+          }
+        : {
+            ConditionExpression: "#version = :expectedVersion",
+            ExpressionAttributeNames: { "#version": "version" },
+            ExpressionAttributeValues: { ":expectedVersion": expectedVersion },
+          }),
+    });
+    if (result.conditionFailed) {
+      throw new Error("Structured occupancy generation changed concurrently.");
     }
+  }
+
+  /** Open a separate building generation; ordinary writers then dual-write. */
+  async beginRebuild(generation: string): Promise<void> {
+    const state = await this.getState();
+    if (state.buildingGeneration) {
+      throw new Error("A structured occupancy rebuild is already active.");
+    }
+    if (generation === state.activeGeneration) {
+      throw new Error(
+        "A rebuild generation must differ from the active generation.",
+      );
+    }
+    await this.compareAndSwap(
+      state.version === 0 ? undefined : state.version,
+      buildStructuredGenerationStateItem(
+        state.activeGeneration,
+        generation,
+        state.version + 1,
+      ),
+    );
+  }
+
+  /** Idempotently add one canonical document to the building generation. */
+  async backfillDocument(
+    document: StructuredOccupancyBackfillDocument,
+  ): Promise<void> {
+    const state = await this.getState();
+    if (!state.buildingGeneration) {
+      throw new Error("No structured occupancy generation is building.");
+    }
+    const items = buildStructuredOccupancyItems(
+      state.buildingGeneration,
+      document.fields,
+      document.occupancyFields,
+    );
+    const missing = buildStructuredMissingItems(
+      state.buildingGeneration,
+      document.docId,
+      document.fields,
+      document.occupancyFields,
+    );
+    const requests = [...items, ...missing].map((item) => ({
+      PutRequest: { Item: item },
+    }));
+    await this.mutationCoordinator.write(
+      requests.map((request) => ({ tableName: this.tableName, request })),
+    );
+  }
+
+  /** Backfill canonical snapshots idempotently into the building generation. */
+  async backfill(
+    documents:
+      | Iterable<StructuredOccupancyBackfillDocument>
+      | AsyncIterable<StructuredOccupancyBackfillDocument>,
+  ): Promise<number> {
+    let processedCount = 0;
+    for await (const document of documents) {
+      await this.backfillDocument(document);
+      processedCount += 1;
+    }
+    return processedCount;
+  }
+
+  /** Activate the completed generation; old cursors immediately become stale. */
+  async activateRebuild(): Promise<void> {
+    const state = await this.getState();
+    if (!state.buildingGeneration) {
+      throw new Error("No structured occupancy generation is building.");
+    }
+    await this.compareAndSwap(
+      state.version,
+      buildStructuredGenerationStateItem(
+        state.buildingGeneration,
+        undefined,
+        state.version + 1,
+      ),
+    );
+  }
+
+  /** Physically reclaim an inactive generation after its zero-retention switch. */
+  async retireGeneration(
+    generation: string,
+    fields: string[],
+  ): Promise<number> {
+    const state = await this.getState();
+    if (
+      generation === state.activeGeneration ||
+      generation === state.buildingGeneration
+    ) {
+      throw new Error(
+        "Cannot retire an active structured occupancy generation.",
+      );
+    }
+    const uniqueFields = Array.from(new Set(fields));
+    const partitions = [
+      ...uniqueFields.map((sortField) =>
+        buildStructuredMissingPartitionKey(generation, sortField),
+      ),
+      ...uniqueFields.flatMap((criterionField) =>
+        uniqueFields
+          .filter((sortField) => sortField !== criterionField)
+          .map((sortField) =>
+            buildStructuredOccupancyPartitionKey(
+              generation,
+              criterionField,
+              sortField,
+            ),
+          ),
+      ),
+    ];
+    let deletedCount = 0;
+    for (const partition of partitions) {
+      let cursor: DynamoKey | undefined;
+      do {
+        const response = await this.config.client.query({
+          TableName: this.tableName,
+          KeyConditionExpression: "#pk = :pk",
+          ExpressionAttributeNames: { "#pk": "pk" },
+          ExpressionAttributeValues: { ":pk": partition },
+          ExclusiveStartKey: cursor,
+          Limit: 250,
+        });
+        const requests = (response.Items ?? []).map((item) => ({
+          DeleteRequest: { Key: { pk: item.pk, sk: item.sk } },
+        }));
+        await this.mutationCoordinator.write(
+          requests.map((request) => ({ tableName: this.tableName, request })),
+        );
+        deletedCount += requests.length;
+        cursor = response.LastEvaluatedKey;
+      } while (cursor);
+    }
+    return deletedCount;
   }
 }
 
@@ -429,9 +783,11 @@ export class StructuredDdbBackend {
    * Writer implementation for structured indexing.
    */
   readonly writer: StructuredDdbWriter;
+  /** Explicit occupancy rebuild/activation operations. */
+  readonly occupancyMaintenance: StructuredDdbOccupancyMaintenance;
 
   /**
-   * @param config DynamoDB config for structured tables.
+   * @param config DynamoDB config for the unified index table.
    */
   constructor(config: StructuredDdbConfig) {
     this.reader = new StructuredDdbReader(config);
@@ -439,9 +795,9 @@ export class StructuredDdbBackend {
       new StructuredDdbWriterDependencies(config),
       {
         ...config.writerOptions,
-        tokenizer:
-          config.writerOptions?.tokenizer ?? config.tokenizer,
+        tokenizer: config.writerOptions?.tokenizer ?? config.tokenizer,
       },
     );
+    this.occupancyMaintenance = new StructuredDdbOccupancyMaintenance(config);
   }
 }

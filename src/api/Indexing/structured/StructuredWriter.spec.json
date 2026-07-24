@@ -6,7 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "loadCalls": 2,
+        "loadCalls": 3,
         "deletedStaleTermSeen": false,
         "deletedLatestTermSeen": true,
         "addedNextTermSeen": true,
@@ -22,7 +22,28 @@
         "hasBigramToken": true,
         "hasUnigramToken": false
       }
+    },
+    {
+      "export": "runStructuredNumericKeyOrderingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ordered": [-230, -10, -1, 0, 0.5, 2, 23, 34, 230],
+        "negativeZeroNormalized": true,
+        "rejectsInfinity": true
+      }
+    },
+    {
+      "export": "runStructuredWriterPartialFailureRepairScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "failed": true,
+        "derivedCalls": 2,
+        "repairedRangePuts": 2,
+        "repairedOccupancyPuts": 2,
+        "finalVersion": 2
+      }
     }
   ]
 }
-

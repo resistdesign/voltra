@@ -5,6 +5,7 @@
  * token postings with positions encoded in JSON for batch retrieval.
  */
 import type { DocId } from "../Types";
+import { encodeIndexScalarIdentity } from "../IndexTable";
 
 /**
  * Location of an exact postings object in S3.
@@ -32,7 +33,7 @@ export function buildExactS3Key(
   indexField: string,
   docId: DocId,
 ): string {
-  return `exact/${encodeURIComponent(indexField)}/${encodeURIComponent(token)}/${docId}.json`;
+  return `exact/${encodeURIComponent(indexField)}/${encodeURIComponent(token)}/${encodeURIComponent(encodeIndexScalarIdentity(docId))}.json`;
 }
 
 const exactStore = new Map<string, number[]>();

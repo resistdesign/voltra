@@ -2,13 +2,14 @@ import {
   createAwsSdkV3DynamoClient,
   createRelationEdgesDdbDependencies,
   FullTextDdbBackend,
+  IndexMutationCoordinator,
   RelationalDdbBackend,
   StructuredDdbBackend,
 } from "../../src/api";
 import {
-  indexingTableEnvVars,
-  readIndexingTablesFromEnv,
-} from "../common/IndexingTableNames";
+  INDEXING_TABLE_ENV_VAR,
+  readIndexingTableFromEnv,
+} from "../common/IndexingTable";
 import { ddbClient } from "./ddbClient";
 import { collectRequiredEnvironmentVariables } from "../../src/common";
 
@@ -21,31 +22,35 @@ export const structuredStringTokenizer = {
   maxTokensPerValue: 256,
 } as const;
 
-collectRequiredEnvironmentVariables([
-  ...Object.values(indexingTableEnvVars.fullText),
-  ...Object.values(indexingTableEnvVars.structured),
-  ...Object.values(indexingTableEnvVars.relations),
-]);
+collectRequiredEnvironmentVariables([INDEXING_TABLE_ENV_VAR]);
 
-const indexingTables = readIndexingTablesFromEnv(process.env);
+const indexingTable = readIndexingTableFromEnv(process.env);
+export const indexMutationCoordinator = new IndexMutationCoordinator(
+  ddbAdapter,
+);
 
 export const fullTextBackend = new FullTextDdbBackend({
   client: ddbAdapter,
-  tables: indexingTables.fullText,
+  table: indexingTable,
+  mutationCoordinator: indexMutationCoordinator,
 });
 
 const structuredBackend = new StructuredDdbBackend({
   client: ddbAdapter,
-  tables: indexingTables.structured,
+  table: indexingTable,
   tokenizer: structuredStringTokenizer,
+  mutationCoordinator: indexMutationCoordinator,
 });
 
 export const structuredReader = structuredBackend.reader;
 export const structuredWriter = structuredBackend.writer;
+export const structuredOccupancyMaintenance =
+  structuredBackend.occupancyMaintenance;
 
 export const relationalBackend = new RelationalDdbBackend(
   createRelationEdgesDdbDependencies({
     client: ddbAdapter,
-    tables: indexingTables.relations,
+    table: indexingTable,
+    mutationCoordinator: indexMutationCoordinator,
   }),
 );

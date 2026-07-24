@@ -37,6 +37,7 @@ import { type ResolvedSearchLimits, SEARCH_DEFAULTS } from "./Handler/Config";
 import type { SearchTrace } from "./Trace";
 import { createHash } from "./hashUniversal";
 import { compareDocId, normalizeDocId } from "./docId";
+import { encodeIndexScalarIdentity } from "./IndexTable";
 
 type TraceableIndexBackend = IndexBackend & {
   setActiveTrace(trace?: SearchTrace): void;
@@ -408,7 +409,7 @@ class SearchLimitTracker {
 }
 
 function createDocTokenKey({ docId, indexField, token }: DocTokenKey): string {
-  return `${indexField}#${docId}#${token}`;
+  return JSON.stringify([encodeIndexScalarIdentity(docId), indexField, token]);
 }
 
 function buildDocTokenMembershipChecker(
@@ -678,6 +679,16 @@ export async function indexDocument({
   const text = resolveIndexText(document, indexField);
   const indexFieldKey = indexFieldQualified ?? indexField;
 
+  if (writer.writeDocument) {
+    await writer.writeDocument(
+      document,
+      primaryField,
+      indexField,
+      indexFieldKey,
+    );
+    return;
+  }
+
   if (!text) {
     return;
   }
@@ -719,6 +730,17 @@ export async function removeDocument({
   const text = resolveIndexText(document, indexField);
   const indexFieldKey = indexFieldQualified ?? indexField;
 
+  if (writer.writeDocument) {
+    await writer.writeDocument(
+      { ...document, [indexField]: "" },
+      primaryField,
+      indexField,
+      indexFieldKey,
+      document,
+    );
+    return;
+  }
+
   if (!text) {
     return;
   }
@@ -758,6 +780,17 @@ export async function replaceFullTextDocument({
   indexFieldQualified,
   backend,
 }: ReplaceDocumentInput): Promise<void> {
+  const writer = resolveBackend(backend);
+  if (writer.writeDocument) {
+    await writer.writeDocument(
+      nextDocument,
+      primaryField,
+      indexField,
+      indexFieldQualified ?? indexField,
+      previousDocument,
+    );
+    return;
+  }
   await removeDocument({
     backend,
     document: previousDocument,
