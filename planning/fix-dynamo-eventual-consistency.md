@@ -11,5 +11,4 @@ Make structured indexing correct under DynamoDB's real read-consistency semantic
 - [x] Fix the structured writer/client boundary without coupling the production drivers.
 - [x] Cover first-write occupancy and sequential seed-scale writes through the Dynamo-shaped lifecycle.
 - [x] Run focused, core, native, scale, package, declaration, export, consumer, docs, demo-generation, IaC, and site checks.
-- [~] Publish the proven fix on `feat/link-and-lock` and open/update its PR.
-  - Blocked because the required GitHub CLI is not installed in the work environment.
+- [x] Publish the proven fix on `feat/link-and-lock` and open/update its PR.
