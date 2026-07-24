@@ -36,9 +36,7 @@ export type BatchWriteWithRetryOptions = {
   onRetry?: (attempt: number, pending: Record<string, WriteRequest[]>) => void;
 };
 
-const toAwsKey = (
-  item: AttributeMap,
-): Record<string, AttributeValue> =>
+const toAwsKey = (item: AttributeMap): Record<string, AttributeValue> =>
   marshall(item) as Record<string, AttributeValue>;
 
 const fromAwsKey = (item: Record<string, AttributeValue>): AttributeMap =>
@@ -69,6 +67,9 @@ const toAwsKeysAndAttributes = (
   ...(entry.ProjectionExpression
     ? { ProjectionExpression: entry.ProjectionExpression }
     : undefined),
+  ...(entry.ConsistentRead !== undefined
+    ? { ConsistentRead: entry.ConsistentRead }
+    : undefined),
 });
 
 const fromAwsKeysAndAttributes = (
@@ -77,6 +78,9 @@ const fromAwsKeysAndAttributes = (
   Keys: (entry.Keys ?? []).map((key) => fromAwsKey(key)),
   ...(entry.ProjectionExpression
     ? { ProjectionExpression: entry.ProjectionExpression }
+    : undefined),
+  ...(entry.ConsistentRead !== undefined
+    ? { ConsistentRead: entry.ConsistentRead }
     : undefined),
 });
 
@@ -141,6 +145,7 @@ export const createAwsSdkV3DynamoClient = (
       new GetItemCommand({
         TableName: input.TableName,
         Key: toAwsKey(input.Key),
+        ConsistentRead: input.ConsistentRead,
       }),
     );
 

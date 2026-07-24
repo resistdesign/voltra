@@ -14,6 +14,37 @@ const clone = <T>(value: T): T => structuredClone(value);
 const keyOf = (item: AttributeMap): string =>
   JSON.stringify([item.pk, item.sk]);
 
+type EventualSnapshot = {
+  item?: AttributeMap;
+  remainingReads: number;
+};
+
+export type InMemoryDynamoQueryClientOptions = {
+  /**
+   * Number of eventually consistent get reads that continue to expose the
+   * pre-write value after each mutation.
+   */
+  eventuallyConsistentGetLag?: number;
+  /**
+   * Reverse object property insertion order in returned records.
+   */
+  reverseReadPropertyOrder?: boolean;
+};
+
+const reversePropertyOrder = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(reversePropertyOrder);
+  }
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .reverse()
+      .map(([key, entry]) => [key, reversePropertyOrder(entry)]),
+  );
+};
+
 /**
  * Test-only map implementation of the DynamoDB operations used by the unified
  * index backends.
@@ -23,12 +54,74 @@ const keyOf = (item: AttributeMap): string =>
  */
 export class InMemoryDynamoQueryClient implements DynamoQueryClient {
   private readonly tables = new Map<string, Map<string, AttributeMap>>();
+  private readonly eventualSnapshots = new Map<string, EventualSnapshot>();
+
+  constructor(
+    private readonly options: InMemoryDynamoQueryClientOptions = {},
+  ) {}
 
   /** Table names touched by the exercised backends. */
   readonly touchedTables = new Set<string>();
 
   /** Logical record kinds submitted in each physical batch. */
   readonly batchKinds: string[][] = [];
+
+  /** Number of strongly consistent get reads requested by tested drivers. */
+  consistentGetCount = 0;
+
+  /** Number of deliberately stale get reads served by this test client. */
+  staleGetCount = 0;
+
+  private visibilityKey(tableName: string, key: AttributeMap): string {
+    return `${tableName}\u0000${keyOf(key)}`;
+  }
+
+  private recordMutation(
+    tableName: string,
+    key: AttributeMap,
+    previous?: AttributeMap,
+  ): void {
+    const remainingReads = this.options.eventuallyConsistentGetLag ?? 0;
+    if (remainingReads <= 0) {
+      return;
+    }
+    this.eventualSnapshots.set(this.visibilityKey(tableName, key), {
+      item: previous ? clone(previous) : undefined,
+      remainingReads,
+    });
+  }
+
+  private returnedItem(item?: AttributeMap): AttributeMap | undefined {
+    if (!item) {
+      return undefined;
+    }
+    const copied = clone(item);
+    return this.options.reverseReadPropertyOrder
+      ? (reversePropertyOrder(copied) as AttributeMap)
+      : copied;
+  }
+
+  private readItem(
+    tableName: string,
+    key: AttributeMap,
+    consistentRead = false,
+  ): AttributeMap | undefined {
+    if (consistentRead) {
+      this.consistentGetCount += 1;
+    } else {
+      const visibilityKey = this.visibilityKey(tableName, key);
+      const snapshot = this.eventualSnapshots.get(visibilityKey);
+      if (snapshot && snapshot.remainingReads > 0) {
+        snapshot.remainingReads -= 1;
+        this.staleGetCount += 1;
+        if (snapshot.remainingReads === 0) {
+          this.eventualSnapshots.delete(visibilityKey);
+        }
+        return this.returnedItem(snapshot.item);
+      }
+    }
+    return this.returnedItem(this.table(tableName).get(keyOf(key)));
+  }
 
   private table(name: string): Map<string, AttributeMap> {
     this.touchedTables.add(name);
@@ -52,6 +145,7 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
       for (const request of requests) {
         if (request.PutRequest) {
           const item = clone(request.PutRequest.Item);
+          this.recordMutation(tableName, item, table.get(keyOf(item)));
           table.set(keyOf(item), item);
         }
         if (request.DeleteRequest) {
@@ -65,6 +159,11 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
               "Unified index deletes must contain exactly the pk/sk key.",
             );
           }
+          this.recordMutation(
+            tableName,
+            request.DeleteRequest.Key,
+            table.get(keyOf(request.DeleteRequest.Key)),
+          );
           table.delete(keyOf(request.DeleteRequest.Key));
         }
       }
@@ -75,18 +174,21 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
   async batchGetItem(input: BatchGetItemInput) {
     const responses: Record<string, AttributeMap[]> = {};
     for (const [tableName, request] of Object.entries(input.RequestItems)) {
-      const table = this.table(tableName);
       responses[tableName] = request.Keys.flatMap((key) => {
-        const item = table.get(keyOf(key));
-        return item ? [clone(item)] : [];
+        const item = this.readItem(tableName, key, request.ConsistentRead);
+        return item ? [item] : [];
       });
     }
     return { Responses: responses };
   }
 
   async getItem(input: GetItemInput) {
-    const item = this.table(input.TableName).get(keyOf(input.Key));
-    return item ? { Item: clone(item) } : {};
+    const item = this.readItem(
+      input.TableName,
+      input.Key,
+      input.ConsistentRead,
+    );
+    return item ? { Item: item } : {};
   }
 
   async putItem(input: PutItemInput) {
@@ -102,6 +204,7 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
     if (expected !== undefined && (current?.version ?? 0) !== expected) {
       return { conditionFailed: true };
     }
+    this.recordMutation(input.TableName, input.Item, current);
     table.set(keyOf(input.Item), clone(input.Item));
     return {};
   }
