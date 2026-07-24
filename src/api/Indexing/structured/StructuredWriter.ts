@@ -126,6 +126,40 @@ function normalizeFields(
   return normalized;
 }
 
+function structurallyEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) {
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((entry, index) => structurallyEqual(entry, right[index]))
+    );
+  }
+  if (
+    left === null ||
+    right === null ||
+    typeof left !== "object" ||
+    typeof right !== "object"
+  ) {
+    return false;
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const leftKeys = Object.keys(leftRecord);
+  const rightKeys = Object.keys(rightRecord);
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(rightRecord, key) &&
+        structurallyEqual(leftRecord[key], rightRecord[key]),
+    )
+  );
+}
+
 function buildTermEntries(
   docId: DocId,
   fields: StructuredDocFieldsRecord,
@@ -355,10 +389,8 @@ export class StructuredDdbWriter {
       const writtenVersion = (expectedVersion ?? 0) + 1;
       if (
         confirmed?.version === writtenVersion &&
-        JSON.stringify(normalizeFields(confirmed.fields)) ===
-          JSON.stringify(normalized) &&
-        JSON.stringify(confirmed.occupancyFields ?? {}) ===
-          JSON.stringify(occupancyFields)
+        structurallyEqual(normalizeFields(confirmed.fields), normalized) &&
+        structurallyEqual(confirmed.occupancyFields ?? {}, occupancyFields)
       ) {
         return;
       }
