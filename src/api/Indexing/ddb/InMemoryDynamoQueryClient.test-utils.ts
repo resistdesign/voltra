@@ -15,13 +15,11 @@ const keyOf = (item: AttributeMap): string =>
   JSON.stringify([item.pk, item.sk]);
 
 /**
- * Inspectable in-memory implementation of the DynamoDB operations used by the
- * unified index backends.
+ * Test-only map implementation of the DynamoDB operations used by the unified
+ * index backends.
  *
- * This is intentionally Dynamo-shaped rather than an independent logical
- * index. Running normal backends over it exercises the same persisted records,
- * key ordering, cursor behavior, conditional writes, and batch mutations
- * without contacting AWS.
+ * It exists only to exercise the real DynamoDB drivers without contacting AWS;
+ * no production in-memory driver depends on it.
  */
 export class InMemoryDynamoQueryClient implements DynamoQueryClient {
   private readonly tables = new Map<string, Map<string, AttributeMap>>();

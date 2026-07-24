@@ -95,7 +95,7 @@ import {
 import type { StructuredWriter } from "../Indexing/structured/Handlers";
 import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
 import { normalizeDocId } from "../Indexing/docId";
-import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredDdb";
+import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredIndexRecords";
 import type { Where, WhereValue } from "../Indexing/structured/Types";
 import { STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY } from "../Indexing/structured/Types";
 import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";

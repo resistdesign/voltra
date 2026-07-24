@@ -1,4 +1,4 @@
-import { InMemoryDynamoQueryClient as InMemoryDynamoIndexClient } from "./ddb/InMemoryDynamoQueryClient";
+import { InMemoryDynamoQueryClient as InMemoryDynamoIndexClient } from "./ddb/InMemoryDynamoQueryClient.test-utils";
 import { IndexMutationCoordinator } from "./ddb/IndexMutationCoordinator";
 import { INDEX_TABLE_KIND_ATTRIBUTE } from "./IndexTable";
 import { FullTextDdbBackend } from "./fulltext/FullTextDdbBackend";

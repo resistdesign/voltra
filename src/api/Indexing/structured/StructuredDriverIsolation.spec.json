@@ -1,0 +1,17 @@
+{
+  "file": "./StructuredDriverIsolation.test-utils.ts",
+  "tests": [
+    {
+      "export": "runStructuredDriverIsolationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "memoryHasNoDynamoNames": true,
+        "dynamoHasNoInMemoryDependency": true,
+        "allMemoryDriversHaveNoDynamoNames": true,
+        "allDynamoDriversHaveNoInMemoryImports": true,
+        "fakeClientIsNotPublic": true
+      }
+    }
+  ]
+}

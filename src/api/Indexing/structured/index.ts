@@ -5,6 +5,7 @@ export * from "./StructuredInMemoryBackend";
 export * from "./SearchStructured";
 export * from "./StructuredSearchCursor";
 export * from "./StructuredDdb";
+export * from "./StructuredIndexRecords";
 export * from "./StructuredDdbBackend";
 export * from "./StructuredWriter";
 export * from "./StructuredOccupancy";

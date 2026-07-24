@@ -7,11 +7,11 @@ import type {
   StructuredRangeIndexKey,
   StructuredTermIndexItem,
   StructuredTermIndexKey,
-} from "./StructuredDdb";
+} from "./StructuredIndexRecords";
 import {
   buildStructuredRangeItem,
   buildStructuredTermItem,
-} from "./StructuredDdb";
+} from "./StructuredIndexRecords";
 import {
   type StructuredStringTokenizerConfig,
   buildStructuredStringContainsTokens,

@@ -1,7 +1,7 @@
 import { searchStructured } from "./SearchStructured";
 import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
 import { StructuredDdbBackend } from "./StructuredDdbBackend";
-import { InMemoryDynamoQueryClient } from "../ddb/InMemoryDynamoQueryClient";
+import { InMemoryDynamoQueryClient } from "../ddb/InMemoryDynamoQueryClient.test-utils";
 import {
   encodeStructuredCriterionChunk,
   type StructuredOccupancyFieldMap,
@@ -399,6 +399,13 @@ const orderedRecords = (records: Array<Record<string, unknown>>) =>
     return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
   });
 
+const orderedMapEntries = (
+  records: ReadonlyMap<string, Record<string, unknown>>,
+) =>
+  Array.from(records).sort(([left], [right]) =>
+    left < right ? -1 : left > right ? 1 : 0,
+  );
+
 const countKinds = (records: Array<Record<string, unknown>>) =>
   records.reduce<Record<string, number>>((counts, record) => {
     const kind = String(record.kind);
@@ -536,8 +543,8 @@ export const runStructuredInMemoryDynamoParityScenario = async () => {
       rawRecordsEqual:
         JSON.stringify(memoryBefore) === JSON.stringify(dynamoBefore),
       rawMapsEqual:
-        JSON.stringify(Array.from(memoryMapBefore)) ===
-        JSON.stringify(Array.from(dynamoMapBefore)),
+        JSON.stringify(orderedMapEntries(memoryMapBefore)) ===
+        JSON.stringify(orderedMapEntries(dynamoMapBefore)),
       snapshotIsolated:
         (protectedDocument?.fields as Record<string, unknown>)?.age === 25,
       kinds: countKinds(memoryBefore),

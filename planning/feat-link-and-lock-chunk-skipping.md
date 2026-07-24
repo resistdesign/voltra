@@ -76,9 +76,20 @@ None. The storage, query, cursor, consistency, and lifecycle contracts are resol
 - [x] Prove ordinary create/update/delete maintains occupancy from an empty database without initialization or backfill.
 - [x] Keep rebuild tooling optional for repair, compaction, and index-rule changes only.
 - [x] Remove setup and demo instructions that require an initial occupancy rebuild.
-- [x] Make the in-memory backend persist and query the Dynamo-equivalent structured record model.
-- [x] Add snapshot/probe APIs and structural parity tests for maps, records, results, cursors, and rebuild behavior.
-- [ ] Run focused and complete validation, then publish the correction.
+- [x] Make the independent in-memory backend persist and query the shared conceptual structured record model without depending on Dynamo-named code.
+- [x] Add snapshot/probe APIs and structural parity tests for explicit expected maps, records, results, cursors, and rebuild behavior.
+- [x] Keep the in-memory and Dynamo production dependency graphs isolated; permit crossover only in test harnesses.
+- [x] Keep the map-backed Dynamo client test-only and remove it from public exports.
+- [~] Run focused and complete validation, then publish the correction.
+
+### Independent-driver correction evidence (2026-07-23)
+
+- Focused structured/occupancy/isolation regressions: 33 passed, 0 failed.
+- Core: 919 passed, 0 failed.
+- Native: 58 passed, 0 failed.
+- Medium DBX: 6 passed, 0 failed.
+- TypeScript, package bundle, declarations, package exports, consumer install/import smoke, TypeDoc, demo API/type generation, IaC generation, and Astro production build passed.
+- The in-memory backend owns its record map and query implementation; production in-memory files contain no Dynamo-named dependency, production Dynamo drivers import no in-memory implementation, and the map-backed Dynamo client exists only in test utilities.
 
 ## Deep-audit validation evidence (2026-07-22)
 
