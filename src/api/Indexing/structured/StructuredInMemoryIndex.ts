@@ -16,7 +16,7 @@ import type {
   WhereValue,
 } from "./Types";
 import { encodeSortableIndexValue } from "../IndexTable";
-import { buildStructuredRangeKey } from "./StructuredDdb";
+import { buildStructuredRangeKey } from "./StructuredIndexRecords";
 
 type RangeEntry = {
   value: WhereValue;

@@ -1,5 +1,5 @@
 import type { DocId } from "../Types";
-import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import type { StructuredDocFieldsRecord } from "./StructuredIndexRecords";
 import {
   decodeStructuredSearchCursor,
   encodeStructuredSearchCursor,

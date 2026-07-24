@@ -13,17 +13,15 @@ The project layers three complementary index types that can be combined in appli
 
 Serverless handlers (`src/api/Indexing/Handler.ts`) wrap these primitives. Use `setHandlerDependencies` to inject a concrete backend (DynamoDB or in-memory for tests), then dispatch index/search events by `action`.
 
-`StructuredInMemoryBackend` runs the real DynamoDB structured backend over an
-inspectable in-memory `pk`/`sk` table. It does not maintain an independent
-approximation of indexing behavior. `snapshotIndexRecords()` returns deep-cloned
-raw objects and `snapshotIndexRecordMap()` returns their keyed map, allowing
-tests to assert the exact term, range, occupancy, missing-value, document, and
-generation records written by normal CRUD.
+`StructuredInMemoryBackend` independently stores the same conceptual term,
+range, occupancy, missing-value, document, and generation records in maps.
+`snapshotIndexRecords()` and `snapshotIndexRecordMap()` expose deep-cloned
+views for direct inspection. The in-memory and DynamoDB drivers share neutral
+record builders, but neither production driver depends on the other.
 
-`InMemoryDynamoQueryClient` is also public and can host the structured,
-full-text, exact, and relationship DynamoDB backends together. This provides
-unified-table record, query, cursor, conditional-write, and batch behavior
-without AWS.
+Tests also use a private map-backed DynamoDB client to exercise the actual
+DynamoDB drivers without AWS. That harness is not part of the public API and is
+never used to implement the production in-memory backend.
 
 ## One DynamoDB Table
 

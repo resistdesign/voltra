@@ -8,7 +8,7 @@ import { searchStructured } from "./SearchStructured";
 import type { DocId } from "../Types";
 import { normalizeDocId } from "../docId";
 import type { StructuredSearchDependencies } from "./SearchStructured";
-import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import type { StructuredDocFieldsRecord } from "./StructuredIndexRecords";
 import type { StructuredQueryOptions, Where } from "./Types";
 import type { StructuredWriteContext } from "./StructuredOccupancy";
 

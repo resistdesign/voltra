@@ -30,7 +30,7 @@ import {
   type StructuredRangeIndexKey,
   type StructuredTermIndexItem,
   type StructuredTermIndexKey,
-} from "./StructuredDdb";
+} from "./StructuredIndexRecords";
 import {
   StructuredDdbWriter,
   type StructuredWriterOptions,

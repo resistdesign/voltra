@@ -17,7 +17,7 @@ import {
   encodeSortableIndexValue,
   type IndexTableKey,
 } from "../IndexTable";
-import type { StructuredDocFieldsRecord } from "./StructuredDdb";
+import type { StructuredDocFieldsRecord } from "./StructuredIndexRecords";
 import type { WhereValue } from "./Types";
 
 /** Initial occupancy generation used before an explicit rebuild. */
