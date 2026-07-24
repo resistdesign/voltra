@@ -1,0 +1,14 @@
+{
+  "file": "./AwsSdkV3Adapter.test-utils.ts",
+  "tests": [
+    {
+      "export": "runAwsSdkV3ConsistencyMappingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "getItem": true,
+        "batchGetItem": true
+      }
+    }
+  ]
+}
