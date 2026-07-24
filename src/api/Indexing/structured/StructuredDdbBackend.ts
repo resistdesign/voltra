@@ -305,6 +305,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
       const response = await this.client.getItem({
         TableName: this.docFieldsTableName,
         Key: buildStructuredGenerationStateKey(),
+        ConsistentRead: true,
       });
       return (
         (response.Item as StructuredOccupancyGenerationState | undefined)
@@ -405,6 +406,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const response = await this.client.getItem({
       TableName: this.docFieldsTableName,
       Key: buildStructuredDocFieldsKey(docId),
+      ConsistentRead: true,
     });
 
     if (!response.Item) {
@@ -528,6 +530,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const response = await this.client.getItem({
       TableName: this.docFieldsTableName,
       Key: buildStructuredGenerationStateKey(),
+      ConsistentRead: true,
     });
     return (
       (response.Item as StructuredOccupancyGenerationState | undefined) ?? {
@@ -602,6 +605,7 @@ export class StructuredDdbOccupancyMaintenance {
     const response = await this.config.client.getItem({
       TableName: this.tableName,
       Key: buildStructuredGenerationStateKey(),
+      ConsistentRead: true,
     });
     return (
       (response.Item as StructuredOccupancyGenerationState | undefined) ?? {

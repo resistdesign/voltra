@@ -1,0 +1,42 @@
+{
+  "file": "./DynamoConsistency.test-utils.ts",
+  "tests": [
+    {
+      "export": "runInMemoryDynamoStaleVisibilityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createReads": [null, null, 1],
+        "updateReads": [1, 2, 1, 2],
+        "staleGetCount": 4,
+        "consistentGetCount": 1
+      }
+    },
+    {
+      "export": "runStructuredDynamoAdverseReadScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "version": 2,
+        "fields": { "name": "Zoe", "age": 24 },
+        "staleGetCount": 0,
+        "consistentReadsUsed": true,
+        "rangeRows": 2,
+        "occupancyRows": 4
+      }
+    },
+    {
+      "export": "runStructuredDynamoSequentialSeedScaleScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "documents": 403,
+        "equalityTerms": 806,
+        "rangeRows": 806,
+        "occupancyRows": 806,
+        "staleGetCount": 0,
+        "consistentReadsUsed": true
+      }
+    }
+  ]
+}

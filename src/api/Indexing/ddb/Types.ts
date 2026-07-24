@@ -32,6 +32,10 @@ export type KeysAndAttributes = {
    * Optional projection expression to limit returned attributes.
    */
   ProjectionExpression?: string;
+  /**
+   * Request strongly consistent reads.
+   */
+  ConsistentRead?: boolean;
 };
 
 /**
@@ -70,6 +74,10 @@ export type GetItemInput = {
    * Key attributes for the item.
    */
   Key: AttributeMap;
+  /**
+   * Request a strongly consistent read.
+   */
+  ConsistentRead?: boolean;
 };
 
 /**
