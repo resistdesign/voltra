@@ -122,9 +122,7 @@ export const useApplicationStateLoader = <
     manual = false,
     cancelPendingOnNewRequest = false,
   } = config;
-  const rpcRef = useRef<RemoteProcedureCall<ArgsType>>(remoteProcedureCall);
-  rpcRef.current = remoteProcedureCall;
-  const { args = [] as unknown as ArgsType } = rpcRef.current;
+  const { args = [] as unknown as ArgsType } = remoteProcedureCall;
   const argsRef = useRef<ArgsType>(args);
   const requestSequenceRef = useRef(0);
   argsRef.current = args;
@@ -145,7 +143,7 @@ export const useApplicationStateLoader = <
       setLatestError(undefined);
 
       try {
-        const { serviceConfig, path } = rpcRef.current;
+        const { serviceConfig, path } = remoteProcedureCall;
         const result = await sendServiceRequest(
           serviceConfig,
           path,
@@ -187,6 +185,7 @@ export const useApplicationStateLoader = <
       }
     },
     [
+      remoteProcedureCall,
       onChange,
       setModified,
       resetOnError,
