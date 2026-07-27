@@ -12,4 +12,4 @@ a complete record.
 - [~] Run focused and full validation.
   - Dependency installation was blocked by the restricted network before tests
     could run locally; CI will perform validation on the PR.
-- [ ] Publish a branch and draft pull request.
+- [x] Publish a branch and draft pull request.
