@@ -213,7 +213,7 @@ export const useApplicationStateLoader = <
 
   useEffect(() => {
     if (!manual && argsRef.current) {
-      makeRemoteProcedureCall(...argsRef.current);
+      void makeRemoteProcedureCall(...argsRef.current);
     }
   }, [cacheValidity, manual, makeRemoteProcedureCall]);
 
