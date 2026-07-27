@@ -175,13 +175,10 @@ export const useApplicationStateLoader = <
           setModified(false);
         }
       } finally {
-        if (requestSequence !== requestSequenceRef.current) {
-          return;
+        if (requestSequence === requestSequenceRef.current) {
+          setLoading(false);
+          onLoadComplete?.(success);
         }
-
-        setLoading(false);
-
-        onLoadComplete?.(success);
       }
     },
     [
