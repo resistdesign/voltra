@@ -18,6 +18,10 @@ import {
   DACRole,
   WILDCARD_SIGNIFIER_PROTOTYPE,
 } from "../DataAccessControl";
+import {
+  DENIED_TYPE_OPERATIONS,
+  ERROR_MESSAGE_CONSTANTS,
+} from "../../common/TypeParsing/Validation";
 
 type Author = {
   id: string;
@@ -88,6 +92,74 @@ const buildDrivers = () => {
   });
 
   return { drivers, relationshipDriver };
+};
+
+export const runTypeInfoORMServiceDeleteValidationScenario = async () => {
+  const { drivers, relationshipDriver } = buildDrivers();
+  const orm = new TypeInfoORMService({
+    typeInfoMap,
+    getDriver: (typeName) =>
+      drivers[typeName as keyof typeof drivers] as DataItemDBDriver<any, any>,
+    getRelationshipDriver: () => relationshipDriver,
+    useDAC: false,
+  });
+  const bookId = await orm.create("Book", { title: "Disposable" });
+  const deleted = await orm.delete("Book", bookId);
+
+  let missingPrimaryFieldError: string | undefined;
+  try {
+    await orm.delete("Book", undefined);
+  } catch (error: any) {
+    missingPrimaryFieldError =
+      error?.errorMap?.id?.[0]?.code ?? error?.error?.code;
+  }
+
+  let invalidPrimaryFieldTypeError: string | undefined;
+  try {
+    await orm.delete("Book", 123);
+  } catch (error: any) {
+    invalidPrimaryFieldTypeError =
+      error?.errorMap?.id?.[0]?.code ?? error?.error?.code;
+  }
+
+  const deleteDeniedTypeInfoMap: TypeInfoMap = {
+    ...typeInfoMap,
+    Book: {
+      ...typeInfoMap.Book,
+      tags: {
+        ...typeInfoMap.Book.tags,
+        deniedOperations: {
+          [TypeOperation.DELETE]: true,
+        },
+      },
+    },
+  };
+  const deleteDeniedOrm = new TypeInfoORMService({
+    typeInfoMap: deleteDeniedTypeInfoMap,
+    getDriver: (typeName) =>
+      drivers[typeName as keyof typeof drivers] as DataItemDBDriver<any, any>,
+    getRelationshipDriver: () => relationshipDriver,
+    useDAC: false,
+  });
+  let deleteDeniedError: string | undefined;
+  try {
+    await deleteDeniedOrm.delete("Book", "book-denied");
+  } catch (error: any) {
+    deleteDeniedError = error?.error?.code;
+  }
+
+  return {
+    bookId,
+    deleted,
+    missingPrimaryFieldError,
+    missingPrimaryFieldErrorExpected:
+      ERROR_MESSAGE_CONSTANTS.MISSING_FIELD_VALUE,
+    invalidPrimaryFieldTypeError,
+    invalidPrimaryFieldTypeErrorExpected:
+      ERROR_MESSAGE_CONSTANTS.NOT_A_STRING,
+    deleteDeniedError,
+    deleteDeniedErrorExpected: DENIED_TYPE_OPERATIONS.DELETE,
+  };
 };
 
 export const runTypeInfoORMServiceScenario = async () => {

@@ -2,6 +2,21 @@
   "file": "./TypeInfoORMService.test-utils.ts",
   "tests": [
     {
+      "export": "runTypeInfoORMServiceDeleteValidationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "bookId": "book-1",
+        "deleted": true,
+        "missingPrimaryFieldError": "MISSING_FIELD_VALUE",
+        "missingPrimaryFieldErrorExpected": "MISSING_FIELD_VALUE",
+        "invalidPrimaryFieldTypeError": "NOT_A_STRING",
+        "invalidPrimaryFieldTypeErrorExpected": "NOT_A_STRING",
+        "deleteDeniedError": "DENIED_TYPE_OPERATION_DELETE",
+        "deleteDeniedErrorExpected": "DENIED_TYPE_OPERATION_DELETE"
+      }
+    },
+    {
       "export": "runTypeInfoORMServiceScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
