@@ -2088,6 +2088,48 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
+   * Validate a delete operation against only the item's primary field.
+   *
+   * Delete receives an identity, not a complete item. The primary field still
+   * needs its normal operation and value validation, but unrelated required
+   * fields must not participate.
+   *
+   * @returns Nothing (throws on an invalid delete operation or primary value).
+   */
+  protected validateDeleteOperation = (
+    typeName: string,
+    primaryFieldValue: any,
+  ): void => {
+    const typeInfo = this.getTypeInfo(typeName);
+    const { fields = {}, primaryField } = typeInfo;
+    const primaryFieldName = String(primaryField);
+    const primaryFieldInfo = fields[primaryFieldName];
+    const deleteTypeInfo: TypeInfo = {
+      ...typeInfo,
+      fields: primaryFieldInfo
+        ? { [primaryFieldName]: primaryFieldInfo }
+        : {},
+      unionFieldSets: undefined,
+    };
+    const validationResults = validateTypeInfoValue(
+      { [primaryFieldName]: primaryFieldValue },
+      typeName,
+      {
+        ...this.config.typeInfoMap,
+        [typeName]: deleteTypeInfo,
+      },
+      true,
+      this.config.customValidators,
+      TypeOperation.DELETE,
+      RelationshipValidationType.STRICT_EXCLUDE,
+    );
+
+    if (!validationResults.valid) {
+      throw validationResults;
+    }
+  };
+
+  /**
    * Validate update operator config against the target TypeInfo fields.
    */
   protected validateUpdateConfig = (
@@ -2895,11 +2937,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     primaryFieldValue: any,
     context?: TypeInfoORMContext,
   ): Promise<boolean> => {
-    const { primaryField } = this.getTypeInfo(typeName);
-    const itemWithPrimaryFieldOnly: TypeInfoDataItem = {
-      [primaryField as keyof TypeInfoDataItem]: primaryFieldValue,
-    };
-    this.validate(typeName, itemWithPrimaryFieldOnly, TypeOperation.DELETE);
+    this.validateDeleteOperation(typeName, primaryFieldValue);
     const driver = this.getDriverInternal(typeName);
     const existingItem = await driver.readItem(primaryFieldValue);
     const { allowed: deleteAllowed, denied: deleteDenied } =
