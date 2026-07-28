@@ -164,6 +164,40 @@ const runServiceTextResponseScenario = async () => {
   };
 };
 
+const runServiceAuthorizationObjectScenario = async () => {
+  const authorization = {
+    value: "token-2",
+  };
+  const config: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+    authorization,
+  };
+  const originalFetch = globalThis.fetch;
+  const authorizationHeaders: Array<string | undefined> = [];
+
+  globalThis.fetch = async (_input, init) => {
+    authorizationHeaders.push(
+      (init?.headers as Record<string, string> | undefined)?.Authorization,
+    );
+
+    return {
+      ok: true,
+      text: async () => JSON.stringify({ ok: true }),
+    } as Response;
+  };
+
+  try {
+    await sendServiceRequest(config);
+    authorization.value = "token-3";
+    await sendServiceRequest(config);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  return authorizationHeaders;
+};
+
 const runServiceEmptyResponseScenario = async () => {
   const config: ServiceConfig = {
     protocol: "https",
@@ -295,6 +329,9 @@ export const runServiceSuccessResponseScenario = async () =>
 
 export const runServiceErrorMessageScenario = async () =>
   (await runServiceScenario()).errorMessage;
+
+export const runServiceAuthorizationObjectHeadersScenario = async () =>
+  await runServiceAuthorizationObjectScenario();
 
 export const runServiceTextSuccessResponseScenario = async () =>
   (await runServiceTextResponseScenario()).successResponse;

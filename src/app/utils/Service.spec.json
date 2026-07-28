@@ -85,6 +85,12 @@
       "expectation": "nope"
     },
     {
+      "export": "runServiceAuthorizationObjectHeadersScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["Bearer token-2", "Bearer token-3"]
+    },
+    {
       "export": "runServiceTextSuccessResponseScenario",
       "conditions": [],
       "operation": "===",
