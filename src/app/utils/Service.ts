@@ -30,7 +30,11 @@ export type ServiceConfig = {
   /**
    * Bearer token for authorization.
    * */
-  authorization?: string;
+  authorization?:
+    | string
+    | {
+        value: string;
+      };
 };
 
 /**
@@ -114,7 +118,11 @@ export const sendServiceRequest = async (
     "Content-Type": "application/json",
     ...(!!authorization
       ? {
-          Authorization: `Bearer ${authorization}`,
+          Authorization: `Bearer ${
+            typeof authorization === "object"
+              ? authorization.value
+              : authorization
+          }`,
         }
       : {}),
   };
