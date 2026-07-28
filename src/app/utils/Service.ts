@@ -28,9 +28,14 @@ export type ServiceConfig = {
    * */
   basePath?: string;
   /**
-   * Bearer token for authorization.
+   * Bearer token for authorization, provided directly or through a mutable
+   * value container that can be updated without replacing the service config.
    * */
-  authorization?: string;
+  authorization?:
+    | string
+    | {
+        value: string;
+      };
 };
 
 /**
@@ -104,6 +109,8 @@ export const sendServiceRequest = async (
   const fullUrl = getFullUrl(protocol, domain, basePath, path, port);
   const abortController = new AbortController();
   const previousRequestController = activeRequestControllers.get(fullUrl);
+  const authorizationValue =
+    typeof authorization === "object" ? authorization.value : authorization;
 
   if (cancelPendingOnNewRequest) {
     previousRequestController?.abort();
@@ -112,9 +119,9 @@ export const sendServiceRequest = async (
 
   const requestHeaders = {
     "Content-Type": "application/json",
-    ...(!!authorization
+    ...(!!authorizationValue
       ? {
-          Authorization: `Bearer ${authorization}`,
+          Authorization: `Bearer ${authorizationValue}`,
         }
       : {}),
   };
