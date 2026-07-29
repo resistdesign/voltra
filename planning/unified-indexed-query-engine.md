@@ -53,7 +53,7 @@ repository's live execution state for that plan.
 - [x] Rename common query modules and public exports to unified terminology.
 - [x] Remove old split configuration, resolvers, query orchestration APIs,
       cursor formats, and compatibility aliases.
-- [x] Rewrite architecture docs and migration guidance.
+- [x] Rewrite the indexing and ORM architecture documentation.
 - [x] Update examples, demos, samples, IaC utilities, package exports, TypeDoc,
       and documentation-site imports.
 - [x] Pass core/native tests, build, consumer/export checks, docs generation,

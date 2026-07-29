@@ -182,5 +182,3 @@ Routing observability reports only:
 
 Indexed diagnostics separately describe expression kinds, driver kind,
 intersection/union strategy, verification, pages, and candidates examined.
-
-See [MIGRATION.md](./MIGRATION.md) for the alpha breaking changes.
