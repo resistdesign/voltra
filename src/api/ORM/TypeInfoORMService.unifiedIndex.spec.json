@@ -1,0 +1,29 @@
+{
+  "file": "./TypeInfoORMService.unifiedIndex.test-utils.ts",
+  "tests": [
+    {
+      "export": "runUnifiedORMMixedAndScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "4"]
+    },
+    {
+      "export": "runUnifiedORMMixedOrScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["3", "4"]
+    },
+    {
+      "export": "runUnifiedORMRefillScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["2", "4"]
+    },
+    {
+      "export": "runUnifiedORMRoutingScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}

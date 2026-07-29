@@ -1,201 +1,111 @@
 import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import type {
+  IndexedFieldCapabilities,
+  IndexedFieldsByType,
+} from "../Indexing/query";
 import type { TypeInfoORMIndexingConfig } from "./TypeInfoORMService";
-import type { StructuredOccupancyFieldMap } from "../Indexing/structured/StructuredOccupancy";
 
-/**
- * Base indexing config accepted by {@link getTypeInfoORMIndexingConfigFromTypeInfoMap}.
- *
- * The utility derives only field lists from `TypeInfo` tags. Concrete backends,
- * readers, writers, and other runtime dependencies must be supplied here when
- * a tagged field requires that indexing mode.
- */
+/** Runtime backend/config seed for TypeInfo capability generation. */
 export type TypeInfoORMIndexingConfigSeed = Omit<
   TypeInfoORMIndexingConfig,
-  "fullText" | "structured"
+  "fieldsByType"
 > & {
-  /**
-   * Optional full-text runtime dependencies and existing field map.
-   */
-  fullText?: TypeInfoORMIndexingConfig["fullText"];
-  /**
-   * Optional structured runtime dependencies and existing field map.
-   */
-  structured?: TypeInfoORMIndexingConfig["structured"];
+  /** Explicit capabilities merged with generated TypeInfo capabilities. */
+  fieldsByType?: IndexedFieldsByType;
 };
 
-const dedupeFieldNames = (fieldNames: string[]): string[] => {
-  const seen = new Set<string>();
-  const deduped: string[] = [];
-
-  for (const fieldName of fieldNames) {
-    if (typeof fieldName !== "string") {
-      continue;
-    }
-
-    const trimmed = fieldName.trim();
-
-    if (!trimmed || seen.has(trimmed)) {
-      continue;
-    }
-
-    seen.add(trimmed);
-    deduped.push(trimmed);
-  }
-
-  return deduped;
-};
-
-const normalizeFieldMap = (
-  fieldMap?: Record<string, string | string[]>,
-): Record<string, string[]> => {
-  const normalized: Record<string, string[]> = {};
-
-  if (!fieldMap) {
-    return normalized;
-  }
-
-  for (const [typeName, configuredFieldNames] of Object.entries(fieldMap)) {
-    const values = Array.isArray(configuredFieldNames)
-      ? configuredFieldNames
-      : [configuredFieldNames];
-    const deduped = dedupeFieldNames(values);
-
-    if (deduped.length > 0) {
-      normalized[typeName] = deduped;
-    }
-  }
-
-  return normalized;
-};
-
-const mergeFieldMaps = (
-  existing: Record<string, string[]>,
-  generated: Record<string, string[]>,
-): Record<string, string[]> => {
-  const merged: Record<string, string[]> = { ...existing };
-
-  for (const [typeName, generatedFieldNames] of Object.entries(generated)) {
-    merged[typeName] = dedupeFieldNames([
-      ...(existing[typeName] ?? []),
-      ...generatedFieldNames,
-    ]);
-  }
-
-  return merged;
-};
-
-const hasIndexedFields = (fieldMap: Record<string, string[]>): boolean =>
-  Object.keys(fieldMap).length > 0;
+const mergeCapability = (
+  existing: IndexedFieldCapabilities | undefined,
+  generated: IndexedFieldCapabilities,
+): IndexedFieldCapabilities => ({
+  ...existing,
+  ...generated,
+  range:
+    existing?.range || generated.range
+      ? ({
+          ...existing?.range,
+          ...generated.range,
+        } as IndexedFieldCapabilities["range"])
+      : undefined,
+  text:
+    existing?.text || generated.text
+      ? { ...existing?.text, ...generated.text }
+      : undefined,
+});
 
 /**
- * Derive ORM indexing field configuration from `TypeInfoField.tags.indexed`.
+ * Derive the singular indexed field capability registry from TypeInfo tags.
  *
- * The returned config preserves the supplied runtime dependencies and merges
- * any generated field names into existing `fullText.defaultIndexFieldByType`
- * and `structured.indexedFieldsByType` entries.
- *
- * @param typeInfoMap Type definitions to scan for indexing tags.
- * @param baseConfig Runtime indexing dependencies and any existing field lists.
- * @returns ORM indexing config with generated field lists merged in.
+ * The same registry drives expression compilation, physical index mutation,
+ * ordering, and occupancy planning.
  */
 export const getTypeInfoORMIndexingConfigFromTypeInfoMap = (
   typeInfoMap: TypeInfoMap,
-  baseConfig: TypeInfoORMIndexingConfigSeed = {},
+  baseConfig: TypeInfoORMIndexingConfigSeed,
 ): TypeInfoORMIndexingConfig => {
-  const generatedFullText: Record<string, string[]> = {};
-  const generatedStructured: Record<string, string[]> = {};
-  const generatedOccupancy: Record<string, StructuredOccupancyFieldMap> = {};
+  if (!baseConfig.backend) {
+    throw new Error(
+      "Cannot generate indexing capabilities without an indexing backend.",
+    );
+  }
+
+  const fieldsByType: IndexedFieldsByType = structuredClone(
+    baseConfig.fieldsByType ?? {},
+  );
 
   for (const [typeName, typeInfo] of Object.entries(typeInfoMap)) {
-    const fields = typeInfo.fields ?? {};
-
-    for (const [fieldName, field] of Object.entries(fields)) {
+    for (const [fieldName, field] of Object.entries(typeInfo.fields ?? {})) {
       const indexed = field.tags?.indexed;
+      if (!indexed) continue;
 
-      if (indexed?.fullText) {
-        generatedFullText[typeName] = [
-          ...(generatedFullText[typeName] ?? []),
-          fieldName,
-        ];
+      const generated: IndexedFieldCapabilities = {
+        ...(indexed.exact ? { exact: true as const } : {}),
+        ...(indexed.membership || (field.array && indexed.exact)
+          ? { membership: true as const }
+          : {}),
+        ...(indexed.range &&
+        !field.array &&
+        !field.typeReference &&
+        (field.type === "string" || field.type === "number")
+          ? {
+              range: {
+                valueType: field.type,
+                ...(field.type === "number" && indexed.decimal
+                  ? { decimal: true as const }
+                  : {}),
+              },
+            }
+          : {}),
+        ...(indexed.text && field.type === "string" && !field.array
+          ? {
+              text: {
+                caseInsensitiveEquals: true as const,
+                caseInsensitiveContains: true as const,
+                exact: true as const,
+                phrase: true as const,
+                prefix: true as const,
+                lossy: true as const,
+              },
+            }
+          : {}),
+        ...(field.optional ? { optional: true as const } : {}),
+      };
+
+      if (
+        !generated.exact &&
+        !generated.membership &&
+        !generated.range &&
+        !generated.text
+      ) {
+        continue;
       }
-
-      if (indexed?.structured) {
-        generatedStructured[typeName] = [
-          ...(generatedStructured[typeName] ?? []),
-          fieldName,
-        ];
-
-        if (
-          !field.array &&
-          !field.typeReference &&
-          (field.type === "string" || field.type === "number")
-        ) {
-          generatedOccupancy[typeName] = {
-            ...(generatedOccupancy[typeName] ?? {}),
-            [fieldName]: {
-              type: field.type,
-              ...(field.type === "number" && indexed.decimal
-                ? { decimal: true }
-                : {}),
-            },
-          };
-        }
-      }
+      fieldsByType[typeName] = fieldsByType[typeName] ?? {};
+      fieldsByType[typeName][fieldName] = mergeCapability(
+        fieldsByType[typeName][fieldName],
+        generated,
+      );
     }
   }
 
-  if (hasIndexedFields(generatedFullText) && !baseConfig.fullText?.backend) {
-    throw new Error(
-      "Cannot generate fullText indexing config from tags without fullText.backend.",
-    );
-  }
-
-  if (hasIndexedFields(generatedStructured) && !baseConfig.structured?.reader) {
-    throw new Error(
-      "Cannot generate structured indexing config from tags without structured.reader.",
-    );
-  }
-
-  const mergedFullTextByType = mergeFieldMaps(
-    normalizeFieldMap(baseConfig.fullText?.defaultIndexFieldByType),
-    generatedFullText,
-  );
-  const mergedStructuredByType = mergeFieldMaps(
-    normalizeFieldMap(baseConfig.structured?.indexedFieldsByType),
-    generatedStructured,
-  );
-
-  return {
-    ...baseConfig,
-    fullText: baseConfig.fullText
-      ? {
-          ...baseConfig.fullText,
-          ...(hasIndexedFields(mergedFullTextByType)
-            ? { defaultIndexFieldByType: mergedFullTextByType }
-            : {}),
-        }
-      : undefined,
-    structured: baseConfig.structured
-      ? {
-          ...baseConfig.structured,
-          ...(hasIndexedFields(mergedStructuredByType)
-            ? { indexedFieldsByType: mergedStructuredByType }
-            : {}),
-          occupancyFieldsByType: {
-            ...(baseConfig.structured.occupancyFieldsByType ?? {}),
-            ...Object.fromEntries(
-              Object.entries(generatedOccupancy).map(([typeName, fields]) => [
-                typeName,
-                {
-                  ...(baseConfig.structured?.occupancyFieldsByType?.[
-                    typeName
-                  ] ?? {}),
-                  ...fields,
-                },
-              ]),
-            ),
-          },
-        }
-      : undefined,
-  };
+  return { ...baseConfig, fieldsByType };
 };

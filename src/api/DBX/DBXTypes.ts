@@ -1,4 +1,9 @@
-import type { AuthInfo, CORSPattern, RouteAuthConfig, RouteMap } from "../Router/Types";
+import type {
+  AuthInfo,
+  CORSPattern,
+  RouteAuthConfig,
+  RouteMap,
+} from "../Router/Types";
 import type {
   DataItemDBDriver,
   DataItemDBDriverConfig,
@@ -42,10 +47,7 @@ export type DBXRuntimeConfig = {
   /**
    * Optional map of custom ID generators for item types.
    */
-  idGeneratorsByType?: Record<
-    string,
-    (targetItem: TypeInfoDataItem) => string
-  >;
+  idGeneratorsByType?: Record<string, (targetItem: TypeInfoDataItem) => string>;
   /**
    * Optional prebuilt drivers keyed by type name.
    */
@@ -57,7 +59,7 @@ export type DBXRuntimeConfig = {
   /**
    * Optional indexing configuration override.
    */
-  indexing?: TypeInfoORMIndexingConfig;
+  indexing?: Partial<TypeInfoORMIndexingConfig>;
   /**
    * When true (default), in-memory indexing backends are supplied.
    */

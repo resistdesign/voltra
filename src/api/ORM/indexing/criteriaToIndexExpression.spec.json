@@ -1,0 +1,96 @@
+{
+  "file": "./criteriaToIndexExpression.ts",
+  "tests": [
+    {
+      "export": "criteriaToIndexExpression",
+      "conditions": [
+        "Record",
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "state",
+              "operator": "IN",
+              "valueOptions": ["published", "reviewed"]
+            }
+          ]
+        },
+        {
+          "state": { "exact": true }
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "or": [
+          {
+            "type": "term",
+            "field": "f1#Record#state",
+            "mode": "eq",
+            "value": "published"
+          },
+          {
+            "type": "term",
+            "field": "f1#Record#state",
+            "mode": "eq",
+            "value": "reviewed"
+          }
+        ]
+      }
+    },
+    {
+      "export": "criteriaToIndexExpression",
+      "conditions": [
+        "Record",
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "title",
+              "operator": "CASE_INSENSITIVE_CONTAINS",
+              "value": "Distributed Systems"
+            }
+          ]
+        },
+        {
+          "title": {
+            "field": "searchTitle",
+            "text": { "caseInsensitiveContains": true }
+          }
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "text",
+        "field": "f1#Record#searchTitle",
+        "mode": "caseInsensitiveContains",
+        "query": "Distributed Systems"
+      }
+    },
+    {
+      "export": "criteriaToIndexExpression",
+      "conditions": [
+        "Record",
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "score",
+              "operator": "BETWEEN",
+              "valueOptions": [10, 20]
+            }
+          ]
+        },
+        {
+          "score": { "range": { "valueType": "number" } }
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "between",
+        "field": "f1#Record#score",
+        "lower": 10,
+        "upper": 20
+      }
+    }
+  ]
+}

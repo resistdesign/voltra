@@ -18,6 +18,8 @@ import type {
   ItemRelationshipDBDriver,
 } from "../ORM/drivers/common/Types";
 import type { TypeInfoORMIndexingConfig } from "../ORM/TypeInfoORMService";
+import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "../ORM/getTypeInfoORMIndexingConfigFromTypeInfoMap";
+import { createIndexBackend } from "../Indexing/query";
 
 const DEFAULT_BASE_PATH = "orm";
 const DEFAULT_ALLOWED_ORIGINS = ["https://dbx.local"];
@@ -31,7 +33,10 @@ const buildDriverConfig = (
   typeName: string,
   typeInfo: TypeInfo,
   overrides?: Partial<
-    Omit<DataItemDBDriverConfig<TypeInfoDataItem, string>, "uniquelyIdentifyingFieldName">
+    Omit<
+      DataItemDBDriverConfig<TypeInfoDataItem, string>,
+      "uniquelyIdentifyingFieldName"
+    >
   >,
   idGenerator?: (targetItem: TypeInfoDataItem) => string,
 ): DataItemDBDriverConfig<TypeInfoDataItem, string> => {
@@ -43,14 +48,15 @@ const buildDriverConfig = (
   return {
     tableName: overrides?.tableName ?? typeName,
     uniquelyIdentifyingFieldName: primaryField,
-    generateUniqueIdentifier: idGenerator ?? overrides?.generateUniqueIdentifier,
+    generateUniqueIdentifier:
+      idGenerator ?? overrides?.generateUniqueIdentifier,
     dbSpecificConfig: overrides?.dbSpecificConfig,
   } as DataItemDBDriverConfig<TypeInfoDataItem, string>;
 };
 
 const mergeIndexingConfig = (
   base: TypeInfoORMIndexingConfig,
-  override?: TypeInfoORMIndexingConfig,
+  override?: Partial<TypeInfoORMIndexingConfig>,
 ): TypeInfoORMIndexingConfig => {
   if (!override) {
     return base;
@@ -59,12 +65,11 @@ const mergeIndexingConfig = (
   return {
     ...base,
     ...override,
-    fullText: override.fullText
-      ? { ...base.fullText, ...override.fullText }
-      : base.fullText,
-    structured: override.structured
-      ? { ...base.structured, ...override.structured }
-      : base.structured,
+    backend: override.backend ?? base.backend,
+    fieldsByType: {
+      ...base.fieldsByType,
+      ...override.fieldsByType,
+    },
     relations: override.relations
       ? { ...base.relations, ...override.relations }
       : base.relations,
@@ -72,18 +77,18 @@ const mergeIndexingConfig = (
 };
 
 const buildMemoryIndexingConfig = (
-  override?: TypeInfoORMIndexingConfig,
+  typeInfoMap: TypeInfoMap,
+  override?: Partial<TypeInfoORMIndexingConfig>,
 ): TypeInfoORMIndexingConfig => {
-  const structuredBackend = new StructuredInMemoryBackend();
+  const valueBackend = new StructuredInMemoryBackend();
 
   const base: TypeInfoORMIndexingConfig = {
-    fullText: {
-      backend: new FullTextMemoryBackend(),
-    },
-    structured: {
-      reader: structuredBackend,
-      writer: structuredBackend,
-    },
+    backend: createIndexBackend({
+      values: valueBackend,
+      valueWriter: valueBackend,
+      text: new FullTextMemoryBackend(),
+    }),
+    allowFullScanFallback: true,
     relations: {
       backend: new RelationalInMemoryBackend(),
       relationNameFor: (fromTypeName, fromTypeFieldName) =>
@@ -91,7 +96,10 @@ const buildMemoryIndexingConfig = (
     },
   };
 
-  return mergeIndexingConfig(base, override);
+  return getTypeInfoORMIndexingConfigFromTypeInfoMap(
+    typeInfoMap,
+    mergeIndexingConfig(base, override),
+  );
 };
 
 /**
@@ -152,8 +160,8 @@ export const createDbxRuntime = (config: DBXRuntimeConfig): DBXRuntime => {
   };
 
   const indexing = useInMemoryIndexing
-    ? buildMemoryIndexingConfig(indexingOverride)
-    : indexingOverride;
+    ? buildMemoryIndexingConfig(typeInfoMap, indexingOverride)
+    : (indexingOverride as TypeInfoORMIndexingConfig | undefined);
 
   let relationshipDriver: ItemRelationshipDBDriver | undefined =
     relationshipDriverOverride;

@@ -39,8 +39,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "fullText": true,
-        "structured": true
+        "text": true,
+        "exact": true,
+        "range": true
       }
     },
     {
@@ -48,7 +49,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "structured": true,
+        "exact": true,
+        "range": true,
         "decimal": true
       }
     },

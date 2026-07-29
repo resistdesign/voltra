@@ -101,6 +101,30 @@ export enum ComparisonOperators {
    * */
   STARTS_WITH = "STARTS_WITH",
   /**
+   * Normalized Unicode equality without case or separator distinctions.
+   * */
+  CASE_INSENSITIVE_EQUALS = "CASE_INSENSITIVE_EQUALS",
+  /**
+   * Normalized Unicode substring matching.
+   * */
+  CASE_INSENSITIVE_CONTAINS = "CASE_INSENSITIVE_CONTAINS",
+  /**
+   * Exact normalized text matching.
+   * */
+  TEXT_EXACT = "TEXT_EXACT",
+  /**
+   * Consecutive normalized token matching.
+   * */
+  TEXT_PHRASE = "TEXT_PHRASE",
+  /**
+   * Normalized text-prefix matching.
+   * */
+  TEXT_PREFIX = "TEXT_PREFIX",
+  /**
+   * Lossy full-text token matching.
+   * */
+  TEXT_LOSSY = "TEXT_LOSSY",
+  /**
    * Field value ends with the criterion value.
    * */
   ENDS_WITH = "ENDS_WITH",

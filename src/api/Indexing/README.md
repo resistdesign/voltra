@@ -1,320 +1,186 @@
-# Voltra Indexing
+# Indexed Query Architecture
 
-A serverless-friendly toolkit for building multi-modal indexes—lossy and exact full-text, structured filters, and graph relations—on top of one DynamoDB table or the matching in-memory backends.
+Voltra exposes one logical indexed-query engine. A query may combine exact
+terms, collection membership, ranges, normalized text, exact phrases, prefixes,
+and lossy text in the same `AND`/`OR` expression.
 
-## Architecture at a Glance
+The storage mechanisms remain specialized:
 
-The project layers three complementary index types that can be combined in application code:
+- Value records provide exact terms, membership, ranges, ordered traversal,
+  optional-value handling, and Link & Lock occupancy.
+- Text records provide lossy postings, exact token positions, per-document
+  membership, statistics, and document mirrors.
+- The query engine combines their candidate sets, owns logical pagination and
+  ordering, and tells the ORM when canonical verification is required.
 
-- **Full-text (lossy)** — Inverted index keyed by field + tokens for recall-heavy searches.
-- **Full-text (exact)** — Token positions for phrase queries and exact verification.
-- **Structured filters** — Term and range indexes per field for equality/contains or numeric/string comparisons. Schemas and query composition live in `src/api/Indexing/structured`.
-- **Relational edges** — Simple graph edges (outgoing/incoming) stored twice for each relation to support directional traversals. Schema and cursor encoding live in `src/api/Indexing/rel`.
+One logical query may therefore issue several DynamoDB `Query` operations. The
+engine, rather than DynamoDB, applies the Boolean expression.
 
-Serverless handlers (`src/api/Indexing/Handler.ts`) wrap these primitives. Use `setHandlerDependencies` to inject a concrete backend (DynamoDB or in-memory for tests), then dispatch index/search events by `action`.
+## TypeInfo capabilities
 
-`StructuredInMemoryBackend` independently stores the same conceptual term,
-range, occupancy, missing-value, document, and generation records in maps.
-`snapshotIndexRecords()` and `snapshotIndexRecordMap()` expose deep-cloned
-views for direct inspection. The in-memory and DynamoDB drivers share neutral
-record builders, but neither production driver depends on the other.
-
-Tests also use a private map-backed DynamoDB client to exercise the actual
-DynamoDB drivers without AWS. That harness is not part of the public API and is
-never used to implement the production in-memory backend.
-
-## One DynamoDB Table
-
-Provision one table with string partition and sort keys:
+Indexing is declared semantically:
 
 ```ts
-const table = {
-  attributes: { pk: "S", sk: "S" },
-  keys: { pk: "HASH", sk: "RANGE" },
+type Article = {
+  /** @primaryField */
+  id: string;
+
+  /** @indexed.exact @indexed.range */
+  state: string;
+
+  /** @indexed.exact @indexed.range @indexed.decimal */
+  score: number;
+
+  /** @indexed.text */
+  title: string;
+
+  /** @indexed.exact @indexed.membership */
+  tags: string[];
 };
 ```
 
-Every logical index is an explicitly namespaced candidate stream. The `kind` attribute helps diagnostics and migration tooling; application fields remain nested in Voltra-owned attributes and can never collide with `pk`, `sk`, or `kind`.
+`getTypeInfoORMIndexingConfigFromTypeInfoMap` derives one `fieldsByType`
+capability registry. It is the source of truth for compilation, mutation,
+ordering, and occupancy.
 
-| Record family        | `pk` stream                                 | `sk` member order                  |
-| -------------------- | ------------------------------------------- | ---------------------------------- |
-| Structured term      | `v1#st#<field>#<mode>#<value>`              | `d#<type>#<docId>`                 |
-| Structured range     | `v1#sr#<field>`                             | `<sortableValue>#d#<type>#<docId>` |
-| Structured document  | `v1#sd#d#<type>#<docId>`                    | `state`                            |
-| Structured occupancy | `v1#so#<generation>#<criterion>#<sort>`     | `<criterionChunk>#<sortToken>`     |
-| Structured missing   | `v1#sm#<generation>#<sort>`                 | `d#<type>#<docId>`                 |
-| Occupancy generation | `v1#sg#occupancy`                           | `state`                            |
-| Lossy posting        | `v1#fl#<field>#<token>`                     | `d#<type>#<docId>`                 |
-| Exact posting        | `v1#fe#<field>#<token>`                     | `d#<type>#<docId>`                 |
-| Document mirror      | `v1#fm#d#<type>#<docId>`                    | `f#<field>`                        |
-| Token statistics     | `v1#fs#<field>#<token>`                     | `state`                            |
-| Document token       | `v1#ft#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
-| Token positions      | `v1#fp#d#<type>#<docId>`                    | `f#<field>#t#<token>`              |
-| Relationship edge    | `v1#re#e#s#<entity>#<relation>#<direction>` | `e#s#<otherId>`                    |
+Text fields enable these semantic modes:
 
-All physical keys must be created through the exported key utilities. Identity segments use URI-component encoding for delimiter safety. Document identities additionally carry `n`/`s` type tags, so numeric `123` and string `"123"` cannot collide and retain their type through cursors. Sortable values do not use URI encoding: finite numbers use an order-preserving IEEE-754 transform and other range-capable values use UTF-8 hex so DynamoDB byte order matches the comparison contract.
+- `caseInsensitiveEquals`
+- `caseInsensitiveContains`
+- `exact`
+- `phrase`
+- `prefix`
+- `lossy`
+
+Unicode text is normalized consistently for canonical comparison. Case is
+folded, diacritics are removed, and punctuation/separator runs are treated as
+spaces.
+
+## Backend composition
+
+Compose specialized implementations structurally:
 
 ```ts
-const table = { tableName: process.env.INDEXING_TABLE as string };
-const mutationCoordinator = new IndexMutationCoordinator(client);
-
-const fullText = new FullTextDdbBackend({ client, table, mutationCoordinator });
-const structured = new StructuredDdbBackend({
-  client,
-  table,
-  mutationCoordinator,
+const backend = createIndexBackend({
+  values: valueBackend,
+  valueWriter: valueBackend,
+  text: textBackend,
 });
-const relationships = new RelationalDdbBackend(
-  createRelationEdgesDdbDependencies({ client, table, mutationCoordinator }),
-);
-```
 
-## Link & Lock Structured Pagination
-
-Scalar string/number fields tagged `indexed.structured` automatically form
-sparse criterion-chunk/sort-token occupancy hints. Strings use case-preserving
-prefixes of up to three Unicode code points. Numbers use decade chunks; add
-`indexed.decimal: true` for unit chunks. Exact canonical fields still verify
-every result.
-
-```ts
-rating: {
-  type: "number",
-  array: false,
-  optional: true,
-  readonly: false,
-  tags: { indexed: { structured: true, decimal: true } },
-}
-```
-
-The initial occupancy generation is active by default. Ordinary item
-create/update/delete operations maintain its occupancy and missing-value records
-through the same derived-write lifecycle as all other indexes. No initialization
-or post-seed rebuild is required.
-
-The ORM helper is optional repair/compaction tooling. It starts or resumes a
-replacement generation, reindexes every named type, and activates only after all
-types complete:
-
-```ts
-await rebuildStructuredOccupancy({
-  controller: structured.occupancyMaintenance,
-  orm,
-  generation: "g2",
-  typeNames: ["Car", "Person"],
-  itemsPerPage: 100,
-});
-```
-
-During a rebuild, normal writers dual-write the active and building
-generations. Activation invalidates old occupancy cursors; they return no rows
-and no successor cursor. Ordinary document writes never change the generation.
-After activation, reclaim the old physical cells asynchronously with
-`retireGeneration(previousGeneration, qualifiedOccupancyFields)`. The demo has
-an optional maintenance command that performs that cleanup before it exits:
-
-```bash
-INDEXING_TABLE=your-table \
-STRUCTURED_OCCUPANCY_GENERATION=g2 \
-yarn rebuild:demo-occupancy
-```
-
-Link & Lock adds record families under the existing string `pk`/`sk` schema; it
-does not require another table, attribute definition, key, or IaC resource.
-
-## Configuration and Limits
-
-Search operations enforce soft guards via `SearchLimits` (tokens processed, postings pages, verified candidates, and time budget). Defaults and hard caps live in `src/api/Indexing/Handler/Config.ts`:
-
-- Defaults: `maxTokens` 6; `maxPostingsPages` 4; `maxCandidatesVerified` 200; `softTimeBudgetMs` 150.
-- Caps: `maxTokens` 12; `maxPostingsPages` 12; `maxCandidatesVerified` 1_000; `softTimeBudgetMs` 500.
-
-Override per request by passing a `limits` object to search calls or handler events; the handler resolver merges overrides with defaults and clamps to the caps to prevent runaway workloads.
-
-No environment variable name is imposed by the library. The demo uses one `INDEXING_TABLE` variable through `site/common/IndexingTable.ts` and passes the resulting `IndexTableConfig` to every backend.
-
-## Indexing Fields and IDs
-
-- `primaryField` identifies the document ID. Non-empty strings and finite numbers retain their scalar type; other values throw.
-- `indexField` scopes tokens and postings. ORM integrations use `qualifyIndexField(typeName, fieldName)`; consumers should not concatenate type and field names themselves.
-- Changing index-field behavior or upgrading from the legacy schema requires re-indexing; old entries are not migrated automatically.
-
-## Setup
-
-1. Install dependencies: `yarn install`
-2. Build TypeScript: `yarn build`
-3. Run tests: `yarn test`
-
-## Demo UI
-
-The Astro + React demo lives in `site/app`. Build the API and static application with:
-
-```bash
-yarn site:build:api
-yarn site:build:app
-```
-
-## Serverless Handler Examples
-
-Configure the handler once at cold start:
-
-```ts
-import { handler, setHandlerDependencies } from "@resistdesign/voltra/api";
-import { createDynamoBackend } from "./your-backend-factory";
-
-setHandlerDependencies({ backend: createDynamoBackend() });
-```
-
-Example payloads (invoke via Lambda, Functions, or tests):
-
-- Index a document
-  ```json
-  {
-    "action": "indexDocument",
-    "document": {
-      "id": "doc-1",
-      "title": "Hello world",
-      "fields": { "category": "news" }
-    },
-    "primaryField": "id",
-    "indexField": "title"
-  }
-  ```
-- Remove a document
-  ```json
-  {
-    "action": "removeDocument",
-    "document": { "id": "doc-1", "title": "Hello world" },
-    "primaryField": "id",
-    "indexField": "title"
-  }
-  ```
-- Lossy full-text search (recall-oriented)
-  ```json
-  {
-    "action": "searchLossy",
-    "query": "hello world",
-    "indexField": "title",
-    "limit": 10
-  }
-  ```
-- Exact/phrase search (position aware)
-  ```json
-  {
-    "action": "searchExact",
-    "query": "\"hello world\"",
-    "indexField": "title",
-    "limit": 10
-  }
-  ```
-
-The handler logs a compact trace with elapsed time and resolved limits for observability.
-
-## Indexing and Query Recipes
-
-### Indexing
-
-Use `indexDocument` to tokenize text and populate lossy/exact postings. Documents can use string or finite numeric IDs, and callers choose which field to index via `indexField`.
-
-```ts
-await indexDocument({
-  document: { id: "doc-42", body: "Quick brown fox" },
-  primaryField: "id",
-  indexField: "body",
+const indexing = getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
   backend,
+  tokenizer,
+  limits: {
+    maxTextTokens: 12,
+    maxCandidates: 5_000,
+  },
+  allowFullScanFallback: true,
 });
 ```
 
-### Lossy full-text search
+`values` may be a DynamoDB reader or the in-memory reference backend. `text`
+may likewise be backed by DynamoDB or memory. Query composition, cursor
+identity, budgets, and verification are shared.
 
-Recall-focused matching that treats any token match as a candidate. Supports pagination via cursors.
+## Semantic criteria
 
-```ts
-const result = await searchLossy({
-  query: "quick fox",
-  indexField: "body",
-  limit: 5,
-  backend,
-});
-// result.docIds => [42, ...]; result.nextCursor for subsequent pages
-```
-
-### Exact full-text search
-
-Position-aware matching for phrases. Pass quoted phrases in the query; candidates are verified using stored token positions.
+Public criteria describe behavior rather than selecting a backend:
 
 ```ts
-const result = await searchExact({
-  query: '"quick brown"',
-  indexField: "body",
-  limit: 5,
-  backend,
-});
-```
-
-### Structured queries
-
-Compose boolean trees with term and range clauses. Example: find docs in category "news" with a score >= 0.8 or tagged with "breaking".
-
-```ts
-const where = {
-  or: [
+const criteria = {
+  logicalOperator: LogicalOperators.AND,
+  fieldCriteria: [
     {
-      and: [
-        { type: "term", field: "category", mode: "eq", value: "news" },
-        { type: "gte", field: "score", value: 0.8 },
-      ],
+      fieldName: "state",
+      operator: ComparisonOperators.IN,
+      valueOptions: ["published", "reviewed"],
     },
-    { type: "term", field: "tags", mode: "contains", value: "breaking" },
+    {
+      fieldName: "score",
+      operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+      value: 80,
+    },
+    {
+      fieldName: "title",
+      operator: ComparisonOperators.TEXT_PHRASE,
+      value: "distributed runtime",
+    },
   ],
 };
-const page = await searchStructured({
-  where,
-  backendStructured,
-  options: { limit: 20 },
-});
 ```
 
-### Relation queries
+Important operator contracts:
 
-Edges are stored in both directions. Fetch outgoing or incoming edges with cursors for pagination.
+- `EQUALS` is canonical scalar equality.
+- `CONTAINS` is collection membership only.
+- `LIKE` and `CASE_INSENSITIVE_CONTAINS` are normalized substring matching.
+- `CASE_INSENSITIVE_EQUALS` is normalized full-value equality.
+- `TEXT_EXACT`, `TEXT_PHRASE`, `TEXT_PREFIX`, and `TEXT_LOSSY` make text intent
+  explicit.
+- `IN` is an equality disjunction.
+- `BETWEEN`, `GREATER_THAN_OR_EQUAL`, and `LESS_THAN_OR_EQUAL` use ordered
+  range capabilities.
 
-```ts
-// Add an edge
-await relationalBackend.putEdge({
-  key: { from: "user#1", to: "post#9", relation: "LIKES" },
-  metadata: { at: Date.now() },
-});
+Unindexed or unsupported criteria use canonical scan-and-compare only when
+`allowFullScanFallback` is enabled.
 
-// Page outgoing edges
-const outgoing = await relationalBackend.getOutgoing("user#1", "LIKES", {
-  limit: 25,
-  cursor,
-});
-// outgoing.edges => [{ key: { from, to, relation }, metadata }]; outgoing.nextCursor for the next page
-```
+## Canonical verification and page refill
 
-## Global Range Criteria with Unrelated Sorting
+Exact value indexes normally produce exact candidate sets. Text, normalized,
+tokenized, and lossy indexes can produce supersets. `searchIndex` propagates
+`requiresCanonicalVerification`; the ORM then evaluates the original criteria
+against the canonical record before it counts toward the page.
 
-For `age BETWEEN 23 AND 34` sorted by `name`, the exact baseline traverses the already ordered `name` range stream, verifies each candidate's canonical structured fields, stops when the page is full, and resumes from that stream cursor. Sparse compliance can still require many reads; that is a cost distribution problem, not a correctness problem.
+The ORM continues consuming indexed pages after:
 
-Link & Lock adds an exact data-skipping layer:
+- a stale index entry,
+- a deleted canonical record,
+- an approximate candidate mismatch, or
+- DAC rejection.
 
-```text
-criterion value chunks -> ordered sort-index blocks -> exact candidate IDs
-```
+It stops when the requested page is full, the plan is exhausted, or a declared
+budget is exceeded.
 
-Occupancy hints may produce false positives but never false negatives. Voltra
-reads only occupied criterion-chunk/sort-token cells, combines `AND`/`OR` token
-plans, seeks the existing ordered range stream, and verifies canonical fields.
-The implementation, lifecycle contract, and audit evidence are tracked in
-`planning/feat-link-and-lock-chunk-skipping.md`.
+## Cursors
 
-## Troubleshooting
+The public cursor is a versioned envelope for the complete logical query. It
+contains query and plan fingerprints plus a bounded continuation offset.
+Fingerprint identity includes:
 
-- **Missing backend configuration**: Calls without `setIndexBackend` or `setHandlerDependencies` throw instead of silently skipping indexing.
-- **Throttling/large scans**: Tune request `limits` to reduce token processing, postings pages, or verified candidates.
-- **Unexpected empty results**: Ensure exact searches were indexed with position data. For structured queries, ensure the indexed field and query bounds use the same TypeInfo-driven comparison type.
-- **Cursor errors**: Cursors are opaque continuation state. Do not edit them or reuse them with a different query; restart without a cursor after a query-shape change.
+- the expression,
+- requested ordering,
+- tokenizer configuration,
+- field capabilities,
+- occupancy generation, and
+- planner version.
 
-With these building blocks and examples, you can provision the DynamoDB table, wire in your client, and run index/search flows confidently in serverless environments.
+Old value-only, exact-text, and lossy-text cursors are not accepted by the
+unified operation. A changed query or plan raises a stale-cursor error.
+
+## Ordering and occupancy
+
+Ordering is global. The engine either produces the complete ordered candidate
+set or throws `INDEX_QUERY_UNSUPPORTED_ORDER`; it never sorts only one returned
+page and presents that as global order.
+
+Link & Lock occupancy remains a value-driver optimization. In mixed `AND`
+plans, an occupancy-aware ordered value stream can drive while text leaves
+filter its candidates. Without an explicit order, a selective text leaf may be
+the diagnostic driver while value leaves filter its candidates.
+
+## Budgets and diagnostics
+
+Limits cover expression depth, leaf count, `OR` fan-out, text tokens, backend
+pages, candidates, and cursor bytes. Exceeding a budget raises
+`INDEX_QUERY_BUDGET_EXCEEDED`; partial logical results are never returned.
+
+Routing observability reports only:
+
+- `indexed`
+- `fullScanCompare`
+- `canonicalDriverList`
+
+Indexed diagnostics separately describe expression kinds, driver kind,
+intersection/union strategy, verification, pages, and candidates examined.
+
+See [MIGRATION.md](./MIGRATION.md) for the alpha breaking changes.

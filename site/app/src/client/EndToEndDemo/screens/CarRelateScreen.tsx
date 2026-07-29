@@ -1,10 +1,8 @@
+import { type ChangeEvent, type FC, type MouseEvent, useCallback } from "react";
 import {
-  type ChangeEvent,
-  type FC,
-  type MouseEvent,
-  useCallback,
-} from "react";
-import { ComparisonOperators, LogicalOperators } from "../../../../../../src/common/SearchTypes";
+  ComparisonOperators,
+  LogicalOperators,
+} from "../../../../../../src/common/SearchTypes";
 import type { TypeInfo } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { TypeOperation } from "../../../../../../src/common/TypeParsing/TypeInfo";
 import { FormBlock } from "../components/FormBlock";
@@ -275,7 +273,9 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                   >
                     <option value={ComparisonOperators.LIKE}>Like</option>
                     <option value={ComparisonOperators.EQUALS}>Equals</option>
-                    <option value={ComparisonOperators.STARTS_WITH}>Starts With</option>
+                    <option value={ComparisonOperators.STARTS_WITH}>
+                      Starts With
+                    </option>
                   </select>
                 </label>
               </InlineRow>
@@ -289,13 +289,15 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                 />
               </label>
               <small>
-                This sends list criteria for a fulltext-indexed field and lets the
-                API auto-route to fulltext search.
+                This sends list criteria for a fulltext-indexed field and lets
+                the API auto-route to fulltext search.
               </small>
             </fieldset>
 
             <fieldset>
-              <legend>Structured Filters (used when quick query is empty)</legend>
+              <legend>
+                Structured Filters (used when quick query is empty)
+              </legend>
               <InlineRow>
                 <label>
                   Operator
@@ -312,7 +314,7 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                 </button>
               </InlineRow>
               {filters.length === 0 ? (
-                <p>No structured filters yet.</p>
+                <p>No indexed filters yet.</p>
               ) : (
                 filters.map((filter) => (
                   <InlineRow key={filter.id}>
@@ -381,7 +383,11 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
                   onChange={handleCarItemsPerPageChange}
                 />
               </label>
-              <button type="button" onClick={handleRunSearch} disabled={isSearching}>
+              <button
+                type="button"
+                onClick={handleRunSearch}
+                disabled={isSearching}
+              >
                 Run Search
               </button>
               <button
@@ -429,7 +435,8 @@ export const CarRelateScreen: FC<CarRelateScreenProps> = ({
             {isRelating && <small>Saving...</small>}
             {selectedCarCandidate && (
               <small>
-                Selected: {formatCarLabel(selectedCarCandidate)} ({selectedCarCandidate.id})
+                Selected: {formatCarLabel(selectedCarCandidate)} (
+                {selectedCarCandidate.id})
               </small>
             )}
           </article>
