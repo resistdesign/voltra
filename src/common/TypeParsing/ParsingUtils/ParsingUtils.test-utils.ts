@@ -25,9 +25,9 @@ const getParsingUtilsScenarioData = () => {
     export type Book = {
       /** @primaryField */
       id: string;
-      /** @label Title @indexed.fullText @indexed.structured */
+      /** @label Title @indexed.text @indexed.exact @indexed.range */
       readonly title?: string;
-      /** @indexed.structured @indexed.decimal */
+      /** @indexed.exact @indexed.range @indexed.decimal */
       rating: 1 | 2 | 3;
       tags: string[];
       author: Person;

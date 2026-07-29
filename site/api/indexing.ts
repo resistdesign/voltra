@@ -1,6 +1,7 @@
 import {
   createAwsSdkV3DynamoClient,
   createRelationEdgesDdbDependencies,
+  createIndexBackend,
   FullTextDdbBackend,
   IndexMutationCoordinator,
   RelationalDdbBackend,
@@ -29,23 +30,25 @@ export const indexMutationCoordinator = new IndexMutationCoordinator(
   ddbAdapter,
 );
 
-export const fullTextBackend = new FullTextDdbBackend({
+const textBackend = new FullTextDdbBackend({
   client: ddbAdapter,
   table: indexingTable,
   mutationCoordinator: indexMutationCoordinator,
 });
 
-const structuredBackend = new StructuredDdbBackend({
+const valueBackend = new StructuredDdbBackend({
   client: ddbAdapter,
   table: indexingTable,
   tokenizer: structuredStringTokenizer,
   mutationCoordinator: indexMutationCoordinator,
 });
 
-export const structuredReader = structuredBackend.reader;
-export const structuredWriter = structuredBackend.writer;
-export const structuredOccupancyMaintenance =
-  structuredBackend.occupancyMaintenance;
+export const indexBackend = createIndexBackend({
+  values: valueBackend.reader,
+  valueWriter: valueBackend.writer,
+  text: textBackend,
+});
+export const structuredOccupancyMaintenance = valueBackend.occupancyMaintenance;
 
 export const relationalBackend = new RelationalDdbBackend(
   createRelationEdgesDdbDependencies({

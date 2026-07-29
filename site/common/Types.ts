@@ -13,14 +13,14 @@ type PersistableItem = {
 export type Car = PersistableItem & {
   /**
    * @label Make
-   * @indexed.fullText
-   * @indexed.structured
+   * @indexed.text
+   * @indexed.exact @indexed.range
    */
   make: string;
   /**
    * @label Model
-   * @indexed.fullText
-   * @indexed.structured
+   * @indexed.text
+   * @indexed.exact @indexed.range
    */
   model: string;
   /**
@@ -28,7 +28,7 @@ export type Car = PersistableItem & {
    * @constraints.min 1900
    * @constraints.max 2022
    * @constraints.step 1
-   * @indexed.structured
+   * @indexed.exact @indexed.range
    */
   year: number;
 };
@@ -39,14 +39,14 @@ export type Car = PersistableItem & {
 export type Person = PersistableItem & {
   /**
    * @label First Name
-   * @indexed.fullText
-   * @indexed.structured
+   * @indexed.text
+   * @indexed.exact @indexed.range
    */
   firstName: string;
   /**
    * @label Last Name
-   * @indexed.fullText
-   * @indexed.structured
+   * @indexed.text
+   * @indexed.exact @indexed.range
    */
   lastName: string;
   /**
@@ -57,7 +57,7 @@ export type Person = PersistableItem & {
    * @constraints.min 18.0
    * @constraints.max 150.0
    * @constraints.pattern \d+
-   * @indexed.structured
+   * @indexed.exact @indexed.range
    * @indexed.decimal
    */
   age: number;
@@ -83,7 +83,7 @@ export type Person = PersistableItem & {
   readonly likesCheese: boolean;
   /**
    * @label Dietary Restrictions
-   * @indexed.structured
+   * @indexed.exact @indexed.range
    */
   dietaryRestrictions:
     "Vegan" | "Vegetarian" | "Pescatarian" | "Keto" | "Paleo" | "None";

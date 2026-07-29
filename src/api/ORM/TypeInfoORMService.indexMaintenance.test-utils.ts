@@ -18,6 +18,7 @@ import type {
 import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "./getTypeInfoORMIndexingConfigFromTypeInfoMap";
 import { TypeInfoORMService } from "./TypeInfoORMService";
 import { rebuildStructuredOccupancy } from "./rebuildStructuredOccupancy";
+import { createIndexBackend } from "../Indexing/query";
 
 type Book = {
   id: string;
@@ -45,7 +46,7 @@ const getTypeInfoMapV1 = (): TypeInfoMap => ({
         optional: false,
         tags: {
           indexed: {
-            fullText: true,
+            text: true,
           },
         },
       },
@@ -62,7 +63,8 @@ const getTypeInfoMapV1 = (): TypeInfoMap => ({
         optional: false,
         tags: {
           indexed: {
-            structured: true,
+            exact: true,
+            range: true,
           },
         },
       },
@@ -94,7 +96,7 @@ const getTypeInfoMapV2 = (): TypeInfoMap => ({
         optional: false,
         tags: {
           indexed: {
-            fullText: true,
+            text: true,
           },
         },
       },
@@ -105,7 +107,8 @@ const getTypeInfoMapV2 = (): TypeInfoMap => ({
         optional: false,
         tags: {
           indexed: {
-            structured: true,
+            exact: true,
+            range: true,
           },
         },
       },
@@ -149,7 +152,7 @@ const getOptionalFullTextTypeInfoMap = (): TypeInfoMap => ({
         optional: true,
         tags: {
           indexed: {
-            fullText: true,
+            text: true,
           },
         },
       },
@@ -172,13 +175,12 @@ const createOrm = (
         uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
       }),
     indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
-      fullText: {
-        backend: fullTextBackend,
-      },
-      structured: {
-        reader: structuredBackend,
-        writer: structuredBackend,
-      },
+      backend: createIndexBackend({
+        values: structuredBackend,
+        valueWriter: structuredBackend,
+        text: fullTextBackend,
+      }),
+      allowFullScanFallback: true,
     }),
     useDAC: false,
   });
@@ -295,7 +297,7 @@ const runIndexMaintenanceScenario = async () => {
   );
 
   await ormV2.reindexStoredItem("Book", bookId, {
-    previousFullTextIndexFields: ["title"],
+    previousIndexFields: ["title"],
   });
 
   const fullTextIdsAfterSchemaChange = {
@@ -306,7 +308,7 @@ const runIndexMaintenanceScenario = async () => {
   const beforeDeleteSnapshot = await driver.readItem(bookId);
   await driver.deleteItem(bookId);
   await ormV2.removeItemIndexes("Book", beforeDeleteSnapshot, {
-    fullTextIndexFields: ["slug"],
+    indexFields: ["slug"],
   });
 
   const fullTextIdsAfterDeleteCleanup = await queryLossyIds(
@@ -371,7 +373,7 @@ const runIndexMaintenanceScenario = async () => {
   const bulkReindexResults = await bulkOrmV2.reindexStoredType("Book", {
     itemsPerPage: 1,
     previousItemsByPrimaryField: bulkPreviousItemsByPrimaryField,
-    previousFullTextIndexFields: ["title"],
+    previousIndexFields: ["title"],
   });
 
   const optionalDriver = new InMemoryDataItemDBDriver<Book, "id">({
@@ -477,14 +479,14 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
           array: false,
           readonly: false,
           optional: false,
-          tags: { indexed: { structured: true } },
+          tags: { indexed: { exact: true, range: true } },
         },
         rating: {
           type: "number",
           array: false,
           readonly: false,
           optional: false,
-          tags: { indexed: { structured: true } },
+          tags: { indexed: { exact: true, range: true } },
         },
       },
     },

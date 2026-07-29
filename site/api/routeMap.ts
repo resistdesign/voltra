@@ -13,12 +13,10 @@ import type { TypeInfo } from "../../src/common";
 import { DEMO_ORM_ROUTE_PATH } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import {
-  fullTextBackend,
+  indexBackend,
   indexMutationCoordinator,
   relationalBackend,
-  structuredReader,
   structuredStringTokenizer,
-  structuredWriter,
 } from "./indexing";
 
 /**
@@ -64,14 +62,9 @@ export const DEMO_ORM_CONFIG = {
   },
   indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(DemoTypeInfoMap, {
     mutationCoordinator: indexMutationCoordinator,
-    fullText: {
-      backend: fullTextBackend,
-    },
-    structured: {
-      reader: structuredReader,
-      writer: structuredWriter,
-      tokenizer: structuredStringTokenizer,
-    },
+    backend: indexBackend,
+    tokenizer: structuredStringTokenizer,
+    allowFullScanFallback: true,
     relations: {
       backend: relationalBackend,
       /**

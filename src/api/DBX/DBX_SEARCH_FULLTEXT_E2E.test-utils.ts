@@ -6,8 +6,6 @@ import {
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
-import { SEARCH_DEFAULTS } from "../Indexing/Handler/Config";
-import { FullTextMemoryBackend } from "../Indexing";
 
 type Post = {
   id: string;
@@ -33,16 +31,33 @@ const buildDbxRuntime = (options?: { maxTokens?: number }) => {
       Post: () => `post-${++postCounter}`,
     },
     indexing: {
-      fullText: {
-        backend: new FullTextMemoryBackend(),
-        defaultIndexFieldByType: {
-          Post: ["body", "title"],
+      fieldsByType: {
+        Post: {
+          body: {
+            text: {
+              exact: true,
+              phrase: true,
+              caseInsensitiveEquals: true,
+              caseInsensitiveContains: true,
+              prefix: true,
+              lossy: true,
+            },
+          },
+          title: {
+            text: {
+              exact: true,
+              phrase: true,
+              caseInsensitiveEquals: true,
+              caseInsensitiveContains: true,
+              prefix: true,
+              lossy: true,
+            },
+          },
         },
       },
       limits: options?.maxTokens
         ? {
-            ...SEARCH_DEFAULTS,
-            maxTokens: options.maxTokens,
+            maxTextTokens: options.maxTokens,
           }
         : undefined,
     },
@@ -151,7 +166,7 @@ const buildPosts = (): Array<Omit<Post, "id">> => [
   },
   {
     title: "Quotes",
-    body: "\"Quoted phrase\" appears with quotes and ‘smart’ apostrophes.",
+    body: '"Quoted phrase" appears with quotes and ‘smart’ apostrophes.',
     status: "draft",
     score: 120,
     createdAt: "2024-04-12T00:00:00.000Z",
@@ -229,158 +244,158 @@ export const runDbxFullTextSearchScenario = async () => {
 
   const exactSentence = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "quick brown fox jumps over",
     "body",
   );
   const exactTitleField = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "sentences",
     "title",
   );
   const exactSentenceNineDefault = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "quick brown fox jumps over 13 lazy dogs today",
     "body",
   );
   const exactSentenceNineMid = await runFullTextSearch(
     runtimeWithMidLimits,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "quick brown fox jumps over 13 lazy dogs today",
     "body",
   );
   const exactSentenceNineHigh = await runFullTextSearch(
     runtimeWithHighLimits,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "quick brown fox jumps over 13 lazy dogs today",
     "body",
   );
   const exactLongDefault = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
     "body",
   );
   const exactLongMid = await runFullTextSearch(
     runtimeWithMidLimits,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
     "body",
   );
   const exactLongHigh = await runFullTextSearch(
     runtimeWithHighLimits,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "aurora borealis glows above arctic night sky with silent cold light over distant mountains under stars",
     "body",
   );
   const exactDiacritics = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "naïve café résumé coöperate são paulo",
     "body",
   );
   const exactStopwords = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "the the the",
     "body",
   );
   const exactQuotedPhrase = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "quoted phrase",
     "body",
   );
   const exactPunctuation = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "edge case",
     "body",
   );
   const exactSeparators = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "snake case and camelcase",
     "body",
   );
   const exactHyphenated = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "service oriented architecture",
     "body",
   );
   const exactNumericShort = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_PHRASE,
     "v2 0 fix 123",
     "body",
   );
 
   const lossyMiddleToken = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "rown",
     "body",
   );
   const lossyDiacritics = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "resume cafe",
     "body",
   );
   const lossySeparators = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "dot case",
     "body",
   );
   const lossyMixedCase = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "mixed case",
     "body",
   );
   const lossyPunctuation = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "punctuation heavy",
     "body",
   );
   const lossyAddress = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "foo bar example",
     "body",
   );
   const lossyPrefix = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "microserv",
     "body",
   );
   const lossyShortToken = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "v2",
     "body",
   );
   const lossyEmoji = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "rocket",
     "body",
   );
   const lossySmartApostrophes = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "smart apostrophes",
     "body",
   );
   const lossyMixedPunctuation = await runFullTextSearch(
     runtime,
-    ComparisonOperators.LIKE,
+    ComparisonOperators.TEXT_LOSSY,
     "o reilly",
     "body",
   );
@@ -567,8 +582,9 @@ export const runDbxFullTextSearchExactSentenceIdsScenario = async () =>
 export const runDbxFullTextSearchExactTitleFieldIdsScenario = async () =>
   (await runDbxFullTextSearchScenario()).exactTitleFieldIds;
 
-export const runDbxFullTextSearchExactSentenceNineDefaultIdsScenario = async () =>
-  (await runDbxFullTextSearchScenario()).exactSentenceNineDefaultIds;
+export const runDbxFullTextSearchExactSentenceNineDefaultIdsScenario =
+  async () =>
+    (await runDbxFullTextSearchScenario()).exactSentenceNineDefaultIds;
 
 export const runDbxFullTextSearchExactSentenceNineMidIdsScenario = async () =>
   (await runDbxFullTextSearchScenario()).exactSentenceNineMidIds;
@@ -669,8 +685,8 @@ export const runDbxFullTextSearchUpdateNullAfterIdsScenario = async () =>
 export const runDbxFullTextSearchUpdateNonFullTextIdScenario = async () =>
   (await runDbxFullTextSearchScenario()).updateNonFullTextId;
 
-export const runDbxFullTextSearchUpdateNonFullTextBeforeIdsScenario = async () =>
-  (await runDbxFullTextSearchScenario()).updateNonFullTextBeforeIds;
+export const runDbxFullTextSearchUpdateNonFullTextBeforeIdsScenario =
+  async () => (await runDbxFullTextSearchScenario()).updateNonFullTextBeforeIds;
 
 export const runDbxFullTextSearchUpdateNonFullTextResultScenario = async () =>
   (await runDbxFullTextSearchScenario()).updateNonFullTextResult;

@@ -140,17 +140,26 @@ export type SupportedFieldTags = Partial<{
    * */
   indexed: Partial<{
     /**
-     * Whether this field should be added to the type's default full-text index fields.
+     * Enable canonical scalar equality indexing.
      * */
-    fullText: boolean;
+    exact: boolean;
     /**
-     * Whether this field should be added to the type's structured indexed field list.
+     * Enable collection-membership indexing. This is normally inferred for
+     * indexed array fields but may be stated explicitly.
      * */
-    structured: boolean;
+    membership: boolean;
     /**
-     * Use unit-sized numeric criterion chunks for structured Link & Lock
-     * occupancy. This flag has effect only on scalar number fields that are
-     * also structurally indexed.
+     * Enable ordered scalar range indexing.
+     * */
+    range: boolean;
+    /**
+     * Enable normalized exact, phrase, prefix, case-insensitive, and lossy text
+     * capabilities for this field.
+     * */
+    text: boolean;
+    /**
+     * Use unit-sized numeric criterion chunks for Link & Lock occupancy. This
+     * has effect only on scalar numeric range fields.
      * */
     decimal: boolean;
   }>;

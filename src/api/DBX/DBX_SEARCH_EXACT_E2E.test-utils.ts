@@ -3,7 +3,6 @@ import {
   LogicalOperators,
   type ListItemsResults,
 } from "../../common/SearchTypes";
-import { FullTextMemoryBackend } from "../Indexing";
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
@@ -28,10 +27,18 @@ const buildDbxRuntime = () => {
       Post: () => `post-${++postCounter}`,
     },
     indexing: {
-      fullText: {
-        backend: new FullTextMemoryBackend(),
-        defaultIndexFieldByType: {
-          Post: "body",
+      fieldsByType: {
+        Post: {
+          body: {
+            text: {
+              exact: true,
+              phrase: true,
+              caseInsensitiveEquals: true,
+              caseInsensitiveContains: true,
+              prefix: true,
+              lossy: true,
+            },
+          },
         },
       },
     },
@@ -90,7 +97,7 @@ const runExactSearch = async (runtime: ReturnType<typeof buildDbxRuntime>) => {
           fieldCriteria: [
             {
               fieldName: "body",
-              operator: ComparisonOperators.LIKE,
+              operator: ComparisonOperators.TEXT_PHRASE,
               value: "Alpha Bravo!",
             },
           ],
