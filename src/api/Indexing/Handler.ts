@@ -2,12 +2,12 @@
  * @packageDocumentation
  *
  * Lambda-friendly handler that wraps indexing and search operations for a
- * configured {@link IndexBackend}. Use this when you want a single entry point
+ * configured {@link TextIndexBackend}. Use this when you want a single entry point
  * for indexDocument/removeDocument/searchLossy/searchExact.
  */
 import { indexDocument, removeDocument, searchExact, searchLossy } from "./API";
 import { resolveSearchLimits, type SearchLimits } from "./Handler/Config";
-import type { DocumentRecord, IndexBackend } from "./Types";
+import type { DocumentRecord, TextIndexBackend } from "./Types";
 import { createSearchTrace } from "./Trace";
 
 /**
@@ -138,7 +138,7 @@ export type HandlerDependencies = {
   /**
    * Index backend used for all operations.
    */
-  backend: IndexBackend;
+  backend: TextIndexBackend;
 };
 
 /**

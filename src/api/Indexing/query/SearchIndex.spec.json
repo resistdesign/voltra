@@ -1,0 +1,54 @@
+{
+  "file": "./SearchIndex.test-utils.ts",
+  "tests": [
+    {
+      "export": "runUnifiedIndexMixedAndScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "4"]
+    },
+    {
+      "export": "runUnifiedIndexMixedOrScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["1", "2", "3", "4"]
+    },
+    {
+      "export": "runUnifiedIndexVerificationScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runUnifiedIndexDiagnosticsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "mixed": true,
+        "strategy": "candidateIntersection"
+      }
+    },
+    {
+      "export": "runUnifiedIndexPaginationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": ["1"],
+        "second": ["4"],
+        "terminal": null
+      }
+    },
+    {
+      "export": "runUnifiedIndexOrderingScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["4", "1"]
+    },
+    {
+      "export": "runUnifiedIndexStaleCursorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "INDEX_QUERY_STALE_CURSOR"
+    }
+  ]
+}

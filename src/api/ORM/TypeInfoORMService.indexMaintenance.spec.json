@@ -6,7 +6,7 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "staleListBeforeRepairIds": ["book-1"],
+        "staleListBeforeRepairIds": [],
         "staleFullTextIdsBeforeRepair": ["book-1"],
         "staleStructuredIdsBeforeRepair": ["book-1"],
         "fullTextIdsAfterRepair": {

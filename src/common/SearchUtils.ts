@@ -14,6 +14,7 @@ import {
   SearchCriteria,
   SortField,
 } from "./SearchTypes";
+import { normalizeIndexText } from "./TextNormalization";
 
 /**
  * Basic comparison operators for filtering data.
@@ -83,12 +84,16 @@ export const COMPARATORS: Record<
     criterionValue: any,
     _criterionValueOptions: any[] | undefined,
     fieldValue: any,
-  ) => `${fieldValue}`.includes(`${criterionValue}`),
+  ) =>
+    normalizeIndexText(fieldValue).includes(normalizeIndexText(criterionValue)),
   [ComparisonOperators.NOT_LIKE]: (
     criterionValue: any,
     _criterionValueOptions: any[] | undefined,
     fieldValue: any,
-  ) => !`${fieldValue}`.includes(`${criterionValue}`),
+  ) =>
+    !normalizeIndexText(fieldValue).includes(
+      normalizeIndexText(criterionValue),
+    ),
   [ComparisonOperators.EXISTS]: (
     _criterionValue: any,
     _criterionValueOptions: any[] | undefined,
@@ -139,7 +144,51 @@ export const COMPARATORS: Record<
     criterionValue: any,
     _criterionValueOptions: any[] | undefined,
     fieldValue: any,
-  ) => `${fieldValue}`.startsWith(`${criterionValue}`),
+  ) =>
+    normalizeIndexText(fieldValue).startsWith(
+      normalizeIndexText(criterionValue),
+    ),
+  [ComparisonOperators.CASE_INSENSITIVE_EQUALS]: (
+    criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
+    fieldValue: any,
+  ) => normalizeIndexText(fieldValue) === normalizeIndexText(criterionValue),
+  [ComparisonOperators.CASE_INSENSITIVE_CONTAINS]: (
+    criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
+    fieldValue: any,
+  ) =>
+    normalizeIndexText(fieldValue).includes(normalizeIndexText(criterionValue)),
+  [ComparisonOperators.TEXT_EXACT]: (
+    criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
+    fieldValue: any,
+  ) => normalizeIndexText(fieldValue) === normalizeIndexText(criterionValue),
+  [ComparisonOperators.TEXT_PHRASE]: (
+    criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
+    fieldValue: any,
+  ) =>
+    normalizeIndexText(fieldValue).includes(normalizeIndexText(criterionValue)),
+  [ComparisonOperators.TEXT_PREFIX]: (
+    criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
+    fieldValue: any,
+  ) =>
+    normalizeIndexText(fieldValue).startsWith(
+      normalizeIndexText(criterionValue),
+    ),
+  [ComparisonOperators.TEXT_LOSSY]: (
+    criterionValue: any,
+    _criterionValueOptions: any[] | undefined,
+    fieldValue: any,
+  ) => {
+    const value = normalizeIndexText(fieldValue);
+    return normalizeIndexText(criterionValue)
+      .split(/\s+/)
+      .filter(Boolean)
+      .every((token) => value.includes(token));
+  },
   [ComparisonOperators.ENDS_WITH]: (
     criterionValue: any,
     _criterionValueOptions: any[] | undefined,
@@ -208,6 +257,35 @@ export const compareArray = (
 };
 
 /**
+ * Canonical semantic authority for one item and one public search criteria.
+ */
+export const doesTypeInfoDataItemMatchSearchCriteria = (
+  searchCriteria: SearchCriteria,
+  item: TypeInfoDataItem,
+  typeInfoName?: string,
+  typeInfoMap?: TypeInfoMap,
+): boolean => {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  const fields = typeInfoMap?.[typeInfoName ?? ""]?.fields ?? {};
+  const { logicalOperator, fieldCriteria } = searchCriteria;
+  const comparableCriteria = fieldCriteria.filter(
+    (criterion) => !fields[criterion.fieldName]?.typeReference,
+  );
+  const matches = (fieldCriterion: FieldCriterion): boolean => {
+    const field = fields[fieldCriterion.fieldName];
+    const value = item[fieldCriterion.fieldName];
+    return field?.array
+      ? compareArray(fieldCriterion, value as any[] | undefined)
+      : compare(fieldCriterion, value);
+  };
+  return logicalOperator === LogicalOperators.OR
+    ? comparableCriteria.some(matches)
+    : comparableCriteria.every(matches);
+};
+
+/**
  * Get the filtered data items based on the search criteria.
  *
  * @param searchCriteria - Criteria to apply.
@@ -222,56 +300,14 @@ export const getFilterTypeInfoDataItemsBySearchCriteria = (
   typeInfoName?: string,
   typeInfoMap?: TypeInfoMap,
 ) => {
-  const { fields = {} }: Partial<TypeInfo> =
-    typeInfoMap?.[typeInfoName as keyof TypeInfoMap] || {};
-  const { logicalOperator = LogicalOperators.AND, fieldCriteria = [] } =
-    searchCriteria;
-  const filteredItems: TypeInfoDataItem[] = [];
-
-  for (const currentItem of items) {
-    if (typeof currentItem === "object" && currentItem !== null) {
-      let meetsCriteria = true;
-      if (logicalOperator === LogicalOperators.OR && fieldCriteria.length > 0) {
-        meetsCriteria = false;
-      }
-
-      for (const fieldCriterion of fieldCriteria) {
-        const { fieldName } = fieldCriterion;
-        const { array: isArrayType, typeReference }: Partial<TypeInfoField> =
-          fields[fieldName] || {};
-        const currentFieldValue = currentItem[fieldName];
-
-        if (!typeReference) {
-          const result = isArrayType
-            ? compareArray(
-                fieldCriterion,
-                currentFieldValue as any[] | undefined,
-              )
-            : compare(fieldCriterion, currentFieldValue);
-
-          if (logicalOperator === LogicalOperators.AND) {
-            meetsCriteria = result;
-
-            if (!meetsCriteria) {
-              break;
-            }
-          } else {
-            meetsCriteria = meetsCriteria || result;
-
-            if (meetsCriteria) {
-              break;
-            }
-          }
-        }
-      }
-
-      if (meetsCriteria) {
-        filteredItems.push(currentItem);
-      }
-    }
-  }
-
-  return filteredItems;
+  return items.filter((item) =>
+    doesTypeInfoDataItemMatchSearchCriteria(
+      searchCriteria,
+      item,
+      typeInfoName,
+      typeInfoMap,
+    ),
+  );
 };
 
 /**

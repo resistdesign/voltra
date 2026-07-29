@@ -82,21 +82,23 @@ import {
   indexDocument,
   removeDocument,
   replaceFullTextDocument as replaceFullTextDocumentIndex,
-  searchExact,
-  searchLossy,
 } from "../Indexing/API";
 import { qualifyIndexField } from "../Indexing/fieldQualification";
-import type { IndexBackend } from "../Indexing/Types";
 import type { IndexMutationCoordinator } from "../Indexing/ddb/IndexMutationCoordinator";
 import {
-  searchStructured,
-  type StructuredSearchDependencies,
-} from "../Indexing/structured/SearchStructured";
-import type { StructuredWriter } from "../Indexing/structured/Handlers";
-import type { ResolvedSearchLimits } from "../Indexing/Handler/Config";
+  searchIndex,
+  IndexQueryError,
+  IndexQueryErrorCode,
+  type IndexBackend,
+  type IndexedFieldCapabilities,
+  type IndexedFieldsByType,
+  type IndexExpression,
+  type IndexSearchDiagnostics,
+  type IndexSearchLimits,
+} from "../Indexing/query";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredIndexRecords";
-import type { Where, WhereValue } from "../Indexing/structured/Types";
+import type { WhereValue } from "../Indexing/structured/Types";
 import { STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY } from "../Indexing/structured/Types";
 import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";
 import type {
@@ -104,11 +106,12 @@ import type {
   StructuredWriteContext,
 } from "../Indexing/structured/StructuredOccupancy";
 import {
+  doesTypeInfoDataItemMatchSearchCriteria,
   getFilterTypeInfoDataItemsBySearchCriteria,
   getSortedItems,
 } from "../../common/SearchUtils";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
-import { criteriaToStructuredWhere } from "./indexing/criteriaToStructuredWhere";
+import { criteriaToIndexExpression } from "./indexing/criteriaToIndexExpression";
 import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
 
 /**
@@ -216,47 +219,14 @@ export type TypeInfoORMDACConfig = {
 export type TypeInfoORMIndexingConfig = {
   /** Shared scope that combines compatible derived writes across backends. */
   mutationCoordinator?: Pick<IndexMutationCoordinator, "run">;
-  /**
-   * Full text indexing configuration.
-   */
-  fullText?: {
-    /**
-     * Backend used for full text indexing.
-     */
-    backend: IndexBackend;
-    /**
-     * Default index field name(s) by type.
-     */
-    defaultIndexFieldByType?: Record<string, string | string[]>;
-  };
-  /**
-   * Structured indexing configuration.
-   */
-  structured?: {
-    /**
-     * Reader used for structured queries.
-     */
-    reader: StructuredSearchDependencies;
-    /**
-     * Optional writer for structured indexing.
-     */
-    writer?: StructuredWriter;
-    /**
-     * Explicitly indexed field names by type. Fields not listed are excluded
-     * from structured indexing and structured query routing.
-     */
-    indexedFieldsByType?: Record<string, string[]>;
-    /** Eligible scalar range fields and chunk policies derived from TypeInfo. */
-    occupancyFieldsByType?: Record<string, StructuredOccupancyFieldMap>;
-    /**
-     * Optional tokenizer overrides for structured string contains/LIKE behavior.
-     */
-    tokenizer?: Partial<StructuredStringTokenizerConfig>;
-    /**
-     * Field name mapping per type.
-     */
-    fieldMapByType?: Record<string, Record<string, string>>;
-  };
+  /** Singular logical backend composed from specialized physical capabilities. */
+  backend: IndexBackend;
+  /** TypeInfo-derived source of truth for planning and mutation. */
+  fieldsByType?: IndexedFieldsByType;
+  /** Shared text/value tokenizer behavior participating in cursor identity. */
+  tokenizer?: Partial<StructuredStringTokenizerConfig>;
+  /** Permit canonical scan fallback for genuinely unindexable criteria. */
+  allowFullScanFallback?: boolean;
   /**
    * Relationship indexing configuration.
    */
@@ -284,7 +254,7 @@ export type TypeInfoORMIndexingConfig = {
   /**
    * Optional search limits for indexing queries.
    */
-  limits?: ResolvedSearchLimits;
+  limits?: Partial<IndexSearchLimits>;
   /**
    * Optional observability hooks for indexing/routing diagnostics.
    */
@@ -294,22 +264,23 @@ export type TypeInfoORMIndexingConfig = {
      */
     onListRoutingDecision?: (event: {
       typeName: string;
-      path: "fullText" | "structured" | "fullScanCompare";
+      path: "indexed" | "fullScanCompare" | "canonicalDriverList";
       reason:
-        | "fullTextPlan"
-        | "structuredEligible"
+        | "indexedExpression"
+        | "noCriteria"
         | "criteriaWithoutIndexedPath"
         | "indexedPathFailedOrUnsupported";
       criteriaCount: number;
+      plan?: IndexSearchDiagnostics;
     }) => void;
     /**
-     * Called when structured indexing writes/removes document entries.
+     * Called when unified indexing writes/removes document entries.
      */
-    onStructuredIndexWrite?: (event: {
+    onIndexWrite?: (event: {
       typeName: string;
       docId: string;
       action: "upsert" | "remove";
-      indexedFieldCount: number;
+      fieldCount: number;
     }) => void;
   };
 };
@@ -319,11 +290,11 @@ export type TypeInfoORMIndexingConfig = {
  */
 export type TypeInfoORMManualIndexingConfig = {
   /**
-   * Explicit full-text field name(s) to target instead of the configured defaults.
+   * Explicit field name(s) to target instead of configured capabilities.
    *
    * Supply the previous field set when cleaning up after a schema/config change.
    */
-  fullTextIndexFields?: string | string[];
+  indexFields?: string[];
 };
 
 /**
@@ -331,13 +302,13 @@ export type TypeInfoORMManualIndexingConfig = {
  */
 export type TypeInfoORMReplaceIndexingConfig = {
   /**
-   * Full-text field name(s) to remove from the previous snapshot.
+   * Indexed field name(s) to remove from the previous snapshot.
    */
-  previousFullTextIndexFields?: string | string[];
+  previousIndexFields?: string[];
   /**
-   * Full-text field name(s) to add for the next snapshot.
+   * Indexed field name(s) to add for the next snapshot.
    */
-  nextFullTextIndexFields?: string | string[];
+  nextIndexFields?: string[];
 };
 
 /**
@@ -364,7 +335,7 @@ export type TypeInfoORMReindexStoredTypeConfig =
      * Optional previous snapshots keyed by primary field value.
      *
      * Use this when a schema/config change requires cleanup of previously indexed
-     * full-text fields before the current item is reindexed.
+     * fields before the current item is reindexed.
      */
     previousItemsByPrimaryField?: Record<string, Partial<TypeInfoDataItem>>;
   };
@@ -450,19 +421,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Selected routing path.
      */
-    path: "fullText" | "structured" | "fullScanCompare",
+    path: "indexed" | "fullScanCompare" | "canonicalDriverList",
     /**
      * Why this path was selected.
      */
     reason:
-      | "fullTextPlan"
-      | "structuredEligible"
+      | "indexedExpression"
+      | "noCriteria"
       | "criteriaWithoutIndexedPath"
       | "indexedPathFailedOrUnsupported",
     /**
      * Number of criteria considered.
      */
     criteriaCount: number,
+    plan?: IndexSearchDiagnostics,
   ): void => {
     const hook = this.config.indexing?.observability?.onListRoutingDecision;
 
@@ -476,6 +448,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         path,
         reason,
         criteriaCount,
+        plan,
       });
     } catch (_error) {
       // Observability hooks must never alter ORM behavior.
@@ -485,7 +458,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Emit structured index write observability events without impacting behavior.
    */
-  protected emitStructuredIndexWrite = (
+  protected emitIndexWrite = (
     /**
      * Type being indexed.
      */
@@ -501,16 +474,16 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     /**
      * Number of indexed fields in the write payload.
      */
-    indexedFieldCount: number,
+    fieldCount: number,
   ): void => {
-    const hook = this.config.indexing?.observability?.onStructuredIndexWrite;
+    const hook = this.config.indexing?.observability?.onIndexWrite;
 
     if (!hook) {
       return;
     }
 
     try {
-      hook({ typeName, docId, action, indexedFieldCount });
+      hook({ typeName, docId, action, fieldCount });
     } catch (_error) {
       // Observability hooks must never alter ORM behavior.
     }
@@ -899,221 +872,27 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     return typeInfo;
   };
 
-  /**
-   * @returns Resolved full-text index field names.
-   */
-  protected resolveFullTextIndexFields = (
-    /**
-     * Type name used to resolve the default index field(s).
-     */
+  /** Resolve all configured field capabilities for a type. */
+  protected getIndexedFieldCapabilities = (
     typeName: string,
-    /**
-     * Optional override for the index field.
-     */
-    override?: string | string[],
-  ): string[] => {
-    if (typeof override === "string") {
-      return this.resolveFullTextIndexFields(typeName, [override]);
-    }
+  ): Record<string, IndexedFieldCapabilities> =>
+    this.config.indexing?.fieldsByType?.[typeName] ?? {};
 
-    if (Array.isArray(override)) {
-      const seen = new Set<string>();
-      const fields: string[] = [];
-
-      for (const field of override) {
-        if (typeof field !== "string") {
-          continue;
-        }
-
-        const trimmed = field.trim();
-
-        if (!trimmed || seen.has(trimmed)) {
-          continue;
-        }
-
-        seen.add(trimmed);
-        fields.push(trimmed);
-      }
-
-      return fields;
-    }
-
-    const defaults =
-      this.config.indexing?.fullText?.defaultIndexFieldByType?.[typeName];
-
-    if (typeof defaults === "string") {
-      return [defaults];
-    }
-
-    if (!Array.isArray(defaults)) {
-      return [];
-    }
-
-    const seen = new Set<string>();
-    const fields: string[] = [];
-
-    for (const field of defaults) {
-      if (typeof field !== "string") {
-        continue;
-      }
-
-      const trimmed = field.trim();
-
-      if (!trimmed || seen.has(trimmed)) {
-        continue;
-      }
-
-      seen.add(trimmed);
-      fields.push(trimmed);
-    }
-
-    return fields;
-  };
-
-  /**
-   * @returns True when the operator maps to full-text search.
-   */
-  protected isFullTextSearchOperator = (
-    /**
-     * Operator to evaluate.
-     */
-    operator: ComparisonOperators,
-  ): boolean =>
-    operator === ComparisonOperators.LIKE ||
-    operator === ComparisonOperators.CONTAINS ||
-    operator === ComparisonOperators.STARTS_WITH;
-
-  /**
-   * @returns Explicitly indexed structured field names for a type.
-   */
-  protected resolveStructuredIndexedFields = (
-    /**
-     * Type name used to resolve indexed structured fields.
-     */
+  /** Resolve deterministic, deduplicated fields for mutation operations. */
+  protected resolveIndexFields = (
     typeName: string,
-  ): Set<string> => {
-    const configured =
-      this.config.indexing?.structured?.indexedFieldsByType?.[typeName];
+    override?: string[],
+  ): string[] =>
+    Array.from(
+      new Set(
+        (override ?? Object.keys(this.getIndexedFieldCapabilities(typeName)))
+          .map((field) => field.trim())
+          .filter(Boolean),
+      ),
+    ).sort();
 
-    if (!Array.isArray(configured)) {
-      return new Set<string>();
-    }
-
-    const fields = new Set<string>();
-
-    for (const field of configured) {
-      if (typeof field !== "string") {
-        continue;
-      }
-
-      const trimmed = field.trim();
-
-      if (trimmed) {
-        fields.add(trimmed);
-      }
-    }
-
-    return fields;
-  };
-
-  /**
-   * @returns True when the field type and operator can be served by structured indexing.
-   */
-  protected isStructuredOperatorSupportedForField = (
-    /**
-     * Field definition from TypeInfo.
-     */
-    field: TypeInfoField,
-    /**
-     * Search operator to evaluate.
-     */
-    operator: ComparisonOperators,
-  ): boolean => {
-    const { array: isArray = false, type } = field;
-
-    if (isArray) {
-      return operator === ComparisonOperators.CONTAINS;
-    }
-
-    if (type === "string") {
-      return (
-        operator === ComparisonOperators.EQUALS ||
-        operator === ComparisonOperators.IN ||
-        operator === ComparisonOperators.LIKE ||
-        operator === ComparisonOperators.GREATER_THAN_OR_EQUAL ||
-        operator === ComparisonOperators.LESS_THAN_OR_EQUAL ||
-        operator === ComparisonOperators.BETWEEN
-      );
-    }
-
-    if (type === "number") {
-      return (
-        operator === ComparisonOperators.EQUALS ||
-        operator === ComparisonOperators.IN ||
-        operator === ComparisonOperators.GREATER_THAN_OR_EQUAL ||
-        operator === ComparisonOperators.LESS_THAN_OR_EQUAL ||
-        operator === ComparisonOperators.BETWEEN
-      );
-    }
-
-    if (type === "boolean") {
-      return (
-        operator === ComparisonOperators.EQUALS ||
-        operator === ComparisonOperators.IN
-      );
-    }
-
-    return false;
-  };
-
-  /**
-   * @returns True when criteria can be evaluated using structured indexing.
-   */
-  protected canUseStructuredIndexForCriteria = (
-    /**
-     * Type being listed.
-     */
-    typeName: string,
-    /**
-     * Criteria to evaluate.
-     */
-    criteria?: SearchCriteria,
-  ): boolean => {
-    if (!criteria?.fieldCriteria?.length) {
-      return false;
-    }
-
-    const typeInfo = this.getTypeInfo(typeName);
-    const { fields = {} } = typeInfo;
-    const indexedFields = this.resolveStructuredIndexedFields(typeName);
-
-    if (indexedFields.size === 0) {
-      return false;
-    }
-
-    for (const criterion of criteria.fieldCriteria) {
-      const { fieldName } = criterion;
-      const field = fields[fieldName];
-
-      if (!field || field.typeReference || !indexedFields.has(fieldName)) {
-        return false;
-      }
-
-      const operator = criterion.operator ?? ComparisonOperators.EQUALS;
-
-      if (!this.isStructuredOperatorSupportedForField(field, operator)) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  /**
-   * Resolve a single globally ordered structured candidate stream.
-   * Unsupported sort shapes fall back before indexed execution begins.
-   */
-  protected resolveStructuredOrderBy = (
+  /** Resolve one globally ordered value capability. */
+  protected resolveIndexOrderBy = (
     typeName: string,
     sortFields: ListItemsConfig["sortFields"],
   ): { field: string; reverse?: boolean; optional?: boolean } | undefined => {
@@ -1128,164 +907,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     const { field, reverse } = sortFields[0];
-    const typeInfoField = this.getTypeInfo(typeName).fields?.[field];
-    if (
-      !typeInfoField ||
-      typeInfoField.array ||
-      typeInfoField.typeReference ||
-      (typeInfoField.type !== "string" && typeInfoField.type !== "number") ||
-      !this.resolveStructuredIndexedFields(typeName).has(field)
-    ) {
+    const capability = this.getIndexedFieldCapabilities(typeName)[field];
+    if (!capability?.range) {
       throw {
         message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
         typeName,
         fieldName: field,
       };
     }
-
-    const mappedField =
-      this.config.indexing?.structured?.fieldMapByType?.[typeName]?.[field] ??
-      field;
     return {
-      field: qualifyIndexField(typeName, mappedField),
+      field: qualifyIndexField(typeName, capability.field ?? field),
       reverse,
-      optional: typeInfoField.optional,
+      optional: capability.optional,
     };
-  };
-
-  /**
-   * @returns Full-text query plan derived from a field criterion.
-   */
-  protected toFullTextSearchPlan = (
-    /**
-     * Criterion to map.
-     */
-    criterion: FieldCriterion,
-  ):
-    | {
-        mode: "lossy" | "exact";
-        query: string;
-      }
-    | undefined => {
-    const operator = criterion.operator ?? ComparisonOperators.EQUALS;
-
-    if (!this.isFullTextSearchOperator(operator)) {
-      return undefined;
-    }
-
-    if (typeof criterion.value !== "string") {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
-        operator,
-        fieldName: criterion.fieldName,
-      };
-    }
-
-    const query = criterion.value.trim();
-
-    if (!query) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
-        operator,
-        fieldName: criterion.fieldName,
-      };
-    }
-
-    if (operator === ComparisonOperators.CONTAINS) {
-      return {
-        mode: "exact",
-        query,
-      };
-    }
-
-    if (operator === ComparisonOperators.STARTS_WITH) {
-      return {
-        mode: "lossy",
-        query: `${query}*`,
-      };
-    }
-
-    return {
-      mode: "lossy",
-      query,
-    };
-  };
-
-  /**
-   * @returns Auto full-text search plan for list criteria, if applicable.
-   */
-  protected resolveAutoFullTextCriteriaPlan = (
-    /**
-     * Type being listed.
-     */
-    typeName: string,
-    /**
-     * Search criteria from list config.
-     */
-    criteria?: SearchCriteria,
-  ):
-    | {
-        mode: "lossy" | "exact";
-        query: string;
-        indexField: string;
-      }
-    | undefined => {
-    if (!criteria?.fieldCriteria?.length) {
-      return undefined;
-    }
-
-    const configuredIndexFields = new Set(
-      this.resolveFullTextIndexFields(typeName),
-    );
-
-    if (configuredIndexFields.size === 0) {
-      return undefined;
-    }
-
-    const fullTextCandidates: Array<{
-      mode: "lossy" | "exact";
-      query: string;
-      indexField: string;
-    }> = [];
-    let hasNonFullTextCriteria = false;
-
-    for (const criterion of criteria.fieldCriteria) {
-      const indexField = criterion.fieldName;
-
-      if (!configuredIndexFields.has(indexField)) {
-        hasNonFullTextCriteria = true;
-        continue;
-      }
-
-      const plan = this.toFullTextSearchPlan(criterion);
-
-      if (!plan) {
-        hasNonFullTextCriteria = true;
-        continue;
-      }
-
-      fullTextCandidates.push({
-        ...plan,
-        indexField,
-      });
-    }
-
-    if (fullTextCandidates.length === 0) {
-      return undefined;
-    }
-
-    if (
-      hasNonFullTextCriteria ||
-      fullTextCandidates.length > 1 ||
-      criteria.logicalOperator === LogicalOperators.OR
-    ) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION,
-        typeName,
-      };
-    }
-
-    return fullTextCandidates[0];
   };
 
   /**
@@ -1434,7 +1068,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * @param value Value to check.
    * @returns True when the value is a supported structured value.
    */
-  protected isStructuredValue = (value: unknown): value is WhereValue =>
+  protected isIndexValue = (value: unknown): value is WhereValue =>
     value === null ||
     typeof value === "string" ||
     typeof value === "number" ||
@@ -1443,7 +1077,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * @returns Structured fields record for indexing.
    */
-  protected buildStructuredFields = (
+  protected buildIndexValueFields = (
     /**
      * Type name for field mapping.
      */
@@ -1454,14 +1088,16 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     item: Partial<TypeInfoDataItem>,
   ): StructuredDocFieldsRecord => {
     const typeInfo = this.getTypeInfo(typeName);
-    const fieldMap =
-      this.config.indexing?.structured?.fieldMapByType?.[typeName];
-    const indexedFields = this.resolveStructuredIndexedFields(typeName);
+    const capabilities = this.getIndexedFieldCapabilities(typeName);
     const withoutRefs = removeTypeReferenceFieldsFromDataItem(typeInfo, item);
     const fields: StructuredDocFieldsRecord = {};
 
     for (const [fieldName, value] of Object.entries(withoutRefs)) {
-      if (!indexedFields.has(fieldName)) {
+      const capability = capabilities[fieldName];
+      if (
+        !capability ||
+        (!capability.exact && !capability.membership && !capability.range)
+      ) {
         continue;
       }
 
@@ -1469,18 +1105,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         continue;
       }
 
-      const mappedField = fieldMap?.[fieldName] ?? fieldName;
+      const mappedField = capability.field ?? fieldName;
       const qualifiedField = qualifyIndexField(typeName, mappedField);
 
       if (Array.isArray(value)) {
-        const filtered = value.filter((entry) => this.isStructuredValue(entry));
+        const filtered = value.filter((entry) => this.isIndexValue(entry));
         if (filtered.length > 0) {
           fields[qualifiedField] = filtered as WhereValue[];
         }
         continue;
       }
 
-      if (this.isStructuredValue(value)) {
+      if (this.isIndexValue(value)) {
         fields[qualifiedField] = value;
       }
     }
@@ -1489,18 +1125,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /** Build qualified Link & Lock field metadata, including optional fields. */
-  protected buildStructuredWriteContext = (
+  protected buildIndexWriteContext = (
     typeName: string,
   ): StructuredWriteContext => {
-    const configured =
-      this.config.indexing?.structured?.occupancyFieldsByType?.[typeName];
-    const fieldMap =
-      this.config.indexing?.structured?.fieldMapByType?.[typeName];
     const occupancyFields: StructuredOccupancyFieldMap = {};
 
-    for (const [fieldName, config] of Object.entries(configured ?? {})) {
-      const mappedField = fieldMap?.[fieldName] ?? fieldName;
-      occupancyFields[qualifyIndexField(typeName, mappedField)] = config;
+    for (const [fieldName, capability] of Object.entries(
+      this.getIndexedFieldCapabilities(typeName),
+    )) {
+      if (!capability.range) continue;
+      occupancyFields[
+        qualifyIndexField(typeName, capability.field ?? fieldName)
+      ] = {
+        type: capability.range.valueType,
+        ...(capability.range.decimal ? { decimal: true } : {}),
+      };
     }
 
     return { occupancyFields };
@@ -1521,174 +1160,131 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Partial<TypeInfoDataItem> => this.getCleanItem(typeName, item, {});
 
   /**
-   * @returns Mapped structured query.
-   */
-  protected applyStructuredFieldMap = (
-    /**
-     * Type name used for field qualification.
-     */
-    typeName: string,
-    /**
-     * Structured query to map.
-     */
-    where: Where,
-    /**
-     * Optional field mapping by type.
-     */
-    fieldMap?: Record<string, string>,
-  ): Where => {
-    if ("and" in where) {
-      return {
-        and: where.and.map((child) =>
-          this.applyStructuredFieldMap(typeName, child, fieldMap),
-        ),
-      };
-    }
-
-    if ("or" in where) {
-      return {
-        or: where.or.map((child) =>
-          this.applyStructuredFieldMap(typeName, child, fieldMap),
-        ),
-      };
-    }
-
-    const mappedField = fieldMap?.[where.field] ?? where.field;
-    const qualifiedField = qualifyIndexField(typeName, mappedField);
-
-    if (where.type === "term") {
-      return { ...where, field: qualifiedField };
-    }
-
-    return { ...where, field: qualifiedField };
-  };
-
-  /**
    * @returns Promise resolved once indexing is complete.
    */
-  protected async indexFullTextDocument(
-    /**
-     * Type name for index field resolution.
-     */
+  protected async mutateItemIndexPlan(
     typeName: string,
-    /**
-     * Item to index.
-     */
-    item: Partial<TypeInfoDataItem>,
-    /**
-     * Optional override for the index field.
-     */
-    indexFieldOverride?: string | string[],
+    action:
+      | { type: "index"; next: Partial<TypeInfoDataItem>; fields?: string[] }
+      | {
+          type: "remove";
+          previous: Partial<TypeInfoDataItem>;
+          fields?: string[];
+        }
+      | {
+          type: "replace";
+          previous: Partial<TypeInfoDataItem>;
+          next: Partial<TypeInfoDataItem>;
+          previousFields?: string[];
+          nextFields?: string[];
+        },
   ): Promise<void> {
-    const { fullText } = this.config.indexing ?? {};
-    const indexFields = this.resolveFullTextIndexFields(
-      typeName,
-      indexFieldOverride,
-    );
-
-    if (!fullText || indexFields.length === 0) {
-      return;
-    }
+    const indexing = this.config.indexing;
+    if (!indexing) return;
     const { primaryField } = this.getTypeInfo(typeName);
-
-    for (const indexField of indexFields) {
-      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
-
-      await indexDocument({
-        backend: fullText.backend,
-        document: item,
-        primaryField: String(primaryField),
-        indexField,
-        indexFieldQualified: qualifiedIndexField,
-      });
-    }
-  }
-
-  /**
-   * @returns Promise resolved once removal is complete.
-   */
-  protected async removeFullTextDocument(
-    /**
-     * Type name for index field resolution.
-     */
-    typeName: string,
-    /**
-     * Item to remove from the index.
-     */
-    item: Partial<TypeInfoDataItem>,
-    /**
-     * Optional override for the index field.
-     */
-    indexFieldOverride?: string | string[],
-  ): Promise<void> {
-    const { fullText } = this.config.indexing ?? {};
-    const indexFields = this.resolveFullTextIndexFields(
-      typeName,
-      indexFieldOverride,
+    const primaryFieldName = String(primaryField);
+    const previous = action.type === "index" ? undefined : action.previous;
+    const next = action.type === "remove" ? undefined : action.next;
+    const identity = next ?? previous;
+    const docId = normalizeDocId(
+      identity?.[primaryFieldName as keyof TypeInfoDataItem],
+      primaryFieldName,
     );
-
-    if (!fullText || indexFields.length === 0) {
-      return;
-    }
-    const { primaryField } = this.getTypeInfo(typeName);
-
-    for (const indexField of indexFields) {
-      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
-
-      await removeDocument({
-        backend: fullText.backend,
-        document: item,
-        primaryField: String(primaryField),
-        indexField,
-        indexFieldQualified: qualifiedIndexField,
-      });
-    }
-  }
-
-  /**
-   * @returns Promise resolved once replacement is complete.
-   */
-  protected async replaceFullTextDocument(
-    /**
-     * Type name for index field resolution.
-     */
-    typeName: string,
-    /**
-     * Previous item state to remove from the index.
-     */
-    previousItem: Partial<TypeInfoDataItem>,
-    /**
-     * Next item state to index.
-     */
-    nextItem: Partial<TypeInfoDataItem>,
-    /**
-     * Optional override for the index field.
-     */
-    indexFieldOverride?: string | string[],
-  ): Promise<void> {
-    const { fullText } = this.config.indexing ?? {};
-    const indexFields = this.resolveFullTextIndexFields(
+    const capabilities = this.getIndexedFieldCapabilities(typeName);
+    const previousFields = this.resolveIndexFields(
       typeName,
-      indexFieldOverride,
+      action.type === "replace" ? action.previousFields : action.fields,
     );
+    const nextFields = this.resolveIndexFields(
+      typeName,
+      action.type === "replace" ? action.nextFields : action.fields,
+    );
+    const textBackend = indexing.backend.text;
+    const textOperations: Promise<void>[] = [];
 
-    if (!fullText || indexFields.length === 0) {
-      return;
+    if (textBackend) {
+      const previousText = previousFields.filter(
+        (field) =>
+          capabilities[field]?.text ||
+          (action.type === "replace" &&
+            action.previousFields?.includes(field) &&
+            !capabilities[field]),
+      );
+      const nextText = nextFields.filter((field) => capabilities[field]?.text);
+      const sameTextFields =
+        JSON.stringify(previousText) === JSON.stringify(nextText);
+
+      if (previous && next && sameTextFields) {
+        for (const field of nextText) {
+          textOperations.push(
+            replaceFullTextDocumentIndex({
+              backend: textBackend,
+              previousDocument: previous,
+              nextDocument: next,
+              primaryField: primaryFieldName,
+              indexField: field,
+              indexFieldQualified: qualifyIndexField(
+                typeName,
+                capabilities[field]?.field ?? field,
+              ),
+            }),
+          );
+        }
+      } else {
+        if (previous) {
+          for (const field of previousText) {
+            textOperations.push(
+              removeDocument({
+                backend: textBackend,
+                document: previous,
+                primaryField: primaryFieldName,
+                indexField: field,
+                indexFieldQualified: qualifyIndexField(
+                  typeName,
+                  capabilities[field]?.field ?? field,
+                ),
+              }),
+            );
+          }
+        }
+        if (next) {
+          for (const field of nextText) {
+            textOperations.push(
+              indexDocument({
+                backend: textBackend,
+                document: next,
+                primaryField: primaryFieldName,
+                indexField: field,
+                indexFieldQualified: qualifyIndexField(
+                  typeName,
+                  capabilities[field]?.field ?? field,
+                ),
+              }),
+            );
+          }
+        }
+      }
     }
-    const { primaryField } = this.getTypeInfo(typeName);
 
-    for (const indexField of indexFields) {
-      const qualifiedIndexField = qualifyIndexField(typeName, indexField);
-
-      await replaceFullTextDocumentIndex({
-        backend: fullText.backend,
-        previousDocument: previousItem,
-        nextDocument: nextItem,
-        primaryField: String(primaryField),
-        indexField,
-        indexFieldQualified: qualifiedIndexField,
-      });
+    if (indexing.backend.valueWriter) {
+      textOperations.push(
+        indexing.backend.valueWriter.write(
+          docId,
+          next ? this.buildIndexValueFields(typeName, next) : {},
+          {
+            ...this.buildIndexWriteContext(typeName),
+            ...(next ? {} : { deleted: true }),
+          },
+        ),
+      );
     }
+    this.emitIndexWrite(
+      typeName,
+      String(docId),
+      next ? "upsert" : "remove",
+      nextFields.length,
+    );
+    await Promise.all(textOperations);
   }
 
   /**
@@ -1698,7 +1294,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    *
    * @param typeName Type name for the indexed item.
    * @param item Item snapshot to index.
-   * @param config Optional full-text field overrides.
+   * @param config Optional field overrides.
    * @returns Promise resolved when manual indexing completes.
    */
   indexItemIndexes = async (
@@ -1709,14 +1305,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const indexedItem = this.getIndexedItemSnapshot(typeName, item);
 
     const operation = async () => {
-      await Promise.all([
-        this.indexFullTextDocument(
-          typeName,
-          indexedItem,
-          config.fullTextIndexFields,
-        ),
-        this.indexStructuredDocument(typeName, indexedItem),
-      ]);
+      await this.mutateItemIndexPlan(typeName, {
+        type: "index",
+        next: indexedItem,
+        fields: config.indexFields,
+      });
     };
     const coordinator = this.config.indexing?.mutationCoordinator;
     await (coordinator ? coordinator.run(operation) : operation());
@@ -1729,7 +1322,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    *
    * @param typeName Type name for the indexed item.
    * @param item Item snapshot to remove from the indexes.
-   * @param config Optional full-text field overrides.
+   * @param config Optional field overrides.
    * @returns Promise resolved when index cleanup completes.
    */
   removeItemIndexes = async (
@@ -1740,14 +1333,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const indexedItem = this.getIndexedItemSnapshot(typeName, item);
 
     const operation = async () => {
-      await Promise.all([
-        this.removeFullTextDocument(
-          typeName,
-          indexedItem,
-          config.fullTextIndexFields,
-        ),
-        this.removeStructuredDocument(typeName, indexedItem),
-      ]);
+      await this.mutateItemIndexPlan(typeName, {
+        type: "remove",
+        previous: indexedItem,
+        fields: config.indexFields,
+      });
     };
     const coordinator = this.config.indexing?.mutationCoordinator;
     await (coordinator ? coordinator.run(operation) : operation());
@@ -1757,13 +1347,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * Replace one indexed item snapshot with another.
    *
    * Use this when an existing stored item changed outside `TypeInfoORMService`
-   * or when a schema/config change requires removing old full-text fields and
+   * or when a schema/config change requires removing old indexed fields and
    * indexing a new field set.
    *
    * @param typeName Type name for the indexed item.
    * @param previousItem Previous item snapshot to remove.
    * @param nextItem Next item snapshot to index.
-   * @param config Optional previous/next full-text field overrides.
+   * @param config Optional previous/next field overrides.
    * @returns Promise resolved when replacement indexing completes.
    */
   replaceItemIndexes = async (
@@ -1779,40 +1369,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const nextIndexedItem = this.getIndexedItemSnapshot(typeName, nextItem);
 
     const operation = async () => {
-      const previousFullTextFields = this.resolveFullTextIndexFields(
-        typeName,
-        config.previousFullTextIndexFields,
-      );
-      const nextFullTextFields = this.resolveFullTextIndexFields(
-        typeName,
-        config.nextFullTextIndexFields,
-      );
-      const sameFullTextFields =
-        JSON.stringify(previousFullTextFields) ===
-        JSON.stringify(nextFullTextFields);
-      const fullTextOperation = sameFullTextFields
-        ? this.replaceFullTextDocument(
-            typeName,
-            previousIndexedItem,
-            nextIndexedItem,
-            nextFullTextFields,
-          )
-        : (async () => {
-            await this.removeFullTextDocument(
-              typeName,
-              previousIndexedItem,
-              previousFullTextFields,
-            );
-            await this.indexFullTextDocument(
-              typeName,
-              nextIndexedItem,
-              nextFullTextFields,
-            );
-          })();
-      await Promise.all([
-        fullTextOperation,
-        this.indexStructuredDocument(typeName, nextIndexedItem),
-      ]);
+      await this.mutateItemIndexPlan(typeName, {
+        type: "replace",
+        previous: previousIndexedItem,
+        next: nextIndexedItem,
+        previousFields: config.previousIndexFields,
+        nextFields: config.nextIndexFields,
+      });
     };
     const coordinator = this.config.indexing?.mutationCoordinator;
     await (coordinator ? coordinator.run(operation) : operation());
@@ -1824,11 +1387,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * When no previous snapshot is supplied, the current stored item is used for
    * both removal and indexing to refresh existing postings without duplication.
    * Supply `previousItem` when an out-of-band update changed indexed field
-   * values, otherwise old full-text tokens cannot be removed safely.
+   * values, otherwise stale index entries cannot be removed safely.
    *
    * @param typeName Type name to reindex.
    * @param primaryFieldValue Primary field value for the stored item.
-   * @param config Optional previous snapshot and full-text field overrides.
+   * @param config Optional previous snapshot and indexed field overrides.
    * @returns True when reindexing completed.
    */
   reindexStoredItem = async (
@@ -1841,8 +1404,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const previousItem = config.previousItem ?? currentItem;
 
     await this.replaceItemIndexes(typeName, previousItem, currentItem, {
-      previousFullTextIndexFields: config.previousFullTextIndexFields,
-      nextFullTextIndexFields: config.nextFullTextIndexFields,
+      previousIndexFields: config.previousIndexFields,
+      nextIndexFields: config.nextIndexFields,
     });
 
     return true;
@@ -1853,12 +1416,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    *
    * This is intended for maintenance passes after out-of-band writes or
    * schema/index configuration changes. Deleted items still require explicit
-   * cleanup via {@link removeItemIndexes}, because full-text token removal
-   * needs a prior snapshot of indexed field values. For out-of-band updates
+   * cleanup via {@link removeItemIndexes}, because index removal needs a prior
+   * snapshot of indexed field values. For out-of-band updates
    * that changed indexed values, provide `previousItemsByPrimaryField`.
    *
    * @param typeName Type name to reindex.
-   * @param config Paging, previous snapshots, and full-text field overrides.
+   * @param config Paging, previous snapshots, and indexed field overrides.
    * @returns Count of processed stored items.
    */
   reindexStoredType = async (
@@ -1887,8 +1450,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item;
 
         await this.replaceItemIndexes(typeName, previousItem, item, {
-          previousFullTextIndexFields: config.previousFullTextIndexFields,
-          nextFullTextIndexFields: config.nextFullTextIndexFields,
+          previousIndexFields: config.previousIndexFields,
+          nextIndexFields: config.nextIndexFields,
         });
         processedCount += 1;
       }
@@ -1898,96 +1461,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     return { processedCount };
   };
-
-  /**
-   * @returns Promise resolved once indexing is complete.
-   */
-  protected async indexStructuredDocument(
-    /**
-     * Type name for field mapping.
-     */
-    typeName: string,
-    /**
-     * Item to index.
-     */
-    item: Partial<TypeInfoDataItem>,
-  ): Promise<void> {
-    const { structured } = this.config.indexing ?? {};
-
-    if (!structured) {
-      return;
-    }
-
-    if (!structured.writer) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-        typeName,
-        backend: "structured.writer",
-      };
-    }
-
-    const { primaryField } = this.getTypeInfo(typeName);
-    const primaryFieldName = String(primaryField);
-    const docId = normalizeDocId(
-      item[primaryFieldName as keyof TypeInfoDataItem],
-      primaryFieldName,
-    );
-    const fields = this.buildStructuredFields(typeName, item);
-    this.emitStructuredIndexWrite(
-      typeName,
-      String(docId),
-      "upsert",
-      Object.keys(fields).length,
-    );
-
-    await structured.writer.write(
-      docId,
-      fields,
-      this.buildStructuredWriteContext(typeName),
-    );
-  }
-
-  /**
-   * @returns Promise resolved once removal is complete.
-   */
-  protected async removeStructuredDocument(
-    /**
-     * Type name for field mapping.
-     */
-    typeName: string,
-    /**
-     * Item to remove from the structured index.
-     */
-    item: Partial<TypeInfoDataItem>,
-  ): Promise<void> {
-    const { structured } = this.config.indexing ?? {};
-
-    if (!structured) {
-      return;
-    }
-
-    if (!structured.writer) {
-      throw {
-        message: TypeInfoORMServiceError.INDEXING_MISSING_BACKEND,
-        typeName,
-        backend: "structured.writer",
-      };
-    }
-
-    const { primaryField } = this.getTypeInfo(typeName);
-    const primaryFieldName = String(primaryField);
-    const docId = normalizeDocId(
-      item[primaryFieldName as keyof TypeInfoDataItem],
-      primaryFieldName,
-    );
-    this.emitStructuredIndexWrite(typeName, String(docId), "remove", 0);
-
-    await structured.writer.write(
-      docId,
-      {},
-      { ...this.buildStructuredWriteContext(typeName), deleted: true },
-    );
-  }
 
   /**
    * @returns Nothing (throws on invalid operations).
@@ -2093,8 +1566,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * Delete receives an identity, not a complete item. The primary field still
    * needs its normal operation and value validation, but unrelated required
    * fields must not participate.
-   *
-   * @returns Nothing (throws on an invalid delete operation or primary value).
    */
   protected validateDeleteOperation = (
     typeName: string,
@@ -2106,9 +1577,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const primaryFieldInfo = fields[primaryFieldName];
     const deleteTypeInfo: TypeInfo = {
       ...typeInfo,
-      fields: primaryFieldInfo
-        ? { [primaryFieldName]: primaryFieldInfo }
-        : {},
+      fields: primaryFieldInfo ? { [primaryFieldName]: primaryFieldInfo } : {},
       unionFieldSets: undefined,
     };
     const validationResults = validateTypeInfoValue(
@@ -3001,129 +2470,66 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     const { valid: searchFieldsValid } = searchFieldValidationResults;
 
     if (searchFieldsValid) {
-      const hasStructured = !!indexing?.structured?.reader;
-      const hasFullText = !!indexing?.fullText?.backend;
       const hasCriteria = !!criteria && fieldCriteria.length > 0;
 
-      if (hasCriteria && (hasStructured || hasFullText)) {
+      if (hasCriteria && indexing?.backend) {
         try {
-          let docIds: Array<string | number> = [];
-          let nextCursor: string | undefined = undefined;
-          let structuredWhere: Where | undefined;
-          let structuredOrderBy:
-            { field: string; reverse?: boolean } | undefined;
-          let usedStructuredPath = false;
-
-          const fullTextPlan = this.resolveAutoFullTextCriteriaPlan(
+          const expression = criteriaToIndexExpression(
             typeName,
             criteria,
+            this.getIndexedFieldCapabilities(typeName),
           );
-
-          if (fullTextPlan && hasFullText) {
-            this.emitListRoutingDecision(
-              typeName,
-              "fullText",
-              "fullTextPlan",
-              fieldCriteria.length,
-            );
-
-            const qualifiedIndexField = qualifyIndexField(
-              typeName,
-              fullTextPlan.indexField,
-            );
-            const fullTextBackend = indexing?.fullText?.backend;
-            const searchResult =
-              fullTextPlan.mode === "exact"
-                ? await searchExact({
-                    backend: fullTextBackend,
-                    query: fullTextPlan.query,
-                    indexField: qualifiedIndexField,
-                    limit: itemsPerPage,
-                    cursor,
-                    limits: indexing?.limits,
-                  })
-                : await searchLossy({
-                    backend: fullTextBackend,
-                    query: fullTextPlan.query,
-                    indexField: qualifiedIndexField,
-                    limit: itemsPerPage,
-                    cursor,
-                    limits: indexing?.limits,
-                  });
-
-            docIds = searchResult.docIds;
-            nextCursor = searchResult.nextCursor;
-          } else if (hasStructured) {
-            if (!this.canUseStructuredIndexForCriteria(typeName, criteria)) {
-              throw {
-                message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
-                typeName,
-              };
-            }
-            this.emitListRoutingDecision(
-              typeName,
-              "structured",
-              "structuredEligible",
-              fieldCriteria.length,
-            );
-
-            const tokenizer = indexing?.structured?.tokenizer;
-            const whereWithTokenizer = criteriaToStructuredWhere(
-              criteria,
-              tokenizer,
-            );
-
-            if (!whereWithTokenizer) {
-              throw {
-                message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
-                typeName,
-              };
-            }
-
-            const mappedWhere = this.applyStructuredFieldMap(
-              typeName,
-              whereWithTokenizer,
-              indexing?.structured?.fieldMapByType?.[typeName],
-            );
-            structuredWhere = mappedWhere;
-            structuredOrderBy = this.resolveStructuredOrderBy(
-              typeName,
-              sortFields,
-            );
-            usedStructuredPath = true;
-            const structuredReader = indexing?.structured?.reader;
-            const page = await searchStructured(
-              structuredReader as StructuredSearchDependencies,
-              mappedWhere,
-              {
-                limit: itemsPerPage,
-                cursor,
-                orderBy: structuredOrderBy,
-                occupancyFields:
-                  this.buildStructuredWriteContext(typeName).occupancyFields,
-              },
-            );
-
-            docIds = page.candidateIds;
-            nextCursor = page.cursor;
-          } else {
+          if (!expression) {
             throw {
               message: TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA,
               typeName,
             };
           }
 
+          const orderBy = this.resolveIndexOrderBy(typeName, sortFields);
+          let page = await searchIndex(indexing.backend, expression, {
+            limit: itemsPerPage,
+            cursor,
+            orderBy,
+            occupancyFields:
+              this.buildIndexWriteContext(typeName).occupancyFields,
+            tokenizer: indexing.tokenizer,
+            limits: indexing.limits,
+            planFingerprintParts: indexing.fieldsByType?.[typeName],
+          });
+          this.emitListRoutingDecision(
+            typeName,
+            "indexed",
+            "indexedExpression",
+            fieldCriteria.length,
+            page.diagnostics,
+          );
+
           const driver = this.getDriverInternal(typeName);
           const items: Partial<TypeInfoDataItem>[] = [];
           const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
 
           while (true) {
-            for (const docId of docIds) {
+            for (const docId of page.candidateIds) {
               try {
                 const item = await driver.readItem(
                   docId as any,
-                  useDAC ? undefined : cleanSelectedFields,
+                  page.requiresCanonicalVerification || useDAC
+                    ? undefined
+                    : cleanSelectedFields,
                 );
+
+                if (
+                  page.requiresCanonicalVerification &&
+                  !doesTypeInfoDataItemMatchSearchCriteria(
+                    criteria,
+                    item,
+                    typeName,
+                    typeInfoMap,
+                  )
+                ) {
+                  continue;
+                }
 
                 if (useDAC) {
                   const {
@@ -3156,28 +2562,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
               }
             }
 
-            if (
-              !usedStructuredPath ||
-              items.length >= (itemsPerPage ?? 10) ||
-              !nextCursor ||
-              !structuredWhere
-            ) {
+            if (items.length >= (itemsPerPage ?? 10) || !page.cursor) {
               break;
             }
 
-            const nextPage = await searchStructured(
-              indexing?.structured?.reader as StructuredSearchDependencies,
-              structuredWhere,
-              {
-                limit: (itemsPerPage ?? 10) - items.length,
-                cursor: nextCursor,
-                orderBy: structuredOrderBy,
-                occupancyFields:
-                  this.buildStructuredWriteContext(typeName).occupancyFields,
-              },
-            );
-            docIds = nextPage.candidateIds;
-            nextCursor = nextPage.cursor;
+            page = await searchIndex(indexing.backend, expression, {
+              limit: (itemsPerPage ?? 10) - items.length,
+              cursor: page.cursor,
+              orderBy,
+              occupancyFields:
+                this.buildIndexWriteContext(typeName).occupancyFields,
+              tokenizer: indexing.tokenizer,
+              limits: indexing.limits,
+              planFingerprintParts: indexing.fieldsByType?.[typeName],
+            });
           }
 
           const cleanedItems = items.map((item, index) => {
@@ -3192,23 +2590,26 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
               cleanSelectedFields,
             );
           });
-          const sortedItems = getSortedItems(
-            sortFields,
-            cleanedItems as TypeInfoDataItem[],
-          );
-
           return {
-            items: sortedItems as Partial<TypeInfoDataItem>[],
-            cursor: nextCursor,
+            items: cleanedItems,
+            cursor: page.cursor,
           };
         } catch (error: any) {
+          const isUnsupportedQuery =
+            error instanceof IndexQueryError &&
+            (error.code === IndexQueryErrorCode.UNSUPPORTED_EXPRESSION ||
+              error.code === IndexQueryErrorCode.UNSUPPORTED_ORDER);
           if (
             error?.message !==
               TypeInfoORMServiceError.INDEXING_UNSUPPORTED_CRITERIA &&
             error?.message !==
               TypeInfoORMServiceError.INDEXING_UNSUPPORTED_COMBINATION &&
-            error?.message !== STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY
+            error?.message !== STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY &&
+            !isUnsupportedQuery
           ) {
+            throw error;
+          }
+          if (!indexing.allowFullScanFallback) {
             throw error;
           }
           this.emitListRoutingDecision(
@@ -3243,6 +2644,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         );
       }
 
+      this.emitListRoutingDecision(
+        typeName,
+        "canonicalDriverList",
+        "noCriteria",
+        0,
+      );
       const driver = this.getDriverInternal(typeName);
       const fieldsResourcesCache: Record<string, DACAccessResult>[] = [];
       const results = await executeDriverListItems(

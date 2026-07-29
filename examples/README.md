@@ -11,6 +11,7 @@ These files are curated **reference snippets** for consumers.
 - `examples/routing/app-routing.ts`
 
 Use this for client route usage via platform barrels:
+
 - `@resistdesign/voltra/web` for web Route roots/matchers
 - `@resistdesign/voltra/native` for native Route roots/matchers
 - `@resistdesign/voltra/app` only for adapter escape hatches (`createUniversalAdapter`)
@@ -20,23 +21,26 @@ Use this for client route usage via platform barrels:
 ## API Routing (Backend)
 
 - `examples/api/backend-routing.ts`
-- `examples/api/orm-structured-indexing.ts`
+- `examples/api/orm-indexing.ts`
 - `examples/api/orm-index-maintenance.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
-Use `orm-structured-indexing.ts` as the starting point for explicit structured field-inclusion config.
+Use `orm-indexing.ts` as the starting point for unified field-capability and
+backend configuration.
 Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup after out-of-band writes and schema-driven index changes.
 
 ## ORM Search + Indexing Reference
 
-- Multi-field fulltext indexing example: `site/api/routeMap.ts`
+- Multi-field text indexing example: `site/api/routeMap.ts`
 - Criteria-driven search UI flow: `site/app/src/client/EndToEndDemo/screens/CarRelateScreen.tsx`
 - Runtime behavior contract: `src/api/ORM/INDEXING_INTEGRATION.md`
 - Manual maintenance example: `examples/api/orm-index-maintenance.ts`
 
-Use these references for the current pattern: configure fulltext fields per type, then query with `criteria` so `list`
-auto-selects fulltext/structured/fallback behavior. For maintenance flows, use the service-side index helpers with prior
-snapshots or prior fulltext field lists when removing old tokens.
+Use these references for the current pattern: derive or configure one field
+capability registry, compose one backend, then query with `criteria` so `list`
+selects a unified indexed plan or the explicit scan fallback. For maintenance
+flows, use the service-side index helpers with prior snapshots or prior field
+lists when removing stale entries.
 
 ## Forms
 

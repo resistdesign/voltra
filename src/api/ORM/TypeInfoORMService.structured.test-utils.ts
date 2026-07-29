@@ -11,6 +11,7 @@ import type {
   TypeInfoDataItem,
 } from "../../common/TypeParsing/TypeInfo";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfoTypes";
+import { createIndexBackend } from "../Indexing/query";
 
 type Post = {
   id: string;
@@ -71,16 +72,16 @@ const runTypeInfoORMStructuredScenario = async () => {
   });
   const structuredBackend = new StructuredInMemoryBackend();
   const routingEvents: Array<{
-    path: "fullText" | "structured" | "fullScanCompare";
+    path: "indexed" | "fullScanCompare" | "canonicalDriverList";
     reason:
-      | "fullTextPlan"
-      | "structuredEligible"
+      | "indexedExpression"
+      | "noCriteria"
       | "criteriaWithoutIndexedPath"
       | "indexedPathFailedOrUnsupported";
   }> = [];
   const structuredIndexWriteEvents: Array<{
     action: "upsert" | "remove";
-    indexedFieldCount: number;
+    fieldCount: number;
   }> = [];
   const structuredReaderCalls = {
     terms: 0,
@@ -123,21 +124,27 @@ const runTypeInfoORMStructuredScenario = async () => {
     getDriver: () => driver as any,
     getRelationshipDriver: () => relationshipDriver,
     indexing: {
-      structured: {
-        reader: structuredReader,
-        writer: structuredBackend,
-        indexedFieldsByType: {
-          Post: ["title", "category", "score", "tags"],
+      backend: createIndexBackend({
+        values: structuredReader,
+        valueWriter: structuredBackend,
+      }),
+      fieldsByType: {
+        Post: {
+          title: { exact: true, range: { valueType: "string" } },
+          category: { exact: true, range: { valueType: "string" } },
+          score: { exact: true, range: { valueType: "number" } },
+          tags: { exact: true, membership: true },
         },
       },
+      allowFullScanFallback: true,
       observability: {
         onListRoutingDecision: (event) => {
           routingEvents.push({ path: event.path, reason: event.reason });
         },
-        onStructuredIndexWrite: (event) => {
+        onIndexWrite: (event) => {
           structuredIndexWriteEvents.push({
             action: event.action,
-            indexedFieldCount: event.indexedFieldCount,
+            fieldCount: event.fieldCount,
           });
         },
       },
@@ -286,8 +293,7 @@ const runTypeInfoORMStructuredScenario = async () => {
       },
     });
   } catch (error: any) {
-    invalidCursorPropagated =
-      error?.message === "Invalid structured search cursor.";
+    invalidCursorPropagated = error?.code === "INDEX_QUERY_INVALID_CURSOR";
   }
 
   await orm.update("Post", {
@@ -366,11 +372,14 @@ const runTypeInfoORMStructuredScenario = async () => {
     getDriver: () => noteDriver as any,
     getRelationshipDriver: () => relationshipDriver,
     indexing: {
-      structured: {
-        reader: noteStructuredBackend,
-        writer: noteStructuredBackend,
-        indexedFieldsByType: {
-          Note: ["title", "priority"],
+      backend: createIndexBackend({
+        values: noteStructuredBackend,
+        valueWriter: noteStructuredBackend,
+      }),
+      fieldsByType: {
+        Note: {
+          title: { exact: true, range: { valueType: "string" } },
+          priority: { exact: true, range: { valueType: "number" } },
         },
       },
     },
@@ -417,7 +426,7 @@ const runTypeInfoORMStructuredScenario = async () => {
     nonIdPrimaryFieldIds: noteByTitle.items.map((item) => item.noteKey),
     generatedNonIdPrimaryFieldId: noteId,
     sawStructuredRoutingDecision: routingEvents.some(
-      (event) => event.path === "structured",
+      (event) => event.path === "indexed",
     ),
     sawFullScanFallbackRoutingDecision: routingEvents.some(
       (event) =>
@@ -427,7 +436,7 @@ const runTypeInfoORMStructuredScenario = async () => {
     ),
     sawStructuredIndexWriteTelemetry:
       structuredIndexWriteEvents.some((event) => event.action === "upsert") &&
-      structuredIndexWriteEvents.some((event) => event.indexedFieldCount > 0),
+      structuredIndexWriteEvents.some((event) => event.fieldCount > 0),
   };
 };
 

@@ -9,7 +9,6 @@ import {
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
-import { FullTextMemoryBackend } from "../Indexing";
 
 type Author = {
   id: string;
@@ -34,11 +33,35 @@ const buildDbxRuntime = () => {
       Customer: () => `customer-${++customerCounter}`,
     },
     indexing: {
-      fullText: {
-        backend: new FullTextMemoryBackend(),
-        defaultIndexFieldByType: {
-          Author: "lastName",
-          Customer: "lastName",
+      fieldsByType: {
+        Author: {
+          lastName: {
+            exact: true,
+            range: { valueType: "string" },
+            text: {
+              exact: true,
+              phrase: true,
+              caseInsensitiveEquals: true,
+              caseInsensitiveContains: true,
+              prefix: true,
+              lossy: true,
+            },
+          },
+          score: { exact: true, range: { valueType: "number" } },
+        },
+        Customer: {
+          lastName: {
+            exact: true,
+            range: { valueType: "string" },
+            text: {
+              exact: true,
+              phrase: true,
+              caseInsensitiveEquals: true,
+              caseInsensitiveContains: true,
+              prefix: true,
+              lossy: true,
+            },
+          },
         },
       },
     },
@@ -130,16 +153,20 @@ const runDbxIndexCollisionScenario = async () => {
     customerIds.push(response.parsedBody as string);
   }
 
-  const authorLastNameResults = await runStructuredSearch<Author>(runtime, "Author", {
-    logicalOperator: LogicalOperators.AND,
-    fieldCriteria: [
-      {
-        fieldName: "lastName",
-        operator: ComparisonOperators.EQUALS,
-        value: "Adams",
-      },
-    ],
-  });
+  const authorLastNameResults = await runStructuredSearch<Author>(
+    runtime,
+    "Author",
+    {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "lastName",
+          operator: ComparisonOperators.EQUALS,
+          value: "Adams",
+        },
+      ],
+    },
+  );
 
   const customerLastNameResults = await runStructuredSearch<Customer>(
     runtime,
@@ -156,16 +183,20 @@ const runDbxIndexCollisionScenario = async () => {
     },
   );
 
-  const authorScoreResults = await runStructuredSearch<Author>(runtime, "Author", {
-    logicalOperator: LogicalOperators.AND,
-    fieldCriteria: [
-      {
-        fieldName: "score",
-        operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
-        value: 10,
-      },
-    ],
-  });
+  const authorScoreResults = await runStructuredSearch<Author>(
+    runtime,
+    "Author",
+    {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "score",
+          operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
+          value: 10,
+        },
+      ],
+    },
+  );
 
   const authorFullTextResults = await runFullTextSearch<Author>(
     runtime,
@@ -196,11 +227,13 @@ export const runDbxIndexCollisionCreatedAuthorIdsScenario = async () =>
 export const runDbxIndexCollisionCreatedCustomerIdsScenario = async () =>
   (await runDbxIndexCollisionScenario()).createdCustomerIds;
 
-export const runDbxIndexCollisionStructuredAuthorLastNameIdsScenario = async () =>
-  (await runDbxIndexCollisionScenario()).structuredAuthorLastNameIds;
+export const runDbxIndexCollisionStructuredAuthorLastNameIdsScenario =
+  async () =>
+    (await runDbxIndexCollisionScenario()).structuredAuthorLastNameIds;
 
-export const runDbxIndexCollisionStructuredCustomerLastNameIdsScenario = async () =>
-  (await runDbxIndexCollisionScenario()).structuredCustomerLastNameIds;
+export const runDbxIndexCollisionStructuredCustomerLastNameIdsScenario =
+  async () =>
+    (await runDbxIndexCollisionScenario()).structuredCustomerLastNameIds;
 
 export const runDbxIndexCollisionStructuredAuthorScoreIdsScenario = async () =>
   (await runDbxIndexCollisionScenario()).structuredAuthorScoreIds;
@@ -208,5 +241,6 @@ export const runDbxIndexCollisionStructuredAuthorScoreIdsScenario = async () =>
 export const runDbxIndexCollisionFullTextAuthorLastNameIdsScenario = async () =>
   (await runDbxIndexCollisionScenario()).fullTextAuthorLastNameIds;
 
-export const runDbxIndexCollisionFullTextCustomerLastNameIdsScenario = async () =>
-  (await runDbxIndexCollisionScenario()).fullTextCustomerLastNameIds;
+export const runDbxIndexCollisionFullTextCustomerLastNameIdsScenario =
+  async () =>
+    (await runDbxIndexCollisionScenario()).fullTextCustomerLastNameIds;
