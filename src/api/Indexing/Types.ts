@@ -266,6 +266,10 @@ export type IndexWriter = LossyWriter &
   Partial<DocumentIndexWriter>;
 
 /**
- * Full index backend interface for reading and writing.
+ * Physical text-index backend for lossy postings, exact positions, token
+ * membership, statistics, and document mutation.
+ *
+ * Text indexing is one capability of the logical indexed-query backend; it is
+ * not a competing top-level query system.
  */
-export type IndexBackend = IndexReader & IndexWriter;
+export type TextIndexBackend = IndexReader & IndexWriter;

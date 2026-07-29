@@ -94,6 +94,12 @@
         "CONTAINS",
         "NOT_CONTAINS",
         "STARTS_WITH",
+        "CASE_INSENSITIVE_EQUALS",
+        "CASE_INSENSITIVE_CONTAINS",
+        "TEXT_EXACT",
+        "TEXT_PHRASE",
+        "TEXT_PREFIX",
+        "TEXT_LOSSY",
         "ENDS_WITH",
         "DOES_NOT_START_WITH",
         "DOES_NOT_END_WITH"

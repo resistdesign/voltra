@@ -5,6 +5,7 @@ import {
   StructuredInMemoryBackend,
   FullTextMemoryBackend,
   TypeInfoORMService,
+  createIndexBackend,
   getTypeInfoORMIndexingConfigFromTypeInfoMap,
   rebuildStructuredOccupancy,
 } from "@resistdesign/voltra/api";
@@ -32,7 +33,7 @@ const currentTypeInfoMap: TypeInfoMap = {
         type: "string",
         array: false,
         readonly: false,
-        tags: { indexed: { structured: true } },
+        tags: { indexed: { exact: true, text: true } },
         optional: false,
       },
       slug: {
@@ -42,7 +43,7 @@ const currentTypeInfoMap: TypeInfoMap = {
         optional: false,
         tags: {
           indexed: {
-            fullText: true,
+            text: true,
           },
         },
       },
@@ -53,7 +54,8 @@ const currentTypeInfoMap: TypeInfoMap = {
         optional: false,
         tags: {
           indexed: {
-            structured: true,
+            exact: true,
+            range: true,
           },
         },
       },
@@ -74,7 +76,7 @@ const previousTypeInfoMap: TypeInfoMap = {
         optional: false,
         tags: {
           indexed: {
-            fullText: true,
+            text: true,
           },
         },
       },
@@ -107,13 +109,11 @@ const orm = new TypeInfoORMService({
       uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
     }),
   indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(currentTypeInfoMap, {
-    fullText: {
-      backend: fullTextBackend,
-    },
-    structured: {
-      reader: structuredBackend,
-      writer: structuredBackend,
-    },
+    backend: createIndexBackend({
+      values: structuredBackend,
+      valueWriter: structuredBackend,
+      text: fullTextBackend,
+    }),
   }),
   useDAC: false,
 });
@@ -141,15 +141,24 @@ async function runMaintenanceExamples() {
     },
   });
 
-  // Example 2: full-text indexing moved from `title` to `slug`. Removing the
-  // old tokens requires the previous field list (and optionally prior item snapshots).
-  const previousFullTextFields =
-    getTypeInfoORMIndexingConfigFromTypeInfoMap(previousTypeInfoMap, {
-      fullText: { backend: fullTextBackend },
-    }).fullText?.defaultIndexFieldByType?.Book ?? [];
+  // Example 2: text indexing moved from `title` to `slug`. Removing the old
+  // tokens requires the previous field list (and optionally prior item snapshots).
+  const previousCapabilities = getTypeInfoORMIndexingConfigFromTypeInfoMap(
+    previousTypeInfoMap,
+    {
+      backend: createIndexBackend({
+        values: structuredBackend,
+        valueWriter: structuredBackend,
+        text: fullTextBackend,
+      }),
+    },
+  ).fieldsByType?.Book;
+  const previousIndexFields = Object.entries(previousCapabilities ?? {})
+    .filter(([, capability]) => capability.text)
+    .map(([fieldName]) => fieldName);
 
   await orm.reindexStoredType("Book", {
-    previousFullTextIndexFields: previousFullTextFields,
+    previousIndexFields,
     itemsPerPage: 100,
   });
 
@@ -167,10 +176,7 @@ async function runMaintenanceExamples() {
   const deletedItemSnapshot = await driver.readItem(createdId);
   await driver.deleteItem(createdId);
   await orm.removeItemIndexes("Book", deletedItemSnapshot, {
-    fullTextIndexFields: currentTypeInfoMap.Book.fields?.slug.tags?.indexed
-      ?.fullText
-      ? ["slug"]
-      : [],
+    indexFields: ["slug"],
   });
 }
 

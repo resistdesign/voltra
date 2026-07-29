@@ -12,6 +12,7 @@ import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
 import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
 import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "../ORM/getTypeInfoORMIndexingConfigFromTypeInfoMap";
 import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
+import { createIndexBackend } from "../Indexing/query";
 
 type Post = {
   id: string;
@@ -764,14 +765,14 @@ export const runDbxStructuredOccupancyE2EScenario = async () => {
           array: false,
           readonly: false,
           optional: false,
-          tags: { indexed: { structured: true } },
+          tags: { indexed: { exact: true, range: true } },
         },
         age: {
           type: "number",
           array: false,
           readonly: false,
           optional: false,
-          tags: { indexed: { structured: true } },
+          tags: { indexed: { exact: true, range: true } },
         },
       },
     },
@@ -791,7 +792,11 @@ export const runDbxStructuredOccupancyE2EScenario = async () => {
     },
     useInMemoryIndexing: false,
     indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
-      structured: { reader: structured, writer: structured },
+      backend: createIndexBackend({
+        values: structured,
+        valueWriter: structured,
+      }),
+      allowFullScanFallback: true,
     }),
   });
 

@@ -1,13 +1,13 @@
 /**
  * @packageDocumentation
  *
- * Indexing utilities and backends for exact, lossy, fulltext, relational, and
- * structured search.
+ * One logical indexed-query engine backed by exact, range, occupancy, text,
+ * and relational physical capabilities.
  *
  * Concepts:
  * - Doc IDs can be strings or numbers; they are normalized for cursor and key
  *   encoding when persisted or paginated.
- * - Cursors are URL-safe tokens that encode paging state (lossy/exact/structured/rel).
+ * - Public ORM query cursors describe the complete logical indexed plan.
  * - Tokenization helpers normalize text for exact tokens or lossy trigrams.
  * - Search traces capture metrics (token counts, batch calls, etc.) for observability.
  *
@@ -41,6 +41,7 @@ export * from "./rel/Cursor";
 export * from "./rel/Handlers";
 export * from "./rel/Types";
 export * from "./structured/index";
+export * from "./query";
 export * from "./tokenize";
 export * from "./Types";
 export * from "./Trace";

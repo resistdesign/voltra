@@ -53,7 +53,7 @@
       "export": "runTypeInfoORMOperatorCoverageLikeIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": ["record-1", "record-2"]
+      "expectation": ["record-1"]
     },
     {
       "export": "runTypeInfoORMOperatorCoverageNotLikeIdsScenario",

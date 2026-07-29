@@ -27,7 +27,7 @@ import type {
   DocTokenKey,
   DocTokenReader,
   DocumentRecord,
-  IndexBackend,
+  TextIndexBackend,
   IndexReader,
   LossyPagingReader,
   LossyPostingsPageOptions,
@@ -39,7 +39,7 @@ import { createHash } from "./hashUniversal";
 import { compareDocId, normalizeDocId } from "./docId";
 import { encodeIndexScalarIdentity } from "./IndexTable";
 
-type TraceableIndexBackend = IndexBackend & {
+type TraceableIndexBackend = TextIndexBackend & {
   setActiveTrace(trace?: SearchTrace): void;
 };
 
@@ -67,7 +67,7 @@ export type IndexDocumentInput = {
   /**
    * Optional backend override (defaults to configured backend).
    */
-  backend?: IndexBackend;
+  backend?: TextIndexBackend;
 };
 
 /**
@@ -94,7 +94,7 @@ export type RemoveDocumentInput = {
   /**
    * Optional backend override (defaults to configured backend).
    */
-  backend?: IndexBackend;
+  backend?: TextIndexBackend;
 };
 
 /**
@@ -125,7 +125,7 @@ export type ReplaceDocumentInput = {
   /**
    * Optional backend override (defaults to configured backend).
    */
-  backend?: IndexBackend;
+  backend?: TextIndexBackend;
 };
 
 /**
@@ -151,7 +151,7 @@ export type SearchLossyInput = {
   /**
    * Optional backend override (defaults to configured backend).
    */
-  backend?: IndexBackend;
+  backend?: TextIndexBackend;
   /**
    * Optional limits override for search execution.
    */
@@ -185,7 +185,7 @@ export type SearchExactInput = {
   /**
    * Optional backend override (defaults to configured backend).
    */
-  backend?: IndexBackend;
+  backend?: TextIndexBackend;
   /**
    * Optional limits override for search execution.
    */
@@ -218,7 +218,7 @@ export type SearchResult = {
   nextCursor?: string;
 };
 
-let configuredBackend: IndexBackend | undefined;
+let configuredBackend: TextIndexBackend | undefined;
 
 /**
  * Set the default backend used by search and mutation calls.
@@ -229,12 +229,14 @@ export function setIndexBackend(
   /**
    * Backend to use for subsequent indexing and search operations.
    */
-  backend: IndexBackend,
+  backend: TextIndexBackend,
 ): void {
   configuredBackend = backend;
 }
 
-function resolveBackend(backend: IndexBackend | undefined): IndexBackend {
+function resolveBackend(
+  backend: TextIndexBackend | undefined,
+): TextIndexBackend {
   if (backend) {
     return backend;
   }
@@ -249,7 +251,7 @@ function resolveBackend(backend: IndexBackend | undefined): IndexBackend {
 }
 
 function setBackendTrace(
-  backend: IndexBackend,
+  backend: TextIndexBackend,
   trace: SearchTrace | undefined,
 ): void {
   if (typeof (backend as TraceableIndexBackend).setActiveTrace === "function") {

@@ -27,11 +27,13 @@ const result = await rebuildStructuredOccupancy({
 });
 
 const occupancyFields = Object.entries(
-  DEMO_ORM_CONFIG.indexing?.structured?.occupancyFieldsByType ?? {},
+  DEMO_ORM_CONFIG.indexing?.fieldsByType ?? {},
 ).flatMap(([typeName, fields]) =>
-  Object.keys(fields).map((fieldName) =>
-    qualifyIndexField(typeName, fieldName),
-  ),
+  Object.entries(fields)
+    .filter(([, capability]) => capability.range)
+    .map(([fieldName, capability]) =>
+      qualifyIndexField(typeName, capability.field ?? fieldName),
+    ),
 );
 const retiredPreviousCells =
   result.previousGeneration && result.previousGeneration !== result.generation

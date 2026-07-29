@@ -10,6 +10,8 @@ import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import type { DataItemDBDriver } from "./drivers/common/Types";
 import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
 import { FullTextMemoryBackend } from "../Indexing/fulltext/FullTextMemoryBackend";
+import { createIndexBackend } from "../Indexing/query";
+import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "./getTypeInfoORMIndexingConfigFromTypeInfoMap";
 
 type RecordItem = {
   id: string;
@@ -31,15 +33,34 @@ const typeInfoMap: TypeInfoMap = {
         optional: false,
         tags: { primaryField: true },
       },
-      title: { type: "string", array: false, readonly: false, optional: false },
+      title: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+        tags: { indexed: { text: true } },
+      },
       category: {
         type: "string",
         array: false,
         readonly: false,
         optional: false,
+        tags: { indexed: { exact: true, range: true } },
       },
-      score: { type: "number", array: false, readonly: false, optional: false },
-      tags: { type: "string", array: true, readonly: false, optional: true },
+      score: {
+        type: "number",
+        array: false,
+        readonly: false,
+        optional: false,
+        tags: { indexed: { exact: true, range: true } },
+      },
+      tags: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: true,
+        tags: { indexed: { exact: true, membership: true } },
+      },
       summary: {
         type: "string",
         array: false,
@@ -87,7 +108,9 @@ const seedRecords: Omit<RecordItem, "id">[] = [
   },
 ];
 
-const buildOrm = (indexing?: ConstructorParameters<typeof TypeInfoORMService>[0]["indexing"]) => {
+const buildOrm = (
+  indexing?: ConstructorParameters<typeof TypeInfoORMService>[0]["indexing"],
+) => {
   let counter = 0;
   const driver = new InMemoryDataItemDBDriver<RecordItem, "id">({
     tableName: "Record",
@@ -123,7 +146,9 @@ const runSingleCriterionSearch = async (
     logicalOperator: LogicalOperators.AND,
     fieldCriteria: [criterion],
   };
-  const result = await orm.list("Record", { itemsPerPage: 50, criteria }, ["id"]);
+  const result = await orm.list("Record", { itemsPerPage: 50, criteria }, [
+    "id",
+  ]);
 
   return toSortedIds(result.items as Array<Partial<RecordItem>>);
 };
@@ -132,28 +157,23 @@ const runOperatorCoverageScenario = async () => {
   const structuredBackend = new StructuredInMemoryBackend();
   const fullTextBackend = new FullTextMemoryBackend();
 
-  const fullTextOrm = buildOrm({
-    fullText: {
-      backend: fullTextBackend,
-      defaultIndexFieldByType: {
-        Record: "title",
-      },
-    },
-  });
-  const structuredOrm = buildOrm({
-    structured: {
-      reader: structuredBackend,
-      writer: structuredBackend,
-    },
-  });
+  const indexedOrm = buildOrm(
+    getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend: createIndexBackend({
+        values: structuredBackend,
+        valueWriter: structuredBackend,
+        text: fullTextBackend,
+      }),
+      allowFullScanFallback: true,
+    }),
+  );
   const fallbackOrm = buildOrm();
 
-  await seed(fullTextOrm);
-  await seed(structuredOrm);
+  await seed(indexedOrm);
   await seed(fallbackOrm);
 
   return {
-    equalsIds: await runSingleCriterionSearch(structuredOrm, {
+    equalsIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "category",
       operator: ComparisonOperators.EQUALS,
       value: "news",
@@ -168,7 +188,7 @@ const runOperatorCoverageScenario = async () => {
       operator: ComparisonOperators.GREATER_THAN,
       value: 15,
     }),
-    greaterThanOrEqualIds: await runSingleCriterionSearch(structuredOrm, {
+    greaterThanOrEqualIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "score",
       operator: ComparisonOperators.GREATER_THAN_OR_EQUAL,
       value: 15,
@@ -178,12 +198,12 @@ const runOperatorCoverageScenario = async () => {
       operator: ComparisonOperators.LESS_THAN,
       value: 10,
     }),
-    lessThanOrEqualIds: await runSingleCriterionSearch(structuredOrm, {
+    lessThanOrEqualIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "score",
       operator: ComparisonOperators.LESS_THAN_OR_EQUAL,
       value: 10,
     }),
-    inIds: await runSingleCriterionSearch(structuredOrm, {
+    inIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "category",
       operator: ComparisonOperators.IN,
       valueOptions: ["news", "guide"],
@@ -193,7 +213,7 @@ const runOperatorCoverageScenario = async () => {
       operator: ComparisonOperators.NOT_IN,
       valueOptions: ["news", "guide"],
     }),
-    likeIds: await runSingleCriterionSearch(fullTextOrm, {
+    likeIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "title",
       operator: ComparisonOperators.LIKE,
       value: "alpha bravo",
@@ -219,7 +239,7 @@ const runOperatorCoverageScenario = async () => {
       fieldName: "summary",
       operator: ComparisonOperators.IS_EMPTY,
     }),
-    betweenIds: await runSingleCriterionSearch(structuredOrm, {
+    betweenIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "score",
       operator: ComparisonOperators.BETWEEN,
       valueOptions: [10, 20],
@@ -229,9 +249,9 @@ const runOperatorCoverageScenario = async () => {
       operator: ComparisonOperators.NOT_BETWEEN,
       valueOptions: [10, 20],
     }),
-    containsFullTextIds: await runSingleCriterionSearch(fullTextOrm, {
+    containsFullTextIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "title",
-      operator: ComparisonOperators.CONTAINS,
+      operator: ComparisonOperators.TEXT_PHRASE,
       value: "alpha bravo",
     }),
     containsArrayIds: await runSingleCriterionSearch(fallbackOrm, {
@@ -244,7 +264,7 @@ const runOperatorCoverageScenario = async () => {
       operator: ComparisonOperators.NOT_CONTAINS,
       value: "red",
     }),
-    startsWithIds: await runSingleCriterionSearch(fullTextOrm, {
+    startsWithIds: await runSingleCriterionSearch(indexedOrm, {
       fieldName: "title",
       operator: ComparisonOperators.STARTS_WITH,
       value: "alp",
@@ -268,8 +288,7 @@ const runOperatorCoverageScenario = async () => {
 };
 
 let cachedScenarioPromise:
-  | Promise<Awaited<ReturnType<typeof runOperatorCoverageScenario>>>
-  | undefined;
+  Promise<Awaited<ReturnType<typeof runOperatorCoverageScenario>>> | undefined;
 
 const getScenario = async () => {
   if (!cachedScenarioPromise) {

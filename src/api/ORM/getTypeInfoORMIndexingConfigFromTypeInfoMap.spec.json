@@ -6,40 +6,55 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "fullTextFieldsByType": {
-          "Book": ["title", "summary"],
-          "Person": ["bio"]
-        },
-        "structuredFieldsByType": {
-          "Book": ["title", "rating"],
-          "Person": ["age"]
-        },
-        "occupancyFieldsByType": {
+        "fieldsByType": {
           "Book": {
-            "title": { "type": "string" },
-            "rating": { "type": "number", "decimal": true }
+            "title": {
+              "field": "bookTitle",
+              "exact": true,
+              "range": { "valueType": "string" },
+              "text": {
+                "caseInsensitiveEquals": true,
+                "caseInsensitiveContains": true,
+                "exact": true,
+                "phrase": true,
+                "prefix": true,
+                "lossy": true
+              }
+            },
+            "summary": {
+              "text": {
+                "caseInsensitiveEquals": true,
+                "caseInsensitiveContains": true,
+                "exact": true,
+                "phrase": true,
+                "prefix": true,
+                "lossy": true
+              },
+              "optional": true
+            },
+            "rating": {
+              "exact": true,
+              "range": {
+                "valueType": "number",
+                "decimal": true
+              },
+              "optional": true
+            }
+          },
+          "Person": {
+            "bio": { "text": { "lossy": true } },
+            "age": { "exact": true, "range": { "valueType": "number" } }
           }
         },
-        "preservedStructuredFieldMap": {
-          "Book": {
-            "title": "bookTitle"
-          }
-        },
-        "preservedStructuredWriter": true,
-        "preservedFullTextBackend": true
+        "preservedValueWriter": true,
+        "preservedTextBackend": true
       }
     },
     {
-      "export": "runGeneratedTypeInfoORMIndexingConfigMissingFullTextDependencyScenario",
+      "export": "runGeneratedTypeInfoORMIndexingConfigMissingBackendScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": "Cannot generate fullText indexing config from tags without fullText.backend."
-    },
-    {
-      "export": "runGeneratedTypeInfoORMIndexingConfigMissingStructuredDependencyScenario",
-      "conditions": [],
-      "operation": "===",
-      "expectation": "Cannot generate structured indexing config from tags without structured.reader."
+      "expectation": "Cannot generate indexing capabilities without an indexing backend."
     }
   ]
 }

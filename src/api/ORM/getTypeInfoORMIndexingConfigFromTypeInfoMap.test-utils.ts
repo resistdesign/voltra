@@ -2,6 +2,7 @@ import { FullTextMemoryBackend } from "../Indexing/fulltext/FullTextMemoryBacken
 import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
 import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
 import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "./getTypeInfoORMIndexingConfigFromTypeInfoMap";
+import { createIndexBackend } from "../Indexing/query";
 
 const getScenarioTypeInfoMap = (): TypeInfoMap => ({
   Book: {
@@ -20,8 +21,9 @@ const getScenarioTypeInfoMap = (): TypeInfoMap => ({
         optional: false,
         tags: {
           indexed: {
-            fullText: true,
-            structured: true,
+            text: true,
+            exact: true,
+            range: true,
           },
         },
       },
@@ -32,7 +34,7 @@ const getScenarioTypeInfoMap = (): TypeInfoMap => ({
         optional: true,
         tags: {
           indexed: {
-            fullText: true,
+            text: true,
           },
         },
       },
@@ -43,7 +45,8 @@ const getScenarioTypeInfoMap = (): TypeInfoMap => ({
         optional: true,
         tags: {
           indexed: {
-            structured: true,
+            exact: true,
+            range: true,
             decimal: true,
           },
         },
@@ -81,90 +84,39 @@ const runGeneratedConfigScenario = () => {
   const config = getTypeInfoORMIndexingConfigFromTypeInfoMap(
     getScenarioTypeInfoMap(),
     {
-      fullText: {
-        backend: fullTextBackend,
-        defaultIndexFieldByType: {
-          Book: "title",
-          Person: ["bio"],
+      backend: createIndexBackend({
+        values: structuredBackend,
+        valueWriter: structuredBackend,
+        text: fullTextBackend,
+      }),
+      fieldsByType: {
+        Book: {
+          title: { field: "bookTitle" },
         },
-      },
-      structured: {
-        reader: structuredBackend,
-        writer: structuredBackend,
-        indexedFieldsByType: {
-          Book: ["title"],
-          Person: ["age"],
-        },
-        fieldMapByType: {
-          Book: {
-            title: "bookTitle",
-          },
+        Person: {
+          bio: { text: { lossy: true } },
+          age: { exact: true, range: { valueType: "number" } },
         },
       },
     },
   );
 
   return {
-    fullTextFieldsByType: config.fullText?.defaultIndexFieldByType,
-    structuredFieldsByType: config.structured?.indexedFieldsByType,
-    occupancyFieldsByType: config.structured?.occupancyFieldsByType,
-    preservedStructuredFieldMap: config.structured?.fieldMapByType,
-    preservedStructuredWriter: config.structured?.writer === structuredBackend,
-    preservedFullTextBackend: config.fullText?.backend === fullTextBackend,
+    fieldsByType: config.fieldsByType,
+    preservedValueWriter: config.backend.valueWriter === structuredBackend,
+    preservedTextBackend: config.backend.text === fullTextBackend,
   };
 };
 
 export const runGeneratedTypeInfoORMIndexingConfigScenario = () =>
   runGeneratedConfigScenario();
 
-export const runGeneratedTypeInfoORMIndexingConfigMissingFullTextDependencyScenario =
-  () => {
-    try {
-      getTypeInfoORMIndexingConfigFromTypeInfoMap(getScenarioTypeInfoMap(), {
-        structured: {
-          reader: new StructuredInMemoryBackend(),
-        },
-      });
-    } catch (error: any) {
-      return error?.message ?? String(error);
-    }
-
-    return "NO_ERROR";
-  };
-
-export const runGeneratedTypeInfoORMIndexingConfigMissingStructuredDependencyScenario =
+export const runGeneratedTypeInfoORMIndexingConfigMissingBackendScenario =
   () => {
     try {
       getTypeInfoORMIndexingConfigFromTypeInfoMap(
-        {
-          Book: {
-            primaryField: "id",
-            fields: {
-              id: {
-                type: "string",
-                array: false,
-                readonly: false,
-                optional: false,
-              },
-              rating: {
-                type: "number",
-                array: false,
-                readonly: false,
-                optional: false,
-                tags: {
-                  indexed: {
-                    structured: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        {
-          fullText: {
-            backend: new FullTextMemoryBackend(),
-          },
-        },
+        getScenarioTypeInfoMap(),
+        {} as any,
       );
     } catch (error: any) {
       return error?.message ?? String(error);
