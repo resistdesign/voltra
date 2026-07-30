@@ -72,6 +72,12 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
   /** Number of deliberately stale get reads served by this test client. */
   staleGetCount = 0;
 
+  /** Number of batch-get calls issued by tested drivers. */
+  batchGetCount = 0;
+
+  /** Number of keys requested through batch-get calls. */
+  batchGetKeyCount = 0;
+
   private visibilityKey(tableName: string, key: AttributeMap): string {
     return `${tableName}\u0000${keyOf(key)}`;
   }
@@ -172,6 +178,11 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
   }
 
   async batchGetItem(input: BatchGetItemInput) {
+    this.batchGetCount += 1;
+    this.batchGetKeyCount += Object.values(input.RequestItems).reduce(
+      (count, request) => count + request.Keys.length,
+      0,
+    );
     const responses: Record<string, AttributeMap[]> = {};
     for (const [tableName, request] of Object.entries(input.RequestItems)) {
       responses[tableName] = request.Keys.flatMap((key) => {
