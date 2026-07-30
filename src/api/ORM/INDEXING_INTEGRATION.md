@@ -29,6 +29,12 @@ capability-driven mutation plan:
   mirrors through `text`;
 - all physical writes share the configured mutation coordinator.
 
+Text updates normally diff against the stored field mirror. When an older or
+newly indexed field has no mirror, the DynamoDB writer performs one strongly
+consistent batch read of the relevant membership and position records, repairs
+the actual persisted state, and writes the mirror. Later updates use the normal
+single-mirror-read path again.
+
 Manual maintenance accepts `indexFields`, `previousIndexFields`, and
 `nextIndexFields`. A previous field override may name a field removed from the
 current TypeInfo so stale text records can still be cleaned during migration.
