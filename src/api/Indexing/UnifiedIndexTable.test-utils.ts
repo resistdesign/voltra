@@ -573,54 +573,139 @@ export const runUnifiedIndexTableLegacyFullTextUpgradeScenario = async () => {
   const client = new InMemoryDynamoIndexClient();
   const table = { tableName: "UnifiedIndex" };
   const fullText = new FullTextDdbBackend({ client, table });
-  const docId = "legacy";
   const indexField = "Record#text";
-  const previousText = "legacy alpha";
-  const nextText = "modern beta";
 
-  for (const token of new Set(tokenizeLossyTrigrams(previousText).tokens)) {
-    await fullText.addLossyPosting(token, indexField, docId);
-  }
-  const positionsByToken = new Map<string, number[]>();
-  for (const token of tokenize(previousText).tokens) {
-    const positions = positionsByToken.get(token) ?? [];
-    positions.push(positionsByToken.size);
-    positionsByToken.set(token, positions);
-  }
-  for (const [token, positions] of positionsByToken) {
-    await fullText.addExactPositions(token, indexField, docId, positions);
-  }
-
-  const mirrorsBefore = client
-    .snapshot(table.tableName)
-    .filter((item) => item.kind === "fm").length;
+  const missingDocId = "missing";
+  const previousMissingText = "Clonks.jpeg";
+  const nextMissingText = "Clonks";
   await replaceFullTextDocument({
     backend: fullText,
-    previousDocument: { id: docId, text: previousText },
-    nextDocument: { id: docId, text: nextText },
+    previousDocument: {
+      id: missingDocId,
+      text: previousMissingText,
+    },
+    nextDocument: { id: missingDocId, text: nextMissingText },
     primaryField: "id",
     indexField: "text",
     indexFieldQualified: indexField,
   });
+  const missingBatchGets = client.batchGetCount;
+  const retainedMissingLossyToken = tokenizeLossyTrigrams(
+    nextMissingText,
+  ).tokens[0];
 
-  const previousLossy = new Set(tokenizeLossyTrigrams(previousText).tokens);
-  const nextLossy = new Set(tokenizeLossyTrigrams(nextText).tokens);
-  const removedLossyToken = [...previousLossy].find(
-    (token) => !nextLossy.has(token),
+  const partialDocId = "partial";
+  const previousPartialText = "legacy alpha";
+  const nextPartialText = "legacy beta";
+  for (const token of new Set(tokenizeLossyTrigrams("alpha").tokens)) {
+    await fullText.addLossyPosting(token, indexField, partialDocId);
+  }
+  await fullText.addExactPositions("alpha", indexField, partialDocId, [1]);
+
+  client.batchGetCount = 0;
+  client.batchGetKeyCount = 0;
+  await replaceFullTextDocument({
+    backend: fullText,
+    previousDocument: {
+      id: partialDocId,
+      text: previousPartialText,
+    },
+    nextDocument: { id: partialDocId, text: nextPartialText },
+    primaryField: "id",
+    indexField: "text",
+    indexFieldQualified: indexField,
+  });
+  const partialBatchGets = client.batchGetCount;
+  const previousPartialLossy = new Set(
+    tokenizeLossyTrigrams(previousPartialText).tokens,
+  );
+  const nextPartialLossy = new Set(
+    tokenizeLossyTrigrams(nextPartialText).tokens,
+  );
+  const obsoletePartialLossyToken = [...previousPartialLossy].find(
+    (token) => !nextPartialLossy.has(token),
   )!;
-  const addedLossyToken = [...nextLossy].find(
-    (token) => !previousLossy.has(token),
+  const retainedPartialLossyToken = [...previousPartialLossy].find((token) =>
+    nextPartialLossy.has(token),
   )!;
+  const addedPartialLossyToken = [...nextPartialLossy].find(
+    (token) => !previousPartialLossy.has(token),
+  )!;
+
+  const normalDocId = "normal";
+  const previousNormalText = "first version";
+  const nextNormalText = "second version";
+  await fullText.writeDocument(
+    { id: normalDocId, text: previousNormalText },
+    "id",
+    "text",
+    indexField,
+  );
+  client.batchGetCount = 0;
+  client.batchGetKeyCount = 0;
+  await fullText.writeDocument(
+    { id: normalDocId, text: nextNormalText },
+    "id",
+    "text",
+    indexField,
+    { id: normalDocId, text: previousNormalText },
+  );
 
   return {
-    mirrorsBefore,
-    mirrorsAfter: client
+    missing: {
+      batchGets: missingBatchGets,
+      exact: await fullText.loadExactPositions(
+        "clonks",
+        indexField,
+        missingDocId,
+      ),
+      lossy: await fullText.loadLossyPostings(
+        retainedMissingLossyToken,
+        indexField,
+      ),
+    },
+    partial: {
+      batchGets: partialBatchGets,
+      obsoleteExact:
+        (await fullText.loadExactPositions(
+          "alpha",
+          indexField,
+          partialDocId,
+        )) ?? null,
+      retainedExact: await fullText.loadExactPositions(
+        "legacy",
+        indexField,
+        partialDocId,
+      ),
+      addedExact: await fullText.loadExactPositions(
+        "beta",
+        indexField,
+        partialDocId,
+      ),
+      obsoleteLossy: await fullText.loadLossyPostings(
+        obsoletePartialLossyToken,
+        indexField,
+      ),
+      retainedLossy: await fullText.loadLossyPostings(
+        retainedPartialLossyToken,
+        indexField,
+      ),
+      addedLossy: await fullText.loadLossyPostings(
+        addedPartialLossyToken,
+        indexField,
+      ),
+    },
+    normal: {
+      batchGets: client.batchGetCount,
+      batchGetKeys: client.batchGetKeyCount,
+      exact: await fullText.loadExactPositions(
+        "second",
+        indexField,
+        normalDocId,
+      ),
+    },
+    mirrors: client
       .snapshot(table.tableName)
       .filter((item) => item.kind === "fm").length,
-    oldExact:
-      (await fullText.loadExactPositions("legacy", indexField, docId)) ?? null,
-    newExact: await fullText.loadExactPositions("modern", indexField, docId),
-    oldLossy: await fullText.loadLossyPostings(removedLossyToken, indexField),
-    newLossy: await fullText.loadLossyPostings(addedLossyToken, indexField),
   };
 };

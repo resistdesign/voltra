@@ -140,12 +140,26 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "mirrorsBefore": 0,
-        "mirrorsAfter": 1,
-        "oldExact": null,
-        "newExact": [0],
-        "oldLossy": [],
-        "newLossy": ["legacy"]
+        "missing": {
+          "batchGets": 1,
+          "exact": [0],
+          "lossy": ["missing"]
+        },
+        "partial": {
+          "batchGets": 1,
+          "obsoleteExact": null,
+          "retainedExact": [0],
+          "addedExact": [1],
+          "obsoleteLossy": [],
+          "retainedLossy": ["partial"],
+          "addedLossy": ["partial"]
+        },
+        "normal": {
+          "batchGets": 0,
+          "batchGetKeys": 0,
+          "exact": [0]
+        },
+        "mirrors": 3
       }
     }
   ]

@@ -246,6 +246,103 @@ export class FullTextDdbWriter {
     return typeof raw === "string" ? raw : undefined;
   }
 
+  private async loadPersistedIndexState(
+    docId: DocId,
+    indexField: string,
+    lossyTokens: string[],
+    exactTokens: string[],
+  ): Promise<{
+    lossyTokens: Set<string>;
+    positions: Map<string, number[]>;
+  }> {
+    const keys: Record<string, unknown>[] = [];
+    const keyTypes = new Map<
+      string,
+      { kind: "lossy" | "positions"; token: string }
+    >();
+
+    for (const token of new Set(lossyTokens)) {
+      const key = {
+        [docTokensSchema.partitionKey]: encodeDocKey(docId),
+        [docTokensSchema.sortKey]: encodeDocTokenSortKey(indexField, token),
+      };
+      keys.push(key);
+      keyTypes.set(buildDocTokenItemKey(String(key.pk), String(key.sk)), {
+        kind: "lossy",
+        token,
+      });
+    }
+
+    for (const token of new Set(exactTokens)) {
+      const key = {
+        [docTokenPositionsSchema.partitionKey]: encodeDocKey(
+          docId,
+          "positions",
+        ),
+        [docTokenPositionsSchema.sortKey]: encodeDocTokenSortKey(
+          indexField,
+          token,
+        ),
+      };
+      keys.push(key);
+      keyTypes.set(buildDocTokenItemKey(String(key.pk), String(key.sk)), {
+        kind: "positions",
+        token,
+      });
+    }
+
+    const persistedLossyTokens = new Set<string>();
+    const persistedPositions = new Map<string, number[]>();
+
+    for (const keyChunk of chunkArray(keys, 100)) {
+      let unprocessed: Record<string, KeysAndAttributes> | undefined = {
+        [this.docTokensTableName]: {
+          Keys: keyChunk,
+          ConsistentRead: true,
+        },
+      };
+
+      while (unprocessed && Object.keys(unprocessed).length > 0) {
+        const response = await this.client.batchGetItem({
+          RequestItems: unprocessed,
+        });
+
+        for (const item of response.Responses?.[this.docTokensTableName] ?? []) {
+          const partitionKey = item[docTokensSchema.partitionKey];
+          const sortKey = item[docTokensSchema.sortKey];
+          if (typeof partitionKey !== "string" || typeof sortKey !== "string") {
+            continue;
+          }
+
+          const keyType = keyTypes.get(
+            buildDocTokenItemKey(partitionKey, sortKey),
+          );
+          if (keyType?.kind === "lossy") {
+            persistedLossyTokens.add(keyType.token);
+          } else if (keyType?.kind === "positions") {
+            const rawPositions =
+              item[docTokenPositionsSchema.positionsAttribute];
+            if (Array.isArray(rawPositions)) {
+              persistedPositions.set(
+                keyType.token,
+                rawPositions.filter(
+                  (value): value is number => typeof value === "number",
+                ),
+              );
+            }
+          }
+        }
+
+        unprocessed = response.UnprocessedKeys;
+      }
+    }
+
+    return {
+      lossyTokens: persistedLossyTokens,
+      positions: persistedPositions,
+    };
+  }
+
   /**
    * Write a document to namespaced postings, membership, and statistics records.
    * @param document Document record to index.
@@ -266,8 +363,12 @@ export class FullTextDdbWriter {
     const persistedIndexField = indexFieldQualified;
     const { tokens: lossyTokens } = tokenizeLossyTrigrams(text);
     const { normalized, tokens } = tokenize(text);
+    const mirrorContent = await this.loadMirrorContent(
+      docId,
+      persistedIndexField,
+    );
     const previousContent =
-      (await this.loadMirrorContent(docId, persistedIndexField)) ??
+      mirrorContent ??
       (previousDocument
         ? resolveIndexText(previousDocument, sourceIndexField)
         : undefined);
@@ -279,11 +380,22 @@ export class FullTextDdbWriter {
       ? tokenizeLossyTrigrams(previousContent).tokens
       : [];
 
-    const previousLossySet = new Set(previousLossyTokens);
+    let previousLossySet = new Set(previousLossyTokens);
     const nextLossySet = new Set(lossyTokens);
 
-    const previousPositions = buildPositionMap(previousTokens);
+    let previousPositions = buildPositionMap(previousTokens);
     const nextPositions = buildPositionMap(tokens);
+
+    if (mirrorContent === undefined && previousDocument) {
+      const persistedState = await this.loadPersistedIndexState(
+        docId,
+        indexField,
+        [...previousLossyTokens, ...lossyTokens],
+        [...previousTokens, ...tokens],
+      );
+      previousLossySet = persistedState.lossyTokens;
+      previousPositions = persistedState.positions;
+    }
 
     const removedLossyTokens = new Set<string>();
     const addedLossyTokens = new Set<string>();
