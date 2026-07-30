@@ -590,7 +590,6 @@ export const runUnifiedIndexTableLegacyFullTextUpgradeScenario = async () => {
     indexFieldQualified: indexField,
   });
   const missingBatchGets = client.batchGetCount;
-  const missingBatchGetKeys = client.batchGetKeyCount;
   const retainedMissingLossyToken = tokenizeLossyTrigrams(
     nextMissingText,
   ).tokens[0];
@@ -617,7 +616,6 @@ export const runUnifiedIndexTableLegacyFullTextUpgradeScenario = async () => {
     indexFieldQualified: indexField,
   });
   const partialBatchGets = client.batchGetCount;
-  const partialBatchGetKeys = client.batchGetKeyCount;
   const previousPartialLossy = new Set(
     tokenizeLossyTrigrams(previousPartialText).tokens,
   );
@@ -656,7 +654,6 @@ export const runUnifiedIndexTableLegacyFullTextUpgradeScenario = async () => {
   return {
     missing: {
       batchGets: missingBatchGets,
-      batchGetKeys: missingBatchGetKeys,
       exact: await fullText.loadExactPositions(
         "clonks",
         indexField,
@@ -669,7 +666,6 @@ export const runUnifiedIndexTableLegacyFullTextUpgradeScenario = async () => {
     },
     partial: {
       batchGets: partialBatchGets,
-      batchGetKeys: partialBatchGetKeys,
       obsoleteExact:
         (await fullText.loadExactPositions(
           "alpha",
