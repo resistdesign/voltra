@@ -1,0 +1,60 @@
+{
+  "file": "./StructuredStringLike.test-utils.ts",
+  "tests": [
+    {
+      "export": "structuredStringEmojiTokenBoundaryTokens",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["__str__:a🌹b"]
+    },
+    {
+      "export": "structuredStringEmojiTruncationBoundaryTokens",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["__str__:a", "__str__:b", "__str__:🌹"]
+    },
+    {
+      "export": "structuredStringMixedUnicodeTokens",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["__str__:a🌹", "__str__:🌹é", "__str__:é😊"]
+    },
+    {
+      "export": "structuredStringConsecutiveEmojiTokens",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["__str__:🌹😊", "__str__:😊🚀"]
+    },
+    {
+      "export": "structuredStringAsciiRegressionTokens",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "__str__:h",
+        "__str__:o",
+        "__str__:n",
+        "__str__:d",
+        "__str__:a",
+        "__str__:ho",
+        "__str__:on",
+        "__str__:nd",
+        "__str__:da",
+        "__str__:hon",
+        "__str__:ond",
+        "__str__:nda"
+      ]
+    },
+    {
+      "export": "runStructuredStringUnicodeExactIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["rose"]
+    },
+    {
+      "export": "runStructuredStringUnicodeLikeIdsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["rose"]
+    }
+  ]
+}
