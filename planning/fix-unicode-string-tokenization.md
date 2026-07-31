@@ -12,4 +12,4 @@ Tokenize structured strings by Unicode code point so astral characters are never
 - [x] Add mixed Unicode, consecutive emoji, and ASCII regression coverage.
 - [x] Verify structured index writes, exact matching, and LIKE queries with astral characters.
 - [x] Run the complete Voltra test suite.
-- [ ] Publish a professional pull request targeting `main`.
+- [x] Publish a professional pull request targeting `main`.
