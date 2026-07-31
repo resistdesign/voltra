@@ -59,6 +59,25 @@
       }
     },
     {
+      "export": "runValidateTypeInfoValueCreateRequiredStringEmptyScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": true,
+        "error": {
+          "code": "NONE"
+        },
+        "errorMap": {
+          "name": [
+            {
+              "code": "NONE"
+            }
+          ]
+        }
+      }
+    },
+    {
       "export": "runValidateTypeInfoValueCreateMissingRequiredBooleanScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
@@ -72,6 +91,25 @@
           "likesCheese": [
             {
               "code": "MISSING_FIELD_VALUE"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "export": "runValidateTypeInfoValueEmptyStringPatternMismatchScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeName": "Person",
+        "valid": false,
+        "error": {
+          "code": "INVALID_TYPE"
+        },
+        "errorMap": {
+          "phoneNumber": [
+            {
+              "code": "VALUE_DOES_NOT_MATCH_PATTERN"
             }
           ]
         }
