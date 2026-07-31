@@ -324,15 +324,7 @@ export const TYPE_KEYWORD_VALIDATORS: Record<
  * @returns Whether the value is present.
  */
 export const hasValue = (value: any): boolean => {
-  if (typeof value === "undefined" || value === null) {
-    return false;
-  }
-
-  if (typeof value === "string") {
-    return value.length > 0;
-  }
-
-  return true;
+  return typeof value !== "undefined" && value !== null;
 };
 
 /**
