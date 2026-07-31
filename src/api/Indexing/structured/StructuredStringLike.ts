@@ -101,7 +101,10 @@ const toNgrams = (
 ): string[] => {
   const tokens: string[] = [];
   const seen = new Set<string>();
-  const limited = normalized.slice(0, config.maxIndexedStringLength);
+  const limited = Array.from(normalized).slice(
+    0,
+    config.maxIndexedStringLength,
+  );
 
   for (let size = config.minNgramSize; size <= config.maxNgramSize; size += 1) {
     if (limited.length < size) {
@@ -109,7 +112,7 @@ const toNgrams = (
     }
 
     for (let index = 0; index <= limited.length - size; index += 1) {
-      const token = limited.slice(index, index + size);
+      const token = limited.slice(index, index + size).join("");
       if (!seen.has(token)) {
         seen.add(token);
         tokens.push(token);
