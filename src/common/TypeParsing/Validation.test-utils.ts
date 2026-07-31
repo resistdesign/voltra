@@ -210,11 +210,39 @@ export const runValidateTypeInfoValueCreateRequiredNumberZeroScenario = () =>
     false,
   );
 
+export const runValidateTypeInfoValueCreateRequiredStringEmptyScenario = () =>
+  validateTypeInfoValue(
+    {
+      name: "",
+    },
+    "Person",
+    createPersonNameMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+
 export const runValidateTypeInfoValueCreateMissingRequiredBooleanScenario = () =>
   validateTypeInfoValue(
     {},
     "Person",
     createBooleanMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+
+export const runValidateTypeInfoValueEmptyStringPatternMismatchScenario = () =>
+  validateTypeInfoValue(
+    {
+      phoneNumber: "",
+    },
+    "Person",
+    createPatternMap(),
     true,
     undefined,
     TypeOperation.CREATE,
