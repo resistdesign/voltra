@@ -107,7 +107,11 @@ const compileCriterion = (
         value: scalar(criterion.value, criterion),
       };
     case ComparisonOperators.IN: {
-      if (!capability.exact || !Array.isArray(criterion.valueOptions)) {
+      const mode = capability.collection ? "contains" : "eq";
+      if (
+        (mode === "contains" ? !capability.membership : !capability.exact) ||
+        !Array.isArray(criterion.valueOptions)
+      ) {
         return unsupported(criterion);
       }
       const values = criterion.valueOptions.map((value) =>
@@ -118,7 +122,7 @@ const compileCriterion = (
         or: values.map((value) => ({
           type: "term" as const,
           field,
-          mode: "eq" as const,
+          mode,
           value,
         })),
       };
