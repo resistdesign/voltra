@@ -208,6 +208,16 @@ const runOperatorCoverageScenario = async () => {
       operator: ComparisonOperators.IN,
       valueOptions: ["news", "guide"],
     }),
+    inArrayIndexedIds: await runSingleCriterionSearch(indexedOrm, {
+      fieldName: "tags",
+      operator: ComparisonOperators.IN,
+      valueOptions: ["red", "yellow"],
+    }),
+    inArrayFallbackIds: await runSingleCriterionSearch(fallbackOrm, {
+      fieldName: "tags",
+      operator: ComparisonOperators.IN,
+      valueOptions: ["red", "yellow"],
+    }),
     notInIds: await runSingleCriterionSearch(fallbackOrm, {
       fieldName: "category",
       operator: ComparisonOperators.NOT_IN,
@@ -312,6 +322,13 @@ export const runTypeInfoORMOperatorCoverageLessThanOrEqualIdsScenario =
   async () => (await getScenario()).lessThanOrEqualIds;
 export const runTypeInfoORMOperatorCoverageInIdsScenario = async () =>
   (await getScenario()).inIds;
+export const runTypeInfoORMOperatorCoverageInArrayParityScenario = async () => {
+  const scenario = await getScenario();
+  return {
+    indexedIds: scenario.inArrayIndexedIds,
+    fallbackIds: scenario.inArrayFallbackIds,
+  };
+};
 export const runTypeInfoORMOperatorCoverageNotInIdsScenario = async () =>
   (await getScenario()).notInIds;
 export const runTypeInfoORMOperatorCoverageLikeIdsScenario = async () =>
