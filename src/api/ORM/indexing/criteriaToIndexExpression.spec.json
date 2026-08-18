@@ -40,6 +40,46 @@
     {
       "export": "criteriaToIndexExpression",
       "conditions": [
+        "Profile",
+        {
+          "logicalOperator": "AND",
+          "fieldCriteria": [
+            {
+              "fieldName": "pronouns",
+              "operator": "IN",
+              "valueOptions": ["She/Her", "They/Them"]
+            }
+          ]
+        },
+        {
+          "pronouns": {
+            "collection": true,
+            "exact": true,
+            "membership": true
+          }
+        }
+      ],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "or": [
+          {
+            "type": "term",
+            "field": "f1#Profile#pronouns",
+            "mode": "contains",
+            "value": "She/Her"
+          },
+          {
+            "type": "term",
+            "field": "f1#Profile#pronouns",
+            "mode": "contains",
+            "value": "They/Them"
+          }
+        ]
+      }
+    },
+    {
+      "export": "criteriaToIndexExpression",
+      "conditions": [
         "Record",
         {
           "logicalOperator": "AND",
