@@ -39,6 +39,12 @@
                 "decimal": true
               },
               "optional": true
+            },
+            "tags": {
+              "collection": true,
+              "exact": true,
+              "membership": true,
+              "optional": true
             }
           },
           "Person": {
