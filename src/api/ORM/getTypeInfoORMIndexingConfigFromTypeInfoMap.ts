@@ -59,6 +59,7 @@ export const getTypeInfoORMIndexingConfigFromTypeInfoMap = (
       if (!indexed) continue;
 
       const generated: IndexedFieldCapabilities = {
+        ...(field.array ? { collection: true as const } : {}),
         ...(indexed.exact ? { exact: true as const } : {}),
         ...(indexed.membership || (field.array && indexed.exact)
           ? { membership: true as const }

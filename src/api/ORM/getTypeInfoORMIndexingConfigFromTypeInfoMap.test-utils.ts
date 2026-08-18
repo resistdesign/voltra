@@ -51,6 +51,17 @@ const getScenarioTypeInfoMap = (): TypeInfoMap => ({
           },
         },
       },
+      tags: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: true,
+        tags: {
+          indexed: {
+            exact: true,
+          },
+        },
+      },
     },
   },
   Person: {

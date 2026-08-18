@@ -44,6 +44,15 @@
       "expectation": ["record-1", "record-3", "record-4"]
     },
     {
+      "export": "runTypeInfoORMOperatorCoverageInArrayParityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "indexedIds": ["record-1", "record-3", "record-5"],
+        "fallbackIds": ["record-1", "record-3", "record-5"]
+      }
+    },
+    {
       "export": "runTypeInfoORMOperatorCoverageNotInIdsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
