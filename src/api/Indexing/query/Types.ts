@@ -73,6 +73,8 @@ export type IndexedTextCapabilities = Partial<Record<TextMatchMode, true>>;
 export type IndexedFieldCapabilities = {
   /** Physical field name before type qualification. */
   field?: string;
+  /** Field is canonically a collection rather than a scalar value. */
+  collection?: true;
   exact?: true;
   membership?: true;
   range?: {
