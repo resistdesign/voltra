@@ -11,4 +11,6 @@ Preserve literal metadata when a TypeScript union also includes the matching bro
 - [x] Preserve the same metadata through parenthesized and array types, and validate every array element with the normal primitive/constraint path.
 - [x] Make a non-empty string pattern authoritative over `possibleValues`, including malformed-pattern failure behavior.
 - [x] Add parser and validation coverage for scalar, array, compatible, incompatible, and strict-enum cases.
-- [ ] Verify the PR with the repository test/build/export workflow.
+- [x] Verify the PR with the repository test/build/export workflow.
+
+Verification: GitHub Actions `Tests` run 35183922407 passed `yarn test`, `yarn build`, and `yarn test:exports`.
