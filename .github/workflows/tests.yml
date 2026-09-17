@@ -39,6 +39,12 @@ jobs:
       - name: Run consumer smoke checks
         run: yarn test:consumer
 
+      - name: Verify generated docs stay deployable
+        run: |
+          yarn doc
+          oversized="$(find docs -type f -size +99999999c -print -quit)"
+          test -z "$oversized"
+
   test-dbx-scale-med:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
