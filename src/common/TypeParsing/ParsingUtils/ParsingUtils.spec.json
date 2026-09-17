@@ -130,6 +130,83 @@
       "conditions": [],
       "operation": "===",
       "expectation": "READ_DENIED_PRIMARY_FIELD_NOT_SUPPORTED"
+    },
+    {
+      "export": "runParsingUtilsMixedStringUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "string",
+        "array": false,
+        "possibleValues": ["US", "CA"],
+        "possibleValuesExhaustive": false
+      }
+    },
+    {
+      "export": "runParsingUtilsMixedNumberUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "number",
+        "array": false,
+        "possibleValues": [1, 2],
+        "possibleValuesExhaustive": false
+      }
+    },
+    {
+      "export": "runParsingUtilsMixedBooleanUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "boolean",
+        "array": false,
+        "possibleValues": [true, false],
+        "possibleValuesExhaustive": false
+      }
+    },
+    {
+      "export": "runParsingUtilsMixedStringArrayUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "string",
+        "array": true,
+        "possibleValues": ["US", "CA"],
+        "possibleValuesExhaustive": false
+      }
+    },
+    {
+      "export": "runParsingUtilsPureLiteralUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "string",
+        "array": false,
+        "possibleValues": ["US", "CA"],
+        "possibleValuesExhaustive": null
+      }
+    },
+    {
+      "export": "runParsingUtilsIncompatibleUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "string",
+        "array": false,
+        "possibleValues": null,
+        "possibleValuesExhaustive": null
+      }
+    },
+    {
+      "export": "runParsingUtilsNullableUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "type": "string",
+        "array": false,
+        "possibleValues": null,
+        "possibleValuesExhaustive": null
+      }
     }
   ]
 }

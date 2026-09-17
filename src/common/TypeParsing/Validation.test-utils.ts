@@ -3,6 +3,7 @@ import {
   ERROR_MESSAGE_CONSTANTS,
   PRIMITIVE_ERROR_MESSAGE_CONSTANTS,
   RelationshipValidationType,
+  getArrayItemErrorMap,
   getErrorDescriptor,
   getErrorDescriptors,
   validateTypeInfoDataItem,
@@ -100,6 +101,75 @@ const createPossibleValuesMap = (): TypeInfoMap => ({
   },
 });
 
+const createCountryPatternMap = (pattern = "^[A-Z]{2}$"): TypeInfoMap => ({
+  Person: {
+    fields: {
+      country: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+        possibleValues: ["US", "CA"],
+        tags: {
+          constraints: {
+            pattern,
+          },
+        },
+      },
+    },
+  },
+});
+
+const createOpenCountryMap = (): TypeInfoMap => ({
+  Person: {
+    fields: {
+      country: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+        possibleValues: ["US", "CA"],
+        possibleValuesExhaustive: false,
+      },
+    },
+  },
+});
+
+const createOpenNumberMap = (): TypeInfoMap => ({
+  Person: {
+    fields: {
+      rating: {
+        type: "number",
+        array: false,
+        readonly: false,
+        optional: false,
+        possibleValues: [1, 2],
+        possibleValuesExhaustive: false,
+      },
+    },
+  },
+});
+
+const createOpenCountryArrayMap = (): TypeInfoMap => ({
+  Person: {
+    fields: {
+      countries: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: false,
+        possibleValues: ["US", "CA"],
+        possibleValuesExhaustive: false,
+        tags: {
+          constraints: {
+            pattern: "^[A-Z]{2}$",
+          },
+        },
+      },
+    },
+  },
+});
+
 const createStrictMap = (): TypeInfoMap => ({
   Person: {
     fields: {
@@ -167,6 +237,14 @@ const createArrayMap = (): TypeInfoMap => ({
     },
   },
 });
+
+const getFirstFieldErrorCode = (
+  results: ReturnType<typeof validateTypeInfoValue>,
+  fieldName: string,
+) =>
+  getErrorDescriptors(results.errorMap[fieldName] ?? []).find(
+    (descriptor) => descriptor.code !== ERROR_MESSAGE_CONSTANTS.NONE,
+  )?.code ?? null;
 
 export const runValidateTypeInfoValueCreateScenario = () =>
   validateTypeInfoValue(
@@ -575,5 +653,126 @@ export const runArrayItemErrorMapScenario = () => {
       entries.find((entry): entry is { code: string } => "code" in (entry as any))
         ?.code ?? null,
     index1Codes: itemCollection?.itemErrorMap?.[1]?.map((d) => d.code) ?? [],
+  };
+};
+
+export const runPatternPossibleValuesPrecedenceScenario = () => {
+  const known = validateTypeInfoValue(
+    { country: "US" },
+    "Person",
+    createCountryPatternMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const custom = validateTypeInfoValue(
+    { country: "ZZ" },
+    "Person",
+    createCountryPatternMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const invalid = validateTypeInfoValue(
+    { country: "USA" },
+    "Person",
+    createCountryPatternMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const malformed = validateTypeInfoValue(
+    { country: "US" },
+    "Person",
+    createCountryPatternMap("["),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+
+  return {
+    knownValid: known.valid,
+    customValid: custom.valid,
+    invalidCode: getFirstFieldErrorCode(invalid, "country"),
+    malformedCode: getFirstFieldErrorCode(malformed, "country"),
+  };
+};
+
+export const runNonExhaustivePrimitiveValuesScenario = () => {
+  const stringCustom = validateTypeInfoValue(
+    { country: "ZZ" },
+    "Person",
+    createOpenCountryMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const numberCustom = validateTypeInfoValue(
+    { rating: 3 },
+    "Person",
+    createOpenNumberMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const numberWrongType = validateTypeInfoValue(
+    { rating: "3" as any },
+    "Person",
+    createOpenNumberMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+
+  return {
+    stringCustomValid: stringCustom.valid,
+    numberCustomValid: numberCustom.valid,
+    numberWrongTypeCode: getFirstFieldErrorCode(numberWrongType, "rating"),
+  };
+};
+
+export const runNonExhaustiveArrayPatternScenario = () => {
+  const valid = validateTypeInfoValue(
+    { countries: ["US", "ZZ"] },
+    "Person",
+    createOpenCountryArrayMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const invalid = validateTypeInfoValue(
+    { countries: ["US", "USA"] },
+    "Person",
+    createOpenCountryArrayMap(),
+    true,
+    undefined,
+    TypeOperation.CREATE,
+    undefined,
+    false,
+  );
+  const itemErrorMap = getArrayItemErrorMap(
+    invalid.errorMap.countries ?? [],
+  );
+
+  return {
+    validArray: valid.valid,
+    invalidArray: invalid.valid,
+    index1Code: itemErrorMap[1]?.[0]?.code ?? null,
   };
 };

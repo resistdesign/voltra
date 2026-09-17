@@ -200,9 +200,18 @@ export type TypeInfoField = {
    */
   optional: boolean;
   /**
-   * Allowed literal values for the field.
+   * Known literal values for the field.
    */
   possibleValues?: LiteralValue[];
+  /**
+   * Whether `possibleValues` is exhaustive.
+   *
+   * Omitted values retain the existing strict-enum behavior. `false` indicates
+   * that the source union also contains the matching broad primitive, so the
+   * literals are metadata/suggestions rather than the complete set of valid
+   * primitive values.
+   */
+  possibleValuesExhaustive?: boolean;
   /**
    * Optional field tags and constraints.
    */

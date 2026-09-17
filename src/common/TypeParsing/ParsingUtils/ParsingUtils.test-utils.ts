@@ -114,6 +114,42 @@ const getParsingUtilsScenarioData = () => {
   };
 };
 
+const getMixedUnionScenarioFields = () => {
+  const source = `
+    export type MixedUnionFields = {
+      country: "US" | "CA" | string;
+      count: 1 | 2 | number;
+      flag: true | false | boolean;
+      countries: ("US" | "CA" | string)[];
+      pureCountry: "US" | "CA";
+      incompatible: "A" | 2 | string;
+      nullable: "A" | string | null;
+    };
+  `;
+
+  const node = createSourceFile(
+    "mixed-unions.ts",
+    source,
+    ScriptTarget.Latest,
+    true,
+  );
+  const typeMap = convertASTToMap(node, {});
+  const mixedNode = typeMap.MixedUnionFields as TypeAliasDeclaration;
+
+  return getTypeInfo(mixedNode.type as any).fields || {};
+};
+
+const getMixedUnionFieldSummary = (fieldName: string) => {
+  const field = getMixedUnionScenarioFields()[fieldName];
+
+  return {
+    type: field?.type ?? null,
+    array: field?.array ?? null,
+    possibleValues: field?.possibleValues ?? null,
+    possibleValuesExhaustive: field?.possibleValuesExhaustive ?? null,
+  };
+};
+
 export const runParsingUtilsCommentTagsScenario = () => {
   const { bookNode } = getParsingUtilsScenarioData();
   return extractCommentTags(bookNode);
@@ -204,3 +240,24 @@ export const runParsingUtilsPrimaryFieldScenario = () =>
 
 export const runParsingUtilsPrimaryFieldErrorScenario = () =>
   getParsingUtilsScenarioData().primaryFieldError;
+
+export const runParsingUtilsMixedStringUnionScenario = () =>
+  getMixedUnionFieldSummary("country");
+
+export const runParsingUtilsMixedNumberUnionScenario = () =>
+  getMixedUnionFieldSummary("count");
+
+export const runParsingUtilsMixedBooleanUnionScenario = () =>
+  getMixedUnionFieldSummary("flag");
+
+export const runParsingUtilsMixedStringArrayUnionScenario = () =>
+  getMixedUnionFieldSummary("countries");
+
+export const runParsingUtilsPureLiteralUnionScenario = () =>
+  getMixedUnionFieldSummary("pureCountry");
+
+export const runParsingUtilsIncompatibleUnionScenario = () =>
+  getMixedUnionFieldSummary("incompatible");
+
+export const runParsingUtilsNullableUnionScenario = () =>
+  getMixedUnionFieldSummary("nullable");
