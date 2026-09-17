@@ -33,6 +33,7 @@
  * @group Core
  */
 export * from "./SimpleCFT";
+export type { CloudFormationTemplatePatch } from "./PatchTypes";
 /**
  * @category iac
  * @group Utilities
