@@ -15,7 +15,7 @@ import { LiteralValue, TypeKeyword } from "../TypeInfo";
  * members are never silently discarded.
  *
  * @param node - Union type node containing compatible literal/primitive members.
- * @returns Literal values, detected type keyword, and whether they are exhaustive.
+ * @returns Literal values, detected type keyword, and optional exhaustiveness metadata.
  */
 export const extractLiteralValues = (
   node: UnionTypeNode,
@@ -23,7 +23,7 @@ export const extractLiteralValues = (
   | {
       values: LiteralValue[];
       type: TypeKeyword;
-      possibleValuesExhaustive: boolean;
+      possibleValuesExhaustive?: boolean;
     }
   | undefined => {
   const literalValues: LiteralValue[] = [];
@@ -87,7 +87,7 @@ export const extractLiteralValues = (
     ? {
         values: literalValues,
         type: detectedTypeKeyword,
-        possibleValuesExhaustive: !broadPrimitivePresent,
+        possibleValuesExhaustive: broadPrimitivePresent ? false : undefined,
       }
     : undefined;
 };
