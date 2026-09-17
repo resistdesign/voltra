@@ -22,11 +22,13 @@ export const checkType = (
   isArray?: boolean;
   typeKeyword?: TypeKeyword;
   options?: LiteralValue[] | undefined;
+  possibleValuesExhaustive?: boolean;
 } => {
   let typeReference: string | undefined;
   let isArray = false;
   let typeKeyword: TypeKeyword;
   let options: LiteralValue[] | undefined;
+  let possibleValuesExhaustive: boolean | undefined;
 
   if (node.kind === SyntaxKind.TypeReference) {
     typeReference = (node as TypeReferenceNode).typeName.getText();
@@ -38,37 +40,47 @@ export const checkType = (
       typeReference: elementReference,
       typeKeyword: elementKeyword,
       options: elementOptions,
+      possibleValuesExhaustive: elementPossibleValuesExhaustive,
     } = checkType(elementType);
 
     typeReference = elementReference;
     typeKeyword = elementKeyword || "string";
     options = elementOptions;
+    possibleValuesExhaustive = elementPossibleValuesExhaustive;
   } else if (node.kind === SyntaxKind.UnionType) {
     const { types: unionTypes } = node as UnionTypeNode;
-    const { options: unionOptions, typeKeyword: unionTypeKeyword } =
-      checkUnionType(node as UnionTypeNode);
+    const {
+      options: unionOptions,
+      typeKeyword: unionTypeKeyword,
+      possibleValuesExhaustive: unionPossibleValuesExhaustive,
+    } = checkUnionType(node as UnionTypeNode);
 
     options = unionOptions;
-    typeKeyword = unionTypeKeyword;
-
-    if (!options) {
-      typeKeyword = getTypeKeyword(unionTypes[0]);
-    }
+    typeKeyword = unionTypeKeyword || getTypeKeyword(unionTypes[0]);
+    possibleValuesExhaustive = unionPossibleValuesExhaustive;
   } else if (node.kind === SyntaxKind.ParenthesizedType) {
     const {
       typeReference: parenthesizedReference,
       isArray: parenthesizedIsArray,
       typeKeyword: parenthesizedKeyword,
       options: parenthesizedOptions,
+      possibleValuesExhaustive: parenthesizedPossibleValuesExhaustive,
     } = checkType((node as any).type);
 
     typeReference = parenthesizedReference;
     isArray = !!parenthesizedIsArray;
     typeKeyword = parenthesizedKeyword || "string";
     options = parenthesizedOptions;
+    possibleValuesExhaustive = parenthesizedPossibleValuesExhaustive;
   } else {
     typeKeyword = getTypeKeyword(node);
   }
 
-  return { typeReference, isArray, typeKeyword, options };
+  return {
+    typeReference,
+    isArray,
+    typeKeyword,
+    options,
+    possibleValuesExhaustive,
+  };
 };
