@@ -9,6 +9,7 @@ import { CloudFormationTemplate } from "./types/IaCTypes";
 import {
   addParameter,
   addParameters,
+  DeepPartial,
   ParameterGroup,
   ParameterInfo,
   patchTemplate,
@@ -70,11 +71,11 @@ export class SimpleCFT {
   };
 
   /**
-   * Apply a patch to the stack template.
+   * Apply a nested patch to the stack template.
    *
-   * @param patch - Template patch to merge.
+   * @param patch - Deep partial template patch to merge.
    * */
-  public patch = (patch: Partial<CloudFormationTemplate>) => {
+  public patch = (patch: DeepPartial<CloudFormationTemplate>) => {
     this.template = patchTemplate(patch, this.template);
 
     return this;
