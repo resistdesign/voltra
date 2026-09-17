@@ -1,4 +1,5 @@
 import { SimpleCFT } from "./SimpleCFT";
+import { addDatabase } from "./packs";
 import { createResourcePack, ParameterGroup } from "./utils";
 import YAML from "yaml";
 
@@ -17,6 +18,31 @@ export const runSimpleCFTScenario = () => {
 
   simpleCFT.applyPack(pack, { typeName: "Custom::Thing" });
   simpleCFT.patch({ Description: "Voltra stack" });
+
+  const tableId: string = "SampleTable";
+
+  simpleCFT.applyPack(addDatabase, {
+    tableId,
+    tableName: "sample-table",
+    attributes: {
+      id: "S",
+    },
+    keys: {
+      id: "HASH",
+    },
+  });
+  simpleCFT.patch({
+    Resources: {
+      [tableId]: {
+        Properties: {
+          TimeToLiveSpecification: {
+            AttributeName: "expiresAt",
+            Enabled: true,
+          },
+        },
+      },
+    },
+  });
 
   simpleCFT.addParameter({
     ParameterId: "Env",
