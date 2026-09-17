@@ -18,6 +18,7 @@ export const getTypeInfoField = (
     typeReference,
     type: typeKeyword,
     options,
+    possibleValuesExhaustive,
   } = type
     ? extractTypeDetails(type)
     : {
@@ -25,6 +26,7 @@ export const getTypeInfoField = (
         typeReference: undefined,
         type: "string" as TypeKeyword,
         options: undefined,
+        possibleValuesExhaustive: undefined,
       };
   const readonly = modifiers
     ? modifiers.some((modifier) => modifier.kind === SyntaxKind.ReadonlyKeyword)
@@ -57,6 +59,7 @@ export const getTypeInfoField = (
     optional,
     typeReference,
     possibleValues: options,
+    possibleValuesExhaustive,
     tags,
   };
 };

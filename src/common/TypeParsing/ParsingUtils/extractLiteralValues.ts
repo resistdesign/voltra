@@ -8,47 +8,86 @@ import {
 import { LiteralValue, TypeKeyword } from "../TypeInfo";
 
 /**
- * Extract literal values and inferred keyword from a union of literals.
+ * Extract literal values and inferred keyword from a homogeneous union.
  *
- * @param node - Union type node containing literal members.
- * @returns Literal values and detected type keyword, or undefined if mixed.
+ * A matching broad primitive member is allowed alongside literals of the same
+ * primitive kind. Unsupported or incompatible members fail closed so union
+ * members are never silently discarded.
+ *
+ * @param node - Union type node containing compatible literal/primitive members.
+ * @returns Literal values, detected type keyword, and optional exhaustiveness metadata.
  */
 export const extractLiteralValues = (
   node: UnionTypeNode,
-): { values: LiteralValue[]; type: TypeKeyword } | undefined => {
+):
+  | {
+      values: LiteralValue[];
+      type: TypeKeyword;
+      possibleValuesExhaustive?: boolean;
+    }
+  | undefined => {
   const literalValues: LiteralValue[] = [];
   let detectedTypeKeyword: TypeKeyword | undefined;
+  let broadPrimitivePresent = false;
 
   for (const type of node.types) {
+    let memberTypeKeyword: TypeKeyword | undefined;
+    let literalValue: LiteralValue | undefined;
+    let literalValuePresent = false;
+
     if (isLiteralTypeNode(type)) {
       const literal = type.literal;
+
       if (isStringLiteral(literal)) {
-        if (!detectedTypeKeyword) detectedTypeKeyword = "string";
-        if (detectedTypeKeyword === "string") {
-          literalValues.push(literal.text);
-        }
+        memberTypeKeyword = "string";
+        literalValue = literal.text;
+        literalValuePresent = true;
       } else if (isNumericLiteral(literal)) {
-        if (!detectedTypeKeyword) detectedTypeKeyword = "number";
-        if (detectedTypeKeyword === "number") {
-          literalValues.push(Number(literal.text));
-        }
+        memberTypeKeyword = "number";
+        literalValue = Number(literal.text);
+        literalValuePresent = true;
       } else if (
         literal.kind === SyntaxKind.TrueKeyword ||
         literal.kind === SyntaxKind.FalseKeyword
       ) {
-        if (!detectedTypeKeyword) detectedTypeKeyword = "boolean";
-        if (detectedTypeKeyword === "boolean") {
-          literalValues.push(literal.kind === SyntaxKind.TrueKeyword);
-        }
-      } else if (literal.kind === SyntaxKind.NullKeyword) {
-        literalValues.push(null);
+        memberTypeKeyword = "boolean";
+        literalValue = literal.kind === SyntaxKind.TrueKeyword;
+        literalValuePresent = true;
+      } else {
+        return undefined;
       }
+    } else if (type.kind === SyntaxKind.StringKeyword) {
+      memberTypeKeyword = "string";
+      broadPrimitivePresent = true;
+    } else if (type.kind === SyntaxKind.NumberKeyword) {
+      memberTypeKeyword = "number";
+      broadPrimitivePresent = true;
+    } else if (type.kind === SyntaxKind.BooleanKeyword) {
+      memberTypeKeyword = "boolean";
+      broadPrimitivePresent = true;
     } else {
       return undefined;
     }
+
+    if (
+      detectedTypeKeyword &&
+      memberTypeKeyword !== detectedTypeKeyword
+    ) {
+      return undefined;
+    }
+
+    detectedTypeKeyword = memberTypeKeyword;
+
+    if (literalValuePresent) {
+      literalValues.push(literalValue as LiteralValue);
+    }
   }
 
-  return literalValues.length
-    ? { values: literalValues, type: detectedTypeKeyword! }
+  return detectedTypeKeyword && literalValues.length
+    ? {
+        values: literalValues,
+        type: detectedTypeKeyword,
+        possibleValuesExhaustive: broadPrimitivePresent ? false : undefined,
+      }
     : undefined;
 };

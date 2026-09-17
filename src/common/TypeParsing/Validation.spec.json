@@ -381,6 +381,37 @@
           "NOT_A_STRING"
         ]
       }
+    },
+    {
+      "export": "runPatternPossibleValuesPrecedenceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "knownValid": true,
+        "customValid": true,
+        "invalidCode": "VALUE_DOES_NOT_MATCH_PATTERN",
+        "malformedCode": "INVALID_PATTERN"
+      }
+    },
+    {
+      "export": "runNonExhaustivePrimitiveValuesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "stringCustomValid": true,
+        "numberCustomValid": true,
+        "numberWrongTypeCode": "NOT_A_NUMBER"
+      }
+    },
+    {
+      "export": "runNonExhaustiveArrayPatternScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "validArray": true,
+        "invalidArray": false,
+        "index1Code": "VALUE_DOES_NOT_MATCH_PATTERN"
+      }
     }
   ]
 }

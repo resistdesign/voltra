@@ -407,6 +407,7 @@ export const validateTypeInfoFieldValue = (
     array,
     optional,
     possibleValues,
+    possibleValuesExhaustive,
     tags: {
       customType,
       validation: {
@@ -436,6 +437,14 @@ export const validateTypeInfoFieldValue = (
     (itemIsPartial && (valueIsUndefined || valueIsNull)) ||
     (optional && valueIsUndefined);
   const emptyArrayIsValid = emptyArrayIsValidOverride ?? false;
+  const patternIsAuthoritative =
+    type === "string" &&
+    typeof pattern === "string" &&
+    pattern.trim() !== "";
+  const possibleValuesAreRestrictive =
+    !!possibleValues &&
+    possibleValuesExhaustive !== false &&
+    !patternIsAuthoritative;
 
   if (canSkipValidation) {
     results.valid = true;
@@ -517,7 +526,10 @@ export const validateTypeInfoFieldValue = (
         // NOTE: This is just here to explicitly demonstrate the intended outcome.
         results.valid = getValidityValue(results.valid, true);
       }
-    } else if (possibleValues && !possibleValues.includes(value)) {
+    } else if (
+      possibleValuesAreRestrictive &&
+      !possibleValues!.includes(value)
+    ) {
       results.valid = false;
       results.error = getErrorDescriptor(
         ERROR_MESSAGE_CONSTANTS.INVALID_OPTION,
@@ -533,7 +545,7 @@ export const validateTypeInfoFieldValue = (
       results.valid = getValidityValue(results.valid, pendingValid);
       results.valid = getValidityValue(results.valid, customValid);
 
-      if (type === "string" && typeof pattern === "string") {
+      if (patternIsAuthoritative) {
         const { valid: patternValid, error: patternError } =
           validateValueMatchesPattern(typeReference ?? type, value, pattern);
 
