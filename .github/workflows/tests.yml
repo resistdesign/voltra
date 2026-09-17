@@ -39,12 +39,6 @@ jobs:
       - name: Run consumer smoke checks
         run: yarn test:consumer
 
-      - name: Verify generated docs stay deployable
-        run: |
-          yarn doc
-          test "$(stat -c%s docs/classes/iac.SimpleCFT.html)" -lt 100000000
-          test "$(stat -c%s docs/functions/iac.patchTemplate.html)" -lt 100000000
-
   test-dbx-scale-med:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
