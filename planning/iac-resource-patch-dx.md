@@ -12,7 +12,10 @@ Goal: make `SimpleCFT.patch()` match its deep-merge behavior for CloudFormation 
 - [x] Add type-level consumer coverage for typed resource patches, untyped resource fragments, invalid properties, and required-property omission.
 - [x] Preserve runtime patch behavior and existing SimpleCFT fixture coverage.
 - [x] Verify build/tests/consumer checks and TypeDoc/site generation no longer create oversized pages.
-- [ ] Close the plan after PR review/merge.
+- [ ] Export the named patch contract visible in public function signatures from `@resistdesign/voltra/iac`.
+- [ ] Verify a packed-package consumer can explicitly import and comply with `CloudFormationTemplatePatch`.
+- [ ] Re-run PR verification after the public export change.
+- [ ] Move this plan to `planning/complete/` before the PR is considered merge-ready.
 
 ## Verification
 
