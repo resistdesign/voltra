@@ -15,13 +15,21 @@ export const extractTypeDetails = (
   typeReference?: string;
   array: boolean;
   options?: LiteralValue[];
+  possibleValuesExhaustive?: boolean;
 } => {
-  const { isArray, typeReference, options, typeKeyword } = checkType(type);
+  const {
+    isArray,
+    typeReference,
+    options,
+    typeKeyword,
+    possibleValuesExhaustive,
+  } = checkType(type);
 
   return {
     type: typeKeyword || "string",
     typeReference,
     array: !!isArray,
     options,
+    possibleValuesExhaustive,
   };
 };
