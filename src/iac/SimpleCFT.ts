@@ -6,10 +6,10 @@
  * it as JSON/YAML.
  */
 import { CloudFormationTemplate } from "./types/IaCTypes";
+import { CloudFormationTemplatePatch } from "./PatchTypes";
 import {
   addParameter,
   addParameters,
-  DeepPartial,
   ParameterGroup,
   ParameterInfo,
   patchTemplate,
@@ -73,9 +73,9 @@ export class SimpleCFT {
   /**
    * Apply a nested patch to the stack template.
    *
-   * @param patch - Deep partial template patch to merge.
+   * @param patch - Resource-aware partial template patch to merge.
    * */
-  public patch = (patch: DeepPartial<CloudFormationTemplate>) => {
+  public patch = (patch: CloudFormationTemplatePatch) => {
     this.template = patchTemplate(patch, this.template);
 
     return this;
