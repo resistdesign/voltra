@@ -8,21 +8,10 @@ import {
   CloudFormationParameter,
   CloudFormationTemplate,
 } from "../types/IaCTypes";
+import { CloudFormationTemplatePatch } from "../PatchTypes";
 import { getValuePathString, mergeValues } from "./patch-utils";
 
 export * from "./patch-utils";
-
-/**
- * Recursively make object properties optional while preserving array and tuple
- * structure. This matches the nested merge semantics used by template patches.
- */
-export type DeepPartial<T> = T extends (...args: any[]) => any
-  ? T
-  : T extends readonly unknown[]
-    ? { [Key in keyof T]: DeepPartial<T[Key]> }
-    : T extends object
-      ? { [Key in keyof T]?: DeepPartial<T[Key]> }
-      : T;
 
 /**
  * Stack parameter definition with display metadata.
@@ -145,12 +134,12 @@ export type ResourcePackApplier<ParamsType> = (
 /**
  * Apply a patch to a stack template.
  *
- * @param patch - Deep partial template patch.
+ * @param patch - Resource-aware partial template patch.
  * @param template - Template to update.
  * @returns Updated CloudFormation template.
  */
 export const patchTemplate = (
-  patch: DeepPartial<CloudFormationTemplate>,
+  patch: CloudFormationTemplatePatch,
   template: CloudFormationTemplate,
 ): CloudFormationTemplate =>
   mergeValues([], template, patch, {

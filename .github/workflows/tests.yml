@@ -36,6 +36,9 @@ jobs:
       - name: Run export checks
         run: yarn test:exports
 
+      - name: Run consumer smoke checks
+        run: yarn test:consumer
+
   test-dbx-scale-med:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
