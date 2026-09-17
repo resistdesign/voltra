@@ -10,6 +10,29 @@
         "Resources": {
           "SampleResource": {
             "Type": "Custom::Thing"
+          },
+          "SampleTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "sample-table",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST",
+              "TimeToLiveSpecification": {
+                "AttributeName": "expiresAt",
+                "Enabled": true
+              }
+            }
           }
         },
         "Description": "Voltra stack",
