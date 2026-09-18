@@ -102,6 +102,51 @@ const findExactTermExpression = (
   return undefined;
 };
 
+const findOrderExpression = (
+  expression: IndexExpression,
+  field: string,
+): IndexTermExpression | IndexRangeExpression | undefined => {
+  if (!isBoolean(expression)) {
+    return expression.type !== "text" && expression.field === field
+      ? expression
+      : undefined;
+  }
+  if ("or" in expression) {
+    return undefined;
+  }
+  for (const child of expression.and) {
+    const orderExpression = findOrderExpression(child, field);
+    if (orderExpression) {
+      return orderExpression;
+    }
+  }
+  return undefined;
+};
+
+const shouldUseNativeOrder = (
+  expression: IndexExpression,
+  context: ExecutionContext,
+): boolean => {
+  const orderBy = context.options.orderBy;
+  if (!orderBy || !isBoolean(expression) || "or" in expression) {
+    return true;
+  }
+
+  const exactTerm = findExactTermExpression(expression);
+  const orderExpression = findOrderExpression(expression, orderBy.field);
+  if (
+    !exactTerm ||
+    (orderExpression?.type !== "gte" && orderExpression?.type !== "lte")
+  ) {
+    return true;
+  }
+
+  return !!(
+    context.backend.values.occupancy &&
+    context.options.occupancyFields?.[exactTerm.field]
+  );
+};
+
 const getValueDriverKind = (
   expression: IndexExpression,
 ): "term" | "range" => {
@@ -143,7 +188,6 @@ const addPage = (
 const materializeValueExpression = async (
   expression: IndexExpression,
   context: ExecutionContext,
-  allowNativeOrder: boolean,
 ): Promise<MaterializedCandidates> => {
   const ids: DocId[] = [];
   let cursor: string | undefined;
@@ -155,10 +199,9 @@ const materializeValueExpression = async (
         "Indexed query exceeded its candidate budget.",
       );
     }
-    const nativeOrderBy =
-      allowNativeOrder && !isBoolean(expression)
-        ? context.options.orderBy
-        : undefined;
+    const nativeOrderBy = shouldUseNativeOrder(expression, context)
+      ? context.options.orderBy
+      : undefined;
     const page = await searchStructured(
       context.backend.values,
       toWhere(expression),
@@ -266,14 +309,9 @@ const union = (children: DocId[][]): DocId[] => {
 const materializeExpression = async (
   expression: IndexExpression,
   context: ExecutionContext,
-  allowNativeOrder = true,
 ): Promise<MaterializedCandidates> => {
   if (isValueExpression(expression)) {
-    return materializeValueExpression(
-      expression,
-      context,
-      allowNativeOrder,
-    );
+    return materializeValueExpression(expression, context);
   }
   if (isText(expression)) {
     return materializeTextExpression(expression, context);
@@ -292,7 +330,7 @@ const materializeExpression = async (
       : children;
   const results: MaterializedCandidates[] = [];
   for (const child of orderedChildren) {
-    results.push(await materializeExpression(child, context, false));
+    results.push(await materializeExpression(child, context));
   }
   const ids =
     "and" in booleanExpression
