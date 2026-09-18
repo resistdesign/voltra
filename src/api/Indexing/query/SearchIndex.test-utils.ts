@@ -229,7 +229,6 @@ export const runUnifiedIndexOrderingScenario = async () =>
 export const runUnifiedIndexStaleCursorScenario = async () =>
   (await getScenario()).staleCursorCode;
 
-
 export const runUnifiedIndexStructuredAndPlanningScenario = async () => {
   const instrumented = await buildInstrumentedBackend();
   const result = await searchIndex(
