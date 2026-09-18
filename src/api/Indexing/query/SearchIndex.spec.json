@@ -56,6 +56,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "ids": ["1", "4"],
+        "driverKind": "term",
         "termQueries": 1,
         "rangeQueries": 0,
         "documentGets": 0,
