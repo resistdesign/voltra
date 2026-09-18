@@ -92,6 +92,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "ids": ["4", "1"],
+        "driverKind": "range",
         "occupancyQueriesUsed": true
       }
     }
