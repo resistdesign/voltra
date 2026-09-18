@@ -125,6 +125,8 @@ export type StructuredDocFieldsState = {
    * Monotonic version for optimistic writes.
    */
   version: number;
+  /** Optional owning type identity for maintenance and health tooling. */
+  typeName?: string;
   /** Field eligibility/chunk policy used by occupancy rebuilds. */
   occupancyFields?: StructuredOccupancyFieldMap;
 };
@@ -161,6 +163,7 @@ export const structuredDocFieldsSchema = {
   kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
   fieldsAttribute: "fields",
   versionAttribute: "version",
+  typeNameAttribute: "typeName",
 } as const;
 
 /**
@@ -281,6 +284,7 @@ export function buildStructuredDocFieldsItem(
   fields: StructuredDocFieldsRecord,
   version: number,
   occupancyFields?: StructuredOccupancyFieldMap,
+  typeName?: string,
 ): StructuredDocFieldsItem {
   const key = assertIndexTableKey({
     pk: buildIndexScalarKey(
@@ -296,6 +300,7 @@ export function buildStructuredDocFieldsItem(
     docId,
     fields,
     version,
+    ...(typeName ? { typeName } : {}),
     ...(occupancyFields ? { occupancyFields } : {}),
   };
 }
