@@ -47,6 +47,15 @@ export type StructuredOccupancyFieldMap = Record<
 export type StructuredWriteContext = {
   /** All eligible scalar fields for the document type, including missing ones. */
   occupancyFields?: StructuredOccupancyFieldMap;
+  /** Stored type identity used by maintenance and health tooling. */
+  typeName?: string;
+  /**
+   * Optional structured-document version that must still be current.
+   *
+   * Maintenance callers use this to avoid deleting index state that changed
+   * after it was audited.
+   */
+  expectedVersion?: number;
   /** True when this write removes the document rather than storing `{}`. */
   deleted?: boolean;
 };
