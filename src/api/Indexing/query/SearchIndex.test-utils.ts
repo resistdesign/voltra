@@ -279,3 +279,51 @@ export const runUnifiedIndexStructuredAndOrderedPlanningScenario = async () => {
     ...instrumented.counters,
   };
 };
+
+
+export const runUnifiedIndexCompoundOccupancyPreservedScenario = async () => {
+  const values = new StructuredInMemoryBackend();
+  const occupancyFields = {
+    [field("state")]: { type: "string" as const },
+    [field("score")]: { type: "number" as const },
+  };
+  for (const record of records) {
+    await values.write(
+      record.id,
+      {
+        [field("state")]: record.state,
+        [field("score")]: record.score,
+      },
+      { occupancyFields },
+    );
+  }
+
+  let occupancyQueries = 0;
+  const occupancy = values.occupancy;
+  const backend = createIndexBackend({
+    valueWriter: values,
+    values: {
+      terms: values.terms,
+      ranges: values.ranges,
+      documents: values.documents,
+      missing: values.missing,
+      occupancy: {
+        getActiveGeneration: occupancy.getActiveGeneration,
+        query: async (...args) => {
+          occupancyQueries += 1;
+          return occupancy.query(...args);
+        },
+      },
+    },
+  });
+  const result = await searchIndex(backend, publishedWithMinimumScore, {
+    limit: 10,
+    orderBy: { field: field("score") },
+    occupancyFields,
+  });
+
+  return {
+    ids: result.candidateIds,
+    occupancyQueriesUsed: occupancyQueries > 0,
+  };
+};
