@@ -37,11 +37,13 @@ compound indexes or direct DynamoDB queries.
 - [x] Prefer an exact-term index source when the existing structured AND driver would
       otherwise be an open-ended range, avoiding broad exact + range traversal without
       disturbing term or bounded-range plans.
-- [x] Keep global ordering at the unified query layer for compound expressions so
-      order-by does not override the selective structured driver.
+- [x] Keep global ordering at the unified query layer only when an ordered compound
+      plan would otherwise force a broad open-ended range over a more selective exact
+      term; preserve native ordering and occupancy for the other plans.
 - [x] Batch structured document verification reads with an optional backend bulk-read
       capability and bounded DynamoDB BatchGet retries.
-- [x] Preserve single-leaf structured ordered traversal and occupancy behavior.
+- [x] Preserve single-leaf structured ordered traversal and compound occupancy
+      behavior, with explicit regression coverage that occupancy is still exercised.
 - [x] Add regression coverage proving exact + range AND uses the exact-term source and
       one batched verification read.
 - [x] Add regression coverage for ordered exact + range queries with LIMIT 1 and
@@ -49,4 +51,4 @@ compound indexes or direct DynamoDB queries.
 - [ ] Re-run existing mixed AND/OR, ordering, stale-cursor, budget, structured-search,
       and ORM/indexing coverage.
 - [ ] Run `yarn test` and `yarn build`.
-- [ ] Open a PR documenting that index storage/write behavior is unchanged.
+- [x] Open a PR documenting that index storage/write behavior is unchanged.
