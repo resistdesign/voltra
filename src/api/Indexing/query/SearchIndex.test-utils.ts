@@ -324,6 +324,7 @@ export const runUnifiedIndexCompoundOccupancyPreservedScenario = async () => {
 
   return {
     ids: result.candidateIds,
+    driverKind: result.diagnostics.driverKind,
     occupancyQueriesUsed: occupancyQueries > 0,
   };
 };
