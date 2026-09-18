@@ -238,6 +238,7 @@ export const runUnifiedIndexStructuredAndPlanningScenario = async () => {
   );
   return {
     ids: result.candidateIds,
+    driverKind: result.diagnostics.driverKind,
     ...instrumented.counters,
   };
 };
