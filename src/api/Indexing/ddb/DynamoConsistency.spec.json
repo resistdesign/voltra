@@ -37,6 +37,20 @@
         "staleGetCount": 0,
         "consistentReadsUsed": true
       }
+    },
+    {
+      "export": "runStructuredDynamoBatchDocumentReadScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "batchGetCount": 1,
+        "batchGetKeyCount": 3,
+        "documents": [
+          { "age": 10, "state": "published" },
+          { "age": 20, "state": "draft" },
+          null
+        ]
+      }
     }
   ]
 }
