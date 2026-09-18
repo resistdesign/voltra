@@ -81,6 +81,45 @@ const toWhere = (expression: IndexExpression): Where => {
   return expression;
 };
 
+
+const findExactTermExpression = (
+  expression: IndexExpression,
+): IndexTermExpression | undefined => {
+  if (!isBoolean(expression)) {
+    return expression.type === "term" && expression.mode === "eq"
+      ? expression
+      : undefined;
+  }
+  if ("or" in expression) {
+    return undefined;
+  }
+  for (const child of expression.and) {
+    const term = findExactTermExpression(child);
+    if (term) {
+      return term;
+    }
+  }
+  return undefined;
+};
+
+const getValueDriverKind = (
+  expression: IndexExpression,
+): "term" | "range" => {
+  let first = expression;
+  while (isBoolean(first)) {
+    first = ("and" in first ? first.and : first.or)[0];
+  }
+  if (first.type === "term") {
+    return "term";
+  }
+  if (
+    (first.type === "gte" || first.type === "lte") &&
+    findExactTermExpression(expression)
+  ) {
+    return "term";
+  }
+  return "range";
+};
 const addPage = (
   context: ExecutionContext,
   ids: DocId[],
@@ -137,17 +176,10 @@ const materializeValueExpression = async (
     ids.push(...page.candidateIds);
   } while (cursor);
 
-  const firstLeaf = (() => {
-    let current = expression;
-    while (isBoolean(current)) {
-      current = ("and" in current ? current.and : current.or)[0];
-    }
-    return current;
-  })();
   return {
     ids,
     exact: true,
-    driverKind: firstLeaf.type === "term" ? "term" : "range",
+    driverKind: getValueDriverKind(expression),
   };
 };
 
