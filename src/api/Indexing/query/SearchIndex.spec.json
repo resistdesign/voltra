@@ -5,13 +5,21 @@
       "export": "runUnifiedIndexMixedAndScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["1", "4"]
+      "expectation": [
+        "1",
+        "4"
+      ]
     },
     {
       "export": "runUnifiedIndexMixedOrScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["1", "2", "3", "4"]
+      "expectation": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
     },
     {
       "export": "runUnifiedIndexVerificationScenario",
@@ -33,8 +41,12 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "first": ["1"],
-        "second": ["4"],
+        "first": [
+          "1"
+        ],
+        "second": [
+          "4"
+        ],
         "terminal": null
       }
     },
@@ -42,7 +54,10 @@
       "export": "runUnifiedIndexOrderingScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["4", "1"]
+      "expectation": [
+        "4",
+        "1"
+      ]
     },
     {
       "export": "runUnifiedIndexStaleCursorScenario",
@@ -55,7 +70,10 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "ids": ["1", "4"],
+        "ids": [
+          "1",
+          "4"
+        ],
         "driverKind": "term",
         "termQueries": 1,
         "rangeQueries": 0,
@@ -68,9 +86,28 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "first": ["4"],
-        "second": ["1"],
+        "first": [
+          "4"
+        ],
+        "second": [
+          "1"
+        ],
         "terminal": null
+      }
+    },
+    {
+      "export": "runUnifiedIndexStructuredAndOrderedPlanningScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": [
+          "4"
+        ],
+        "driverKind": "term",
+        "termQueries": 1,
+        "rangeQueries": 0,
+        "documentGets": 0,
+        "documentBatches": 2
       }
     }
   ]
