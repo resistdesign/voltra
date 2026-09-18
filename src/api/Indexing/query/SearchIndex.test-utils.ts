@@ -261,3 +261,21 @@ export const runUnifiedIndexStructuredAndOrderedPaginationScenario =
       terminal: second.cursor ?? null,
     };
   };
+
+
+export const runUnifiedIndexStructuredAndOrderedPlanningScenario = async () => {
+  const instrumented = await buildInstrumentedBackend();
+  const result = await searchIndex(
+    instrumented.backend,
+    publishedWithMinimumScore,
+    {
+      limit: 1,
+      orderBy: { field: field("score") },
+    },
+  );
+  return {
+    ids: result.candidateIds,
+    driverKind: result.diagnostics.driverKind,
+    ...instrumented.counters,
+  };
+};
