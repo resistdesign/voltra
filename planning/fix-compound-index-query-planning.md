@@ -34,8 +34,9 @@ compound indexes or direct DynamoDB queries.
 
 ## Checklist
 
-- [x] Prefer exact-term index sources for structured AND verification when available,
-      avoiding broad range traversal for exact + range conjunctions.
+- [x] Prefer an exact-term index source when the existing structured AND driver would
+      otherwise be an open-ended range, avoiding broad exact + range traversal without
+      disturbing term or bounded-range plans.
 - [x] Keep global ordering at the unified query layer for compound expressions so
       order-by does not override the selective structured driver.
 - [x] Batch structured document verification reads with an optional backend bulk-read
