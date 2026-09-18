@@ -394,12 +394,14 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>> => {
       const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
 
+      const uniqueDocIds = Array.from(new Set(docIds));
+
       for (
         let offset = 0;
-        offset < docIds.length;
+        offset < uniqueDocIds.length;
         offset += STRUCTURED_DOCUMENT_BATCH_GET_LIMIT
       ) {
-        const chunk = docIds.slice(
+        const chunk = uniqueDocIds.slice(
           offset,
           offset + STRUCTURED_DOCUMENT_BATCH_GET_LIMIT,
         );
@@ -418,8 +420,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
 
         for (
           let attempt = 0;
-          pending &&
-          Object.keys(pending).length > 0 &&
+          (pending?.[this.docFieldsTableName]?.Keys.length ?? 0) > 0 &&
           attempt < STRUCTURED_DOCUMENT_BATCH_GET_MAX_ATTEMPTS;
           attempt += 1
         ) {
