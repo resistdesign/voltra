@@ -14,7 +14,11 @@ import {
   assertIndexTableConfig,
   type IndexTableConfig,
 } from "../IndexTable";
-import type { StructuredSearchDependencies } from "./SearchStructured";
+import type {
+  StructuredDocumentListOptions,
+  StructuredDocumentPage,
+  StructuredSearchDependencies,
+} from "./SearchStructured";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
 import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
 import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
@@ -459,6 +463,43 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
 
       return fieldsById;
     },
+    list: async (
+      options: StructuredDocumentListOptions = {},
+    ): Promise<StructuredDocumentPage> => {
+      if (!this.client.scan) {
+        throw new Error(
+          "Structured document maintenance enumeration requires DynamoDB scan support.",
+        );
+      }
+
+      const response = await this.client.scan({
+        TableName: this.docFieldsTableName,
+        FilterExpression: "#kind = :kind",
+        ExpressionAttributeNames: {
+          "#kind": "kind",
+        },
+        ExpressionAttributeValues: {
+          ":kind": "sd",
+        },
+        ExclusiveStartKey: decodeCursorKey(options.cursor),
+        Limit: Math.max(1, options.limit ?? 100),
+        ConsistentRead: true,
+      });
+
+      const items = (response.Items ?? []) as StructuredDocFieldsItem[];
+      return {
+        documents: items.map((item) => ({
+          docId: item.docId,
+          fields: item.fields ?? {},
+          version:
+            typeof item.version === "number" && Number.isFinite(item.version)
+              ? item.version
+              : 0,
+          ...(item.typeName ? { typeName: item.typeName } : {}),
+        })),
+        cursor: encodeCursorKey(response.LastEvaluatedKey),
+      };
+    },
   };
 }
 
@@ -495,6 +536,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const item = response.Item as {
       fields?: StructuredDocFieldsRecord;
       version?: number;
+      typeName?: string;
       occupancyFields?: StructuredDocFieldsState["occupancyFields"];
     };
     if (!item.fields) {
@@ -507,6 +549,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         typeof item.version === "number" && Number.isFinite(item.version)
           ? item.version
           : 0,
+      typeName: item.typeName,
       occupancyFields: item.occupancyFields,
     };
   }
@@ -516,11 +559,18 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredDocFieldsState["occupancyFields"],
+    typeName?: string,
   ): Promise<boolean> {
     if (typeof expectedVersion === "undefined") {
       const createResult = await this.client.putItem({
         TableName: this.docFieldsTableName,
-        Item: buildStructuredDocFieldsItem(docId, fields, 1, occupancyFields),
+        Item: buildStructuredDocFieldsItem(
+          docId,
+          fields,
+          1,
+          occupancyFields,
+          typeName,
+        ),
         ConditionExpression: "attribute_not_exists(#pk)",
         ExpressionAttributeNames: {
           "#pk": structuredDocFieldsSchema.partitionKey,
@@ -538,6 +588,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         fields,
         nextVersion,
         occupancyFields,
+        typeName,
       ),
       ConditionExpression:
         "(#version = :expectedVersion) OR (attribute_not_exists(#version) AND :expectedVersion = :zero)",
