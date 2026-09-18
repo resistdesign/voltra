@@ -118,7 +118,6 @@ export const runStructuredDynamoSequentialSeedScaleScenario = async () => {
   };
 };
 
-
 export const runStructuredDynamoBatchDocumentReadScenario = async () => {
   const client = new InMemoryDynamoQueryClient();
   const table = { tableName: "Index" };
