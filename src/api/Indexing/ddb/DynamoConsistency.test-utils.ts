@@ -117,3 +117,29 @@ export const runStructuredDynamoSequentialSeedScaleScenario = async () => {
     consistentReadsUsed: client.consistentGetCount > 0,
   };
 };
+
+
+export const runStructuredDynamoBatchDocumentReadScenario = async () => {
+  const client = new InMemoryDynamoQueryClient();
+  const table = { tableName: "Index" };
+  const backend = new StructuredDdbBackend({ client, table });
+
+  await backend.writer.write("one", { age: 10, state: "published" });
+  await backend.writer.write("two", { age: 20, state: "draft" });
+
+  const documents = await backend.reader.documents?.getMany?.([
+    "one",
+    "two",
+    "missing",
+  ]);
+
+  return {
+    batchGetCount: client.batchGetCount,
+    batchGetKeyCount: client.batchGetKeyCount,
+    documents: [
+      documents?.get("one") ?? null,
+      documents?.get("two") ?? null,
+      documents?.get("missing") ?? null,
+    ],
+  };
+};
