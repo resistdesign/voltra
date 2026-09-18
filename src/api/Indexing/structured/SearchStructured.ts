@@ -151,8 +151,13 @@ const findExactTermLeaf = (
 
 const preferredCandidateLeaf = (
   where: Where,
-): StructuredTermWhere | StructuredRangeWhere =>
-  findExactTermLeaf(where) ?? firstLeaf(where);
+): StructuredTermWhere | StructuredRangeWhere => {
+  const first = firstLeaf(where);
+  if (first.type !== "gte" && first.type !== "lte") {
+    return first;
+  }
+  return findExactTermLeaf(where) ?? first;
+};
 
 const findDirectOrderLeaf = (
   where: Where,
