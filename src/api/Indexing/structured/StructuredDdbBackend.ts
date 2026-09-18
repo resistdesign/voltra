@@ -424,8 +424,12 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           attempt < STRUCTURED_DOCUMENT_BATCH_GET_MAX_ATTEMPTS;
           attempt += 1
         ) {
+          const requestItems = pending;
+          if (!requestItems) {
+            break;
+          }
           const response = await this.client.batchGetItem({
-            RequestItems: pending,
+            RequestItems: requestItems,
           });
           for (const item of (response.Responses?.[
             this.docFieldsTableName
