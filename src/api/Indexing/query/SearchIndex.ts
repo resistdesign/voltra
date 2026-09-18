@@ -396,14 +396,19 @@ const sortCandidates = async (
     );
   }
   const values = new Map<DocId, unknown>();
-  await Promise.all(
-    ids.map(async (id) => {
-      values.set(
-        id,
-        (await context.backend.values.documents?.get(id))?.[orderBy.field],
-      );
-    }),
-  );
+  const documents = context.backend.values.documents;
+  if (documents.getMany) {
+    const fieldsById = await documents.getMany(ids);
+    for (const id of ids) {
+      values.set(id, fieldsById.get(id)?.[orderBy.field]);
+    }
+  } else {
+    await Promise.all(
+      ids.map(async (id) => {
+        values.set(id, (await documents.get(id))?.[orderBy.field]);
+      }),
+    );
+  }
   return [...ids].sort((left, right) => {
     const leftValue = values.get(left);
     const rightValue = values.get(right);
