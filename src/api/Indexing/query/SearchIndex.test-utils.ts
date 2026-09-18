@@ -60,6 +60,86 @@ const publishedAndDistributed: IndexExpression = {
   ],
 };
 
+const publishedWithMinimumScore: IndexExpression = {
+  and: [
+    {
+      type: "gte",
+      field: field("score"),
+      value: 0,
+    },
+    {
+      type: "term",
+      field: field("state"),
+      mode: "eq",
+      value: "published",
+    },
+  ],
+};
+
+const buildInstrumentedBackend = async () => {
+  const backend = await buildBackend();
+  const values = backend.values;
+  const documents = values.documents;
+  const counters = {
+    termQueries: 0,
+    rangeQueries: 0,
+    documentGets: 0,
+    documentBatches: 0,
+  };
+  const instrumented = createIndexBackend({
+    valueWriter: backend.valueWriter,
+    text: backend.text,
+    values: {
+      terms: {
+        query: async (queryField, mode, value, options) => {
+          counters.termQueries += 1;
+          return values.terms.query(queryField, mode, value, options);
+        },
+      },
+      ranges: {
+        between: async (queryField, lower, upper, options) => {
+          counters.rangeQueries += 1;
+          return values.ranges.between(queryField, lower, upper, options);
+        },
+        gte: async (queryField, lower, options) => {
+          counters.rangeQueries += 1;
+          return values.ranges.gte(queryField, lower, options);
+        },
+        lte: async (queryField, upper, options) => {
+          counters.rangeQueries += 1;
+          return values.ranges.lte(queryField, upper, options);
+        },
+        all: async (queryField, options) => {
+          counters.rangeQueries += 1;
+          return values.ranges.all(queryField, options);
+        },
+      },
+      ...(documents
+        ? {
+            documents: {
+              get: async (docId) => {
+                counters.documentGets += 1;
+                return documents.get(docId);
+              },
+              ...(documents.getMany
+                ? {
+                    getMany: async (docIds) => {
+                      counters.documentBatches += 1;
+                      return documents.getMany?.(docIds) ?? new Map();
+                    },
+                  }
+                : {}),
+            },
+          }
+        : {}),
+      ...(values.tokenizer ? { tokenizer: values.tokenizer } : {}),
+      ...(values.occupancy ? { occupancy: values.occupancy } : {}),
+      ...(values.missing ? { missing: values.missing } : {}),
+    },
+  });
+  return { backend: instrumented, counters };
+};
+
 const runScenario = async () => {
   const backend = await buildBackend();
   const mixedAnd = await searchIndex(backend, publishedAndDistributed, {
@@ -148,3 +228,36 @@ export const runUnifiedIndexOrderingScenario = async () =>
   (await getScenario()).orderedIds;
 export const runUnifiedIndexStaleCursorScenario = async () =>
   (await getScenario()).staleCursorCode;
+
+
+export const runUnifiedIndexStructuredAndPlanningScenario = async () => {
+  const instrumented = await buildInstrumentedBackend();
+  const result = await searchIndex(
+    instrumented.backend,
+    publishedWithMinimumScore,
+    { limit: 10 },
+  );
+  return {
+    ids: result.candidateIds,
+    ...instrumented.counters,
+  };
+};
+
+export const runUnifiedIndexStructuredAndOrderedPaginationScenario =
+  async () => {
+    const backend = await buildBackend();
+    const first = await searchIndex(backend, publishedWithMinimumScore, {
+      limit: 1,
+      orderBy: { field: field("score") },
+    });
+    const second = await searchIndex(backend, publishedWithMinimumScore, {
+      limit: 1,
+      cursor: first.cursor,
+      orderBy: { field: field("score") },
+    });
+    return {
+      first: first.candidateIds,
+      second: second.candidateIds,
+      terminal: second.cursor ?? null,
+    };
+  };
