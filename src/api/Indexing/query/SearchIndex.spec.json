@@ -49,6 +49,52 @@
       "conditions": [],
       "operation": "===",
       "expectation": "INDEX_QUERY_STALE_CURSOR"
+    },
+    {
+      "export": "runUnifiedIndexStructuredAndPlanningScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["1", "4"],
+        "driverKind": "term",
+        "termQueries": 1,
+        "rangeQueries": 0,
+        "documentGets": 0,
+        "documentBatches": 1
+      }
+    },
+    {
+      "export": "runUnifiedIndexStructuredAndOrderedPaginationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": ["4"],
+        "second": ["1"],
+        "terminal": null
+      }
+    },
+    {
+      "export": "runUnifiedIndexStructuredAndOrderedPlanningScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["4"],
+        "driverKind": "term",
+        "termQueries": 1,
+        "rangeQueries": 0,
+        "documentGets": 0,
+        "documentBatches": 2
+      }
+    },
+    {
+      "export": "runUnifiedIndexCompoundOccupancyPreservedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["4", "1"],
+        "driverKind": "range",
+        "occupancyQueriesUsed": true
+      }
     }
   ]
 }

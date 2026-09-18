@@ -3,7 +3,11 @@
  *
  * DynamoDB-backed structured indexing reader/writer implementations.
  */
-import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
+import type {
+  DynamoQueryClient,
+  KeysAndAttributes,
+  WriteRequest,
+} from "../ddb/Types";
 import type { DocId } from "../Types";
 import {
   assertIndexSortKey,
@@ -51,6 +55,11 @@ import {
 import type { StructuredDerivedMutation } from "./StructuredWriter";
 
 type DynamoKey = Record<string, unknown>;
+
+const STRUCTURED_DOCUMENT_BATCH_GET_LIMIT = 100;
+const STRUCTURED_DOCUMENT_BATCH_GET_MAX_ATTEMPTS = 8;
+const indexKeyIdentity = (key: DynamoKey): string =>
+  JSON.stringify([key.pk, key.sk]);
 
 /**
  * @deprecated Use {@link IndexTableConfig}. All structured records share one table.
@@ -379,6 +388,76 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         Key: buildStructuredDocFieldsKey(docId),
       });
       return (response.Item as StructuredDocFieldsItem | undefined)?.fields;
+    },
+    getMany: async (
+      docIds: DocId[],
+    ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>> => {
+      const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
+
+      const uniqueDocIds = Array.from(new Set(docIds));
+
+      for (
+        let offset = 0;
+        offset < uniqueDocIds.length;
+        offset += STRUCTURED_DOCUMENT_BATCH_GET_LIMIT
+      ) {
+        const chunk = uniqueDocIds.slice(
+          offset,
+          offset + STRUCTURED_DOCUMENT_BATCH_GET_LIMIT,
+        );
+        const keyedDocs = chunk.map((docId) => ({
+          docId,
+          key: buildStructuredDocFieldsKey(docId),
+        }));
+        const docIdByKey = new Map(
+          keyedDocs.map(({ docId, key }) => [indexKeyIdentity(key), docId]),
+        );
+        let pending: Record<string, KeysAndAttributes> | undefined = {
+          [this.docFieldsTableName]: {
+            Keys: keyedDocs.map(({ key }) => key),
+          },
+        };
+
+        for (
+          let attempt = 0;
+          (pending?.[this.docFieldsTableName]?.Keys.length ?? 0) > 0 &&
+          attempt < STRUCTURED_DOCUMENT_BATCH_GET_MAX_ATTEMPTS;
+          attempt += 1
+        ) {
+          const requestItems = pending;
+          if (!requestItems) {
+            break;
+          }
+          const response = await this.client.batchGetItem({
+            RequestItems: requestItems,
+          });
+          for (const item of (response.Responses?.[
+            this.docFieldsTableName
+          ] ?? []) as StructuredDocFieldsItem[]) {
+            fieldsById.set(item.docId, item.fields);
+          }
+          pending = response.UnprocessedKeys;
+        }
+
+        const fallback = await Promise.all(
+          (pending?.[this.docFieldsTableName]?.Keys ?? []).map(async (key) => {
+            const docId = docIdByKey.get(indexKeyIdentity(key));
+            return docId === undefined
+              ? undefined
+              : {
+                  docId,
+                  fields: await this.documents.get(docId),
+                };
+          }),
+        );
+        for (const result of fallback) {
+          if (result?.fields) {
+            fieldsById.set(result.docId, result.fields);
+          }
+        }
+      }
+
+      return fieldsById;
     },
   };
 }

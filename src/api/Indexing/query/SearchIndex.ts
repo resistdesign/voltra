@@ -81,6 +81,92 @@ const toWhere = (expression: IndexExpression): Where => {
   return expression;
 };
 
+
+const findExactTermExpression = (
+  expression: IndexExpression,
+): IndexTermExpression | undefined => {
+  if (!isBoolean(expression)) {
+    return expression.type === "term" && expression.mode === "eq"
+      ? expression
+      : undefined;
+  }
+  if ("or" in expression) {
+    return undefined;
+  }
+  for (const child of expression.and) {
+    const term = findExactTermExpression(child);
+    if (term) {
+      return term;
+    }
+  }
+  return undefined;
+};
+
+const findOrderExpression = (
+  expression: IndexExpression,
+  field: string,
+): IndexTermExpression | IndexRangeExpression | undefined => {
+  if (!isBoolean(expression)) {
+    return expression.type !== "text" && expression.field === field
+      ? expression
+      : undefined;
+  }
+  if ("or" in expression) {
+    return undefined;
+  }
+  for (const child of expression.and) {
+    const orderExpression = findOrderExpression(child, field);
+    if (orderExpression) {
+      return orderExpression;
+    }
+  }
+  return undefined;
+};
+
+const shouldUseNativeOrder = (
+  expression: IndexExpression,
+  context: ExecutionContext,
+): boolean => {
+  const orderBy = context.options.orderBy;
+  if (!orderBy || !isBoolean(expression) || "or" in expression) {
+    return true;
+  }
+
+  const exactTerm = findExactTermExpression(expression);
+  const orderExpression = findOrderExpression(expression, orderBy.field);
+  if (
+    !exactTerm ||
+    (orderExpression?.type !== "gte" && orderExpression?.type !== "lte")
+  ) {
+    return true;
+  }
+
+  return !!(
+    context.backend.values.occupancy &&
+    context.options.occupancyFields?.[exactTerm.field]
+  );
+};
+
+const getValueDriverKind = (
+  expression: IndexExpression,
+  nativeOrderBy: IndexSearchOptions["orderBy"],
+): "term" | "range" => {
+  let first = expression;
+  while (isBoolean(first)) {
+    first = ("and" in first ? first.and : first.or)[0];
+  }
+  if (first.type === "term") {
+    return "term";
+  }
+  if (
+    !nativeOrderBy &&
+    (first.type === "gte" || first.type === "lte") &&
+    findExactTermExpression(expression)
+  ) {
+    return "term";
+  }
+  return "range";
+};
 const addPage = (
   context: ExecutionContext,
   ids: DocId[],
@@ -107,6 +193,9 @@ const materializeValueExpression = async (
 ): Promise<MaterializedCandidates> => {
   const ids: DocId[] = [];
   let cursor: string | undefined;
+  const nativeOrderBy = shouldUseNativeOrder(expression, context)
+    ? context.options.orderBy
+    : undefined;
   do {
     const remaining = context.limits.maxCandidates - context.candidatesExamined;
     if (remaining <= 0) {
@@ -121,8 +210,10 @@ const materializeValueExpression = async (
       {
         limit: Math.min(250, remaining),
         cursor,
-        orderBy: context.options.orderBy,
-        occupancyFields: context.options.occupancyFields,
+        orderBy: nativeOrderBy,
+        occupancyFields: nativeOrderBy
+          ? context.options.occupancyFields
+          : undefined,
       },
     );
     cursor = page.cursor;
@@ -130,17 +221,10 @@ const materializeValueExpression = async (
     ids.push(...page.candidateIds);
   } while (cursor);
 
-  const firstLeaf = (() => {
-    let current = expression;
-    while (isBoolean(current)) {
-      current = ("and" in current ? current.and : current.or)[0];
-    }
-    return current;
-  })();
   return {
     ids,
     exact: true,
-    driverKind: firstLeaf.type === "term" ? "term" : "range",
+    driverKind: getValueDriverKind(expression, nativeOrderBy),
   };
 };
 
@@ -352,14 +436,19 @@ const sortCandidates = async (
     );
   }
   const values = new Map<DocId, unknown>();
-  await Promise.all(
-    ids.map(async (id) => {
-      values.set(
-        id,
-        (await context.backend.values.documents?.get(id))?.[orderBy.field],
-      );
-    }),
-  );
+  const documents = context.backend.values.documents;
+  if (documents.getMany) {
+    const fieldsById = await documents.getMany(ids);
+    for (const id of ids) {
+      values.set(id, fieldsById.get(id)?.[orderBy.field]);
+    }
+  } else {
+    await Promise.all(
+      ids.map(async (id) => {
+        values.set(id, (await documents.get(id))?.[orderBy.field]);
+      }),
+    );
+  }
   return [...ids].sort((left, right) => {
     const leftValue = values.get(left);
     const rightValue = values.get(right);

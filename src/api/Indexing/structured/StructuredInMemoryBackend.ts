@@ -331,6 +331,18 @@ export class StructuredInMemoryBackend
       ) as StructuredDocFieldsItem | undefined;
       return item ? clone(item.fields) : undefined;
     },
+    getMany: async (docIds) => {
+      const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
+      for (const docId of docIds) {
+        const item = this.records.get(
+          recordKey(buildStructuredDocFieldsKey(docId)),
+        ) as StructuredDocFieldsItem | undefined;
+        if (item) {
+          fieldsById.set(docId, clone(item.fields));
+        }
+      }
+      return fieldsById;
+    },
   };
 
   /** Optional in-memory repair/compaction lifecycle. */
