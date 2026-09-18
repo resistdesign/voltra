@@ -6,17 +6,8 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createReads": [
-          null,
-          null,
-          1
-        ],
-        "updateReads": [
-          1,
-          2,
-          1,
-          2
-        ],
+        "createReads": [null, null, 1],
+        "updateReads": [1, 2, 1, 2],
         "staleGetCount": 4,
         "consistentGetCount": 1
       }
@@ -27,10 +18,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "version": 2,
-        "fields": {
-          "name": "Zoe",
-          "age": 24
-        },
+        "fields": { "name": "Zoe", "age": 24 },
         "staleGetCount": 0,
         "consistentReadsUsed": true,
         "rangeRows": 2,
@@ -58,14 +46,8 @@
         "batchGetCount": 1,
         "batchGetKeyCount": 3,
         "documents": [
-          {
-            "age": 10,
-            "state": "published"
-          },
-          {
-            "age": 20,
-            "state": "draft"
-          },
+          { "age": 10, "state": "published" },
+          { "age": 20, "state": "draft" },
           null
         ]
       }
