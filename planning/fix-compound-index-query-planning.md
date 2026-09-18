@@ -48,7 +48,17 @@ compound indexes or direct DynamoDB queries.
       one batched verification read.
 - [x] Add regression coverage for ordered exact + range queries with LIMIT 1 and
       pagination.
-- [ ] Re-run existing mixed AND/OR, ordering, stale-cursor, budget, structured-search,
+- [x] Re-run existing mixed AND/OR, ordering, stale-cursor, budget, structured-search,
       and ORM/indexing coverage.
-- [ ] Run `yarn test` and `yarn build`.
+- [x] Run `yarn test` and `yarn build`.
 - [x] Open a PR documenting that index storage/write behavior is unchanged.
+
+
+## Verification
+
+- GitHub Actions `Tests` workflow: `yarn test` passed with the new compound-query,
+  ordering, occupancy-preservation, and DynamoDB batch-read regressions included.
+- `yarn build` passed, including declaration generation.
+- `yarn test:exports` passed.
+- Existing index writer/storage regression suites remained green; no persisted record
+  format or mutation-path change is part of this PR.
