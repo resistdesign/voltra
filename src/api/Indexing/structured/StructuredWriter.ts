@@ -50,6 +50,7 @@ export type StructuredWriterDependencies = {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredOccupancyFieldMap,
+    typeName?: string,
   ): Promise<boolean>;
   /**
    * Store term index entries.
@@ -97,6 +98,28 @@ export type StructuredDerivedMutation = {
 type TermEntry = StructuredTermIndexItem;
 
 type RangeEntry = StructuredRangeIndexItem;
+
+/**
+ * Raised when maintenance tries to mutate a structured document that changed
+ * since it was audited.
+ */
+export class StructuredIndexVersionMismatchError extends Error {
+  /** Version expected by the maintenance caller. */
+  readonly expectedVersion: number;
+  /** Version observed immediately before the attempted write. */
+  readonly actualVersion?: number;
+
+  /**
+   * @param expectedVersion Audited version supplied by the caller.
+   * @param actualVersion Current persisted version, when present.
+   */
+  constructor(expectedVersion: number, actualVersion?: number) {
+    super("Structured index state changed after it was audited.");
+    this.name = "StructuredIndexVersionMismatchError";
+    this.expectedVersion = expectedVersion;
+    this.actualVersion = actualVersion;
+  }
+}
 
 export type StructuredWriterOptions = {
   /**
@@ -282,6 +305,15 @@ export class StructuredDdbWriter {
 
     while (attempts <= maxRetries) {
       const previousState = await this.dependencies.loadDocFieldsState(docId);
+      if (
+        context.expectedVersion !== undefined &&
+        previousState?.version !== context.expectedVersion
+      ) {
+        throw new StructuredIndexVersionMismatchError(
+          context.expectedVersion,
+          previousState?.version,
+        );
+      }
       const previousNormalized = previousState
         ? normalizeFields(previousState.fields)
         : {};
@@ -304,6 +336,7 @@ export class StructuredDdbWriter {
         expectedVersion,
         normalized,
         occupancyFields,
+        context.typeName ?? previousState?.typeName,
       );
 
       if (!swapped) {
@@ -390,7 +423,8 @@ export class StructuredDdbWriter {
       if (
         confirmed?.version === writtenVersion &&
         structurallyEqual(normalizeFields(confirmed.fields), normalized) &&
-        structurallyEqual(confirmed.occupancyFields ?? {}, occupancyFields)
+        structurallyEqual(confirmed.occupancyFields ?? {}, occupancyFields) &&
+        (context.typeName === undefined || confirmed.typeName === context.typeName)
       ) {
         return;
       }
