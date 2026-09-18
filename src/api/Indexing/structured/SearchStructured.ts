@@ -95,6 +95,9 @@ export type StructuredSearchDependencies = {
   /** Canonical structured fields used for exact candidate verification. */
   documents?: {
     get(docId: DocId): Promise<StructuredDocFieldsRecord | undefined>;
+    getMany?(
+      docIds: DocId[],
+    ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>>;
   };
   /** Tokenizer used by string contains/LIKE verification. */
   tokenizer?: Partial<StructuredStringTokenizerConfig>;
@@ -127,6 +130,29 @@ const firstLeaf = (
   }
   return firstLeaf(children[0]);
 };
+
+const findExactTermLeaf = (
+  where: Where,
+): StructuredTermWhere | undefined => {
+  if (isLeaf(where)) {
+    return where.type === "term" && where.mode === "eq" ? where : undefined;
+  }
+  if ("or" in where) {
+    return undefined;
+  }
+  for (const child of where.and) {
+    const leaf = findExactTermLeaf(child);
+    if (leaf) {
+      return leaf;
+    }
+  }
+  return undefined;
+};
+
+const preferredCandidateLeaf = (
+  where: Where,
+): StructuredTermWhere | StructuredRangeWhere =>
+  findExactTermLeaf(where) ?? firstLeaf(where);
 
 const findDirectOrderLeaf = (
   where: Where,
@@ -195,7 +221,7 @@ const buildSources = (
     .filter((branch) => branch.length > 0)
     .map((branch) => {
       const owner = branchWhere(branch);
-      return { leaf: firstLeaf(owner), owner };
+      return { leaf: preferredCandidateLeaf(owner), owner };
     });
 };
 
@@ -264,6 +290,34 @@ const matchesWhere = (
   return where.type === "term"
     ? matchesTerm(where, fields, tokenizer)
     : matchesRange(where, fields);
+};
+
+const loadDocumentFields = async (
+  dependencies: StructuredSearchDependencies,
+  docIds: DocId[],
+): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>> => {
+  if (!dependencies.documents) {
+    throw new Error(
+      "Structured compound and ordered searches require document fields.",
+    );
+  }
+  if (dependencies.documents.getMany) {
+    return dependencies.documents.getMany(docIds);
+  }
+
+  const results = await Promise.all(
+    docIds.map(async (docId) => ({
+      docId,
+      fields: await dependencies.documents?.get(docId),
+    })),
+  );
+  const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
+  for (const result of results) {
+    if (result.fields) {
+      fieldsById.set(result.docId, result.fields);
+    }
+  }
+  return fieldsById;
 };
 
 const readSourcePage = async (
@@ -839,16 +893,15 @@ export async function searchStructured(
     const requiresVerification =
       !!source.orderBy || sources.length > 1 || !isLeaf(source.owner);
 
+    const fieldsById = requiresVerification
+      ? await loadDocumentFields(dependencies, uniquePageIds)
+      : undefined;
+
     for (const docId of uniquePageIds) {
       let qualifies = true;
 
       if (requiresVerification) {
-        if (!dependencies.documents) {
-          throw new Error(
-            "Structured compound and ordered searches require document fields.",
-          );
-        }
-        const fields = await dependencies.documents.get(docId);
+        const fields = fieldsById?.get(docId);
         qualifies =
           !!fields &&
           matchesWhere(source.owner, fields, dependencies.tokenizer);
