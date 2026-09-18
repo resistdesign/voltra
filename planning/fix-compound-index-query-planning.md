@@ -2,9 +2,9 @@
 
 ## Goal
 
-Make compound indexed value queries use the indexes Voltra already records instead of
-walking one candidate stream and performing serialized canonical document reads for
-the remaining predicates.
+Make compound indexed value queries choose a selective indexed candidate stream,
+avoid order-by forcing a broad global range traversal, and batch the structured
+document reads needed to verify the remaining predicates.
 
 The motivating production shape is an exact-plus-range conjunction such as:
 
@@ -34,15 +34,16 @@ compound indexes or direct DynamoDB queries.
 
 ## Checklist
 
-- [ ] Route compound value-only Boolean expressions through indexed child execution
-      and candidate intersection/union instead of structured compound document
-      verification.
-- [ ] Ensure global ordering is applied after candidate composition without changing
-      result ordering or cursor semantics.
-- [ ] Preserve single-leaf structured ordered traversal and occupancy behavior.
-- [ ] Add regression coverage proving exact + range AND does not require canonical
-      document verification reads.
-- [ ] Add regression coverage for ordered exact + range queries with LIMIT 1 and
+- [x] Prefer exact-term index sources for structured AND verification when available,
+      avoiding broad range traversal for exact + range conjunctions.
+- [x] Keep global ordering at the unified query layer for compound expressions so
+      order-by does not override the selective structured driver.
+- [x] Batch structured document verification reads with an optional backend bulk-read
+      capability and bounded DynamoDB BatchGet retries.
+- [x] Preserve single-leaf structured ordered traversal and occupancy behavior.
+- [x] Add regression coverage proving exact + range AND uses the exact-term source and
+      one batched verification read.
+- [x] Add regression coverage for ordered exact + range queries with LIMIT 1 and
       pagination.
 - [ ] Re-run existing mixed AND/OR, ordering, stale-cursor, budget, structured-search,
       and ORM/indexing coverage.
