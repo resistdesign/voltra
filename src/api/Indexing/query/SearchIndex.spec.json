@@ -85,6 +85,15 @@
         "documentGets": 0,
         "documentBatches": 2
       }
+    },
+    {
+      "export": "runUnifiedIndexCompoundOccupancyPreservedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ids": ["4", "1"],
+        "occupancyQueriesUsed": true
+      }
     }
   ]
 }
