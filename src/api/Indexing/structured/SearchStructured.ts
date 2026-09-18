@@ -95,6 +95,7 @@ export type StructuredSearchDependencies = {
   /** Canonical structured fields used for exact candidate verification. */
   documents?: {
     get(docId: DocId): Promise<StructuredDocFieldsRecord | undefined>;
+    /** Batch-load canonical fields when the storage backend supports it. */
     getMany?(
       docIds: DocId[],
     ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>>;
