@@ -149,6 +149,7 @@ const shouldUseNativeOrder = (
 
 const getValueDriverKind = (
   expression: IndexExpression,
+  nativeOrderBy: IndexSearchOptions["orderBy"],
 ): "term" | "range" => {
   let first = expression;
   while (isBoolean(first)) {
@@ -158,6 +159,7 @@ const getValueDriverKind = (
     return "term";
   }
   if (
+    !nativeOrderBy &&
     (first.type === "gte" || first.type === "lte") &&
     findExactTermExpression(expression)
   ) {
@@ -191,6 +193,9 @@ const materializeValueExpression = async (
 ): Promise<MaterializedCandidates> => {
   const ids: DocId[] = [];
   let cursor: string | undefined;
+  const nativeOrderBy = shouldUseNativeOrder(expression, context)
+    ? context.options.orderBy
+    : undefined;
   do {
     const remaining = context.limits.maxCandidates - context.candidatesExamined;
     if (remaining <= 0) {
@@ -199,9 +204,6 @@ const materializeValueExpression = async (
         "Indexed query exceeded its candidate budget.",
       );
     }
-    const nativeOrderBy = shouldUseNativeOrder(expression, context)
-      ? context.options.orderBy
-      : undefined;
     const page = await searchStructured(
       context.backend.values,
       toWhere(expression),
@@ -222,7 +224,7 @@ const materializeValueExpression = async (
   return {
     ids,
     exact: true,
-    driverKind: getValueDriverKind(expression),
+    driverKind: getValueDriverKind(expression, nativeOrderBy),
   };
 };
 
