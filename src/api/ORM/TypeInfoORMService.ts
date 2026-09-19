@@ -374,6 +374,13 @@ export type TypeInfoORMOrphanIndexCleanupConfig = {
    * index writes that happen after the audit.
    */
   structuredVersion?: number;
+  /**
+   * Persisted full-text fields observed by the audit.
+   *
+   * This supports cleanup of fields removed from the current TypeInfo schema.
+   * Every supplied field must still belong to the requested type namespace.
+   */
+  textIndexFields?: string[];
 };
 
 /**
@@ -1529,10 +1536,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const structuredWriter = indexing.backend.valueWriter;
     const textMaintenance = indexing.backend.text;
-    const hasStructuredCleanup =
-      config.structuredVersion !== undefined &&
-      descriptor.structuredFields.length > 0;
-    const hasTextCleanup = descriptor.textFields.length > 0;
+    const hasStructuredCleanup = config.structuredVersion !== undefined;
+    const textFields = Array.from(
+      new Set(config.textIndexFields ?? descriptor.textFields),
+    );
+    if (
+      textFields.some(
+        (field) => !field.startsWith(descriptor.qualifiedFieldPrefix),
+      )
+    ) {
+      throw new Error(
+        "Text index maintenance field does not belong to the requested type.",
+      );
+    }
+    const hasTextCleanup = textFields.length > 0;
 
     if (
       (hasStructuredCleanup && !structuredWriter) ||
@@ -1605,7 +1622,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (hasTextCleanup && textMaintenance?.removeDocumentIndex) {
       const docId = normalizeDocId(primaryFieldValue, descriptor.primaryField);
 
-      for (const indexField of descriptor.textFields) {
+      for (const indexField of textFields) {
         cleanupAttempted = true;
         await textMaintenance.removeDocumentIndex(docId, indexField);
 
