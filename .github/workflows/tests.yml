@@ -30,8 +30,31 @@ jobs:
       - name: Run tests
         run: yarn test
 
+      - name: Verify generated demo TypeInfo
+        run: |
+          yarn site:build:demo-types
+          if ! git diff --exit-code -- site/common/DemoTypeInfoMap.json; then
+            echo "Generated demo TypeInfoMap is out of date:"
+            cat site/common/DemoTypeInfoMap.json
+            exit 1
+          fi
+
       - name: Build dist artifacts
         run: yarn build
+
+      - name: Build demo API
+        run: yarn site:build:api
+
+      - name: Build demo app
+        run: yarn site:build:app
+
+      - name: Build demo IaC
+        run: yarn site:build:iac
+        env:
+          REPO_OWNER: test
+          REPO_NAME: test
+          REPO_BRANCH: test
+          REPO_TOKEN: test
 
       - name: Run export checks
         run: yarn test:exports
