@@ -57,7 +57,7 @@
     {
       "export": "runTypeInfoJSONSchemaMissingEntryScenario",
       "conditions": [],
-      "operation": "EQUALS",
+      "operation": "===",
       "expectation": "TypeInfo entry type does not exist: Missing"
     }
   ]
