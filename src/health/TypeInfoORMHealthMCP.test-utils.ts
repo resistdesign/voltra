@@ -52,6 +52,7 @@ const getRouteMap = (): RouteMap =>
       authConfig: {
         allowedRoles: ["HealthAdmin"],
       },
+      enableRepairTool: true,
     },
   );
 
