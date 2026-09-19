@@ -5,6 +5,7 @@ import { Route } from "../../../../src/web";
 import { AdvancedDemo } from "./AdvancedDemo";
 import { EasyLayoutDemo } from "./EasyLayoutDemo";
 import { EndToEndDemo } from "./EndToEndDemo";
+import { MCPDemo } from "./MCPDemo";
 
 const MenuToggle = styled.button<{ $isOpen: boolean }>`
   display: none;
@@ -221,6 +222,11 @@ export const App: FC = () => {
                 EasyLayout Demo
               </a>
             </li>
+            <li>
+              <a href="/mcp-demo" onClick={() => setIsMenuOpen(false)}>
+                MCP Demo
+              </a>
+            </li>
           </ul>
         </NavBar>
         <Content>
@@ -234,6 +240,9 @@ export const App: FC = () => {
             </Route>
             <Route path="easy-layout-demo" exact>
               EasyLayout Demo
+            </Route>
+            <Route path="mcp-demo" exact>
+              MCP Demo
             </Route>
           </h3>
           <Route exact>
@@ -338,6 +347,9 @@ export const App: FC = () => {
           </Route>
           <Route path="easy-layout-demo" exact>
             <EasyLayoutDemo />
+          </Route>
+          <Route path="mcp-demo" exact>
+            <MCPDemo />
           </Route>
         </Content>
       </Route>
