@@ -36,8 +36,14 @@ export type TypeInfoORMHealthMonitorRunResult = {
   orphanFindingCount: number;
   /** Findings confirmed with strongly consistent canonical reads. */
   confirmedOrphanCount: number;
-  /** Guarded repairs completed. */
+  /** Guarded orphan/removed-type repairs completed. */
   repairedCount: number;
+  /** Index-relevant TypeInfo schema changes observed. */
+  schemaDriftFindingCount: number;
+  /** Schema changes confirmed across repeated monitor runs. */
+  confirmedSchemaDriftCount: number;
+  /** Canonical items reconciled to the confirmed current schema. */
+  schemaReconciledItemCount: number;
   /** Findings that could not be safely scoped or maintained. */
   suspiciousCount: number;
   /** Expired Health records removed during bounded retention cleanup. */
@@ -54,6 +60,8 @@ export type TypeInfoORMHealthMonitorOptions = {
   maxIndexDocumentsPerRun?: number;
   /** Maximum destructive repairs applied in one run. */
   maxRepairsPerRun?: number;
+  /** Maximum canonical items reindexed for schema reconciliation in one run. */
+  maxSchemaItemsPerRun?: number;
   /** Maximum physical index records requested per backend page. */
   indexPageSize?: number;
   /** Finding/repair retention duration. Defaults to seven days. */
@@ -91,6 +99,8 @@ type AuditCheckpointData = {
   textCursor?: string;
   textComplete?: boolean;
   retentionCursor?: string;
+  schemaTypeName?: string;
+  schemaCursor?: string;
 };
 
 type AuditSource = "structured" | "text";
@@ -104,6 +114,8 @@ type AuditCandidate = {
 };
 
 const INDEX_AUDIT_CHECKPOINT_ID = "health:index-audit";
+const INDEX_SCHEMA_BASELINE_ID = "health:index-schema:baseline";
+const INDEX_SCHEMA_CANDIDATE_ID = "health:index-schema:candidate";
 const DEFAULT_RECORD_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 const identityKey = (typeName: string, docId: DocId): string =>
@@ -113,6 +125,43 @@ const findingId = (typeName: string, docId: DocId): string =>
   `health:finding:orphan:${encodeURIComponent(typeName)}:${encodeURIComponent(
     JSON.stringify([typeof docId, docId]),
   )}`;
+
+const schemaFindingId = (typeName: string): string =>
+  `health:finding:schema:${encodeURIComponent(typeName)}`;
+
+const schemaSignature = (
+  descriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[],
+): string =>
+  JSON.stringify(
+    descriptors
+      .map((descriptor) => [descriptor.typeName, descriptor.indexFingerprint])
+      .sort(([left], [right]) =>
+        String(left) < String(right) ? -1 : String(left) > String(right) ? 1 : 0,
+      ),
+  );
+
+const readDescriptorData = (
+  value: unknown,
+): TypeInfoORMIndexMaintenanceTypeDescriptor[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((entry): entry is TypeInfoORMIndexMaintenanceTypeDescriptor => {
+    if (typeof entry !== "object" || entry === null) {
+      return false;
+    }
+    const record = entry as Record<string, unknown>;
+    return (
+      typeof record.typeName === "string" &&
+      typeof record.primaryField === "string" &&
+      typeof record.qualifiedFieldPrefix === "string" &&
+      typeof record.indexFingerprint === "string" &&
+      Array.isArray(record.structuredFields) &&
+      Array.isArray(record.textFields)
+    );
+  });
+};
 
 /**
  * Audit and repair TypeInfoORM operational health in bounded scheduled passes.
@@ -144,6 +193,7 @@ export class TypeInfoORMHealthMonitor {
         config.maxIndexDocumentsPerRun ?? 200,
       ),
       maxRepairsPerRun: Math.max(0, config.maxRepairsPerRun ?? 20),
+      maxSchemaItemsPerRun: Math.max(1, config.maxSchemaItemsPerRun ?? 100),
       indexPageSize: Math.max(1, config.indexPageSize ?? 100),
       recordRetentionMs: Math.max(
         1,
