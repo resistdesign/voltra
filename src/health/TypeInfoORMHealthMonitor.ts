@@ -244,21 +244,97 @@ export class TypeInfoORMHealthMonitor {
       data: { repairMode },
     });
     const checkpoint = await this.readCheckpoint();
-    const seen = new Set<string>();
+    const schemaState = await this.evaluateSchemaDrift(now, runId);
+
+    if (checkpoint.schemaSignature !== schemaState.signature) {
+      checkpoint.schemaSignature = schemaState.signature;
+      checkpoint.schemaTypeName = undefined;
+      checkpoint.schemaCursor = undefined;
+      checkpoint.schemaReconcileComplete = false;
+    }
+
     let examinedCount = 0;
     let orphanFindingCount = 0;
     let confirmedOrphanCount = 0;
     let repairedCount = 0;
+    let schemaReconciledItemCount = 0;
     let suspiciousCount = 0;
+    let repairDeferred = false;
     let remainingBudget = this.options.maxIndexDocumentsPerRun;
 
-    const auditCandidate = async (candidate: AuditCandidate): Promise<void> => {
-      const key = identityKey(candidate.typeName, candidate.docId);
-      if (seen.has(key)) {
-        return;
-      }
-      seen.add(key);
+    if (
+      schemaState.confirmed &&
+      repairMode === "apply" &&
+      !checkpoint.schemaReconcileComplete
+    ) {
+      const baselineByType = new Map(
+        schemaState.baselineDescriptors.map((descriptor) => [
+          descriptor.typeName,
+          descriptor,
+        ]),
+      );
+      const currentByType = new Map(
+        schemaState.currentDescriptors.map((descriptor) => [
+          descriptor.typeName,
+          descriptor,
+        ]),
+      );
+      const typesToReconcile = schemaState.changedTypeNames.filter((typeName) =>
+        currentByType.has(typeName),
+      );
+      let remainingSchemaBudget = this.options.maxSchemaItemsPerRun;
+      let typeIndex = checkpoint.schemaTypeName
+        ? Math.max(0, typesToReconcile.indexOf(checkpoint.schemaTypeName))
+        : 0;
 
+      if (
+        checkpoint.schemaTypeName &&
+        !typesToReconcile.includes(checkpoint.schemaTypeName)
+      ) {
+        checkpoint.schemaTypeName = undefined;
+        checkpoint.schemaCursor = undefined;
+        typeIndex = 0;
+      }
+
+      while (
+        typeIndex < typesToReconcile.length &&
+        remainingSchemaBudget > 0
+      ) {
+        const typeName = typesToReconcile[typeIndex];
+        const page = await this.orm.reconcileStoredTypeIndexesPage(typeName, {
+          previousDescriptor: baselineByType.get(typeName),
+          itemsPerPage: Math.min(
+            this.options.indexPageSize,
+            remainingSchemaBudget,
+          ),
+          cursor:
+            checkpoint.schemaTypeName === typeName
+              ? checkpoint.schemaCursor
+              : undefined,
+        });
+
+        schemaReconciledItemCount += page.processedCount;
+        remainingSchemaBudget -= page.processedCount;
+
+        if (page.cursor) {
+          checkpoint.schemaTypeName = typeName;
+          checkpoint.schemaCursor = page.cursor;
+          break;
+        }
+
+        typeIndex += 1;
+        checkpoint.schemaTypeName = typesToReconcile[typeIndex];
+        checkpoint.schemaCursor = undefined;
+      }
+
+      checkpoint.schemaReconcileComplete =
+        typeIndex >= typesToReconcile.length;
+    } else if (!schemaState.confirmed) {
+      checkpoint.schemaReconcileComplete =
+        schemaState.findingCount === 0;
+    }
+
+    const auditCandidate = async (candidate: AuditCandidate): Promise<void> => {
       const verification =
         await this.orm.verifyStoredItemForIndexMaintenance(
           candidate.typeName,
@@ -348,11 +424,97 @@ export class TypeInfoORMHealthMonitor {
 
     const descriptorForField = (
       field: string,
-    ): TypeInfoORMIndexMaintenanceTypeDescriptor | undefined => {
-      const matches = this.descriptors.filter((descriptor) =>
+    ):
+      | {
+          descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+          removed: boolean;
+        }
+      | undefined => {
+      const currentMatches = this.descriptors.filter((descriptor) =>
         field.startsWith(descriptor.qualifiedFieldPrefix),
       );
-      return matches.length === 1 ? matches[0] : undefined;
+      if (currentMatches.length === 1) {
+        return { descriptor: currentMatches[0], removed: false };
+      }
+
+      const removedMatches = schemaState.removedDescriptors.filter(
+        (descriptor) => field.startsWith(descriptor.qualifiedFieldPrefix),
+      );
+      return removedMatches.length === 1
+        ? { descriptor: removedMatches[0], removed: true }
+        : undefined;
+    };
+
+    const auditRemovedTypeCandidate = async (
+      descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor,
+      candidate: Omit<AuditCandidate, "typeName">,
+    ): Promise<void> => {
+      examinedCount += 1;
+
+      await this.store.putRecord(
+        `health:finding:removed-type-index:${encodeURIComponent(
+          descriptor.typeName,
+        )}:${encodeURIComponent(
+          JSON.stringify([typeof candidate.docId, candidate.docId]),
+        )}`,
+        {
+          kind: "finding",
+          status: schemaState.confirmed ? "confirmed" : "open",
+          typeName: descriptor.typeName,
+          itemId: candidate.docId,
+          scope: "removedTypeIndex",
+          correlationId: runId,
+          expiresAt: now + this.options.recordRetentionMs,
+          data: {
+            findingType: "removedTypeIndex",
+            source: candidate.source,
+            ...(candidate.structuredVersion !== undefined
+              ? { structuredVersion: candidate.structuredVersion }
+              : {}),
+            ...(candidate.textIndexFields
+              ? { textIndexFields: candidate.textIndexFields }
+              : {}),
+          },
+        },
+      );
+
+      if (
+        repairMode !== "apply" ||
+        !schemaState.confirmed ||
+        repairedCount >= this.options.maxRepairsPerRun
+      ) {
+        if (repairMode === "apply" && schemaState.confirmed) {
+          repairDeferred = true;
+        }
+        return;
+      }
+
+      const cleanup = await this.orm.cleanupRemovedTypeIndexState(
+        candidate.docId,
+        {
+          previousDescriptor: descriptor,
+          structuredVersion: candidate.structuredVersion,
+          textIndexFields: candidate.textIndexFields,
+        },
+      );
+
+      await this.store.createRecord({
+        kind: "repair",
+        status: cleanup.status === "cleaned" ? "repaired" : "open",
+        typeName: descriptor.typeName,
+        itemId: candidate.docId,
+        operation: "removedTypeIndexCleanup",
+        correlationId: runId,
+        expiresAt: now + this.options.recordRetentionMs,
+        data: cleanup,
+      });
+
+      if (cleanup.status === "cleaned") {
+        repairedCount += 1;
+      } else {
+        suspiciousCount += 1;
+        repairDeferred = true;
+      }
     };
 
     if (!checkpoint.structuredComplete && remainingBudget > 0) {
