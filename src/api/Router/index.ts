@@ -42,9 +42,11 @@ import {
   mergeStringPaths,
 } from "../../common/Routing";
 import { logFunctionCall } from "../../common/Logging";
+import { isStandardHTTPResponse } from "./isStandardHTTPResponse";
 
 export * from "./Types";
 export * from "./AWS";
+export * from "./isStandardHTTPResponse";
 
 /**
  * A utility function to add a route to a route map by path.
@@ -221,17 +223,16 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
               debug,
             );
 
-            if (
-              typeof Response !== "undefined" &&
-              result instanceof Response
-            ) {
+            let routeResponse: CloudFunctionResponse;
+
+            if (isStandardHTTPResponse(result)) {
               const resultHeaders: Record<string, string> = {};
 
               result.headers.forEach((value, key) => {
                 resultHeaders[key] = value;
               });
 
-              return {
+              routeResponse = {
                 statusCode: result.status,
                 headers: {
                   ...responseHeaders,
@@ -239,13 +240,15 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
                 },
                 body: await result.text(),
               };
+            } else {
+              routeResponse = {
+                statusCode: 200,
+                headers: responseHeaders,
+                body: JSON.stringify(result),
+              };
             }
 
-            return {
-              statusCode: 200,
-              headers: responseHeaders,
-              body: JSON.stringify(result),
-            };
+            return routeResponse;
           } catch (error: any) {
             return {
               statusCode: 500,
