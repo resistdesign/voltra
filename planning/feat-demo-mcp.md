@@ -6,4 +6,4 @@
 - [x] Ensure browser MCP clients can preflight the standard MCP HTTP headers.
 - [x] Surface the live MCP endpoint from the demo IaC stack.
 - [ ] Add/adjust focused tests and verify site/API/IaC builds.
-- [ ] Open the fast-follow PR.
+- [x] Open the fast-follow PR.
