@@ -3,9 +3,9 @@ import {
   FullTextMemoryBackend,
   qualifyIndexField,
   searchLossy,
-  searchStructured,
   StructuredInMemoryBackend,
 } from "../api/Indexing";
+import { searchStructured } from "../api/Indexing/structured/SearchStructured";
 import {
   InMemoryDataItemDBDriver,
   InMemoryItemRelationshipDBDriver,
