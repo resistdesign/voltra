@@ -17,7 +17,9 @@
       "expectation": {
         "statusCode": 200,
         "contentType": "application/json",
-        "supportedVersions": ["2026-07-28"],
+        "supportedVersions": [
+          "2026-07-28"
+        ],
         "serverName": "Voltra MCP Test"
       }
     },
@@ -30,6 +32,12 @@
         "name": "whoAmI",
         "description": "Return the authenticated caller and supplied message.",
         "inputType": "object",
+        "inputMessageType": "string",
+        "inputRequired": [
+          "message"
+        ],
+        "outputRolesType": "array",
+        "outputRolesItemType": "string",
         "readOnlyHint": true
       }
     },
@@ -41,7 +49,18 @@
         "statusCode": 200,
         "toolResult": {
           "userId": "user-1",
-          "roles": ["MCP", "Admin"],
+          "roles": [
+            "MCP",
+            "Admin"
+          ],
+          "message": "hello"
+        },
+        "structuredContent": {
+          "userId": "user-1",
+          "roles": [
+            "MCP",
+            "Admin"
+          ],
           "message": "hello"
         }
       }
