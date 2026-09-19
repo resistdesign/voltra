@@ -683,6 +683,144 @@ export class TypeInfoORMHealthMonitor {
     return result;
   };
 
+  private evaluateSchemaDrift = async (
+    now: number,
+    runId: string,
+  ): Promise<SchemaDriftState> => {
+    const currentDescriptors = this.descriptors;
+    const signature = schemaSignature(currentDescriptors);
+    const baselineRecord = await this.store.readRecord(INDEX_SCHEMA_BASELINE_ID);
+
+    if (!baselineRecord) {
+      await this.store.putRecord(INDEX_SCHEMA_BASELINE_ID, {
+        kind: "checkpoint",
+        status: "complete",
+        operation: "indexSchemaBaseline",
+        data: {
+          signature,
+          descriptors: currentDescriptors,
+        },
+      });
+
+      return {
+        baselineDescriptors: currentDescriptors,
+        currentDescriptors,
+        signature,
+        changedTypeNames: [],
+        removedDescriptors: [],
+        findingCount: 0,
+        confirmedCount: 0,
+        confirmed: false,
+      };
+    }
+
+    const baselineDescriptors = readDescriptorData(
+      baselineRecord.data?.descriptors,
+    );
+    const baselineSignature =
+      typeof baselineRecord.data?.signature === "string"
+        ? baselineRecord.data.signature
+        : schemaSignature(baselineDescriptors);
+
+    if (baselineSignature === signature) {
+      const candidate = await this.store.readRecord(INDEX_SCHEMA_CANDIDATE_ID);
+      if (candidate) {
+        await this.store.deleteRecord(INDEX_SCHEMA_CANDIDATE_ID);
+      }
+
+      return {
+        baselineDescriptors,
+        currentDescriptors,
+        signature,
+        changedTypeNames: [],
+        removedDescriptors: [],
+        findingCount: 0,
+        confirmedCount: 0,
+        confirmed: false,
+      };
+    }
+
+    const baselineByType = new Map(
+      baselineDescriptors.map((descriptor) => [descriptor.typeName, descriptor]),
+    );
+    const currentByType = new Map(
+      currentDescriptors.map((descriptor) => [descriptor.typeName, descriptor]),
+    );
+    const changedTypeNames = Array.from(
+      new Set([...baselineByType.keys(), ...currentByType.keys()]),
+    )
+      .filter(
+        (typeName) =>
+          baselineByType.get(typeName)?.indexFingerprint !==
+          currentByType.get(typeName)?.indexFingerprint,
+      )
+      .sort();
+    const removedDescriptors = changedTypeNames
+      .filter((typeName) => !currentByType.has(typeName))
+      .map((typeName) => baselineByType.get(typeName))
+      .filter(
+        (
+          descriptor,
+        ): descriptor is TypeInfoORMIndexMaintenanceTypeDescriptor =>
+          !!descriptor,
+      );
+
+    const candidate = await this.store.readRecord(INDEX_SCHEMA_CANDIDATE_ID);
+    const observations =
+      candidate?.data?.signature === signature
+        ? Math.max(1, candidate.count ?? 1) + 1
+        : 1;
+    const confirmed = observations >= 2;
+
+    await this.store.putRecord(INDEX_SCHEMA_CANDIDATE_ID, {
+      kind: "checkpoint",
+      status: confirmed ? "confirmed" : "open",
+      operation: "indexSchemaCandidate",
+      count: observations,
+      data: {
+        signature,
+        descriptors: currentDescriptors,
+      },
+    });
+
+    for (const typeName of changedTypeNames) {
+      const previousDescriptor = baselineByType.get(typeName);
+      const currentDescriptor = currentByType.get(typeName);
+
+      await this.store.putRecord(schemaFindingId(typeName), {
+        kind: "finding",
+        status: confirmed ? "confirmed" : "open",
+        typeName,
+        scope: "indexSchemaDrift",
+        correlationId: runId,
+        expiresAt: now + this.options.recordRetentionMs,
+        data: {
+          findingType: "indexSchemaDrift",
+          change:
+            !previousDescriptor
+              ? "typeAdded"
+              : !currentDescriptor
+                ? "typeRemoved"
+                : "typeChanged",
+          previousDescriptor,
+          currentDescriptor,
+          observations,
+        },
+      });
+    }
+
+    return {
+      baselineDescriptors,
+      currentDescriptors,
+      signature,
+      changedTypeNames,
+      removedDescriptors,
+      findingCount: changedTypeNames.length,
+      confirmedCount: confirmed ? changedTypeNames.length : 0,
+      confirmed,
+    };
+  };
+
   private readCheckpoint = async (): Promise<AuditCheckpointData> => {
     const checkpoint = await this.store.readRecord(INDEX_AUDIT_CHECKPOINT_ID);
     const data = checkpoint?.data;
