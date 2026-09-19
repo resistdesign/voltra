@@ -34,6 +34,32 @@ type BackendCandidatePage = {
   lastEvaluatedKey?: string;
 };
 
+/** One structured document mirror exposed to maintenance tooling. */
+export type StructuredDocumentSnapshot = {
+  /** Indexed document identifier. */
+  docId: DocId;
+  /** Current structured fields mirror. */
+  fields: StructuredDocFieldsRecord;
+  /** Monotonic structured mirror version. */
+  version: number;
+};
+
+/** Bounded page of structured document mirrors. */
+export type StructuredDocumentPage = {
+  /** Structured document snapshots in this page. */
+  documents: StructuredDocumentSnapshot[];
+  /** Opaque continuation token when more physical records remain. */
+  cursor?: string;
+};
+
+/** Options for bounded structured document mirror enumeration. */
+export type StructuredDocumentListOptions = {
+  /** Maximum physical records to evaluate in this page. */
+  limit?: number;
+  /** Opaque continuation token from a prior page. */
+  cursor?: string;
+};
+
 type StructuredTermIndex = {
   query(
     field: string,
@@ -99,6 +125,10 @@ export type StructuredSearchDependencies = {
     getMany?(
       docIds: DocId[],
     ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>>;
+    /** Enumerate bounded structured document mirrors for maintenance. */
+    list?(
+      options?: StructuredDocumentListOptions,
+    ): Promise<StructuredDocumentPage>;
   };
   /** Tokenizer used by string contains/LIKE verification. */
   tokenizer?: Partial<StructuredStringTokenizerConfig>;

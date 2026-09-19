@@ -150,6 +150,13 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
   };
 
   /**
+   * Strongly consistent maintenance read.
+   *
+   * Amazon S3 object reads are strongly consistent after successful writes.
+   */
+  public readItemStronglyConsistent = this.readItem;
+
+  /**
    * Update a @{@link BaseFileItem}.
    * @param uniqueIdentifier Unique identifier value for the file.
    * @param item Partial update payload for the file.

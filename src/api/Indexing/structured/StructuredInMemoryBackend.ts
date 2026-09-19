@@ -7,6 +7,7 @@ import type { DocId } from "../Types";
 import { encodeSortableIndexValue } from "../IndexTable";
 import type { StructuredSearchDependencies } from "./SearchStructured";
 import type { StructuredWriter } from "./Handlers";
+import { StructuredIndexVersionMismatchError } from "./StructuredWriter";
 import type { StructuredQueryOptions, WhereValue } from "./Types";
 import {
   buildStructuredDocFieldsItem,
@@ -343,6 +344,45 @@ export class StructuredInMemoryBackend
       }
       return fieldsById;
     },
+    list: async (options = {}) => {
+      const cursor = decodeCursor(options.cursor);
+      const ordered = this.find<StructuredDocFieldsItem>(
+        (record) => record.kind === "sd",
+      )
+        .slice()
+        .sort((left, right) =>
+          left.pk < right.pk
+            ? -1
+            : left.pk > right.pk
+              ? 1
+              : left.sk < right.sk
+                ? -1
+                : left.sk > right.sk
+                  ? 1
+                  : 0,
+        );
+      const remaining = cursor
+        ? ordered.filter(
+            (item) =>
+              item.pk > cursor.pk ||
+              (item.pk === cursor.pk && item.sk > cursor.sk),
+          )
+        : ordered;
+      const limit = Math.max(1, options.limit ?? 100);
+      const items = remaining.slice(0, limit);
+      const last = items[items.length - 1];
+
+      return {
+        documents: items.map((item) => ({
+          docId: item.docId,
+          fields: clone(item.fields),
+          version: item.version,
+        })),
+        ...(last && items.length < remaining.length
+          ? { cursor: JSON.stringify({ pk: last.pk, sk: last.sk }) }
+          : {}),
+      };
+    },
   };
 
   /** Optional in-memory repair/compaction lifecycle. */
@@ -456,6 +496,17 @@ export class StructuredInMemoryBackend
     const docKey = buildStructuredDocFieldsKey(docId);
     const previous = this.records.get(recordKey(docKey)) as
       StructuredDocFieldsItem | undefined;
+
+    if (
+      context.expectedVersion !== undefined &&
+      previous?.version !== context.expectedVersion
+    ) {
+      throw new StructuredIndexVersionMismatchError(
+        context.expectedVersion,
+        previous?.version,
+      );
+    }
+
     const previousFields = previous?.fields ?? {};
     const normalized = normalizeFields(fields);
     const occupancyFields = context.occupancyFields ?? {};

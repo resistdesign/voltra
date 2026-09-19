@@ -98,6 +98,28 @@ type TermEntry = StructuredTermIndexItem;
 
 type RangeEntry = StructuredRangeIndexItem;
 
+/**
+ * Raised when maintenance tries to mutate a structured document that changed
+ * since it was audited.
+ */
+export class StructuredIndexVersionMismatchError extends Error {
+  /** Version expected by the maintenance caller. */
+  readonly expectedVersion: number;
+  /** Version observed immediately before the attempted write. */
+  readonly actualVersion?: number;
+
+  /**
+   * @param expectedVersion Audited version supplied by the caller.
+   * @param actualVersion Current persisted version, when present.
+   */
+  constructor(expectedVersion: number, actualVersion?: number) {
+    super("Structured index state changed after it was audited.");
+    this.name = "StructuredIndexVersionMismatchError";
+    this.expectedVersion = expectedVersion;
+    this.actualVersion = actualVersion;
+  }
+}
+
 export type StructuredWriterOptions = {
   /**
    * Optional tokenizer settings for string contains indexing.
@@ -282,6 +304,15 @@ export class StructuredDdbWriter {
 
     while (attempts <= maxRetries) {
       const previousState = await this.dependencies.loadDocFieldsState(docId);
+      if (
+        context.expectedVersion !== undefined &&
+        previousState?.version !== context.expectedVersion
+      ) {
+        throw new StructuredIndexVersionMismatchError(
+          context.expectedVersion,
+          previousState?.version,
+        );
+      }
       const previousNormalized = previousState
         ? normalizeFields(previousState.fields)
         : {};

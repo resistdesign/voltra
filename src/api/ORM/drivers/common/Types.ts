@@ -93,6 +93,15 @@ export type DataItemDBDriver<
     selectedFields?: (keyof ItemType)[],
   ) => Promise<Partial<ItemType>>;
   /**
+   * Optional strongly consistent read used by destructive maintenance safety checks.
+   *
+   * Drivers that cannot provide stronger read semantics should omit this method.
+   */
+  readItemStronglyConsistent?: (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    selectedFields?: (keyof ItemType)[],
+  ) => Promise<Partial<ItemType>>;
+  /**
    * Update an item in the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.

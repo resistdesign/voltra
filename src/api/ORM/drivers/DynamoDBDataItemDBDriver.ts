@@ -353,6 +353,35 @@ export class DynamoDBDataItemDBDriver<
   };
 
   /**
+   * Read an item using DynamoDB strong consistency for maintenance validation.
+   * @param uniqueIdentifier Unique identifier value for the item.
+   * @param selectedFields Optional fields to select from the item.
+   * @returns Item payload (partial when selected fields are used).
+   */
+  public readItemStronglyConsistent = async (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    selectedFields?: (keyof ItemType)[],
+  ): Promise<Partial<ItemType>> => {
+    const { tableName, uniquelyIdentifyingFieldName } = this.config;
+    const selectedFieldParams = buildSelectedFieldParams(selectedFields);
+    const command = new GetItemCommand({
+      TableName: tableName,
+      Key: marshall({
+        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+      }),
+      ConsistentRead: true,
+      ...selectedFieldParams,
+    });
+    const { Item } = await this.dynamoDBClient.send(command);
+
+    if (typeof Item === "undefined") {
+      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+    }
+
+    return unmarshall(Item) as ItemType;
+  };
+
+  /**
    * Update an item in the database.
    * @returns True when an item was updated.
    */

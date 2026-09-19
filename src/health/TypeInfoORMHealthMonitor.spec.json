@@ -1,0 +1,88 @@
+{
+  "file": "./TypeInfoORMHealthMonitor.test-utils.ts",
+  "tests": [
+    {
+      "export": "runHealthOrphanRepairScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "previewDetected": true,
+        "previewStillIndexed": {
+          "text": ["book-1"],
+          "structured": ["book-1"]
+        },
+        "repairDidWork": true,
+        "afterRepair": {
+          "text": [],
+          "structured": []
+        },
+        "repeatedRepairCount": 0
+      }
+    },
+    {
+      "export": "runHealthIndexRaceGuardScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "status": "indexChanged",
+        "newerIndexIds": ["race-1"]
+      }
+    },
+    {
+      "export": "runHealthBoundedContinuationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "completed": true,
+        "usedMultipleRuns": true,
+        "stayedWithinBudget": true
+      }
+    },
+    {
+      "export": "runHealthSchemaDriftScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstObservation": {
+          "driftCount": 2,
+          "confirmedCount": 0
+        },
+        "repair": {
+          "confirmedCount": 2,
+          "reconciledCount": 1
+        },
+        "bookIndexes": {
+          "oldTitle": [],
+          "newSlug": ["schema-book-1"],
+          "rating": ["schema-book-1"]
+        },
+        "removedTypeIndexes": {
+          "text": [],
+          "structured": []
+        },
+        "removedTypeCanonicalId": "legacy-1",
+        "bookId": "schema-book-1"
+      }
+    },
+    {
+      "export": "runHealthOperationObservationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "itemId": "observed-1",
+        "observations": [
+          {
+            "operation": "create",
+            "typeName": "Book",
+            "success": true
+          },
+          {
+            "operation": "read",
+            "typeName": "Book",
+            "success": true
+          }
+        ]
+      }
+    }
+  ]
+}

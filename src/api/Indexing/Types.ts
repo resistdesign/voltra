@@ -265,6 +265,45 @@ export type IndexWriter = LossyWriter &
   ExactWriter &
   Partial<DocumentIndexWriter>;
 
+/** One full-text document/field mirror exposed to bounded maintenance tooling. */
+export type TextIndexDocumentSnapshot = {
+  /** Indexed document identifier. */
+  docId: DocId;
+  /** Fully qualified persisted index field. */
+  indexField: string;
+};
+
+/** Options for bounded full-text document mirror enumeration. */
+export type TextIndexDocumentListOptions = {
+  /** Maximum physical mirror records to evaluate in one page. */
+  limit?: number;
+  /** Opaque backend continuation token. */
+  cursor?: string;
+};
+
+/** Bounded page of full-text document/field mirrors. */
+export type TextIndexDocumentPage = {
+  /** Full-text mirror records in this page. */
+  documents: TextIndexDocumentSnapshot[];
+  /** Opaque continuation token when more records remain. */
+  cursor?: string;
+};
+
+/**
+ * Optional document-level maintenance capability for text indexes.
+ *
+ * This surface intentionally operates on persisted qualified fields and ids so
+ * repair tooling does not need a deleted canonical item snapshot.
+ */
+export type TextIndexMaintenance = {
+  /** Enumerate a bounded page of indexed document/field mirrors. */
+  listDocuments(
+    options?: TextIndexDocumentListOptions,
+  ): Promise<TextIndexDocumentPage>;
+  /** Remove every text-index artifact for one document/field pair. */
+  removeDocumentIndex(docId: DocId, indexField: string): Promise<void>;
+};
+
 /**
  * Physical text-index backend for lossy postings, exact positions, token
  * membership, statistics, and document mutation.
@@ -272,4 +311,6 @@ export type IndexWriter = LossyWriter &
  * Text indexing is one capability of the logical indexed-query backend; it is
  * not a competing top-level query system.
  */
-export type TextIndexBackend = IndexReader & IndexWriter;
+export type TextIndexBackend = IndexReader &
+  IndexWriter &
+  Partial<TextIndexMaintenance>;
