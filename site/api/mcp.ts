@@ -2,132 +2,21 @@ import {
   TypeInfoORMService,
   addMCPToRouteMap,
   type BaseTypeInfoORMServiceConfig,
-  type MCPJSONSchema,
   type RouteMap,
 } from "../../src/api";
 import {
   ComparisonOperators,
   LogicalOperators,
   type ListItemsConfig,
+  type TypeInfoPack,
 } from "../../src/common";
 import { DEMO_MCP_ROUTE_PATH } from "../common/Constants";
-
-const PERSON_FIELDS = [
-  "id",
-  "firstName",
-  "lastName",
-  "age",
-  "dietaryRestrictions",
-  "likesCheese",
-];
-
-const CAR_FIELDS = ["id", "make", "model", "year"];
-
-const PAGING_SCHEMA_PROPERTIES = {
-  itemsPerPage: {
-    type: "integer",
-    minimum: 1,
-    maximum: 20,
-    default: 5,
-    description: "Maximum number of items to return.",
-  },
-  cursor: {
-    type: "string",
-    description: "Cursor returned by a previous call.",
-  },
-};
-
-const PERSON_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string" },
-    firstName: { type: "string" },
-    lastName: { type: "string" },
-    age: { type: "number" },
-    dietaryRestrictions: { type: "string" },
-    likesCheese: { type: "boolean" },
-  },
-  additionalProperties: false,
-};
-
-const CAR_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string" },
-    make: { type: "string" },
-    model: { type: "string" },
-    year: { type: "number" },
-  },
-  additionalProperties: false,
-};
-
-const LIST_PEOPLE_INPUT_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: PAGING_SCHEMA_PROPERTIES,
-  additionalProperties: false,
-};
-
-const LIST_PEOPLE_OUTPUT_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    items: {
-      type: "array",
-      items: PERSON_SCHEMA,
-    },
-    cursor: {
-      type: "string",
-    },
-  },
-  required: ["items"],
-  additionalProperties: false,
-};
-
-const GET_PERSON_INPUT_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    id: {
-      type: "string",
-      description: "Person ID.",
-    },
-  },
-  required: ["id"],
-  additionalProperties: false,
-};
-
-const SEARCH_CARS_INPUT_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    query: {
-      type: "string",
-      minLength: 1,
-      description: "Text to search for.",
-    },
-    field: {
-      type: "string",
-      enum: ["make", "model"],
-      default: "model",
-      description: "Car field to search.",
-    },
-    ...PAGING_SCHEMA_PROPERTIES,
-  },
-  required: ["query"],
-  additionalProperties: false,
-};
-
-const SEARCH_CARS_OUTPUT_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    items: {
-      type: "array",
-      items: CAR_SCHEMA,
-    },
-    cursor: {
-      type: "string",
-    },
-  },
-  required: ["items"],
-  additionalProperties: false,
-};
+import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
+import type {
+  MCPDemoGetPersonInput,
+  MCPDemoListPeopleInput,
+  MCPDemoSearchCarsInput,
+} from "../common/Types";
 
 const READ_ONLY_ANNOTATIONS = {
   readOnlyHint: true,
@@ -136,21 +25,22 @@ const READ_ONLY_ANNOTATIONS = {
   openWorldHint: false,
 };
 
-type PagingInput = {
-  itemsPerPage?: number;
-  cursor?: string;
-};
+const getDemoTypeInfoPack = (
+  entryTypeName: string,
+): TypeInfoPack => ({
+  entryTypeName,
+  typeInfoMap: DemoTypeInfoMap,
+});
 
-type GetPersonInput = {
-  id: string;
-};
+const getDemoTypeFields = (typeName: string): string[] =>
+  Object.keys(DemoTypeInfoMap[typeName]?.fields ?? {});
 
-type SearchCarsInput = PagingInput & {
-  query: string;
-  field?: "make" | "model";
-};
+const PERSON_FIELDS = getDemoTypeFields("MCPDemoPerson");
+const CAR_FIELDS = getDemoTypeFields("MCPDemoCar");
 
-const getPagingConfig = (input: PagingInput): ListItemsConfig => {
+const getPagingConfig = (
+  input: MCPDemoListPeopleInput,
+): ListItemsConfig => {
   const config: ListItemsConfig = {
     itemsPerPage: input.itemsPerPage ?? 5,
   };
@@ -186,30 +76,30 @@ export const addDemoMCPToRouteMap = (
         name: "listPeople",
         description:
           "List people from the Voltra demo application. Returns safe demo profile fields and supports cursor paging.",
-        inputSchema: LIST_PEOPLE_INPUT_SCHEMA,
-        outputSchema: LIST_PEOPLE_OUTPUT_SCHEMA,
+        inputTypeInfo: getDemoTypeInfoPack("MCPDemoListPeopleInput"),
+        outputTypeInfo: getDemoTypeInfoPack("MCPDemoListPeopleOutput"),
         annotations: READ_ONLY_ANNOTATIONS,
-        handler: async (input: PagingInput) =>
+        handler: async (input: MCPDemoListPeopleInput) =>
           orm.list("Person", getPagingConfig(input), PERSON_FIELDS),
       },
       {
         name: "getPerson",
         description:
           "Read one person from the Voltra demo application by person ID.",
-        inputSchema: GET_PERSON_INPUT_SCHEMA,
-        outputSchema: PERSON_SCHEMA,
+        inputTypeInfo: getDemoTypeInfoPack("MCPDemoGetPersonInput"),
+        outputTypeInfo: getDemoTypeInfoPack("MCPDemoPerson"),
         annotations: READ_ONLY_ANNOTATIONS,
-        handler: async (input: GetPersonInput) =>
+        handler: async (input: MCPDemoGetPersonInput) =>
           orm.read("Person", input.id, PERSON_FIELDS),
       },
       {
         name: "searchCars",
         description:
           "Search demo cars by make or model using Voltra ORM text indexing.",
-        inputSchema: SEARCH_CARS_INPUT_SCHEMA,
-        outputSchema: SEARCH_CARS_OUTPUT_SCHEMA,
+        inputTypeInfo: getDemoTypeInfoPack("MCPDemoSearchCarsInput"),
+        outputTypeInfo: getDemoTypeInfoPack("MCPDemoSearchCarsOutput"),
         annotations: READ_ONLY_ANNOTATIONS,
-        handler: async (input: SearchCarsInput) => {
+        handler: async (input: MCPDemoSearchCarsInput) => {
           const config = getPagingConfig(input);
           const fieldName = input.field === "make" ? "make" : "model";
 
