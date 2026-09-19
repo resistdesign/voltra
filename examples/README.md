@@ -24,12 +24,15 @@ Use this for client route usage via platform barrels:
 - `examples/api/mcp-routing.ts`
 - `examples/api/orm-indexing.ts`
 - `examples/api/orm-index-maintenance.ts`
+- `examples/api/orm-health-monitoring.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
 Use `mcp-routing.ts` to expose authenticated MCP tools through the same RouteMap.
 Use `orm-indexing.ts` as the starting point for unified field-capability and
 backend configuration.
 Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup after out-of-band writes and schema-driven index changes.
+Use `orm-health-monitoring.ts` for bounded scheduled monitoring, preview/repair
+runs, one driver-backed Health store, and authenticated Health MCP tools.
 
 ## MCP Reference
 
@@ -37,6 +40,14 @@ Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup a
 - Live demo implementation: `site/api/mcp.ts`
 - Live demo UI: `site/app/src/client/MCPDemo.tsx`
 - Tool schemas are generated from Voltra `TypeInfoPack` values; consumers do not hand-author JSON Schema.
+
+## Health Monitoring Reference
+
+- Scheduled/agent integration: `examples/api/orm-health-monitoring.ts`
+- Live read-only demo API: `site/api/health.ts`
+- Live Health demo UI: `site/app/src/client/HealthDemo.tsx`
+- Health storage is one normal driver-backed record collection.
+- MCP repair is opt-in and can use normal Voltra `allowedRoles` authorization.
 
 ## ORM Search + Indexing Reference
 
