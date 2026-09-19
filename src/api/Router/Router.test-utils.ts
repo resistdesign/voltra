@@ -7,7 +7,7 @@ import {
 import { AWS } from "./AWS";
 import type { Route } from "./Types";
 import { mergeStringPaths } from "../../common/Routing";
-import { isStandardHTTPResponse } from "./isStandardHTTPResponse";
+import { isStandardHTTPResponse } from "./Utils";
 
 const buildRoute = (path: string, payload: unknown): Route => ({
   path,
