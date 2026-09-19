@@ -15,9 +15,9 @@ import type {
   TypeInfoMap,
   TypeInfoPack,
 } from "../common/TypeParsing";
-import {
+import type {
   TypeInfoORMHealthMonitor,
-  type TypeInfoORMHealthMonitorRunResult,
+  TypeInfoORMHealthMonitorRunResult,
 } from "./TypeInfoORMHealthMonitor";
 
 const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
@@ -120,12 +120,20 @@ const REPAIR_ANNOTATIONS: MCPToolAnnotations = {
 };
 
 /**
+ * Minimal Health monitor contract required by the MCP adapter.
+ */
+export type TypeInfoORMHealthMCPMonitor = Pick<
+  TypeInfoORMHealthMonitor,
+  "preview" | "repair"
+>;
+
+/**
  * Configuration for exposing one Health monitor through Voltra's native MCP
  * RouteMap integration.
  */
 export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
   /** Health monitor instance whose bounded operations become MCP tools. */
-  monitor: TypeInfoORMHealthMonitor;
+  monitor: TypeInfoORMHealthMCPMonitor;
   /** Route path for the MCP endpoint. Defaults to `health-mcp`. */
   path?: string;
   /** MCP server name. Defaults to `Voltra Health`. */
