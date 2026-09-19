@@ -6,7 +6,14 @@
  * cursor-based paging.
  */
 import { tokenize, tokenizeLossyTrigrams } from "../tokenize";
-import type { DocId, DocTokenKey, DocumentRecord, TokenStats } from "../Types";
+import type {
+  DocId,
+  DocTokenKey,
+  DocumentRecord,
+  TextIndexDocumentListOptions,
+  TextIndexDocumentPage,
+  TokenStats,
+} from "../Types";
 import type { SearchTrace } from "../Trace";
 import { normalizeDocId } from "../docId";
 import {
@@ -26,9 +33,14 @@ import {
 } from "./Schema";
 import {
   INDEX_ITEM_KINDS,
+  INDEX_KEY_PARTS,
+  INDEX_KEY_SEPARATOR,
+  INDEX_KEY_VERSION,
   INDEX_TABLE_KIND_ATTRIBUTE,
   assertIndexTableConfig,
   decodeIndexDocumentSortKey,
+  decodeIndexIdentity,
+  decodeIndexScalarIdentity,
   type IndexTableConfig,
 } from "../IndexTable";
 import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
@@ -125,6 +137,69 @@ function decodeDocKey(value: unknown): DocId | undefined {
 
 function buildDocTokenItemKey(partitionKey: string, sortKey: string): string {
   return `${partitionKey}|${sortKey}`;
+}
+
+function decodeMirrorDocumentId(value: unknown): DocId | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const prefix = [
+    INDEX_KEY_VERSION,
+    INDEX_ITEM_KINDS.fullTextDocumentMirror,
+    INDEX_KEY_PARTS.document,
+  ].join(INDEX_KEY_SEPARATOR) + INDEX_KEY_SEPARATOR;
+
+  if (!value.startsWith(prefix)) {
+    return undefined;
+  }
+
+  try {
+    return decodeIndexScalarIdentity(value.slice(prefix.length));
+  } catch (_error) {
+    return undefined;
+  }
+}
+
+function decodeMirrorIndexField(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const prefix = `${INDEX_KEY_PARTS.field}${INDEX_KEY_SEPARATOR}`;
+  if (!value.startsWith(prefix)) {
+    return undefined;
+  }
+
+  try {
+    return decodeIndexIdentity(value.slice(prefix.length));
+  } catch (_error) {
+    return undefined;
+  }
+}
+
+function decodeMaintenanceCursor(
+  cursor?: string,
+): Record<string, unknown> | undefined {
+  if (!cursor) {
+    return undefined;
+  }
+
+  try {
+    const value = JSON.parse(cursor) as Record<string, unknown>;
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error();
+    }
+    return value;
+  } catch (_error) {
+    throw new Error("Invalid full-text maintenance cursor.");
+  }
+}
+
+function encodeMaintenanceCursor(
+  key?: Record<string, unknown>,
+): string | undefined {
+  return key ? JSON.stringify(key) : undefined;
 }
 
 /**
@@ -687,6 +762,71 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
   constructor(config: FullTextDdbBackendConfig) {
     super(config);
     this.queryClient = config.client;
+  }
+
+  /**
+   * Enumerate a bounded page of persisted full-text document mirrors.
+   * @param options Paging options.
+   * @returns Full-text document/field mirrors and continuation state.
+   */
+  async listDocuments(
+    options: TextIndexDocumentListOptions = {},
+  ): Promise<TextIndexDocumentPage> {
+    if (!this.queryClient.scan) {
+      throw new Error(
+        "Full-text maintenance enumeration requires DynamoDB scan support.",
+      );
+    }
+
+    const response = await this.queryClient.scan({
+      TableName: this.mirrorTableName,
+      FilterExpression: "#kind = :kind",
+      ExpressionAttributeNames: {
+        "#kind": INDEX_TABLE_KIND_ATTRIBUTE,
+      },
+      ExpressionAttributeValues: {
+        ":kind": INDEX_ITEM_KINDS.fullTextDocumentMirror,
+      },
+      ExclusiveStartKey: decodeMaintenanceCursor(options.cursor),
+      Limit: Math.max(1, options.limit ?? 100),
+      ConsistentRead: true,
+    });
+
+    const documents = [];
+    for (const item of response.Items ?? []) {
+      const docId = decodeMirrorDocumentId(
+        item[fullTextDocMirrorSchema.partitionKey],
+      );
+      const indexField = decodeMirrorIndexField(
+        item[fullTextDocMirrorSchema.sortKey],
+      );
+      if (docId !== undefined && indexField !== undefined) {
+        documents.push({ docId, indexField });
+      }
+    }
+
+    return {
+      documents,
+      cursor: encodeMaintenanceCursor(response.LastEvaluatedKey),
+    };
+  }
+
+  /**
+   * Remove every persisted full-text artifact for one document/field pair.
+   * @param docId Document id to clean.
+   * @param indexField Fully qualified persisted field.
+   * @returns Promise resolved when cleanup is complete.
+   */
+  async removeDocumentIndex(
+    docId: DocId,
+    indexField: string,
+  ): Promise<void> {
+    await this.writeDocument(
+      { __healthDocId: docId, __healthContent: "" },
+      "__healthDocId",
+      "__healthContent",
+      indexField,
+    );
   }
 
   /**
