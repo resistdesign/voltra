@@ -6,10 +6,10 @@ Add an optional, infrastructure-neutral Voltra health subsystem that can observe
 
 ## Checklist
 
-- [ ] Add the public `@resistdesign/voltra/health` barrel and package/build/docs/export wiring.
-- [ ] Define one extensible driver-backed Health record model for telemetry, findings, repair history, runs, checkpoints, and queued work.
-- [ ] Add lightweight optional ORM operation timing/diagnostic observation without allowing health recording failures to change ORM behavior.
-- [ ] Add bounded ORM/index inspection primitives needed by health monitoring, including paged structured-document enumeration and safe item-level index repair.
+- [x] Add the public `@resistdesign/voltra/health` barrel and package/build/docs/export wiring.
+- [x] Define one extensible driver-backed Health record model for telemetry, findings, repair history, runs, checkpoints, and queued work.
+- [x] Add lightweight optional ORM operation timing/diagnostic observation without allowing health recording failures to change ORM behavior.
+- [~] Add bounded ORM/index inspection primitives needed by health monitoring, including paged structured-document enumeration and safe item-level index repair. (Dynamo-backed enumeration and optimistic structured-version guards are in place; in-memory parity and the public repair surface remain.)
 - [ ] Implement a resumable `TypeInfoORMHealthMonitor` that:
   - [ ] records/compacts slow-query and operation statistics;
   - [ ] audits canonical/index state by type in bounded pages;
