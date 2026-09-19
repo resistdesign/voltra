@@ -99,8 +99,10 @@ type AuditCheckpointData = {
   textCursor?: string;
   textComplete?: boolean;
   retentionCursor?: string;
+  schemaSignature?: string;
   schemaTypeName?: string;
   schemaCursor?: string;
+  schemaReconcileComplete?: boolean;
 };
 
 type AuditSource = "structured" | "text";
