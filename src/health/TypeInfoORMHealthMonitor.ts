@@ -375,6 +375,13 @@ export class TypeInfoORMHealthMonitor {
         !confirmed ||
         repairedCount >= this.options.maxRepairsPerRun
       ) {
+        if (
+          repairMode === "apply" &&
+          confirmed &&
+          repairedCount >= this.options.maxRepairsPerRun
+        ) {
+          repairDeferred = true;
+        }
         return;
       }
 
