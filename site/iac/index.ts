@@ -14,7 +14,11 @@ import Path from "path";
 import FS from "fs";
 import { fileURLToPath } from "url";
 import { collectRequiredEnvironmentVariables } from "../../src/common";
-import { BASE_DOMAIN, DOMAINS } from "../common/Constants";
+import {
+  BASE_DOMAIN,
+  DEMO_MCP_ROUTE_PATH,
+  DOMAINS,
+} from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import { INDEXING_TABLE_ENV_VAR } from "../common/IndexingTable";
 
@@ -225,6 +229,14 @@ const IaC = new SimpleCFT({
     },
     hostedZoneId: {
       Ref: IDS.PARAMETERS.HOSTED_ZONE_ID,
+    },
+  })
+  .patch({
+    Outputs: {
+      MCPDemoEndpoint: {
+        Description: "Public read-only MCP endpoint for the Voltra demo API.",
+        Value: `https://${DOMAINS.API}${DEMO_MCP_ROUTE_PATH}`,
+      },
     },
   });
 

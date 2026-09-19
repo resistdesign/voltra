@@ -85,7 +85,7 @@ export const getHeadersWithCORS = (
     "Access-Control-Allow-Origin": getAllowedCORSOrigin(origin, corsPatterns),
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Headers":
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
     "Access-Control-Allow-Methods":
       "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE",
   };
