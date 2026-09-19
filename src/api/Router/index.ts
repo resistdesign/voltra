@@ -42,11 +42,11 @@ import {
   mergeStringPaths,
 } from "../../common/Routing";
 import { logFunctionCall } from "../../common/Logging";
-import { isStandardHTTPResponse } from "./isStandardHTTPResponse";
+import { isStandardHTTPResponse } from "./Utils";
 
 export * from "./Types";
 export * from "./AWS";
-export * from "./isStandardHTTPResponse";
+export * from "./Utils";
 
 /**
  * A utility function to add a route to a route map by path.
