@@ -286,6 +286,47 @@ export type TypeInfoORMIndexingConfig = {
 };
 
 /**
+ * Public TypeInfoORM operations exposed to lightweight observability hooks.
+ */
+export type TypeInfoORMOperationName =
+  | "createRelationship"
+  | "deleteRelationship"
+  | "listRelationships"
+  | "listRelatedItems"
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "list";
+
+/**
+ * Timing/result metadata emitted after one public TypeInfoORM operation.
+ *
+ * Payload values intentionally exclude item contents, criteria values, and DAC
+ * context so health instrumentation does not accidentally persist application
+ * data or authorization material.
+ */
+export type TypeInfoORMOperationObservation = {
+  /** Public ORM operation that completed or failed. */
+  operation: TypeInfoORMOperationName;
+  /** Associated TypeInfo type when it can be determined from the call. */
+  typeName?: string;
+  /** Millisecond timestamp when the operation began. */
+  startedAt: number;
+  /** Total operation duration in milliseconds. */
+  durationMs: number;
+  /** Whether the operation completed successfully. */
+  success: boolean;
+  /** Number of returned items for list-style results, when available. */
+  resultCount?: number;
+};
+
+/** Callback for receiving TypeInfoORM operation observations. */
+export type TypeInfoORMOperationObserver = (
+  event: TypeInfoORMOperationObservation,
+) => void;
+
+/**
  * Optional field overrides for manual indexing maintenance operations.
  */
 export type TypeInfoORMManualIndexingConfig = {
@@ -374,6 +415,17 @@ export type BaseTypeInfoORMServiceConfig = {
    */
   indexing?: TypeInfoORMIndexingConfig;
   /**
+   * Optional ORM-wide observability hooks.
+   */
+  observability?: {
+    /**
+     * Called after public ORM operations complete or fail.
+     *
+     * Hook failures are isolated and never alter ORM behavior.
+     */
+    onOperation?: TypeInfoORMOperationObserver;
+  };
+  /**
    * Optional relationship cleanup hook on delete.
    */
   createRelationshipCleanupItem?: (
@@ -409,6 +461,89 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
   protected indexingRelationshipDriver?: IndexingRelationshipDriver;
+
+  /**
+   * Emit a public ORM operation observation without impacting runtime behavior.
+   */
+  protected emitOperationObservation = (
+    event: TypeInfoORMOperationObservation,
+  ): void => {
+    const hook = this.config.observability?.onOperation;
+
+    if (!hook) {
+      return;
+    }
+
+    try {
+      hook(event);
+    } catch (_error) {
+      // Observability hooks must never alter ORM behavior.
+    }
+  };
+
+  /**
+   * Resolve a non-sensitive TypeInfo type name from a public ORM argument list.
+   */
+  protected getObservedOperationTypeName = (
+    args: unknown[],
+  ): string | undefined => {
+    const first = args[0];
+
+    if (typeof first === "string") {
+      return first;
+    }
+
+    if (typeof first !== "object" || first === null) {
+      return undefined;
+    }
+
+    const record = first as Record<string, unknown>;
+    const typeName = record.typeName ?? record.fromTypeName;
+
+    return typeof typeName === "string" ? typeName : undefined;
+  };
+
+  /**
+   * Wrap one public ORM method with lightweight duration/result observation.
+   */
+  protected wrapObservedOperation = <Args extends unknown[], Result>(
+    operation: TypeInfoORMOperationName,
+    target: (...args: Args) => Promise<Result>,
+  ): ((...args: Args) => Promise<Result>) =>
+    async (...args: Args): Promise<Result> => {
+      const startedAt = Date.now();
+
+      try {
+        const result = await target(...args);
+        const resultCount =
+          typeof result === "object" &&
+          result !== null &&
+          "items" in result &&
+          Array.isArray((result as { items?: unknown }).items)
+            ? (result as { items: unknown[] }).items.length
+            : undefined;
+
+        this.emitOperationObservation({
+          operation,
+          typeName: this.getObservedOperationTypeName(args),
+          startedAt,
+          durationMs: Math.max(0, Date.now() - startedAt),
+          success: true,
+          ...(resultCount !== undefined ? { resultCount } : {}),
+        });
+
+        return result;
+      } catch (error) {
+        this.emitOperationObservation({
+          operation,
+          typeName: this.getObservedOperationTypeName(args),
+          startedAt,
+          durationMs: Math.max(0, Date.now() - startedAt),
+          success: false,
+        });
+        throw error;
+      }
+    };
 
   /**
    * Emit list routing decision observability events without impacting runtime behavior.
@@ -500,6 +635,28 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (!config.getRelationshipDriver && !config.indexing?.relations) {
       throw new Error(TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED);
     }
+
+    this.createRelationship = this.wrapObservedOperation(
+      "createRelationship",
+      this.createRelationship,
+    );
+    this.deleteRelationship = this.wrapObservedOperation(
+      "deleteRelationship",
+      this.deleteRelationship,
+    );
+    this.listRelationships = this.wrapObservedOperation(
+      "listRelationships",
+      this.listRelationships,
+    );
+    this.listRelatedItems = this.wrapObservedOperation(
+      "listRelatedItems",
+      this.listRelatedItems,
+    );
+    this.create = this.wrapObservedOperation("create", this.create);
+    this.read = this.wrapObservedOperation("read", this.read);
+    this.update = this.wrapObservedOperation("update", this.update);
+    this.delete = this.wrapObservedOperation("delete", this.delete);
+    this.list = this.wrapObservedOperation("list", this.list);
   }
 
   protected resolveAccessingRole = async (
