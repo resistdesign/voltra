@@ -381,6 +381,14 @@ export type TypeInfoORMRemovedTypeIndexCleanupConfig = {
   textIndexFields?: string[];
 };
 
+/** Result of one removed-Type index cleanup attempt. */
+export type TypeInfoORMRemovedTypeIndexCleanupResult = {
+  /** Outcome of the guarded index-only cleanup. */
+  status: "cleaned" | "indexChanged" | "maintenanceUnsupported";
+  /** Whether any index mutation was attempted. */
+  cleanupAttempted: boolean;
+};
+
 /**
  * Result of a canonical-item maintenance verification read.
  */
@@ -1791,10 +1799,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   cleanupRemovedTypeIndexState = async (
     primaryFieldValue: LiteralValue,
     config: TypeInfoORMRemovedTypeIndexCleanupConfig,
-  ): Promise<void> => {
+  ): Promise<TypeInfoORMRemovedTypeIndexCleanupResult> => {
     const indexing = this.config.indexing;
     if (!indexing) {
-      return;
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+      };
     }
 
     const { previousDescriptor } = config;
@@ -1806,14 +1817,27 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (config.structuredVersion !== undefined) {
       const structuredWriter = indexing.backend.valueWriter;
       if (!structuredWriter) {
-        throw new Error(
-          "Removed-Type structured cleanup requires structured maintenance support.",
-        );
+        return {
+          status: "maintenanceUnsupported",
+          cleanupAttempted: false,
+        };
       }
-      await structuredWriter.write(docId, {}, {
-        deleted: true,
-        expectedVersion: config.structuredVersion,
-      });
+
+      try {
+        await structuredWriter.write(docId, {}, {
+          deleted: true,
+          expectedVersion: config.structuredVersion,
+        });
+      } catch (error) {
+        if (error instanceof StructuredIndexVersionMismatchError) {
+          return {
+            status: "indexChanged",
+            cleanupAttempted: true,
+          };
+        }
+
+        throw error;
+      }
     }
 
     const textFields = Array.from(
@@ -1832,14 +1856,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (textFields.length > 0) {
       const textMaintenance = indexing.backend.text;
       if (!textMaintenance?.removeDocumentIndex) {
-        throw new Error(
-          "Removed-Type text cleanup requires document maintenance support.",
-        );
+        return {
+          status: "maintenanceUnsupported",
+          cleanupAttempted: config.structuredVersion !== undefined,
+        };
       }
       for (const indexField of textFields) {
         await textMaintenance.removeDocumentIndex(docId, indexField);
       }
     }
+
+    return {
+      status: "cleaned",
+      cleanupAttempted:
+        config.structuredVersion !== undefined || textFields.length > 0,
+    };
   };
 
   /**
