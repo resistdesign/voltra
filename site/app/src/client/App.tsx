@@ -262,6 +262,9 @@ export const App: FC = () => {
                         <td>Routing: Nesting/Handlers/Injected Handlers</td>
                       </tr>
                       <tr>
+                        <td>MCP: RouteMap-hosted Tools for LLM Clients</td>
+                      </tr>
+                      <tr>
                         <td>
                           ORM: TypeScript Type Driven Auto-generated Data
                           Contexts with Relationships
