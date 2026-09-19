@@ -18,6 +18,7 @@ import {
   relationalBackend,
   structuredStringTokenizer,
 } from "./indexing";
+import { addDemoMCPToRouteMap } from "./mcp";
 
 /**
  * Base route map containing lightweight demo routes that do not rely on DynamoDB.
@@ -38,7 +39,7 @@ export const ROUTE_MAP: RouteMap = addRoutesToRouteMap({}, [
 ]);
 
 /**
- * Route map augmented with DynamoDB-backed ORM routes and indexing integrations.
+ * Shared demo ORM configuration used by both RPC routes and MCP tools.
  */
 export const DEMO_ORM_CONFIG = {
   typeInfoMap: DemoTypeInfoMap,
@@ -76,7 +77,7 @@ export const DEMO_ORM_CONFIG = {
   }),
 } satisfies BaseTypeInfoORMServiceConfig;
 
-export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
+const ROUTE_MAP_WITH_ORM: RouteMap = addRouteMapToRouteMap(
   ROUTE_MAP,
   getTypeInfoORMRouteMap(
     DEMO_ORM_CONFIG,
@@ -106,4 +107,12 @@ export const ROUTE_MAP_WITH_DB: RouteMap = addRouteMapToRouteMap(
     },
   ),
   DEMO_ORM_ROUTE_PATH,
+);
+
+/**
+ * Complete demo API route map, including the public read-only MCP endpoint.
+ */
+export const ROUTE_MAP_WITH_DB: RouteMap = addDemoMCPToRouteMap(
+  ROUTE_MAP_WITH_ORM,
+  DEMO_ORM_CONFIG,
 );
