@@ -100,6 +100,7 @@ type AuditCandidate = {
   docId: DocId;
   source: AuditSource;
   structuredVersion?: number;
+  textIndexFields?: string[];
 };
 
 const INDEX_AUDIT_CHECKPOINT_ID = "health:index-audit";
@@ -243,6 +244,7 @@ export class TypeInfoORMHealthMonitor {
         candidate.docId,
         {
           structuredVersion: candidate.structuredVersion,
+          textIndexFields: candidate.textIndexFields,
         },
       );
 
@@ -360,6 +362,7 @@ export class TypeInfoORMHealthMonitor {
               typeName: descriptor.typeName,
               docId: document.docId,
               source: "text",
+              textIndexFields: [document.indexField],
             });
           } else {
             suspiciousCount += 1;
