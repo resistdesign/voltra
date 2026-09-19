@@ -1,0 +1,195 @@
+/**
+ * @packageDocumentation
+ *
+ * MCP exposure helpers for bounded Voltra Health operations.
+ */
+import {
+  addMCPToRouteMap,
+  type MCPToolAnnotations,
+} from "../api/MCP";
+import type {
+  RouteAuthConfig,
+  RouteMap,
+} from "../api/Router";
+import type {
+  TypeInfoMap,
+  TypeInfoPack,
+} from "../common/TypeParsing";
+import {
+  TypeInfoORMHealthMonitor,
+  type TypeInfoORMHealthMonitorRunResult,
+} from "./TypeInfoORMHealthMonitor";
+
+const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
+  TypeInfoORMHealthMonitorRunResult: {
+    fields: {
+      runId: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      repairMode: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: false,
+        possibleValues: ["preview", "apply"],
+      },
+      examinedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      orphanFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      confirmedOrphanCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      repairedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      schemaDriftFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      confirmedSchemaDriftCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      schemaReconciledItemCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      suspiciousCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      expiredRecordCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      continuation: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+    },
+  },
+};
+
+const HEALTH_MCP_RESULT_TYPE_INFO_PACK: TypeInfoPack = {
+  entryTypeName: "TypeInfoORMHealthMonitorRunResult",
+  typeInfoMap: HEALTH_MCP_RESULT_TYPE_INFO_MAP,
+};
+
+const PREVIEW_ANNOTATIONS: MCPToolAnnotations = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false,
+};
+
+const REPAIR_ANNOTATIONS: MCPToolAnnotations = {
+  readOnlyHint: false,
+  destructiveHint: true,
+  idempotentHint: true,
+  openWorldHint: false,
+};
+
+/**
+ * Configuration for exposing one Health monitor through Voltra's native MCP
+ * RouteMap integration.
+ */
+export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
+  /** Health monitor instance whose bounded operations become MCP tools. */
+  monitor: TypeInfoORMHealthMonitor;
+  /** Route path for the MCP endpoint. Defaults to `health-mcp`. */
+  path?: string;
+  /** MCP server name. Defaults to `Voltra Health`. */
+  name?: string;
+  /** MCP server version. Defaults to `1.0.0`. */
+  version?: string;
+  /**
+   * Normal Voltra route authorization applied to all Health MCP tools.
+   *
+   * Health operations can inspect internal state and apply destructive repairs,
+   * so authorization is intentionally required rather than defaulted.
+   */
+  authConfig: RouteAuthConfig;
+};
+
+/**
+ * Add bounded Health preview/repair tools to a Voltra RouteMap MCP endpoint.
+ *
+ * Applications own authentication infrastructure. For example, a Cognito-backed
+ * app can map a dedicated group into Voltra roles and pass
+ * `{ allowedRoles: ["HealthAdmin"] }` here.
+ *
+ * The exposed tools are deliberately small:
+ * - `healthPreview` performs one bounded non-destructive monitor pass.
+ * - `healthRepair` performs one bounded pass and applies only the monitor's
+ *   strongly validated repairs.
+ *
+ * Both return continuation state so an agent or scheduled worker can continue
+ * larger jobs without turning one request into unbounded maintenance work.
+ *
+ * @param routeMap Existing Voltra RouteMap.
+ * @param config Health MCP configuration.
+ * @returns New RouteMap with the Health MCP endpoint appended.
+ */
+export const addTypeInfoORMHealthMCPToRouteMap = (
+  routeMap: RouteMap,
+  config: AddTypeInfoORMHealthMCPToRouteMapConfig,
+): RouteMap => {
+  const { monitor } = config;
+
+  return addMCPToRouteMap(routeMap, {
+    path: config.path ?? "health-mcp",
+    name: config.name ?? "Voltra Health",
+    version: config.version ?? "1.0.0",
+    authConfig: config.authConfig,
+    tools: [
+      {
+        name: "healthPreview",
+        description:
+          "Run one bounded, non-destructive Voltra ORM/index health pass. Reports orphaned indexes, schema drift, suspicious state, retention cleanup, and whether more work remains.",
+        outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
+        annotations: PREVIEW_ANNOTATIONS,
+        handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
+          monitor.preview(),
+      },
+      {
+        name: "healthRepair",
+        description:
+          "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true when additional bounded work remains.",
+        outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
+        annotations: REPAIR_ANNOTATIONS,
+        handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
+          monitor.repair(),
+      },
+    ],
+  });
+};
