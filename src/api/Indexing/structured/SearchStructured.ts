@@ -42,8 +42,6 @@ export type StructuredDocumentSnapshot = {
   fields: StructuredDocFieldsRecord;
   /** Monotonic structured mirror version. */
   version: number;
-  /** Optional owning TypeInfo type for records written by newer Voltra versions. */
-  typeName?: string;
 };
 
 /** Bounded page of structured document mirrors. */
