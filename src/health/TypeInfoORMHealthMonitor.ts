@@ -842,6 +842,19 @@ export class TypeInfoORMHealthMonitor {
         typeof data.retentionCursor === "string"
           ? data.retentionCursor
           : undefined,
+      schemaSignature:
+        typeof data.schemaSignature === "string"
+          ? data.schemaSignature
+          : undefined,
+      schemaTypeName:
+        typeof data.schemaTypeName === "string"
+          ? data.schemaTypeName
+          : undefined,
+      schemaCursor:
+        typeof data.schemaCursor === "string"
+          ? data.schemaCursor
+          : undefined,
+      schemaReconcileComplete: data.schemaReconcileComplete === true,
     };
   };
 
