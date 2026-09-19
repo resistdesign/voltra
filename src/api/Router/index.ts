@@ -221,6 +221,26 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
               debug,
             );
 
+            if (
+              typeof Response !== "undefined" &&
+              result instanceof Response
+            ) {
+              const resultHeaders: Record<string, string> = {};
+
+              result.headers.forEach((value, key) => {
+                resultHeaders[key] = value;
+              });
+
+              return {
+                statusCode: result.status,
+                headers: {
+                  ...responseHeaders,
+                  ...resultHeaders,
+                },
+                body: await result.text(),
+              };
+            }
+
             return {
               statusCode: 200,
               headers: responseHeaders,
