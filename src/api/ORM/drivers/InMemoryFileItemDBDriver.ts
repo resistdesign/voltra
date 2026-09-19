@@ -195,6 +195,11 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
   };
 
   /**
+   * Strongly consistent maintenance read.
+   */
+  public readItemStronglyConsistent = this.readItem;
+
+  /**
    * Update a file item in memory.
    * @returns True when the item was updated.
    */
