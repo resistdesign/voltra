@@ -651,16 +651,69 @@ export class TypeInfoORMHealthMonitor {
       now,
     );
     checkpoint.retentionCursor = retention.cursor;
-    const cycleComplete =
+    const indexCycleComplete =
       !!checkpoint.structuredComplete && !!checkpoint.textComplete;
+    const schemaRepairComplete =
+      schemaState.findingCount === 0 ||
+      (repairMode === "apply" &&
+        schemaState.confirmed &&
+        checkpoint.schemaReconcileComplete === true &&
+        indexCycleComplete &&
+        !repairDeferred);
+
+    if (schemaState.findingCount > 0 && schemaRepairComplete) {
+      await this.store.putRecord(INDEX_SCHEMA_BASELINE_ID, {
+        kind: "checkpoint",
+        status: "complete",
+        operation: "indexSchemaBaseline",
+        data: {
+          signature: schemaState.signature,
+          descriptors: schemaState.currentDescriptors,
+        },
+      });
+      await this.store.deleteRecord(INDEX_SCHEMA_CANDIDATE_ID);
+
+      for (const typeName of schemaState.changedTypeNames) {
+        await this.store.updateRecord(schemaFindingId(typeName), {
+          status: "repaired",
+          correlationId: runId,
+        });
+      }
+
+      checkpoint.schemaSignature = schemaState.signature;
+      checkpoint.schemaTypeName = undefined;
+      checkpoint.schemaCursor = undefined;
+      checkpoint.schemaReconcileComplete = true;
+    }
+
+    if (repairDeferred && indexCycleComplete) {
+      checkpoint.structuredCursor = undefined;
+      checkpoint.structuredComplete = false;
+      checkpoint.textCursor = undefined;
+      checkpoint.textComplete = false;
+    }
+
+    const continuation =
+      !indexCycleComplete ||
+      (repairMode === "apply" &&
+        schemaState.confirmed &&
+        (!checkpoint.schemaReconcileComplete || repairDeferred));
+
+    const preserveSchemaProgress =
+      repairMode === "apply" &&
+      schemaState.confirmed &&
+      schemaState.findingCount > 0 &&
+      !schemaRepairComplete;
 
     await this.writeCheckpoint(
-      cycleComplete
+      indexCycleComplete && !repairDeferred && !preserveSchemaProgress
         ? {
             retentionCursor: checkpoint.retentionCursor,
+            schemaSignature: checkpoint.schemaSignature,
+            schemaReconcileComplete: checkpoint.schemaReconcileComplete,
           }
         : checkpoint,
-      cycleComplete ? "complete" : "running",
+      continuation ? "running" : "complete",
     );
 
     const result: TypeInfoORMHealthMonitorRunResult = {
@@ -670,9 +723,12 @@ export class TypeInfoORMHealthMonitor {
       orphanFindingCount,
       confirmedOrphanCount,
       repairedCount,
+      schemaDriftFindingCount: schemaState.findingCount,
+      confirmedSchemaDriftCount: schemaState.confirmedCount,
+      schemaReconciledItemCount,
       suspiciousCount,
       expiredRecordCount: retention.deletedCount,
-      continuation: !cycleComplete,
+      continuation,
     };
 
     await this.store.updateRecord(runId, {
