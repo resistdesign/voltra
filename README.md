@@ -160,6 +160,7 @@ App features include form generation via TypeInfo-driven AutoForm/AutoField with
 | RPC                                                                         | Easy Layout                                                     | Full Parameter Support: Groups/Labels/Types/etc...            |
 | Auth: Public/Secured/Role Based                                             | State Management                                                | Packs: Easy to add Database/Storage/Auth/Functions/etc...     |
 | Routing: Nesting/Handlers/Injected Handlers                                 | Routing: Param Handlers/Parallel Routes/Hooks                   | Utilities: Patching Stacks/Constants/Standard Includes/etc... |
+| MCP: Authenticated RouteMap tools for LLM clients                           |                                                                  |                                                               |
 | ORM: TypeScript Type Driven Auto-generated Data Contexts with Relationships | Form Generation: AutoForm/AutoField + constraints/relations     | Typed Build Spec Creation                                     |
 |                                                                             | Form Engine: validation, defaults, denied ops, custom type flow | Typed Resource Parameters                                     |
 
