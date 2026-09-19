@@ -17,17 +17,16 @@ import {
   type RouteAuthConfig,
   type RouteMap,
 } from "../Router";
+import {
+  getJSONSchemaFromTypeInfoPack,
+  type TypeInfoPack,
+} from "../../common/TypeParsing";
 
-const DEFAULT_MCP_TOOL_INPUT_SCHEMA: MCPJSONSchema = {
+const DEFAULT_MCP_TOOL_INPUT_SCHEMA = {
   type: "object",
   properties: {},
   additionalProperties: false,
 };
-
-/**
- * JSON Schema used to describe MCP tool inputs and outputs.
- */
-export type MCPJSONSchema = Record<string, unknown>;
 
 /**
  * MCP tool annotations advertised to clients.
@@ -65,10 +64,18 @@ export type MCPTool<
   title?: string;
   /** Description used by the model to decide when to call the tool. */
   description?: string;
-  /** JSON Schema for the tool argument object. */
-  inputSchema?: MCPJSONSchema;
-  /** Optional JSON Schema for structured tool output. */
-  outputSchema?: MCPJSONSchema;
+  /**
+   * Voltra TypeInfo contract for tool arguments.
+   *
+   * Voltra converts this to JSON Schema for MCP automatically.
+   */
+  inputTypeInfo?: TypeInfoPack;
+  /**
+   * Optional Voltra TypeInfo contract for structured tool output.
+   *
+   * Voltra converts this to JSON Schema for MCP automatically.
+   */
+  outputTypeInfo?: TypeInfoPack;
   /** MCP behavior hints such as read-only or destructive operation hints. */
   annotations?: MCPToolAnnotations;
 } & (
@@ -161,11 +168,15 @@ const getMCPServer = (
     const handler = tool.handler
       ? tool.handler
       : tool.handlerFactory(eventData);
-    const inputSchema = fromJsonSchema(
-      tool.inputSchema ?? DEFAULT_MCP_TOOL_INPUT_SCHEMA,
-    );
-    const outputSchema = tool.outputSchema
-      ? fromJsonSchema(tool.outputSchema)
+    const inputJSONSchema = tool.inputTypeInfo
+      ? getJSONSchemaFromTypeInfoPack(tool.inputTypeInfo)
+      : DEFAULT_MCP_TOOL_INPUT_SCHEMA;
+    const outputJSONSchema = tool.outputTypeInfo
+      ? getJSONSchemaFromTypeInfoPack(tool.outputTypeInfo)
+      : undefined;
+    const inputSchema = fromJsonSchema(inputJSONSchema);
+    const outputSchema = outputJSONSchema
+      ? fromJsonSchema(outputJSONSchema)
       : undefined;
 
     server.registerTool(
@@ -187,7 +198,7 @@ const getMCPServer = (
               text: getToolResultText(result),
             },
           ],
-          ...(tool.outputSchema ? { structuredContent: result } : {}),
+          ...(tool.outputTypeInfo ? { structuredContent: result } : {}),
         };
       },
     );
