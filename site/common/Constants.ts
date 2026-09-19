@@ -1,4 +1,5 @@
 export const DEMO_ORM_ROUTE_PATH = "/db";
+export const DEMO_MCP_ROUTE_PATH = "/mcp";
 export const BASE_DOMAIN = "voltra.app";
 export const DOMAINS = {
   APP: `docs.${BASE_DOMAIN}`,
