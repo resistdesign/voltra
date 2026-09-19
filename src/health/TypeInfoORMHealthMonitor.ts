@@ -115,6 +115,17 @@ type AuditCandidate = {
   textIndexFields?: string[];
 };
 
+type SchemaDriftState = {
+  baselineDescriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[];
+  currentDescriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[];
+  signature: string;
+  changedTypeNames: string[];
+  removedDescriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[];
+  findingCount: number;
+  confirmedCount: number;
+  confirmed: boolean;
+};
+
 const INDEX_AUDIT_CHECKPOINT_ID = "health:index-audit";
 const INDEX_SCHEMA_BASELINE_ID = "health:index-schema:baseline";
 const INDEX_SCHEMA_CANDIDATE_ID = "health:index-schema:candidate";
