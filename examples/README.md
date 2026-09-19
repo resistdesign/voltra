@@ -31,6 +31,13 @@ Use `orm-indexing.ts` as the starting point for unified field-capability and
 backend configuration.
 Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup after out-of-band writes and schema-driven index changes.
 
+## MCP Reference
+
+- Basic MCP RouteMap example: `examples/api/mcp-routing.ts`
+- Live demo implementation: `site/api/mcp.ts`
+- Live demo UI: `site/app/src/client/MCPDemo.tsx`
+- Tool schemas are generated from Voltra `TypeInfoPack` values; consumers do not hand-author JSON Schema.
+
 ## ORM Search + Indexing Reference
 
 - Multi-field text indexing example: `site/api/routeMap.ts`

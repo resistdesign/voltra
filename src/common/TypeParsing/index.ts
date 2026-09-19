@@ -6,3 +6,5 @@
 export * from "./Validation";
 export * from "./TypeInfo";
 export * from "./Constants";
+
+export * from "./TypeInfoJSONSchema";

@@ -5,4 +5,4 @@
 - [x] Preserve MCP HTTP status, headers, and body through the existing cloud-function router.
 - [x] Abstract standard HTTP Response detection and avoid MCP-specific early-return handling in Router.
 - [x] Add focused tests and a consumer example.
-- [ ] Verify tests/build/exports and open the PR.
+- [x] Verify tests/build/exports and open the PR.

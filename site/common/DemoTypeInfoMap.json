@@ -213,5 +213,312 @@
       "persisted": true
     },
     "primaryField": "id"
+  },
+  "MCPDemoPerson": {
+    "tags": {
+      "persisted": true
+    },
+    "fields": {
+      "id": {
+        "type": "string",
+        "array": false,
+        "readonly": true,
+        "optional": true,
+        "tags": {
+          "label": "ID",
+          "primaryField": true,
+          "hidden": true,
+          "deniedOperations": {
+            "create": true,
+            "update": true,
+            "delete": true
+          }
+        }
+      },
+      "firstName": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {
+          "label": "First Name",
+          "indexed": {
+            "text": true,
+            "exact": true,
+            "range": true
+          }
+        }
+      },
+      "lastName": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {
+          "label": "Last Name",
+          "indexed": {
+            "text": true,
+            "exact": true,
+            "range": true
+          }
+        }
+      },
+      "age": {
+        "type": "number",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {
+          "label": "Age",
+          "format": "number",
+          "constraints": {
+            "defaultValue": "18.0",
+            "step": 0.5,
+            "min": 18,
+            "max": 150,
+            "pattern": "\\d+"
+          },
+          "indexed": {
+            "exact": true,
+            "range": true,
+            "decimal": true
+          }
+        }
+      },
+      "likesCheese": {
+        "type": "boolean",
+        "array": false,
+        "readonly": true,
+        "optional": false,
+        "tags": {
+          "label": "Likes Cheese",
+          "constraints": {
+            "defaultValue": true
+          },
+          "deniedOperations": {
+            "create": true,
+            "update": true,
+            "delete": true
+          }
+        }
+      },
+      "dietaryRestrictions": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "possibleValues": [
+          "Vegan",
+          "Vegetarian",
+          "Pescatarian",
+          "Keto",
+          "Paleo",
+          "None"
+        ],
+        "tags": {
+          "label": "Dietary Restrictions",
+          "indexed": {
+            "exact": true,
+            "range": true
+          }
+        }
+      }
+    },
+    "primaryField": "id"
+  },
+  "MCPDemoListPeopleInput": {
+    "fields": {
+      "itemsPerPage": {
+        "type": "number",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {
+          "constraints": {
+            "min": 1,
+            "max": 20,
+            "defaultValue": 5
+          }
+        }
+      },
+      "cursor": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "itemsPerPage"
+  },
+  "MCPDemoListPeopleOutput": {
+    "fields": {
+      "items": {
+        "type": "string",
+        "array": true,
+        "readonly": false,
+        "optional": false,
+        "typeReference": "MCPDemoPerson",
+        "tags": {}
+      },
+      "cursor": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "items"
+  },
+  "MCPDemoGetPersonInput": {
+    "fields": {
+      "id": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "id"
+  },
+  "MCPDemoCar": {
+    "tags": {
+      "persisted": true
+    },
+    "fields": {
+      "id": {
+        "type": "string",
+        "array": false,
+        "readonly": true,
+        "optional": true,
+        "tags": {
+          "label": "ID",
+          "primaryField": true,
+          "hidden": true,
+          "deniedOperations": {
+            "create": true,
+            "update": true,
+            "delete": true
+          }
+        }
+      },
+      "make": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {
+          "label": "Make",
+          "indexed": {
+            "text": true,
+            "exact": true,
+            "range": true
+          }
+        }
+      },
+      "model": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {
+          "label": "Model",
+          "indexed": {
+            "text": true,
+            "exact": true,
+            "range": true
+          }
+        }
+      },
+      "year": {
+        "type": "number",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {
+          "label": "Year",
+          "constraints": {
+            "min": 1900,
+            "max": 2022,
+            "step": 1
+          },
+          "indexed": {
+            "exact": true,
+            "range": true
+          }
+        }
+      }
+    },
+    "primaryField": "id"
+  },
+  "MCPDemoSearchCarsInput": {
+    "fields": {
+      "itemsPerPage": {
+        "type": "number",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {
+          "constraints": {
+            "min": 1,
+            "max": 20,
+            "defaultValue": 5
+          }
+        }
+      },
+      "cursor": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      },
+      "query": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": false,
+        "tags": {}
+      },
+      "field": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "possibleValues": [
+          "make",
+          "model"
+        ],
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "itemsPerPage"
+  },
+  "MCPDemoSearchCarsOutput": {
+    "fields": {
+      "items": {
+        "type": "string",
+        "array": true,
+        "readonly": false,
+        "optional": false,
+        "typeReference": "MCPDemoCar",
+        "tags": {}
+      },
+      "cursor": {
+        "type": "string",
+        "array": false,
+        "readonly": false,
+        "optional": true,
+        "tags": {}
+      }
+    },
+    "tags": {},
+    "primaryField": "items"
   }
 }

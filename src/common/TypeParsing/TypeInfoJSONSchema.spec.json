@@ -1,0 +1,64 @@
+{
+  "file": "./TypeInfoJSONSchema.test-utils.ts",
+  "tests": [
+    {
+      "export": "runTypeInfoJSONSchemaScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "draft": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "tags", "mode", "region"],
+        "nameTitle": "Name",
+        "namePattern": "^[A-Z]",
+        "countMinimum": 1,
+        "countMaximum": 20,
+        "countDefault": 5,
+        "tagsType": "array",
+        "tagsItemType": "string",
+        "tagsMinItems": 1,
+        "modeEnum": ["fast", "safe"],
+        "regionType": "string",
+        "regionHasEnum": false,
+        "emailFormat": "email",
+        "addressRef": "#/$defs/Address",
+        "addressesItemRef": "#/$defs/Address",
+        "idReadOnly": true,
+        "definitionNames": ["Address", "Request", "UnionRequest"],
+        "zipPattern": "^\\d{5}$"
+      }
+    },
+    {
+      "export": "runTypeInfoJSONSchemaUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "type": "object",
+          "properties": {
+            "byId": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "byEmail": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    {
+      "export": "runTypeInfoJSONSchemaMissingEntryScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "TypeInfo entry type does not exist: Missing"
+    }
+  ]
+}

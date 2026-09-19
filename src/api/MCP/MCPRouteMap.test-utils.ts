@@ -1,7 +1,5 @@
-import {
-  addMCPToRouteMap,
-  type MCPJSONSchema,
-} from "./MCPRouteMap";
+import { addMCPToRouteMap } from "./MCPRouteMap";
+import type { TypeInfoMap } from "../../common/TypeParsing";
 import {
   AWS,
   handleCloudFunctionEvent,
@@ -18,15 +16,39 @@ const CLIENT_META = {
   "io.modelcontextprotocol/clientCapabilities": {},
 };
 
-const WHO_AM_I_INPUT_SCHEMA: MCPJSONSchema = {
-  type: "object",
-  properties: {
-    message: {
-      type: "string",
+const MCP_TEST_TYPE_INFO_MAP: TypeInfoMap = {
+  WhoAmIInput: {
+    fields: {
+      message: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
     },
   },
-  required: ["message"],
-  additionalProperties: false,
+  WhoAmIOutput: {
+    fields: {
+      userId: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+      roles: {
+        type: "string",
+        array: true,
+        readonly: false,
+        optional: false,
+      },
+      message: {
+        type: "string",
+        array: false,
+        readonly: false,
+        optional: false,
+      },
+    },
+  },
 };
 
 const getRouteMap = (): RouteMap =>
@@ -43,7 +65,14 @@ const getRouteMap = (): RouteMap =>
         {
           name: "whoAmI",
           description: "Return the authenticated caller and supplied message.",
-          inputSchema: WHO_AM_I_INPUT_SCHEMA,
+          inputTypeInfo: {
+            entryTypeName: "WhoAmIInput",
+            typeInfoMap: MCP_TEST_TYPE_INFO_MAP,
+          },
+          outputTypeInfo: {
+            entryTypeName: "WhoAmIOutput",
+            typeInfoMap: MCP_TEST_TYPE_INFO_MAP,
+          },
           annotations: {
             readOnlyHint: true,
           },
@@ -152,6 +181,10 @@ export const runMCPToolsListScenario = async () => {
     name: tool.name,
     description: tool.description,
     inputType: tool.inputSchema.type,
+    inputMessageType: tool.inputSchema.properties?.message?.type,
+    inputRequired: tool.inputSchema.required,
+    outputRolesType: tool.outputSchema.properties?.roles?.type,
+    outputRolesItemType: tool.outputSchema.properties?.roles?.items?.type,
     readOnlyHint: tool.annotations?.readOnlyHint,
   };
 };
@@ -170,5 +203,6 @@ export const runMCPToolHandlerFactoryScenario = async () => {
   return {
     statusCode: response.statusCode,
     toolResult,
+    structuredContent: parsed.result.structuredContent,
   };
 };
