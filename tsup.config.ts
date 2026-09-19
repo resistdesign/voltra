@@ -8,6 +8,7 @@ export default defineConfig([
       "web/index": "src/web/index.ts",
       "native/index": "src/native/index.ts",
       "common/index": "src/common/index.ts",
+      "health/index": "src/health/index.ts",
       "build/index": "src/build/index.ts",
       "iac/index": "src/iac/index.ts",
       "iac/packs/index": "src/iac/packs/index.ts",
