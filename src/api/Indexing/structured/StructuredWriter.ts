@@ -50,7 +50,6 @@ export type StructuredWriterDependencies = {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredOccupancyFieldMap,
-    typeName?: string,
   ): Promise<boolean>;
   /**
    * Store term index entries.
@@ -336,7 +335,6 @@ export class StructuredDdbWriter {
         expectedVersion,
         normalized,
         occupancyFields,
-        context.typeName ?? previousState?.typeName,
       );
 
       if (!swapped) {
@@ -423,8 +421,7 @@ export class StructuredDdbWriter {
       if (
         confirmed?.version === writtenVersion &&
         structurallyEqual(normalizeFields(confirmed.fields), normalized) &&
-        structurallyEqual(confirmed.occupancyFields ?? {}, occupancyFields) &&
-        (context.typeName === undefined || confirmed.typeName === context.typeName)
+        structurallyEqual(confirmed.occupancyFields ?? {}, occupancyFields)
       ) {
         return;
       }
