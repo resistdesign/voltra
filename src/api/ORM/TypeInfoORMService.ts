@@ -98,6 +98,15 @@ import {
 } from "../Indexing/query";
 import { normalizeDocId } from "../Indexing/docId";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredIndexRecords";
+import type {
+  StructuredDocumentListOptions,
+  StructuredDocumentPage,
+} from "../Indexing/structured/SearchStructured";
+import { StructuredIndexVersionMismatchError } from "../Indexing/structured/StructuredWriter";
+import type {
+  TextIndexDocumentListOptions,
+  TextIndexDocumentPage,
+} from "../Indexing/Types";
 import type { WhereValue } from "../Indexing/structured/Types";
 import { STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY } from "../Indexing/structured/Types";
 import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";
@@ -325,6 +334,65 @@ export type TypeInfoORMOperationObservation = {
 export type TypeInfoORMOperationObserver = (
   event: TypeInfoORMOperationObservation,
 ) => void;
+
+/**
+ * Type-level metadata exposed to Health and maintenance tooling.
+ */
+export type TypeInfoORMIndexMaintenanceTypeDescriptor = {
+  /** TypeInfo type name. */
+  typeName: string;
+  /** Primary field used by the canonical data driver. */
+  primaryField: string;
+  /** Prefix shared by every persisted qualified index field for this type. */
+  qualifiedFieldPrefix: string;
+  /** Current structured exact/membership/range fields for this type. */
+  structuredFields: string[];
+  /** Current full-text fields for this type. */
+  textFields: string[];
+};
+
+/**
+ * Result of a canonical-item maintenance verification read.
+ */
+export type TypeInfoORMIndexMaintenanceVerification = {
+  /** Whether the canonical item exists. */
+  exists: boolean;
+  /** Read consistency used for the verification. */
+  consistency: "strong" | "bestEffort";
+  /** Canonical item when it exists. */
+  item?: Partial<TypeInfoDataItem>;
+};
+
+/**
+ * Options for safe orphan index cleanup.
+ */
+export type TypeInfoORMOrphanIndexCleanupConfig = {
+  /**
+   * Structured document mirror version observed by the auditing caller.
+   *
+   * When supplied, structured cleanup is compare-and-swap guarded against
+   * index writes that happen after the audit.
+   */
+  structuredVersion?: number;
+};
+
+/**
+ * Result of one type+id orphan cleanup attempt.
+ */
+export type TypeInfoORMOrphanIndexCleanupResult = {
+  /** Outcome of the guarded cleanup attempt. */
+  status:
+    | "cleaned"
+    | "canonicalExists"
+    | "concurrentCanonicalRestored"
+    | "indexChanged"
+    | "strongConsistencyUnavailable"
+    | "maintenanceUnsupported";
+  /** Whether any index cleanup write was attempted. */
+  cleanupAttempted: boolean;
+  /** Whether current canonical state was reindexed during race recovery. */
+  canonicalReindexed: boolean;
+};
 
 /**
  * Optional field overrides for manual indexing maintenance operations.
@@ -1300,6 +1368,270 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     return { occupancyFields };
+  };
+
+  /**
+   * Return all TypeInfo types known to this ORM for index maintenance.
+   * @returns Type descriptors derived from current ORM/index configuration.
+   */
+  getIndexMaintenanceTypeDescriptors =
+    (): TypeInfoORMIndexMaintenanceTypeDescriptor[] => {
+      const descriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[] = [];
+
+      for (const typeName of Object.keys(this.config.typeInfoMap).sort()) {
+        const typeInfo = this.getTypeInfo(typeName);
+        const capabilities = this.getIndexedFieldCapabilities(typeName);
+        const structuredFields: string[] = [];
+        const textFields: string[] = [];
+
+        for (const [fieldName, capability] of Object.entries(capabilities)) {
+          const qualifiedField = qualifyIndexField(
+            typeName,
+            capability.field ?? fieldName,
+          );
+
+          if (
+            capability.exact ||
+            capability.membership ||
+            capability.range
+          ) {
+            structuredFields.push(qualifiedField);
+          }
+
+          if (capability.text) {
+            textFields.push(qualifiedField);
+          }
+        }
+
+        descriptors.push({
+          typeName,
+          primaryField: String(typeInfo.primaryField),
+          qualifiedFieldPrefix: qualifyIndexField(typeName, ""),
+          structuredFields: Array.from(new Set(structuredFields)).sort(),
+          textFields: Array.from(new Set(textFields)).sort(),
+        });
+      }
+
+      return descriptors;
+    };
+
+  /**
+   * Enumerate bounded structured document mirrors when supported.
+   * @param options Paging options.
+   * @returns Structured index document page, or undefined when unsupported.
+   */
+  listStructuredIndexDocuments = async (
+    options: StructuredDocumentListOptions = {},
+  ): Promise<StructuredDocumentPage | undefined> =>
+    this.config.indexing?.backend.values.documents?.list?.(options);
+
+  /**
+   * Enumerate bounded full-text document mirrors when supported.
+   * @param options Paging options.
+   * @returns Full-text document page, or undefined when unsupported.
+   */
+  listTextIndexDocuments = async (
+    options: TextIndexDocumentListOptions = {},
+  ): Promise<TextIndexDocumentPage | undefined> =>
+    this.config.indexing?.backend.text?.listDocuments?.(options);
+
+  /**
+   * Verify canonical item existence for index maintenance.
+   *
+   * Drivers with a strong-read capability are preferred. Best-effort reads are
+   * still useful for diagnostics but must not authorize destructive healing.
+   *
+   * @param typeName TypeInfo type to verify.
+   * @param primaryFieldValue Canonical item identifier.
+   * @returns Existence result and the consistency level used.
+   */
+  verifyStoredItemForIndexMaintenance = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+  ): Promise<TypeInfoORMIndexMaintenanceVerification> => {
+    const driver = this.config.getDriver(typeName);
+    if (!driver) {
+      throw new Error(TypeInfoORMServiceError.INVALID_DRIVER);
+    }
+
+    const strongReader = driver.readItemStronglyConsistent;
+    const reader = strongReader ?? driver.readItem;
+    const consistency = strongReader ? "strong" : "bestEffort";
+
+    try {
+      const item = await reader.call(driver, primaryFieldValue as any);
+      return { exists: true, consistency, item };
+    } catch (error: any) {
+      if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+        return { exists: false, consistency };
+      }
+
+      throw error;
+    }
+  };
+
+  /**
+   * Safely clean orphaned index state for exactly one type+id.
+   *
+   * The method refuses destructive cleanup without a strongly consistent
+   * canonical read. It rechecks canonical state after destructive phases and
+   * reindexes a concurrently-created item before returning.
+   *
+   * @param typeName TypeInfo type being repaired.
+   * @param primaryFieldValue Canonical item identifier.
+   * @param config Guard data captured during the audit.
+   * @returns Guarded cleanup outcome.
+   */
+  cleanupOrphanedIndexState = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+    config: TypeInfoORMOrphanIndexCleanupConfig = {},
+  ): Promise<TypeInfoORMOrphanIndexCleanupResult> => {
+    const descriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!descriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const verification = await this.verifyStoredItemForIndexMaintenance(
+      typeName,
+      primaryFieldValue,
+    );
+    if (verification.consistency !== "strong") {
+      return {
+        status: "strongConsistencyUnavailable",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    if (verification.exists) {
+      await this.reindexStoredItem(typeName, primaryFieldValue);
+      return {
+        status: "canonicalExists",
+        cleanupAttempted: false,
+        canonicalReindexed: true,
+      };
+    }
+
+    const indexing = this.config.indexing;
+    if (!indexing) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    const structuredWriter = indexing.backend.valueWriter;
+    const textMaintenance = indexing.backend.text;
+    const hasStructuredCleanup =
+      config.structuredVersion !== undefined &&
+      descriptor.structuredFields.length > 0;
+    const hasTextCleanup = descriptor.textFields.length > 0;
+
+    if (
+      (hasStructuredCleanup && !structuredWriter) ||
+      (hasTextCleanup && !textMaintenance?.removeDocumentIndex)
+    ) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    const restoreIfCanonicalAppeared = async (): Promise<boolean> => {
+      const current = await this.verifyStoredItemForIndexMaintenance(
+        typeName,
+        primaryFieldValue,
+      );
+
+      if (current.consistency !== "strong" || !current.exists) {
+        return false;
+      }
+
+      await this.reindexStoredItem(typeName, primaryFieldValue);
+      return true;
+    };
+
+    let cleanupAttempted = false;
+
+    if (hasStructuredCleanup && structuredWriter) {
+      cleanupAttempted = true;
+      try {
+        await structuredWriter.write(
+          normalizeDocId(primaryFieldValue, descriptor.primaryField),
+          {},
+          {
+            ...this.buildIndexWriteContext(typeName),
+            deleted: true,
+            expectedVersion: config.structuredVersion,
+          },
+        );
+      } catch (error) {
+        if (await restoreIfCanonicalAppeared()) {
+          return {
+            status: "concurrentCanonicalRestored",
+            cleanupAttempted: true,
+            canonicalReindexed: true,
+          };
+        }
+
+        if (error instanceof StructuredIndexVersionMismatchError) {
+          return {
+            status: "indexChanged",
+            cleanupAttempted: true,
+            canonicalReindexed: false,
+          };
+        }
+
+        throw error;
+      }
+
+      if (await restoreIfCanonicalAppeared()) {
+        return {
+          status: "concurrentCanonicalRestored",
+          cleanupAttempted: true,
+          canonicalReindexed: true,
+        };
+      }
+    }
+
+    if (hasTextCleanup && textMaintenance?.removeDocumentIndex) {
+      const docId = normalizeDocId(primaryFieldValue, descriptor.primaryField);
+
+      for (const indexField of descriptor.textFields) {
+        cleanupAttempted = true;
+        await textMaintenance.removeDocumentIndex(docId, indexField);
+
+        if (await restoreIfCanonicalAppeared()) {
+          return {
+            status: "concurrentCanonicalRestored",
+            cleanupAttempted: true,
+            canonicalReindexed: true,
+          };
+        }
+      }
+    }
+
+    if (await restoreIfCanonicalAppeared()) {
+      return {
+        status: "concurrentCanonicalRestored",
+        cleanupAttempted,
+        canonicalReindexed: true,
+      };
+    }
+
+    return {
+      status: "cleaned",
+      cleanupAttempted,
+      canonicalReindexed: false,
+    };
   };
 
   /**
