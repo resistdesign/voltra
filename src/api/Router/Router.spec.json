@@ -5,7 +5,12 @@
       "export": "runRouterRouteKeysScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["\"alpha\"", "\"beta\"", "\"gamma\"", "\"status\""]
+      "expectation": [
+        "\"alpha\"",
+        "\"beta\"",
+        "\"gamma\"",
+        "\"status\""
+      ]
     },
     {
       "export": "runRouterNormalizedScenario",
@@ -14,14 +19,20 @@
       "expectation": {
         "authInfo": {
           "userId": "user-1",
-          "roles": ["admin"]
+          "roles": [
+            "admin"
+          ]
         },
         "headers": {
-          "origin": ["https://example.com"]
+          "origin": [
+            "https://example.com"
+          ]
         },
         "method": "POST",
         "path": "status",
-        "body": ["payload"]
+        "body": [
+          "payload"
+        ]
       }
     },
     {
@@ -33,7 +44,7 @@
         "headers": {
           "Access-Control-Allow-Origin": "https://example.com",
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
           "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "\"ok\""
@@ -48,7 +59,7 @@
         "headers": {
           "Access-Control-Allow-Origin": "https://example.com",
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
           "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "OK"
@@ -63,7 +74,7 @@
         "headers": {
           "Access-Control-Allow-Origin": "https://example.com",
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
           "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "Not Found"
@@ -78,7 +89,7 @@
         "headers": {
           "Access-Control-Allow-Origin": "https://example.com",
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
           "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "Unauthorized"
@@ -93,10 +104,19 @@
         "headers": {
           "Access-Control-Allow-Origin": "https://example.com",
           "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
           "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "{\n  \"status\": \"Internal Server Error\",\n  \"message\": \"boom\",\n  \"error\": {}\n}"
+      }
+    },
+    {
+      "export": "runRouterStandardHTTPResponseDetectionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "standardResponse": true,
+        "plainObject": false
       }
     }
   ]

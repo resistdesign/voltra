@@ -88,3 +88,42 @@ export type Person = PersistableItem & {
   dietaryRestrictions:
     "Vegan" | "Vegetarian" | "Pescatarian" | "Keto" | "Paleo" | "None";
 };
+
+
+type MCPDemoPagingInput = {
+  /**
+   * @constraints.min 1
+   * @constraints.max 20
+   * @constraints.defaultValue 5
+   */
+  itemsPerPage?: number;
+  cursor?: string;
+};
+
+export type MCPDemoPerson = Pick<
+  Person,
+  "id" | "firstName" | "lastName" | "age" | "dietaryRestrictions" | "likesCheese"
+>;
+
+export type MCPDemoListPeopleInput = MCPDemoPagingInput;
+
+export type MCPDemoListPeopleOutput = {
+  items: MCPDemoPerson[];
+  cursor?: string;
+};
+
+export type MCPDemoGetPersonInput = {
+  id: string;
+};
+
+export type MCPDemoCar = Pick<Car, "id" | "make" | "model" | "year">;
+
+export type MCPDemoSearchCarsInput = MCPDemoPagingInput & {
+  query: string;
+  field?: "make" | "model";
+};
+
+export type MCPDemoSearchCarsOutput = {
+  items: MCPDemoCar[];
+  cursor?: string;
+};
