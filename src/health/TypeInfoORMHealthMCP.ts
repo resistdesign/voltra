@@ -147,6 +147,13 @@ export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
    * so authorization is intentionally required rather than defaulted.
    */
   authConfig: RouteAuthConfig;
+  /**
+   * Expose the destructive `healthRepair` tool.
+   *
+   * Defaults to false so a Health MCP endpoint is read-only unless the
+   * application explicitly opts into agent-triggered repair.
+   */
+  enableRepairTool?: boolean;
 };
 
 /**
@@ -158,8 +165,8 @@ export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
  *
  * The exposed tools are deliberately small:
  * - `healthPreview` performs one bounded non-destructive monitor pass.
- * - `healthRepair` performs one bounded pass and applies only the monitor's
- *   strongly validated repairs.
+ * - `healthRepair` is opt-in and performs one bounded pass while applying
+ *   only the monitor's strongly validated repairs.
  *
  * Both return continuation state so an agent or scheduled worker can continue
  * larger jobs without turning one request into unbounded maintenance work.
@@ -189,15 +196,19 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
         handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
           monitor.preview(),
       },
-      {
-        name: "healthRepair",
-        description:
-          "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true when additional bounded work remains.",
-        outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
-        annotations: REPAIR_ANNOTATIONS,
-        handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
-          monitor.repair(),
-      },
+      ...(config.enableRepairTool
+        ? [
+            {
+              name: "healthRepair",
+              description:
+                "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true when additional bounded work remains.",
+              outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
+              annotations: REPAIR_ANNOTATIONS,
+              handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
+                monitor.repair(),
+            },
+          ]
+        : []),
     ],
   });
 };
