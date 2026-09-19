@@ -133,6 +133,11 @@ export class InMemoryDataItemDBDriver<
   };
 
   /**
+   * Strongly consistent maintenance read.
+   */
+  public readItemStronglyConsistent = this.readItem;
+
+  /**
    * Update an item in memory.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
