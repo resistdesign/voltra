@@ -6,7 +6,10 @@
  */
 import { ExactIndex } from "../exact/ExactIndex";
 import { LossyIndex } from "../lossy/LossyIndex";
-import { encodeIndexScalarIdentity } from "../IndexTable";
+import {
+  decodeIndexScalarIdentity,
+  encodeIndexScalarIdentity,
+} from "../IndexTable";
 import type {
   DocId,
   DocTokenBatchReader,
@@ -16,6 +19,8 @@ import type {
   LossyPagingReader,
   LossyPostingsPage,
   LossyPostingsPageOptions,
+  TextIndexDocumentListOptions,
+  TextIndexDocumentPage,
   TokenStats,
 } from "../Types";
 
@@ -227,5 +232,79 @@ export class FullTextMemoryBackend
         this.createMembershipKey(key.docId, key.indexField, key.token),
       ),
     );
+  }
+
+  /**
+   * Enumerate indexed document/field pairs for bounded maintenance.
+   * @param options Paging options.
+   * @returns A deterministic page of text-index document mirrors.
+   */
+  async listDocuments(
+    options: TextIndexDocumentListOptions = {},
+  ): Promise<TextIndexDocumentPage> {
+    const pairs = new Map<
+      string,
+      { docId: DocId; indexField: string; identity: string }
+    >();
+
+    for (const key of this.docTokenMembership) {
+      const parsed = JSON.parse(key) as [string, string, string];
+      const [encodedDocId, indexField] = parsed;
+      const identity = JSON.stringify([encodedDocId, indexField]);
+      if (!pairs.has(identity)) {
+        pairs.set(identity, {
+          docId: decodeIndexScalarIdentity(encodedDocId),
+          indexField,
+          identity,
+        });
+      }
+    }
+
+    const ordered = Array.from(pairs.values()).sort((left, right) =>
+      left.identity < right.identity ? -1 : left.identity > right.identity ? 1 : 0,
+    );
+    const start = options.cursor
+      ? Math.max(
+          0,
+          ordered.findIndex((entry) => entry.identity === options.cursor) + 1,
+        )
+      : 0;
+    const limit = Math.max(1, options.limit ?? 100);
+    const page = ordered.slice(start, start + limit);
+    const last = page[page.length - 1];
+
+    return {
+      documents: page.map(({ docId, indexField }) => ({ docId, indexField })),
+      ...(last && start + page.length < ordered.length
+        ? { cursor: last.identity }
+        : {}),
+    };
+  }
+
+  /**
+   * Remove every in-memory text-index artifact for one document/field pair.
+   * @param docId Document id to clean.
+   * @param indexField Fully qualified persisted index field.
+   * @returns Promise resolved when cleanup is complete.
+   */
+  async removeDocumentIndex(
+    docId: DocId,
+    indexField: string,
+  ): Promise<void> {
+    const encodedDocId = encodeIndexScalarIdentity(docId);
+    const matching: Array<{ key: string; token: string }> = [];
+
+    for (const key of this.docTokenMembership) {
+      const parsed = JSON.parse(key) as [string, string, string];
+      if (parsed[0] === encodedDocId && parsed[1] === indexField) {
+        matching.push({ key, token: parsed[2] });
+      }
+    }
+
+    for (const { key, token } of matching) {
+      this.LossyIndex.removePosting(token, indexField, docId);
+      this.ExactIndex.removePositions(token, indexField, docId);
+      this.docTokenMembership.delete(key);
+    }
   }
 }
