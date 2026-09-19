@@ -19,6 +19,7 @@ Add an optional, infrastructure-neutral Voltra health subsystem that can observe
   - [ ] prunes expired Health records without requiring storage-specific TTL support.
 - [ ] Add focused specs for observation, persistence/progress, orphan detection, destructive-validation safety, repair idempotency, and bounded continuation.
 - [ ] Update consumer/export checks and public documentation/examples for the new barrel.
+- [ ] Add a focused demo-site/IaC example that provisions a Health store and runs the Health monitor in the existing Voltra demo architecture.
 - [ ] Run build, core tests, export checks, and consumer smoke checks; fix regressions.
 - [ ] Open a professional PR with implementation/safety notes and verification evidence.
 
