@@ -16,6 +16,7 @@ const requiredExports = [
   "./native",
   "./build",
   "./common",
+  "./health",
   "./iac",
   "./iac/packs",
 ];
@@ -27,6 +28,7 @@ const requiredDistFiles = [
   "native/index.js",
   "build/index.js",
   "common/index.js",
+  "health/index.js",
 ];
 
 const requiredRuntimeExports = [
@@ -45,6 +47,10 @@ const requiredRuntimeExports = [
   {
     distFilePath: "build/index.js",
     names: ["getTypeInfoMapFromTypeScript"],
+  },
+  {
+    distFilePath: "health/index.js",
+    names: ["DriverHealthStore"],
   },
 ];
 
@@ -228,6 +234,8 @@ import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";
 import { createWebFormRenderer, AutoField } from "@resistdesign/voltra/web";
 import { createNativeFormRenderer } from "@resistdesign/voltra/native";
 import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
+import type { HealthRecord, HealthStore } from "@resistdesign/voltra/health";
+import { DriverHealthStore } from "@resistdesign/voltra/health";
 
 const routeMap: RouteMap = addRoutesToRouteMap({}, []);
 const t: TypeInfo = {};
@@ -236,6 +244,13 @@ const dynamoConfig: DynamoDBSpecificConfig = {};
 const inMemoryConfig: InMemorySpecificConfig = {};
 const inMemoryFileConfig: InMemoryFileSpecificConfig = {};
 const s3Config: S3SpecificConfig = { bucketName: "test-bucket", s3Config: {} };
+const healthRecord: HealthRecord = {
+  id: "health-1",
+  kind: "run",
+  createdAt: 0,
+  updatedAt: 0,
+};
+const healthStoreType: HealthStore | undefined = undefined;
 void routeMap;
 void t;
 void tm;
@@ -243,6 +258,9 @@ void dynamoConfig;
 void inMemoryConfig;
 void inMemoryFileConfig;
 void s3Config;
+void healthRecord;
+void healthStoreType;
+void DriverHealthStore;
 void handleCloudFunctionEvent;
 void TypeInfoORMServiceError;
 void createWebFormRenderer;
@@ -271,6 +289,7 @@ void AutoField;
         "@resistdesign/voltra/web": ["dist/web/index.d.ts"],
         "@resistdesign/voltra/native": ["dist/native/index.d.ts"],
         "@resistdesign/voltra/build": ["dist/build/index.d.ts"],
+        "@resistdesign/voltra/health": ["dist/health/index.d.ts"],
       },
     };
 
