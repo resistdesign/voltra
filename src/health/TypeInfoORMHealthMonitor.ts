@@ -529,24 +529,46 @@ export class TypeInfoORMHealthMonitor {
         remainingBudget -= page.documents.length;
 
         for (const document of page.documents) {
-          const matchingTypes = Array.from(
-            new Set(
-              Object.keys(document.fields)
-                .map((field) => descriptorForField(field)?.typeName)
-                .filter((value): value is string => !!value),
-            ),
+          const scopedMatches = Object.keys(document.fields)
+            .map((field) => descriptorForField(field))
+            .filter(
+              (
+                value,
+              ): value is {
+                descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+                removed: boolean;
+              } => !!value,
+            );
+          const uniqueMatches = Array.from(
+            new Map(
+              scopedMatches.map((match) => [
+                `${match.removed ? "removed" : "current"}:${
+                  match.descriptor.typeName
+                }`,
+                match,
+              ]),
+            ).values(),
           );
 
-          if (matchingTypes.length === 1) {
-            await auditCandidate({
-              typeName: matchingTypes[0],
-              docId: document.docId,
-              source: "structured",
-              structuredVersion: document.version,
-            });
+          if (uniqueMatches.length === 1) {
+            const match = uniqueMatches[0];
+            if (match.removed) {
+              await auditRemovedTypeCandidate(match.descriptor, {
+                docId: document.docId,
+                source: "structured",
+                structuredVersion: document.version,
+              });
+            } else {
+              await auditCandidate({
+                typeName: match.descriptor.typeName,
+                docId: document.docId,
+                source: "structured",
+                structuredVersion: document.version,
+              });
+            }
           } else if (
             Object.keys(document.fields).length > 0 &&
-            matchingTypes.length !== 1
+            uniqueMatches.length !== 1
           ) {
             suspiciousCount += 1;
             await this.store.createRecord({
@@ -581,10 +603,16 @@ export class TypeInfoORMHealthMonitor {
         remainingBudget -= page.documents.length;
 
         for (const document of page.documents) {
-          const descriptor = descriptorForField(document.indexField);
-          if (descriptor) {
+          const match = descriptorForField(document.indexField);
+          if (match?.removed) {
+            await auditRemovedTypeCandidate(match.descriptor, {
+              docId: document.docId,
+              source: "text",
+              textIndexFields: [document.indexField],
+            });
+          } else if (match) {
             await auditCandidate({
-              typeName: descriptor.typeName,
+              typeName: match.descriptor.typeName,
               docId: document.docId,
               source: "text",
               textIndexFields: [document.indexField],
