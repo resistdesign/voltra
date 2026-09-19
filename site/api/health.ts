@@ -13,6 +13,7 @@ import {
 import {
   readHealthTableNameFromEnv,
 } from "../common/HealthTable";
+import { DEMO_HEALTH_MCP_ROUTE_PATH } from "../common/Constants";
 
 /**
  * Add a public, read-only Health MCP endpoint to the demo RouteMap.
@@ -45,7 +46,7 @@ export const addDemoHealthMCPToRouteMap = (
 
   return addTypeInfoORMHealthMCPToRouteMap(routeMap, {
     monitor,
-    path: "health-mcp",
+    path: DEMO_HEALTH_MCP_ROUTE_PATH,
     name: "Voltra Health Demo",
     version: "1.0.0",
     authConfig: {
