@@ -495,7 +495,6 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
             typeof item.version === "number" && Number.isFinite(item.version)
               ? item.version
               : 0,
-          ...(item.typeName ? { typeName: item.typeName } : {}),
         })),
         cursor: encodeCursorKey(response.LastEvaluatedKey),
       };
@@ -536,7 +535,6 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     const item = response.Item as {
       fields?: StructuredDocFieldsRecord;
       version?: number;
-      typeName?: string;
       occupancyFields?: StructuredDocFieldsState["occupancyFields"];
     };
     if (!item.fields) {
@@ -549,7 +547,6 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         typeof item.version === "number" && Number.isFinite(item.version)
           ? item.version
           : 0,
-      typeName: item.typeName,
       occupancyFields: item.occupancyFields,
     };
   }
@@ -559,7 +556,6 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredDocFieldsState["occupancyFields"],
-    typeName?: string,
   ): Promise<boolean> {
     if (typeof expectedVersion === "undefined") {
       const createResult = await this.client.putItem({
@@ -569,7 +565,6 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
           fields,
           1,
           occupancyFields,
-          typeName,
         ),
         ConditionExpression: "attribute_not_exists(#pk)",
         ExpressionAttributeNames: {
@@ -588,7 +583,6 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         fields,
         nextVersion,
         occupancyFields,
-        typeName,
       ),
       ConditionExpression:
         "(#version = :expectedVersion) OR (attribute_not_exists(#version) AND :expectedVersion = :zero)",
