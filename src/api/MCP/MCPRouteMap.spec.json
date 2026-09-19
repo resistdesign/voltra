@@ -1,0 +1,50 @@
+{
+  "file": "./MCPRouteMap.test-utils.ts",
+  "tests": [
+    {
+      "export": "runMCPUnauthorizedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+      }
+    },
+    {
+      "export": "runMCPDiscoverScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "contentType": "application/json",
+        "supportedVersions": ["2026-07-28"],
+        "serverName": "Voltra MCP Test"
+      }
+    },
+    {
+      "export": "runMCPToolsListScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "name": "whoAmI",
+        "description": "Return the authenticated caller and supplied message.",
+        "inputType": "object",
+        "readOnlyHint": true
+      }
+    },
+    {
+      "export": "runMCPToolHandlerFactoryScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "toolResult": {
+          "userId": "user-1",
+          "roles": ["MCP", "Admin"],
+          "message": "hello"
+        }
+      }
+    }
+  ]
+}
