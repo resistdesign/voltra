@@ -33,7 +33,7 @@ Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup a
 
 ## MCP Reference
 
-- TypeInfo-driven MCP RouteMap example: `examples/api/mcp-routing.ts`
+- Basic MCP RouteMap example: `examples/api/mcp-routing.ts`
 - Live demo implementation: `site/api/mcp.ts`
 - Live demo UI: `site/app/src/client/MCPDemo.tsx`
 - Tool schemas are generated from Voltra `TypeInfoPack` values; consumers do not hand-author JSON Schema.
