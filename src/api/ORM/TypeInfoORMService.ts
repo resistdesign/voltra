@@ -345,10 +345,40 @@ export type TypeInfoORMIndexMaintenanceTypeDescriptor = {
   primaryField: string;
   /** Prefix shared by every persisted qualified index field for this type. */
   qualifiedFieldPrefix: string;
+  /** Deterministic identity for the current index-relevant TypeInfo schema. */
+  indexFingerprint: string;
   /** Current structured exact/membership/range fields for this type. */
   structuredFields: string[];
   /** Current full-text fields for this type. */
   textFields: string[];
+};
+
+/** Options for one bounded TypeInfo index-schema reconciliation page. */
+export type TypeInfoORMReconcileStoredTypeIndexesPageConfig = {
+  /** Prior descriptor captured before the schema changed. */
+  previousDescriptor?: TypeInfoORMIndexMaintenanceTypeDescriptor;
+  /** Maximum canonical items to reconcile in this page. */
+  itemsPerPage?: number;
+  /** Opaque canonical-driver continuation token. */
+  cursor?: string;
+};
+
+/** Result of one bounded TypeInfo index-schema reconciliation page. */
+export type TypeInfoORMReconcileStoredTypeIndexesPageResult = {
+  /** Canonical items reconciled in this page. */
+  processedCount: number;
+  /** Opaque continuation token when more canonical items remain. */
+  cursor?: string;
+};
+
+/** Options for removed-Type index cleanup. */
+export type TypeInfoORMRemovedTypeIndexCleanupConfig = {
+  /** Prior TypeInfo descriptor for the removed type. */
+  previousDescriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+  /** Audited structured mirror version, when cleaning structured state. */
+  structuredVersion?: number;
+  /** Persisted text fields observed for this id. */
+  textIndexFields?: string[];
 };
 
 /**
@@ -1410,10 +1440,39 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           }
         }
 
+        const sortedCapabilities = Object.entries(capabilities)
+          .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+          .map(([fieldName, capability]) => [
+            fieldName,
+            {
+              field: capability.field ?? fieldName,
+              collection: capability.collection === true,
+              exact: capability.exact === true,
+              membership: capability.membership === true,
+              range: capability.range
+                ? {
+                    valueType: capability.range.valueType,
+                    decimal: capability.range.decimal === true,
+                  }
+                : undefined,
+              text: capability.text
+                ? Object.entries(capability.text)
+                    .filter(([, enabled]) => enabled === true)
+                    .map(([mode]) => mode)
+                    .sort()
+                : undefined,
+              optional: capability.optional === true,
+            },
+          ]);
+
         descriptors.push({
           typeName,
           primaryField: String(typeInfo.primaryField),
           qualifiedFieldPrefix: qualifyIndexField(typeName, ""),
+          indexFingerprint: JSON.stringify({
+            primaryField: String(typeInfo.primaryField),
+            fields: sortedCapabilities,
+          }),
           structuredFields: Array.from(new Set(structuredFields)).sort(),
           textFields: Array.from(new Set(textFields)).sort(),
         });
@@ -1649,6 +1708,138 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       cleanupAttempted,
       canonicalReindexed: false,
     };
+  };
+
+  /**
+   * Reconcile one bounded page of canonical items after an index-relevant
+   * TypeInfo schema change.
+   *
+   * Structured writes replace the persisted structured mirror, which removes
+   * fields no longer indexed. Full-text fields removed from the schema are
+   * deleted through document-level maintenance before current fields are
+   * reindexed.
+   *
+   * @param typeName Current TypeInfo type.
+   * @param config Previous schema descriptor and paging state.
+   * @returns Processed count and continuation token.
+   */
+  reconcileStoredTypeIndexesPage = async (
+    typeName: string,
+    config: TypeInfoORMReconcileStoredTypeIndexesPageConfig = {},
+  ): Promise<TypeInfoORMReconcileStoredTypeIndexesPageResult> => {
+    const currentDescriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!currentDescriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const driver = this.getDriverInternal(typeName);
+    const page = await driver.listItems({
+      itemsPerPage: Math.max(1, config.itemsPerPage ?? 100),
+      cursor: config.cursor,
+    });
+    const staleTextFields = (config.previousDescriptor?.textFields ?? []).filter(
+      (field) => !currentDescriptor.textFields.includes(field),
+    );
+    const textMaintenance = this.config.indexing?.backend.text;
+    const primaryFieldName = currentDescriptor.primaryField;
+    let processedCount = 0;
+
+    for (const item of page.items) {
+      const primaryFieldValue =
+        item[primaryFieldName as keyof TypeInfoDataItem];
+      if (typeof primaryFieldValue === "undefined") {
+        continue;
+      }
+
+      const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
+      if (staleTextFields.length > 0) {
+        if (!textMaintenance?.removeDocumentIndex) {
+          throw new Error(
+            "Text index schema reconciliation requires document maintenance support.",
+          );
+        }
+        for (const indexField of staleTextFields) {
+          await textMaintenance.removeDocumentIndex(docId, indexField);
+        }
+      }
+
+      await this.indexItemIndexes(typeName, item);
+      processedCount += 1;
+    }
+
+    return {
+      processedCount,
+      cursor: page.cursor,
+    };
+  };
+
+  /**
+   * Remove one removed-Type index identity after the schema removal has been
+   * independently confirmed by Health monitoring.
+   *
+   * This method never touches canonical data. It only removes index artifacts
+   * belonging to the prior type namespace.
+   *
+   * @param primaryFieldValue Persisted document identity.
+   * @param config Prior type descriptor and audited index state.
+   */
+  cleanupRemovedTypeIndexState = async (
+    primaryFieldValue: LiteralValue,
+    config: TypeInfoORMRemovedTypeIndexCleanupConfig,
+  ): Promise<void> => {
+    const indexing = this.config.indexing;
+    if (!indexing) {
+      return;
+    }
+
+    const { previousDescriptor } = config;
+    const docId = normalizeDocId(
+      primaryFieldValue,
+      previousDescriptor.primaryField,
+    );
+
+    if (config.structuredVersion !== undefined) {
+      const structuredWriter = indexing.backend.valueWriter;
+      if (!structuredWriter) {
+        throw new Error(
+          "Removed-Type structured cleanup requires structured maintenance support.",
+        );
+      }
+      await structuredWriter.write(docId, {}, {
+        deleted: true,
+        expectedVersion: config.structuredVersion,
+      });
+    }
+
+    const textFields = Array.from(
+      new Set(config.textIndexFields ?? previousDescriptor.textFields),
+    );
+    if (
+      textFields.some(
+        (field) => !field.startsWith(previousDescriptor.qualifiedFieldPrefix),
+      )
+    ) {
+      throw new Error(
+        "Removed-Type text index field does not belong to the prior type namespace.",
+      );
+    }
+
+    if (textFields.length > 0) {
+      const textMaintenance = indexing.backend.text;
+      if (!textMaintenance?.removeDocumentIndex) {
+        throw new Error(
+          "Removed-Type text cleanup requires document maintenance support.",
+        );
+      }
+      for (const indexField of textFields) {
+        await textMaintenance.removeDocumentIndex(docId, indexField);
+      }
+    }
   };
 
   /**
