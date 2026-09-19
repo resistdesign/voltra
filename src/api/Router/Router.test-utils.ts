@@ -7,6 +7,7 @@ import {
 import { AWS } from "./AWS";
 import type { Route } from "./Types";
 import { mergeStringPaths } from "../../common/Routing";
+import { isStandardHTTPResponse } from "./isStandardHTTPResponse";
 
 const buildRoute = (path: string, payload: unknown): Route => ({
   path,
@@ -132,3 +133,16 @@ export const runRouterUnauthorizedResponseScenario = async () =>
 
 export const runRouterErrorResponseScenario = async () =>
   (await runRouterScenario()).errorResponse;
+
+
+export const runRouterStandardHTTPResponseDetectionScenario = () => ({
+  standardResponse: isStandardHTTPResponse(
+    new Response("ok", {
+      status: 202,
+    }),
+  ),
+  plainObject: isStandardHTTPResponse({
+    status: 202,
+    body: "ok",
+  }),
+});
