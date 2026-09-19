@@ -12,3 +12,4 @@
  */
 export * from "./Types";
 export * from "./DriverHealthStore";
+export * from "./TypeInfoORMHealthMonitor";
