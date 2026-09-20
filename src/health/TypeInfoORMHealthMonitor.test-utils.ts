@@ -890,3 +890,59 @@ export const runHealthIndexRelevantSchemaScopeScenario = async () => {
       descriptorsA[0]?.indexFingerprint === descriptorsB[0]?.indexFingerprint,
   };
 };
+
+
+export const runHealthStatusPagingScenario = async () => {
+  const store = createHealthStore();
+  await store.createRecord({
+    kind: "finding",
+    status: "open",
+    scope: "one",
+  });
+  await store.createRecord({
+    kind: "stats",
+    status: "complete",
+    scope: "two",
+  });
+  await store.createRecord({
+    kind: "finding",
+    status: "confirmed",
+    scope: "three",
+  });
+
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    {
+      Book: new InMemoryDataItemDBDriver<Book, "id">({
+        tableName: "StatusBooks",
+        uniquelyIdentifyingFieldName: "id",
+        generateUniqueIdentifier: () => "unused",
+      }),
+    },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+  );
+  const monitor = new TypeInfoORMHealthMonitor({ orm, store });
+  const first = await monitor.status({ itemsPerPage: 2 });
+  const second = await monitor.status({
+    itemsPerPage: 2,
+    cursor: first.cursor,
+  });
+
+  return {
+    first: {
+      examinedRecordCount: first.examinedRecordCount,
+      openFindingCount: first.openFindingCount,
+      confirmedFindingCount: first.confirmedFindingCount,
+      statsRecordCount: first.statsRecordCount,
+      continuation: first.continuation,
+    },
+    second: {
+      examinedRecordCount: second.examinedRecordCount,
+      openFindingCount: second.openFindingCount,
+      confirmedFindingCount: second.confirmedFindingCount,
+      statsRecordCount: second.statsRecordCount,
+      continuation: second.continuation,
+    },
+  };
+};
