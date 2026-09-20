@@ -650,3 +650,101 @@ export const runHealthQueryFingerprintScenario = async () => {
     containsSecondValue: fingerprints.some((value) => value.includes("67890")),
   };
 };
+
+
+export const runHealthMissingIndexRepairScenario = async () => {
+  let counter = 0;
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "MissingIndexBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => `missing-index-book-${++counter}`,
+  });
+  const fullTextBackend = new FullTextMemoryBackend();
+  const structuredBackend = new StructuredInMemoryBackend();
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    { Book: driver },
+    fullTextBackend,
+    structuredBackend,
+  );
+  const id = await orm.create("Book", {
+    title: "Repair Me",
+    slug: "repair-me",
+    rating: 42,
+  } as TypeInfoDataItem);
+
+  const structuredPage = await structuredBackend.documents?.list?.({
+    limit: 10,
+  });
+  const structuredSnapshot = structuredPage?.documents.find(
+    (document) => document.docId === id,
+  );
+
+  await structuredBackend.write(id, {}, {
+    deleted: true,
+    expectedVersion: structuredSnapshot?.version,
+  });
+  await fullTextBackend.removeDocumentIndex(
+    id,
+    qualifyIndexField("Book", "title"),
+  );
+
+  const store = createHealthStore();
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store,
+    maxIndexDocumentsPerRun: 20,
+    maxCanonicalItemsPerRun: 20,
+    maxRepairsPerRun: 10,
+  });
+
+  const preview = await monitor.preview();
+  const afterPreview = {
+    text: await queryTextIds(
+      fullTextBackend,
+      "Book",
+      "title",
+      "Repair",
+    ),
+    structured: await queryStructuredIds(
+      structuredBackend,
+      "Book",
+      "rating",
+      42,
+    ),
+  };
+
+  const repair = await monitor.repair();
+  const afterRepair = {
+    text: await queryTextIds(
+      fullTextBackend,
+      "Book",
+      "title",
+      "Repair",
+    ),
+    structured: await queryStructuredIds(
+      structuredBackend,
+      "Book",
+      "rating",
+      42,
+    ),
+  };
+  const repeated = await monitor.repair();
+
+  return {
+    preview: {
+      missingIndexFindingCount: preview.missingIndexFindingCount,
+      reindexedItemCount: preview.reindexedItemCount,
+    },
+    afterPreview,
+    repair: {
+      missingIndexFindingCount: repair.missingIndexFindingCount,
+      reindexedItemCount: repair.reindexedItemCount,
+    },
+    afterRepair,
+    repeated: {
+      missingIndexFindingCount: repeated.missingIndexFindingCount,
+      reindexedItemCount: repeated.reindexedItemCount,
+    },
+  };
+};
