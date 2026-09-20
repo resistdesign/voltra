@@ -1,0 +1,16 @@
+{
+  "file": "./FullTextIndexWriter.test-utils.ts",
+  "tests": [
+    {
+      "export": "runFullTextMembershipUnionScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "removesExactCat": true,
+        "retainsLossyCat": true,
+        "doesNotRemoveCatMembership": true,
+        "removesObsoleteCatPrefixMembership": true
+      }
+    }
+  ]
+}
