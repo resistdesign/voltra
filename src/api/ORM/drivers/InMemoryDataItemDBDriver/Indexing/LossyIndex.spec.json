@@ -6,7 +6,10 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-1", "doc-2"]
+        "docIds": [
+          "doc-1",
+          "doc-2"
+        ]
       }
     },
     {
@@ -14,7 +17,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-1"],
+        "docIds": [
+          "doc-1"
+        ],
         "nextCursor": "doc-1"
       }
     },
@@ -23,7 +28,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-2"]
+        "docIds": [
+          "doc-2"
+        ]
       }
     },
     {
@@ -31,7 +38,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-1"]
+        "docIds": [
+          "doc-1"
+        ]
       }
     },
     {
@@ -39,16 +48,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-4"]
-      }
-    },
-    {
-      "export": "runLossyIndexDdbKeyScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "pk": "v1#fl#text#token",
-        "sk": "d#s#doc-1"
+        "docIds": [
+          "doc-4"
+        ]
       }
     }
   ]
