@@ -1,190 +1,95 @@
 /**
- * @packageDocumentation
- *
- * In-memory relational edge store with directional queries and cursor paging.
+ * In-memory IO for Voltra's generic relational indexing strategy.
  */
-import { decodeRelationalCursor, encodeRelationalCursor } from "../../../../Indexing/rel/Cursor";
-import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "../../../../Indexing/rel/Types";
+import { buildIndexDocumentSortKey } from "../../../../Indexing/IndexTable";
 import {
-  INDEX_ITEM_KINDS,
-  buildIndexDocumentSortKey,
-  buildIndexScalarKey,
-} from "../../../../Indexing/IndexTable";
+  RelationalIndexBackend,
+  type RelationalIndexStorage,
+  type RelationalStorageKey,
+  type RelationalStorageRecord,
+} from "../../../../Indexing/rel/RelationalIndexBackend";
 
 type EdgeMetadata = Record<string, unknown>;
 
-type EdgeEntry<TMetadata extends EdgeMetadata> = {
-  /**
-   * Opposite entity id for the edge.
-   */
-  otherId: string;
-  /**
-   * Optional metadata stored for the edge.
-   */
-  metadata?: TMetadata;
-};
+const partitionKey = (key: Omit<RelationalStorageKey, "otherId">): string =>
+  JSON.stringify([key.entityId, key.relation, key.direction]);
 
-type EdgeLookup<TMetadata extends EdgeMetadata> = Map<
-  string,
-  Map<string, EdgeEntry<TMetadata>>
->;
+class InMemoryRelationalIndexStorage<
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+> implements RelationalIndexStorage<TMetadata> {
+  private readonly partitions = new Map<
+    string,
+    Map<string, TMetadata | undefined>
+  >();
 
-function edgeKey(entityId: string, relation: string): string {
-  return buildIndexScalarKey(
-    INDEX_ITEM_KINDS.relationshipEdge,
-    "entity",
-    entityId,
-    relation,
-  );
-}
-
-function findStartIndex(ids: string[], lastId?: string): number {
-  if (!lastId) {
-    return 0;
-  }
-
-  let low = 0;
-  let high = ids.length;
-
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    if (
-      buildIndexDocumentSortKey(ids[mid]) <= buildIndexDocumentSortKey(lastId)
-    ) {
-      low = mid + 1;
-    } else {
-      high = mid;
+  put(records: Array<RelationalStorageRecord<TMetadata>>): void {
+    for (const record of records) {
+      const key = partitionKey(record);
+      const partition = this.partitions.get(key) ?? new Map();
+      partition.set(record.otherId, record.metadata);
+      this.partitions.set(key, partition);
     }
   }
 
-  return low;
-}
-
-function paginateIds<TMetadata extends EdgeMetadata>(
-  ids: string[],
-  options: RelationalQueryOptions,
-  buildEdge: (otherId: string) => Edge<TMetadata>,
-): EdgePage<TMetadata> {
-  const cursorState = decodeRelationalCursor(options.cursor);
-  const startIndex = findStartIndex(ids, cursorState?.lastId);
-  const limit = options.limit ?? ids.length;
-  const slice = ids.slice(startIndex, startIndex + limit);
-  const edges = slice.map((id) => buildEdge(id));
-
-  if (startIndex + limit < ids.length && slice.length > 0) {
-    return {
-      edges,
-      nextCursor: encodeRelationalCursor({ lastId: slice[slice.length - 1] }),
-    };
+  delete(keys: RelationalStorageKey[]): void {
+    for (const key of keys) {
+      const partitionId = partitionKey(key);
+      const partition = this.partitions.get(partitionId);
+      partition?.delete(key.otherId);
+      if (partition?.size === 0) {
+        this.partitions.delete(partitionId);
+      }
+    }
   }
 
-  return { edges };
+  query(query: {
+    entityId: string;
+    relation: string;
+    direction: "out" | "in";
+    limit?: number;
+    continuationToken?: string;
+  }) {
+    const partition = this.partitions.get(partitionKey(query));
+    const ids = partition
+      ? Array.from(partition.keys()).sort((left, right) => {
+          const leftKey = buildIndexDocumentSortKey(left);
+          const rightKey = buildIndexDocumentSortKey(right);
+          return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+        })
+      : [];
+
+    const start = query.continuationToken
+      ? ids.findIndex((id) => id === query.continuationToken) + 1
+      : 0;
+    const safeStart = Math.max(0, start);
+    const limit = Math.max(1, query.limit ?? ids.length || 1);
+    const pageIds = ids.slice(safeStart, safeStart + limit);
+    const last = pageIds[pageIds.length - 1];
+
+    return {
+      records: pageIds.map((otherId) => ({
+        entityId: query.entityId,
+        relation: query.relation,
+        direction: query.direction,
+        otherId,
+        ...(partition?.get(otherId) !== undefined
+          ? { metadata: partition?.get(otherId) }
+          : {}),
+      })),
+      ...(last && safeStart + pageIds.length < ids.length
+        ? { continuationToken: last }
+        : {}),
+    };
+  }
 }
 
 /**
- * In-memory relational backend for tests and local runs.
+ * In-memory IO wrapper around the generic relational indexing strategy.
  */
 export class RelationalInMemoryBackend<
   TMetadata extends EdgeMetadata = EdgeMetadata,
-> {
-  private forward: EdgeLookup<TMetadata> = new Map();
-  private reverse: EdgeLookup<TMetadata> = new Map();
-
-  /**
-   * Insert or update an edge.
-   * @param edge Edge to store.
-   * @returns Nothing.
-   */
-  putEdge(edge: Edge<TMetadata>): void {
-    const { from, to, relation } = edge.key;
-    const forwardKey = edgeKey(from, relation);
-    const reverseKey = edgeKey(to, relation);
-
-    const forwardMap = this.forward.get(forwardKey) ?? new Map();
-    forwardMap.set(to, { otherId: to, metadata: edge.metadata });
-    this.forward.set(forwardKey, forwardMap);
-
-    const reverseMap = this.reverse.get(reverseKey) ?? new Map();
-    reverseMap.set(from, { otherId: from, metadata: edge.metadata });
-    this.reverse.set(reverseKey, reverseMap);
-  }
-
-  /**
-   * Remove an edge by key.
-   * @param key Edge key to remove.
-   * @returns Nothing.
-   */
-  removeEdge(key: EdgeKey): void {
-    const { from, to, relation } = key;
-    const forwardKey = edgeKey(from, relation);
-    const reverseKey = edgeKey(to, relation);
-
-    const forwardMap = this.forward.get(forwardKey);
-    forwardMap?.delete(to);
-    if (forwardMap && forwardMap.size === 0) {
-      this.forward.delete(forwardKey);
-    }
-
-    const reverseMap = this.reverse.get(reverseKey);
-    reverseMap?.delete(from);
-    if (reverseMap && reverseMap.size === 0) {
-      this.reverse.delete(reverseKey);
-    }
-  }
-
-  /**
-   * Query outgoing edges for an entity and relation.
-   * @param fromId Source entity id.
-   * @param relation Relation name.
-   * @param options Optional paging options.
-   * @returns Page of outgoing edges.
-   */
-  getOutgoing(
-    fromId: string,
-    relation: string,
-    options: RelationalQueryOptions = {},
-  ): EdgePage<TMetadata> {
-    const forwardKey = edgeKey(fromId, relation);
-    const map = this.forward.get(forwardKey);
-    const ids = map
-      ? Array.from(map.keys()).sort((a, b) =>
-          buildIndexDocumentSortKey(a).localeCompare(
-            buildIndexDocumentSortKey(b),
-          ),
-        )
-      : [];
-
-    return paginateIds(ids, options, (otherId) => ({
-      key: { from: fromId, to: otherId, relation },
-      metadata: map?.get(otherId)?.metadata,
-    }));
-  }
-
-  /**
-   * Query incoming edges for an entity and relation.
-   * @param toId Target entity id.
-   * @param relation Relation name.
-   * @param options Optional paging options.
-   * @returns Page of incoming edges.
-   */
-  getIncoming(
-    toId: string,
-    relation: string,
-    options: RelationalQueryOptions = {},
-  ): EdgePage<TMetadata> {
-    const reverseKey = edgeKey(toId, relation);
-    const map = this.reverse.get(reverseKey);
-    const ids = map
-      ? Array.from(map.keys()).sort((a, b) =>
-          buildIndexDocumentSortKey(a).localeCompare(
-            buildIndexDocumentSortKey(b),
-          ),
-        )
-      : [];
-
-    return paginateIds(ids, options, (otherId) => ({
-      key: { from: otherId, to: toId, relation },
-      metadata: map?.get(otherId)?.metadata,
-    }));
+> extends RelationalIndexBackend<TMetadata> {
+  constructor() {
+    super(new InMemoryRelationalIndexStorage<TMetadata>());
   }
 }
