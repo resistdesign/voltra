@@ -779,6 +779,10 @@ export class TypeInfoORMHealthMonitor {
         let deferredInPage = false;
 
         for (const unhealthy of page.unhealthyItems) {
+          const healthItemId =
+            typeof unhealthy.primaryFieldValue === "number"
+              ? unhealthy.primaryFieldValue
+              : String(unhealthy.primaryFieldValue);
           const currentFindingId = missingIndexFindingId(
             typeName,
             unhealthy.primaryFieldValue,
@@ -794,7 +798,7 @@ export class TypeInfoORMHealthMonitor {
               kind: "finding",
               status: "open",
               typeName,
-              itemId: unhealthy.primaryFieldValue,
+              itemId: healthItemId,
               scope: "canonicalIndexMismatch",
               correlationId: runId,
               expiresAt: now + this.options.recordRetentionMs,
@@ -823,7 +827,7 @@ export class TypeInfoORMHealthMonitor {
             kind: "finding",
             status: stronglyConfirmed ? "confirmed" : "open",
             typeName,
-            itemId: unhealthy.primaryFieldValue,
+            itemId: healthItemId,
             scope: "canonicalIndexMismatch",
             correlationId: runId,
             expiresAt: now + this.options.recordRetentionMs,
