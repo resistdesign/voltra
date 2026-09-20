@@ -5,14 +5,19 @@
       "export": "runFullTextMemoryBackendLossyAllScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["doc-1", "doc-2"]
+      "expectation": [
+        "doc-1",
+        "doc-2"
+      ]
     },
     {
       "export": "runFullTextMemoryBackendLossyPageScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-1"],
+        "docIds": [
+          "doc-1"
+        ],
         "lastEvaluatedDocId": "doc-1"
       }
     },
@@ -20,13 +25,24 @@
       "export": "runFullTextMemoryBackendExactDoc1Scenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [0, 2]
+      "expectation": [
+        0,
+        2
+      ]
     },
     {
       "export": "runFullTextMemoryBackendExactBatchScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [[0, 2], [1]]
+      "expectation": [
+        [
+          0,
+          2
+        ],
+        [
+          1
+        ]
+      ]
     },
     {
       "export": "runFullTextMemoryBackendTokenStatsScenario",
@@ -59,13 +75,19 @@
       "export": "runFullTextMemoryBackendBatchHasScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [true, true, false]
+      "expectation": [
+        true,
+        true,
+        false
+      ]
     },
     {
       "export": "runFullTextMemoryBackendLossyAfterRemoveScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["doc-1"]
+      "expectation": [
+        "doc-1"
+      ]
     },
     {
       "export": "runFullTextMemoryBackendExactAfterRemoveScenario",
@@ -93,15 +115,30 @@
       "expectation": {
         "numericMembership": true,
         "stringMembership": true,
-        "numericPositions": [1],
-        "stringPositions": [2]
+        "numericPositions": [
+          1
+        ],
+        "stringPositions": [
+          2
+        ]
       }
     },
     {
       "export": "runFullTextMemoryBackendTypedSearchCacheScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [123]
+      "expectation": [
+        123
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendMaintenanceMirrorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "before": "hello world",
+        "after": null
+      }
     }
   ]
 }
