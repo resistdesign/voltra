@@ -1,13 +1,13 @@
-import { searchStructured } from "./SearchStructured";
-import { StructuredInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
-import { StructuredDdbBackend } from "../../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/StructuredDdbBackend";
-import { InMemoryDynamoQueryClient } from "../../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
+import { searchStructured } from "../../../Indexing/structured/SearchStructured";
+import { StructuredInMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { StructuredDdbBackend } from "../DynamoDBDataItemDBDriver/Indexing/StructuredDdbBackend";
+import { InMemoryDynamoQueryClient } from "../DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
 import {
   encodeStructuredCriterionChunk,
   type StructuredOccupancyFieldMap,
-} from "./StructuredOccupancy";
-import type { Where } from "./Types";
-import { rebuildStructuredOccupancy } from "../../ORM/rebuildStructuredOccupancy";
+} from "../../../Indexing/structured/StructuredOccupancy";
+import type { Where } from "../../../Indexing/structured/Types";
+import { rebuildStructuredOccupancy } from "../../rebuildStructuredOccupancy";
 
 const occupancyFields: StructuredOccupancyFieldMap = {
   age: { type: "number" },
