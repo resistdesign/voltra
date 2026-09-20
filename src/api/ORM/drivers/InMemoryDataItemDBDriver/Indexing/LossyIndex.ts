@@ -4,8 +4,8 @@
  * In-memory lossy index for recall-heavy search. It stores token postings and
  * supports paging with cursor-style doc IDs.
  */
-import type { DocId } from "../Types";
-import { compareDocId } from "../docId";
+import type { DocId } from "../../../../Indexing/Types";
+import { compareDocId } from "../../../../Indexing/docId";
 
 /**
  * Paging options for lossy postings queries.
