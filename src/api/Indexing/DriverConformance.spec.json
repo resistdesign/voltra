@@ -6,7 +6,20 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "fullText": true,
+        "fullText": {
+          "memoryDynamo": {
+            "lossy": true,
+            "exact": true,
+            "mirror": true,
+            "listed": true
+          },
+          "memoryS3": {
+            "lossy": true,
+            "exact": true,
+            "mirror": true,
+            "listed": true
+          }
+        },
         "structured": true,
         "relational": true
       }
