@@ -351,7 +351,14 @@ const createRelationalDdbStorage = <
         query.direction,
       ),
       limit: query.limit,
-      exclusiveStartKey: decodeRelationEdgesToken(query.continuationToken),
+      exclusiveStartKey: query.lastId
+        ? buildRelationEdgeDdbKey(
+            query.entityId,
+            query.relation,
+            query.direction,
+            query.lastId,
+          )
+        : decodeRelationEdgesToken(query.continuationToken),
     });
 
     return {
