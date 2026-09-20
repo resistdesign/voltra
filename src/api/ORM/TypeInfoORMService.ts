@@ -1498,6 +1498,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
               optional: capability.optional === true,
             },
           ]);
+        const sortedTypeFields = Object.entries(typeInfo.fields ?? {})
+          .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+          .map(([fieldName, field]) => [
+            fieldName,
+            {
+              type: field.type,
+              typeReference: field.typeReference,
+              array: field.array === true,
+              readonly: field.readonly === true,
+              optional: field.optional === true,
+              indexed: field.tags?.indexed,
+            },
+          ]);
 
         descriptors.push({
           typeName,
@@ -1505,7 +1518,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           qualifiedFieldPrefix: qualifyIndexField(typeName, ""),
           indexFingerprint: JSON.stringify({
             primaryField: String(typeInfo.primaryField),
-            fields: sortedCapabilities,
+            typeFields: sortedTypeFields,
+            indexCapabilities: sortedCapabilities,
           }),
           structuredFields: Array.from(new Set(structuredFields)).sort(),
           textFields: Array.from(new Set(textFields)).sort(),
