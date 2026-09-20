@@ -143,6 +143,37 @@
         "containsFirstValue": false,
         "containsSecondValue": false
       }
+    },
+    {
+      "export": "runHealthMissingIndexRepairScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "preview": {
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 0
+        },
+        "afterPreview": {
+          "text": [],
+          "structured": []
+        },
+        "repair": {
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 1
+        },
+        "afterRepair": {
+          "text": [
+            "missing-index-book-1"
+          ],
+          "structured": [
+            "missing-index-book-1"
+          ]
+        },
+        "repeated": {
+          "missingIndexFindingCount": 0,
+          "reindexedItemCount": 0
+        }
+      }
     }
   ]
 }
