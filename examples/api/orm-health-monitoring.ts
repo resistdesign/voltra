@@ -6,6 +6,7 @@ import {
 import {
   DriverHealthStore,
   TypeInfoORMHealthMonitor,
+  TypeInfoORMHealthOperationRecorder,
   addTypeInfoORMHealthMCPToRouteMap,
   type HealthRecord,
 } from "@resistdesign/voltra/health";
@@ -26,6 +27,14 @@ const monitor = new TypeInfoORMHealthMonitor({
   maxRepairsPerRun: 20,
   maxSchemaItemsPerRun: 100,
 });
+
+// Attach once in the application process. Only slow or failed operations are
+// persisted, keeping normal ORM traffic lightweight.
+const operationRecorder = new TypeInfoORMHealthOperationRecorder({
+  store,
+  slowOperationMs: 1000,
+});
+operationRecorder.attach(orm);
 
 // Safe for CI, diagnostics, or an operator preview.
 export const previewHealth = async () => monitor.preview();
