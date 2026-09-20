@@ -5,7 +5,7 @@
  * document mirrors, and token statistics in one table to support fast search with
  * cursor-based paging.
  */
-import { tokenize, tokenizeLossyTrigrams } from "../tokenize";
+import { tokenize, tokenizeLossyTrigrams } from "../../../../Indexing/tokenize";
 import type {
   DocId,
   DocTokenKey,
@@ -13,9 +13,9 @@ import type {
   TextIndexDocumentListOptions,
   TextIndexDocumentPage,
   TokenStats,
-} from "../Types";
-import type { SearchTrace } from "../Trace";
-import { normalizeDocId } from "../docId";
+} from "../../../../Indexing/Types";
+import type { SearchTrace } from "../../../../Indexing/Trace";
+import { normalizeDocId } from "../../../../Indexing/docId";
 import {
   docTokenPositionsSchema,
   docTokensSchema,
@@ -30,7 +30,7 @@ import {
   FULL_TEXT_TOKEN_STATS_SORT_KEY,
   fullTextTokenStatsSchema,
   lossyPostingsSchema,
-} from "./Schema";
+} from "../../../../Indexing/fulltext/Schema";
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
@@ -42,15 +42,15 @@ import {
   decodeIndexIdentity,
   decodeIndexScalarIdentity,
   type IndexTableConfig,
-} from "../IndexTable";
-import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
+} from "../../../../Indexing/IndexTable";
+import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
 import type {
   DynamoBatchWriter,
   DynamoQueryClient,
   KeysAndAttributes,
   WriteRequest,
-} from "../ddb/Types";
-export * from "../ddb/Types";
+} from "./Types";
+export * from "./Types";
 
 /**
  * @deprecated Use {@link IndexTableConfig}. All full-text records share one table.
