@@ -7,6 +7,7 @@ import {
 import {
   DriverHealthStore,
   TypeInfoORMHealthMonitor,
+  TypeInfoORMHealthOperationRecorder,
   addTypeInfoORMHealthMCPToRouteMap,
   type HealthRecord,
 } from "../../src/health";
@@ -14,6 +15,20 @@ import {
   readHealthTableNameFromEnv,
 } from "../common/HealthTable";
 import { DEMO_HEALTH_MCP_ROUTE_PATH } from "../common/Constants";
+
+const demoHealthDriver = new DynamoDBDataItemDBDriver<HealthRecord, "id">({
+  tableName: readHealthTableNameFromEnv(process.env),
+  uniquelyIdentifyingFieldName: "id",
+});
+
+/** Shared Health store used by demo telemetry and scheduled-style monitoring. */
+export const demoHealthStore = new DriverHealthStore(demoHealthDriver);
+
+/** Lightweight recorder attached to normal demo ORM traffic. */
+export const demoHealthOperationRecorder =
+  new TypeInfoORMHealthOperationRecorder({
+    store: demoHealthStore,
+  });
 
 /**
  * Add a public, read-only Health MCP endpoint to the demo RouteMap.
@@ -29,13 +44,9 @@ export const addDemoHealthMCPToRouteMap = (
     ...ormConfig,
     useDAC: false,
   });
-  const healthDriver = new DynamoDBDataItemDBDriver<HealthRecord, "id">({
-    tableName: readHealthTableNameFromEnv(process.env),
-    uniquelyIdentifyingFieldName: "id",
-  });
   const monitor = new TypeInfoORMHealthMonitor({
     orm,
-    store: new DriverHealthStore(healthDriver),
+    store: demoHealthStore,
     repairMode: "preview",
     maxIndexDocumentsPerRun: 100,
     maxRepairsPerRun: 0,
