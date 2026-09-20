@@ -349,9 +349,10 @@ export class FullTextS3Backend
     const prefix = lossyPrefix(indexField, token);
     const page = await this.store.list(prefix, {
       limit: options.limit,
-      cursor: options.exclusiveStartDocId
-        ? lossyKey(indexField, token, options.exclusiveStartDocId)
-        : undefined,
+      afterKey:
+        options.exclusiveStartDocId !== undefined
+          ? lossyKey(indexField, token, options.exclusiveStartDocId)
+          : undefined,
     });
     return {
       docIds: page.keys.map((key) => parsePostingDocId(prefix, key)),
