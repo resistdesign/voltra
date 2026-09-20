@@ -54,7 +54,7 @@ export const runHealthOperationRecorderScenario = async () => {
       typeName: record.typeName,
       operation: record.operation,
       scope: record.scope,
-      count: record.count,
+      ...(record.count !== undefined ? { count: record.count } : {}),
       value: record.value,
       expiresAt: record.expiresAt,
       success: record.data?.success,
