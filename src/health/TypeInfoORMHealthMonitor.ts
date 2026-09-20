@@ -145,8 +145,39 @@ const findingId = (typeName: string, docId: DocId): string =>
     JSON.stringify([typeof docId, docId]),
   )}`;
 
-const operationFindingId = (operationRecordId: string): string =>
-  `health:finding:operation:${encodeURIComponent(operationRecordId)}`;
+const compactHealthKeyHash = (value: string): string => {
+  let left = 0x811c9dc5;
+  let right = 0x9e3779b9;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    left = Math.imul(left ^ code, 0x01000193);
+    right = Math.imul(right ^ code, 0x85ebca6b);
+  }
+
+  return `${(left >>> 0).toString(16).padStart(8, "0")}${(
+    right >>> 0
+  )
+    .toString(16)
+    .padStart(8, "0")}`;
+};
+
+const operationStatsIdentity = (record: HealthRecord): string =>
+  JSON.stringify([
+    record.typeName ?? "",
+    record.operation ?? "",
+    typeof record.data?.queryFingerprint === "string"
+      ? record.data.queryFingerprint
+      : "",
+  ]);
+
+const operationStatsId = (record: HealthRecord): string =>
+  `health:stats:operation:${compactHealthKeyHash(
+    operationStatsIdentity(record),
+  )}`;
+
+const operationFindingId = (statsId: string): string =>
+  `health:finding:operation:${statsId.slice("health:stats:operation:".length)}`;
 
 const schemaFindingId = (typeName: string): string =>
   `health:finding:schema:${encodeURIComponent(typeName)}`;
