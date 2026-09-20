@@ -50,7 +50,12 @@ const requiredRuntimeExports = [
   },
   {
     distFilePath: "health/index.js",
-    names: ["DriverHealthStore"],
+    names: [
+      "DriverHealthStore",
+      "TypeInfoORMHealthMonitor",
+      "TypeInfoORMHealthOperationRecorder",
+      "addTypeInfoORMHealthMCPToRouteMap",
+    ],
   },
 ];
 
@@ -234,8 +239,21 @@ import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";
 import { createWebFormRenderer, AutoField } from "@resistdesign/voltra/web";
 import { createNativeFormRenderer } from "@resistdesign/voltra/native";
 import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
-import type { HealthRecord, HealthStore } from "@resistdesign/voltra/health";
-import { DriverHealthStore } from "@resistdesign/voltra/health";
+import type {
+  AddTypeInfoORMHealthMCPToRouteMapConfig,
+  HealthRecord,
+  HealthStore,
+  TypeInfoORMHealthMonitorConfig,
+  TypeInfoORMHealthMonitorRunResult,
+  TypeInfoORMHealthStatusOptions,
+  TypeInfoORMHealthStatusResult,
+} from "@resistdesign/voltra/health";
+import {
+  DriverHealthStore,
+  TypeInfoORMHealthMonitor,
+  TypeInfoORMHealthOperationRecorder,
+  addTypeInfoORMHealthMCPToRouteMap,
+} from "@resistdesign/voltra/health";
 
 const routeMap: RouteMap = addRoutesToRouteMap({}, []);
 const t: TypeInfo = {};
@@ -251,6 +269,16 @@ const healthRecord: HealthRecord = {
   updatedAt: 0,
 };
 const healthStoreType: HealthStore | undefined = undefined;
+const healthMonitorConfigType =
+  undefined as TypeInfoORMHealthMonitorConfig | undefined;
+const healthRunResultType =
+  undefined as TypeInfoORMHealthMonitorRunResult | undefined;
+const healthStatusOptionsType =
+  undefined as TypeInfoORMHealthStatusOptions | undefined;
+const healthStatusResultType =
+  undefined as TypeInfoORMHealthStatusResult | undefined;
+const healthMCPConfigType =
+  undefined as AddTypeInfoORMHealthMCPToRouteMapConfig | undefined;
 void routeMap;
 void t;
 void tm;
@@ -260,7 +288,15 @@ void inMemoryFileConfig;
 void s3Config;
 void healthRecord;
 void healthStoreType;
+void healthMonitorConfigType;
+void healthRunResultType;
+void healthStatusOptionsType;
+void healthStatusResultType;
+void healthMCPConfigType;
 void DriverHealthStore;
+void TypeInfoORMHealthMonitor;
+void TypeInfoORMHealthOperationRecorder;
+void addTypeInfoORMHealthMCPToRouteMap;
 void handleCloudFunctionEvent;
 void TypeInfoORMServiceError;
 void createWebFormRenderer;
