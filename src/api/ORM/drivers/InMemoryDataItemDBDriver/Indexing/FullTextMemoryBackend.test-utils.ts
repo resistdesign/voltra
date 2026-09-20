@@ -1,6 +1,6 @@
 import { FullTextMemoryBackend } from "./FullTextMemoryBackend";
-import { searchExact } from "../API";
-import { tokenizeLossyTrigrams } from "../tokenize";
+import { searchExact } from "../../../../Indexing/API";
+import { tokenizeLossyTrigrams } from "../../../../Indexing/tokenize";
 import {
   encodeDocKey,
   encodeDocMirrorKey,
@@ -8,7 +8,7 @@ import {
   encodeDocTokenSortKey,
   encodeTokenDocSortKey,
   encodeTokenKey,
-} from "./Schema";
+} from "../../../../Indexing/fulltext/Schema";
 
 const runFullTextMemoryBackendScenario = async () => {
   const backend = new FullTextMemoryBackend();
