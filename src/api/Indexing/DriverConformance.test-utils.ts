@@ -234,8 +234,34 @@ export const runIndexDriverConformanceScenario = async () => {
 
 export const runIndexDriverConformanceEqualScenario = async () => {
   const result = await runIndexDriverConformanceScenario();
+
   return {
-    fullText: result.fullTextEqual,
+    fullText: {
+      memoryDynamo: {
+        lossy:
+          JSON.stringify(result.memoryTextResult.lossy) ===
+          JSON.stringify(result.dynamoTextResult.lossy),
+        exact:
+          JSON.stringify(result.memoryTextResult.exact) ===
+          JSON.stringify(result.dynamoTextResult.exact),
+        mirror: result.memoryTextResult.mirror === result.dynamoTextResult.mirror,
+        listed:
+          JSON.stringify(result.memoryTextResult.listed) ===
+          JSON.stringify(result.dynamoTextResult.listed),
+      },
+      memoryS3: {
+        lossy:
+          JSON.stringify(result.memoryTextResult.lossy) ===
+          JSON.stringify(result.s3TextResult.lossy),
+        exact:
+          JSON.stringify(result.memoryTextResult.exact) ===
+          JSON.stringify(result.s3TextResult.exact),
+        mirror: result.memoryTextResult.mirror === result.s3TextResult.mirror,
+        listed:
+          JSON.stringify(result.memoryTextResult.listed) ===
+          JSON.stringify(result.s3TextResult.listed),
+      },
+    },
     structured: result.structuredEqual,
     relational: result.relationalEqual,
   };
