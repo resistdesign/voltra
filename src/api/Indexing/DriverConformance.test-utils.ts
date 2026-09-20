@@ -7,6 +7,8 @@ import {
 import { qualifyIndexField } from "./fieldQualification";
 import { searchStructured } from "./structured/SearchStructured";
 import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
+import type { TextIndexBackend, TextIndexMaintenance } from "./Types";
+import type { RelationalBackend } from "./rel/Types";
 import { FullTextMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
 import { StructuredInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
 import { RelationalInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
@@ -17,11 +19,15 @@ import {
   createRelationEdgesDdbDependencies,
 } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
 import { InMemoryDynamoQueryClient } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
+import { FullTextS3Backend } from "../ORM/drivers/S3FileItemDBDriver/Indexing/FullTextS3Backend";
+import { StructuredS3Backend } from "../ORM/drivers/S3FileItemDBDriver/Indexing/StructuredS3Backend";
+import { RelationalS3Backend } from "../ORM/drivers/S3FileItemDBDriver/Indexing/RelationalS3Backend";
+import { InMemoryS3IndexObjectStore } from "../ORM/drivers/S3FileItemDBDriver/Indexing/S3IndexObjectStore.test-utils";
 
 const textField = qualifyIndexField("Record", "title");
 
 const exerciseFullText = async (
-  backend: FullTextMemoryBackend | FullTextDdbBackend,
+  backend: TextIndexBackend & TextIndexMaintenance,
 ) => {
   const first = { id: "1", title: "hello world" };
   const second = { id: "2", title: "hello there" };
@@ -106,9 +112,7 @@ const exerciseStructured = async (
 };
 
 const exerciseRelations = async (
-  backend:
-    | RelationalInMemoryBackend<{ weight: number }>
-    | RelationalDdbBackend<{ weight: number }>,
+  backend: RelationalBackend<{ weight: number }>,
 ) => {
   await backend.putEdge({
     key: { from: "a", to: "b", relation: "owns" },
@@ -148,6 +152,14 @@ export const runIndexDriverConformanceScenario = async () => {
     table: { tableName: "ConformanceStructured" },
   });
 
+  const s3Text = new FullTextS3Backend({
+    store: new InMemoryS3IndexObjectStore(),
+  });
+
+  const s3Structured = new StructuredS3Backend({
+    store: new InMemoryS3IndexObjectStore(),
+  });
+
   const memoryRelations = new RelationalInMemoryBackend<{ weight: number }>();
   const dynamoRelationsClient = new InMemoryDynamoQueryClient();
   const dynamoRelations = new RelationalDdbBackend<{ weight: number }>(
@@ -156,17 +168,24 @@ export const runIndexDriverConformanceScenario = async () => {
       table: { tableName: "ConformanceRelations" },
     }),
   );
+  const s3Relations = new RelationalS3Backend<{ weight: number }>({
+    store: new InMemoryS3IndexObjectStore(),
+  });
 
   const [
     memoryTextResult,
     dynamoTextResult,
+    s3TextResult,
     memoryStructuredResult,
     dynamoStructuredResult,
+    s3StructuredResult,
     memoryRelationResult,
     dynamoRelationResult,
+    s3RelationResult,
   ] = await Promise.all([
     exerciseFullText(memoryText),
     exerciseFullText(dynamoText),
+    exerciseFullText(s3Text),
     exerciseStructured(
       memoryStructured,
       (docId, fields) =>
@@ -177,25 +196,39 @@ export const runIndexDriverConformanceScenario = async () => {
       (docId, fields) =>
         dynamoStructured.writer.write(docId, fields, { occupancyFields }),
     ),
+    exerciseStructured(
+      s3Structured.reader,
+      (docId, fields) =>
+        s3Structured.writer.write(docId, fields, { occupancyFields }),
+    ),
     exerciseRelations(memoryRelations),
     exerciseRelations(dynamoRelations),
+    exerciseRelations(s3Relations),
   ]);
 
   return {
     fullTextEqual:
-      JSON.stringify(memoryTextResult) === JSON.stringify(dynamoTextResult),
+      JSON.stringify(memoryTextResult) === JSON.stringify(dynamoTextResult) &&
+      JSON.stringify(memoryTextResult) === JSON.stringify(s3TextResult),
     structuredEqual:
       JSON.stringify(memoryStructuredResult) ===
-      JSON.stringify(dynamoStructuredResult),
+        JSON.stringify(dynamoStructuredResult) &&
+      JSON.stringify(memoryStructuredResult) ===
+        JSON.stringify(s3StructuredResult),
     relationalEqual:
       JSON.stringify(memoryRelationResult) ===
-      JSON.stringify(dynamoRelationResult),
+        JSON.stringify(dynamoRelationResult) &&
+      JSON.stringify(memoryRelationResult) ===
+        JSON.stringify(s3RelationResult),
     memoryTextResult,
     dynamoTextResult,
+    s3TextResult,
     memoryStructuredResult,
     dynamoStructuredResult,
+    s3StructuredResult,
     memoryRelationResult,
     dynamoRelationResult,
+    s3RelationResult,
   };
 };
 
