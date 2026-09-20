@@ -15,21 +15,23 @@ import {
 
 export const runRelationalIndexingScenario = async () => {
   const inMemoryBackend = new RelationalInMemoryBackend<{ weight: number }>();
-  inMemoryBackend.putEdge({
+  await inMemoryBackend.putEdge({
     key: { from: "a", to: "b", relation: "owns" },
     metadata: { weight: 1 },
   });
-  inMemoryBackend.putEdge({
+  await inMemoryBackend.putEdge({
     key: { from: "a", to: "c", relation: "owns" },
     metadata: { weight: 2 },
   });
 
-  const outgoingPage1 = inMemoryBackend.getOutgoing("a", "owns", { limit: 1 });
-  const outgoingPage2 = inMemoryBackend.getOutgoing("a", "owns", {
+  const outgoingPage1 = await inMemoryBackend.getOutgoing("a", "owns", {
+    limit: 1,
+  });
+  const outgoingPage2 = await inMemoryBackend.getOutgoing("a", "owns", {
     limit: 1,
     cursor: outgoingPage1.nextCursor,
   });
-  const incomingPage = inMemoryBackend.getIncoming("b", "owns");
+  const incomingPage = await inMemoryBackend.getIncoming("b", "owns");
 
   const relationalCursor = encodeRelationalCursor({
     lastId: "b",
