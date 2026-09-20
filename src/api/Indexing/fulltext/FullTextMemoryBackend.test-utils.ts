@@ -159,3 +159,25 @@ export const runFullTextMemoryBackendTypedSearchCacheScenario = async () => {
 
   return result.docIds;
 };
+
+
+export const runFullTextMemoryBackendMaintenanceMirrorScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+  await backend.addExactPositions("hello", "Record.text", "doc-1", [0]);
+  await backend.addExactPositions("world", "Record.text", "doc-1", [1]);
+
+  const before = await backend.readDocumentIndex(
+    "doc-1",
+    "Record.text",
+  );
+  await backend.removeDocumentIndex("doc-1", "Record.text");
+  const after = await backend.readDocumentIndex(
+    "doc-1",
+    "Record.text",
+  );
+
+  return {
+    before,
+    after: after ?? null,
+  };
+};
