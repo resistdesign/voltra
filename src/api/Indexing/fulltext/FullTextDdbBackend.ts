@@ -302,7 +302,7 @@ export class FullTextDdbWriter {
     };
   }
 
-  private async loadMirrorContent(
+  protected async loadMirrorContent(
     docId: DocId,
     indexField: string,
   ): Promise<string | undefined> {
@@ -809,6 +809,19 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       documents,
       cursor: encodeMaintenanceCursor(response.LastEvaluatedKey),
     };
+  }
+
+  /**
+   * Read the normalized persisted full-text mirror for maintenance.
+   * @param docId Document id to inspect.
+   * @param indexField Fully qualified persisted field.
+   * @returns Normalized indexed content, or undefined when missing.
+   */
+  async readDocumentIndex(
+    docId: DocId,
+    indexField: string,
+  ): Promise<string | undefined> {
+    return this.loadMirrorContent(docId, indexField);
   }
 
   /**
