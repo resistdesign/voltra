@@ -3,26 +3,26 @@ import {
   replaceFullTextDocument,
   searchExact,
   searchLossy,
-} from "./API";
-import { qualifyIndexField } from "./fieldQualification";
-import { searchStructured } from "./structured/SearchStructured";
-import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
-import type { TextIndexBackend, TextIndexMaintenance } from "./Types";
-import type { RelationalBackend } from "./rel/Types";
-import { FullTextMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
-import { StructuredInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
-import { RelationalInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
-import { FullTextDdbBackend } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/FullTextDdbBackend";
-import { StructuredDdbBackend } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/StructuredDdbBackend";
+} from "../../../Indexing/API";
+import { qualifyIndexField } from "../../../Indexing/fieldQualification";
+import { searchStructured } from "../../../Indexing/structured/SearchStructured";
+import type { StructuredOccupancyFieldMap } from "../../../Indexing/structured/StructuredOccupancy";
+import type { TextIndexBackend, TextIndexMaintenance } from "../../../Indexing/Types";
+import type { RelationalBackend } from "../../../Indexing/rel/Types";
+import { FullTextMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { RelationalInMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
+import { FullTextDdbBackend } from "../DynamoDBDataItemDBDriver/Indexing/FullTextDdbBackend";
+import { StructuredDdbBackend } from "../DynamoDBDataItemDBDriver/Indexing/StructuredDdbBackend";
 import {
   RelationalDdbBackend,
   createRelationEdgesDdbDependencies,
-} from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
-import { InMemoryDynamoQueryClient } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
-import { FullTextS3Backend } from "../ORM/drivers/S3FileItemDBDriver/Indexing/FullTextS3Backend";
-import { StructuredS3Backend } from "../ORM/drivers/S3FileItemDBDriver/Indexing/StructuredS3Backend";
-import { RelationalS3Backend } from "../ORM/drivers/S3FileItemDBDriver/Indexing/RelationalS3Backend";
-import { InMemoryS3IndexObjectStore } from "../ORM/drivers/S3FileItemDBDriver/Indexing/S3IndexObjectStore.test-utils";
+} from "../DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
+import { InMemoryDynamoQueryClient } from "../DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
+import { FullTextS3Backend } from "../S3FileItemDBDriver/Indexing/FullTextS3Backend";
+import { StructuredS3Backend } from "../S3FileItemDBDriver/Indexing/StructuredS3Backend";
+import { RelationalS3Backend } from "../S3FileItemDBDriver/Indexing/RelationalS3Backend";
+import { InMemoryS3IndexObjectStore } from "../S3FileItemDBDriver/Indexing/S3IndexObjectStore.test-utils";
 
 const textField = qualifyIndexField("Record", "title");
 
