@@ -1,6 +1,6 @@
 import { InMemoryDynamoQueryClient } from "./InMemoryDynamoQueryClient.test-utils";
-import { StructuredDdbBackend } from "../structured/StructuredDdbBackend";
-import type { StructuredOccupancyFieldMap } from "../structured/StructuredOccupancy";
+import { StructuredDdbBackend } from "./StructuredDdbBackend";
+import type { StructuredOccupancyFieldMap } from "../../../../Indexing/structured/StructuredOccupancy";
 
 export const runInMemoryDynamoStaleVisibilityScenario = async () => {
   const client = new InMemoryDynamoQueryClient({
