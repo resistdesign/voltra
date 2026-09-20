@@ -30,6 +30,10 @@ export type FullTextDocumentMutation = {
   putExactTokens: FullTextExactTokenState[];
   /** Exact postings that must be removed. */
   removeExactTokens: string[];
+  /** Document-token membership records that must be added. */
+  addMembershipTokens: string[];
+  /** Document-token membership records that must be removed. */
+  removeMembershipTokens: string[];
 };
 
 /**
@@ -119,6 +123,14 @@ export const planFullTextDocumentMutation = (
   const nextLossy = new Set(next.lossyTokens);
   const previousExact = exactStateMap(previous);
   const nextExact = exactStateMap(next);
+  const previousMembership = new Set([
+    ...previous.lossyTokens,
+    ...previousExact.keys(),
+  ]);
+  const nextMembership = new Set([
+    ...next.lossyTokens,
+    ...nextExact.keys(),
+  ]);
 
   const addLossyTokens = Array.from(nextLossy).filter(
     (token) => !previousLossy.has(token),
@@ -139,12 +151,21 @@ export const planFullTextDocumentMutation = (
     );
   });
 
+  const addMembershipTokens = Array.from(nextMembership).filter(
+    (token) => !previousMembership.has(token),
+  );
+  const removeMembershipTokens = Array.from(previousMembership).filter(
+    (token) => !nextMembership.has(token),
+  );
+
   return {
     normalizedContent: next.normalizedContent,
     addLossyTokens,
     removeLossyTokens,
     putExactTokens,
     removeExactTokens,
+    addMembershipTokens,
+    removeMembershipTokens,
   };
 };
 
