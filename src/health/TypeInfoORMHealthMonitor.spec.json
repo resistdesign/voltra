@@ -93,6 +93,27 @@
           }
         ]
       }
+    },
+    {
+      "export": "runHealthOperationFindingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": {
+          "slow": 1,
+          "failed": 1,
+          "processed": 2
+        },
+        "second": {
+          "slow": 0,
+          "failed": 0,
+          "processed": 0
+        },
+        "scopes": [
+          "failedOperation",
+          "slowOperation"
+        ]
+      }
     }
   ]
 }
