@@ -7,21 +7,21 @@ import type {
   DynamoQueryClient,
   KeysAndAttributes,
   WriteRequest,
-} from "../ddb/Types";
-import type { DocId } from "../Types";
+} from "../../../../Indexing/structured/Types";
+import type { DocId } from "../../../../Indexing/Types";
 import {
   assertIndexSortKey,
   assertIndexTableConfig,
   type IndexTableConfig,
-} from "../IndexTable";
+} from "../../../../Indexing/IndexTable";
 import type {
   StructuredDocumentListOptions,
   StructuredDocumentPage,
   StructuredSearchDependencies,
-} from "./SearchStructured";
-import type { StructuredQueryOptions, WhereValue } from "./Types";
-import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
-import type { StructuredStringTokenizerConfig } from "./StructuredStringLike";
+} from "../../../../Indexing/structured/SearchStructured";
+import type { StructuredQueryOptions, WhereValue } from "../../../../Indexing/structured/Types";
+import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
+import type { StructuredStringTokenizerConfig } from "../../../../Indexing/structured/StructuredStringLike";
 import {
   buildStructuredTermKey,
   buildStructuredDocFieldsKey,
@@ -38,12 +38,12 @@ import {
   type StructuredRangeIndexKey,
   type StructuredTermIndexItem,
   type StructuredTermIndexKey,
-} from "./StructuredIndexRecords";
+} from "../../../../Indexing/structured/StructuredIndexRecords";
 import {
   StructuredDdbWriter,
   type StructuredWriterOptions,
   type StructuredWriterDependencies,
-} from "./StructuredWriter";
+} from "../../../../Indexing/structured/StructuredWriter";
 import {
   INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
   buildStructuredGenerationStateItem,
@@ -55,8 +55,8 @@ import {
   type StructuredOccupancyBackfillDocument,
   type StructuredOccupancyGenerationState,
   type StructuredOccupancyItem,
-} from "./StructuredOccupancy";
-import type { StructuredDerivedMutation } from "./StructuredWriter";
+} from "../../../../Indexing/structured/StructuredOccupancy";
+import type { StructuredDerivedMutation } from "../../../../Indexing/structured/StructuredWriter";
 
 type DynamoKey = Record<string, unknown>;
 
