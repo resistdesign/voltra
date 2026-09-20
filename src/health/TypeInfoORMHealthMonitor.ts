@@ -44,6 +44,12 @@ export type TypeInfoORMHealthMonitorRunResult = {
   confirmedSchemaDriftCount: number;
   /** Canonical items reconciled to the confirmed current schema. */
   schemaReconciledItemCount: number;
+  /** Persisted slow-operation records promoted to Health findings. */
+  slowOperationFindingCount: number;
+  /** Persisted failed-operation records promoted to Health findings. */
+  failedOperationFindingCount: number;
+  /** Raw operation records consumed during this bounded pass. */
+  operationRecordsProcessedCount: number;
   /** Findings that could not be safely scoped or maintained. */
   suspiciousCount: number;
   /** Expired Health records removed during bounded retention cleanup. */
@@ -138,6 +144,9 @@ const findingId = (typeName: string, docId: DocId): string =>
   `health:finding:orphan:${encodeURIComponent(typeName)}:${encodeURIComponent(
     JSON.stringify([typeof docId, docId]),
   )}`;
+
+const operationFindingId = (operationRecordId: string): string =>
+  `health:finding:operation:${encodeURIComponent(operationRecordId)}`;
 
 const schemaFindingId = (typeName: string): string =>
   `health:finding:schema:${encodeURIComponent(typeName)}`;
@@ -646,9 +655,10 @@ export class TypeInfoORMHealthMonitor {
       }
     }
 
-    const retention = await this.pruneExpiredRecords(
+    const retention = await this.inspectHealthRecords(
       checkpoint.retentionCursor,
       now,
+      runId,
     );
     checkpoint.retentionCursor = retention.cursor;
     const indexCycleComplete =
@@ -726,6 +736,9 @@ export class TypeInfoORMHealthMonitor {
       schemaDriftFindingCount: schemaState.findingCount,
       confirmedSchemaDriftCount: schemaState.confirmedCount,
       schemaReconciledItemCount,
+      slowOperationFindingCount: retention.slowOperationFindingCount,
+      failedOperationFindingCount: retention.failedOperationFindingCount,
+      operationRecordsProcessedCount: retention.operationRecordsProcessedCount,
       suspiciousCount,
       expiredRecordCount: retention.deletedCount,
       continuation,
@@ -926,15 +939,25 @@ export class TypeInfoORMHealthMonitor {
     });
   };
 
-  private pruneExpiredRecords = async (
+  private inspectHealthRecords = async (
     cursor: string | undefined,
     now: number,
-  ): Promise<{ deletedCount: number; cursor?: string }> => {
+    runId: string,
+  ): Promise<{
+    deletedCount: number;
+    slowOperationFindingCount: number;
+    failedOperationFindingCount: number;
+    operationRecordsProcessedCount: number;
+    cursor?: string;
+  }> => {
     const page = await this.store.listRecords({
       itemsPerPage: this.options.retentionPageSize,
       cursor,
     });
     let deletedCount = 0;
+    let slowOperationFindingCount = 0;
+    let failedOperationFindingCount = 0;
+    let operationRecordsProcessedCount = 0;
 
     for (const record of page.records) {
       if (
@@ -944,11 +967,62 @@ export class TypeInfoORMHealthMonitor {
       ) {
         await this.store.deleteRecord(record.id);
         deletedCount += 1;
+        continue;
+      }
+
+      if (record.kind !== "operation" || record.status !== "pending") {
+        continue;
+      }
+
+      const scope =
+        record.scope === "failedOperation"
+          ? "failedOperation"
+          : record.scope === "slowOperation"
+            ? "slowOperation"
+            : undefined;
+
+      if (!scope) {
+        await this.store.updateRecord(record.id, {
+          status: "dismissed",
+          correlationId: runId,
+        });
+        continue;
+      }
+
+      await this.store.putRecord(operationFindingId(record.id), {
+        kind: "finding",
+        status: "confirmed",
+        typeName: record.typeName,
+        operation: record.operation,
+        scope,
+        correlationId: runId,
+        count: record.count,
+        value: record.value,
+        expiresAt: now + this.options.recordRetentionMs,
+        data: {
+          findingType: scope,
+          operationRecordId: record.id,
+          ...(record.data ? { observation: record.data } : {}),
+        },
+      });
+      await this.store.updateRecord(record.id, {
+        status: "complete",
+        correlationId: runId,
+      });
+
+      operationRecordsProcessedCount += 1;
+      if (scope === "failedOperation") {
+        failedOperationFindingCount += 1;
+      } else {
+        slowOperationFindingCount += 1;
       }
     }
 
     return {
       deletedCount,
+      slowOperationFindingCount,
+      failedOperationFindingCount,
+      operationRecordsProcessedCount,
       cursor: page.cursor,
     };
   };
