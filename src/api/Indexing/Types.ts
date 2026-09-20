@@ -300,6 +300,15 @@ export type TextIndexMaintenance = {
   listDocuments(
     options?: TextIndexDocumentListOptions,
   ): Promise<TextIndexDocumentPage>;
+  /**
+   * Read the normalized persisted document mirror for one document/field pair.
+   *
+   * Undefined means no current text-index mirror exists.
+   */
+  readDocumentIndex(
+    docId: DocId,
+    indexField: string,
+  ): Promise<string | undefined>;
   /** Remove every text-index artifact for one document/field pair. */
   removeDocumentIndex(docId: DocId, indexField: string): Promise<void>;
 };
