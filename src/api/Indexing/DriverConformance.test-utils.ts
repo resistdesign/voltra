@@ -234,9 +234,9 @@ export const runIndexDriverConformanceScenario = async () => {
 
 export const runIndexDriverConformanceEqualScenario = async () => {
   const result = await runIndexDriverConformanceScenario();
-  return (
-    result.fullTextEqual &&
-    result.structuredEqual &&
-    result.relationalEqual
-  );
+  return {
+    fullText: result.fullTextEqual,
+    structured: result.structuredEqual,
+    relational: result.relationalEqual,
+  };
 };
