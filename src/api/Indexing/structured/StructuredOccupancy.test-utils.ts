@@ -1,7 +1,7 @@
 import { searchStructured } from "./SearchStructured";
-import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
-import { StructuredDdbBackend } from "./StructuredDdbBackend";
-import { InMemoryDynamoQueryClient } from "../ddb/InMemoryDynamoQueryClient.test-utils";
+import { StructuredInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { StructuredDdbBackend } from "../../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/StructuredDdbBackend";
+import { InMemoryDynamoQueryClient } from "../../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
 import {
   encodeStructuredCriterionChunk,
   type StructuredOccupancyFieldMap,
