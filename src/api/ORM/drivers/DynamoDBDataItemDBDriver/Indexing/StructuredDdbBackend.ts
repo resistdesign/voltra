@@ -42,7 +42,7 @@ import {
   structuredTermIndexSchema,
 } from "./StructuredSchema";
 import {
-  StructuredDdbWriter,
+  StructuredIndexWriter,
   type StructuredWriterOptions,
   type StructuredWriterDependencies,
 } from "../../../../Indexing/structured/StructuredWriter";
@@ -921,7 +921,7 @@ export class StructuredDdbBackend {
    */
   constructor(config: StructuredDdbConfig) {
     this.reader = new StructuredDdbReader(config);
-    this.writer = new StructuredDdbWriter(
+    this.writer = new StructuredIndexWriter(
       new StructuredDdbWriterDependencies(config),
       {
         ...config.writerOptions,
