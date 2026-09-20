@@ -6,11 +6,11 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "genericFileNamesAreStorageNeutral": true,
-        "genericImportsDoNotReferenceDrivers": true,
-        "genericImportsDoNotReferenceStorageSDKs": true,
-        "genericSourceHasNoDynamoContracts": true,
-        "genericSourceHasNoS3Contracts": true
+        "storageSpecificFileNames": [],
+        "driverImports": [],
+        "storageSdkImports": [],
+        "dynamoContracts": [],
+        "s3Contracts": []
       }
     }
   ]
