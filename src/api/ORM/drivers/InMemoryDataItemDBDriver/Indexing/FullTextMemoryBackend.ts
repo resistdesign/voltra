@@ -4,13 +4,13 @@
  * In-memory fulltext backend that combines lossy and exact indexes plus
  * doc-token membership checks. Useful for tests and local development.
  */
-import { ExactIndex } from "../exact/ExactIndex";
-import { LossyIndex } from "../lossy/LossyIndex";
-import { tokenize } from "../tokenize";
+import { ExactIndex } from "./ExactIndex";
+import { LossyIndex } from "./LossyIndex";
+import { tokenize } from "../../../../Indexing/tokenize";
 import {
   decodeIndexScalarIdentity,
   encodeIndexScalarIdentity,
-} from "../IndexTable";
+} from "../../../../Indexing/IndexTable";
 import type {
   DocId,
   DocTokenBatchReader,
@@ -23,7 +23,7 @@ import type {
   TextIndexDocumentListOptions,
   TextIndexDocumentPage,
   TokenStats,
-} from "../Types";
+} from "../../../../Indexing/Types";
 
 /**
  * In-memory backend combining lossy and exact indexes.
