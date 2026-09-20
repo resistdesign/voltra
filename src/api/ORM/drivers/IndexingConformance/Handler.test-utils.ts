@@ -1,12 +1,12 @@
-import { FullTextMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { FullTextMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
 import {
   indexDocument,
   removeDocument,
   searchExact,
   searchLossy,
   setIndexBackend,
-} from "./API";
-import { handler, setHandlerDependencies } from "./Handler";
+} from "../../../Indexing/API";
+import { handler, setHandlerDependencies } from "../../../Indexing/Handler";
 
 const runIndexingHandlerScenario = async () => {
   const backend = new FullTextMemoryBackend();
