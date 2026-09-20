@@ -722,6 +722,168 @@ export class TypeInfoORMHealthMonitor {
       }
     }
 
+    if (schemaState.findingCount === 0 && !checkpoint.canonicalComplete) {
+      const typeNames = this.descriptors.map((descriptor) => descriptor.typeName);
+      let remainingCanonicalBudget = this.options.maxCanonicalItemsPerRun;
+      let typeIndex = checkpoint.canonicalTypeName
+        ? Math.max(0, typeNames.indexOf(checkpoint.canonicalTypeName))
+        : 0;
+
+      if (
+        checkpoint.canonicalTypeName &&
+        !typeNames.includes(checkpoint.canonicalTypeName)
+      ) {
+        checkpoint.canonicalTypeName = undefined;
+        checkpoint.canonicalCursor = undefined;
+        typeIndex = 0;
+      }
+
+      while (
+        typeIndex < typeNames.length &&
+        remainingCanonicalBudget > 0
+      ) {
+        const typeName = typeNames[typeIndex];
+        const pageStartCursor =
+          checkpoint.canonicalTypeName === typeName
+            ? checkpoint.canonicalCursor
+            : undefined;
+        const page = await this.orm.inspectStoredTypeIndexesPage(typeName, {
+          itemsPerPage: Math.min(
+            this.options.indexPageSize,
+            remainingCanonicalBudget,
+          ),
+          cursor: pageStartCursor,
+        });
+        remainingCanonicalBudget -= page.processedCount;
+
+        for (const capability of page.unsupportedCapabilities) {
+          suspiciousCount += 1;
+          await this.store.putRecord(
+            inspectionCapabilityFindingId(typeName, capability),
+            {
+              kind: "finding",
+              status: "open",
+              typeName,
+              scope: "indexInspectionUnsupported",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "indexInspectionUnsupported",
+                capability,
+              },
+            },
+          );
+        }
+
+        let deferredInPage = false;
+
+        for (const unhealthy of page.unhealthyItems) {
+          missingIndexFindingCount += 1;
+          const currentFindingId = missingIndexFindingId(
+            typeName,
+            unhealthy.primaryFieldValue,
+          );
+          await this.store.putRecord(currentFindingId, {
+            kind: "finding",
+            status: "confirmed",
+            typeName,
+            itemId: unhealthy.primaryFieldValue,
+            scope: "canonicalIndexMismatch",
+            correlationId: runId,
+            expiresAt: now + this.options.recordRetentionMs,
+            data: {
+              findingType: "canonicalIndexMismatch",
+              issues: unhealthy.issues,
+            },
+          });
+
+          if (repairMode !== "apply") {
+            continue;
+          }
+
+          if (
+            repairedCount + reindexedItemCount >=
+            this.options.maxRepairsPerRun
+          ) {
+            repairDeferred = true;
+            deferredInPage = true;
+            continue;
+          }
+
+          try {
+            await this.orm.reindexStoredItem(
+              typeName,
+              unhealthy.primaryFieldValue,
+            );
+            reindexedItemCount += 1;
+            await this.store.updateRecord(currentFindingId, {
+              status: "repaired",
+              correlationId: runId,
+            });
+          } catch (error: any) {
+            if (error?.message === "ITEM_NOT_FOUND") {
+              await this.store.updateRecord(currentFindingId, {
+                status: "open",
+                correlationId: runId,
+                data: {
+                  findingType: "canonicalIndexMismatch",
+                  issues: unhealthy.issues,
+                  concurrentCanonicalDelete: true,
+                },
+              });
+              continue;
+            }
+
+            throw error;
+          }
+        }
+
+        if (deferredInPage) {
+          checkpoint.canonicalTypeName = typeName;
+          checkpoint.canonicalCursor = pageStartCursor;
+          break;
+        }
+
+        if (page.cursor && page.cursor === pageStartCursor) {
+          suspiciousCount += 1;
+          await this.store.putRecord(
+            inspectionCapabilityFindingId(typeName, "structured"),
+            {
+              kind: "finding",
+              status: "open",
+              typeName,
+              scope: "canonicalAuditNonProgress",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "canonicalAuditNonProgress",
+              },
+            },
+          );
+          typeIndex += 1;
+          checkpoint.canonicalTypeName = typeNames[typeIndex];
+          checkpoint.canonicalCursor = undefined;
+          continue;
+        }
+
+        if (page.cursor) {
+          checkpoint.canonicalTypeName = typeName;
+          checkpoint.canonicalCursor = page.cursor;
+          break;
+        }
+
+        typeIndex += 1;
+        checkpoint.canonicalTypeName = typeNames[typeIndex];
+        checkpoint.canonicalCursor = undefined;
+      }
+
+      checkpoint.canonicalComplete = typeIndex >= typeNames.length;
+    } else if (schemaState.findingCount > 0) {
+      checkpoint.canonicalTypeName = undefined;
+      checkpoint.canonicalCursor = undefined;
+      checkpoint.canonicalComplete = false;
+    }
+
     const retention = await this.inspectHealthRecords(
       checkpoint.retentionCursor,
       now,
