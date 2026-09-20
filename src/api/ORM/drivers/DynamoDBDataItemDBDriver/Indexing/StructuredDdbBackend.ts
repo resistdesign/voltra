@@ -9,7 +9,6 @@ import type {
   WriteRequest,
 } from "./Types";
 import type { DocId } from "../../../../Indexing/Types";
-import { assertIndexSortKey } from "../../../../Indexing/IndexTable";
 import {
   assertDynamoIndexSortKey,
   assertIndexTableConfig,
@@ -107,10 +106,10 @@ const encodeCursorKey = (key?: DynamoKey): string | undefined =>
   key ? JSON.stringify(key) : undefined;
 
 const buildRangeLowerKey = (value: WhereValue): string =>
-  assertIndexSortKey(`${serializeStructuredValue(value)}#`);
+  assertDynamoIndexSortKey(`${serializeStructuredValue(value)}#`);
 
 const buildRangeUpperKey = (value: WhereValue): string =>
-  assertIndexSortKey(`${serializeStructuredValue(value)}#\uffff`);
+  assertDynamoIndexSortKey(`${serializeStructuredValue(value)}#\uffff`);
 
 /**
  * Read-only structured queries against DynamoDB term/range indexes.
@@ -346,8 +345,8 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
             criterionField,
             sortField,
           ),
-          ":lower": assertIndexSortKey(lowerChunk),
-          ":upper": assertIndexSortKey(upperChunk),
+          ":lower": assertDynamoIndexSortKey(lowerChunk),
+          ":upper": assertDynamoIndexSortKey(upperChunk),
         },
         ExclusiveStartKey: decodeCursorKey(options.cursor),
         Limit: options.limit,
