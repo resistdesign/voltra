@@ -1014,35 +1014,96 @@ export class TypeInfoORMHealthMonitor {
             : undefined;
 
       if (!scope) {
-        await this.store.updateRecord(record.id, {
-          status: "dismissed",
-          correlationId: runId,
-        });
+        await this.store.deleteRecord(record.id);
+        deletedCount += 1;
         continue;
       }
 
-      await this.store.putRecord(operationFindingId(record.id), {
+      const statsId = operationStatsId(record);
+      const existingStats = await this.store.readRecord(statsId);
+      const previousCount = existingStats?.count ?? 0;
+      const previousData = existingStats?.data ?? {};
+      const durationMs = record.value ?? 0;
+      const previousTotalDurationMs =
+        typeof previousData.totalDurationMs === "number"
+          ? previousData.totalDurationMs
+          : 0;
+      const previousMaxDurationMs =
+        typeof previousData.maxDurationMs === "number"
+          ? previousData.maxDurationMs
+          : 0;
+      const previousFailureCount =
+        typeof previousData.failureCount === "number"
+          ? previousData.failureCount
+          : 0;
+      const previousResultCountTotal =
+        typeof previousData.resultCountTotal === "number"
+          ? previousData.resultCountTotal
+          : 0;
+      const nextCount = previousCount + 1;
+      const queryFingerprint =
+        typeof record.data?.queryFingerprint === "string"
+          ? record.data.queryFingerprint
+          : undefined;
+      const startedAt =
+        typeof record.data?.startedAt === "number"
+          ? record.data.startedAt
+          : undefined;
+      const resultCount =
+        typeof record.data?.resultCount === "number"
+          ? record.data.resultCount
+          : undefined;
+
+      await this.store.putRecord(statsId, {
+        kind: "stats",
+        status: "complete",
+        typeName: record.typeName,
+        operation: record.operation,
+        scope: "operationStats",
+        correlationId: runId,
+        count: nextCount,
+        value: Math.max(previousMaxDurationMs, durationMs),
+        expiresAt: now + this.options.recordRetentionMs,
+        data: {
+          aggregationIdentity: operationStatsIdentity(record),
+          ...(queryFingerprint ? { queryFingerprint } : {}),
+          totalDurationMs: previousTotalDurationMs + durationMs,
+          maxDurationMs: Math.max(previousMaxDurationMs, durationMs),
+          lastDurationMs: durationMs,
+          failureCount:
+            previousFailureCount + (scope === "failedOperation" ? 1 : 0),
+          resultCountTotal:
+            previousResultCountTotal + (resultCount ?? 0),
+          ...(startedAt !== undefined ? { lastStartedAt: startedAt } : {}),
+        },
+      });
+
+      await this.store.putRecord(operationFindingId(statsId), {
         kind: "finding",
         status: "confirmed",
         typeName: record.typeName,
         operation: record.operation,
         scope,
         correlationId: runId,
-        count: record.count,
-        value: record.value,
+        count: nextCount,
+        value: Math.max(previousMaxDurationMs, durationMs),
         expiresAt: now + this.options.recordRetentionMs,
         data: {
           findingType: scope,
-          operationRecordId: record.id,
-          ...(record.data ? { observation: record.data } : {}),
+          statsRecordId: statsId,
+          ...(queryFingerprint ? { queryFingerprint } : {}),
+          sampleCount: nextCount,
+          totalDurationMs: previousTotalDurationMs + durationMs,
+          maxDurationMs: Math.max(previousMaxDurationMs, durationMs),
+          failureCount:
+            previousFailureCount + (scope === "failedOperation" ? 1 : 0),
         },
       });
-      await this.store.updateRecord(record.id, {
-        status: "complete",
-        correlationId: runId,
-      });
 
+      await this.store.deleteRecord(record.id);
+      deletedCount += 1;
       operationRecordsProcessedCount += 1;
+
       if (scope === "failedOperation") {
         failedOperationFindingCount += 1;
       } else {
