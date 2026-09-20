@@ -8,6 +8,7 @@ import type {
   TypeInfoORMService,
 } from "../api/ORM/TypeInfoORMService";
 import type { DocId } from "../api/Indexing/Types";
+import { DATA_ITEM_DB_DRIVER_ERRORS } from "../api/ORM/drivers/common/Types";
 import { DriverHealthStore } from "./DriverHealthStore";
 import type {
   HealthRecord,
@@ -821,7 +822,7 @@ export class TypeInfoORMHealthMonitor {
               correlationId: runId,
             });
           } catch (error: any) {
-            if (error?.message === "ITEM_NOT_FOUND") {
+            if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
               await this.store.updateRecord(currentFindingId, {
                 status: "open",
                 correlationId: runId,
@@ -892,6 +893,8 @@ export class TypeInfoORMHealthMonitor {
     checkpoint.retentionCursor = retention.cursor;
     const indexCycleComplete =
       !!checkpoint.structuredComplete && !!checkpoint.textComplete;
+    const canonicalCycleComplete =
+      schemaState.findingCount > 0 || !!checkpoint.canonicalComplete;
     const schemaRepairComplete =
       schemaState.findingCount === 0 ||
       (repairMode === "apply" &&
@@ -934,6 +937,7 @@ export class TypeInfoORMHealthMonitor {
 
     const continuation =
       !indexCycleComplete ||
+      !canonicalCycleComplete ||
       !!retention.cursor ||
       (repairMode === "apply" &&
         schemaState.confirmed &&
@@ -946,7 +950,10 @@ export class TypeInfoORMHealthMonitor {
       !schemaRepairComplete;
 
     await this.writeCheckpoint(
-      indexCycleComplete && !repairDeferred && !preserveSchemaProgress
+      indexCycleComplete &&
+      canonicalCycleComplete &&
+      !repairDeferred &&
+      !preserveSchemaProgress
         ? {
             retentionCursor: checkpoint.retentionCursor,
             schemaSignature: checkpoint.schemaSignature,
@@ -966,6 +973,8 @@ export class TypeInfoORMHealthMonitor {
       schemaDriftFindingCount: schemaState.findingCount,
       confirmedSchemaDriftCount: schemaState.confirmedCount,
       schemaReconciledItemCount,
+      missingIndexFindingCount,
+      reindexedItemCount,
       slowOperationFindingCount: retention.slowOperationFindingCount,
       failedOperationFindingCount: retention.failedOperationFindingCount,
       operationRecordsProcessedCount: retention.operationRecordsProcessedCount,
@@ -1154,6 +1163,15 @@ export class TypeInfoORMHealthMonitor {
           ? data.schemaCursor
           : undefined,
       schemaReconcileComplete: data.schemaReconcileComplete === true,
+      canonicalTypeName:
+        typeof data.canonicalTypeName === "string"
+          ? data.canonicalTypeName
+          : undefined,
+      canonicalCursor:
+        typeof data.canonicalCursor === "string"
+          ? data.canonicalCursor
+          : undefined,
+      canonicalComplete: data.canonicalComplete === true,
     };
   };
 
