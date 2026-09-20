@@ -19,52 +19,13 @@ import type {
   Edge,
   EdgeKey,
   EdgePage,
+  RelationalBackend,
   RelationalQueryOptions,
 } from "../../Indexing/rel/Types";
 
-type EdgeMetadata = Record<string, unknown>;
+export type { RelationalBackend } from "../../Indexing/rel/Types";
 
-/**
- * Relational backend interface for relationship edge operations.
- */
-export type RelationalBackend<TMetadata extends EdgeMetadata = EdgeMetadata> = {
-  /**
-   * Insert or update an edge.
-   * @param edge Edge to store.
-   * @returns Promise resolved once stored.
-   */
-  putEdge(edge: Edge<TMetadata>): Promise<void> | void;
-  /**
-   * Remove an edge by key.
-   * @param key Edge key to remove.
-   * @returns Promise resolved once removed.
-   */
-  removeEdge(key: EdgeKey): Promise<void> | void;
-  /**
-   * Query outgoing edges for an entity and relation.
-   * @param fromId Source entity id.
-   * @param relation Relation name.
-   * @param options Optional paging options.
-   * @returns Page of outgoing edges.
-   */
-  getOutgoing(
-    fromId: string,
-    relation: string,
-    options?: RelationalQueryOptions,
-  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
-  /**
-   * Query incoming edges for an entity and relation.
-   * @param toId Target entity id.
-   * @param relation Relation name.
-   * @param options Optional paging options.
-   * @returns Page of incoming edges.
-   */
-  getIncoming(
-    toId: string,
-    relation: string,
-    options?: RelationalQueryOptions,
-  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
-};
+type EdgeMetadata = Record<string, unknown>;
 
 /**
  * Configuration for the indexing relationship driver.
