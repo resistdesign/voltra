@@ -9,9 +9,6 @@ import type { StructuredOccupancyFieldMap } from "./StructuredOccupancy";
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
-  INDEX_TABLE_KIND_ATTRIBUTE,
-  INDEX_TABLE_PARTITION_KEY,
-  INDEX_TABLE_SORT_KEY,
   assertIndexTableKey,
   buildIndexDocumentSortKey,
   buildIndexKey,
@@ -38,7 +35,7 @@ export type StructuredDocFieldsRecord = Record<
 export type StructuredTermMode = "eq" | "contains";
 
 /**
- * Physical key shape for term index entries.
+ * Logical key shape for term index entries.
  */
 export type StructuredTermIndexKey = IndexTableKey;
 
@@ -66,7 +63,7 @@ export type StructuredTermIndexItem = StructuredTermIndexKey & {
 };
 
 /**
- * Physical key shape for range index entries.
+ * Logical key shape for range index entries.
  */
 export type StructuredRangeIndexKey = IndexTableKey;
 
@@ -89,7 +86,7 @@ export type StructuredRangeIndexItem = StructuredRangeIndexKey & {
 };
 
 /**
- * Physical key shape for structured document records.
+ * Logical key shape for structured document records.
  */
 export type StructuredDocFieldsKey = IndexTableKey;
 
@@ -130,40 +127,6 @@ export type StructuredDocFieldsState = {
 };
 
 /**
- * Schema metadata for the structured term index table.
- */
-export const structuredTermIndexSchema = {
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  fieldAttribute: "field",
-  valueAttribute: "value",
-  modeAttribute: "mode",
-} as const;
-
-/**
- * Schema metadata for the structured range index table.
- */
-export const structuredRangeIndexSchema = {
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  valueAttribute: "value",
-  docIdAttribute: "docId",
-} as const;
-
-/**
- * Schema metadata for the structured document fields table.
- */
-export const structuredDocFieldsSchema = {
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  fieldsAttribute: "fields",
-  versionAttribute: "version",
-} as const;
-
-/**
  * Encode a finite IEEE-754 number so lexicographic key order equals numeric order.
  * @param value Finite number to encode.
  * @returns Fixed-width hexadecimal representation.
@@ -173,7 +136,7 @@ export function encodeStructuredNumber(value: number): string {
 }
 
 /**
- * Serialize a structured value for physical key usage.
+ * Serialize a structured value for logical key usage.
  * @param value Structured value to serialize.
  * @returns Serialized string representation.
  */
@@ -300,7 +263,7 @@ export function buildStructuredDocFieldsItem(
   };
 }
 
-/** Build the physical key for canonical structured document state. */
+/** Build the logical key for canonical structured document state. */
 export function buildStructuredDocFieldsKey(docId: DocId): IndexTableKey {
   return assertIndexTableKey({
     pk: buildIndexScalarKey(
