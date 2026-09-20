@@ -7,14 +7,16 @@
 import type { DocId } from "../../../../Indexing/Types";
 import {
   INDEX_ITEM_KINDS,
-  INDEX_TABLE_KIND_ATTRIBUTE,
-  INDEX_TABLE_PARTITION_KEY,
-  INDEX_TABLE_SORT_KEY,
-  assertIndexTableKey,
   buildIndexDocumentSortKey,
   buildIndexKey,
   type IndexTableKey,
 } from "../../../../Indexing/IndexTable";
+import {
+  INDEX_TABLE_KIND_ATTRIBUTE,
+  INDEX_TABLE_PARTITION_KEY,
+  INDEX_TABLE_SORT_KEY,
+  assertDynamoIndexTableKey,
+} from "./IndexTable";
 
 /**
  * DynamoDB key shape for exact postings items.
@@ -72,7 +74,7 @@ export function buildExactDdbKey(
   indexField: string,
   docId: DocId,
 ): ExactDdbKey {
-  return assertIndexTableKey({
+  return assertDynamoIndexTableKey({
     pk: buildIndexKey(INDEX_ITEM_KINDS.fullTextExactPosting, indexField, token),
     sk: buildIndexDocumentSortKey(docId),
   });
