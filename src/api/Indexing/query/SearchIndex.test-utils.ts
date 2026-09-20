@@ -1,7 +1,7 @@
 import { indexDocument } from "../API";
 import { qualifyIndexField } from "../fieldQualification";
-import { FullTextMemoryBackend } from "../fulltext/FullTextMemoryBackend";
-import { StructuredInMemoryBackend } from "../structured/StructuredInMemoryBackend";
+import { FullTextMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
 import { searchIndex } from "./SearchIndex";
 import {
   createIndexBackend,
