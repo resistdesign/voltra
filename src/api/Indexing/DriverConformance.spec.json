@@ -4,8 +4,12 @@
     {
       "export": "runIndexDriverConformanceEqualScenario",
       "conditions": [],
-      "operation": "===",
-      "expectation": true
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fullText": true,
+        "structured": true,
+        "relational": true
+      }
     }
   ]
 }
