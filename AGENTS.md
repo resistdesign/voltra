@@ -12,6 +12,16 @@
     then proceed.
   - Only ask where work is tracked if the user prompt provides insufficient detail to create a plan.
 
+## Core Architecture: Storage Driver Isolation
+
+- **SEVERE CORE OBJECTIVE:** Voltra's ORM, indexing, health, query planning, maintenance, and other generic API behavior must remain storage/backend agnostic.
+- The generic API owns semantics and strategy: query planning, exact/range/membership behavior, full-text behavior, ordering, pagination, occupancy, maintenance, repair, schema-drift handling, and related invariants.
+- A storage driver owns only what is necessary to communicate with its backing storage system and implement Voltra's generic contracts.
+- **Nothing storage/driver specific may live outside a `drivers/` folder.** This includes DynamoDB-, S3-, SQL-, in-memory-, or future-backend-specific clients, request/response shapes, adapters, commands, marshalling, consistency knobs, storage queries, and persistence implementations.
+- Generic API modules must not import driver-specific modules or expose driver-specific types in generic contracts.
+- All supported drivers, including in-memory drivers, must receive the same Voltra indexing semantics by implementing the same generic driver contracts. Never remove or weaken generic functionality merely to separate storage concerns.
+- Treat any backend-specific contamination of generic API code as an architectural regression requiring correction before completion.
+
 ## Project Structure & Module Organization
 
 - `src/` holds the TypeScript source. Key areas include `src/api/`, `src/app/`, `src/common/`, and `src/iac/`.
