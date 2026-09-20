@@ -1,7 +1,4 @@
-import {
-  TypeInfoDataItem,
-  TypeInfoPack,
-} from "../../../../common/TypeParsing/TypeInfo";
+import { TypeInfoPack } from "../../../../common/TypeParsing/TypeInfo";
 import {
   ItemRelationshipInfo,
   ItemRelationshipInfoIdentifyingKeys,
