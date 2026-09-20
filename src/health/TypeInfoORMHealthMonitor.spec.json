@@ -197,6 +197,27 @@
         ],
         "unindexedFieldChangeKeepsFingerprint": true
       }
+    },
+    {
+      "export": "runHealthStatusPagingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": {
+          "examinedRecordCount": 2,
+          "openFindingCount": 1,
+          "confirmedFindingCount": 0,
+          "statsRecordCount": 1,
+          "continuation": true
+        },
+        "second": {
+          "examinedRecordCount": 1,
+          "openFindingCount": 0,
+          "confirmedFindingCount": 1,
+          "statsRecordCount": 0,
+          "continuation": false
+        }
+      }
     }
   ]
 }
