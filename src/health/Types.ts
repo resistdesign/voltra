@@ -13,6 +13,7 @@ import type { DataItemDBDriver } from "../api/ORM/drivers/common/Types";
  */
 export type HealthRecordKind =
   | "operation"
+  | "stats"
   | "finding"
   | "repair"
   | "run"
