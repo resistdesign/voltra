@@ -1,9 +1,9 @@
 import {
   buildStructuredLikePatternTokens,
   buildStructuredStringContainsTokens,
-} from "./StructuredStringLike";
-import { StructuredInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
-import { searchStructured } from "./SearchStructured";
+} from "../../../Indexing/structured/StructuredStringLike";
+import { StructuredInMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { searchStructured } from "../../../Indexing/structured/SearchStructured";
 
 export const structuredStringEmojiTokenBoundaryTokens = () =>
   buildStructuredStringContainsTokens("a🌹b", {
