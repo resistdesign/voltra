@@ -31,7 +31,7 @@ export const demoHealthOperationRecorder =
   });
 
 /**
- * Add a public, read-only Health MCP endpoint to the demo RouteMap.
+ * Add a public, non-destructive Health MCP endpoint to the demo RouteMap.
  *
  * The live demo intentionally exposes preview only. Production consumers can
  * enable the repair tool behind their own authenticated Voltra role/group.
