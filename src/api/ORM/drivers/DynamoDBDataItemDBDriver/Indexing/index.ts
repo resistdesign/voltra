@@ -6,6 +6,7 @@
  */
 export * from "./AwsSdkV3Adapter";
 export * from "./Types";
+export * from "./IndexTable";
 export * from "./IndexMutationCoordinator";
 export * from "./ExactDdb";
 export * from "./LossyDdb";
