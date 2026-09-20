@@ -14,3 +14,4 @@ export * from "./Types";
 export * from "./DriverHealthStore";
 export * from "./TypeInfoORMHealthMonitor";
 export * from "./TypeInfoORMHealthMCP";
+export * from "./TypeInfoORMHealthOperationRecorder";
