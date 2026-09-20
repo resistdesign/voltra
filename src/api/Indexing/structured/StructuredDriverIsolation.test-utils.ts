@@ -2,27 +2,27 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const indexingRoot = fileURLToPath(new URL("../", import.meta.url));
+const isolationTestPath = fileURLToPath(import.meta.url);
 
-const listProductionSources = (directory: string): string[] =>
+const listGenericSources = (directory: string): string[] =>
   readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = `${directory}/${entry.name}`;
     if (entry.isDirectory()) {
-      return listProductionSources(path);
+      return listGenericSources(path);
     }
     return entry.name.endsWith(".ts") &&
-      !entry.name.endsWith(".test-utils.ts") &&
-      !entry.name.endsWith(".spec.ts") &&
-      !entry.name.endsWith(".d.ts")
+      !entry.name.endsWith(".d.ts") &&
+      path !== isolationTestPath
       ? [path]
       : [];
   });
 
-const productionSources = listProductionSources(indexingRoot);
-const productionText = productionSources
+const genericSources = listGenericSources(indexingRoot);
+const genericText = genericSources
   .map((path) => readFileSync(path, "utf8"))
   .join("\n");
 
-const importStatements = productionSources
+const importStatements = genericSources
   .flatMap((path) =>
     Array.from(
       readFileSync(path, "utf8").matchAll(
@@ -38,10 +38,11 @@ const importStatements = productionSources
  *
  * Generic Indexing owns semantic behavior only. Concrete storage technology,
  * SDKs, adapters, persistence implementations, and driver imports must remain
- * under driver folders.
+ * under driver folders. This includes test utilities: driver-aware integration
+ * suites belong under drivers, not under generic Indexing.
  */
 export const runStructuredDriverIsolationScenario = () => {
-  const relativePaths = productionSources.map((path) =>
+  const relativePaths = genericSources.map((path) =>
     path.slice(indexingRoot.length + 1),
   );
 
@@ -55,11 +56,11 @@ export const runStructuredDriverIsolationScenario = () => {
       !/@aws-sdk|client-dynamodb|client-s3/.test(importStatements),
     genericSourceHasNoDynamoContracts:
       !/\b(?:DynamoDB|DynamoQueryClient|DynamoScanClient|ConsistentRead|ScanCommand|QueryCommand)\b/.test(
-        productionText,
+        genericText,
       ),
     genericSourceHasNoS3Contracts:
       !/\b(?:S3Client|GetObjectCommand|PutObjectCommand|ListObjectsV2Command)\b/.test(
-        productionText,
+        genericText,
       ),
   };
 };
