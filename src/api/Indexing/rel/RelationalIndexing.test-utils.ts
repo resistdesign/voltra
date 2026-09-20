@@ -1,4 +1,4 @@
-import { RelationalInMemoryBackend } from "./RelationalInMemoryBackend";
+import { RelationalInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
 import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
 import {
   RelationalDdbBackend,
@@ -7,7 +7,7 @@ import {
   buildRelationEdgeDdbKey,
   encodeRelationEdgePartitionKey,
   relationEdgesSchema,
-} from "./RelationalDdb";
+} from "../../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
 import {
   handler as relationalHandler,
   setRelationalHandlerDependencies,
