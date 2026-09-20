@@ -912,7 +912,7 @@ export class StructuredDdbBackend {
   /**
    * Writer implementation for structured indexing.
    */
-  readonly writer: StructuredDdbWriter;
+  readonly writer: StructuredIndexWriter;
   /** Explicit occupancy rebuild/activation operations. */
   readonly occupancyMaintenance: StructuredDdbOccupancyMaintenance;
 
