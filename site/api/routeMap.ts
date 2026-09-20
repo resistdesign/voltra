@@ -19,7 +19,10 @@ import {
   structuredStringTokenizer,
 } from "./indexing";
 import { addDemoMCPToRouteMap } from "./mcp";
-import { addDemoHealthMCPToRouteMap } from "./health";
+import {
+  addDemoHealthMCPToRouteMap,
+  demoHealthOperationRecorder,
+} from "./health";
 
 /**
  * Base route map containing lightweight demo routes that do not rely on DynamoDB.
@@ -61,6 +64,9 @@ export const DEMO_ORM_CONFIG = {
     }
 
     throw new Error("Invalid type.");
+  },
+  observability: {
+    onOperation: demoHealthOperationRecorder.observe,
   },
   indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(DemoTypeInfoMap, {
     mutationCoordinator: indexMutationCoordinator,
