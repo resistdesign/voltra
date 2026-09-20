@@ -44,8 +44,8 @@ import {
   decodeIndexIdentity,
   decodeIndexScalarIdentity,
 } from "../../../../Indexing/IndexTable";
+import { INDEX_TABLE_KIND_ATTRIBUTE } from "../../../../Indexing/IndexTable";
 import {
-  INDEX_TABLE_KIND_ATTRIBUTE,
   assertIndexTableConfig,
   type IndexTableConfig,
 } from "./IndexTable";
