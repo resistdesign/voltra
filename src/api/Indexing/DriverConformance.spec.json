@@ -1,0 +1,11 @@
+{
+  "file": "./DriverConformance.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexDriverConformanceEqualScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}
