@@ -18,6 +18,9 @@ type HealthPreviewResult = {
   schemaDriftFindingCount: number;
   confirmedSchemaDriftCount: number;
   schemaReconciledItemCount: number;
+  slowOperationFindingCount: number;
+  failedOperationFindingCount: number;
+  operationRecordsProcessedCount: number;
   suspiciousCount: number;
   expiredRecordCount: number;
   continuation: boolean;
@@ -124,6 +127,18 @@ export const HealthDemo: FC = () => {
             <tr>
               <td>Schema drift findings</td>
               <td>{result.schemaDriftFindingCount}</td>
+            </tr>
+            <tr>
+              <td>Slow operations found</td>
+              <td>{result.slowOperationFindingCount}</td>
+            </tr>
+            <tr>
+              <td>Failed operations found</td>
+              <td>{result.failedOperationFindingCount}</td>
+            </tr>
+            <tr>
+              <td>Operation records processed</td>
+              <td>{result.operationRecordsProcessedCount}</td>
             </tr>
             <tr>
               <td>Suspicious findings</td>
