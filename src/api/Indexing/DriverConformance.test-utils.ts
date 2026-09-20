@@ -241,9 +241,13 @@ export const runIndexDriverConformanceEqualScenario = async () => {
         lossy:
           JSON.stringify(result.memoryTextResult.lossy) ===
           JSON.stringify(result.dynamoTextResult.lossy),
-        exact:
-          JSON.stringify(result.memoryTextResult.exact) ===
-          JSON.stringify(result.dynamoTextResult.exact),
+        exact: {
+          equal:
+            JSON.stringify(result.memoryTextResult.exact) ===
+            JSON.stringify(result.dynamoTextResult.exact),
+          memory: result.memoryTextResult.exact,
+          dynamo: result.dynamoTextResult.exact,
+        },
         mirror: result.memoryTextResult.mirror === result.dynamoTextResult.mirror,
         listed:
           JSON.stringify(result.memoryTextResult.listed) ===
@@ -253,9 +257,13 @@ export const runIndexDriverConformanceEqualScenario = async () => {
         lossy:
           JSON.stringify(result.memoryTextResult.lossy) ===
           JSON.stringify(result.s3TextResult.lossy),
-        exact:
-          JSON.stringify(result.memoryTextResult.exact) ===
-          JSON.stringify(result.s3TextResult.exact),
+        exact: {
+          equal:
+            JSON.stringify(result.memoryTextResult.exact) ===
+            JSON.stringify(result.s3TextResult.exact),
+          memory: result.memoryTextResult.exact,
+          s3: result.s3TextResult.exact,
+        },
         mirror: result.memoryTextResult.mirror === result.s3TextResult.mirror,
         listed:
           JSON.stringify(result.memoryTextResult.listed) ===
