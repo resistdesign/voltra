@@ -77,6 +77,7 @@ class S3RelationalIndexStorage<
     relation: string;
     direction: "out" | "in";
     limit?: number;
+    lastId?: string;
     continuationToken?: string;
   }) {
     const page = await this.records.listPartition<
@@ -87,6 +88,9 @@ class S3RelationalIndexStorage<
       {
         limit: query.limit,
         cursor: query.continuationToken,
+        afterSortKey: query.lastId
+          ? buildIndexDocumentSortKey(query.lastId)
+          : undefined,
       },
     );
 
