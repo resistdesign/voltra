@@ -61,8 +61,9 @@ export class InMemoryS3IndexObjectStore implements S3IndexObjectStore {
     const ordered = Array.from(this.entries.keys())
       .filter((key) => key.startsWith(prefix))
       .sort();
-    const start = options.cursor
-      ? Math.max(0, ordered.findIndex((key) => key === options.cursor) + 1)
+    const resumeKey = options.cursor ?? options.afterKey;
+    const start = resumeKey
+      ? Math.max(0, ordered.findIndex((key) => key === resumeKey) + 1)
       : 0;
     const limit = Math.max(1, options.limit ?? 100);
     const keys = ordered.slice(start, start + limit);
