@@ -1622,6 +1622,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           }
         }
 
+        if (structuredFields.length === 0 && textFields.length === 0) {
+          continue;
+        }
+
         const sortedCapabilities = Object.entries(capabilities)
           .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
           .map(([fieldName, capability]) => [
@@ -1647,6 +1651,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             },
           ]);
         const sortedTypeFields = Object.entries(typeInfo.fields ?? {})
+          .filter(
+            ([fieldName]) =>
+              fieldName === String(typeInfo.primaryField) ||
+              Object.prototype.hasOwnProperty.call(capabilities, fieldName),
+          )
           .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
           .map(([fieldName, field]) => [
             fieldName,
