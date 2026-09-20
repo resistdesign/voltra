@@ -35,6 +35,9 @@ export type RelationalStorageQuery = {
   relation: string;
   direction: Direction;
   limit?: number;
+  /** Generic last-id resume state used by simple ordered stores. */
+  lastId?: string;
+  /** Optional opaque continuation state used by optimized stores. */
   continuationToken?: string;
 };
 
@@ -42,6 +45,9 @@ export type RelationalStoragePage<
   TMetadata = Record<string, unknown>,
 > = {
   records: Array<RelationalStorageRecord<TMetadata>>;
+  /** Generic last-id continuation state. */
+  lastId?: string;
+  /** Optional opaque continuation state from the storage driver. */
   continuationToken?: string;
 };
 
@@ -96,29 +102,20 @@ export class RelationalIndexBackend<
     private readonly storage: RelationalIndexStorage<TMetadata>,
   ) {}
 
-  async putEdge(edge: Edge<TMetadata>): Promise<void> {
-    await this.storage.put(buildStorageRecords(edge));
+  putEdge(edge: Edge<TMetadata>): Promise<void> | void {
+    return this.storage.put(buildStorageRecords(edge));
   }
 
-  async removeEdge(key: EdgeKey): Promise<void> {
-    await this.storage.delete(buildStorageKeys(key));
+  removeEdge(key: EdgeKey): Promise<void> | void {
+    return this.storage.delete(buildStorageKeys(key));
   }
 
-  private async getDirectional(
+  private mapPage(
     entityId: string,
     relation: string,
     direction: Direction,
-    options: RelationalQueryOptions = {},
-  ): Promise<EdgePage<TMetadata>> {
-    const cursor = decodeRelationalCursor(options.cursor);
-    const page = await this.storage.query({
-      entityId,
-      relation,
-      direction,
-      limit: options.limit,
-      continuationToken: cursor?.continuationToken ?? cursor?.lastId,
-    });
-
+    page: RelationalStoragePage<TMetadata>,
+  ): EdgePage<TMetadata> {
     const edges = page.records.map((record) => ({
       key:
         direction === "out"
@@ -128,22 +125,54 @@ export class RelationalIndexBackend<
         ? { metadata: record.metadata }
         : {}),
     }));
+    const nextCursor = encodeRelationalCursor({
+      ...(page.lastId ? { lastId: page.lastId } : {}),
+      ...(page.continuationToken
+        ? { continuationToken: page.continuationToken }
+        : {}),
+    });
 
     return {
       edges,
-      nextCursor: page.continuationToken
-        ? encodeRelationalCursor({
-            continuationToken: page.continuationToken,
-          })
-        : undefined,
+      ...(nextCursor ? { nextCursor } : {}),
     };
+  }
+
+  private getDirectional(
+    entityId: string,
+    relation: string,
+    direction: Direction,
+    options: RelationalQueryOptions = {},
+  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata> {
+    const cursor = decodeRelationalCursor(options.cursor);
+    const result = this.storage.query({
+      entityId,
+      relation,
+      direction,
+      limit: options.limit,
+      lastId: cursor?.lastId,
+      continuationToken: cursor?.continuationToken,
+    });
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "then" in result &&
+      typeof result.then === "function"
+    ) {
+      return result.then((page) =>
+        this.mapPage(entityId, relation, direction, page),
+      );
+    }
+
+    return this.mapPage(entityId, relation, direction, result);
   }
 
   getOutgoing(
     fromId: string,
     relation: string,
     options: RelationalQueryOptions = {},
-  ): Promise<EdgePage<TMetadata>> {
+  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata> {
     return this.getDirectional(fromId, relation, "out", options);
   }
 
@@ -151,7 +180,7 @@ export class RelationalIndexBackend<
     toId: string,
     relation: string,
     options: RelationalQueryOptions = {},
-  ): Promise<EdgePage<TMetadata>> {
+  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata> {
     return this.getDirectional(toId, relation, "in", options);
   }
 }
