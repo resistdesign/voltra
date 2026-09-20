@@ -1,13 +1,13 @@
-import { indexDocument } from "../API";
-import { qualifyIndexField } from "../fieldQualification";
-import { FullTextMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
-import { StructuredInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
-import { searchIndex } from "./SearchIndex";
+import { indexDocument } from "../../../Indexing/API";
+import { qualifyIndexField } from "../../../Indexing/fieldQualification";
+import { FullTextMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { searchIndex } from "../../../Indexing/query/SearchIndex";
 import {
   createIndexBackend,
   IndexQueryError,
   type IndexExpression,
-} from "./Types";
+} from "../../../Indexing/query/Types";
 
 const typeName = "Record";
 const field = (name: string) => qualifyIndexField(typeName, name);
