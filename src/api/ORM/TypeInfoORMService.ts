@@ -84,7 +84,7 @@ import {
   replaceFullTextDocument as replaceFullTextDocumentIndex,
 } from "../Indexing/API";
 import { qualifyIndexField } from "../Indexing/fieldQualification";
-import type { IndexMutationCoordinator } from "../Indexing/ddb/IndexMutationCoordinator";
+import type { IndexMutationScope } from "../Indexing/Types";
 import {
   searchIndex,
   IndexQueryError,
@@ -234,7 +234,7 @@ export type TypeInfoORMDACConfig = {
  */
 export type TypeInfoORMIndexingConfig = {
   /** Shared scope that combines compatible derived writes across backends. */
-  mutationCoordinator?: Pick<IndexMutationCoordinator, "run">;
+  mutationCoordinator?: IndexMutationScope;
   /** Singular logical backend composed from specialized physical capabilities. */
   backend: IndexBackend;
   /** TypeInfo-derived source of truth for planning and mutation. */
