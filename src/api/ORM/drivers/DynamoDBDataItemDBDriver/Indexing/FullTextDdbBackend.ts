@@ -30,19 +30,21 @@ import {
   FULL_TEXT_TOKEN_STATS_SORT_KEY,
   fullTextTokenStatsSchema,
   lossyPostingsSchema,
-} from "../../../../Indexing/fulltext/Schema";
+} from "./FullTextSchema";
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
   INDEX_KEY_SEPARATOR,
   INDEX_KEY_VERSION,
-  INDEX_TABLE_KIND_ATTRIBUTE,
-  assertIndexTableConfig,
   decodeIndexDocumentSortKey,
   decodeIndexIdentity,
   decodeIndexScalarIdentity,
-  type IndexTableConfig,
 } from "../../../../Indexing/IndexTable";
+import {
+  INDEX_TABLE_KIND_ATTRIBUTE,
+  assertIndexTableConfig,
+  type IndexTableConfig,
+} from "./IndexTable";
 import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
 import type {
   DynamoBatchWriter,
