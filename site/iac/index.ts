@@ -251,7 +251,7 @@ const IaC = new SimpleCFT({
       },
       HealthMCPDemoEndpoint: {
         Description:
-          "Public read-only MCP endpoint for bounded Voltra Health previews.",
+          "Public non-destructive MCP endpoint for bounded Voltra Health previews.",
         Value: `https://${DOMAINS.API}${DEMO_HEALTH_MCP_ROUTE_PATH}`,
       },
     },
