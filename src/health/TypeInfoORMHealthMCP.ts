@@ -277,8 +277,8 @@ export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
   /**
    * Expose the destructive `healthRepair` tool.
    *
-   * Defaults to false so a Health MCP endpoint is read-only unless the
-   * application explicitly opts into agent-triggered repair.
+   * Defaults to false so the endpoint exposes only status/preview behavior
+   * unless the application explicitly opts into agent-triggered repair.
    */
   enableRepairTool?: boolean;
 };
