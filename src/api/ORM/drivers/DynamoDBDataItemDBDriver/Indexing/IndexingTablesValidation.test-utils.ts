@@ -1,7 +1,7 @@
-import type { DynamoQueryClient } from "./ddb/Types";
-import { FullTextDdbBackend } from "./fulltext/FullTextDdbBackend";
-import { createRelationEdgesDdbDependencies } from "./rel/RelationalDdb";
-import { StructuredDdbBackend } from "./structured/StructuredDdbBackend";
+import type { DynamoQueryClient } from "./Types";
+import { FullTextDdbBackend } from "./FullTextDdbBackend";
+import { createRelationEdgesDdbDependencies } from "./RelationalDdb";
+import { StructuredDdbBackend } from "./StructuredDdbBackend";
 
 const stubClient: DynamoQueryClient = {
   batchWriteItem: async () => ({}),
