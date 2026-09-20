@@ -6,6 +6,7 @@
  */
 import { ExactIndex } from "../exact/ExactIndex";
 import { LossyIndex } from "../lossy/LossyIndex";
+import { tokenize } from "../tokenize";
 import {
   decodeIndexScalarIdentity,
   encodeIndexScalarIdentity,
@@ -279,6 +280,49 @@ export class FullTextMemoryBackend
         ? { cursor: last.identity }
         : {}),
     };
+  }
+
+  /**
+   * Read normalized indexed content reconstructed from exact token positions.
+   * @param docId Document id to inspect.
+   * @param indexField Fully qualified persisted index field.
+   * @returns Normalized indexed content, or undefined when missing.
+   */
+  async readDocumentIndex(
+    docId: DocId,
+    indexField: string,
+  ): Promise<string | undefined> {
+    const encodedDocId = encodeIndexScalarIdentity(docId);
+    const tokens = new Set<string>();
+
+    for (const key of this.docTokenMembership) {
+      const parsed = JSON.parse(key) as [string, string, string];
+      if (parsed[0] === encodedDocId && parsed[1] === indexField) {
+        tokens.add(parsed[2]);
+      }
+    }
+
+    const byPosition = new Map<number, string>();
+    for (const token of tokens) {
+      const positions = this.ExactIndex.getPositions(token, indexField, docId);
+      if (!positions) {
+        continue;
+      }
+      for (const position of positions) {
+        byPosition.set(position, token);
+      }
+    }
+
+    if (byPosition.size === 0) {
+      return undefined;
+    }
+
+    const normalized = Array.from(byPosition.entries())
+      .sort(([left], [right]) => left - right)
+      .map(([, token]) => token)
+      .join(" ");
+
+    return tokenize(normalized).normalized || undefined;
   }
 
   /**
