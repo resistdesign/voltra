@@ -3,9 +3,9 @@ import { getTypeInfoORMRouteMap } from "../ORM/ORMRouteMap";
 import { InMemoryDataItemDBDriver } from "../ORM/drivers/InMemoryDataItemDBDriver";
 import { InMemoryItemRelationshipDBDriver } from "../ORM/drivers/InMemoryItemRelationshipDBDriver";
 import { ItemRelationshipInfoIdentifyingKeys } from "../../common/ItemRelationshipInfoTypes";
-import { FullTextMemoryBackend } from "../Indexing/fulltext/FullTextMemoryBackend";
-import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
-import { RelationalInMemoryBackend } from "../Indexing/rel/RelationalInMemoryBackend";
+import { FullTextMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { RelationalInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
 import type { DBXRuntime, DBXRuntimeConfig } from "./DBXTypes";
 import type {
   TypeInfo,
