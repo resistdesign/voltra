@@ -447,20 +447,6 @@ export class FullTextDdbWriter {
           },
         },
       });
-      writes.push({
-        tableName: this.docTokensTableName,
-        request: {
-          DeleteRequest: {
-            Key: {
-              [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
-                indexField,
-                token,
-              ),
-            },
-          },
-        },
-      });
     }
 
     for (const token of mutation.addLossyTokens) {
@@ -481,6 +467,26 @@ export class FullTextDdbWriter {
           },
         },
       });
+    }
+
+    for (const token of mutation.removeMembershipTokens) {
+      writes.push({
+        tableName: this.docTokensTableName,
+        request: {
+          DeleteRequest: {
+            Key: {
+              [docTokensSchema.partitionKey]: docKey,
+              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
+                indexField,
+                token,
+              ),
+            },
+          },
+        },
+      });
+    }
+
+    for (const token of mutation.addMembershipTokens) {
       writes.push({
         tableName: this.docTokensTableName,
         request: {
