@@ -99,7 +99,7 @@ export const HealthDemo: FC = () => {
       </p>
 
       <p>
-        <strong>Read-only MCP endpoint:</strong>{" "}
+        <strong>Non-destructive MCP endpoint:</strong>{" "}
         <code>{HEALTH_MCP_ENDPOINT}</code>
       </p>
 
