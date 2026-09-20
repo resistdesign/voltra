@@ -25,6 +25,38 @@ export type TypeInfoORMHealthMonitorRunOptions = {
   repairMode?: TypeInfoORMHealthRepairMode;
 };
 
+/** Bounded options for reading persisted Health status. */
+export type TypeInfoORMHealthStatusOptions = {
+  /** Maximum Health records summarized in one page. Defaults to 100. */
+  itemsPerPage?: number;
+  /** Opaque Health-store continuation token. */
+  cursor?: string;
+};
+
+/** One bounded page of persisted Health status counts. */
+export type TypeInfoORMHealthStatusResult = {
+  /** Health records examined in this page. */
+  examinedRecordCount: number;
+  /** Open findings requiring attention or further confirmation. */
+  openFindingCount: number;
+  /** Confirmed findings not yet marked repaired/dismissed. */
+  confirmedFindingCount: number;
+  /** Findings already repaired. */
+  repairedFindingCount: number;
+  /** Pending raw operation observations awaiting compaction. */
+  pendingOperationCount: number;
+  /** Compacted statistics records retained by Health. */
+  statsRecordCount: number;
+  /** Repair history records retained by Health. */
+  repairRecordCount: number;
+  /** Failed Health runs retained in this page. */
+  failedRunCount: number;
+  /** Opaque continuation token when more Health records remain. */
+  cursor?: string;
+  /** True when additional persisted Health records remain. */
+  continuation: boolean;
+};
+
 /** Result summary returned by one bounded Health monitor run. */
 export type TypeInfoORMHealthMonitorRunResult = {
   /** Health run record id. */
@@ -289,6 +321,67 @@ export class TypeInfoORMHealthMonitor {
     };
     this.descriptors = this.orm.getIndexMaintenanceTypeDescriptors();
   }
+
+  /**
+   * Read one bounded page of persisted Health status without running audits.
+   *
+   * @param options Bounded Health-store paging options.
+   * @returns Page-local Health counts and continuation state.
+   */
+  status = async (
+    options: TypeInfoORMHealthStatusOptions = {},
+  ): Promise<TypeInfoORMHealthStatusResult> => {
+    const page = await this.store.listRecords({
+      itemsPerPage: Math.max(1, options.itemsPerPage ?? 100),
+      cursor: options.cursor,
+    });
+
+    let openFindingCount = 0;
+    let confirmedFindingCount = 0;
+    let repairedFindingCount = 0;
+    let pendingOperationCount = 0;
+    let statsRecordCount = 0;
+    let repairRecordCount = 0;
+    let failedRunCount = 0;
+
+    for (const record of page.records) {
+      if (record.kind === "finding") {
+        if (record.status === "open") {
+          openFindingCount += 1;
+        } else if (record.status === "confirmed") {
+          confirmedFindingCount += 1;
+        } else if (record.status === "repaired") {
+          repairedFindingCount += 1;
+        }
+      }
+
+      if (record.kind === "operation" && record.status === "pending") {
+        pendingOperationCount += 1;
+      }
+      if (record.kind === "stats") {
+        statsRecordCount += 1;
+      }
+      if (record.kind === "repair") {
+        repairRecordCount += 1;
+      }
+      if (record.kind === "run" && record.status === "failed") {
+        failedRunCount += 1;
+      }
+    }
+
+    return {
+      examinedRecordCount: page.records.length,
+      openFindingCount,
+      confirmedFindingCount,
+      repairedFindingCount,
+      pendingOperationCount,
+      statsRecordCount,
+      repairRecordCount,
+      failedRunCount,
+      cursor: page.cursor,
+      continuation: !!page.cursor,
+    };
+  };
 
   /** Run a non-destructive bounded Health audit. */
   preview = async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
