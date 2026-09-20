@@ -50,6 +50,7 @@ Public entrypoints:
 - `@resistdesign/voltra/iac`
 - `@resistdesign/voltra/iac/packs`
 - `@resistdesign/voltra/build`
+- `@resistdesign/voltra/health`
 
 Common imports by domain:
 
@@ -62,7 +63,26 @@ import { createNativeFormRenderer, makeNativeEasyLayout } from "@resistdesign/vo
 import { SimpleCFT } from "@resistdesign/voltra/iac";
 import { addDNS } from "@resistdesign/voltra/iac/packs";
 import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
+import {
+  DriverHealthStore,
+  TypeInfoORMHealthMonitor,
+} from "@resistdesign/voltra/health";
 ```
+
+### ORM Health Monitoring
+
+`@resistdesign/voltra/health` adds optional, infrastructure-neutral ORM/index
+health monitoring. A monitor receives the application's configured ORM plus one
+driver-backed Health store, then performs bounded/resumable integrity audits,
+schema-drift reconciliation, retention cleanup, and strongly validated repairs.
+
+Slow or failed ORM operations can be recorded separately through
+`TypeInfoORMHealthOperationRecorder`. Native MCP helpers can expose bounded
+Health preview/repair tools through the normal Voltra RouteMap authorization
+model; destructive MCP repair is opt-in.
+
+See `examples/api/orm-health-monitoring.ts` and the live demo under
+`site/api/health.ts`.
 
 ### IaC Auth/Gateway Example
 
