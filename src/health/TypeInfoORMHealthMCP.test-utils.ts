@@ -31,6 +31,8 @@ const buildResult = (
   schemaDriftFindingCount: 2,
   confirmedSchemaDriftCount: repairMode === "preview" ? 0 : 2,
   schemaReconciledItemCount: repairMode === "preview" ? 0 : 5,
+  missingIndexFindingCount: repairMode === "preview" ? 2 : 1,
+  reindexedItemCount: repairMode === "preview" ? 0 : 1,
   slowOperationFindingCount: repairMode === "preview" ? 1 : 0,
   failedOperationFindingCount: repairMode === "preview" ? 0 : 1,
   operationRecordsProcessedCount: 1,
