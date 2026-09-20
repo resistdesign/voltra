@@ -4,6 +4,26 @@
 
 Add an optional, infrastructure-neutral Voltra health subsystem that can observe ORM performance, persist operational health state through one normal ORM-style data driver, audit index integrity, perform strongly validated bounded repairs, and resume scheduled work safely.
 
+## Critical Architecture Correction
+
+The Health work exposed a pre-existing architectural deviation in Indexing: storage-specific implementations and types currently live inside generic `src/api/Indexing/**`. This violates Voltra's core objective that ORM/indexing behavior is normalized across all current and future drivers.
+
+The correction must preserve functionality. Generic Indexing continues to own all semantics and strategies; drivers only implement the generic storage operations required to persist/query those structures.
+
+### Storage-driver isolation checklist
+
+- [x] Record storage-driver isolation as a repository-wide core objective in `AGENTS.md`.
+- [~] Inventory every storage-specific implementation/type currently outside `drivers/` and classify the generic behavior that must remain in Indexing.
+- [ ] Define the minimal generic index-storage contracts required by Voltra's existing exact/range/membership/full-text/relationship/occupancy/maintenance behavior.
+- [ ] Refactor generic indexing algorithms to depend only on those contracts, with no DynamoDB/S3/in-memory concepts in generic modules.
+- [ ] Move DynamoDB-specific indexing clients, adapters, persistence implementations, schemas/configuration, and tests into the Dynamo driver folder.
+- [ ] Move S3-specific indexing persistence implementations/tests into the S3 driver folder.
+- [ ] Move in-memory-specific indexing persistence implementations/tests into the in-memory driver folder while preserving identical generic indexing behavior.
+- [ ] Remove backend-specific exports/imports from generic Indexing barrels/docs and expose driver implementations through driver barrels instead.
+- [ ] Add architecture regression checks proving generic Indexing contains no backend-specific imports/names and no driver-specific implementation files.
+- [ ] Add cross-driver contract tests proving the same generic indexing strategies execute against multiple driver implementations.
+- [ ] Re-run the complete test/build/demo/export/consumer workflow and update PR #405 only after the architecture is clean and behavior is preserved.
+
 ## Checklist
 
 - [x] Add the public `@resistdesign/voltra/health` barrel and package/build/docs/export wiring.
