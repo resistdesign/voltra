@@ -7,19 +7,24 @@ import type { DocId } from "../../../../Indexing/Types";
 import { encodeSortableIndexValue } from "../../../../Indexing/IndexTable";
 import type { StructuredSearchDependencies } from "../../../../Indexing/structured/SearchStructured";
 import type { StructuredWriter } from "../../../../Indexing/structured/Handlers";
-import { StructuredIndexVersionMismatchError } from "../../../../Indexing/structured/StructuredWriter";
+import {
+  StructuredIndexWriter,
+  type StructuredDerivedMutation,
+  type StructuredWriterDependencies,
+} from "../../../../Indexing/structured/StructuredWriter";
 import type { StructuredQueryOptions, WhereValue } from "../../../../Indexing/structured/Types";
 import {
   buildStructuredDocFieldsItem,
   buildStructuredDocFieldsKey,
-  buildStructuredRangeItem,
   buildStructuredRangePartitionKey,
-  buildStructuredTermItem,
   buildStructuredTermKey,
   type StructuredDocFieldsItem,
   type StructuredDocFieldsRecord,
+  type StructuredDocFieldsState,
   type StructuredRangeIndexItem,
+  type StructuredRangeIndexKey,
   type StructuredTermIndexItem,
+  type StructuredTermIndexKey,
 } from "../../../../Indexing/structured/StructuredIndexRecords";
 import {
   type StructuredStringTokenizerConfig,
@@ -56,52 +61,6 @@ type StructuredPage = {
 const clone = <T>(value: T): T => structuredClone(value);
 const recordKey = ({ pk, sk }: { pk: string; sk: string }): string =>
   JSON.stringify([pk, sk]);
-
-const normalizeFields = (
-  fields: StructuredDocFieldsRecord,
-): StructuredDocFieldsRecord => {
-  const normalized: StructuredDocFieldsRecord = {};
-  for (const [field, value] of Object.entries(fields)) {
-    normalized[field] = Array.isArray(value)
-      ? (Array.from(new Set(value)) as WhereValue[])
-      : value;
-  }
-  return normalized;
-};
-
-const buildTermItems = (
-  docId: DocId,
-  fields: StructuredDocFieldsRecord,
-  tokenizer?: Partial<StructuredStringTokenizerConfig>,
-): StructuredTermIndexItem[] => {
-  const items: StructuredTermIndexItem[] = [];
-  for (const [field, value] of Object.entries(fields)) {
-    if (Array.isArray(value)) {
-      for (const entry of new Set(value)) {
-        items.push(buildStructuredTermItem(field, entry, "contains", docId));
-      }
-      continue;
-    }
-    items.push(buildStructuredTermItem(field, value, "eq", docId));
-    if (typeof value === "string") {
-      for (const token of buildStructuredStringContainsTokens(
-        value,
-        tokenizer,
-      )) {
-        items.push(buildStructuredTermItem(field, token, "contains", docId));
-      }
-    }
-  }
-  return items;
-};
-
-const buildRangeItems = (
-  docId: DocId,
-  fields: StructuredDocFieldsRecord,
-): StructuredRangeIndexItem[] =>
-  Object.entries(fields).flatMap(([field, value]) =>
-    Array.isArray(value) ? [] : [buildStructuredRangeItem(field, value, docId)],
-  );
 
 const compareValues = (left: WhereValue, right: WhereValue): number => {
   const leftKey = encodeSortableIndexValue(left);
@@ -165,12 +124,102 @@ export class StructuredInMemoryBackend
   implements StructuredSearchDependencies, StructuredWriter
 {
   private readonly records = new Map<string, StructuredIndexRecord>();
+  private readonly indexWriter: StructuredIndexWriter;
 
   /**
    * @param tokenizer Optional tokenizer overrides for structured contains
    * indexing.
    */
-  constructor(readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {}
+  constructor(readonly tokenizer?: Partial<StructuredStringTokenizerConfig>) {
+    this.indexWriter = new StructuredIndexWriter(
+      this.createWriterDependencies(),
+      { tokenizer },
+    );
+  }
+
+  private createWriterDependencies(): StructuredWriterDependencies {
+    return {
+      loadDocFieldsState: async (
+        docId: DocId,
+      ): Promise<StructuredDocFieldsState | undefined> => {
+        const item = this.records.get(
+          recordKey(buildStructuredDocFieldsKey(docId)),
+        ) as StructuredDocFieldsItem | undefined;
+        return item
+          ? {
+              fields: clone(item.fields),
+              version: item.version,
+              occupancyFields: item.occupancyFields
+                ? clone(item.occupancyFields)
+                : undefined,
+            }
+          : undefined;
+      },
+      putDocFieldsIfVersion: async (
+        docId,
+        expectedVersion,
+        fields,
+        occupancyFields,
+      ) => {
+        const key = recordKey(buildStructuredDocFieldsKey(docId));
+        const current = this.records.get(key) as
+          | StructuredDocFieldsItem
+          | undefined;
+        const currentVersion = current?.version;
+        if (currentVersion !== expectedVersion) {
+          return false;
+        }
+        this.put(
+          buildStructuredDocFieldsItem(
+            docId,
+            fields,
+            (expectedVersion ?? 0) + 1,
+            occupancyFields,
+          ),
+        );
+        return true;
+      },
+      putTermEntries: async (entries: StructuredTermIndexItem[]) => {
+        for (const entry of entries) {
+          this.put(entry);
+        }
+      },
+      deleteTermEntries: async (entries: StructuredTermIndexKey[]) => {
+        for (const entry of entries) {
+          this.delete(entry);
+        }
+      },
+      putRangeEntries: async (entries: StructuredRangeIndexItem[]) => {
+        for (const entry of entries) {
+          this.put(entry);
+        }
+      },
+      deleteRangeEntries: async (entries: StructuredRangeIndexKey[]) => {
+        for (const entry of entries) {
+          this.delete(entry);
+        }
+      },
+      loadOccupancyGenerationState: async () =>
+        clone(this.getGenerationState()),
+      writeDerivedEntries: async (mutation: StructuredDerivedMutation) => {
+        for (const entry of [
+          ...mutation.deleteTerms,
+          ...mutation.deleteRanges,
+          ...mutation.deleteMissing,
+        ]) {
+          this.delete(entry);
+        }
+        for (const entry of [
+          ...mutation.putTerms,
+          ...mutation.putRanges,
+          ...mutation.putOccupancy,
+          ...mutation.putMissing,
+        ]) {
+          this.put(entry);
+        }
+      },
+    };
+  }
 
   private put(record: StructuredIndexRecord): void {
     this.records.set(recordKey(record), clone(record));
@@ -487,81 +536,13 @@ export class StructuredInMemoryBackend
     },
   };
 
-  /** Write canonical and derived records through the normal item lifecycle. */
+  /** Write canonical and derived records through the generic structured strategy. */
   async write(
     docId: DocId,
     fields: StructuredDocFieldsRecord,
     context: StructuredWriteContext = {},
   ): Promise<void> {
-    const docKey = buildStructuredDocFieldsKey(docId);
-    const previous = this.records.get(recordKey(docKey)) as
-      StructuredDocFieldsItem | undefined;
-
-    if (
-      context.expectedVersion !== undefined &&
-      previous?.version !== context.expectedVersion
-    ) {
-      throw new StructuredIndexVersionMismatchError(
-        context.expectedVersion,
-        previous?.version,
-      );
-    }
-
-    const previousFields = previous?.fields ?? {};
-    const normalized = normalizeFields(fields);
-    const occupancyFields = context.occupancyFields ?? {};
-    const generations = Array.from(
-      new Set(
-        [
-          this.getGenerationState().activeGeneration,
-          this.getGenerationState().buildingGeneration,
-        ].filter((value): value is string => !!value),
-      ),
-    );
-
-    for (const record of [
-      ...buildTermItems(docId, previousFields, this.tokenizer),
-      ...buildRangeItems(docId, previousFields),
-      ...generations.flatMap((generation) =>
-        buildStructuredMissingItems(
-          generation,
-          docId,
-          previousFields,
-          previous?.occupancyFields ?? occupancyFields,
-        ),
-      ),
-    ]) {
-      this.delete(record);
-    }
-
-    this.put(
-      buildStructuredDocFieldsItem(
-        docId,
-        normalized,
-        (previous?.version ?? 0) + 1,
-        occupancyFields,
-      ),
-    );
-
-    for (const record of [
-      ...buildTermItems(docId, normalized, this.tokenizer),
-      ...buildRangeItems(docId, normalized),
-      ...generations.flatMap((generation) =>
-        buildStructuredOccupancyItems(generation, normalized, occupancyFields),
-      ),
-      ...(context.deleted
-        ? []
-        : generations.flatMap((generation) =>
-            buildStructuredMissingItems(
-              generation,
-              docId,
-              normalized,
-              occupancyFields,
-            ),
-          )),
-    ]) {
-      this.put(record);
-    }
+    await this.indexWriter.write(docId, fields, context);
   }
 
   /**
