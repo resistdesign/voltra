@@ -17,7 +17,7 @@
       "expectation": [
         {
           "name": "healthPreview",
-          "readOnlyHint": true,
+          "readOnlyHint": false,
           "destructiveHint": false,
           "idempotentHint": true,
           "outputRepairModeValues": ["preview", "apply"],
