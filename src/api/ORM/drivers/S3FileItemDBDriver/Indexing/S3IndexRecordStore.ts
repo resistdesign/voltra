@@ -13,6 +13,8 @@ export type S3IndexRecordPage<T extends S3IndexRecord = S3IndexRecord> = {
 
 export type S3IndexRecordQueryOptions = S3IndexObjectListOptions & {
   reverse?: boolean;
+  /** Logical sort key to resume strictly after. */
+  afterSortKey?: string;
 };
 
 const segment = (value: string): string => encodeURIComponent(value);
@@ -158,6 +160,13 @@ export class S3IndexRecordStore {
     const page = await this.store.list(prefix, {
       limit: options.limit,
       cursor: options.cursor,
+      afterKey: options.afterSortKey
+        ? recordKey(
+            collection,
+            { pk, sk: options.afterSortKey },
+            reverse,
+          )
+        : undefined,
     });
     const values = await Promise.all(
       page.keys.map((key) => this.store.get<T>(key)),
