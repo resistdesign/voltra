@@ -3,13 +3,13 @@
  *
  * In-memory relational edge store with directional queries and cursor paging.
  */
-import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
-import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "./Types";
+import { decodeRelationalCursor, encodeRelationalCursor } from "../../../../Indexing/rel/Cursor";
+import type { Edge, EdgeKey, EdgePage, RelationalQueryOptions } from "../../../../Indexing/rel/Types";
 import {
   INDEX_ITEM_KINDS,
   buildIndexDocumentSortKey,
   buildIndexScalarKey,
-} from "../IndexTable";
+} from "../../../../Indexing/IndexTable";
 
 type EdgeMetadata = Record<string, unknown>;
 
