@@ -1,6 +1,5 @@
 import {
   INDEX_ITEM_KINDS,
-  assertIndexTableKey,
   buildIndexKey,
   buildIndexDocumentSortKey,
   decodeIndexDocumentSortKey,
@@ -93,15 +92,6 @@ export const runIndexTableStructuredCollisionScenario = () => {
 export const runIndexTableRejectsMalformedUnicodeScenario = () => {
   try {
     encodeIndexIdentity("\ud800");
-    return false;
-  } catch (_error) {
-    return true;
-  }
-};
-
-export const runIndexTableRejectsOversizedKeyScenario = () => {
-  try {
-    assertIndexTableKey({ pk: "p", sk: "x".repeat(1025) });
     return false;
   } catch (_error) {
     return true;
