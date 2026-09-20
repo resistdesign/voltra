@@ -20,7 +20,10 @@
           "readOnlyHint": false,
           "destructiveHint": false,
           "idempotentHint": true,
-          "outputRepairModeValues": ["preview", "apply"],
+          "outputRepairModeValues": [
+            "preview",
+            "apply"
+          ],
           "outputContinuationType": "boolean"
         },
         {
@@ -28,7 +31,10 @@
           "readOnlyHint": false,
           "destructiveHint": true,
           "idempotentHint": true,
-          "outputRepairModeValues": ["preview", "apply"],
+          "outputRepairModeValues": [
+            "preview",
+            "apply"
+          ],
           "outputContinuationType": "boolean"
         }
       ]
@@ -54,7 +60,9 @@
           "operationRecordsProcessedCount": 1,
           "suspiciousCount": 0,
           "expiredRecordCount": 1,
-          "continuation": true
+          "continuation": true,
+          "missingIndexFindingCount": 2,
+          "reindexedItemCount": 0
         }
       }
     },
@@ -79,7 +87,9 @@
           "operationRecordsProcessedCount": 1,
           "suspiciousCount": 0,
           "expiredRecordCount": 1,
-          "continuation": false
+          "continuation": false,
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 1
         }
       }
     }
