@@ -860,7 +860,11 @@ export const runHealthIndexRelevantSchemaScopeScenario = async () => {
   const changedUnindexedBook: TypeInfoMap = structuredClone(
     getBookTypeInfoV1(),
   );
-  changedUnindexedBook.Book.fields.slug.type = "number";
+  const changedBookFields = changedUnindexedBook.Book.fields;
+  if (!changedBookFields) {
+    throw new Error("Book TypeInfo fields are required for this scenario.");
+  }
+  changedBookFields.slug.type = "number";
 
   const ormA = createOrm(
     mergeTypeInfoMaps(getBookTypeInfoV1(), plainTypeInfo),
