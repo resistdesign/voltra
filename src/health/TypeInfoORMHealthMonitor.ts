@@ -779,14 +779,49 @@ export class TypeInfoORMHealthMonitor {
         let deferredInPage = false;
 
         for (const unhealthy of page.unhealthyItems) {
-          missingIndexFindingCount += 1;
           const currentFindingId = missingIndexFindingId(
             typeName,
             unhealthy.primaryFieldValue,
           );
+          const verification =
+            await this.orm.verifyStoredItemIndexesForMaintenance(
+              typeName,
+              unhealthy.primaryFieldValue,
+            );
+
+          if (!verification.exists) {
+            await this.store.putRecord(currentFindingId, {
+              kind: "finding",
+              status: "open",
+              typeName,
+              itemId: unhealthy.primaryFieldValue,
+              scope: "canonicalIndexMismatch",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "canonicalIndexMismatch",
+                concurrentCanonicalDelete: true,
+              },
+            });
+            continue;
+          }
+
+          if (verification.issues.length === 0) {
+            const existing = await this.store.readRecord(currentFindingId);
+            if (existing) {
+              await this.store.updateRecord(currentFindingId, {
+                status: "dismissed",
+                correlationId: runId,
+              });
+            }
+            continue;
+          }
+
+          missingIndexFindingCount += 1;
+          const stronglyConfirmed = verification.consistency === "strong";
           await this.store.putRecord(currentFindingId, {
             kind: "finding",
-            status: "confirmed",
+            status: stronglyConfirmed ? "confirmed" : "open",
             typeName,
             itemId: unhealthy.primaryFieldValue,
             scope: "canonicalIndexMismatch",
@@ -794,9 +829,16 @@ export class TypeInfoORMHealthMonitor {
             expiresAt: now + this.options.recordRetentionMs,
             data: {
               findingType: "canonicalIndexMismatch",
-              issues: unhealthy.issues,
+              issues: verification.issues,
+              consistency: verification.consistency,
+              unsupportedCapabilities: verification.unsupportedCapabilities,
             },
           });
+
+          if (!stronglyConfirmed) {
+            suspiciousCount += 1;
+            continue;
+          }
 
           if (repairMode !== "apply") {
             continue;
@@ -816,11 +858,45 @@ export class TypeInfoORMHealthMonitor {
               typeName,
               unhealthy.primaryFieldValue,
             );
-            reindexedItemCount += 1;
-            await this.store.updateRecord(currentFindingId, {
-              status: "repaired",
-              correlationId: runId,
-            });
+
+            const postRepair =
+              await this.orm.verifyStoredItemIndexesForMaintenance(
+                typeName,
+                unhealthy.primaryFieldValue,
+              );
+
+            if (
+              postRepair.exists &&
+              postRepair.consistency === "strong" &&
+              postRepair.issues.length === 0
+            ) {
+              reindexedItemCount += 1;
+              await this.store.updateRecord(currentFindingId, {
+                status: "repaired",
+                correlationId: runId,
+                data: {
+                  findingType: "canonicalIndexMismatch",
+                  issues: verification.issues,
+                  consistency: verification.consistency,
+                  postRepairVerified: true,
+                },
+              });
+            } else {
+              suspiciousCount += 1;
+              repairDeferred = true;
+              deferredInPage = true;
+              await this.store.updateRecord(currentFindingId, {
+                status: "open",
+                correlationId: runId,
+                data: {
+                  findingType: "canonicalIndexMismatch",
+                  issues: postRepair.issues,
+                  consistency: postRepair.consistency,
+                  postRepairVerified: false,
+                  concurrentCanonicalDelete: !postRepair.exists,
+                },
+              });
+            }
           } catch (error: any) {
             if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
               await this.store.updateRecord(currentFindingId, {
@@ -828,7 +904,7 @@ export class TypeInfoORMHealthMonitor {
                 correlationId: runId,
                 data: {
                   findingType: "canonicalIndexMismatch",
-                  issues: unhealthy.issues,
+                  issues: verification.issues,
                   concurrentCanonicalDelete: true,
                 },
               });
