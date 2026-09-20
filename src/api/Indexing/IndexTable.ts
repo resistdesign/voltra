@@ -1,13 +1,19 @@
 /**
  * @packageDocumentation
  *
- * Public schema and key factories for Voltra's unified indexing table.
- * Callers provide semantic identities; this module exclusively owns physical
- * separators, namespaces, encoding, and key-size validation.
+ * Storage-neutral key factories for Voltra's unified logical index records.
+ * Callers provide semantic identities; this module owns namespaces, encoding,
+ * ordering, and collision-safe logical key construction.
  */
 import type { DocId } from "./Types";
 import type { WhereValue } from "./structured/Types";
 
+/** Logical partition-key attribute used by every unified index item. */
+export const INDEX_TABLE_PARTITION_KEY = "pk";
+/** Logical sort-key attribute used by every unified index item. */
+export const INDEX_TABLE_SORT_KEY = "sk";
+/** Logical item-kind attribute used for diagnostics and migrations. */
+export const INDEX_TABLE_KIND_ATTRIBUTE = "kind";
 /** Current logical key format version. */
 export const INDEX_KEY_VERSION = "v1";
 /** Separator reserved for Voltra-owned key structure. */
@@ -29,7 +35,6 @@ export const INDEX_KEY_PARTS = {
   string: "s",
   token: "t",
 } as const;
-
 /** Stable namespaces for every logical record family in the shared table. */
 export const INDEX_ITEM_KINDS = {
   structuredTerm: "st",
@@ -59,6 +64,147 @@ export type IndexTableKey = {
 
 /** Scalar identity types supported by Voltra index keys. */
 export type IndexScalarIdentity = string | number;
+
+const assertWellFormedUnicode = (value: string): void => {
+  try {
+    encodeURIComponent(value);
+  } catch (_error) {
+    throw new Error("Index identities must contain well-formed Unicode.");
+  }
+};
+
+/**
+ * Encode one opaque identity segment. `encodeURIComponent` is used here—not
+ * `encodeURI`—because URI structural characters such as `#`, `/`, and `?`
+ * must never become Voltra key separators. Sortable values use a different
+ * codec because URI escaping does not preserve value order.
+ */
+export function encodeIndexIdentity(value: string | number): string {
+  const normalized = String(value);
+  assertWellFormedUnicode(normalized);
+  return encodeURIComponent(normalized);
+}
+
+/** Decode an identity segment produced by {@link encodeIndexIdentity}. */
+export function decodeIndexIdentity(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch (_error) {
+    throw new Error("Invalid encoded index identity.");
+  }
+}
+
+/**
+ * Encode a scalar identity without collapsing numeric and string values.
+ *
+ * The type tag is part of the persisted identity: numeric `123` and string
+ * `"123"` intentionally produce different keys. Numeric identities must be
+ * finite; `-0` is normalized to `0` because JavaScript treats them as the same
+ * map identity.
+ */
+export function encodeIndexScalarIdentity(value: IndexScalarIdentity): string {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new Error("Numeric index identities must be finite.");
+    }
+    const normalized = Object.is(value, -0) ? 0 : value;
+    return `${INDEX_KEY_PARTS.number}${INDEX_KEY_SEPARATOR}${encodeIndexIdentity(normalized)}`;
+  }
+
+  return `${INDEX_KEY_PARTS.string}${INDEX_KEY_SEPARATOR}${encodeIndexIdentity(value)}`;
+}
+
+/** Decode a scalar identity produced by {@link encodeIndexScalarIdentity}. */
+export function decodeIndexScalarIdentity(value: string): IndexScalarIdentity {
+  const separatorIndex = value.indexOf(INDEX_KEY_SEPARATOR);
+  if (separatorIndex < 0) {
+    throw new Error("Invalid encoded scalar index identity.");
+  }
+
+  const tag = value.slice(0, separatorIndex);
+  const decoded = decodeIndexIdentity(value.slice(separatorIndex + 1));
+
+  if (tag === INDEX_KEY_PARTS.string) {
+    return decoded;
+  }
+  if (tag === INDEX_KEY_PARTS.number) {
+    const numeric = Number(decoded);
+    if (
+      !Number.isFinite(numeric) ||
+      encodeIndexScalarIdentity(numeric) !== value
+    ) {
+      throw new Error("Invalid encoded numeric index identity.");
+    }
+    return numeric;
+  }
+
+  throw new Error("Invalid scalar index identity type tag.");
+}
+
+/** Join already semantic identity segments into a versioned logical key. */
+export function buildIndexKey(
+  kind: IndexItemKind,
+  ...segments: string[]
+): string {
+  const key = [
+    INDEX_KEY_VERSION,
+    kind,
+    ...segments.map(encodeIndexIdentity),
+  ].join(INDEX_KEY_SEPARATOR);
+  return assertIndexPartitionKey(key);
+}
+
+/**
+ * Build a partition key whose first semantic identity is a typed scalar.
+ * Use this for document/entity-owned partitions instead of passing an id to
+ * {@link buildIndexKey}, which intentionally treats ordinary segments as
+ * untyped opaque strings.
+ */
+export function buildIndexScalarKey(
+  kind: IndexItemKind,
+  scope: "document" | "entity",
+  identity: IndexScalarIdentity,
+  ...segments: string[]
+): string {
+  const scopePart =
+    scope === "document" ? INDEX_KEY_PARTS.document : INDEX_KEY_PARTS.entity;
+  const key = [
+    INDEX_KEY_VERSION,
+    kind,
+    scopePart,
+    encodeIndexScalarIdentity(identity),
+    ...segments.map(encodeIndexIdentity),
+  ].join(INDEX_KEY_SEPARATOR);
+  return assertIndexPartitionKey(key);
+}
+
+/** Validate a complete logical index key. */
+export function assertIndexTableKey(key: IndexTableKey): IndexTableKey {
+  assertIndexPartitionKey(key.pk);
+  assertIndexSortKey(key.sk);
+  return key;
+}
+
+/** Validate a logical partition key and return it unchanged. */
+export function assertIndexPartitionKey(value: string): string {
+  if (typeof value !== "string") {
+    throw new Error("Index partition keys must be strings.");
+  }
+  return value;
+}
+
+/** Validate a logical sort key and return it unchanged. */
+export function assertIndexSortKey(value: string): string {
+  if (typeof value !== "string") {
+    throw new Error("Index sort keys must be strings.");
+  }
+  return value;
+}
+
+const encodeUtf8Hex = (value: string): string =>
+  Array.from(new TextEncoder().encode(value), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
 
 const FLOAT_SIGN_BIT = 0x8000000000000000n;
 const FLOAT_MASK = 0xffffffffffffffffn;
