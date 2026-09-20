@@ -2561,7 +2561,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: TypeInfoORMReindexStoredItemConfig = {},
   ): Promise<boolean> => {
     const driver = this.getDriverInternal(typeName);
-    const currentItem = await driver.readItem(primaryFieldValue as any);
+    const reader = driver.readItemStronglyConsistent ?? driver.readItem;
+    const currentItem = await reader.call(driver, primaryFieldValue as any);
     const previousItem = config.previousItem ?? currentItem;
 
     await this.replaceItemIndexes(typeName, previousItem, currentItem, {
