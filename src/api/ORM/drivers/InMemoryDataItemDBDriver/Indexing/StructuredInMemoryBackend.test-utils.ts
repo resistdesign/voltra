@@ -1,9 +1,9 @@
 import { StructuredInMemoryBackend } from "./StructuredInMemoryBackend";
-import { searchStructured } from "./SearchStructured";
+import { searchStructured } from "../../../../Indexing/structured/SearchStructured";
 import {
   setStructuredHandlerDependencies,
   structuredHandler,
-} from "./Handlers";
+} from "../../../../Indexing/structured/Handlers";
 
 const runStructuredInMemoryBackendScenario = async () => {
   const backend = new StructuredInMemoryBackend();
