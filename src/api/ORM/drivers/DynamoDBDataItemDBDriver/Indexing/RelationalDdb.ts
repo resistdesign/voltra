@@ -23,14 +23,13 @@ import {
   assertIndexTableConfig,
   type IndexTableConfig,
 } from "./IndexTable";
-import { decodeRelationalCursor, encodeRelationalCursor } from "../../../../Indexing/rel/Cursor";
-import type {
-  Direction,
-  Edge,
-  EdgeKey,
-  EdgePage,
-  RelationalQueryOptions,
-} from "../../../../Indexing/rel/Types";
+import {
+  RelationalIndexBackend,
+  type RelationalIndexStorage,
+  type RelationalStorageKey,
+  type RelationalStorageRecord,
+} from "../../../../Indexing/rel/RelationalIndexBackend";
+import type { Direction } from "../../../../Indexing/rel/Types";
 
 type EdgeMetadata = Record<string, unknown>;
 
@@ -312,125 +311,69 @@ function decodeRelationEdgesToken(
 }
 
 /**
- * DynamoDB-backed relational edge store with directional queries.
+ * Adapt DynamoDB IO to Voltra's generic relational storage contract.
+ */
+const createRelationalDdbStorage = <
+  TMetadata extends EdgeMetadata = EdgeMetadata,
+>(
+  dependencies: RelationEdgesDdbDependencies<TMetadata>,
+): RelationalIndexStorage<TMetadata> => ({
+  put: async (records: Array<RelationalStorageRecord<TMetadata>>) => {
+    await dependencies.putEdges(
+      records.map((record) =>
+        buildRelationEdgeDdbItem(
+          record.entityId,
+          record.relation,
+          record.direction,
+          record.otherId,
+          record.metadata,
+        ),
+      ),
+    );
+  },
+  delete: async (keys: RelationalStorageKey[]) => {
+    await dependencies.deleteEdges(
+      keys.map((key) =>
+        buildRelationEdgeDdbKey(
+          key.entityId,
+          key.relation,
+          key.direction,
+          key.otherId,
+        ),
+      ),
+    );
+  },
+  query: async (query) => {
+    const result = await dependencies.queryEdges({
+      edgeKey: encodeRelationEdgePartitionKey(
+        query.entityId,
+        query.relation,
+        query.direction,
+      ),
+      limit: query.limit,
+      exclusiveStartKey: decodeRelationEdgesToken(query.continuationToken),
+    });
+
+    return {
+      records: result.items.map((item) => ({
+        entityId: query.entityId,
+        relation: query.relation,
+        direction: query.direction,
+        otherId: item.otherId,
+        ...(item.metadata !== undefined ? { metadata: item.metadata } : {}),
+      })),
+      continuationToken: encodeRelationEdgesToken(result.lastEvaluatedKey),
+    };
+  },
+});
+
+/**
+ * DynamoDB IO wrapper around the generic relational indexing strategy.
  */
 export class RelationalDdbBackend<
   TMetadata extends EdgeMetadata = EdgeMetadata,
-> {
-  /**
-   * @param dependencies DynamoDB query/write dependencies.
-   */
-  constructor(
-    private readonly dependencies: RelationEdgesDdbDependencies<TMetadata>,
-  ) {}
-
-  /**
-   * Insert or update an edge.
-   * @param edge Edge to store.
-   * @returns Promise resolved once stored.
-   */
-  async putEdge(edge: Edge<TMetadata>): Promise<void> {
-    const { from, to, relation } = edge.key;
-    const forwardItem = buildRelationEdgeDdbItem(
-      from,
-      relation,
-      "out",
-      to,
-      edge.metadata,
-    );
-    const reverseItem = buildRelationEdgeDdbItem(
-      to,
-      relation,
-      "in",
-      from,
-      edge.metadata,
-    );
-
-    await this.dependencies.putEdges([forwardItem, reverseItem]);
-  }
-
-  /**
-   * Remove an edge by key.
-   * @param key Edge key to remove.
-   * @returns Promise resolved once removed.
-   */
-  async removeEdge(key: EdgeKey): Promise<void> {
-    const { from, to, relation } = key;
-    const forwardKey = buildRelationEdgeDdbKey(from, relation, "out", to);
-    const reverseKey = buildRelationEdgeDdbKey(to, relation, "in", from);
-
-    await this.dependencies.deleteEdges([forwardKey, reverseKey]);
-  }
-
-  /**
-   * Query outgoing edges for an entity and relation.
-   * @param fromId Source entity id.
-   * @param relation Relation name.
-   * @param options Optional paging options.
-   * @returns Page of outgoing edges.
-   */
-  async getOutgoing(
-    fromId: string,
-    relation: string,
-    options: RelationalQueryOptions = {},
-  ): Promise<EdgePage<TMetadata>> {
-    const cursorState = decodeRelationalCursor(options.cursor);
-    const exclusiveStartKey = decodeRelationEdgesToken(
-      cursorState?.continuationToken,
-    );
-    const edgeKey = encodeRelationEdgePartitionKey(fromId, relation, "out");
-    const result = await this.dependencies.queryEdges({
-      edgeKey,
-      limit: options.limit,
-      exclusiveStartKey,
-    });
-
-    const edges = result.items.map((item) => ({
-      key: { from: fromId, to: item.otherId, relation },
-      metadata: item.metadata,
-    }));
-
-    return {
-      edges,
-      nextCursor: encodeRelationalCursor({
-        continuationToken: encodeRelationEdgesToken(result.lastEvaluatedKey),
-      }),
-    };
-  }
-
-  /**
-   * Query incoming edges for an entity and relation.
-   * @param toId Target entity id.
-   * @param relation Relation name.
-   * @param options Optional paging options.
-   * @returns Page of incoming edges.
-   */
-  async getIncoming(
-    toId: string,
-    relation: string,
-    options: RelationalQueryOptions = {},
-  ): Promise<EdgePage<TMetadata>> {
-    const cursorState = decodeRelationalCursor(options.cursor);
-    const exclusiveStartKey = decodeRelationEdgesToken(
-      cursorState?.continuationToken,
-    );
-    const edgeKey = encodeRelationEdgePartitionKey(toId, relation, "in");
-    const result = await this.dependencies.queryEdges({
-      edgeKey,
-      limit: options.limit,
-      exclusiveStartKey,
-    });
-
-    const edges = result.items.map((item) => ({
-      key: { from: item.otherId, to: toId, relation },
-      metadata: item.metadata,
-    }));
-
-    return {
-      edges,
-      nextCursor: encodeRelationalCursor({
-        continuationToken: encodeRelationEdgesToken(result.lastEvaluatedKey),
-      }),
-    };
+> extends RelationalIndexBackend<TMetadata> {
+  constructor(dependencies: RelationEdgesDdbDependencies<TMetadata>) {
+    super(createRelationalDdbStorage(dependencies));
   }
 }
