@@ -1,4 +1,4 @@
-import { FullTextMemoryBackend } from "./fulltext/FullTextMemoryBackend";
+import { FullTextMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
 import {
   indexDocument,
   removeDocument,
