@@ -13,7 +13,7 @@ import {
 import {
   buildStructuredRangeItem,
   buildStructuredTermItem,
-} from "./structured/StructuredDdb";
+} from "./structured/StructuredIndexRecords";
 
 export const runIndexTableIdentityRoundTripScenario = () => {
   const values = ["plain", "a#b/c?d", "100%", "éclair", "emoji-💜"];
