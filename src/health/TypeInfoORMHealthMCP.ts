@@ -124,7 +124,9 @@ const HEALTH_MCP_RESULT_TYPE_INFO_PACK: TypeInfoPack = {
 };
 
 const PREVIEW_ANNOTATIONS: MCPToolAnnotations = {
-  readOnlyHint: true,
+  // Preview does not mutate application/index data, but it does persist
+  // Health findings/checkpoints and may prune expired Health records.
+  readOnlyHint: false,
   destructiveHint: false,
   idempotentHint: true,
   openWorldHint: false,
