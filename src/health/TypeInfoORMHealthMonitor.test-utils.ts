@@ -22,6 +22,7 @@ import type {
 } from "../common/TypeParsing/TypeInfo";
 import { DriverHealthStore } from "./DriverHealthStore";
 import { TypeInfoORMHealthMonitor } from "./TypeInfoORMHealthMonitor";
+import { TypeInfoORMHealthOperationRecorder } from "./TypeInfoORMHealthOperationRecorder";
 import type { HealthRecord } from "./Types";
 
 type Book = {
@@ -501,5 +502,71 @@ export const runHealthOperationObservationScenario = async () => {
   return {
     itemId: item.id,
     observations,
+  };
+};
+
+
+export const runHealthOperationFindingScenario = async () => {
+  let counter = 0;
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "OperationBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => `operation-book-${++counter}`,
+  });
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    { Book: driver },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+  );
+  const store = createHealthStore();
+  const recorder = new TypeInfoORMHealthOperationRecorder({
+    store,
+    slowOperationMs: 100,
+  });
+
+  await recorder.observe({
+    operation: "list",
+    typeName: "Book",
+    startedAt: 10,
+    durationMs: 250,
+    success: true,
+    resultCount: 4,
+  });
+  await recorder.observe({
+    operation: "read",
+    typeName: "Book",
+    startedAt: 20,
+    durationMs: 10,
+    success: false,
+  });
+
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store,
+    maxIndexDocumentsPerRun: 10,
+    retentionPageSize: 50,
+  });
+  const first = await monitor.preview();
+  const second = await monitor.preview();
+  const records = await store.listRecords({ itemsPerPage: 50 });
+  const scopes = records.records
+    .filter((record) => record.kind === "finding")
+    .map((record) => record.scope)
+    .filter((scope): scope is string => !!scope)
+    .sort();
+
+  return {
+    first: {
+      slow: first.slowOperationFindingCount,
+      failed: first.failedOperationFindingCount,
+      processed: first.operationRecordsProcessedCount,
+    },
+    second: {
+      slow: second.slowOperationFindingCount,
+      failed: second.failedOperationFindingCount,
+      processed: second.operationRecordsProcessedCount,
+    },
+    scopes,
   };
 };
