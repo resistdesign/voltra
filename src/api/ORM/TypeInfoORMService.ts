@@ -339,7 +339,7 @@ export type TypeInfoORMOperationObservation = {
 /** Callback for receiving TypeInfoORM operation observations. */
 export type TypeInfoORMOperationObserver = (
   event: TypeInfoORMOperationObservation,
-) => void;
+) => void | Promise<void>;
 
 /**
  * Type-level metadata exposed to Health and maintenance tooling.
@@ -580,24 +580,40 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
   protected indexingRelationshipDriver?: IndexingRelationshipDriver;
+  protected operationObservers = new Set<TypeInfoORMOperationObserver>();
 
   /**
    * Emit a public ORM operation observation without impacting runtime behavior.
    */
-  protected emitOperationObservation = (
+  protected emitOperationObservation = async (
     event: TypeInfoORMOperationObservation,
-  ): void => {
-    const hook = this.config.observability?.onOperation;
-
-    if (!hook) {
-      return;
+  ): Promise<void> => {
+    for (const observer of this.operationObservers) {
+      try {
+        await observer(event);
+      } catch (_error) {
+        // Observability hooks must never alter ORM behavior.
+      }
     }
+  };
 
-    try {
-      hook(event);
-    } catch (_error) {
-      // Observability hooks must never alter ORM behavior.
-    }
+  /**
+   * Subscribe to public ORM operation observations.
+   *
+   * This allows optional systems such as Health to attach to an already
+   * configured ORM instance without rebuilding its application configuration.
+   *
+   * @param observer Observation callback.
+   * @returns Function that removes the observer.
+   */
+  addOperationObserver = (
+    observer: TypeInfoORMOperationObserver,
+  ): (() => void) => {
+    this.operationObservers.add(observer);
+
+    return () => {
+      this.operationObservers.delete(observer);
+    };
   };
 
   /**
@@ -642,7 +658,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             ? (result as { items: unknown[] }).items.length
             : undefined;
 
-        this.emitOperationObservation({
+        await this.emitOperationObservation({
           operation,
           typeName: this.getObservedOperationTypeName(args),
           startedAt,
@@ -653,7 +669,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
         return result;
       } catch (error) {
-        this.emitOperationObservation({
+        await this.emitOperationObservation({
           operation,
           typeName: this.getObservedOperationTypeName(args),
           startedAt,
@@ -753,6 +769,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (!config.getRelationshipDriver && !config.indexing?.relations) {
       throw new Error(TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED);
+    }
+
+    if (config.observability?.onOperation) {
+      this.operationObservers.add(config.observability.onOperation);
     }
 
     this.createRelationship = this.wrapObservedOperation(
