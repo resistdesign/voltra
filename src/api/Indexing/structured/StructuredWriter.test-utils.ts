@@ -2,7 +2,7 @@ import {
   buildStructuredTermKey,
   serializeStructuredValue,
 } from "./StructuredIndexRecords";
-import { StructuredDdbWriter } from "./StructuredWriter";
+import { StructuredIndexWriter } from "./StructuredWriter";
 import type { StructuredDocFieldsState } from "./StructuredIndexRecords";
 
 const runStructuredWriterConcurrentRetryScenario = async () => {
@@ -13,7 +13,7 @@ const runStructuredWriterConcurrentRetryScenario = async () => {
   let loadCalls = 0;
   let written = false;
 
-  const writer = new StructuredDdbWriter(
+  const writer = new StructuredIndexWriter(
     {
       loadDocFieldsState: async () => {
         loadCalls += 1;
@@ -86,7 +86,7 @@ const runStructuredWriterTokenizerConfigScenario = async () => {
     | { fields: { "Post.title": string }; version: number; occupancyFields: {} }
     | undefined;
 
-  const writer = new StructuredDdbWriter(
+  const writer = new StructuredIndexWriter(
     {
       loadDocFieldsState: async () => state,
       putDocFieldsIfVersion: async (_docId, _version, fields) => {
@@ -159,7 +159,7 @@ export const runStructuredWriterPartialFailureRepairScenario = async () => {
   let derivedCalls = 0;
   let repairedRangePuts = 0;
   let repairedOccupancyPuts = 0;
-  const writer = new StructuredDdbWriter({
+  const writer = new StructuredIndexWriter({
     loadDocFieldsState: async () => state,
     putDocFieldsIfVersion: async (
       _docId,
