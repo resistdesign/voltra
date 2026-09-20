@@ -24,6 +24,7 @@ export * from "./Cursor";
 export * from "./IndexTable";
 export * from "./fieldQualification";
 export * from "./fulltext/Schema";
+export * from "./fulltext/FullTextIndexWriter";
 export * from "./rel/Cursor";
 export * from "./rel/Handlers";
 export * from "./rel/Types";
