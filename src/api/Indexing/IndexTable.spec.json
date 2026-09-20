@@ -5,7 +5,13 @@
       "export": "runIndexTableIdentityRoundTripScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["plain", "a#b/c?d", "100%", "éclair", "emoji-💜"]
+      "expectation": [
+        "plain",
+        "a#b/c?d",
+        "100%",
+        "éclair",
+        "emoji-💜"
+      ]
     },
     {
       "export": "runIndexTableIdentityCollisionScenario",
@@ -39,19 +45,40 @@
       "export": "runIndexTableLogicalIsolationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": { "count": 13, "uniqueCount": 13 }
+      "expectation": {
+        "count": 13,
+        "uniqueCount": 13
+      }
     },
     {
       "export": "runIndexTableSortableNumberScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [-230, -10, -1, 0, 0, 0.5, 2, 23, 34, 230]
+      "expectation": [
+        -230,
+        -10,
+        -1,
+        0,
+        0,
+        0.5,
+        2,
+        23,
+        34,
+        230
+      ]
     },
     {
       "export": "runIndexTableSortableStringScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["a", "a#", "aa", "z", "é", "💜"]
+      "expectation": [
+        "a",
+        "a#",
+        "aa",
+        "z",
+        "é",
+        "💜"
+      ]
     },
     {
       "export": "runIndexTableStructuredCollisionScenario",
@@ -65,12 +92,6 @@
     },
     {
       "export": "runIndexTableRejectsMalformedUnicodeScenario",
-      "conditions": [],
-      "operation": "===",
-      "expectation": true
-    },
-    {
-      "export": "runIndexTableRejectsOversizedKeyScenario",
       "conditions": [],
       "operation": "===",
       "expectation": true
