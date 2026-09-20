@@ -1,3 +1,4 @@
+import { assertDynamoIndexTableKey } from "./IndexTable";
 import type { DynamoQueryClient } from "./Types";
 import { FullTextDdbBackend } from "./FullTextDdbBackend";
 import { createRelationEdgesDdbDependencies } from "./RelationalDdb";
@@ -60,3 +61,12 @@ export const runIndexingTablesValidationMissingStructuredTableErrorScenario =
 
 export const runIndexingTablesValidationMissingRelationsTableErrorScenario =
   () => runIndexingTablesValidationScenario().missingRelationsTableError;
+
+export const runDynamoIndexRejectsOversizedKeyScenario = () => {
+  try {
+    assertDynamoIndexTableKey({ pk: "p", sk: "x".repeat(1025) });
+    return false;
+  } catch (_error) {
+    return true;
+  }
+};
