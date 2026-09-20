@@ -1,5 +1,5 @@
-import { RelationalInMemoryBackend } from "../../ORM/drivers/InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
-import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
+import { RelationalInMemoryBackend } from "../InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
+import { decodeRelationalCursor, encodeRelationalCursor } from "../../../Indexing/rel/Cursor";
 import {
   RelationalDdbBackend,
   type RelationEdgesDdbItem,
@@ -7,11 +7,11 @@ import {
   buildRelationEdgeDdbKey,
   encodeRelationEdgePartitionKey,
   relationEdgesSchema,
-} from "../../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
+} from "../DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
 import {
   handler as relationalHandler,
   setRelationalHandlerDependencies,
-} from "./Handlers";
+} from "../../../Indexing/rel/Handlers";
 
 export const runRelationalIndexingScenario = async () => {
   const inMemoryBackend = new RelationalInMemoryBackend<{ weight: number }>();
