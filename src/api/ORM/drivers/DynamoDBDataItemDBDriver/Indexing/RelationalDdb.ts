@@ -4,8 +4,8 @@
  * DynamoDB backend for relational edges. Stores each edge twice (out/in) to
  * support directional traversal with cursor-based paging.
  */
-import { IndexMutationCoordinator } from "../ddb/IndexMutationCoordinator";
-import type { DynamoQueryClient, WriteRequest } from "../ddb/Types";
+import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
+import type { DynamoQueryClient, WriteRequest } from "../../../../Indexing/rel/Types";
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
@@ -18,15 +18,15 @@ import {
   encodeIndexScalarIdentity,
   type IndexTableConfig,
   type IndexTableKey,
-} from "../IndexTable";
-import { decodeRelationalCursor, encodeRelationalCursor } from "./Cursor";
+} from "../../../../Indexing/IndexTable";
+import { decodeRelationalCursor, encodeRelationalCursor } from "../../../../Indexing/rel/Cursor";
 import type {
   Direction,
   Edge,
   EdgeKey,
   EdgePage,
   RelationalQueryOptions,
-} from "./Types";
+} from "../../../../Indexing/rel/Types";
 
 type EdgeMetadata = Record<string, unknown>;
 
