@@ -1,9 +1,9 @@
 import {
   buildStructuredTermKey,
   serializeStructuredValue,
-} from "./StructuredDdb";
+} from "./StructuredIndexRecords";
 import { StructuredDdbWriter } from "./StructuredWriter";
-import type { StructuredDocFieldsState } from "./StructuredDdb";
+import type { StructuredDocFieldsState } from "./StructuredIndexRecords";
 
 const runStructuredWriterConcurrentRetryScenario = async () => {
   const deletedTermKeys: string[] = [];
