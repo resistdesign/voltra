@@ -62,7 +62,7 @@ class InMemoryRelationalIndexStorage<
       ? ids.findIndex((id) => id === query.continuationToken) + 1
       : 0;
     const safeStart = Math.max(0, start);
-    const limit = Math.max(1, query.limit ?? ids.length || 1);
+    const limit = Math.max(1, query.limit ?? (ids.length || 1));
     const pageIds = ids.slice(safeStart, safeStart + limit);
     const last = pageIds[pageIds.length - 1];
 
