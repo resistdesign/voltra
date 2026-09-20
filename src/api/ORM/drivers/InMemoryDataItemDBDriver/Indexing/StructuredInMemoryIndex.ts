@@ -3,20 +3,20 @@
  *
  * In-memory structured index for term/contains/range queries with cursor paging.
  */
-import { decodeStructuredCursor, encodeStructuredCursor } from "./Cursor";
-import type { DocId } from "../Types";
-import { compareDocId } from "../docId";
+import { decodeStructuredCursor, encodeStructuredCursor } from "../../../../Indexing/structured/Cursor";
+import type { DocId } from "../../../../Indexing/Types";
+import { compareDocId } from "../../../../Indexing/docId";
 import {
   type StructuredStringTokenizerConfig,
   buildStructuredStringContainsTokens,
-} from "./StructuredStringLike";
+} from "../../../../Indexing/structured/StructuredStringLike";
 import type {
   CandidatePage,
   StructuredQueryOptions,
   WhereValue,
-} from "./Types";
-import { encodeSortableIndexValue } from "../IndexTable";
-import { buildStructuredRangeKey } from "./StructuredIndexRecords";
+} from "../../../../Indexing/structured/Types";
+import { encodeSortableIndexValue } from "../../../../Indexing/IndexTable";
+import { buildStructuredRangeKey } from "../../../../Indexing/structured/StructuredIndexRecords";
 
 type RangeEntry = {
   value: WhereValue;
