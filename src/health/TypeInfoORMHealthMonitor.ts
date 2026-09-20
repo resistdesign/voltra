@@ -44,6 +44,10 @@ export type TypeInfoORMHealthMonitorRunResult = {
   confirmedSchemaDriftCount: number;
   /** Canonical items reconciled to the confirmed current schema. */
   schemaReconciledItemCount: number;
+  /** Canonical items found with missing or mismatched current index state. */
+  missingIndexFindingCount: number;
+  /** Canonical items reindexed from fresh stored state during this run. */
+  reindexedItemCount: number;
   /** Persisted slow-operation records promoted to Health findings. */
   slowOperationFindingCount: number;
   /** Persisted failed-operation records promoted to Health findings. */
@@ -68,6 +72,8 @@ export type TypeInfoORMHealthMonitorOptions = {
   maxRepairsPerRun?: number;
   /** Maximum canonical items reindexed for schema reconciliation in one run. */
   maxSchemaItemsPerRun?: number;
+  /** Maximum canonical items inspected for missing indexes in one run. */
+  maxCanonicalItemsPerRun?: number;
   /** Maximum physical index records requested per backend page. */
   indexPageSize?: number;
   /** Finding/repair retention duration. Defaults to seven days. */
@@ -109,6 +115,9 @@ type AuditCheckpointData = {
   schemaTypeName?: string;
   schemaCursor?: string;
   schemaReconcileComplete?: boolean;
+  canonicalTypeName?: string;
+  canonicalCursor?: string;
+  canonicalComplete?: boolean;
 };
 
 type AuditSource = "structured" | "text";
@@ -182,6 +191,24 @@ const operationFindingId = (statsId: string): string =>
 const schemaFindingId = (typeName: string): string =>
   `health:finding:schema:${encodeURIComponent(typeName)}`;
 
+const missingIndexFindingId = (
+  typeName: string,
+  primaryFieldValue: string | number | boolean | null,
+): string =>
+  `health:finding:missing-index:${encodeURIComponent(
+    typeName,
+  )}:${compactHealthKeyHash(
+    JSON.stringify([typeof primaryFieldValue, primaryFieldValue]),
+  )}`;
+
+const inspectionCapabilityFindingId = (
+  typeName: string,
+  capability: "structured" | "text",
+): string =>
+  `health:finding:index-inspection:${encodeURIComponent(
+    typeName,
+  )}:${capability}`;
+
 const schemaSignature = (
   descriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[],
 ): string =>
@@ -247,6 +274,10 @@ export class TypeInfoORMHealthMonitor {
       ),
       maxRepairsPerRun: Math.max(0, config.maxRepairsPerRun ?? 20),
       maxSchemaItemsPerRun: Math.max(1, config.maxSchemaItemsPerRun ?? 100),
+      maxCanonicalItemsPerRun: Math.max(
+        1,
+        config.maxCanonicalItemsPerRun ?? 100,
+      ),
       indexPageSize: Math.max(1, config.indexPageSize ?? 100),
       recordRetentionMs: Math.max(
         1,
@@ -291,6 +322,9 @@ export class TypeInfoORMHealthMonitor {
       checkpoint.schemaTypeName = undefined;
       checkpoint.schemaCursor = undefined;
       checkpoint.schemaReconcileComplete = false;
+      checkpoint.canonicalTypeName = undefined;
+      checkpoint.canonicalCursor = undefined;
+      checkpoint.canonicalComplete = false;
     }
 
     let examinedCount = 0;
@@ -298,6 +332,8 @@ export class TypeInfoORMHealthMonitor {
     let confirmedOrphanCount = 0;
     let repairedCount = 0;
     let schemaReconciledItemCount = 0;
+    let missingIndexFindingCount = 0;
+    let reindexedItemCount = 0;
     let suspiciousCount = 0;
     let repairDeferred = false;
     let remainingBudget = this.options.maxIndexDocumentsPerRun;
