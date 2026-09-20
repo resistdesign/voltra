@@ -5,7 +5,11 @@
  * document mirrors, and token statistics in one table to support fast search with
  * cursor-based paging.
  */
-import { tokenize, tokenizeLossyTrigrams } from "../../../../Indexing/tokenize";
+import {
+  FullTextIndexWriter,
+  type FullTextDocumentMutation,
+  type FullTextDocumentState,
+} from "../../../../Indexing/fulltext/FullTextIndexWriter";
 import type {
   DocId,
   DocTokenKey,
@@ -81,42 +85,6 @@ type TableWrite = {
   tableName: string;
   request: WriteRequest;
 };
-
-function buildPositionMap(tokens: string[]): Map<string, number[]> {
-  const positions = new Map<string, number[]>();
-  tokens.forEach((token, index) => {
-    const list = positions.get(token) ?? [];
-    list.push(index);
-    positions.set(token, list);
-  });
-  return positions;
-}
-
-function resolveIndexText(
-  document: DocumentRecord,
-  indexField: string,
-): string {
-  const value = document[indexField];
-  if (value === null || value === undefined) {
-    return "";
-  }
-
-  return String(value);
-}
-
-function arraysEqual(left: number[], right: number[]): boolean {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  for (let index = 0; index < left.length; index += 1) {
-    if (left[index] !== right[index]) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 function chunkArray<T>(items: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -216,6 +184,7 @@ export class FullTextDdbWriter {
   protected docTokenPositionsTableName: string;
   protected tokenStatsTableName: string;
   protected mutationCoordinator: IndexMutationCoordinator;
+  private readonly documentWriter: FullTextIndexWriter;
 
   /**
    * @param config Writer configuration including client and unified table.
@@ -231,6 +200,31 @@ export class FullTextDdbWriter {
     this.tokenStatsTableName = config.table.tableName;
     this.mutationCoordinator =
       config.mutationCoordinator ?? new IndexMutationCoordinator(config.client);
+    this.documentWriter = new FullTextIndexWriter({
+      loadDocumentContent: (docId, indexField) =>
+        this.loadMirrorContent(docId, indexField),
+      loadDocumentArtifacts: async (
+        docId,
+        indexField,
+        candidates,
+      ): Promise<FullTextDocumentState> => {
+        const state = await this.loadPersistedIndexState(
+          docId,
+          indexField,
+          candidates.lossyTokens,
+          candidates.exactTokens,
+        );
+        return {
+          lossyTokens: Array.from(state.lossyTokens),
+          exactTokens: Array.from(
+            state.positions,
+            ([token, positions]) => ({ token, positions }),
+          ),
+        };
+      },
+      applyDocumentMutation: (docId, indexField, mutation) =>
+        this.applyDocumentMutation(docId, indexField, mutation),
+    });
   }
 
   /**
@@ -420,107 +414,25 @@ export class FullTextDdbWriter {
     };
   }
 
-  /**
-   * Write a document to namespaced postings, membership, and statistics records.
-   * @param document Document record to index.
-   * @param primaryField Field name used as the document id.
-   * @param indexField Field name containing the text to index.
-   * @returns Promise resolved once all writes complete.
-   */
-  async writeDocument(
-    document: DocumentRecord,
-    primaryField: string,
+  protected async applyDocumentMutation(
+    docId: DocId,
     indexField: string,
-    indexFieldQualified = indexField,
-    previousDocument?: DocumentRecord,
+    mutation: FullTextDocumentMutation,
   ): Promise<void> {
-    const sourceIndexField = indexField;
-    const docId = normalizeDocId(document[primaryField], primaryField);
-    const text = resolveIndexText(document, indexField);
-    const persistedIndexField = indexFieldQualified;
-    const { tokens: lossyTokens } = tokenizeLossyTrigrams(text);
-    const { normalized, tokens } = tokenize(text);
-    const mirrorContent = await this.loadMirrorContent(
-      docId,
-      persistedIndexField,
-    );
-    const previousContent =
-      mirrorContent ??
-      (previousDocument
-        ? resolveIndexText(previousDocument, sourceIndexField)
-        : undefined);
-    indexField = persistedIndexField;
-    const previousTokens = previousContent
-      ? tokenize(previousContent).tokens
-      : [];
-    const previousLossyTokens = previousContent
-      ? tokenizeLossyTrigrams(previousContent).tokens
-      : [];
-
-    let previousLossySet = new Set(previousLossyTokens);
-    const nextLossySet = new Set(lossyTokens);
-
-    let previousPositions = buildPositionMap(previousTokens);
-    const nextPositions = buildPositionMap(tokens);
-
-    if (mirrorContent === undefined && previousDocument) {
-      const persistedState = await this.loadPersistedIndexState(
-        docId,
-        indexField,
-        [...previousLossyTokens, ...lossyTokens],
-        [...previousTokens, ...tokens],
-      );
-      previousLossySet = persistedState.lossyTokens;
-      previousPositions = persistedState.positions;
-    }
-
-    const removedLossyTokens = new Set<string>();
-    const addedLossyTokens = new Set<string>();
-    const removedTokens = new Set<string>();
-    const addedTokens = new Set<string>();
-    const updatedTokens = new Set<string>();
-
-    for (const token of previousLossySet) {
-      if (!nextLossySet.has(token)) {
-        removedLossyTokens.add(token);
-      }
-    }
-
-    for (const token of nextLossySet) {
-      if (!previousLossySet.has(token)) {
-        addedLossyTokens.add(token);
-      }
-    }
-
-    for (const token of previousPositions.keys()) {
-      if (!nextPositions.has(token)) {
-        removedTokens.add(token);
-      }
-    }
-
-    for (const [token, positions] of nextPositions.entries()) {
-      const previous = previousPositions.get(token);
-      if (!previous) {
-        addedTokens.add(token);
-      } else if (!arraysEqual(previous, positions)) {
-        updatedTokens.add(token);
-      }
-    }
-
     const writes: TableWrite[] = [];
     const docKey = encodeDocKey(docId);
     const positionsDocKey = encodeDocKey(docId, "positions");
 
     const statWrites = await Promise.all([
-      ...[...removedLossyTokens].map((token) =>
+      ...mutation.removeLossyTokens.map((token) =>
         this.buildTokenStatsWrite(token, indexField, -1),
       ),
-      ...[...addedLossyTokens].map((token) =>
+      ...mutation.addLossyTokens.map((token) =>
         this.buildTokenStatsWrite(token, indexField, 1),
       ),
     ]);
 
-    for (const token of removedLossyTokens) {
+    for (const token of mutation.removeLossyTokens) {
       writes.push({
         tableName: this.lossyTableName,
         request: {
@@ -551,7 +463,7 @@ export class FullTextDdbWriter {
       });
     }
 
-    for (const token of addedLossyTokens) {
+    for (const token of mutation.addLossyTokens) {
       writes.push({
         tableName: this.lossyTableName,
         request: {
@@ -587,7 +499,7 @@ export class FullTextDdbWriter {
       });
     }
 
-    for (const token of removedTokens) {
+    for (const token of mutation.removeExactTokens) {
       writes.push({
         tableName: this.exactTableName,
         request: {
@@ -599,20 +511,6 @@ export class FullTextDdbWriter {
                 "exact",
               ),
               [exactPostingsSchema.sortKey]: encodeTokenDocSortKey(docId),
-            },
-          },
-        },
-      });
-      writes.push({
-        tableName: this.docTokensTableName,
-        request: {
-          DeleteRequest: {
-            Key: {
-              [docTokensSchema.partitionKey]: docKey,
-              [docTokensSchema.sortKey]: encodeDocTokenSortKey(
-                indexField,
-                token,
-              ),
             },
           },
         },
@@ -639,11 +537,7 @@ export class FullTextDdbWriter {
       }
     }
 
-    for (const token of [...addedTokens, ...updatedTokens]) {
-      const positions = nextPositions.get(token);
-      if (!positions) {
-        continue;
-      }
+    for (const { token, positions } of mutation.putExactTokens) {
       writes.push({
         tableName: this.exactTableName,
         request: {
@@ -690,14 +584,15 @@ export class FullTextDdbWriter {
     };
     writes.push({
       tableName: this.mirrorTableName,
-      request: normalized
+      request: mutation.normalizedContent
         ? {
             PutRequest: {
               Item: {
                 ...mirrorKey,
                 [INDEX_TABLE_KIND_ATTRIBUTE]:
                   INDEX_ITEM_KINDS.fullTextDocumentMirror,
-                [fullTextDocMirrorSchema.contentAttribute]: normalized,
+                [fullTextDocMirrorSchema.contentAttribute]:
+                  mutation.normalizedContent,
               },
             },
           }
@@ -706,6 +601,26 @@ export class FullTextDdbWriter {
 
     await this.mutationCoordinator.write(writes);
   }
+
+  /**
+   * Apply generic full-text document semantics through DynamoDB persistence.
+   */
+  async writeDocument(
+    document: DocumentRecord,
+    primaryField: string,
+    indexField: string,
+    indexFieldQualified = indexField,
+    previousDocument?: DocumentRecord,
+  ): Promise<void> {
+    await this.documentWriter.writeDocument(
+      document,
+      primaryField,
+      indexField,
+      indexFieldQualified,
+      previousDocument,
+    );
+  }
+
 }
 
 /**
