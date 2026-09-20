@@ -2,10 +2,10 @@
  * @packageDocumentation
  *
  * In-memory exact index that stores token positions per document. Useful for
- * tests and local workflows where you want phrase verification without DynamoDB.
+ * tests and local workflows where you want phrase verification without external storage.
  */
-import type { DocId } from "../Types";
-import { compareDocId } from "../docId";
+import type { DocId } from "../../../../Indexing/Types";
+import { compareDocId } from "../../../../Indexing/docId";
 
 /**
  * Paging options for exact phrase verification.
