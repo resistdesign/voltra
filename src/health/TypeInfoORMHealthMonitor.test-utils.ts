@@ -1,10 +1,9 @@
 import {
   createIndexBackend,
-  FullTextMemoryBackend,
   qualifyIndexField,
   searchLossy,
-  StructuredInMemoryBackend,
 } from "../api/Indexing";
+import { FullTextMemoryBackend, StructuredInMemoryBackend } from "../api/ORM/drivers/InMemoryDataItemDBDriver/Indexing";
 import { searchStructured } from "../api/Indexing/structured/SearchStructured";
 import {
   InMemoryDataItemDBDriver,
