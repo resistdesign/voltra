@@ -10,7 +10,7 @@ The Health work exposed a pre-existing architectural deviation in Indexing: stor
 
 The correction must preserve functionality. Generic Indexing continues to own all semantics and strategies; drivers only implement the generic storage operations required to persist/query those structures.
 
-### Confirmed architecture violations
+### Confirmed architecture violations (corrected in this PR)
 
 - DynamoDB implementation leaked into generic Indexing through `Indexing/ddb/**`, `FullTextDdbBackend`, `StructuredDdb*`, `RelationalDdb`, `ExactDdb`, and `LossyDdb`.
 - S3 implementation leaked through `ExactS3` and `LossyS3`.
@@ -25,18 +25,27 @@ The correction must preserve functionality. Generic Indexing continues to own al
 
 Exact/range/membership semantics, text tokenization and search, phrase/prefix/lossy behavior, Boolean query planning, ordering, pagination/cursors, occupancy strategy, normalized index-record construction, maintenance contracts, bounded inspection, repair semantics, schema drift behavior, and storage-neutral observability remain generic Voltra functionality. Driver code may only implement the persistence/query primitives necessary to execute those semantics.
 
+### Resolution notes
+
+- Generic full-text mutation semantics now live in `FullTextIndexWriter`; DynamoDB, S3, and in-memory backends apply its planned storage mutations.
+- Generic structured mutation semantics remain in `StructuredIndexWriter`; DynamoDB, S3, and in-memory backends provide persistence/search primitives around the same writer and generic search planner.
+- Generic relational semantics now live in `RelationalIndexBackend`; drivers provide only directional record persistence/query IO.
+- Generic index keys no longer inherit DynamoDB byte-size constraints; DynamoDB validates its own physical limits inside the DynamoDB driver.
+- Storage-specific implementation and conformance/integration tests live under driver folders. Generic Indexing has a regression guard that rejects driver imports, storage SDK imports, backend-specific contracts, or backend-specific implementation filenames.
+- Cross-driver conformance exercises full-text, structured, and relational behavior across DynamoDB, S3, and in-memory implementations.
+
 ### Storage-driver isolation checklist
 
 - [x] Record storage-driver isolation as a repository-wide core objective in `AGENTS.md`.
 - [x] Inventory every storage-specific implementation/type currently outside `drivers/` and classify the generic behavior that must remain in Indexing.
-- [ ] Define the minimal generic index-storage contracts required by Voltra's existing exact/range/membership/full-text/relationship/occupancy/maintenance behavior.
-- [ ] Refactor generic indexing algorithms to depend only on those contracts, with no DynamoDB/S3/in-memory concepts in generic modules.
-- [ ] Move DynamoDB-specific indexing clients, adapters, persistence implementations, schemas/configuration, and tests into the Dynamo driver folder.
-- [ ] Move S3-specific indexing persistence implementations/tests into the S3 driver folder.
-- [ ] Move in-memory-specific indexing persistence implementations/tests into the in-memory driver folder while preserving identical generic indexing behavior.
-- [ ] Remove backend-specific exports/imports from generic Indexing barrels/docs and expose driver implementations through driver barrels instead.
-- [ ] Add architecture regression checks proving generic Indexing contains no backend-specific imports/names and no driver-specific implementation files.
-- [ ] Add cross-driver contract tests proving the same generic indexing strategies execute against multiple driver implementations.
+- [x] Define the minimal generic index-storage contracts required by Voltra's existing exact/range/membership/full-text/relationship/occupancy/maintenance behavior.
+- [x] Refactor generic indexing algorithms to depend only on those contracts, with no DynamoDB/S3/in-memory concepts in generic modules.
+- [x] Move DynamoDB-specific indexing clients, adapters, persistence implementations, schemas/configuration, and tests into the Dynamo driver folder.
+- [x] Move S3-specific indexing persistence implementations/tests into the S3 driver folder.
+- [x] Move in-memory-specific indexing persistence implementations/tests into the in-memory driver folder while preserving identical generic indexing behavior.
+- [x] Remove backend-specific exports/imports from generic Indexing barrels/docs and expose driver implementations through driver barrels instead.
+- [x] Add architecture regression checks proving generic Indexing contains no backend-specific imports/names and no driver-specific implementation files.
+- [x] Add cross-driver contract tests proving the same generic indexing strategies execute against multiple driver implementations.
 - [ ] Re-run the complete test/build/demo/export/consumer workflow and update PR #405 only after the architecture is clean and behavior is preserved.
 
 ## Checklist
