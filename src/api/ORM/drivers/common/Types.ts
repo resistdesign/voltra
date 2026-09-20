@@ -76,57 +76,57 @@ export type DataItemDBDriver<
    * @param newItem New item payload without the identifying field.
    * @returns Generated identifier for the created item.
    */
-  createItem: (
+  createItem(
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => Promise<ItemType[UniquelyIdentifyingFieldName]>;
+  ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
   /**
    * Read an item from the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param selectedFields Optional fields to select from the item.
    * @returns Item payload (partial when selected fields are used).
    */
-  readItem: (
+  readItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
-  ) => Promise<Partial<ItemType>>;
+  ): Promise<Partial<ItemType>>;
   /**
    * Optional strongly consistent read used by destructive maintenance safety checks.
    *
    * Drivers that cannot provide stronger read semantics should omit this method.
    */
-  readItemStronglyConsistent?: (
+  readItemStronglyConsistent?(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
-  ) => Promise<Partial<ItemType>>;
+  ): Promise<Partial<ItemType>>;
   /**
    * Update an item in the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.
    */
-  updateItem: (
+  updateItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
     updateConfig?: TypeInfoORMUpdateConfig,
-  ) => Promise<boolean>;
+  ): Promise<boolean>;
   /**
    * Delete an item from the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @returns True when the item was deleted.
    */
-  deleteItem: (
+  deleteItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ) => Promise<boolean>;
+  ): Promise<boolean>;
   /**
    * List items from the data store.
    * @param config List configuration and criteria.
    * @param selectedFields Optional fields to select from each item.
    * @returns List results with items and cursor.
    */
-  listItems: (
+  listItems(
     config: ListItemsConfig,
     selectedFields?: (keyof ItemType)[],
-  ) => Promise<ListItemsResults<Partial<ItemType>>>;
+  ): Promise<ListItemsResults<Partial<ItemType>>>;
 };
 
 /**
