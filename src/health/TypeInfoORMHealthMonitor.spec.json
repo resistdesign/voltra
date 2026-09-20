@@ -186,6 +186,17 @@
         "text": [],
         "structured": []
       }
+    },
+    {
+      "export": "runHealthIndexRelevantSchemaScopeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeNames": [
+          "Book"
+        ],
+        "unindexedFieldChangeKeepsFingerprint": true
+      }
     }
   ]
 }
