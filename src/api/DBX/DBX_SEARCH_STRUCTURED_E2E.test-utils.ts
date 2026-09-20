@@ -9,7 +9,7 @@ import {
 import { runDbxRequest } from "./DBXRequest";
 import { createDbxRuntime } from "./DBXRuntime";
 import { DBX_TYPE_INFO_MAP } from "./DBXScenarioConfig";
-import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
+import { StructuredInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
 import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "../ORM/getTypeInfoORMIndexingConfigFromTypeInfoMap";
 import type { TypeInfoMap } from "../../common/TypeParsing/TypeInfo";
 import { createIndexBackend } from "../Indexing/query";
