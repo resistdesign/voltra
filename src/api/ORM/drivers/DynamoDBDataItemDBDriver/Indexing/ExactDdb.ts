@@ -4,7 +4,7 @@
  * DynamoDB schema helpers for the exact (position-aware) postings table.
  * The exact index stores token positions per document to support phrase queries.
  */
-import type { DocId } from "../Types";
+import type { DocId } from "../../../../Indexing/Types";
 import {
   INDEX_ITEM_KINDS,
   INDEX_TABLE_KIND_ATTRIBUTE,
@@ -14,7 +14,7 @@ import {
   buildIndexDocumentSortKey,
   buildIndexKey,
   type IndexTableKey,
-} from "../IndexTable";
+} from "../../../../Indexing/IndexTable";
 
 /**
  * DynamoDB key shape for exact postings items.
