@@ -748,3 +748,74 @@ export const runHealthMissingIndexRepairScenario = async () => {
     },
   };
 };
+
+
+export const runHealthMissingIndexRequiresStrongReadScenario = async () => {
+  let counter = 0;
+  const baseDriver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "WeakConsistencyBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => `weak-book-${++counter}`,
+  });
+  const weakDriver: DataItemDBDriver<Book, "id"> = {
+    createItem: baseDriver.createItem,
+    readItem: baseDriver.readItem,
+    updateItem: baseDriver.updateItem,
+    deleteItem: baseDriver.deleteItem,
+    listItems: baseDriver.listItems,
+  };
+  const fullTextBackend = new FullTextMemoryBackend();
+  const structuredBackend = new StructuredInMemoryBackend();
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    { Book: weakDriver },
+    fullTextBackend,
+    structuredBackend,
+  );
+  const id = await orm.create("Book", {
+    title: "Strong Read Required",
+    slug: "strong-read-required",
+    rating: 88,
+  } as TypeInfoDataItem);
+
+  const structuredPage = await structuredBackend.documents?.list?.({
+    limit: 10,
+  });
+  const structuredSnapshot = structuredPage?.documents.find(
+    (document) => document.docId === id,
+  );
+  await structuredBackend.write(id, {}, {
+    deleted: true,
+    expectedVersion: structuredSnapshot?.version,
+  });
+  await fullTextBackend.removeDocumentIndex(
+    id,
+    qualifyIndexField("Book", "title"),
+  );
+
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store: createHealthStore(),
+    maxCanonicalItemsPerRun: 20,
+    maxRepairsPerRun: 10,
+  });
+  const result = await monitor.repair();
+
+  return {
+    missingIndexFindingCount: result.missingIndexFindingCount,
+    reindexedItemCount: result.reindexedItemCount,
+    suspiciousCount: result.suspiciousCount,
+    text: await queryTextIds(
+      fullTextBackend,
+      "Book",
+      "title",
+      "Strong",
+    ),
+    structured: await queryStructuredIds(
+      structuredBackend,
+      "Book",
+      "rating",
+      88,
+    ),
+  };
+};
