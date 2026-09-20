@@ -78,6 +78,24 @@ const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
         readonly: true,
         optional: false,
       },
+      slowOperationFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      failedOperationFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      operationRecordsProcessedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
       suspiciousCount: {
         type: "number",
         array: false,
