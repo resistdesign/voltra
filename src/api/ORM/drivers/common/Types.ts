@@ -46,7 +46,7 @@ export enum DATA_ITEM_DB_DRIVER_ERRORS {
  * The generic type for a database driver configuration.
  * */
 export type DataItemDBDriverConfig<
-  ItemType extends TypeInfoDataItem,
+  ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   /**
@@ -71,7 +71,7 @@ export type DataItemDBDriverConfig<
  * The API for a database driver.
  * */
 export type DataItemDBDriver<
-  ItemType extends TypeInfoDataItem,
+  ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   /**
