@@ -273,9 +273,9 @@ function toRangeKeys(entries: RangeEntry[]): StructuredRangeIndexKey[] {
 }
 
 /**
- * Writer that diffs structured fields and persists term/range entries.
+ * Storage-neutral writer that diffs structured fields and persists term/range entries through driver dependencies.
  */
-export class StructuredDdbWriter {
+export class StructuredIndexWriter {
   private readonly options: StructuredWriterOptions;
   /**
    * @param dependencies Writer dependencies for persistence.
