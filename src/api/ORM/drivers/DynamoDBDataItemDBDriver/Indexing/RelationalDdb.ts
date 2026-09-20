@@ -5,20 +5,22 @@
  * support directional traversal with cursor-based paging.
  */
 import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
-import type { DynamoQueryClient, WriteRequest } from "../../../../Indexing/rel/Types";
+import type { DynamoQueryClient, WriteRequest } from "./Types";
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
+  buildIndexScalarKey,
+  encodeIndexScalarIdentity,
+  type IndexTableKey,
+} from "../../../../Indexing/IndexTable";
+import {
   INDEX_TABLE_KIND_ATTRIBUTE,
   INDEX_TABLE_PARTITION_KEY,
   INDEX_TABLE_SORT_KEY,
+  assertDynamoIndexTableKey,
   assertIndexTableConfig,
-  assertIndexTableKey,
-  buildIndexScalarKey,
-  encodeIndexScalarIdentity,
   type IndexTableConfig,
-  type IndexTableKey,
-} from "../../../../Indexing/IndexTable";
+} from "./IndexTable";
 import { decodeRelationalCursor, encodeRelationalCursor } from "../../../../Indexing/rel/Cursor";
 import type {
   Direction,
@@ -187,7 +189,7 @@ export function buildRelationEdgeDdbKey(
   direction: Direction,
   otherId: string,
 ): RelationEdgesDdbKey {
-  return assertIndexTableKey({
+  return assertDynamoIndexTableKey({
     pk: encodeRelationEdgePartitionKey(entityId, relation, direction),
     sk: `${INDEX_KEY_PARTS.entity}#${encodeIndexScalarIdentity(otherId)}`,
   });
