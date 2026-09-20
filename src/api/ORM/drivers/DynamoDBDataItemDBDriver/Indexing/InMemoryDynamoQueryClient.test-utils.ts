@@ -1,4 +1,4 @@
-import { INDEX_TABLE_KIND_ATTRIBUTE } from "../IndexTable";
+import { INDEX_TABLE_KIND_ATTRIBUTE } from "../../../../Indexing/IndexTable";
 import type {
   AttributeMap,
   BatchGetItemInput,
