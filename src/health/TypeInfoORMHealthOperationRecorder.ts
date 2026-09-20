@@ -85,6 +85,9 @@ export class TypeInfoORMHealthOperationRecorder {
           ...(event.resultCount !== undefined
             ? { resultCount: event.resultCount }
             : {}),
+          ...(event.queryFingerprint
+            ? { queryFingerprint: event.queryFingerprint }
+            : {}),
           slowOperationMs: this.slowOperationMs,
         },
       });
