@@ -97,6 +97,7 @@ import {
   type IndexSearchLimits,
 } from "../Indexing/query";
 import { normalizeDocId } from "../Indexing/docId";
+import { tokenize } from "../Indexing/tokenize";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredIndexRecords";
 import type {
   StructuredDocumentListOptions,
@@ -363,6 +364,46 @@ export type TypeInfoORMIndexMaintenanceTypeDescriptor = {
   structuredFields: string[];
   /** Current full-text fields for this type. */
   textFields: string[];
+};
+
+/** One current canonical/index mismatch found by maintenance inspection. */
+export type TypeInfoORMStoredItemIndexIssue = {
+  /** Mismatch category. */
+  kind:
+    | "structuredMissing"
+    | "structuredMismatch"
+    | "textMissing"
+    | "textMismatch";
+  /** Persisted qualified field when the issue is field-specific. */
+  indexField?: string;
+};
+
+/** One canonical item whose current index state requires reconciliation. */
+export type TypeInfoORMStoredItemIndexInspection = {
+  /** Canonical primary-field value. */
+  primaryFieldValue: LiteralValue;
+  /** Detected current-schema index issues. */
+  issues: TypeInfoORMStoredItemIndexIssue[];
+};
+
+/** Options for one bounded current-schema index verification page. */
+export type TypeInfoORMInspectStoredTypeIndexesPageConfig = {
+  /** Maximum canonical items to inspect in this page. */
+  itemsPerPage?: number;
+  /** Opaque canonical-driver continuation token. */
+  cursor?: string;
+};
+
+/** Result of one bounded current-schema index verification page. */
+export type TypeInfoORMInspectStoredTypeIndexesPageResult = {
+  /** Canonical items inspected in this page. */
+  processedCount: number;
+  /** Canonical items whose current index state is missing or mismatched. */
+  unhealthyItems: TypeInfoORMStoredItemIndexInspection[];
+  /** Backend capabilities unavailable for complete inspection. */
+  unsupportedCapabilities: Array<"structured" | "text">;
+  /** Opaque continuation token when more canonical items remain. */
+  cursor?: string;
 };
 
 /** Options for one bounded TypeInfo index-schema reconciliation page. */
@@ -1848,6 +1889,158 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       status: "cleaned",
       cleanupAttempted,
       canonicalReindexed: false,
+    };
+  };
+
+  /**
+   * Inspect one bounded page of canonical items against current index mirrors.
+   *
+   * This catches the inverse of orphaned indexes: canonical items whose current
+   * structured or text index state is missing or stale. Inspection is
+   * non-destructive; callers should repair through `reindexStoredItem`, which
+   * re-reads canonical state before writing.
+   *
+   * @param typeName Current TypeInfo type.
+   * @param config Paging options.
+   * @returns Bounded inspection results and continuation state.
+   */
+  inspectStoredTypeIndexesPage = async (
+    typeName: string,
+    config: TypeInfoORMInspectStoredTypeIndexesPageConfig = {},
+  ): Promise<TypeInfoORMInspectStoredTypeIndexesPageResult> => {
+    const descriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!descriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const driver = this.getDriverInternal(typeName);
+    const page = await driver.listItems({
+      itemsPerPage: Math.max(1, config.itemsPerPage ?? 100),
+      cursor: config.cursor,
+    });
+    const documents = this.config.indexing?.backend.values.documents;
+    const textMaintenance = this.config.indexing?.backend.text;
+    const capabilities = this.getIndexedFieldCapabilities(typeName);
+    const unsupportedCapabilities = new Set<"structured" | "text">();
+    const unhealthyItems: TypeInfoORMStoredItemIndexInspection[] = [];
+    const primaryFieldName = descriptor.primaryField;
+
+    const stableValue = (value: unknown): unknown => {
+      if (Array.isArray(value)) {
+        return value.map(stableValue);
+      }
+      if (typeof value !== "object" || value === null) {
+        return value;
+      }
+
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .sort(([left], [right]) =>
+            left < right ? -1 : left > right ? 1 : 0,
+          )
+          .map(([key, entry]) => [key, stableValue(entry)]),
+      );
+    };
+
+    const equal = (left: unknown, right: unknown): boolean =>
+      JSON.stringify(stableValue(left)) === JSON.stringify(stableValue(right));
+
+    for (const item of page.items) {
+      const primaryFieldValue =
+        item[primaryFieldName as keyof TypeInfoDataItem];
+      if (
+        typeof primaryFieldValue === "undefined" ||
+        Array.isArray(primaryFieldValue)
+      ) {
+        continue;
+      }
+
+      const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
+      const issues: TypeInfoORMStoredItemIndexIssue[] = [];
+      const expectedStructured = this.buildIndexValueFields(typeName, item);
+      const expectedStructuredCount = Object.keys(expectedStructured).length;
+
+      if (descriptor.structuredFields.length > 0) {
+        if (!documents?.get) {
+          unsupportedCapabilities.add("structured");
+        } else {
+          const actualStructured = await documents.get(docId);
+          if (
+            expectedStructuredCount > 0 &&
+            typeof actualStructured === "undefined"
+          ) {
+            issues.push({ kind: "structuredMissing" });
+          } else if (
+            actualStructured &&
+            !equal(expectedStructured, actualStructured)
+          ) {
+            issues.push({ kind: "structuredMismatch" });
+          } else if (
+            expectedStructuredCount === 0 &&
+            actualStructured &&
+            Object.keys(actualStructured).length > 0
+          ) {
+            issues.push({ kind: "structuredMismatch" });
+          }
+        }
+      }
+
+      const textFields = Object.entries(capabilities).filter(
+        ([, capability]) => !!capability.text,
+      );
+      if (textFields.length > 0) {
+        if (!textMaintenance?.readDocumentIndex) {
+          unsupportedCapabilities.add("text");
+        } else {
+          for (const [fieldName, capability] of textFields) {
+            const qualifiedField = qualifyIndexField(
+              typeName,
+              capability.field ?? fieldName,
+            );
+            const rawValue = item[fieldName as keyof TypeInfoDataItem];
+            const expectedText = tokenize(
+              rawValue === null || typeof rawValue === "undefined"
+                ? ""
+                : String(rawValue),
+            ).normalized;
+            const actualText = await textMaintenance.readDocumentIndex(
+              docId,
+              qualifiedField,
+            );
+
+            if (expectedText && typeof actualText === "undefined") {
+              issues.push({
+                kind: "textMissing",
+                indexField: qualifiedField,
+              });
+            } else if ((actualText ?? "") !== expectedText) {
+              issues.push({
+                kind: "textMismatch",
+                indexField: qualifiedField,
+              });
+            }
+          }
+        }
+      }
+
+      if (issues.length > 0) {
+        unhealthyItems.push({
+          primaryFieldValue,
+          issues,
+        });
+      }
+    }
+
+    return {
+      processedCount: page.items.length,
+      unhealthyItems,
+      unsupportedCapabilities: Array.from(unsupportedCapabilities).sort(),
+      cursor: page.cursor,
     };
   };
 
