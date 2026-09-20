@@ -745,6 +745,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             ? (result as { items: unknown[] }).items.length
             : undefined;
 
+        const queryFingerprint =
+          this.getObservedOperationQueryFingerprint(operation, args);
         await this.emitOperationObservation({
           operation,
           typeName: this.getObservedOperationTypeName(args),
@@ -752,6 +754,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           durationMs: Math.max(0, Date.now() - startedAt),
           success: true,
           ...(resultCount !== undefined ? { resultCount } : {}),
+          ...(queryFingerprint ? { queryFingerprint } : {}),
         });
 
         return result;
