@@ -8,6 +8,11 @@ import { ExactIndex } from "./ExactIndex";
 import { LossyIndex } from "./LossyIndex";
 import { tokenize } from "../../../../Indexing/tokenize";
 import {
+  FullTextIndexWriter,
+  type FullTextDocumentMutation,
+  type FullTextDocumentState,
+} from "../../../../Indexing/fulltext/FullTextIndexWriter";
+import {
   decodeIndexScalarIdentity,
   encodeIndexScalarIdentity,
 } from "../../../../Indexing/IndexTable";
@@ -34,6 +39,34 @@ export class FullTextMemoryBackend
   private LossyIndex = new LossyIndex();
   private ExactIndex = new ExactIndex();
   private docTokenMembership = new Set<string>();
+  private readonly documentWriter: FullTextIndexWriter;
+
+  constructor() {
+    this.documentWriter = new FullTextIndexWriter({
+      loadDocumentContent: (docId, indexField) =>
+        this.readDocumentIndex(docId, indexField),
+      loadDocumentArtifacts: async (
+        docId,
+        indexField,
+        candidates,
+      ): Promise<FullTextDocumentState> => {
+        const lossyTokens = candidates.lossyTokens.filter((token) =>
+          this.LossyIndex.getPostings(token, indexField).docIds.includes(docId),
+        );
+        const exactTokens = candidates.exactTokens.flatMap((token) => {
+          const positions = this.ExactIndex.getPositions(
+            token,
+            indexField,
+            docId,
+          );
+          return positions ? [{ token, positions: [...positions] }] : [];
+        });
+        return { lossyTokens, exactTokens };
+      },
+      applyDocumentMutation: (docId, indexField, mutation) =>
+        this.applyDocumentMutation(docId, indexField, mutation),
+    });
+  }
 
   private createMembershipKey(
     docId: DocId,
@@ -45,6 +78,69 @@ export class FullTextMemoryBackend
       indexField,
       token,
     ]);
+  }
+
+  private syncMembership(
+    docId: DocId,
+    indexField: string,
+    token: string,
+  ): void {
+    const key = this.createMembershipKey(docId, indexField, token);
+    const inLossy = this.LossyIndex.getPostings(token, indexField).docIds.includes(
+      docId,
+    );
+    const inExact = !!this.ExactIndex.getPositions(token, indexField, docId);
+    if (inLossy || inExact) {
+      this.docTokenMembership.add(key);
+    } else {
+      this.docTokenMembership.delete(key);
+    }
+  }
+
+  private async applyDocumentMutation(
+    docId: DocId,
+    indexField: string,
+    mutation: FullTextDocumentMutation,
+  ): Promise<void> {
+    const affected = new Set<string>();
+
+    for (const token of mutation.removeLossyTokens) {
+      this.LossyIndex.removePosting(token, indexField, docId);
+      affected.add(token);
+    }
+    for (const token of mutation.addLossyTokens) {
+      this.LossyIndex.addPosting(token, indexField, docId);
+      affected.add(token);
+    }
+    for (const token of mutation.removeExactTokens) {
+      this.ExactIndex.removePositions(token, indexField, docId);
+      affected.add(token);
+    }
+    for (const { token, positions } of mutation.putExactTokens) {
+      this.ExactIndex.addPositions(token, indexField, docId, positions);
+      affected.add(token);
+    }
+
+    for (const token of affected) {
+      this.syncMembership(docId, indexField, token);
+    }
+  }
+
+  /** Apply generic full-text document semantics to in-memory persistence. */
+  async writeDocument(
+    document: Record<string, unknown>,
+    primaryField: string,
+    indexField: string,
+    indexFieldQualified = indexField,
+    previousDocument?: Record<string, unknown>,
+  ): Promise<void> {
+    await this.documentWriter.writeDocument(
+      document,
+      primaryField,
+      indexField,
+      indexFieldQualified,
+      previousDocument,
+    );
   }
 
   /**
@@ -60,9 +156,7 @@ export class FullTextMemoryBackend
     docId: DocId,
   ): Promise<void> {
     this.LossyIndex.addPosting(token, indexField, docId);
-    this.docTokenMembership.add(
-      this.createMembershipKey(docId, indexField, token),
-    );
+    this.syncMembership(docId, indexField, token);
   }
 
   /**
@@ -78,9 +172,7 @@ export class FullTextMemoryBackend
     docId: DocId,
   ): Promise<void> {
     this.LossyIndex.removePosting(token, indexField, docId);
-    this.docTokenMembership.delete(
-      this.createMembershipKey(docId, indexField, token),
-    );
+    this.syncMembership(docId, indexField, token);
   }
 
   /**
@@ -132,9 +224,7 @@ export class FullTextMemoryBackend
     positions: number[],
   ): Promise<void> {
     this.ExactIndex.addPositions(token, indexField, docId, positions);
-    this.docTokenMembership.add(
-      this.createMembershipKey(docId, indexField, token),
-    );
+    this.syncMembership(docId, indexField, token);
   }
 
   /**
@@ -150,9 +240,7 @@ export class FullTextMemoryBackend
     docId: DocId,
   ): Promise<void> {
     this.ExactIndex.removePositions(token, indexField, docId);
-    this.docTokenMembership.delete(
-      this.createMembershipKey(docId, indexField, token),
-    );
+    this.syncMembership(docId, indexField, token);
   }
 
   /**
