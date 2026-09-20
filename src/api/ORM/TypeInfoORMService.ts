@@ -122,7 +122,7 @@ import {
 } from "../../common/SearchUtils";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
 import { criteriaToIndexExpression } from "./indexing/criteriaToIndexExpression";
-import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
+import type { RelationalBackend } from "../Indexing/rel/Types";
 
 /**
  * Strip a relationship item down to its identifying keys.
