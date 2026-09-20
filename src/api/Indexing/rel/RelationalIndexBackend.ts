@@ -62,6 +62,9 @@ export type RelationalIndexStorage<
   ): Promise<RelationalStoragePage<TMetadata>> | RelationalStoragePage<TMetadata>;
 };
 
+const isPromise = <T>(value: T | Promise<T>): value is Promise<T> =>
+  typeof (value as Promise<T>)?.then === "function";
+
 const buildStorageRecords = <TMetadata>(
   edge: Edge<TMetadata>,
 ): Array<RelationalStorageRecord<TMetadata>> => {
@@ -154,12 +157,7 @@ export class RelationalIndexBackend<
       continuationToken: cursor?.continuationToken,
     });
 
-    if (
-      typeof result === "object" &&
-      result !== null &&
-      "then" in result &&
-      typeof result.then === "function"
-    ) {
+    if (isPromise(result)) {
       return result.then((page) =>
         this.mapPage(entityId, relation, direction, page),
       );
