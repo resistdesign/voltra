@@ -198,3 +198,12 @@ export const runIndexDriverConformanceScenario = async () => {
     dynamoRelationResult,
   };
 };
+
+export const runIndexDriverConformanceEqualScenario = async () => {
+  const result = await runIndexDriverConformanceScenario();
+  return (
+    result.fullTextEqual &&
+    result.structuredEqual &&
+    result.relationalEqual
+  );
+};
