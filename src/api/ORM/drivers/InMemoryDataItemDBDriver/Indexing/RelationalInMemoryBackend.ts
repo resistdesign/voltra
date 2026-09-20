@@ -47,6 +47,7 @@ class InMemoryRelationalIndexStorage<
     relation: string;
     direction: "out" | "in";
     limit?: number;
+    lastId?: string;
     continuationToken?: string;
   }) {
     const partition = this.partitions.get(partitionKey(query));
@@ -58,8 +59,9 @@ class InMemoryRelationalIndexStorage<
         })
       : [];
 
-    const start = query.continuationToken
-      ? ids.findIndex((id) => id === query.continuationToken) + 1
+    const resumeId = query.lastId ?? query.continuationToken;
+    const start = resumeId
+      ? ids.findIndex((id) => id === resumeId) + 1
       : 0;
     const safeStart = Math.max(0, start);
     const limit = Math.max(1, query.limit ?? (ids.length || 1));
@@ -77,7 +79,7 @@ class InMemoryRelationalIndexStorage<
           : {}),
       })),
       ...(last && safeStart + pageIds.length < ids.length
-        ? { continuationToken: last }
+        ? { lastId: last }
         : {}),
     };
   }
