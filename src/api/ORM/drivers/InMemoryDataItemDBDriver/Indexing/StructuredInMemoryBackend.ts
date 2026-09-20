@@ -3,12 +3,12 @@
  *
  * Independent, inspectable in-memory structured indexing backend.
  */
-import type { DocId } from "../Types";
-import { encodeSortableIndexValue } from "../IndexTable";
-import type { StructuredSearchDependencies } from "./SearchStructured";
-import type { StructuredWriter } from "./Handlers";
-import { StructuredIndexVersionMismatchError } from "./StructuredWriter";
-import type { StructuredQueryOptions, WhereValue } from "./Types";
+import type { DocId } from "../../../../Indexing/Types";
+import { encodeSortableIndexValue } from "../../../../Indexing/IndexTable";
+import type { StructuredSearchDependencies } from "../../../../Indexing/structured/SearchStructured";
+import type { StructuredWriter } from "../../../../Indexing/structured/Handlers";
+import { StructuredIndexVersionMismatchError } from "../../../../Indexing/structured/StructuredWriter";
+import type { StructuredQueryOptions, WhereValue } from "../../../../Indexing/structured/Types";
 import {
   buildStructuredDocFieldsItem,
   buildStructuredDocFieldsKey,
@@ -20,11 +20,11 @@ import {
   type StructuredDocFieldsRecord,
   type StructuredRangeIndexItem,
   type StructuredTermIndexItem,
-} from "./StructuredIndexRecords";
+} from "../../../../Indexing/structured/StructuredIndexRecords";
 import {
   type StructuredStringTokenizerConfig,
   buildStructuredStringContainsTokens,
-} from "./StructuredStringLike";
+} from "../../../../Indexing/structured/StructuredStringLike";
 import {
   INITIAL_STRUCTURED_OCCUPANCY_GENERATION,
   buildStructuredGenerationStateItem,
@@ -38,7 +38,7 @@ import {
   type StructuredOccupancyGenerationState,
   type StructuredOccupancyItem,
   type StructuredWriteContext,
-} from "./StructuredOccupancy";
+} from "../../../../Indexing/structured/StructuredOccupancy";
 
 type StructuredIndexRecord =
   | StructuredDocFieldsItem
