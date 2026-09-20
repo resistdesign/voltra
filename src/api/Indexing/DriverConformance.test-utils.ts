@@ -1,0 +1,200 @@
+import {
+  indexDocument,
+  replaceFullTextDocument,
+  searchExact,
+  searchLossy,
+} from "./API";
+import { qualifyIndexField } from "./fieldQualification";
+import { searchStructured } from "./structured/SearchStructured";
+import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
+import { FullTextMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { RelationalInMemoryBackend } from "../ORM/drivers/InMemoryDataItemDBDriver/Indexing/RelationalInMemoryBackend";
+import { FullTextDdbBackend } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/FullTextDdbBackend";
+import { StructuredDdbBackend } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/StructuredDdbBackend";
+import {
+  RelationalDdbBackend,
+  createRelationEdgesDdbDependencies,
+} from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/RelationalDdb";
+import { InMemoryDynamoQueryClient } from "../ORM/drivers/DynamoDBDataItemDBDriver/Indexing/InMemoryDynamoQueryClient.test-utils";
+
+const textField = qualifyIndexField("Record", "title");
+
+const exerciseFullText = async (
+  backend: FullTextMemoryBackend | FullTextDdbBackend,
+) => {
+  const first = { id: "1", title: "hello world" };
+  const second = { id: "2", title: "hello there" };
+  await indexDocument({
+    backend,
+    document: first,
+    primaryField: "id",
+    indexField: "title",
+    indexFieldQualified: textField,
+  });
+  await indexDocument({
+    backend,
+    document: second,
+    primaryField: "id",
+    indexField: "title",
+    indexFieldQualified: textField,
+  });
+  const replacement = { id: "1", title: "hello brave world" };
+  await replaceFullTextDocument({
+    backend,
+    previousDocument: first,
+    nextDocument: replacement,
+    primaryField: "id",
+    indexField: "title",
+    indexFieldQualified: textField,
+  });
+
+  const lossy = await searchLossy({
+    backend,
+    query: "hello",
+    indexField: textField,
+  });
+  const exact = await searchExact({
+    backend,
+    query: '"hello brave world"',
+    indexField: textField,
+  });
+  const mirror = await backend.readDocumentIndex("1", textField);
+  const listed = await backend.listDocuments({ limit: 10 });
+
+  return {
+    lossy: lossy.docIds,
+    exact: exact.docIds,
+    mirror,
+    listed: listed.documents
+      .map(({ docId, indexField }) => `${String(docId)}:${indexField}`)
+      .sort(),
+  };
+};
+
+const occupancyFields: StructuredOccupancyFieldMap = {
+  state: { type: "string" },
+  score: { type: "number" },
+};
+
+const exerciseStructured = async (
+  reader: Parameters<typeof searchStructured>[0],
+  write: (
+    docId: string,
+    fields: Record<string, string | number>,
+  ) => Promise<void>,
+) => {
+  await write("1", { state: "published", score: 20 });
+  await write("2", { state: "draft", score: 10 });
+  await write("3", { state: "published", score: 30 });
+
+  const term = await searchStructured(
+    reader,
+    { type: "term", field: "state", mode: "eq", value: "published" },
+    { limit: 10, occupancyFields },
+  );
+  const range = await searchStructured(
+    reader,
+    { type: "between", field: "score", lower: 15, upper: 30 },
+    { limit: 10, orderBy: { field: "score" }, occupancyFields },
+  );
+
+  return {
+    term: term.candidateIds,
+    range: range.candidateIds,
+  };
+};
+
+const exerciseRelations = async (
+  backend:
+    | RelationalInMemoryBackend<{ weight: number }>
+    | RelationalDdbBackend<{ weight: number }>,
+) => {
+  await backend.putEdge({
+    key: { from: "a", to: "b", relation: "owns" },
+    metadata: { weight: 1 },
+  });
+  await backend.putEdge({
+    key: { from: "a", to: "c", relation: "owns" },
+    metadata: { weight: 2 },
+  });
+  const first = await backend.getOutgoing("a", "owns", { limit: 1 });
+  const second = await backend.getOutgoing("a", "owns", {
+    limit: 1,
+    cursor: first.nextCursor,
+  });
+  await backend.removeEdge({ from: "a", to: "b", relation: "owns" });
+  const afterRemove = await backend.getOutgoing("a", "owns", { limit: 10 });
+
+  return {
+    first: first.edges.map((edge) => edge.key.to),
+    second: second.edges.map((edge) => edge.key.to),
+    afterRemove: afterRemove.edges.map((edge) => edge.key.to),
+  };
+};
+
+export const runIndexDriverConformanceScenario = async () => {
+  const memoryText = new FullTextMemoryBackend();
+  const dynamoTextClient = new InMemoryDynamoQueryClient();
+  const dynamoText = new FullTextDdbBackend({
+    client: dynamoTextClient,
+    table: { tableName: "ConformanceText" },
+  });
+
+  const memoryStructured = new StructuredInMemoryBackend();
+  const dynamoStructuredClient = new InMemoryDynamoQueryClient();
+  const dynamoStructured = new StructuredDdbBackend({
+    client: dynamoStructuredClient,
+    table: { tableName: "ConformanceStructured" },
+  });
+
+  const memoryRelations = new RelationalInMemoryBackend<{ weight: number }>();
+  const dynamoRelationsClient = new InMemoryDynamoQueryClient();
+  const dynamoRelations = new RelationalDdbBackend<{ weight: number }>(
+    createRelationEdgesDdbDependencies({
+      client: dynamoRelationsClient,
+      table: { tableName: "ConformanceRelations" },
+    }),
+  );
+
+  const [
+    memoryTextResult,
+    dynamoTextResult,
+    memoryStructuredResult,
+    dynamoStructuredResult,
+    memoryRelationResult,
+    dynamoRelationResult,
+  ] = await Promise.all([
+    exerciseFullText(memoryText),
+    exerciseFullText(dynamoText),
+    exerciseStructured(
+      memoryStructured,
+      (docId, fields) =>
+        memoryStructured.write(docId, fields, { occupancyFields }),
+    ),
+    exerciseStructured(
+      dynamoStructured.reader,
+      (docId, fields) =>
+        dynamoStructured.writer.write(docId, fields, { occupancyFields }),
+    ),
+    exerciseRelations(memoryRelations),
+    exerciseRelations(dynamoRelations),
+  ]);
+
+  return {
+    fullTextEqual:
+      JSON.stringify(memoryTextResult) === JSON.stringify(dynamoTextResult),
+    structuredEqual:
+      JSON.stringify(memoryStructuredResult) ===
+      JSON.stringify(dynamoStructuredResult),
+    relationalEqual:
+      JSON.stringify(memoryRelationResult) ===
+      JSON.stringify(dynamoRelationResult),
+    memoryTextResult,
+    dynamoTextResult,
+    memoryStructuredResult,
+    dynamoStructuredResult,
+    memoryRelationResult,
+    dynamoRelationResult,
+  };
+};
