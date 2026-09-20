@@ -10,10 +10,25 @@ The Health work exposed a pre-existing architectural deviation in Indexing: stor
 
 The correction must preserve functionality. Generic Indexing continues to own all semantics and strategies; drivers only implement the generic storage operations required to persist/query those structures.
 
+### Confirmed architecture violations
+
+- DynamoDB implementation leaked into generic Indexing through `Indexing/ddb/**`, `FullTextDdbBackend`, `StructuredDdb*`, `RelationalDdb`, `ExactDdb`, and `LossyDdb`.
+- S3 implementation leaked through `ExactS3` and `LossyS3`.
+- In-memory implementation leaked through `FullTextMemoryBackend`, `StructuredInMemoryBackend`, `StructuredInMemoryIndex`, `RelationalInMemoryBackend`, `ExactIndex`, and `LossyIndex`.
+- Generic `IndexTable.ts` currently contains DynamoDB-only table configuration and DynamoDB key-size limits; generic key encoding must not inherit Dynamo limits.
+- Generic `SearchTrace` exposes DynamoDB-specific counters.
+- Generic ORM indexing config references the concrete Dynamo `IndexMutationCoordinator` instead of a storage-neutral mutation-scope contract.
+- Generic `StructuredWriter.ts` contains a storage-neutral algorithm named `StructuredDdbWriter`, obscuring the actual architectural boundary.
+- Several generic Indexing tests instantiate specific storage implementations; these need to move under driver contract/integration tests rather than making generic Indexing depend on concrete drivers.
+
+### Generic behavior that must remain in Indexing
+
+Exact/range/membership semantics, text tokenization and search, phrase/prefix/lossy behavior, Boolean query planning, ordering, pagination/cursors, occupancy strategy, normalized index-record construction, maintenance contracts, bounded inspection, repair semantics, schema drift behavior, and storage-neutral observability remain generic Voltra functionality. Driver code may only implement the persistence/query primitives necessary to execute those semantics.
+
 ### Storage-driver isolation checklist
 
 - [x] Record storage-driver isolation as a repository-wide core objective in `AGENTS.md`.
-- [~] Inventory every storage-specific implementation/type currently outside `drivers/` and classify the generic behavior that must remain in Indexing.
+- [x] Inventory every storage-specific implementation/type currently outside `drivers/` and classify the generic behavior that must remain in Indexing.
 - [ ] Define the minimal generic index-storage contracts required by Voltra's existing exact/range/membership/full-text/relationship/occupancy/maintenance behavior.
 - [ ] Refactor generic indexing algorithms to depend only on those contracts, with no DynamoDB/S3/in-memory concepts in generic modules.
 - [ ] Move DynamoDB-specific indexing clients, adapters, persistence implementations, schemas/configuration, and tests into the Dynamo driver folder.
