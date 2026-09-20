@@ -46,21 +46,22 @@ export const runStructuredDriverIsolationScenario = () => {
     path.slice(indexingRoot.length + 1),
   );
 
+  const findMatchingPaths = (pattern: RegExp): string[] =>
+    genericSources
+      .filter((path) => pattern.test(readFileSync(path, "utf8")))
+      .map((path) => path.slice(indexingRoot.length + 1));
+
   return {
-    genericFileNamesAreStorageNeutral: relativePaths.every(
-      (path) => !/(?:Ddb|Dynamo|S3|InMemory)/.test(path),
+    storageSpecificFileNames: relativePaths.filter((path) =>
+      /(?:Ddb|Dynamo|S3|InMemory)/.test(path),
     ),
-    genericImportsDoNotReferenceDrivers:
-      !/(?:\/drivers\/|ORM\/drivers)/.test(importStatements),
-    genericImportsDoNotReferenceStorageSDKs:
-      !/@aws-sdk|client-dynamodb|client-s3/.test(importStatements),
-    genericSourceHasNoDynamoContracts:
-      !/\b(?:DynamoDB|DynamoQueryClient|DynamoScanClient|ConsistentRead|ScanCommand|QueryCommand)\b/.test(
-        genericText,
-      ),
-    genericSourceHasNoS3Contracts:
-      !/\b(?:S3Client|GetObjectCommand|PutObjectCommand|ListObjectsV2Command)\b/.test(
-        genericText,
-      ),
+    driverImports: findMatchingPaths(/(?:\/drivers\/|ORM\/drivers)/),
+    storageSdkImports: findMatchingPaths(/@aws-sdk|client-dynamodb|client-s3/),
+    dynamoContracts: findMatchingPaths(
+      /\b(?:DynamoDB|DynamoQueryClient|DynamoScanClient|ConsistentRead|ScanCommand|QueryCommand)\b/,
+    ),
+    s3Contracts: findMatchingPaths(
+      /\b(?:S3Client|GetObjectCommand|PutObjectCommand|ListObjectsV2Command)\b/,
+    ),
   };
 };
