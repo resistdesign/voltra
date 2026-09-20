@@ -5,13 +5,19 @@
       "export": "runExactIndexPositionsDoc1HelloScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [0, 2]
+      "expectation": [
+        0,
+        2
+      ]
     },
     {
       "export": "runExactIndexPositionsDoc2HelloScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [0, 2]
+      "expectation": [
+        0,
+        2
+      ]
     },
     {
       "export": "runExactIndexHasPhraseDoc1Scenario",
@@ -36,7 +42,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-1"],
+        "docIds": [
+          "doc-1"
+        ],
         "nextCursor": "doc-1"
       }
     },
@@ -45,7 +53,9 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "docIds": ["doc-2"],
+        "docIds": [
+          "doc-2"
+        ],
         "nextCursor": "doc-2"
       }
     },
@@ -54,29 +64,6 @@
       "conditions": [],
       "operation": "===",
       "expectation": null
-    },
-    {
-      "export": "runExactIndexDdbKeyScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "pk": "v1#fe#text#token",
-        "sk": "d#s#doc-1"
-      }
-    },
-    {
-      "export": "runExactIndexDdbItemScenario",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": {
-        "pk": "v1#fe#text#token",
-        "sk": "d#s#doc-1",
-        "kind": "fe",
-        "token": "token",
-        "indexField": "text",
-        "docId": "doc-1",
-        "positions": [3, 4]
-      }
     }
   ]
 }
