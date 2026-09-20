@@ -4,6 +4,19 @@
 export type DocId = string | number;
 
 /**
+ * Storage-neutral scope used to coordinate derived index mutations.
+ *
+ * Implementations may batch, coalesce, transact, or otherwise coordinate
+ * writes according to the backing storage system. Generic ORM/indexing code
+ * depends only on this scope contract.
+ */
+export type IndexMutationScope = {
+  /** Execute one logical index mutation scope. */
+  run<T>(operation: () => Promise<T>): Promise<T>;
+};
+
+
+/**
  * Generic document record stored in the index.
  */
 export type DocumentRecord = Record<string, unknown>;
