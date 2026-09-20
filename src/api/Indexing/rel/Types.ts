@@ -71,3 +71,23 @@ export type RelationalQueryOptions = {
    */
   cursor?: string;
 };
+
+/**
+ * Storage-neutral relational behavior consumed by ORM and handlers.
+ */
+export type RelationalBackend<
+  TMetadata = Record<string, unknown>,
+> = {
+  putEdge(edge: Edge<TMetadata>): Promise<void> | void;
+  removeEdge(key: EdgeKey): Promise<void> | void;
+  getOutgoing(
+    fromId: string,
+    relation: string,
+    options?: RelationalQueryOptions,
+  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
+  getIncoming(
+    toId: string,
+    relation: string,
+    options?: RelationalQueryOptions,
+  ): Promise<EdgePage<TMetadata>> | EdgePage<TMetadata>;
+};
