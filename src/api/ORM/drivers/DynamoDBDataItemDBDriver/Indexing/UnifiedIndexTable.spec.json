@@ -6,12 +6,27 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "touchedTables": ["UnifiedIndex"],
-        "termIds": ["doc#1", "doc/2"],
-        "rangeIds": ["doc#1", "doc/2"],
-        "lossy": ["doc#1"],
-        "exact": [0, 2],
-        "related": ["doc/2"],
+        "touchedTables": [
+          "UnifiedIndex"
+        ],
+        "termIds": [
+          "doc#1",
+          "doc/2"
+        ],
+        "rangeIds": [
+          "doc#1",
+          "doc/2"
+        ],
+        "lossy": [
+          "doc#1"
+        ],
+        "exact": [
+          0,
+          2
+        ],
+        "related": [
+          "doc/2"
+        ],
         "kinds": {
           "fe": 1,
           "fl": 1,
@@ -30,8 +45,17 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "first": { "docIds": [0], "lastEvaluatedDocId": 0 },
-        "second": { "docIds": [2] }
+        "first": {
+          "docIds": [
+            0
+          ],
+          "lastEvaluatedDocId": 0
+        },
+        "second": {
+          "docIds": [
+            2
+          ]
+        }
       }
     },
     {
@@ -39,10 +63,20 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "terms": [123, "123"],
-        "postings": [123, "123"],
-        "numericPositions": [1],
-        "stringPositions": [2],
+        "terms": [
+          123,
+          "123"
+        ],
+        "postings": [
+          123,
+          "123"
+        ],
+        "numericPositions": [
+          1
+        ],
+        "stringPositions": [
+          2
+        ],
         "structuredStateCount": 2
       }
     },
@@ -52,11 +86,17 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "oldTerms": [],
-        "newTerms": ["cleanup"],
+        "newTerms": [
+          "cleanup"
+        ],
         "oldRange": [],
-        "newRange": ["cleanup"],
+        "newRange": [
+          "cleanup"
+        ],
         "oldPositions": null,
-        "newPositions": [0]
+        "newPositions": [
+          0
+        ]
       }
     },
     {
@@ -64,8 +104,15 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "ids": ["b", "a", "c"],
-        "strategies": ["occupancy", "occupancy"],
+        "ids": [
+          "b",
+          "a",
+          "c"
+        ],
+        "strategies": [
+          "occupancy",
+          "occupancy"
+        ],
         "occupancyCells": 6,
         "missingRows": 1
       }
@@ -76,10 +123,14 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "activeGeneration": "g1",
-        "created": ["doc"],
+        "created": [
+          "doc"
+        ],
         "createdStrategy": "occupancy",
         "missingAfterCreate": 1,
-        "updated": ["doc"],
+        "updated": [
+          "doc"
+        ],
         "updatedStrategy": "occupancy",
         "missingAfterUpdate": 0,
         "occupancyAfterUpdate": 2,
@@ -93,8 +144,14 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "building": { "active": "g1", "building": "g2" },
-        "active": { "active": "g2", "building": null }
+        "building": {
+          "active": "g1",
+          "building": "g2"
+        },
+        "active": {
+          "active": "g2",
+          "building": null
+        }
       }
     },
     {
@@ -103,8 +160,14 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "beforeRebuildStrategy": "occupancy",
-        "generationCounts": { "g1": 4, "g2": 4 },
-        "ids": ["historical", "live"],
+        "generationCounts": {
+          "g1": 4,
+          "g2": 4
+        },
+        "ids": [
+          "historical",
+          "live"
+        ],
         "strategy": "occupancy",
         "retiredCount": 4,
         "retiredCellsRemaining": 0
@@ -114,13 +177,18 @@
       "export": "runUnifiedIndexTableDescendingTieScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["b", "a"]
+      "expectation": [
+        "b",
+        "a"
+      ]
     },
     {
       "export": "runUnifiedIndexTableStaleBackfillMissingScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["doc"]
+      "expectation": [
+        "doc"
+      ]
     },
     {
       "export": "runUnifiedIndexTableCoordinatedMutationScenario",
@@ -128,11 +196,29 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "batchCount": 1,
-        "batchSize": 20,
-        "kinds": ["fe", "fl", "fm", "fp", "fs", "ft", "re", "so", "sr", "st"],
-        "maxBatchSize": 20,
-        "capBatchSizes": [25, 25, 10],
-        "concurrentBatchSizes": [1, 1]
+        "batchSize": 21,
+        "kinds": [
+          "fe",
+          "fl",
+          "fm",
+          "fp",
+          "fs",
+          "ft",
+          "re",
+          "so",
+          "sr",
+          "st"
+        ],
+        "maxBatchSize": 21,
+        "capBatchSizes": [
+          25,
+          25,
+          10
+        ],
+        "concurrentBatchSizes": [
+          1,
+          1
+        ]
       }
     },
     {
@@ -142,22 +228,36 @@
       "expectation": {
         "missing": {
           "batchGets": 1,
-          "exact": [0],
-          "lossy": ["missing"]
+          "exact": [
+            0
+          ],
+          "lossy": [
+            "missing"
+          ]
         },
         "partial": {
           "batchGets": 1,
           "obsoleteExact": null,
-          "retainedExact": [0],
-          "addedExact": [1],
+          "retainedExact": [
+            0
+          ],
+          "addedExact": [
+            1
+          ],
           "obsoleteLossy": [],
-          "retainedLossy": ["partial"],
-          "addedLossy": ["partial"]
+          "retainedLossy": [
+            "partial"
+          ],
+          "addedLossy": [
+            "partial"
+          ]
         },
         "normal": {
           "batchGets": 0,
           "batchGetKeys": 0,
-          "exact": [0]
+          "exact": [
+            0
+          ]
         },
         "mirrors": 3
       }
