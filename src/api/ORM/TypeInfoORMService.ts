@@ -334,6 +334,12 @@ export type TypeInfoORMOperationObservation = {
   success: boolean;
   /** Number of returned items for list-style results, when available. */
   resultCount?: number;
+  /**
+   * Non-sensitive stable query-shape fingerprint for list operations.
+   *
+   * Criterion values, cursors, DAC context, and item contents are excluded.
+   */
+  queryFingerprint?: string;
 };
 
 /** Callback for receiving TypeInfoORM operation observations. */
@@ -639,6 +645,87 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
+   * Build a non-sensitive fingerprint for public ORM query shape.
+   */
+  protected getObservedOperationQueryFingerprint = (
+    operation: TypeInfoORMOperationName,
+    args: unknown[],
+  ): string | undefined => {
+    if (operation !== "list") {
+      return undefined;
+    }
+
+    const config =
+      typeof args[1] === "object" && args[1] !== null
+        ? (args[1] as Record<string, unknown>)
+        : undefined;
+    if (!config) {
+      return undefined;
+    }
+
+    const criteria =
+      typeof config.criteria === "object" && config.criteria !== null
+        ? (config.criteria as Record<string, unknown>)
+        : undefined;
+    const rawFieldCriteria = Array.isArray(criteria?.fieldCriteria)
+      ? criteria?.fieldCriteria
+      : [];
+    const fieldCriteria = rawFieldCriteria.map((criterion) => {
+      const value =
+        typeof criterion === "object" && criterion !== null
+          ? (criterion as Record<string, unknown>)
+          : {};
+
+      return {
+        fieldName:
+          typeof value.fieldName === "string" ? value.fieldName : undefined,
+        operator:
+          typeof value.operator === "string" ? value.operator : undefined,
+        customOperator:
+          typeof value.customOperator === "string"
+            ? value.customOperator
+            : undefined,
+        operand:
+          Array.isArray(value.valueOptions)
+            ? `options:${value.valueOptions.length}`
+            : "value" in value
+              ? "value"
+              : "none",
+      };
+    });
+    const sortFields = Array.isArray(config.sortFields)
+      ? config.sortFields.map((sortField) => {
+          const value =
+            typeof sortField === "object" && sortField !== null
+              ? (sortField as Record<string, unknown>)
+              : {};
+
+          return {
+            field: typeof value.field === "string" ? value.field : undefined,
+            reverse: value.reverse === true,
+          };
+        })
+      : [];
+    const selectedFields = Array.isArray(args[2])
+      ? [...args[2]]
+          .filter((field): field is string => typeof field === "string")
+          .sort()
+      : undefined;
+
+    return JSON.stringify({
+      logicalOperator:
+        typeof criteria?.logicalOperator === "string"
+          ? criteria.logicalOperator
+          : undefined,
+      fieldCriteria,
+      sortFields,
+      itemsPerPage:
+        typeof config.itemsPerPage === "number" ? config.itemsPerPage : undefined,
+      selectedFields,
+    });
+  };
+
+  /**
    * Wrap one public ORM method with lightweight duration/result observation.
    */
   protected wrapObservedOperation = <Args extends unknown[], Result>(
@@ -669,12 +756,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
         return result;
       } catch (error) {
+        const queryFingerprint =
+          this.getObservedOperationQueryFingerprint(operation, args);
         await this.emitOperationObservation({
           operation,
           typeName: this.getObservedOperationTypeName(args),
           startedAt,
           durationMs: Math.max(0, Date.now() - startedAt),
           success: false,
+          ...(queryFingerprint ? { queryFingerprint } : {}),
         });
         throw error;
       }
