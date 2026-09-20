@@ -50,7 +50,7 @@ const decodeCursor = (cursor?: string): number => {
 
 const encodeCursor = (offset: number): string => JSON.stringify({ offset });
 
-const selectFieldsFromItem = <ItemType extends TypeInfoDataItem>(
+const selectFieldsFromItem = <ItemType extends Record<string, any>>(
   item: ItemType,
   selectedFields?: (keyof ItemType)[],
 ): Partial<ItemType> => {
@@ -70,7 +70,7 @@ const selectFieldsFromItem = <ItemType extends TypeInfoDataItem>(
  * In-memory data item driver for testing and local usage.
  */
 export class InMemoryDataItemDBDriver<
-  ItemType extends TypeInfoDataItem,
+  ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> {
   private items = new Map<ItemType[UniquelyIdentifyingFieldName], ItemType>();
