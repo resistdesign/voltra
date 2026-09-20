@@ -386,6 +386,20 @@ export type TypeInfoORMStoredItemIndexInspection = {
   issues: TypeInfoORMStoredItemIndexIssue[];
 };
 
+/** Strong/best-effort verification of one canonical item's current indexes. */
+export type TypeInfoORMStoredItemIndexVerification = {
+  /** Whether the canonical item exists. */
+  exists: boolean;
+  /** Read consistency used for canonical verification. */
+  consistency: "strong" | "bestEffort";
+  /** Detected current-schema index issues. */
+  issues: TypeInfoORMStoredItemIndexIssue[];
+  /** Backend capabilities unavailable for complete inspection. */
+  unsupportedCapabilities: Array<"structured" | "text">;
+  /** Canonical item snapshot when it exists. */
+  item?: Partial<TypeInfoDataItem>;
+};
+
 /** Options for one bounded current-schema index verification page. */
 export type TypeInfoORMInspectStoredTypeIndexesPageConfig = {
   /** Maximum canonical items to inspect in this page. */
@@ -1892,13 +1906,192 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     };
   };
 
+  protected stableIndexMaintenanceValue = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(this.stableIndexMaintenanceValue);
+    }
+    if (typeof value !== "object" || value === null) {
+      return value;
+    }
+
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+        .map(([key, entry]) => [
+          key,
+          this.stableIndexMaintenanceValue(entry),
+        ]),
+    );
+  };
+
+  protected indexMaintenanceValuesEqual = (
+    left: unknown,
+    right: unknown,
+  ): boolean =>
+    JSON.stringify(this.stableIndexMaintenanceValue(left)) ===
+    JSON.stringify(this.stableIndexMaintenanceValue(right));
+
+  protected inspectStoredItemIndexState = async (
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+  ): Promise<{
+    issues: TypeInfoORMStoredItemIndexIssue[];
+    unsupportedCapabilities: Array<"structured" | "text">;
+  }> => {
+    const descriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!descriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const primaryFieldName = descriptor.primaryField;
+    const primaryFieldValue =
+      item[primaryFieldName as keyof TypeInfoDataItem];
+    if (
+      typeof primaryFieldValue === "undefined" ||
+      Array.isArray(primaryFieldValue)
+    ) {
+      return {
+        issues: [],
+        unsupportedCapabilities: [],
+      };
+    }
+
+    const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
+    const issues: TypeInfoORMStoredItemIndexIssue[] = [];
+    const unsupportedCapabilities = new Set<"structured" | "text">();
+    const documents = this.config.indexing?.backend.values.documents;
+    const textMaintenance = this.config.indexing?.backend.text;
+    const capabilities = this.getIndexedFieldCapabilities(typeName);
+    const expectedStructured = this.buildIndexValueFields(typeName, item);
+    const expectedStructuredCount = Object.keys(expectedStructured).length;
+
+    if (descriptor.structuredFields.length > 0) {
+      if (!documents?.get) {
+        unsupportedCapabilities.add("structured");
+      } else {
+        const actualStructured = await documents.get(docId);
+        if (
+          expectedStructuredCount > 0 &&
+          typeof actualStructured === "undefined"
+        ) {
+          issues.push({ kind: "structuredMissing" });
+        } else if (
+          actualStructured &&
+          !this.indexMaintenanceValuesEqual(
+            expectedStructured,
+            actualStructured,
+          )
+        ) {
+          issues.push({ kind: "structuredMismatch" });
+        } else if (
+          expectedStructuredCount === 0 &&
+          actualStructured &&
+          Object.keys(actualStructured).length > 0
+        ) {
+          issues.push({ kind: "structuredMismatch" });
+        }
+      }
+    }
+
+    const textFields = Object.entries(capabilities).filter(
+      ([, capability]) => !!capability.text,
+    );
+    if (textFields.length > 0) {
+      if (!textMaintenance?.readDocumentIndex) {
+        unsupportedCapabilities.add("text");
+      } else {
+        for (const [fieldName, capability] of textFields) {
+          const qualifiedField = qualifyIndexField(
+            typeName,
+            capability.field ?? fieldName,
+          );
+          const rawValue = item[fieldName as keyof TypeInfoDataItem];
+          const expectedText = tokenize(
+            rawValue === null || typeof rawValue === "undefined"
+              ? ""
+              : String(rawValue),
+          ).normalized;
+          const actualText = await textMaintenance.readDocumentIndex(
+            docId,
+            qualifiedField,
+          );
+
+          if (expectedText && typeof actualText === "undefined") {
+            issues.push({
+              kind: "textMissing",
+              indexField: qualifiedField,
+            });
+          } else if ((actualText ?? "") !== expectedText) {
+            issues.push({
+              kind: "textMismatch",
+              indexField: qualifiedField,
+            });
+          }
+        }
+      }
+    }
+
+    return {
+      issues,
+      unsupportedCapabilities: Array.from(unsupportedCapabilities).sort(),
+    };
+  };
+
+  /**
+   * Strongly revalidate one canonical item's current index state when the
+   * configured driver supports it.
+   *
+   * @param typeName Current TypeInfo type.
+   * @param primaryFieldValue Canonical primary-field value.
+   * @returns Canonical existence, consistency level, and current index issues.
+   */
+  verifyStoredItemIndexesForMaintenance = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+  ): Promise<TypeInfoORMStoredItemIndexVerification> => {
+    const verification = await this.verifyStoredItemForIndexMaintenance(
+      typeName,
+      primaryFieldValue,
+    );
+
+    if (!verification.exists || !verification.item) {
+      return {
+        exists: false,
+        consistency: verification.consistency,
+        issues: [],
+        unsupportedCapabilities: [],
+      };
+    }
+
+    const inspection = await this.inspectStoredItemIndexState(
+      typeName,
+      verification.item,
+    );
+
+    return {
+      exists: true,
+      consistency: verification.consistency,
+      item: verification.item,
+      issues: inspection.issues,
+      unsupportedCapabilities: inspection.unsupportedCapabilities,
+    };
+  };
+
   /**
    * Inspect one bounded page of canonical items against current index mirrors.
    *
    * This catches the inverse of orphaned indexes: canonical items whose current
    * structured or text index state is missing or stale. Inspection is
-   * non-destructive; callers should repair through `reindexStoredItem`, which
-   * re-reads canonical state before writing.
+   * non-destructive. Health callers should strongly revalidate an unhealthy
+   * item through {@link verifyStoredItemIndexesForMaintenance} before applying
+   * repair.
    *
    * @param typeName Current TypeInfo type.
    * @param config Paging options.
@@ -1923,32 +2116,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       itemsPerPage: Math.max(1, config.itemsPerPage ?? 100),
       cursor: config.cursor,
     });
-    const documents = this.config.indexing?.backend.values.documents;
-    const textMaintenance = this.config.indexing?.backend.text;
-    const capabilities = this.getIndexedFieldCapabilities(typeName);
     const unsupportedCapabilities = new Set<"structured" | "text">();
     const unhealthyItems: TypeInfoORMStoredItemIndexInspection[] = [];
     const primaryFieldName = descriptor.primaryField;
-
-    const stableValue = (value: unknown): unknown => {
-      if (Array.isArray(value)) {
-        return value.map(stableValue);
-      }
-      if (typeof value !== "object" || value === null) {
-        return value;
-      }
-
-      return Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-          .sort(([left], [right]) =>
-            left < right ? -1 : left > right ? 1 : 0,
-          )
-          .map(([key, entry]) => [key, stableValue(entry)]),
-      );
-    };
-
-    const equal = (left: unknown, right: unknown): boolean =>
-      JSON.stringify(stableValue(left)) === JSON.stringify(stableValue(right));
 
     for (const item of page.items) {
       const primaryFieldValue =
@@ -1960,78 +2130,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         continue;
       }
 
-      const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
-      const issues: TypeInfoORMStoredItemIndexIssue[] = [];
-      const expectedStructured = this.buildIndexValueFields(typeName, item);
-      const expectedStructuredCount = Object.keys(expectedStructured).length;
-
-      if (descriptor.structuredFields.length > 0) {
-        if (!documents?.get) {
-          unsupportedCapabilities.add("structured");
-        } else {
-          const actualStructured = await documents.get(docId);
-          if (
-            expectedStructuredCount > 0 &&
-            typeof actualStructured === "undefined"
-          ) {
-            issues.push({ kind: "structuredMissing" });
-          } else if (
-            actualStructured &&
-            !equal(expectedStructured, actualStructured)
-          ) {
-            issues.push({ kind: "structuredMismatch" });
-          } else if (
-            expectedStructuredCount === 0 &&
-            actualStructured &&
-            Object.keys(actualStructured).length > 0
-          ) {
-            issues.push({ kind: "structuredMismatch" });
-          }
-        }
+      const inspection = await this.inspectStoredItemIndexState(typeName, item);
+      for (const capability of inspection.unsupportedCapabilities) {
+        unsupportedCapabilities.add(capability);
       }
 
-      const textFields = Object.entries(capabilities).filter(
-        ([, capability]) => !!capability.text,
-      );
-      if (textFields.length > 0) {
-        if (!textMaintenance?.readDocumentIndex) {
-          unsupportedCapabilities.add("text");
-        } else {
-          for (const [fieldName, capability] of textFields) {
-            const qualifiedField = qualifyIndexField(
-              typeName,
-              capability.field ?? fieldName,
-            );
-            const rawValue = item[fieldName as keyof TypeInfoDataItem];
-            const expectedText = tokenize(
-              rawValue === null || typeof rawValue === "undefined"
-                ? ""
-                : String(rawValue),
-            ).normalized;
-            const actualText = await textMaintenance.readDocumentIndex(
-              docId,
-              qualifiedField,
-            );
-
-            if (expectedText && typeof actualText === "undefined") {
-              issues.push({
-                kind: "textMissing",
-                indexField: qualifiedField,
-              });
-            } else if ((actualText ?? "") !== expectedText) {
-              issues.push({
-                kind: "textMismatch",
-                indexField: qualifiedField,
-              });
-            }
-          }
-        }
-      }
-
-      if (issues.length > 0) {
+      if (inspection.issues.length > 0) {
         unhealthyItems.push({
           primaryFieldValue,
-          issues,
+          issues: inspection.issues,
         });
       }
     }
