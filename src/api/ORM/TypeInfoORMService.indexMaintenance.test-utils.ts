@@ -1,8 +1,8 @@
 import { searchLossy } from "../Indexing/API";
 import { qualifyIndexField } from "../Indexing/fieldQualification";
 import { searchStructured } from "../Indexing/structured/SearchStructured";
-import { FullTextMemoryBackend } from "../Indexing/fulltext/FullTextMemoryBackend";
-import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
+import { FullTextMemoryBackend } from "./drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "./drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
 import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import { InMemoryItemRelationshipDBDriver } from "./drivers/InMemoryItemRelationshipDBDriver";
 import type { DataItemDBDriver } from "./drivers/common/Types";
