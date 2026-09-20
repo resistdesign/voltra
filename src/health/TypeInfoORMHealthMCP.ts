@@ -18,6 +18,8 @@ import type {
 import type {
   TypeInfoORMHealthMonitor,
   TypeInfoORMHealthMonitorRunResult,
+  TypeInfoORMHealthStatusOptions,
+  TypeInfoORMHealthStatusResult,
 } from "./TypeInfoORMHealthMonitor";
 
 const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
@@ -135,6 +137,99 @@ const HEALTH_MCP_RESULT_TYPE_INFO_PACK: TypeInfoPack = {
   typeInfoMap: HEALTH_MCP_RESULT_TYPE_INFO_MAP,
 };
 
+const HEALTH_MCP_STATUS_TYPE_INFO_MAP: TypeInfoMap = {
+  TypeInfoORMHealthStatusOptions: {
+    fields: {
+      itemsPerPage: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      cursor: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+    },
+  },
+  TypeInfoORMHealthStatusResult: {
+    fields: {
+      examinedRecordCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      openFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      confirmedFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      repairedFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      pendingOperationCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      statsRecordCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      repairRecordCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      failedRunCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      cursor: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      continuation: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+    },
+  },
+};
+
+const HEALTH_MCP_STATUS_INPUT_TYPE_INFO_PACK: TypeInfoPack = {
+  entryTypeName: "TypeInfoORMHealthStatusOptions",
+  typeInfoMap: HEALTH_MCP_STATUS_TYPE_INFO_MAP,
+};
+
+const HEALTH_MCP_STATUS_OUTPUT_TYPE_INFO_PACK: TypeInfoPack = {
+  entryTypeName: "TypeInfoORMHealthStatusResult",
+  typeInfoMap: HEALTH_MCP_STATUS_TYPE_INFO_MAP,
+};
+
 const PREVIEW_ANNOTATIONS: MCPToolAnnotations = {
   // Preview does not mutate application/index data, but it does persist
   // Health findings/checkpoints and may prune expired Health records.
@@ -156,7 +251,7 @@ const REPAIR_ANNOTATIONS: MCPToolAnnotations = {
  */
 export type TypeInfoORMHealthMCPMonitor = Pick<
   TypeInfoORMHealthMonitor,
-  "preview" | "repair"
+  "status" | "preview" | "repair"
 >;
 
 /**
@@ -196,6 +291,7 @@ export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
  * `{ allowedRoles: ["HealthAdmin"] }` here.
  *
  * The exposed tools are deliberately small:
+ * - `healthStatus` reads one bounded page of persisted Health state.
  * - `healthPreview` performs one bounded non-destructive monitor pass.
  * - `healthRepair` is opt-in and performs one bounded pass while applying
  *   only the monitor's strongly validated repairs.
@@ -219,6 +315,22 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
     version: config.version ?? "1.0.0",
     authConfig: config.authConfig,
     tools: [
+      {
+        name: "healthStatus",
+        description:
+          "Read one bounded page of persisted Voltra Health status without running audits or repairs.",
+        inputTypeInfo: HEALTH_MCP_STATUS_INPUT_TYPE_INFO_PACK,
+        outputTypeInfo: HEALTH_MCP_STATUS_OUTPUT_TYPE_INFO_PACK,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+        handler: async (
+          input: TypeInfoORMHealthStatusOptions,
+        ): Promise<TypeInfoORMHealthStatusResult> => monitor.status(input),
+      },
       {
         name: "healthPreview",
         description:
