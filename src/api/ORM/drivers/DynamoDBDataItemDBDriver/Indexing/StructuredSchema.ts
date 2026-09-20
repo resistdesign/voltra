@@ -2,7 +2,7 @@ import {
   INDEX_TABLE_KIND_ATTRIBUTE,
   INDEX_TABLE_PARTITION_KEY,
   INDEX_TABLE_SORT_KEY,
-} from "./IndexTable";
+} from "../../../../Indexing/IndexTable";
 
 /** DynamoDB attribute schema for structured term records. */
 export const structuredTermIndexSchema = {
