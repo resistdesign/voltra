@@ -8,8 +8,8 @@ import type {
   TypeInfoMap,
 } from "../../common/TypeParsing/TypeInfo";
 import { createIndexBackend } from "../Indexing/query";
-import { FullTextMemoryBackend } from "../Indexing/fulltext/FullTextMemoryBackend";
-import { StructuredInMemoryBackend } from "../Indexing/structured/StructuredInMemoryBackend";
+import { FullTextMemoryBackend } from "./drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend";
+import { StructuredInMemoryBackend } from "./drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
 import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
 import type { DataItemDBDriver } from "./drivers";
 import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "./getTypeInfoORMIndexingConfigFromTypeInfoMap";
