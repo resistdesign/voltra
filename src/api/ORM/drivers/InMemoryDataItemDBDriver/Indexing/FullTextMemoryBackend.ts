@@ -121,8 +121,26 @@ export class FullTextMemoryBackend
       affected.add(token);
     }
 
+    for (const token of mutation.removeMembershipTokens) {
+      this.docTokenMembership.delete(
+        this.createMembershipKey(docId, indexField, token),
+      );
+    }
+    for (const token of mutation.addMembershipTokens) {
+      this.docTokenMembership.add(
+        this.createMembershipKey(docId, indexField, token),
+      );
+    }
+
+    // Preserve membership for tokens whose exact/lossy representation changed
+    // without changing union membership.
     for (const token of affected) {
-      this.syncMembership(docId, indexField, token);
+      if (
+        !mutation.removeMembershipTokens.includes(token) &&
+        !mutation.addMembershipTokens.includes(token)
+      ) {
+        this.syncMembership(docId, indexField, token);
+      }
     }
   }
 
