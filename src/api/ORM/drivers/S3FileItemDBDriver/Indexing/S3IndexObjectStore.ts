@@ -20,6 +20,8 @@ export type S3IndexStoredObject<T = unknown> = {
 export type S3IndexObjectListOptions = {
   limit?: number;
   cursor?: string;
+  /** Exclusive physical object key for key-addressable paging. */
+  afterKey?: string;
 };
 
 export type S3IndexObjectListPage = {
@@ -194,6 +196,9 @@ export class AwsS3IndexObjectStore implements S3IndexObjectStore {
         Bucket: this.bucketName,
         Prefix: joinKey(this.prefix, prefix),
         ContinuationToken: options.cursor,
+        ...(!options.cursor && options.afterKey
+          ? { StartAfter: joinKey(this.prefix, options.afterKey) }
+          : {}),
         MaxKeys: Math.max(1, options.limit ?? 100),
       }),
     );
