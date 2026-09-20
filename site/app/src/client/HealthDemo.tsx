@@ -18,6 +18,8 @@ type HealthPreviewResult = {
   schemaDriftFindingCount: number;
   confirmedSchemaDriftCount: number;
   schemaReconciledItemCount: number;
+  missingIndexFindingCount: number;
+  reindexedItemCount: number;
   slowOperationFindingCount: number;
   failedOperationFindingCount: number;
   operationRecordsProcessedCount: number;
@@ -29,7 +31,7 @@ type HealthPreviewResult = {
 export const HealthDemo: FC = () => {
   const [result, setResult] = useState<HealthPreviewResult>();
   const [status, setStatus] = useState(
-    "Run a bounded read-only Health pass against the live demo ORM and indexes.",
+    "Run a bounded non-destructive Health pass against the live demo ORM and indexes.",
   );
   const [loading, setLoading] = useState(false);
 
@@ -127,6 +129,14 @@ export const HealthDemo: FC = () => {
             <tr>
               <td>Schema drift findings</td>
               <td>{result.schemaDriftFindingCount}</td>
+            </tr>
+            <tr>
+              <td>Missing/mismatched index findings</td>
+              <td>{result.missingIndexFindingCount}</td>
+            </tr>
+            <tr>
+              <td>Items reindexed</td>
+              <td>{result.reindexedItemCount}</td>
             </tr>
             <tr>
               <td>Slow operations found</td>
