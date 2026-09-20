@@ -3,12 +3,6 @@
  */
 import type { IndexTableKey } from "../../../../Indexing/IndexTable";
 
-/** Physical DynamoDB partition-key attribute for Voltra index records. */
-export const INDEX_TABLE_PARTITION_KEY = "pk";
-/** Physical DynamoDB sort-key attribute for Voltra index records. */
-export const INDEX_TABLE_SORT_KEY = "sk";
-/** Physical DynamoDB item-kind attribute for Voltra index records. */
-export const INDEX_TABLE_KIND_ATTRIBUTE = "kind";
 /** DynamoDB partition-key maximum size in UTF-8 bytes. */
 export const INDEX_PARTITION_KEY_MAX_BYTES = 2048;
 /** DynamoDB sort-key maximum size in UTF-8 bytes. */
