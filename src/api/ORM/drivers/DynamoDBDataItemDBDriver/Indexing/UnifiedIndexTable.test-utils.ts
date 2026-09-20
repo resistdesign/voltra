@@ -1,16 +1,16 @@
-import { InMemoryDynamoQueryClient as InMemoryDynamoIndexClient } from "./ddb/InMemoryDynamoQueryClient.test-utils";
-import { IndexMutationCoordinator } from "./ddb/IndexMutationCoordinator";
-import { INDEX_TABLE_KIND_ATTRIBUTE } from "./IndexTable";
-import { FullTextDdbBackend } from "./fulltext/FullTextDdbBackend";
+import { InMemoryDynamoQueryClient as InMemoryDynamoIndexClient } from "./InMemoryDynamoQueryClient.test-utils";
+import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
+import { INDEX_TABLE_KIND_ATTRIBUTE } from "../../../../Indexing/IndexTable";
+import { FullTextDdbBackend } from "./FullTextDdbBackend";
 import {
   RelationalDdbBackend,
   createRelationEdgesDdbDependencies,
-} from "./rel/RelationalDdb";
-import { StructuredDdbBackend } from "./structured/StructuredDdbBackend";
-import { searchStructured } from "./structured/SearchStructured";
-import type { StructuredOccupancyFieldMap } from "./structured/StructuredOccupancy";
-import { replaceFullTextDocument } from "./API";
-import { tokenize, tokenizeLossyTrigrams } from "./tokenize";
+} from "./RelationalDdb";
+import { StructuredDdbBackend } from "./StructuredDdbBackend";
+import { searchStructured } from "../../../../Indexing/structured/SearchStructured";
+import type { StructuredOccupancyFieldMap } from "../../../../Indexing/structured/StructuredOccupancy";
+import { replaceFullTextDocument } from "../../../../Indexing/API";
+import { tokenize, tokenizeLossyTrigrams } from "../../../../Indexing/tokenize";
 
 export const runUnifiedIndexTableIntegrationScenario = async () => {
   const client = new InMemoryDynamoIndexClient();
