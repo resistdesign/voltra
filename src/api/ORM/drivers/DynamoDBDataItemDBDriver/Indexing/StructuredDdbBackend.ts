@@ -7,13 +7,14 @@ import type {
   DynamoQueryClient,
   KeysAndAttributes,
   WriteRequest,
-} from "../../../../Indexing/structured/Types";
+} from "./Types";
 import type { DocId } from "../../../../Indexing/Types";
+import { assertIndexSortKey } from "../../../../Indexing/IndexTable";
 import {
-  assertIndexSortKey,
+  assertDynamoIndexSortKey,
   assertIndexTableConfig,
   type IndexTableConfig,
-} from "../../../../Indexing/IndexTable";
+} from "./IndexTable";
 import type {
   StructuredDocumentListOptions,
   StructuredDocumentPage,
@@ -28,9 +29,6 @@ import {
   buildStructuredRangePartitionKey,
   buildStructuredDocFieldsItem,
   serializeStructuredValue,
-  structuredDocFieldsSchema,
-  structuredRangeIndexSchema,
-  structuredTermIndexSchema,
   type StructuredDocFieldsState,
   type StructuredDocFieldsItem,
   type StructuredDocFieldsRecord,
@@ -39,6 +37,11 @@ import {
   type StructuredTermIndexItem,
   type StructuredTermIndexKey,
 } from "../../../../Indexing/structured/StructuredIndexRecords";
+import {
+  structuredDocFieldsSchema,
+  structuredRangeIndexSchema,
+  structuredTermIndexSchema,
+} from "./StructuredSchema";
 import {
   StructuredDdbWriter,
   type StructuredWriterOptions,
