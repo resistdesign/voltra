@@ -228,7 +228,7 @@ const buildUpdateExpression = (
   };
 };
 
-const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
+const buildSelectedFieldParams = <ItemType extends Record<string, any>>(
   selectedFields?: (keyof ItemType)[],
 ) => {
   const selectedFieldParams =
@@ -257,7 +257,7 @@ const buildSelectedFieldParams = <ItemType extends TypeInfoDataItem>(
  * A {@link DataItemDBDriver} that uses DynamoDB as its database.
  * */
 export class DynamoDBDataItemDBDriver<
-  ItemType extends TypeInfoDataItem,
+  ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > implements DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> {
   protected dynamoDBClient: DynamoDBClient;
