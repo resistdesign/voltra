@@ -7,6 +7,7 @@ import type {
   GetItemInput,
   PutItemInput,
   QueryInput,
+  ScanInput,
 } from "./Types";
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -218,6 +219,47 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
     this.recordMutation(input.TableName, input.Item, current);
     table.set(keyOf(input.Item), clone(input.Item));
     return {};
+  }
+
+  async scan(input: ScanInput) {
+    let items = Array.from(this.table(input.TableName).values()).sort(
+      (left, right) => {
+        const leftKey = keyOf(left);
+        const rightKey = keyOf(right);
+        return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+      },
+    );
+
+    if (input.ExclusiveStartKey) {
+      const cursorKey = keyOf(input.ExclusiveStartKey);
+      items = items.filter((item) => keyOf(item) > cursorKey);
+    }
+
+    const kindName = input.ExpressionAttributeNames?.["#kind"];
+    const kindValue = input.ExpressionAttributeValues?.[":kind"];
+    if (
+      input.FilterExpression?.includes("#kind = :kind") &&
+      kindName &&
+      kindValue !== undefined
+    ) {
+      items = items.filter((item) => item[kindName] === kindValue);
+    }
+
+    const limit = input.Limit ?? items.length;
+    const page = items.slice(0, limit);
+    const last = page[page.length - 1];
+
+    if (input.ConsistentRead) {
+      this.consistentGetCount += page.length;
+    }
+
+    return {
+      Items: page.map(clone),
+      LastEvaluatedKey:
+        page.length < items.length && last
+          ? { pk: last.pk, sk: last.sk }
+          : undefined,
+    };
   }
 
   async query(input: QueryInput) {
