@@ -1,5 +1,4 @@
 import { ExactIndex } from "./ExactIndex";
-import { buildExactDdbItem, buildExactDdbKey } from "./ExactDdb";
 
 const runExactIndexScenario = () => {
   const index = new ExactIndex();
@@ -45,9 +44,7 @@ const runExactIndexScenario = () => {
     missingPhrase,
     verifiedPage1,
     verifiedPage2,
-    positionsAfterRemove: positionsAfterRemove ?? null,
-    ddbKey: buildExactDdbKey("token", "text", "doc-1"),
-    ddbItem: buildExactDdbItem("token", "text", "doc-1", [3, 4]),
+    positionsAfterRemove: positionsAfterRemove ?? null
   };
 };
 
@@ -74,7 +71,3 @@ export const runExactIndexVerifiedPage2Scenario = () =>
 
 export const runExactIndexPositionsAfterRemoveScenario = () =>
   runExactIndexScenario().positionsAfterRemove;
-
-export const runExactIndexDdbKeyScenario = () => runExactIndexScenario().ddbKey;
-
-export const runExactIndexDdbItemScenario = () => runExactIndexScenario().ddbItem;
