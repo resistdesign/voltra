@@ -143,6 +143,13 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
+type RequiredDataItemDBDriverMethodName =
+  | "createItem"
+  | "readItem"
+  | "updateItem"
+  | "deleteItem"
+  | "listItems";
+
 /**
  * Wrap a driver method to attach extra fields to thrown errors.
  * @returns Wrapped driver method with extended error data.
@@ -150,11 +157,10 @@ export const cleanRelationshipItem = (
 export const getDriverMethodWithModifiedError = <
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
-  DriverMethodNameType extends keyof DataItemDBDriver<
-    ItemType,
-    UniquelyIdentifyingFieldName
-  >,
-  MethodType extends DataItemDBDriver<
+  DriverMethodNameType extends RequiredDataItemDBDriverMethodName,
+  MethodType extends (
+    ...args: any[]
+  ) => any = DataItemDBDriver<
     ItemType,
     UniquelyIdentifyingFieldName
   >[DriverMethodNameType],
@@ -1027,7 +1033,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      */
     extendedData: Record<any, any>,
   ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
-    const driverMethodList: (keyof DataItemDBDriver<any, any>)[] = [
+    const driverMethodList: RequiredDataItemDBDriverMethodName[] = [
       "createItem",
       "readItem",
       "updateItem",
