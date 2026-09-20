@@ -19,6 +19,7 @@ import { ItemRelationshipInfoIdentifyingKeys } from "../common/ItemRelationshipI
 import {
   ComparisonOperators,
   LogicalOperators,
+  type SearchCriteria,
 } from "../common/SearchTypes";
 import type {
   TypeInfoDataItem,
@@ -622,7 +623,7 @@ export const runHealthQueryFingerprintScenario = async () => {
     },
   );
 
-  const getCriteria = (value: number) => ({
+  const getCriteria = (value: number): SearchCriteria => ({
     logicalOperator: LogicalOperators.AND,
     fieldCriteria: [
       {
