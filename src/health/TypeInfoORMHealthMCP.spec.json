@@ -55,14 +55,14 @@
           "schemaDriftFindingCount": 2,
           "confirmedSchemaDriftCount": 0,
           "schemaReconciledItemCount": 0,
+          "missingIndexFindingCount": 2,
+          "reindexedItemCount": 0,
           "slowOperationFindingCount": 1,
           "failedOperationFindingCount": 0,
           "operationRecordsProcessedCount": 1,
           "suspiciousCount": 0,
           "expiredRecordCount": 1,
-          "continuation": true,
-          "missingIndexFindingCount": 2,
-          "reindexedItemCount": 0
+          "continuation": true
         }
       }
     },
@@ -82,14 +82,14 @@
           "schemaDriftFindingCount": 2,
           "confirmedSchemaDriftCount": 2,
           "schemaReconciledItemCount": 5,
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 1,
           "slowOperationFindingCount": 0,
           "failedOperationFindingCount": 1,
           "operationRecordsProcessedCount": 1,
           "suspiciousCount": 0,
           "expiredRecordCount": 1,
-          "continuation": false,
-          "missingIndexFindingCount": 1,
-          "reindexedItemCount": 1
+          "continuation": false
         }
       }
     }
