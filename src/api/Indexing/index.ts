@@ -27,6 +27,7 @@ export * from "./fulltext/Schema";
 export * from "./fulltext/FullTextIndexWriter";
 export * from "./rel/Cursor";
 export * from "./rel/Handlers";
+export * from "./rel/RelationalIndexBackend";
 export * from "./rel/Types";
 export * from "./structured/index";
 export * from "./query";
