@@ -705,6 +705,7 @@ export class TypeInfoORMHealthMonitor {
 
     const continuation =
       !indexCycleComplete ||
+      !!retention.cursor ||
       (repairMode === "apply" &&
         schemaState.confirmed &&
         (!checkpoint.schemaReconcileComplete || repairDeferred));
