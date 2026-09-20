@@ -819,3 +819,74 @@ export const runHealthMissingIndexRequiresStrongReadScenario = async () => {
     ),
   };
 };
+
+
+export const runHealthIndexRelevantSchemaScopeScenario = async () => {
+  const bookDriver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "ScopedBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => "unused-book",
+  });
+  const plainDriver = new InMemoryDataItemDBDriver<
+    { id: string; name: string },
+    "id"
+  >({
+    tableName: "PlainRecords",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => "unused-plain",
+  });
+  const fullTextBackend = new FullTextMemoryBackend();
+  const structuredBackend = new StructuredInMemoryBackend();
+  const plainTypeInfo: TypeInfoMap = {
+    Plain: {
+      primaryField: "id",
+      fields: {
+        id: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+          tags: { primaryField: true },
+        },
+        name: {
+          type: "string",
+          array: false,
+          readonly: false,
+          optional: false,
+        },
+      },
+    },
+  };
+  const changedUnindexedBook: TypeInfoMap = structuredClone(
+    getBookTypeInfoV1(),
+  );
+  changedUnindexedBook.Book.fields.slug.type = "number";
+
+  const ormA = createOrm(
+    mergeTypeInfoMaps(getBookTypeInfoV1(), plainTypeInfo),
+    {
+      Book: bookDriver,
+      Plain: plainDriver,
+    },
+    fullTextBackend,
+    structuredBackend,
+  );
+  const ormB = createOrm(
+    mergeTypeInfoMaps(changedUnindexedBook, plainTypeInfo),
+    {
+      Book: bookDriver,
+      Plain: plainDriver,
+    },
+    fullTextBackend,
+    structuredBackend,
+  );
+
+  const descriptorsA = ormA.getIndexMaintenanceTypeDescriptors();
+  const descriptorsB = ormB.getIndexMaintenanceTypeDescriptors();
+
+  return {
+    typeNames: descriptorsA.map((descriptor) => descriptor.typeName),
+    unindexedFieldChangeKeepsFingerprint:
+      descriptorsA[0]?.indexFingerprint === descriptorsB[0]?.indexFingerprint,
+  };
+};
