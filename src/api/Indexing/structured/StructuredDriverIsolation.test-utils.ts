@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const indexingRoot = fileURLToPath(new URL("../", import.meta.url));
-const isolationTestPath = fileURLToPath(import.meta.url);
+const isolationTestFileName = "StructuredDriverIsolation.test-utils.ts";
 
 const listGenericSources = (directory: string): string[] =>
   readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -12,7 +12,7 @@ const listGenericSources = (directory: string): string[] =>
     }
     return entry.name.endsWith(".ts") &&
       !entry.name.endsWith(".d.ts") &&
-      path !== isolationTestPath
+      entry.name !== isolationTestFileName
       ? [path]
       : [];
   });
