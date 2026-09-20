@@ -853,19 +853,19 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
 
   private recordQuery(): void {
     if (this.activeTrace) {
-      this.activeTrace.ddbQueryCalls += 1;
+      this.activeTrace.storageQueryCalls += 1;
     }
   }
 
   private recordBatchGet(): void {
     if (this.activeTrace) {
-      this.activeTrace.ddbBatchGetCalls += 1;
+      this.activeTrace.storageBatchReadCalls += 1;
     }
   }
 
   private recordItemRead(): void {
     if (this.activeTrace) {
-      this.activeTrace.ddbItemReadCalls += 1;
+      this.activeTrace.storageItemReadCalls += 1;
     }
   }
 
