@@ -16,6 +16,13 @@
       "operation": "DEEP_EQUALS",
       "expectation": [
         {
+          "name": "healthStatus",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "outputContinuationType": "boolean"
+        },
+        {
           "name": "healthPreview",
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -38,6 +45,25 @@
           "outputContinuationType": "boolean"
         }
       ]
+    },
+    {
+      "export": "runHealthMCPStatusScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "examinedRecordCount": 25,
+          "openFindingCount": 2,
+          "confirmedFindingCount": 3,
+          "repairedFindingCount": 4,
+          "pendingOperationCount": 1,
+          "statsRecordCount": 5,
+          "repairRecordCount": 6,
+          "failedRunCount": 0,
+          "continuation": false
+        }
+      }
     },
     {
       "export": "runHealthMCPPreviewScenario",
