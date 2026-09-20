@@ -42,6 +42,18 @@ const buildResult = (
 });
 
 const getMonitor = (): TypeInfoORMHealthMCPMonitor => ({
+  status: async (options = {}) => ({
+    examinedRecordCount: options.itemsPerPage ?? 100,
+    openFindingCount: 2,
+    confirmedFindingCount: 3,
+    repairedFindingCount: 4,
+    pendingOperationCount: 1,
+    statsRecordCount: 5,
+    repairRecordCount: 6,
+    failedRunCount: 0,
+    cursor: options.cursor ? undefined : "health-cursor-2",
+    continuation: !options.cursor,
+  }),
   preview: async () => buildResult("preview"),
   repair: async () => buildResult("apply"),
 });
@@ -147,6 +159,26 @@ export const runHealthMCPToolsScenario = async () => {
     outputContinuationType:
       tool.outputSchema?.properties?.continuation?.type,
   }));
+};
+
+export const runHealthMCPStatusScenario = async () => {
+  const response = await runRequest(
+    getRequestBody("tools/call", {
+      name: "healthStatus",
+      arguments: {
+        itemsPerPage: 25,
+        cursor: "health-cursor-1",
+      },
+    }),
+    "tools/call",
+    "healthStatus",
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    structuredContent: parsed.result.structuredContent,
+  };
 };
 
 export const runHealthMCPPreviewScenario = async () => {
