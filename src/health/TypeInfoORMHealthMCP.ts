@@ -78,6 +78,18 @@ const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
         readonly: true,
         optional: false,
       },
+      missingIndexFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      reindexedItemCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
       slowOperationFindingCount: {
         type: "number",
         array: false,
