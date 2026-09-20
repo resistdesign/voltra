@@ -9,13 +9,29 @@
         "fullText": {
           "memoryDynamo": {
             "lossy": true,
-            "exact": true,
+            "exact": {
+              "equal": true,
+              "memory": [
+                "1"
+              ],
+              "dynamo": [
+                "1"
+              ]
+            },
             "mirror": true,
             "listed": true
           },
           "memoryS3": {
             "lossy": true,
-            "exact": true,
+            "exact": {
+              "equal": true,
+              "memory": [
+                "1"
+              ],
+              "s3": [
+                "1"
+              ]
+            },
             "mirror": true,
             "listed": true
           }
