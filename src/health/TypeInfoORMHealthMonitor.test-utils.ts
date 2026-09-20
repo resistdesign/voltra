@@ -16,6 +16,10 @@ import {
   getTypeInfoORMIndexingConfigFromTypeInfoMap,
 } from "../api/ORM";
 import { ItemRelationshipInfoIdentifyingKeys } from "../common/ItemRelationshipInfoTypes";
+import {
+  ComparisonOperators,
+  LogicalOperators,
+} from "../common/SearchTypes";
 import type {
   TypeInfoDataItem,
   TypeInfoMap,
@@ -532,6 +536,16 @@ export const runHealthOperationFindingScenario = async () => {
     durationMs: 250,
     success: true,
     resultCount: 4,
+    queryFingerprint: "book-rating-equals",
+  });
+  await recorder.observe({
+    operation: "list",
+    typeName: "Book",
+    startedAt: 15,
+    durationMs: 300,
+    success: true,
+    resultCount: 2,
+    queryFingerprint: "book-rating-equals",
   });
   await recorder.observe({
     operation: "read",
@@ -555,6 +569,22 @@ export const runHealthOperationFindingScenario = async () => {
     .map((record) => record.scope)
     .filter((scope): scope is string => !!scope)
     .sort();
+  const stats = records.records
+    .filter((record) => record.kind === "stats")
+    .map((record) => ({
+      operation: record.operation,
+      count: record.count,
+      maxDurationMs: record.data?.maxDurationMs,
+      totalDurationMs: record.data?.totalDurationMs,
+      failureCount: record.data?.failureCount,
+      queryFingerprint: record.data?.queryFingerprint,
+    }))
+    .sort((left, right) =>
+      String(left.operation) < String(right.operation) ? -1 : 1,
+    );
+  const rawOperationCount = records.records.filter(
+    (record) => record.kind === "operation",
+  ).length;
 
   return {
     first: {
@@ -568,5 +598,54 @@ export const runHealthOperationFindingScenario = async () => {
       processed: second.operationRecordsProcessedCount,
     },
     scopes,
+    stats,
+    rawOperationCount,
+  };
+};
+
+export const runHealthQueryFingerprintScenario = async () => {
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "FingerprintBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => "unused",
+  });
+  const fingerprints: string[] = [];
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    { Book: driver },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+    (event) => {
+      if (event.queryFingerprint) {
+        fingerprints.push(event.queryFingerprint);
+      }
+    },
+  );
+
+  const getCriteria = (value: number) => ({
+    logicalOperator: LogicalOperators.AND,
+    fieldCriteria: [
+      {
+        fieldName: "rating",
+        operator: ComparisonOperators.EQUALS,
+        value,
+      },
+    ],
+  });
+
+  await orm.list("Book", {
+    criteria: getCriteria(12345),
+    itemsPerPage: 5,
+  });
+  await orm.list("Book", {
+    criteria: getCriteria(67890),
+    itemsPerPage: 5,
+  });
+
+  return {
+    fingerprintCount: fingerprints.length,
+    sameShape: fingerprints[0] === fingerprints[1],
+    containsFirstValue: fingerprints.some((value) => value.includes("12345")),
+    containsSecondValue: fingerprints.some((value) => value.includes("67890")),
   };
 };
