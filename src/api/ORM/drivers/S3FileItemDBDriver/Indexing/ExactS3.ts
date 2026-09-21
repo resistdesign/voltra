@@ -6,6 +6,10 @@
  */
 import type { DocId } from "../../../../Indexing/Types";
 import { encodeIndexScalarIdentity } from "../../../../Indexing/IndexTable";
+import {
+  AwsS3IndexObjectStore,
+  type S3IndexObjectStore,
+} from "./S3IndexObjectStore";
 
 /**
  * Location of an exact postings object in S3.
@@ -36,31 +40,40 @@ export function buildExactS3Key(
   return `exact/${encodeURIComponent(indexField)}/${encodeURIComponent(token)}/${encodeURIComponent(encodeIndexScalarIdentity(docId))}.json`;
 }
 
-const exactStore = new Map<string, number[]>();
-
-const buildStoreKey = (pointer: ExactS3Pointer): string =>
-  `${pointer.bucket}/${pointer.key}`;
+const getExactS3Store = (
+  pointer: ExactS3Pointer,
+  store?: S3IndexObjectStore,
+): S3IndexObjectStore =>
+  store ?? new AwsS3IndexObjectStore({ bucketName: pointer.bucket });
 
 /**
  * Store exact token positions for a pointer.
  * @param pointer Bucket/key pair for the postings object.
  * @param positions Token positions within the document.
+ * @param store Optional driver-local object store override, primarily for tests.
  * @returns Promise resolved once positions are stored.
  */
 export async function storeExactPositions(
   pointer: ExactS3Pointer,
   positions: number[],
+  store?: S3IndexObjectStore,
 ): Promise<void> {
-  exactStore.set(buildStoreKey(pointer), [...positions]);
+  await getExactS3Store(pointer, store).put(pointer.key, [...positions]);
 }
 
 /**
  * Load exact token positions for a pointer.
  * @param pointer Bucket/key pair for the postings object.
+ * @param store Optional driver-local object store override, primarily for tests.
  * @returns Positions array (empty when not found).
  */
 export async function loadExactPositions(
   pointer: ExactS3Pointer,
+  store?: S3IndexObjectStore,
 ): Promise<number[]> {
-  return [...(exactStore.get(buildStoreKey(pointer)) ?? [])];
+  const record = await getExactS3Store(pointer, store).get<number[]>(
+    pointer.key,
+  );
+
+  return [...(record?.value ?? [])];
 }
