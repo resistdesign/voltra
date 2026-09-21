@@ -27,7 +27,7 @@ import type {
 import { DriverHealthStore } from "./DriverHealthStore";
 import { TypeInfoORMHealthMonitor } from "./TypeInfoORMHealthMonitor";
 import { TypeInfoORMHealthOperationRecorder } from "./TypeInfoORMHealthOperationRecorder";
-import type { HealthRecord } from "./Types";
+import type { HealthRecord, HealthStore } from "./Types";
 
 type Book = {
   id: string;
@@ -947,5 +947,50 @@ export const runHealthStatusPagingScenario = async () => {
       statsRecordCount: second.statsRecordCount,
       continuation: second.continuation,
     },
+  };
+};
+
+export const runHealthFailedRunPersistenceScenario = async () => {
+  const baseStore = createHealthStore();
+  const store: HealthStore = {
+    createRecord: baseStore.createRecord,
+    putRecord: baseStore.putRecord,
+    readRecord: baseStore.readRecord,
+    updateRecord: baseStore.updateRecord,
+    deleteRecord: baseStore.deleteRecord,
+    listRecords: async () => {
+      throw new Error("health test failure");
+    },
+  };
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    {
+      Book: new InMemoryDataItemDBDriver<Book, "id">({
+        tableName: "FailedRunBooks",
+        uniquelyIdentifyingFieldName: "id",
+        generateUniqueIdentifier: () => "unused",
+      }),
+    },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+  );
+  const monitor = new TypeInfoORMHealthMonitor({ orm, store });
+  let errorMessage: string | undefined;
+
+  try {
+    await monitor.preview();
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : String(error);
+  }
+
+  const page = await baseStore.listRecords({ itemsPerPage: 100 });
+  const runRecords = page.records.filter((record) => record.kind === "run");
+
+  return {
+    errorMessage,
+    failedRunCount: runRecords.filter((record) => record.status === "failed")
+      .length,
+    runningRunCount: runRecords.filter((record) => record.status === "running")
+      .length,
   };
 };
