@@ -67,15 +67,15 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 - [x] Update consumer/export checks and public documentation/examples for the new barrel and public types.
 - [x] Add an MCP-friendly Health RouteMap adapter with bounded `healthStatus`, `healthPreview`, and opt-in `healthRepair` tools using normal Voltra route authorization.
 - [x] Add a focused demo-site/IaC example with one Health store, live ORM operation recording, a bounded Health monitor, and a public non-destructive MCP/demo surface; production auth/group usage is shown in the consumer example.
-- [x] Run build, core tests, demo builds, export checks, and consumer smoke checks; fix regressions. Final architecture-corrected branch verified green in GitHub Actions run #474.
+- [x] Run build, core tests, demo builds, export checks, and consumer smoke checks; fix regressions. Final implementation, including completion-audit remediation, verified green in GitHub Actions run #478.
 - [x] Open and polish PR #405 with implementation, safety, demo/MCP, and verification notes.
 
 ## Completion audit remediation
 
-- [~] Replace legacy S3 exact/lossy helpers' module-level in-memory stores with real S3-driver IO while preserving their public signatures; update focused tests to use injected driver-local test storage.
-- [~] Persist Health monitor run failures as `status: "failed"` without masking the original exception; add regression coverage.
-- [ ] Re-run the complete test/build/demo/export/consumer workflow after these corrections and record the final green run.
-- [ ] Perform one final scope audit for unfinished markers or storage-specific leakage before requesting user review.
+- [x] Replace legacy S3 exact/lossy helpers' module-level in-memory stores with real S3-driver IO while preserving their public signatures; update focused tests to use injected driver-local test storage.
+- [x] Persist Health monitor run failures as `status: "failed"` without masking the original exception; add regression coverage.
+- [x] Re-run the complete test/build/demo/export/consumer workflow after these corrections; implementation verified green in GitHub Actions run #478.
+- [x] Perform one final scope audit for unfinished markers or storage-specific leakage before requesting user review.
 
 ## Guardrails
 
