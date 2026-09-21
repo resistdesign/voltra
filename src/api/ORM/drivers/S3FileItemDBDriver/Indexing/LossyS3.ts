@@ -5,6 +5,10 @@
  * of doc IDs under a deterministic key.
  */
 import type { DocId } from "../../../../Indexing/Types";
+import {
+  AwsS3IndexObjectStore,
+  type S3IndexObjectStore,
+} from "./S3IndexObjectStore";
 
 /**
  * Location of a lossy postings object in S3.
@@ -30,31 +34,40 @@ export function buildLossyS3Key(token: string, indexField: string): string {
   return `lossy/${encodeURIComponent(indexField)}/${encodeURIComponent(token)}.json`;
 }
 
-const lossyStore = new Map<string, DocId[]>();
-
-const buildStoreKey = (pointer: LossyS3Pointer): string =>
-  `${pointer.bucket}/${pointer.key}`;
+const getLossyS3Store = (
+  pointer: LossyS3Pointer,
+  store?: S3IndexObjectStore,
+): S3IndexObjectStore =>
+  store ?? new AwsS3IndexObjectStore({ bucketName: pointer.bucket });
 
 /**
  * Store lossy postings for a pointer.
  * @param pointer Bucket/key pair for the postings object.
  * @param docIds Document ids to store for the token.
+ * @param store Optional driver-local object store override, primarily for tests.
  * @returns Promise resolved once postings are stored.
  */
 export async function storeLossyIndex(
   pointer: LossyS3Pointer,
   docIds: DocId[],
+  store?: S3IndexObjectStore,
 ): Promise<void> {
-  lossyStore.set(buildStoreKey(pointer), [...docIds]);
+  await getLossyS3Store(pointer, store).put(pointer.key, [...docIds]);
 }
 
 /**
  * Load lossy postings for a pointer.
  * @param pointer Bucket/key pair for the postings object.
+ * @param store Optional driver-local object store override, primarily for tests.
  * @returns Document ids stored for the token.
  */
 export async function loadLossyIndex(
   pointer: LossyS3Pointer,
+  store?: S3IndexObjectStore,
 ): Promise<DocId[]> {
-  return [...(lossyStore.get(buildStoreKey(pointer)) ?? [])];
+  const record = await getLossyS3Store(pointer, store).get<DocId[]>(
+    pointer.key,
+  );
+
+  return [...(record?.value ?? [])];
 }
