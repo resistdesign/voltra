@@ -408,8 +408,9 @@ export class TypeInfoORMHealthMonitor {
       expiresAt: now + this.options.recordRetentionMs,
       data: { repairMode },
     });
-    const checkpoint = await this.readCheckpoint();
-    const schemaState = await this.evaluateSchemaDrift(now, runId);
+    try {
+      const checkpoint = await this.readCheckpoint();
+      const schemaState = await this.evaluateSchemaDrift(now, runId);
 
     if (checkpoint.schemaSignature !== schemaState.signature) {
       checkpoint.schemaSignature = schemaState.signature;
@@ -1156,12 +1157,24 @@ export class TypeInfoORMHealthMonitor {
       continuation,
     };
 
-    await this.store.updateRecord(runId, {
-      status: "complete",
-      data: result as unknown as Record<string, unknown>,
-    });
+      await this.store.updateRecord(runId, {
+        status: "complete",
+        data: result as unknown as Record<string, unknown>,
+      });
 
-    return result;
+      return result;
+    } catch (error) {
+      try {
+        await this.store.updateRecord(runId, {
+          status: "failed",
+          data: { repairMode },
+        });
+      } catch (_healthStoreError) {
+        // Preserve the original monitor failure if Health persistence also fails.
+      }
+
+      throw error;
+    }
   };
 
   private evaluateSchemaDrift = async (
