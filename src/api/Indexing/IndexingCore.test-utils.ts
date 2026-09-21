@@ -105,9 +105,9 @@ const runIndexingCoreScenario = () => {
       candidatesVerified: trace.candidatesVerified,
       batchGetCalls: trace.batchGetCalls,
       batchGetKeys: trace.batchGetKeys,
-      ddbQueryCalls: trace.ddbQueryCalls,
-      ddbBatchGetCalls: trace.ddbBatchGetCalls,
-      ddbItemReadCalls: trace.ddbItemReadCalls,
+      storageQueryCalls: trace.storageQueryCalls,
+      storageBatchReadCalls: trace.storageBatchReadCalls,
+      storageItemReadCalls: trace.storageItemReadCalls,
     },
   };
 };

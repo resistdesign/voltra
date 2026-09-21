@@ -19,6 +19,10 @@ import {
   structuredStringTokenizer,
 } from "./indexing";
 import { addDemoMCPToRouteMap } from "./mcp";
+import {
+  addDemoHealthMCPToRouteMap,
+  demoHealthOperationRecorder,
+} from "./health";
 
 /**
  * Base route map containing lightweight demo routes that do not rely on DynamoDB.
@@ -60,6 +64,9 @@ export const DEMO_ORM_CONFIG = {
     }
 
     throw new Error("Invalid type.");
+  },
+  observability: {
+    onOperation: demoHealthOperationRecorder.observe,
   },
   indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(DemoTypeInfoMap, {
     mutationCoordinator: indexMutationCoordinator,
@@ -109,10 +116,16 @@ const ROUTE_MAP_WITH_ORM: RouteMap = addRouteMapToRouteMap(
   DEMO_ORM_ROUTE_PATH,
 );
 
-/**
- * Complete demo API route map, including the public read-only MCP endpoint.
- */
-export const ROUTE_MAP_WITH_DB: RouteMap = addDemoMCPToRouteMap(
+const ROUTE_MAP_WITH_MCP: RouteMap = addDemoMCPToRouteMap(
   ROUTE_MAP_WITH_ORM,
+  DEMO_ORM_CONFIG,
+);
+
+/**
+ * Complete demo API route map, including the application MCP endpoint and the
+ * public read-only Health MCP endpoint.
+ */
+export const ROUTE_MAP_WITH_DB: RouteMap = addDemoHealthMCPToRouteMap(
+  ROUTE_MAP_WITH_MCP,
   DEMO_ORM_CONFIG,
 );

@@ -1,0 +1,183 @@
+import { FullTextMemoryBackend } from "./FullTextMemoryBackend";
+import { searchExact } from "../../../../Indexing/API";
+import { tokenizeLossyTrigrams } from "../../../../Indexing/tokenize";
+import {
+  encodeDocKey,
+  encodeDocMirrorKey,
+  encodeDocTokenPositionSortKey,
+  encodeDocTokenSortKey,
+  encodeTokenDocSortKey,
+  encodeTokenKey,
+} from "../../../../Indexing/fulltext/Schema";
+
+const runFullTextMemoryBackendScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+
+  await backend.addLossyPosting("hello", "text", "doc-1");
+  await backend.addLossyPosting("hello", "text", "doc-2");
+  await backend.addLossyPosting("world", "text", "doc-2");
+
+  const lossyAll = await backend.loadLossyPostings("hello", "text");
+  const lossyPage = await backend.queryLossyPostingsPage("hello", "text", {
+    limit: 1,
+  });
+
+  await backend.addExactPositions("hello", "text", "doc-1", [0, 2]);
+  await backend.addExactPositions("hello", "text", "doc-2", [1]);
+
+  const exactDoc1 = await backend.loadExactPositions("hello", "text", "doc-1");
+  const exactBatch = await backend.batchLoadExactPositions([
+    { docId: "doc-1", indexField: "text", token: "hello" },
+    { docId: "doc-2", indexField: "text", token: "hello" },
+  ]);
+
+  const tokenStats = await backend.loadTokenStats("hello", "text");
+  const tokenStatsMissing = await backend.loadTokenStats("missing", "text");
+
+  const hasDocToken = await backend.hasDocToken("doc-2", "text", "world");
+  const hasDocTokenMissing = await backend.hasDocToken(
+    "doc-3",
+    "text",
+    "hello",
+  );
+  const batchHas = await backend.batchHasDocTokens([
+    { docId: "doc-1", indexField: "text", token: "hello" },
+    { docId: "doc-2", indexField: "text", token: "world" },
+    { docId: "doc-3", indexField: "text", token: "hello" },
+  ]);
+
+  await backend.removeLossyPosting("hello", "text", "doc-2");
+  await backend.removeExactPositions("hello", "text", "doc-2");
+  const lossyAfterRemove = await backend.loadLossyPostings("hello", "text");
+  const exactAfterRemove = await backend.loadExactPositions(
+    "hello",
+    "text",
+    "doc-2",
+  );
+
+  return {
+    lossyAll,
+    lossyPage,
+    exactDoc1,
+    exactBatch,
+    tokenStats,
+    tokenStatsMissing: tokenStatsMissing ?? null,
+    hasDocToken,
+    hasDocTokenMissing,
+    batchHas,
+    lossyAfterRemove,
+    exactAfterRemove: exactAfterRemove ?? null,
+    schema: {
+      tokenKey: encodeTokenKey("text", "hello"),
+      docKey: encodeDocKey("doc-1"),
+      docMirrorKey: encodeDocMirrorKey("text", "doc-1"),
+      tokenDocSortKey: encodeTokenDocSortKey("doc-1"),
+      docTokenSortKey: encodeDocTokenSortKey("text", "hello"),
+      docTokenPositionSortKey: encodeDocTokenPositionSortKey(
+        "text",
+        "hello",
+        2,
+      ),
+    },
+  };
+};
+
+export const runFullTextMemoryBackendLossyAllScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).lossyAll;
+
+export const runFullTextMemoryBackendLossyPageScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).lossyPage;
+
+export const runFullTextMemoryBackendExactDoc1Scenario = async () =>
+  (await runFullTextMemoryBackendScenario()).exactDoc1;
+
+export const runFullTextMemoryBackendExactBatchScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).exactBatch;
+
+export const runFullTextMemoryBackendTokenStatsScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).tokenStats;
+
+export const runFullTextMemoryBackendTokenStatsMissingScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).tokenStatsMissing;
+
+export const runFullTextMemoryBackendHasDocTokenScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).hasDocToken;
+
+export const runFullTextMemoryBackendHasDocTokenMissingScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).hasDocTokenMissing;
+
+export const runFullTextMemoryBackendBatchHasScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).batchHas;
+
+export const runFullTextMemoryBackendLossyAfterRemoveScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).lossyAfterRemove;
+
+export const runFullTextMemoryBackendExactAfterRemoveScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).exactAfterRemove;
+
+export const runFullTextMemoryBackendSchemaScenario = async () =>
+  (await runFullTextMemoryBackendScenario()).schema;
+
+export const runFullTextMemoryBackendTypedIdentityScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+  await backend.addExactPositions("same", "Record.value", 123, [1]);
+  await backend.addExactPositions("same", "Record.value", "123", [2]);
+
+  return {
+    numericMembership: await backend.hasDocToken(123, "Record.value", "same"),
+    stringMembership: await backend.hasDocToken("123", "Record.value", "same"),
+    numericPositions: await backend.loadExactPositions(
+      "same",
+      "Record.value",
+      123,
+    ),
+    stringPositions: await backend.loadExactPositions(
+      "same",
+      "Record.value",
+      "123",
+    ),
+  };
+};
+
+export const runFullTextMemoryBackendTypedSearchCacheScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+  const lossyTokens = tokenizeLossyTrigrams('"same token"').tokens;
+  for (const docId of [123, "123"] as const) {
+    for (const token of lossyTokens) {
+      await backend.addLossyPosting(token, "Record.value", docId);
+    }
+    await backend.addExactPositions("same", "Record.value", docId, [0]);
+  }
+  await backend.addExactPositions("token", "Record.value", 123, [1]);
+  await backend.addExactPositions("token", "Record.value", "123", [2]);
+
+  const result = await searchExact({
+    query: '"same token"',
+    indexField: "Record.value",
+    backend,
+  });
+
+  return result.docIds;
+};
+
+
+export const runFullTextMemoryBackendMaintenanceMirrorScenario = async () => {
+  const backend = new FullTextMemoryBackend();
+  await backend.addExactPositions("hello", "Record.text", "doc-1", [0]);
+  await backend.addExactPositions("world", "Record.text", "doc-1", [1]);
+
+  const before = await backend.readDocumentIndex(
+    "doc-1",
+    "Record.text",
+  );
+  await backend.removeDocumentIndex("doc-1", "Record.text");
+  const after = await backend.readDocumentIndex(
+    "doc-1",
+    "Record.text",
+  );
+
+  return {
+    before,
+    after: after ?? null,
+  };
+};

@@ -1,15 +1,11 @@
 /**
  * @packageDocumentation
  *
- * DynamoDB schema constants and key encoders for fulltext records in the
- * unified Voltra index table.
+ * Storage-neutral key encoders for Voltra full-text index records.
  */
 import {
   INDEX_ITEM_KINDS,
   INDEX_KEY_PARTS,
-  INDEX_TABLE_KIND_ATTRIBUTE,
-  INDEX_TABLE_PARTITION_KEY,
-  INDEX_TABLE_SORT_KEY,
   buildIndexDocumentSortKey,
   buildIndexKey,
   buildIndexScalarKey,
@@ -34,120 +30,6 @@ export const fullTextKeyPrefixes = {
    * Prefix for token position values.
    */
   position: "p#",
-} as const;
-
-/**
- * LossyPostings table
- * PK: f#{indexField}#t#{token}
- * SK: d#{docId}
- */
-export const lossyPostingsSchema = {
-  /**
-   * Partition key attribute for lossy postings.
-   */
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  /**
-   * Sort key attribute for lossy postings.
-   */
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  /** Original document id retained so numeric identities preserve their type. */
-  docIdAttribute: "docId",
-} as const;
-
-/**
- * ExactPostings table
- * PK: f#{indexField}#t#{token}
- * SK: d#{docId}
- */
-export const exactPostingsSchema = {
-  /**
-   * Partition key attribute for exact postings.
-   */
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  /**
-   * Sort key attribute for exact postings.
-   */
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  /**
-   * Attribute name holding position arrays.
-   */
-  positionsAttribute: "positions",
-} as const;
-
-/**
- * Optional FullTextDocMirror table
- * PK: d#{docId}
- */
-export const fullTextDocMirrorSchema = {
-  /**
-   * Partition key attribute for document mirrors.
-   */
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  /** Sort key distinguishes field mirrors within a document partition. */
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  /**
-   * Attribute name for stored normalized content.
-   */
-  contentAttribute: "content",
-} as const;
-
-/**
- * FullTextTokenStats table
- * PK: f#{indexField}#t#{token}
- */
-export const fullTextTokenStatsSchema = {
-  /**
-   * Partition key attribute for token stats.
-   */
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  /** Singleton state member within the token statistics partition. */
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  /**
-   * Attribute name for document frequency values.
-   */
-  documentFrequencyAttribute: "df",
-} as const;
-
-/**
- * Optional DocTokens table
- * PK: d#{docId}
- * SK: f#{indexField}#t#{token}
- */
-export const docTokensSchema = {
-  /**
-   * Partition key attribute for doc token membership.
-   */
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  /**
-   * Sort key attribute for doc token membership.
-   */
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-} as const;
-
-/**
- * Optional DocTokenPositions table
- * PK: d#{docId}
- * SK: f#{indexField}#t#{token}
- */
-export const docTokenPositionsSchema = {
-  /**
-   * Partition key attribute for doc token positions.
-   */
-  partitionKey: INDEX_TABLE_PARTITION_KEY,
-  /**
-   * Sort key attribute for doc token positions.
-   */
-  sortKey: INDEX_TABLE_SORT_KEY,
-  kindAttribute: INDEX_TABLE_KIND_ATTRIBUTE,
-  /**
-   * Attribute name holding position arrays.
-   */
-  positionsAttribute: "positions",
 } as const;
 
 /**

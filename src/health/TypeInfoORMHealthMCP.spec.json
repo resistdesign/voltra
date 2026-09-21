@@ -1,0 +1,123 @@
+{
+  "file": "./TypeInfoORMHealthMCP.test-utils.ts",
+  "tests": [
+    {
+      "export": "runHealthMCPUnauthorizedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+      }
+    },
+    {
+      "export": "runHealthMCPToolsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "name": "healthStatus",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "outputContinuationType": "boolean"
+        },
+        {
+          "name": "healthPreview",
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "outputRepairModeValues": [
+            "preview",
+            "apply"
+          ],
+          "outputContinuationType": "boolean"
+        },
+        {
+          "name": "healthRepair",
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "idempotentHint": true,
+          "outputRepairModeValues": [
+            "preview",
+            "apply"
+          ],
+          "outputContinuationType": "boolean"
+        }
+      ]
+    },
+    {
+      "export": "runHealthMCPStatusScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "examinedRecordCount": 25,
+          "openFindingCount": 2,
+          "confirmedFindingCount": 3,
+          "repairedFindingCount": 4,
+          "pendingOperationCount": 1,
+          "statsRecordCount": 5,
+          "repairRecordCount": 6,
+          "failedRunCount": 0,
+          "continuation": false
+        }
+      }
+    },
+    {
+      "export": "runHealthMCPPreviewScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "runId": "run-preview",
+          "repairMode": "preview",
+          "examinedCount": 3,
+          "orphanFindingCount": 1,
+          "confirmedOrphanCount": 0,
+          "repairedCount": 0,
+          "schemaDriftFindingCount": 2,
+          "confirmedSchemaDriftCount": 0,
+          "schemaReconciledItemCount": 0,
+          "missingIndexFindingCount": 2,
+          "reindexedItemCount": 0,
+          "slowOperationFindingCount": 1,
+          "failedOperationFindingCount": 0,
+          "operationRecordsProcessedCount": 1,
+          "suspiciousCount": 0,
+          "expiredRecordCount": 1,
+          "continuation": true
+        }
+      }
+    },
+    {
+      "export": "runHealthMCPRepairScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "runId": "run-repair",
+          "repairMode": "apply",
+          "examinedCount": 4,
+          "orphanFindingCount": 1,
+          "confirmedOrphanCount": 1,
+          "repairedCount": 1,
+          "schemaDriftFindingCount": 2,
+          "confirmedSchemaDriftCount": 2,
+          "schemaReconciledItemCount": 5,
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 1,
+          "slowOperationFindingCount": 0,
+          "failedOperationFindingCount": 1,
+          "operationRecordsProcessedCount": 1,
+          "suspiciousCount": 0,
+          "expiredRecordCount": 1,
+          "continuation": false
+        }
+      }
+    }
+  ]
+}

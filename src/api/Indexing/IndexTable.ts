@@ -1,20 +1,20 @@
 /**
  * @packageDocumentation
  *
- * Public schema and key factories for Voltra's unified indexing table.
- * Callers provide semantic identities; this module exclusively owns physical
- * separators, namespaces, encoding, and key-size validation.
+ * Storage-neutral key factories for Voltra's unified logical index records.
+ * Callers provide semantic identities; this module owns namespaces, encoding,
+ * ordering, and collision-safe logical key construction.
  */
 import type { DocId } from "./Types";
 import type { WhereValue } from "./structured/Types";
 
-/** Physical partition-key attribute used by every unified index item. */
+/** Logical partition-key attribute used by every unified index item. */
 export const INDEX_TABLE_PARTITION_KEY = "pk";
-/** Physical sort-key attribute used by every unified index item. */
+/** Logical sort-key attribute used by every unified index item. */
 export const INDEX_TABLE_SORT_KEY = "sk";
-/** Physical item-kind attribute used for diagnostics and migrations. */
+/** Logical item-kind attribute used for diagnostics and migrations. */
 export const INDEX_TABLE_KIND_ATTRIBUTE = "kind";
-/** Current physical key format version. */
+/** Current logical key format version. */
 export const INDEX_KEY_VERSION = "v1";
 /** Separator reserved for Voltra-owned key structure. */
 export const INDEX_KEY_SEPARATOR = "#";
@@ -35,11 +35,6 @@ export const INDEX_KEY_PARTS = {
   string: "s",
   token: "t",
 } as const;
-/** DynamoDB partition-key maximum size in UTF-8 bytes. */
-export const INDEX_PARTITION_KEY_MAX_BYTES = 2048;
-/** DynamoDB sort-key maximum size in UTF-8 bytes. */
-export const INDEX_SORT_KEY_MAX_BYTES = 1024;
-
 /** Stable namespaces for every logical record family in the shared table. */
 export const INDEX_ITEM_KINDS = {
   structuredTerm: "st",
@@ -61,13 +56,7 @@ export const INDEX_ITEM_KINDS = {
 export type IndexItemKind =
   (typeof INDEX_ITEM_KINDS)[keyof typeof INDEX_ITEM_KINDS];
 
-/** The one deployment-specific table required by all DynamoDB index backends. */
-export type IndexTableConfig = {
-  /** Name of the DynamoDB table with string `pk` and `sk` keys. */
-  tableName: string;
-};
-
-/** Physical key shared by every item in the unified index table. */
+/** Logical key shared by every item in the unified index table. */
 export type IndexTableKey = {
   [INDEX_TABLE_PARTITION_KEY]: string;
   [INDEX_TABLE_SORT_KEY]: string;
@@ -75,9 +64,6 @@ export type IndexTableKey = {
 
 /** Scalar identity types supported by Voltra index keys. */
 export type IndexScalarIdentity = string | number;
-
-const utf8Length = (value: string): number =>
-  new TextEncoder().encode(value).length;
 
 const assertWellFormedUnicode = (value: string): void => {
   try {
@@ -114,7 +100,7 @@ export function decodeIndexIdentity(value: string): string {
  * The type tag is part of the persisted identity: numeric `123` and string
  * `"123"` intentionally produce different keys. Numeric identities must be
  * finite; `-0` is normalized to `0` because JavaScript treats them as the same
- * map identity and DynamoDB cannot expose a useful distinction between them.
+ * map identity.
  */
 export function encodeIndexScalarIdentity(value: IndexScalarIdentity): string {
   if (typeof value === "number") {
@@ -155,7 +141,7 @@ export function decodeIndexScalarIdentity(value: string): IndexScalarIdentity {
   throw new Error("Invalid scalar index identity type tag.");
 }
 
-/** Join already semantic identity segments into a versioned physical key. */
+/** Join already semantic identity segments into a versioned logical key. */
 export function buildIndexKey(
   kind: IndexItemKind,
   ...segments: string[]
@@ -192,36 +178,25 @@ export function buildIndexScalarKey(
   return assertIndexPartitionKey(key);
 }
 
-/** Assert a deployment supplied a usable unified table name. */
-export function assertIndexTableConfig(config: IndexTableConfig): void {
-  if (typeof config?.tableName !== "string" || config.tableName.trim() === "") {
-    throw new Error("Missing table name for indexing.tableName.");
-  }
-}
-
-/** Validate a complete physical key against DynamoDB's key byte limits. */
+/** Validate a complete logical index key. */
 export function assertIndexTableKey(key: IndexTableKey): IndexTableKey {
   assertIndexPartitionKey(key.pk);
   assertIndexSortKey(key.sk);
   return key;
 }
 
-/** Validate a physical partition key and return it unchanged. */
+/** Validate a logical partition key and return it unchanged. */
 export function assertIndexPartitionKey(value: string): string {
-  if (utf8Length(value) > INDEX_PARTITION_KEY_MAX_BYTES) {
-    throw new Error(
-      `Index partition key exceeds ${INDEX_PARTITION_KEY_MAX_BYTES} UTF-8 bytes.`,
-    );
+  if (typeof value !== "string") {
+    throw new Error("Index partition keys must be strings.");
   }
   return value;
 }
 
-/** Validate a physical sort key and return it unchanged. */
+/** Validate a logical sort key and return it unchanged. */
 export function assertIndexSortKey(value: string): string {
-  if (utf8Length(value) > INDEX_SORT_KEY_MAX_BYTES) {
-    throw new Error(
-      `Index sort key exceeds ${INDEX_SORT_KEY_MAX_BYTES} UTF-8 bytes.`,
-    );
+  if (typeof value !== "string") {
+    throw new Error("Index sort keys must be strings.");
   }
   return value;
 }

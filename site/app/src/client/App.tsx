@@ -6,6 +6,7 @@ import { AdvancedDemo } from "./AdvancedDemo";
 import { EasyLayoutDemo } from "./EasyLayoutDemo";
 import { EndToEndDemo } from "./EndToEndDemo";
 import { MCPDemo } from "./MCPDemo";
+import { HealthDemo } from "./HealthDemo";
 
 const MenuToggle = styled.button<{ $isOpen: boolean }>`
   display: none;
@@ -227,6 +228,11 @@ export const App: FC = () => {
                 MCP Demo
               </a>
             </li>
+            <li>
+              <a href="/health-demo" onClick={() => setIsMenuOpen(false)}>
+                Health Demo
+              </a>
+            </li>
           </ul>
         </NavBar>
         <Content>
@@ -243,6 +249,9 @@ export const App: FC = () => {
             </Route>
             <Route path="mcp-demo" exact>
               MCP Demo
+            </Route>
+            <Route path="health-demo" exact>
+              Health Demo
             </Route>
           </h3>
           <Route exact>
@@ -353,6 +362,9 @@ export const App: FC = () => {
           </Route>
           <Route path="mcp-demo" exact>
             <MCPDemo />
+          </Route>
+          <Route path="health-demo" exact>
+            <HealthDemo />
           </Route>
         </Content>
       </Route>

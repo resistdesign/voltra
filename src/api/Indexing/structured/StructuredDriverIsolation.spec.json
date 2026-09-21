@@ -6,11 +6,11 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "memoryHasNoDynamoNames": true,
-        "dynamoHasNoInMemoryDependency": true,
-        "allMemoryDriversHaveNoDynamoNames": true,
-        "allDynamoDriversHaveNoInMemoryImports": true,
-        "fakeClientIsNotPublic": true
+        "storageSpecificFileNames": [],
+        "driverImports": [],
+        "storageSdkImports": [],
+        "dynamoContracts": [],
+        "s3Contracts": []
       }
     }
   ]

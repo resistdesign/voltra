@@ -1,0 +1,233 @@
+{
+  "file": "./TypeInfoORMHealthMonitor.test-utils.ts",
+  "tests": [
+    {
+      "export": "runHealthOrphanRepairScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "previewDetected": true,
+        "previewStillIndexed": {
+          "text": [
+            "book-1"
+          ],
+          "structured": [
+            "book-1"
+          ]
+        },
+        "repairDidWork": true,
+        "afterRepair": {
+          "text": [],
+          "structured": []
+        },
+        "repeatedRepairCount": 0
+      }
+    },
+    {
+      "export": "runHealthIndexRaceGuardScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "status": "indexChanged",
+        "newerIndexIds": [
+          "race-1"
+        ]
+      }
+    },
+    {
+      "export": "runHealthBoundedContinuationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "completed": true,
+        "usedMultipleRuns": true,
+        "stayedWithinBudget": true
+      }
+    },
+    {
+      "export": "runHealthSchemaDriftScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstObservation": {
+          "driftCount": 2,
+          "confirmedCount": 0
+        },
+        "repair": {
+          "confirmedCount": 2,
+          "reconciledCount": 1
+        },
+        "bookIndexes": {
+          "oldTitle": [],
+          "newSlug": [
+            "schema-book-1"
+          ],
+          "rating": [
+            "schema-book-1"
+          ]
+        },
+        "removedTypeIndexes": {
+          "text": [],
+          "structured": []
+        },
+        "removedTypeCanonicalId": "legacy-1",
+        "bookId": "schema-book-1"
+      }
+    },
+    {
+      "export": "runHealthOperationObservationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "itemId": "observed-1",
+        "observations": [
+          {
+            "operation": "create",
+            "typeName": "Book",
+            "success": true
+          },
+          {
+            "operation": "read",
+            "typeName": "Book",
+            "success": true
+          }
+        ]
+      }
+    },
+    {
+      "export": "runHealthOperationFindingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": {
+          "slow": 2,
+          "failed": 1,
+          "processed": 3
+        },
+        "second": {
+          "slow": 0,
+          "failed": 0,
+          "processed": 0
+        },
+        "scopes": [
+          "failedOperation",
+          "slowOperation"
+        ],
+        "stats": [
+          {
+            "operation": "list",
+            "count": 2,
+            "maxDurationMs": 300,
+            "totalDurationMs": 550,
+            "failureCount": 0,
+            "queryFingerprint": "book-rating-equals"
+          },
+          {
+            "operation": "read",
+            "count": 1,
+            "maxDurationMs": 10,
+            "totalDurationMs": 10,
+            "failureCount": 1
+          }
+        ],
+        "rawOperationCount": 0
+      }
+    },
+    {
+      "export": "runHealthQueryFingerprintScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fingerprintCount": 2,
+        "sameShape": true,
+        "containsFirstValue": false,
+        "containsSecondValue": false
+      }
+    },
+    {
+      "export": "runHealthMissingIndexRepairScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "preview": {
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 0
+        },
+        "afterPreview": {
+          "text": [],
+          "structured": []
+        },
+        "repair": {
+          "missingIndexFindingCount": 1,
+          "reindexedItemCount": 1
+        },
+        "afterRepair": {
+          "text": [
+            "missing-index-book-1"
+          ],
+          "structured": [
+            "missing-index-book-1"
+          ]
+        },
+        "repeated": {
+          "missingIndexFindingCount": 0,
+          "reindexedItemCount": 0
+        }
+      }
+    },
+    {
+      "export": "runHealthMissingIndexRequiresStrongReadScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "missingIndexFindingCount": 1,
+        "reindexedItemCount": 0,
+        "suspiciousCount": 1,
+        "text": [],
+        "structured": []
+      }
+    },
+    {
+      "export": "runHealthIndexRelevantSchemaScopeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "typeNames": [
+          "Book"
+        ],
+        "unindexedFieldChangeKeepsFingerprint": true
+      }
+    },
+    {
+      "export": "runHealthStatusPagingScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "first": {
+          "examinedRecordCount": 2,
+          "openFindingCount": 1,
+          "confirmedFindingCount": 0,
+          "statsRecordCount": 1,
+          "continuation": true
+        },
+        "second": {
+          "examinedRecordCount": 1,
+          "openFindingCount": 0,
+          "confirmedFindingCount": 1,
+          "statsRecordCount": 0,
+          "continuation": false
+        }
+      }
+    },
+    {
+      "export": "runHealthFailedRunPersistenceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "errorMessage": "health test failure",
+        "failedRunCount": 1,
+        "runningRunCount": 0
+      }
+    }
+  ]
+}

@@ -84,7 +84,7 @@ import {
   replaceFullTextDocument as replaceFullTextDocumentIndex,
 } from "../Indexing/API";
 import { qualifyIndexField } from "../Indexing/fieldQualification";
-import type { IndexMutationCoordinator } from "../Indexing/ddb/IndexMutationCoordinator";
+import type { IndexMutationScope } from "../Indexing/Types";
 import {
   searchIndex,
   IndexQueryError,
@@ -97,7 +97,17 @@ import {
   type IndexSearchLimits,
 } from "../Indexing/query";
 import { normalizeDocId } from "../Indexing/docId";
+import { tokenize } from "../Indexing/tokenize";
 import type { StructuredDocFieldsRecord } from "../Indexing/structured/StructuredIndexRecords";
+import type {
+  StructuredDocumentListOptions,
+  StructuredDocumentPage,
+} from "../Indexing/structured/SearchStructured";
+import { StructuredIndexVersionMismatchError } from "../Indexing/structured/StructuredWriter";
+import type {
+  TextIndexDocumentListOptions,
+  TextIndexDocumentPage,
+} from "../Indexing/Types";
 import type { WhereValue } from "../Indexing/structured/Types";
 import { STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY } from "../Indexing/structured/Types";
 import type { StructuredStringTokenizerConfig } from "../Indexing/structured/StructuredStringLike";
@@ -112,7 +122,7 @@ import {
 } from "../../common/SearchUtils";
 import { DATA_ITEM_DB_DRIVER_ERRORS } from "./drivers/common";
 import { criteriaToIndexExpression } from "./indexing/criteriaToIndexExpression";
-import type { RelationalBackend } from "./drivers/IndexingRelationshipDriver";
+import type { RelationalBackend } from "../Indexing/rel/Types";
 
 /**
  * Strip a relationship item down to its identifying keys.
@@ -134,6 +144,13 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
+type RequiredDataItemDBDriverMethodName =
+  | "createItem"
+  | "readItem"
+  | "updateItem"
+  | "deleteItem"
+  | "listItems";
+
 /**
  * Wrap a driver method to attach extra fields to thrown errors.
  * @returns Wrapped driver method with extended error data.
@@ -141,11 +158,10 @@ export const cleanRelationshipItem = (
 export const getDriverMethodWithModifiedError = <
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
-  DriverMethodNameType extends keyof DataItemDBDriver<
-    ItemType,
-    UniquelyIdentifyingFieldName
-  >,
-  MethodType extends DataItemDBDriver<
+  DriverMethodNameType extends RequiredDataItemDBDriverMethodName,
+  MethodType extends (
+    ...args: any[]
+  ) => any = DataItemDBDriver<
     ItemType,
     UniquelyIdentifyingFieldName
   >[DriverMethodNameType],
@@ -218,7 +234,7 @@ export type TypeInfoORMDACConfig = {
  */
 export type TypeInfoORMIndexingConfig = {
   /** Shared scope that combines compatible derived writes across backends. */
-  mutationCoordinator?: Pick<IndexMutationCoordinator, "run">;
+  mutationCoordinator?: IndexMutationScope;
   /** Singular logical backend composed from specialized physical capabilities. */
   backend: IndexBackend;
   /** TypeInfo-derived source of truth for planning and mutation. */
@@ -283,6 +299,211 @@ export type TypeInfoORMIndexingConfig = {
       fieldCount: number;
     }) => void;
   };
+};
+
+/**
+ * Public TypeInfoORM operations exposed to lightweight observability hooks.
+ */
+export type TypeInfoORMOperationName =
+  | "createRelationship"
+  | "deleteRelationship"
+  | "listRelationships"
+  | "listRelatedItems"
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "list";
+
+/**
+ * Timing/result metadata emitted after one public TypeInfoORM operation.
+ *
+ * Payload values intentionally exclude item contents, criteria values, and DAC
+ * context so health instrumentation does not accidentally persist application
+ * data or authorization material.
+ */
+export type TypeInfoORMOperationObservation = {
+  /** Public ORM operation that completed or failed. */
+  operation: TypeInfoORMOperationName;
+  /** Associated TypeInfo type when it can be determined from the call. */
+  typeName?: string;
+  /** Millisecond timestamp when the operation began. */
+  startedAt: number;
+  /** Total operation duration in milliseconds. */
+  durationMs: number;
+  /** Whether the operation completed successfully. */
+  success: boolean;
+  /** Number of returned items for list-style results, when available. */
+  resultCount?: number;
+  /**
+   * Non-sensitive stable query-shape fingerprint for list operations.
+   *
+   * Criterion values, cursors, DAC context, and item contents are excluded.
+   */
+  queryFingerprint?: string;
+};
+
+/** Callback for receiving TypeInfoORM operation observations. */
+export type TypeInfoORMOperationObserver = (
+  event: TypeInfoORMOperationObservation,
+) => void | Promise<void>;
+
+/**
+ * Type-level metadata exposed to Health and maintenance tooling.
+ */
+export type TypeInfoORMIndexMaintenanceTypeDescriptor = {
+  /** TypeInfo type name. */
+  typeName: string;
+  /** Primary field used by the canonical data driver. */
+  primaryField: string;
+  /** Prefix shared by every persisted qualified index field for this type. */
+  qualifiedFieldPrefix: string;
+  /** Deterministic identity for the current index-relevant TypeInfo schema. */
+  indexFingerprint: string;
+  /** Current structured exact/membership/range fields for this type. */
+  structuredFields: string[];
+  /** Current full-text fields for this type. */
+  textFields: string[];
+};
+
+/** One current canonical/index mismatch found by maintenance inspection. */
+export type TypeInfoORMStoredItemIndexIssue = {
+  /** Mismatch category. */
+  kind:
+    | "structuredMissing"
+    | "structuredMismatch"
+    | "textMissing"
+    | "textMismatch";
+  /** Persisted qualified field when the issue is field-specific. */
+  indexField?: string;
+};
+
+/** One canonical item whose current index state requires reconciliation. */
+export type TypeInfoORMStoredItemIndexInspection = {
+  /** Canonical primary-field value. */
+  primaryFieldValue: LiteralValue;
+  /** Detected current-schema index issues. */
+  issues: TypeInfoORMStoredItemIndexIssue[];
+};
+
+/** Strong/best-effort verification of one canonical item's current indexes. */
+export type TypeInfoORMStoredItemIndexVerification = {
+  /** Whether the canonical item exists. */
+  exists: boolean;
+  /** Read consistency used for canonical verification. */
+  consistency: "strong" | "bestEffort";
+  /** Detected current-schema index issues. */
+  issues: TypeInfoORMStoredItemIndexIssue[];
+  /** Backend capabilities unavailable for complete inspection. */
+  unsupportedCapabilities: Array<"structured" | "text">;
+  /** Canonical item snapshot when it exists. */
+  item?: Partial<TypeInfoDataItem>;
+};
+
+/** Options for one bounded current-schema index verification page. */
+export type TypeInfoORMInspectStoredTypeIndexesPageConfig = {
+  /** Maximum canonical items to inspect in this page. */
+  itemsPerPage?: number;
+  /** Opaque canonical-driver continuation token. */
+  cursor?: string;
+};
+
+/** Result of one bounded current-schema index verification page. */
+export type TypeInfoORMInspectStoredTypeIndexesPageResult = {
+  /** Canonical items inspected in this page. */
+  processedCount: number;
+  /** Canonical items whose current index state is missing or mismatched. */
+  unhealthyItems: TypeInfoORMStoredItemIndexInspection[];
+  /** Backend capabilities unavailable for complete inspection. */
+  unsupportedCapabilities: Array<"structured" | "text">;
+  /** Opaque continuation token when more canonical items remain. */
+  cursor?: string;
+};
+
+/** Options for one bounded TypeInfo index-schema reconciliation page. */
+export type TypeInfoORMReconcileStoredTypeIndexesPageConfig = {
+  /** Prior descriptor captured before the schema changed. */
+  previousDescriptor?: TypeInfoORMIndexMaintenanceTypeDescriptor;
+  /** Maximum canonical items to reconcile in this page. */
+  itemsPerPage?: number;
+  /** Opaque canonical-driver continuation token. */
+  cursor?: string;
+};
+
+/** Result of one bounded TypeInfo index-schema reconciliation page. */
+export type TypeInfoORMReconcileStoredTypeIndexesPageResult = {
+  /** Canonical items reconciled in this page. */
+  processedCount: number;
+  /** Opaque continuation token when more canonical items remain. */
+  cursor?: string;
+};
+
+/** Options for removed-Type index cleanup. */
+export type TypeInfoORMRemovedTypeIndexCleanupConfig = {
+  /** Prior TypeInfo descriptor for the removed type. */
+  previousDescriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+  /** Audited structured mirror version, when cleaning structured state. */
+  structuredVersion?: number;
+  /** Persisted text fields observed for this id. */
+  textIndexFields?: string[];
+};
+
+/** Result of one removed-Type index cleanup attempt. */
+export type TypeInfoORMRemovedTypeIndexCleanupResult = {
+  /** Outcome of the guarded index-only cleanup. */
+  status: "cleaned" | "indexChanged" | "maintenanceUnsupported";
+  /** Whether any index mutation was attempted. */
+  cleanupAttempted: boolean;
+};
+
+/**
+ * Result of a canonical-item maintenance verification read.
+ */
+export type TypeInfoORMIndexMaintenanceVerification = {
+  /** Whether the canonical item exists. */
+  exists: boolean;
+  /** Read consistency used for the verification. */
+  consistency: "strong" | "bestEffort";
+  /** Canonical item when it exists. */
+  item?: Partial<TypeInfoDataItem>;
+};
+
+/**
+ * Options for safe orphan index cleanup.
+ */
+export type TypeInfoORMOrphanIndexCleanupConfig = {
+  /**
+   * Structured document mirror version observed by the auditing caller.
+   *
+   * When supplied, structured cleanup is compare-and-swap guarded against
+   * index writes that happen after the audit.
+   */
+  structuredVersion?: number;
+  /**
+   * Persisted full-text fields observed by the audit.
+   *
+   * This supports cleanup of fields removed from the current TypeInfo schema.
+   * Every supplied field must still belong to the requested type namespace.
+   */
+  textIndexFields?: string[];
+};
+
+/**
+ * Result of one type+id orphan cleanup attempt.
+ */
+export type TypeInfoORMOrphanIndexCleanupResult = {
+  /** Outcome of the guarded cleanup attempt. */
+  status:
+    | "cleaned"
+    | "canonicalExists"
+    | "concurrentCanonicalRestored"
+    | "indexChanged"
+    | "strongConsistencyUnavailable"
+    | "maintenanceUnsupported";
+  /** Whether any index cleanup write was attempted. */
+  cleanupAttempted: boolean;
+  /** Whether current canonical state was reindexed during race recovery. */
+  canonicalReindexed: boolean;
 };
 
 /**
@@ -374,6 +595,17 @@ export type BaseTypeInfoORMServiceConfig = {
    */
   indexing?: TypeInfoORMIndexingConfig;
   /**
+   * Optional ORM-wide observability hooks.
+   */
+  observability?: {
+    /**
+     * Called after public ORM operations complete or fail.
+     *
+     * Hook failures are isolated and never alter ORM behavior.
+     */
+    onOperation?: TypeInfoORMOperationObserver;
+  };
+  /**
    * Optional relationship cleanup hook on delete.
    */
   createRelationshipCleanupItem?: (
@@ -409,6 +641,192 @@ export type TypeInfoORMServiceConfig = BaseTypeInfoORMServiceConfig &
 export class TypeInfoORMService implements TypeInfoORMAPI {
   protected dacRoleCache: Record<string, DACRole> = {};
   protected indexingRelationshipDriver?: IndexingRelationshipDriver;
+  protected operationObservers = new Set<TypeInfoORMOperationObserver>();
+
+  /**
+   * Emit a public ORM operation observation without impacting runtime behavior.
+   */
+  protected emitOperationObservation = async (
+    event: TypeInfoORMOperationObservation,
+  ): Promise<void> => {
+    for (const observer of this.operationObservers) {
+      try {
+        await observer(event);
+      } catch (_error) {
+        // Observability hooks must never alter ORM behavior.
+      }
+    }
+  };
+
+  /**
+   * Subscribe to public ORM operation observations.
+   *
+   * This allows optional systems such as Health to attach to an already
+   * configured ORM instance without rebuilding its application configuration.
+   *
+   * @param observer Observation callback.
+   * @returns Function that removes the observer.
+   */
+  addOperationObserver = (
+    observer: TypeInfoORMOperationObserver,
+  ): (() => void) => {
+    this.operationObservers.add(observer);
+
+    return () => {
+      this.operationObservers.delete(observer);
+    };
+  };
+
+  /**
+   * Resolve a non-sensitive TypeInfo type name from a public ORM argument list.
+   */
+  protected getObservedOperationTypeName = (
+    args: unknown[],
+  ): string | undefined => {
+    const first = args[0];
+
+    if (typeof first === "string") {
+      return first;
+    }
+
+    if (typeof first !== "object" || first === null) {
+      return undefined;
+    }
+
+    const record = first as Record<string, unknown>;
+    const typeName = record.typeName ?? record.fromTypeName;
+
+    return typeof typeName === "string" ? typeName : undefined;
+  };
+
+  /**
+   * Build a non-sensitive fingerprint for public ORM query shape.
+   */
+  protected getObservedOperationQueryFingerprint = (
+    operation: TypeInfoORMOperationName,
+    args: unknown[],
+  ): string | undefined => {
+    if (operation !== "list") {
+      return undefined;
+    }
+
+    const config =
+      typeof args[1] === "object" && args[1] !== null
+        ? (args[1] as Record<string, unknown>)
+        : undefined;
+    if (!config) {
+      return undefined;
+    }
+
+    const criteria =
+      typeof config.criteria === "object" && config.criteria !== null
+        ? (config.criteria as Record<string, unknown>)
+        : undefined;
+    const rawFieldCriteria = Array.isArray(criteria?.fieldCriteria)
+      ? criteria?.fieldCriteria
+      : [];
+    const fieldCriteria = rawFieldCriteria.map((criterion) => {
+      const value =
+        typeof criterion === "object" && criterion !== null
+          ? (criterion as Record<string, unknown>)
+          : {};
+
+      return {
+        fieldName:
+          typeof value.fieldName === "string" ? value.fieldName : undefined,
+        operator:
+          typeof value.operator === "string" ? value.operator : undefined,
+        customOperator:
+          typeof value.customOperator === "string"
+            ? value.customOperator
+            : undefined,
+        operand:
+          Array.isArray(value.valueOptions)
+            ? `options:${value.valueOptions.length}`
+            : "value" in value
+              ? "value"
+              : "none",
+      };
+    });
+    const sortFields = Array.isArray(config.sortFields)
+      ? config.sortFields.map((sortField) => {
+          const value =
+            typeof sortField === "object" && sortField !== null
+              ? (sortField as Record<string, unknown>)
+              : {};
+
+          return {
+            field: typeof value.field === "string" ? value.field : undefined,
+            reverse: value.reverse === true,
+          };
+        })
+      : [];
+    const selectedFields = Array.isArray(args[2])
+      ? [...args[2]]
+          .filter((field): field is string => typeof field === "string")
+          .sort()
+      : undefined;
+
+    return JSON.stringify({
+      logicalOperator:
+        typeof criteria?.logicalOperator === "string"
+          ? criteria.logicalOperator
+          : undefined,
+      fieldCriteria,
+      sortFields,
+      itemsPerPage:
+        typeof config.itemsPerPage === "number" ? config.itemsPerPage : undefined,
+      selectedFields,
+    });
+  };
+
+  /**
+   * Wrap one public ORM method with lightweight duration/result observation.
+   */
+  protected wrapObservedOperation = <Args extends unknown[], Result>(
+    operation: TypeInfoORMOperationName,
+    target: (...args: Args) => Promise<Result>,
+  ): ((...args: Args) => Promise<Result>) =>
+    async (...args: Args): Promise<Result> => {
+      const startedAt = Date.now();
+
+      try {
+        const result = await target(...args);
+        const resultCount =
+          typeof result === "object" &&
+          result !== null &&
+          "items" in result &&
+          Array.isArray((result as { items?: unknown }).items)
+            ? (result as { items: unknown[] }).items.length
+            : undefined;
+
+        const queryFingerprint =
+          this.getObservedOperationQueryFingerprint(operation, args);
+        await this.emitOperationObservation({
+          operation,
+          typeName: this.getObservedOperationTypeName(args),
+          startedAt,
+          durationMs: Math.max(0, Date.now() - startedAt),
+          success: true,
+          ...(resultCount !== undefined ? { resultCount } : {}),
+          ...(queryFingerprint ? { queryFingerprint } : {}),
+        });
+
+        return result;
+      } catch (error) {
+        const queryFingerprint =
+          this.getObservedOperationQueryFingerprint(operation, args);
+        await this.emitOperationObservation({
+          operation,
+          typeName: this.getObservedOperationTypeName(args),
+          startedAt,
+          durationMs: Math.max(0, Date.now() - startedAt),
+          success: false,
+          ...(queryFingerprint ? { queryFingerprint } : {}),
+        });
+        throw error;
+      }
+    };
 
   /**
    * Emit list routing decision observability events without impacting runtime behavior.
@@ -500,6 +918,32 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (!config.getRelationshipDriver && !config.indexing?.relations) {
       throw new Error(TypeInfoORMServiceError.NO_RELATIONSHIP_DRIVERS_SUPPLIED);
     }
+
+    if (config.observability?.onOperation) {
+      this.operationObservers.add(config.observability.onOperation);
+    }
+
+    this.createRelationship = this.wrapObservedOperation(
+      "createRelationship",
+      this.createRelationship,
+    );
+    this.deleteRelationship = this.wrapObservedOperation(
+      "deleteRelationship",
+      this.deleteRelationship,
+    );
+    this.listRelationships = this.wrapObservedOperation(
+      "listRelationships",
+      this.listRelationships,
+    );
+    this.listRelatedItems = this.wrapObservedOperation(
+      "listRelatedItems",
+      this.listRelatedItems,
+    );
+    this.create = this.wrapObservedOperation("create", this.create);
+    this.read = this.wrapObservedOperation("read", this.read);
+    this.update = this.wrapObservedOperation("update", this.update);
+    this.delete = this.wrapObservedOperation("delete", this.delete);
+    this.list = this.wrapObservedOperation("list", this.list);
   }
 
   protected resolveAccessingRole = async (
@@ -757,7 +1201,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      */
     extendedData: Record<any, any>,
   ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
-    const driverMethodList: (keyof DataItemDBDriver<any, any>)[] = [
+    const driverMethodList: RequiredDataItemDBDriverMethodName[] = [
       "createItem",
       "readItem",
       "updateItem",
@@ -1146,6 +1590,732 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   };
 
   /**
+   * Return all TypeInfo types known to this ORM for index maintenance.
+   * @returns Type descriptors derived from current ORM/index configuration.
+   */
+  getIndexMaintenanceTypeDescriptors =
+    (): TypeInfoORMIndexMaintenanceTypeDescriptor[] => {
+      const descriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[] = [];
+
+      for (const typeName of Object.keys(this.config.typeInfoMap).sort()) {
+        const typeInfo = this.getTypeInfo(typeName);
+        const capabilities = this.getIndexedFieldCapabilities(typeName);
+        const structuredFields: string[] = [];
+        const textFields: string[] = [];
+
+        for (const [fieldName, capability] of Object.entries(capabilities)) {
+          const qualifiedField = qualifyIndexField(
+            typeName,
+            capability.field ?? fieldName,
+          );
+
+          if (
+            capability.exact ||
+            capability.membership ||
+            capability.range
+          ) {
+            structuredFields.push(qualifiedField);
+          }
+
+          if (capability.text) {
+            textFields.push(qualifiedField);
+          }
+        }
+
+        if (structuredFields.length === 0 && textFields.length === 0) {
+          continue;
+        }
+
+        const sortedCapabilities = Object.entries(capabilities)
+          .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+          .map(([fieldName, capability]) => [
+            fieldName,
+            {
+              field: capability.field ?? fieldName,
+              collection: capability.collection === true,
+              exact: capability.exact === true,
+              membership: capability.membership === true,
+              range: capability.range
+                ? {
+                    valueType: capability.range.valueType,
+                    decimal: capability.range.decimal === true,
+                  }
+                : undefined,
+              text: capability.text
+                ? Object.entries(capability.text)
+                    .filter(([, enabled]) => enabled === true)
+                    .map(([mode]) => mode)
+                    .sort()
+                : undefined,
+              optional: capability.optional === true,
+            },
+          ]);
+        const sortedTypeFields = Object.entries(typeInfo.fields ?? {})
+          .filter(
+            ([fieldName]) =>
+              fieldName === String(typeInfo.primaryField) ||
+              Object.prototype.hasOwnProperty.call(capabilities, fieldName),
+          )
+          .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+          .map(([fieldName, field]) => [
+            fieldName,
+            {
+              type: field.type,
+              typeReference: field.typeReference,
+              array: field.array === true,
+              readonly: field.readonly === true,
+              optional: field.optional === true,
+              indexed: field.tags?.indexed,
+            },
+          ]);
+
+        descriptors.push({
+          typeName,
+          primaryField: String(typeInfo.primaryField),
+          qualifiedFieldPrefix: qualifyIndexField(typeName, ""),
+          indexFingerprint: JSON.stringify({
+            primaryField: String(typeInfo.primaryField),
+            typeFields: sortedTypeFields,
+            indexCapabilities: sortedCapabilities,
+          }),
+          structuredFields: Array.from(new Set(structuredFields)).sort(),
+          textFields: Array.from(new Set(textFields)).sort(),
+        });
+      }
+
+      return descriptors;
+    };
+
+  /**
+   * Enumerate bounded structured document mirrors when supported.
+   * @param options Paging options.
+   * @returns Structured index document page, or undefined when unsupported.
+   */
+  listStructuredIndexDocuments = async (
+    options: StructuredDocumentListOptions = {},
+  ): Promise<StructuredDocumentPage | undefined> =>
+    this.config.indexing?.backend.values.documents?.list?.(options);
+
+  /**
+   * Enumerate bounded full-text document mirrors when supported.
+   * @param options Paging options.
+   * @returns Full-text document page, or undefined when unsupported.
+   */
+  listTextIndexDocuments = async (
+    options: TextIndexDocumentListOptions = {},
+  ): Promise<TextIndexDocumentPage | undefined> =>
+    this.config.indexing?.backend.text?.listDocuments?.(options);
+
+  /**
+   * Verify canonical item existence for index maintenance.
+   *
+   * Drivers with a strong-read capability are preferred. Best-effort reads are
+   * still useful for diagnostics but must not authorize destructive healing.
+   *
+   * @param typeName TypeInfo type to verify.
+   * @param primaryFieldValue Canonical item identifier.
+   * @returns Existence result and the consistency level used.
+   */
+  verifyStoredItemForIndexMaintenance = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+  ): Promise<TypeInfoORMIndexMaintenanceVerification> => {
+    const driver = this.config.getDriver(typeName);
+    if (!driver) {
+      throw new Error(TypeInfoORMServiceError.INVALID_DRIVER);
+    }
+
+    const strongReader = driver.readItemStronglyConsistent;
+    const reader = strongReader ?? driver.readItem;
+    const consistency = strongReader ? "strong" : "bestEffort";
+
+    try {
+      const item = await reader.call(driver, primaryFieldValue as any);
+      return { exists: true, consistency, item };
+    } catch (error: any) {
+      if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+        return { exists: false, consistency };
+      }
+
+      throw error;
+    }
+  };
+
+  /**
+   * Safely clean orphaned index state for exactly one type+id.
+   *
+   * The method refuses destructive cleanup without a strongly consistent
+   * canonical read. It rechecks canonical state after destructive phases and
+   * reindexes a concurrently-created item before returning.
+   *
+   * @param typeName TypeInfo type being repaired.
+   * @param primaryFieldValue Canonical item identifier.
+   * @param config Guard data captured during the audit.
+   * @returns Guarded cleanup outcome.
+   */
+  cleanupOrphanedIndexState = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+    config: TypeInfoORMOrphanIndexCleanupConfig = {},
+  ): Promise<TypeInfoORMOrphanIndexCleanupResult> => {
+    const descriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!descriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const verification = await this.verifyStoredItemForIndexMaintenance(
+      typeName,
+      primaryFieldValue,
+    );
+    if (verification.consistency !== "strong") {
+      return {
+        status: "strongConsistencyUnavailable",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    if (verification.exists) {
+      await this.reindexStoredItem(typeName, primaryFieldValue);
+      return {
+        status: "canonicalExists",
+        cleanupAttempted: false,
+        canonicalReindexed: true,
+      };
+    }
+
+    const indexing = this.config.indexing;
+    if (!indexing) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    const structuredWriter = indexing.backend.valueWriter;
+    const textMaintenance = indexing.backend.text;
+    const hasStructuredCleanup = config.structuredVersion !== undefined;
+    const textFields = Array.from(
+      new Set(config.textIndexFields ?? descriptor.textFields),
+    );
+    if (
+      textFields.some(
+        (field) => !field.startsWith(descriptor.qualifiedFieldPrefix),
+      )
+    ) {
+      throw new Error(
+        "Text index maintenance field does not belong to the requested type.",
+      );
+    }
+    const hasTextCleanup = textFields.length > 0;
+
+    if (
+      (hasStructuredCleanup && !structuredWriter) ||
+      (hasTextCleanup && !textMaintenance?.removeDocumentIndex)
+    ) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    const restoreIfCanonicalAppeared = async (): Promise<boolean> => {
+      const current = await this.verifyStoredItemForIndexMaintenance(
+        typeName,
+        primaryFieldValue,
+      );
+
+      if (current.consistency !== "strong" || !current.exists) {
+        return false;
+      }
+
+      await this.reindexStoredItem(typeName, primaryFieldValue);
+      return true;
+    };
+
+    let cleanupAttempted = false;
+
+    if (hasStructuredCleanup && structuredWriter) {
+      cleanupAttempted = true;
+      try {
+        await structuredWriter.write(
+          normalizeDocId(primaryFieldValue, descriptor.primaryField),
+          {},
+          {
+            ...this.buildIndexWriteContext(typeName),
+            deleted: true,
+            expectedVersion: config.structuredVersion,
+          },
+        );
+      } catch (error) {
+        if (await restoreIfCanonicalAppeared()) {
+          return {
+            status: "concurrentCanonicalRestored",
+            cleanupAttempted: true,
+            canonicalReindexed: true,
+          };
+        }
+
+        if (error instanceof StructuredIndexVersionMismatchError) {
+          return {
+            status: "indexChanged",
+            cleanupAttempted: true,
+            canonicalReindexed: false,
+          };
+        }
+
+        throw error;
+      }
+
+      if (await restoreIfCanonicalAppeared()) {
+        return {
+          status: "concurrentCanonicalRestored",
+          cleanupAttempted: true,
+          canonicalReindexed: true,
+        };
+      }
+    }
+
+    if (hasTextCleanup && textMaintenance?.removeDocumentIndex) {
+      const docId = normalizeDocId(primaryFieldValue, descriptor.primaryField);
+
+      for (const indexField of textFields) {
+        cleanupAttempted = true;
+        await textMaintenance.removeDocumentIndex(docId, indexField);
+
+        if (await restoreIfCanonicalAppeared()) {
+          return {
+            status: "concurrentCanonicalRestored",
+            cleanupAttempted: true,
+            canonicalReindexed: true,
+          };
+        }
+      }
+    }
+
+    if (await restoreIfCanonicalAppeared()) {
+      return {
+        status: "concurrentCanonicalRestored",
+        cleanupAttempted,
+        canonicalReindexed: true,
+      };
+    }
+
+    return {
+      status: "cleaned",
+      cleanupAttempted,
+      canonicalReindexed: false,
+    };
+  };
+
+  protected stableIndexMaintenanceValue = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(this.stableIndexMaintenanceValue);
+    }
+    if (typeof value !== "object" || value === null) {
+      return value;
+    }
+
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .sort(([left], [right]) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+        .map(([key, entry]) => [
+          key,
+          this.stableIndexMaintenanceValue(entry),
+        ]),
+    );
+  };
+
+  protected indexMaintenanceValuesEqual = (
+    left: unknown,
+    right: unknown,
+  ): boolean =>
+    JSON.stringify(this.stableIndexMaintenanceValue(left)) ===
+    JSON.stringify(this.stableIndexMaintenanceValue(right));
+
+  protected inspectStoredItemIndexState = async (
+    typeName: string,
+    item: Partial<TypeInfoDataItem>,
+  ): Promise<{
+    issues: TypeInfoORMStoredItemIndexIssue[];
+    unsupportedCapabilities: Array<"structured" | "text">;
+  }> => {
+    const descriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!descriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const primaryFieldName = descriptor.primaryField;
+    const primaryFieldValue =
+      item[primaryFieldName as keyof TypeInfoDataItem];
+    if (
+      typeof primaryFieldValue === "undefined" ||
+      Array.isArray(primaryFieldValue)
+    ) {
+      return {
+        issues: [],
+        unsupportedCapabilities: [],
+      };
+    }
+
+    const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
+    const issues: TypeInfoORMStoredItemIndexIssue[] = [];
+    const unsupportedCapabilities = new Set<"structured" | "text">();
+    const documents = this.config.indexing?.backend.values.documents;
+    const textMaintenance = this.config.indexing?.backend.text;
+    const capabilities = this.getIndexedFieldCapabilities(typeName);
+    const expectedStructured = this.buildIndexValueFields(typeName, item);
+    const expectedStructuredCount = Object.keys(expectedStructured).length;
+
+    if (descriptor.structuredFields.length > 0) {
+      if (!documents?.get) {
+        unsupportedCapabilities.add("structured");
+      } else {
+        const actualStructured = await documents.get(docId);
+        if (
+          expectedStructuredCount > 0 &&
+          typeof actualStructured === "undefined"
+        ) {
+          issues.push({ kind: "structuredMissing" });
+        } else if (
+          actualStructured &&
+          !this.indexMaintenanceValuesEqual(
+            expectedStructured,
+            actualStructured,
+          )
+        ) {
+          issues.push({ kind: "structuredMismatch" });
+        } else if (
+          expectedStructuredCount === 0 &&
+          actualStructured &&
+          Object.keys(actualStructured).length > 0
+        ) {
+          issues.push({ kind: "structuredMismatch" });
+        }
+      }
+    }
+
+    const textFields = Object.entries(capabilities).filter(
+      ([, capability]) => !!capability.text,
+    );
+    if (textFields.length > 0) {
+      if (!textMaintenance?.readDocumentIndex) {
+        unsupportedCapabilities.add("text");
+      } else {
+        for (const [fieldName, capability] of textFields) {
+          const qualifiedField = qualifyIndexField(
+            typeName,
+            capability.field ?? fieldName,
+          );
+          const rawValue = item[fieldName as keyof TypeInfoDataItem];
+          const expectedText = tokenize(
+            rawValue === null || typeof rawValue === "undefined"
+              ? ""
+              : String(rawValue),
+          ).normalized;
+          const actualText = await textMaintenance.readDocumentIndex(
+            docId,
+            qualifiedField,
+          );
+
+          if (expectedText && typeof actualText === "undefined") {
+            issues.push({
+              kind: "textMissing",
+              indexField: qualifiedField,
+            });
+          } else if ((actualText ?? "") !== expectedText) {
+            issues.push({
+              kind: "textMismatch",
+              indexField: qualifiedField,
+            });
+          }
+        }
+      }
+    }
+
+    return {
+      issues,
+      unsupportedCapabilities: Array.from(unsupportedCapabilities).sort(),
+    };
+  };
+
+  /**
+   * Strongly revalidate one canonical item's current index state when the
+   * configured driver supports it.
+   *
+   * @param typeName Current TypeInfo type.
+   * @param primaryFieldValue Canonical primary-field value.
+   * @returns Canonical existence, consistency level, and current index issues.
+   */
+  verifyStoredItemIndexesForMaintenance = async (
+    typeName: string,
+    primaryFieldValue: LiteralValue,
+  ): Promise<TypeInfoORMStoredItemIndexVerification> => {
+    const verification = await this.verifyStoredItemForIndexMaintenance(
+      typeName,
+      primaryFieldValue,
+    );
+
+    if (!verification.exists || !verification.item) {
+      return {
+        exists: false,
+        consistency: verification.consistency,
+        issues: [],
+        unsupportedCapabilities: [],
+      };
+    }
+
+    const inspection = await this.inspectStoredItemIndexState(
+      typeName,
+      verification.item,
+    );
+
+    return {
+      exists: true,
+      consistency: verification.consistency,
+      item: verification.item,
+      issues: inspection.issues,
+      unsupportedCapabilities: inspection.unsupportedCapabilities,
+    };
+  };
+
+  /**
+   * Inspect one bounded page of canonical items against current index mirrors.
+   *
+   * This catches the inverse of orphaned indexes: canonical items whose current
+   * structured or text index state is missing or stale. Inspection is
+   * non-destructive. Health callers should strongly revalidate an unhealthy
+   * item through {@link verifyStoredItemIndexesForMaintenance} before applying
+   * repair.
+   *
+   * @param typeName Current TypeInfo type.
+   * @param config Paging options.
+   * @returns Bounded inspection results and continuation state.
+   */
+  inspectStoredTypeIndexesPage = async (
+    typeName: string,
+    config: TypeInfoORMInspectStoredTypeIndexesPageConfig = {},
+  ): Promise<TypeInfoORMInspectStoredTypeIndexesPageResult> => {
+    const descriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!descriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const driver = this.getDriverInternal(typeName);
+    const page = await driver.listItems({
+      itemsPerPage: Math.max(1, config.itemsPerPage ?? 100),
+      cursor: config.cursor,
+    });
+    const unsupportedCapabilities = new Set<"structured" | "text">();
+    const unhealthyItems: TypeInfoORMStoredItemIndexInspection[] = [];
+    const primaryFieldName = descriptor.primaryField;
+
+    for (const item of page.items) {
+      const primaryFieldValue =
+        item[primaryFieldName as keyof TypeInfoDataItem];
+      if (
+        typeof primaryFieldValue === "undefined" ||
+        Array.isArray(primaryFieldValue)
+      ) {
+        continue;
+      }
+
+      const inspection = await this.inspectStoredItemIndexState(typeName, item);
+      for (const capability of inspection.unsupportedCapabilities) {
+        unsupportedCapabilities.add(capability);
+      }
+
+      if (inspection.issues.length > 0) {
+        unhealthyItems.push({
+          primaryFieldValue,
+          issues: inspection.issues,
+        });
+      }
+    }
+
+    return {
+      processedCount: page.items.length,
+      unhealthyItems,
+      unsupportedCapabilities: Array.from(unsupportedCapabilities).sort(),
+      cursor: page.cursor,
+    };
+  };
+
+  /**
+   * Reconcile one bounded page of canonical items after an index-relevant
+   * TypeInfo schema change.
+   *
+   * Structured writes replace the persisted structured mirror, which removes
+   * fields no longer indexed. Full-text fields removed from the schema are
+   * deleted through document-level maintenance before current fields are
+   * reindexed.
+   *
+   * @param typeName Current TypeInfo type.
+   * @param config Previous schema descriptor and paging state.
+   * @returns Processed count and continuation token.
+   */
+  reconcileStoredTypeIndexesPage = async (
+    typeName: string,
+    config: TypeInfoORMReconcileStoredTypeIndexesPageConfig = {},
+  ): Promise<TypeInfoORMReconcileStoredTypeIndexesPageResult> => {
+    const currentDescriptor = this.getIndexMaintenanceTypeDescriptors().find(
+      (entry) => entry.typeName === typeName,
+    );
+    if (!currentDescriptor) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_TYPE_INFO,
+        typeName,
+      };
+    }
+
+    const driver = this.getDriverInternal(typeName);
+    const page = await driver.listItems({
+      itemsPerPage: Math.max(1, config.itemsPerPage ?? 100),
+      cursor: config.cursor,
+    });
+    const staleTextFields = (config.previousDescriptor?.textFields ?? []).filter(
+      (field) => !currentDescriptor.textFields.includes(field),
+    );
+    const textMaintenance = this.config.indexing?.backend.text;
+    const primaryFieldName = currentDescriptor.primaryField;
+    let processedCount = 0;
+
+    for (const item of page.items) {
+      const primaryFieldValue =
+        item[primaryFieldName as keyof TypeInfoDataItem];
+      if (typeof primaryFieldValue === "undefined") {
+        continue;
+      }
+
+      const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
+      if (staleTextFields.length > 0) {
+        if (!textMaintenance?.removeDocumentIndex) {
+          throw new Error(
+            "Text index schema reconciliation requires document maintenance support.",
+          );
+        }
+        for (const indexField of staleTextFields) {
+          await textMaintenance.removeDocumentIndex(docId, indexField);
+        }
+      }
+
+      await this.indexItemIndexes(typeName, item);
+      processedCount += 1;
+    }
+
+    return {
+      processedCount,
+      cursor: page.cursor,
+    };
+  };
+
+  /**
+   * Remove one removed-Type index identity after the schema removal has been
+   * independently confirmed by Health monitoring.
+   *
+   * This method never touches canonical data. It only removes index artifacts
+   * belonging to the prior type namespace.
+   *
+   * @param primaryFieldValue Persisted document identity.
+   * @param config Prior type descriptor and audited index state.
+   */
+  cleanupRemovedTypeIndexState = async (
+    primaryFieldValue: LiteralValue,
+    config: TypeInfoORMRemovedTypeIndexCleanupConfig,
+  ): Promise<TypeInfoORMRemovedTypeIndexCleanupResult> => {
+    const indexing = this.config.indexing;
+    if (!indexing) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+      };
+    }
+
+    const { previousDescriptor } = config;
+    const docId = normalizeDocId(
+      primaryFieldValue,
+      previousDescriptor.primaryField,
+    );
+
+    if (config.structuredVersion !== undefined) {
+      const structuredWriter = indexing.backend.valueWriter;
+      if (!structuredWriter) {
+        return {
+          status: "maintenanceUnsupported",
+          cleanupAttempted: false,
+        };
+      }
+
+      try {
+        await structuredWriter.write(docId, {}, {
+          deleted: true,
+          expectedVersion: config.structuredVersion,
+        });
+      } catch (error) {
+        if (error instanceof StructuredIndexVersionMismatchError) {
+          return {
+            status: "indexChanged",
+            cleanupAttempted: true,
+          };
+        }
+
+        throw error;
+      }
+    }
+
+    const textFields = Array.from(
+      new Set(config.textIndexFields ?? previousDescriptor.textFields),
+    );
+    if (
+      textFields.some(
+        (field) => !field.startsWith(previousDescriptor.qualifiedFieldPrefix),
+      )
+    ) {
+      throw new Error(
+        "Removed-Type text index field does not belong to the prior type namespace.",
+      );
+    }
+
+    if (textFields.length > 0) {
+      const textMaintenance = indexing.backend.text;
+      if (!textMaintenance?.removeDocumentIndex) {
+        return {
+          status: "maintenanceUnsupported",
+          cleanupAttempted: config.structuredVersion !== undefined,
+        };
+      }
+      for (const indexField of textFields) {
+        await textMaintenance.removeDocumentIndex(docId, indexField);
+      }
+    }
+
+    return {
+      status: "cleaned",
+      cleanupAttempted:
+        config.structuredVersion !== undefined || textFields.length > 0,
+    };
+  };
+
+  /**
    * @returns Item snapshot normalized for indexing operations.
    */
   protected getIndexedItemSnapshot = (
@@ -1400,7 +2570,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: TypeInfoORMReindexStoredItemConfig = {},
   ): Promise<boolean> => {
     const driver = this.getDriverInternal(typeName);
-    const currentItem = await driver.readItem(primaryFieldValue as any);
+    const reader = driver.readItemStronglyConsistent ?? driver.readItem;
+    const currentItem = await reader.call(driver, primaryFieldValue as any);
     const previousItem = config.previousItem ?? currentItem;
 
     await this.replaceItemIndexes(typeName, previousItem, currentItem, {

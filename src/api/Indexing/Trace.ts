@@ -35,17 +35,17 @@ export type SearchTrace = {
    */
   batchGetKeys: number;
   /**
-   * DynamoDB query calls issued (if applicable).
+   * Storage query calls issued by the active index driver.
    */
-  ddbQueryCalls: number;
+  storageQueryCalls: number;
   /**
-   * DynamoDB batch get calls issued (if applicable).
+   * Storage batch-read calls issued by the active index driver.
    */
-  ddbBatchGetCalls: number;
+  storageBatchReadCalls: number;
   /**
-   * DynamoDB item read calls issued (if applicable).
+   * Storage item-read calls issued by the active index driver.
    */
-  ddbItemReadCalls: number;
+  storageItemReadCalls: number;
 };
 
 /**
@@ -59,8 +59,8 @@ export function createSearchTrace(): SearchTrace {
     candidatesVerified: 0,
     batchGetCalls: 0,
     batchGetKeys: 0,
-    ddbQueryCalls: 0,
-    ddbBatchGetCalls: 0,
-    ddbItemReadCalls: 0,
+    storageQueryCalls: 0,
+    storageBatchReadCalls: 0,
+    storageItemReadCalls: 0,
   };
 }

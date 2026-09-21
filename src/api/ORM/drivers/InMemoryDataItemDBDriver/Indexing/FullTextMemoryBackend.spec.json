@@ -1,0 +1,144 @@
+{
+  "file": "./FullTextMemoryBackend.test-utils.ts",
+  "tests": [
+    {
+      "export": "runFullTextMemoryBackendLossyAllScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "doc-1",
+        "doc-2"
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendLossyPageScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "docIds": [
+          "doc-1"
+        ],
+        "lastEvaluatedDocId": "doc-1"
+      }
+    },
+    {
+      "export": "runFullTextMemoryBackendExactDoc1Scenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        0,
+        2
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendExactBatchScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        [
+          0,
+          2
+        ],
+        [
+          1
+        ]
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendTokenStatsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "df": 2,
+        "version": 1
+      }
+    },
+    {
+      "export": "runFullTextMemoryBackendTokenStatsMissingScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runFullTextMemoryBackendHasDocTokenScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runFullTextMemoryBackendHasDocTokenMissingScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runFullTextMemoryBackendBatchHasScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        true,
+        true,
+        false
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendLossyAfterRemoveScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        "doc-1"
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendExactAfterRemoveScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": null
+    },
+    {
+      "export": "runFullTextMemoryBackendSchemaScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "tokenKey": "v1#fl#text#hello",
+        "docKey": "v1#ft#d#s#doc-1",
+        "docMirrorKey": "v1#fm#d#s#doc-1",
+        "tokenDocSortKey": "d#s#doc-1",
+        "docTokenSortKey": "f#text#t#hello",
+        "docTokenPositionSortKey": "f#text#t#hello#p#2"
+      }
+    },
+    {
+      "export": "runFullTextMemoryBackendTypedIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "numericMembership": true,
+        "stringMembership": true,
+        "numericPositions": [
+          1
+        ],
+        "stringPositions": [
+          2
+        ]
+      }
+    },
+    {
+      "export": "runFullTextMemoryBackendTypedSearchCacheScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": [
+        123
+      ]
+    },
+    {
+      "export": "runFullTextMemoryBackendMaintenanceMirrorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "before": "hello world",
+        "after": null
+      }
+    }
+  ]
+}

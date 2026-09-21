@@ -4,17 +4,21 @@ Voltra exposes one logical indexed-query engine. A query may combine exact
 terms, collection membership, ranges, normalized text, exact phrases, prefixes,
 and lossy text in the same `AND`/`OR` expression.
 
-The storage mechanisms remain specialized:
+The indexing semantics are storage-neutral:
 
-- Value records provide exact terms, membership, ranges, ordered traversal,
+- Value indexing provides exact terms, membership, ranges, ordered traversal,
   optional-value handling, and Link & Lock occupancy.
-- Text records provide lossy postings, exact token positions, per-document
+- Text indexing provides lossy postings, exact token positions, per-document
   membership, statistics, and document mirrors.
-- The query engine combines their candidate sets, owns logical pagination and
+- Relational indexing provides directional edge semantics and paging.
+- The query engine combines candidate sets, owns logical pagination and
   ordering, and tells the ORM when canonical verification is required.
+- Storage drivers implement only the IO primitives needed to execute those
+  contracts efficiently.
 
-One logical query may therefore issue several DynamoDB `Query` operations. The
-engine, rather than DynamoDB, applies the Boolean expression.
+A driver may translate those primitives into DynamoDB queries, SQL statements,
+S3 object operations, in-memory maps, or another storage mechanism. That
+translation must not redefine Voltra's indexing semantics.
 
 ## TypeInfo capabilities
 
@@ -78,9 +82,10 @@ const indexing = getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
 });
 ```
 
-`values` may be a DynamoDB reader or the in-memory reference backend. `text`
-may likewise be backed by DynamoDB or memory. Query composition, cursor
-identity, budgets, and verification are shared.
+`values`, `text`, and relational capabilities are generic contracts.
+DynamoDB, S3, in-memory, SQL, or future drivers may implement those contracts.
+Query composition, mutation strategy, cursor semantics, budgets, verification,
+maintenance, and repair remain shared Voltra behavior.
 
 ## Semantic criteria
 
@@ -163,9 +168,10 @@ Ordering is global. The engine either produces the complete ordered candidate
 set or throws `INDEX_QUERY_UNSUPPORTED_ORDER`; it never sorts only one returned
 page and presents that as global order.
 
-Link & Lock occupancy remains a value-driver optimization. In mixed `AND`
-plans, an occupancy-aware ordered value stream can drive while text leaves
-filter its candidates. Without an explicit order, a selective text leaf may be
+Link & Lock occupancy remains a generic value-index optimization. Drivers
+provide the persistence/query primitives used by that strategy. In mixed
+`AND` plans, an occupancy-aware ordered value stream can drive while text
+leaves filter its candidates. Without an explicit order, a selective text leaf may be
 the diagnostic driver while value leaves filter its candidates.
 
 ## Budgets and diagnostics

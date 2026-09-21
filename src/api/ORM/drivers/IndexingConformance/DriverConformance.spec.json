@@ -1,0 +1,44 @@
+{
+  "file": "./DriverConformance.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexDriverConformanceEqualScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "fullText": {
+          "memoryDynamo": {
+            "lossy": true,
+            "exact": {
+              "equal": true,
+              "memory": [
+                "1"
+              ],
+              "dynamo": [
+                "1"
+              ]
+            },
+            "mirror": true,
+            "listed": true
+          },
+          "memoryS3": {
+            "lossy": true,
+            "exact": {
+              "equal": true,
+              "memory": [
+                "1"
+              ],
+              "s3": [
+                "1"
+              ]
+            },
+            "mirror": true,
+            "listed": true
+          }
+        },
+        "structured": true,
+        "relational": true
+      }
+    }
+  ]
+}
