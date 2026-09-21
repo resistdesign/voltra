@@ -412,485 +412,514 @@ export class TypeInfoORMHealthMonitor {
       const checkpoint = await this.readCheckpoint();
       const schemaState = await this.evaluateSchemaDrift(now, runId);
 
-    if (checkpoint.schemaSignature !== schemaState.signature) {
-      checkpoint.schemaSignature = schemaState.signature;
-      checkpoint.schemaTypeName = undefined;
-      checkpoint.schemaCursor = undefined;
-      checkpoint.schemaReconcileComplete = false;
-      checkpoint.canonicalTypeName = undefined;
-      checkpoint.canonicalCursor = undefined;
-      checkpoint.canonicalComplete = false;
-    }
-
-    let examinedCount = 0;
-    let orphanFindingCount = 0;
-    let confirmedOrphanCount = 0;
-    let repairedCount = 0;
-    let schemaReconciledItemCount = 0;
-    let missingIndexFindingCount = 0;
-    let reindexedItemCount = 0;
-    let suspiciousCount = 0;
-    let repairDeferred = false;
-    let remainingBudget = this.options.maxIndexDocumentsPerRun;
-
-    if (
-      schemaState.confirmed &&
-      repairMode === "apply" &&
-      !checkpoint.schemaReconcileComplete
-    ) {
-      const baselineByType = new Map(
-        schemaState.baselineDescriptors.map((descriptor) => [
-          descriptor.typeName,
-          descriptor,
-        ]),
-      );
-      const currentByType = new Map(
-        schemaState.currentDescriptors.map((descriptor) => [
-          descriptor.typeName,
-          descriptor,
-        ]),
-      );
-      const typesToReconcile = schemaState.changedTypeNames.filter((typeName) =>
-        currentByType.has(typeName),
-      );
-      let remainingSchemaBudget = this.options.maxSchemaItemsPerRun;
-      let typeIndex = checkpoint.schemaTypeName
-        ? Math.max(0, typesToReconcile.indexOf(checkpoint.schemaTypeName))
-        : 0;
-
-      if (
-        checkpoint.schemaTypeName &&
-        !typesToReconcile.includes(checkpoint.schemaTypeName)
-      ) {
+      if (checkpoint.schemaSignature !== schemaState.signature) {
+        checkpoint.schemaSignature = schemaState.signature;
         checkpoint.schemaTypeName = undefined;
         checkpoint.schemaCursor = undefined;
-        typeIndex = 0;
+        checkpoint.schemaReconcileComplete = false;
+        checkpoint.canonicalTypeName = undefined;
+        checkpoint.canonicalCursor = undefined;
+        checkpoint.canonicalComplete = false;
       }
 
-      while (
-        typeIndex < typesToReconcile.length &&
-        remainingSchemaBudget > 0
-      ) {
-        const typeName = typesToReconcile[typeIndex];
-        const page = await this.orm.reconcileStoredTypeIndexesPage(typeName, {
-          previousDescriptor: baselineByType.get(typeName),
-          itemsPerPage: Math.min(
-            this.options.indexPageSize,
-            remainingSchemaBudget,
-          ),
-          cursor:
-            checkpoint.schemaTypeName === typeName
-              ? checkpoint.schemaCursor
-              : undefined,
-        });
-
-        schemaReconciledItemCount += page.processedCount;
-        remainingSchemaBudget -= page.processedCount;
-
-        if (page.cursor) {
-          checkpoint.schemaTypeName = typeName;
-          checkpoint.schemaCursor = page.cursor;
-          break;
-        }
-
-        typeIndex += 1;
-        checkpoint.schemaTypeName = typesToReconcile[typeIndex];
-        checkpoint.schemaCursor = undefined;
-      }
-
-      checkpoint.schemaReconcileComplete =
-        typeIndex >= typesToReconcile.length;
-    } else if (!schemaState.confirmed) {
-      checkpoint.schemaReconcileComplete =
-        schemaState.findingCount === 0;
-    }
-
-    const auditCandidate = async (candidate: AuditCandidate): Promise<void> => {
-      const verification =
-        await this.orm.verifyStoredItemForIndexMaintenance(
-          candidate.typeName,
-          candidate.docId,
-        );
-      examinedCount += 1;
-
-      if (verification.exists) {
-        return;
-      }
-
-      orphanFindingCount += 1;
-      const confirmed = verification.consistency === "strong";
-      if (confirmed) {
-        confirmedOrphanCount += 1;
-      }
-
-      await this.store.putRecord(findingId(candidate.typeName, candidate.docId), {
-        kind: "finding",
-        status: confirmed ? "confirmed" : "open",
-        typeName: candidate.typeName,
-        itemId: candidate.docId,
-        scope: "orphanedIndex",
-        correlationId: runId,
-        expiresAt: now + this.options.recordRetentionMs,
-        data: {
-          findingType: "orphanedIndex",
-          source: candidate.source,
-          consistency: verification.consistency,
-          ...(candidate.structuredVersion !== undefined
-            ? { structuredVersion: candidate.structuredVersion }
-            : {}),
-        },
-      });
+      let examinedCount = 0;
+      let orphanFindingCount = 0;
+      let confirmedOrphanCount = 0;
+      let repairedCount = 0;
+      let schemaReconciledItemCount = 0;
+      let missingIndexFindingCount = 0;
+      let reindexedItemCount = 0;
+      let suspiciousCount = 0;
+      let repairDeferred = false;
+      let remainingBudget = this.options.maxIndexDocumentsPerRun;
 
       if (
-        repairMode !== "apply" ||
-        !confirmed ||
-        repairedCount >= this.options.maxRepairsPerRun
+        schemaState.confirmed &&
+        repairMode === "apply" &&
+        !checkpoint.schemaReconcileComplete
       ) {
+        const baselineByType = new Map(
+          schemaState.baselineDescriptors.map((descriptor) => [
+            descriptor.typeName,
+            descriptor,
+          ]),
+        );
+        const currentByType = new Map(
+          schemaState.currentDescriptors.map((descriptor) => [
+            descriptor.typeName,
+            descriptor,
+          ]),
+        );
+        const typesToReconcile = schemaState.changedTypeNames.filter((typeName) =>
+          currentByType.has(typeName),
+        );
+        let remainingSchemaBudget = this.options.maxSchemaItemsPerRun;
+        let typeIndex = checkpoint.schemaTypeName
+          ? Math.max(0, typesToReconcile.indexOf(checkpoint.schemaTypeName))
+          : 0;
+
         if (
-          repairMode === "apply" &&
-          confirmed &&
-          repairedCount >= this.options.maxRepairsPerRun
+          checkpoint.schemaTypeName &&
+          !typesToReconcile.includes(checkpoint.schemaTypeName)
         ) {
-          repairDeferred = true;
+          checkpoint.schemaTypeName = undefined;
+          checkpoint.schemaCursor = undefined;
+          typeIndex = 0;
         }
-        return;
-      }
 
-      const cleanup = await this.orm.cleanupOrphanedIndexState(
-        candidate.typeName,
-        candidate.docId,
-        {
-          structuredVersion: candidate.structuredVersion,
-          textIndexFields: candidate.textIndexFields,
-        },
-      );
+        while (
+          typeIndex < typesToReconcile.length &&
+          remainingSchemaBudget > 0
+        ) {
+          const typeName = typesToReconcile[typeIndex];
+          const page = await this.orm.reconcileStoredTypeIndexesPage(typeName, {
+            previousDescriptor: baselineByType.get(typeName),
+            itemsPerPage: Math.min(
+              this.options.indexPageSize,
+              remainingSchemaBudget,
+            ),
+            cursor:
+              checkpoint.schemaTypeName === typeName
+                ? checkpoint.schemaCursor
+                : undefined,
+          });
 
-      await this.store.createRecord({
-        kind: "repair",
-        status:
-          cleanup.status === "cleaned" ||
-          cleanup.status === "concurrentCanonicalRestored"
-            ? "repaired"
-            : "open",
-        typeName: candidate.typeName,
-        itemId: candidate.docId,
-        operation: "orphanedIndexCleanup",
-        correlationId: runId,
-        expiresAt: now + this.options.recordRetentionMs,
-        data: cleanup,
-      });
+          schemaReconciledItemCount += page.processedCount;
+          remainingSchemaBudget -= page.processedCount;
 
-      if (
-        cleanup.status === "cleaned" ||
-        cleanup.status === "concurrentCanonicalRestored"
-      ) {
-        repairedCount += 1;
-        await this.store.updateRecord(
-          findingId(candidate.typeName, candidate.docId),
-          {
-            status: "repaired",
-            correlationId: runId,
-          },
-        );
-      } else if (
-        cleanup.status === "maintenanceUnsupported" ||
-        cleanup.status === "strongConsistencyUnavailable"
-      ) {
-        suspiciousCount += 1;
-      }
-    };
+          if (page.cursor) {
+            checkpoint.schemaTypeName = typeName;
+            checkpoint.schemaCursor = page.cursor;
+            break;
+          }
 
-    const descriptorForField = (
-      field: string,
-    ):
-      | {
-          descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
-          removed: boolean;
+          typeIndex += 1;
+          checkpoint.schemaTypeName = typesToReconcile[typeIndex];
+          checkpoint.schemaCursor = undefined;
         }
-      | undefined => {
-      const currentMatches = this.descriptors.filter((descriptor) =>
-        field.startsWith(descriptor.qualifiedFieldPrefix),
-      );
-      if (currentMatches.length === 1) {
-        return { descriptor: currentMatches[0], removed: false };
+
+        checkpoint.schemaReconcileComplete =
+          typeIndex >= typesToReconcile.length;
+      } else if (!schemaState.confirmed) {
+        checkpoint.schemaReconcileComplete =
+          schemaState.findingCount === 0;
       }
 
-      const removedMatches = schemaState.removedDescriptors.filter(
-        (descriptor) => field.startsWith(descriptor.qualifiedFieldPrefix),
-      );
-      return removedMatches.length === 1
-        ? { descriptor: removedMatches[0], removed: true }
-        : undefined;
-    };
+      const auditCandidate = async (candidate: AuditCandidate): Promise<void> => {
+        const verification =
+          await this.orm.verifyStoredItemForIndexMaintenance(
+            candidate.typeName,
+            candidate.docId,
+          );
+        examinedCount += 1;
 
-    const auditRemovedTypeCandidate = async (
-      descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor,
-      candidate: Omit<AuditCandidate, "typeName">,
-    ): Promise<void> => {
-      examinedCount += 1;
+        if (verification.exists) {
+          return;
+        }
 
-      await this.store.putRecord(
-        `health:finding:removed-type-index:${encodeURIComponent(
-          descriptor.typeName,
-        )}:${encodeURIComponent(
-          JSON.stringify([typeof candidate.docId, candidate.docId]),
-        )}`,
-        {
+        orphanFindingCount += 1;
+        const confirmed = verification.consistency === "strong";
+        if (confirmed) {
+          confirmedOrphanCount += 1;
+        }
+
+        await this.store.putRecord(findingId(candidate.typeName, candidate.docId), {
           kind: "finding",
-          status: schemaState.confirmed ? "confirmed" : "open",
-          typeName: descriptor.typeName,
+          status: confirmed ? "confirmed" : "open",
+          typeName: candidate.typeName,
           itemId: candidate.docId,
-          scope: "removedTypeIndex",
+          scope: "orphanedIndex",
           correlationId: runId,
           expiresAt: now + this.options.recordRetentionMs,
           data: {
-            findingType: "removedTypeIndex",
+            findingType: "orphanedIndex",
             source: candidate.source,
+            consistency: verification.consistency,
             ...(candidate.structuredVersion !== undefined
               ? { structuredVersion: candidate.structuredVersion }
               : {}),
-            ...(candidate.textIndexFields
-              ? { textIndexFields: candidate.textIndexFields }
-              : {}),
           },
-        },
-      );
+        });
 
-      if (
-        repairMode !== "apply" ||
-        !schemaState.confirmed ||
-        repairedCount >= this.options.maxRepairsPerRun
-      ) {
-        if (repairMode === "apply" && schemaState.confirmed) {
+        if (
+          repairMode !== "apply" ||
+          !confirmed ||
+          repairedCount >= this.options.maxRepairsPerRun
+        ) {
+          if (
+            repairMode === "apply" &&
+            confirmed &&
+            repairedCount >= this.options.maxRepairsPerRun
+          ) {
+            repairDeferred = true;
+          }
+          return;
+        }
+
+        const cleanup = await this.orm.cleanupOrphanedIndexState(
+          candidate.typeName,
+          candidate.docId,
+          {
+            structuredVersion: candidate.structuredVersion,
+            textIndexFields: candidate.textIndexFields,
+          },
+        );
+
+        await this.store.createRecord({
+          kind: "repair",
+          status:
+            cleanup.status === "cleaned" ||
+            cleanup.status === "concurrentCanonicalRestored"
+              ? "repaired"
+              : "open",
+          typeName: candidate.typeName,
+          itemId: candidate.docId,
+          operation: "orphanedIndexCleanup",
+          correlationId: runId,
+          expiresAt: now + this.options.recordRetentionMs,
+          data: cleanup,
+        });
+
+        if (
+          cleanup.status === "cleaned" ||
+          cleanup.status === "concurrentCanonicalRestored"
+        ) {
+          repairedCount += 1;
+          await this.store.updateRecord(
+            findingId(candidate.typeName, candidate.docId),
+            {
+              status: "repaired",
+              correlationId: runId,
+            },
+          );
+        } else if (
+          cleanup.status === "maintenanceUnsupported" ||
+          cleanup.status === "strongConsistencyUnavailable"
+        ) {
+          suspiciousCount += 1;
+        }
+      };
+
+      const descriptorForField = (
+        field: string,
+      ):
+        | {
+            descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+            removed: boolean;
+          }
+        | undefined => {
+        const currentMatches = this.descriptors.filter((descriptor) =>
+          field.startsWith(descriptor.qualifiedFieldPrefix),
+        );
+        if (currentMatches.length === 1) {
+          return { descriptor: currentMatches[0], removed: false };
+        }
+
+        const removedMatches = schemaState.removedDescriptors.filter(
+          (descriptor) => field.startsWith(descriptor.qualifiedFieldPrefix),
+        );
+        return removedMatches.length === 1
+          ? { descriptor: removedMatches[0], removed: true }
+          : undefined;
+      };
+
+      const auditRemovedTypeCandidate = async (
+        descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor,
+        candidate: Omit<AuditCandidate, "typeName">,
+      ): Promise<void> => {
+        examinedCount += 1;
+
+        await this.store.putRecord(
+          `health:finding:removed-type-index:${encodeURIComponent(
+            descriptor.typeName,
+          )}:${encodeURIComponent(
+            JSON.stringify([typeof candidate.docId, candidate.docId]),
+          )}`,
+          {
+            kind: "finding",
+            status: schemaState.confirmed ? "confirmed" : "open",
+            typeName: descriptor.typeName,
+            itemId: candidate.docId,
+            scope: "removedTypeIndex",
+            correlationId: runId,
+            expiresAt: now + this.options.recordRetentionMs,
+            data: {
+              findingType: "removedTypeIndex",
+              source: candidate.source,
+              ...(candidate.structuredVersion !== undefined
+                ? { structuredVersion: candidate.structuredVersion }
+                : {}),
+              ...(candidate.textIndexFields
+                ? { textIndexFields: candidate.textIndexFields }
+                : {}),
+            },
+          },
+        );
+
+        if (
+          repairMode !== "apply" ||
+          !schemaState.confirmed ||
+          repairedCount >= this.options.maxRepairsPerRun
+        ) {
+          if (repairMode === "apply" && schemaState.confirmed) {
+            repairDeferred = true;
+          }
+          return;
+        }
+
+        const cleanup = await this.orm.cleanupRemovedTypeIndexState(
+          candidate.docId,
+          {
+            previousDescriptor: descriptor,
+            structuredVersion: candidate.structuredVersion,
+            textIndexFields: candidate.textIndexFields,
+          },
+        );
+
+        await this.store.createRecord({
+          kind: "repair",
+          status: cleanup.status === "cleaned" ? "repaired" : "open",
+          typeName: descriptor.typeName,
+          itemId: candidate.docId,
+          operation: "removedTypeIndexCleanup",
+          correlationId: runId,
+          expiresAt: now + this.options.recordRetentionMs,
+          data: cleanup,
+        });
+
+        if (cleanup.status === "cleaned") {
+          repairedCount += 1;
+        } else {
+          suspiciousCount += 1;
           repairDeferred = true;
         }
-        return;
-      }
+      };
 
-      const cleanup = await this.orm.cleanupRemovedTypeIndexState(
-        candidate.docId,
-        {
-          previousDescriptor: descriptor,
-          structuredVersion: candidate.structuredVersion,
-          textIndexFields: candidate.textIndexFields,
-        },
-      );
+      if (!checkpoint.structuredComplete && remainingBudget > 0) {
+        const page = await this.orm.listStructuredIndexDocuments({
+          cursor: checkpoint.structuredCursor,
+          limit: Math.min(this.options.indexPageSize, remainingBudget),
+        });
 
-      await this.store.createRecord({
-        kind: "repair",
-        status: cleanup.status === "cleaned" ? "repaired" : "open",
-        typeName: descriptor.typeName,
-        itemId: candidate.docId,
-        operation: "removedTypeIndexCleanup",
-        correlationId: runId,
-        expiresAt: now + this.options.recordRetentionMs,
-        data: cleanup,
-      });
+        if (!page) {
+          checkpoint.structuredComplete = true;
+        } else {
+          remainingBudget -= page.documents.length;
 
-      if (cleanup.status === "cleaned") {
-        repairedCount += 1;
-      } else {
-        suspiciousCount += 1;
-        repairDeferred = true;
-      }
-    };
-
-    if (!checkpoint.structuredComplete && remainingBudget > 0) {
-      const page = await this.orm.listStructuredIndexDocuments({
-        cursor: checkpoint.structuredCursor,
-        limit: Math.min(this.options.indexPageSize, remainingBudget),
-      });
-
-      if (!page) {
-        checkpoint.structuredComplete = true;
-      } else {
-        remainingBudget -= page.documents.length;
-
-        for (const document of page.documents) {
-          const scopedMatches = Object.keys(document.fields)
-            .map((field) => descriptorForField(field))
-            .filter(
-              (
-                value,
-              ): value is {
-                descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
-                removed: boolean;
-              } => !!value,
+          for (const document of page.documents) {
+            const scopedMatches = Object.keys(document.fields)
+              .map((field) => descriptorForField(field))
+              .filter(
+                (
+                  value,
+                ): value is {
+                  descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+                  removed: boolean;
+                } => !!value,
+              );
+            const uniqueMatches = Array.from(
+              new Map(
+                scopedMatches.map((match) => [
+                  `${match.removed ? "removed" : "current"}:${
+                    match.descriptor.typeName
+                  }`,
+                  match,
+                ]),
+              ).values(),
             );
-          const uniqueMatches = Array.from(
-            new Map(
-              scopedMatches.map((match) => [
-                `${match.removed ? "removed" : "current"}:${
-                  match.descriptor.typeName
-                }`,
-                match,
-              ]),
-            ).values(),
-          );
 
-          if (uniqueMatches.length === 1) {
-            const match = uniqueMatches[0];
-            if (match.removed) {
+            if (uniqueMatches.length === 1) {
+              const match = uniqueMatches[0];
+              if (match.removed) {
+                await auditRemovedTypeCandidate(match.descriptor, {
+                  docId: document.docId,
+                  source: "structured",
+                  structuredVersion: document.version,
+                });
+              } else {
+                await auditCandidate({
+                  typeName: match.descriptor.typeName,
+                  docId: document.docId,
+                  source: "structured",
+                  structuredVersion: document.version,
+                });
+              }
+            } else if (
+              Object.keys(document.fields).length > 0 &&
+              uniqueMatches.length !== 1
+            ) {
+              suspiciousCount += 1;
+              await this.store.createRecord({
+                kind: "finding",
+                status: "open",
+                itemId: document.docId,
+                scope: "unscopedStructuredIndex",
+                correlationId: runId,
+                expiresAt: now + this.options.recordRetentionMs,
+                data: {
+                  findingType: "unscopedStructuredIndex",
+                  fieldCount: Object.keys(document.fields).length,
+                },
+              });
+            }
+          }
+
+          checkpoint.structuredCursor = page.cursor;
+          checkpoint.structuredComplete = !page.cursor;
+        }
+      }
+
+      if (!checkpoint.textComplete && remainingBudget > 0) {
+        const page = await this.orm.listTextIndexDocuments({
+          cursor: checkpoint.textCursor,
+          limit: Math.min(this.options.indexPageSize, remainingBudget),
+        });
+
+        if (!page) {
+          checkpoint.textComplete = true;
+        } else {
+          remainingBudget -= page.documents.length;
+
+          for (const document of page.documents) {
+            const match = descriptorForField(document.indexField);
+            if (match?.removed) {
               await auditRemovedTypeCandidate(match.descriptor, {
                 docId: document.docId,
-                source: "structured",
-                structuredVersion: document.version,
+                source: "text",
+                textIndexFields: [document.indexField],
               });
-            } else {
+            } else if (match) {
               await auditCandidate({
                 typeName: match.descriptor.typeName,
                 docId: document.docId,
-                source: "structured",
-                structuredVersion: document.version,
+                source: "text",
+                textIndexFields: [document.indexField],
+              });
+            } else {
+              suspiciousCount += 1;
+              await this.store.createRecord({
+                kind: "finding",
+                status: "open",
+                itemId: document.docId,
+                scope: "unscopedTextIndex",
+                correlationId: runId,
+                expiresAt: now + this.options.recordRetentionMs,
+                data: {
+                  findingType: "unscopedTextIndex",
+                  indexField: document.indexField,
+                },
               });
             }
-          } else if (
-            Object.keys(document.fields).length > 0 &&
-            uniqueMatches.length !== 1
-          ) {
-            suspiciousCount += 1;
-            await this.store.createRecord({
-              kind: "finding",
-              status: "open",
-              itemId: document.docId,
-              scope: "unscopedStructuredIndex",
-              correlationId: runId,
-              expiresAt: now + this.options.recordRetentionMs,
-              data: {
-                findingType: "unscopedStructuredIndex",
-                fieldCount: Object.keys(document.fields).length,
-              },
-            });
           }
+
+          checkpoint.textCursor = page.cursor;
+          checkpoint.textComplete = !page.cursor;
+        }
+      }
+
+      if (schemaState.findingCount === 0 && !checkpoint.canonicalComplete) {
+        const typeNames = this.descriptors.map((descriptor) => descriptor.typeName);
+        let remainingCanonicalBudget = this.options.maxCanonicalItemsPerRun;
+        let typeIndex = checkpoint.canonicalTypeName
+          ? Math.max(0, typeNames.indexOf(checkpoint.canonicalTypeName))
+          : 0;
+
+        if (
+          checkpoint.canonicalTypeName &&
+          !typeNames.includes(checkpoint.canonicalTypeName)
+        ) {
+          checkpoint.canonicalTypeName = undefined;
+          checkpoint.canonicalCursor = undefined;
+          typeIndex = 0;
         }
 
-        checkpoint.structuredCursor = page.cursor;
-        checkpoint.structuredComplete = !page.cursor;
-      }
-    }
+        while (
+          typeIndex < typeNames.length &&
+          remainingCanonicalBudget > 0
+        ) {
+          const typeName = typeNames[typeIndex];
+          const pageStartCursor =
+            checkpoint.canonicalTypeName === typeName
+              ? checkpoint.canonicalCursor
+              : undefined;
+          const page = await this.orm.inspectStoredTypeIndexesPage(typeName, {
+            itemsPerPage: Math.min(
+              this.options.indexPageSize,
+              remainingCanonicalBudget,
+            ),
+            cursor: pageStartCursor,
+          });
+          remainingCanonicalBudget -= page.processedCount;
 
-    if (!checkpoint.textComplete && remainingBudget > 0) {
-      const page = await this.orm.listTextIndexDocuments({
-        cursor: checkpoint.textCursor,
-        limit: Math.min(this.options.indexPageSize, remainingBudget),
-      });
-
-      if (!page) {
-        checkpoint.textComplete = true;
-      } else {
-        remainingBudget -= page.documents.length;
-
-        for (const document of page.documents) {
-          const match = descriptorForField(document.indexField);
-          if (match?.removed) {
-            await auditRemovedTypeCandidate(match.descriptor, {
-              docId: document.docId,
-              source: "text",
-              textIndexFields: [document.indexField],
-            });
-          } else if (match) {
-            await auditCandidate({
-              typeName: match.descriptor.typeName,
-              docId: document.docId,
-              source: "text",
-              textIndexFields: [document.indexField],
-            });
-          } else {
+          for (const capability of page.unsupportedCapabilities) {
             suspiciousCount += 1;
-            await this.store.createRecord({
-              kind: "finding",
-              status: "open",
-              itemId: document.docId,
-              scope: "unscopedTextIndex",
-              correlationId: runId,
-              expiresAt: now + this.options.recordRetentionMs,
-              data: {
-                findingType: "unscopedTextIndex",
-                indexField: document.indexField,
+            await this.store.putRecord(
+              inspectionCapabilityFindingId(typeName, capability),
+              {
+                kind: "finding",
+                status: "open",
+                typeName,
+                scope: "indexInspectionUnsupported",
+                correlationId: runId,
+                expiresAt: now + this.options.recordRetentionMs,
+                data: {
+                  findingType: "indexInspectionUnsupported",
+                  capability,
+                },
               },
-            });
+            );
           }
-        }
 
-        checkpoint.textCursor = page.cursor;
-        checkpoint.textComplete = !page.cursor;
-      }
-    }
+          let deferredInPage = false;
 
-    if (schemaState.findingCount === 0 && !checkpoint.canonicalComplete) {
-      const typeNames = this.descriptors.map((descriptor) => descriptor.typeName);
-      let remainingCanonicalBudget = this.options.maxCanonicalItemsPerRun;
-      let typeIndex = checkpoint.canonicalTypeName
-        ? Math.max(0, typeNames.indexOf(checkpoint.canonicalTypeName))
-        : 0;
-
-      if (
-        checkpoint.canonicalTypeName &&
-        !typeNames.includes(checkpoint.canonicalTypeName)
-      ) {
-        checkpoint.canonicalTypeName = undefined;
-        checkpoint.canonicalCursor = undefined;
-        typeIndex = 0;
-      }
-
-      while (
-        typeIndex < typeNames.length &&
-        remainingCanonicalBudget > 0
-      ) {
-        const typeName = typeNames[typeIndex];
-        const pageStartCursor =
-          checkpoint.canonicalTypeName === typeName
-            ? checkpoint.canonicalCursor
-            : undefined;
-        const page = await this.orm.inspectStoredTypeIndexesPage(typeName, {
-          itemsPerPage: Math.min(
-            this.options.indexPageSize,
-            remainingCanonicalBudget,
-          ),
-          cursor: pageStartCursor,
-        });
-        remainingCanonicalBudget -= page.processedCount;
-
-        for (const capability of page.unsupportedCapabilities) {
-          suspiciousCount += 1;
-          await this.store.putRecord(
-            inspectionCapabilityFindingId(typeName, capability),
-            {
-              kind: "finding",
-              status: "open",
-              typeName,
-              scope: "indexInspectionUnsupported",
-              correlationId: runId,
-              expiresAt: now + this.options.recordRetentionMs,
-              data: {
-                findingType: "indexInspectionUnsupported",
-                capability,
-              },
-            },
-          );
-        }
-
-        let deferredInPage = false;
-
-        for (const unhealthy of page.unhealthyItems) {
-          const healthItemId =
-            typeof unhealthy.primaryFieldValue === "number"
-              ? unhealthy.primaryFieldValue
-              : String(unhealthy.primaryFieldValue);
-          const currentFindingId = missingIndexFindingId(
-            typeName,
-            unhealthy.primaryFieldValue,
-          );
-          const verification =
-            await this.orm.verifyStoredItemIndexesForMaintenance(
+          for (const unhealthy of page.unhealthyItems) {
+            const healthItemId =
+              typeof unhealthy.primaryFieldValue === "number"
+                ? unhealthy.primaryFieldValue
+                : String(unhealthy.primaryFieldValue);
+            const currentFindingId = missingIndexFindingId(
               typeName,
               unhealthy.primaryFieldValue,
             );
+            const verification =
+              await this.orm.verifyStoredItemIndexesForMaintenance(
+                typeName,
+                unhealthy.primaryFieldValue,
+              );
 
-          if (!verification.exists) {
+            if (!verification.exists) {
+              await this.store.putRecord(currentFindingId, {
+                kind: "finding",
+                status: "open",
+                typeName,
+                itemId: healthItemId,
+                scope: "canonicalIndexMismatch",
+                correlationId: runId,
+                expiresAt: now + this.options.recordRetentionMs,
+                data: {
+                  findingType: "canonicalIndexMismatch",
+                  concurrentCanonicalDelete: true,
+                },
+              });
+              continue;
+            }
+
+            if (verification.issues.length === 0) {
+              const existing = await this.store.readRecord(currentFindingId);
+              if (existing) {
+                await this.store.updateRecord(currentFindingId, {
+                  status: "dismissed",
+                  correlationId: runId,
+                });
+              }
+              continue;
+            }
+
+            missingIndexFindingCount += 1;
+            const stronglyConfirmed = verification.consistency === "strong";
             await this.store.putRecord(currentFindingId, {
               kind: "finding",
-              status: "open",
+              status: stronglyConfirmed ? "confirmed" : "open",
               typeName,
               itemId: healthItemId,
               scope: "canonicalIndexMismatch",
@@ -898,264 +927,235 @@ export class TypeInfoORMHealthMonitor {
               expiresAt: now + this.options.recordRetentionMs,
               data: {
                 findingType: "canonicalIndexMismatch",
-                concurrentCanonicalDelete: true,
+                issues: verification.issues,
+                consistency: verification.consistency,
+                unsupportedCapabilities: verification.unsupportedCapabilities,
               },
             });
-            continue;
-          }
 
-          if (verification.issues.length === 0) {
-            const existing = await this.store.readRecord(currentFindingId);
-            if (existing) {
-              await this.store.updateRecord(currentFindingId, {
-                status: "dismissed",
-                correlationId: runId,
-              });
+            if (!stronglyConfirmed) {
+              suspiciousCount += 1;
+              continue;
             }
-            continue;
-          }
 
-          missingIndexFindingCount += 1;
-          const stronglyConfirmed = verification.consistency === "strong";
-          await this.store.putRecord(currentFindingId, {
-            kind: "finding",
-            status: stronglyConfirmed ? "confirmed" : "open",
-            typeName,
-            itemId: healthItemId,
-            scope: "canonicalIndexMismatch",
-            correlationId: runId,
-            expiresAt: now + this.options.recordRetentionMs,
-            data: {
-              findingType: "canonicalIndexMismatch",
-              issues: verification.issues,
-              consistency: verification.consistency,
-              unsupportedCapabilities: verification.unsupportedCapabilities,
-            },
-          });
+            if (repairMode !== "apply") {
+              continue;
+            }
 
-          if (!stronglyConfirmed) {
-            suspiciousCount += 1;
-            continue;
-          }
+            if (
+              repairedCount + reindexedItemCount >=
+              this.options.maxRepairsPerRun
+            ) {
+              repairDeferred = true;
+              deferredInPage = true;
+              continue;
+            }
 
-          if (repairMode !== "apply") {
-            continue;
-          }
-
-          if (
-            repairedCount + reindexedItemCount >=
-            this.options.maxRepairsPerRun
-          ) {
-            repairDeferred = true;
-            deferredInPage = true;
-            continue;
-          }
-
-          try {
-            await this.orm.reindexStoredItem(
-              typeName,
-              unhealthy.primaryFieldValue,
-            );
-
-            const postRepair =
-              await this.orm.verifyStoredItemIndexesForMaintenance(
+            try {
+              await this.orm.reindexStoredItem(
                 typeName,
                 unhealthy.primaryFieldValue,
               );
 
-            if (
-              postRepair.exists &&
-              postRepair.consistency === "strong" &&
-              postRepair.issues.length === 0
-            ) {
-              reindexedItemCount += 1;
-              await this.store.updateRecord(currentFindingId, {
-                status: "repaired",
-                correlationId: runId,
-                data: {
-                  findingType: "canonicalIndexMismatch",
-                  issues: verification.issues,
-                  consistency: verification.consistency,
-                  postRepairVerified: true,
-                },
-              });
-            } else {
-              suspiciousCount += 1;
-              repairDeferred = true;
-              deferredInPage = true;
-              await this.store.updateRecord(currentFindingId, {
-                status: "open",
-                correlationId: runId,
-                data: {
-                  findingType: "canonicalIndexMismatch",
-                  issues: postRepair.issues,
-                  consistency: postRepair.consistency,
-                  postRepairVerified: false,
-                  concurrentCanonicalDelete: !postRepair.exists,
-                },
-              });
-            }
-          } catch (error: any) {
-            if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
-              await this.store.updateRecord(currentFindingId, {
-                status: "open",
-                correlationId: runId,
-                data: {
-                  findingType: "canonicalIndexMismatch",
-                  issues: verification.issues,
-                  concurrentCanonicalDelete: true,
-                },
-              });
-              continue;
-            }
+              const postRepair =
+                await this.orm.verifyStoredItemIndexesForMaintenance(
+                  typeName,
+                  unhealthy.primaryFieldValue,
+                );
 
-            throw error;
+              if (
+                postRepair.exists &&
+                postRepair.consistency === "strong" &&
+                postRepair.issues.length === 0
+              ) {
+                reindexedItemCount += 1;
+                await this.store.updateRecord(currentFindingId, {
+                  status: "repaired",
+                  correlationId: runId,
+                  data: {
+                    findingType: "canonicalIndexMismatch",
+                    issues: verification.issues,
+                    consistency: verification.consistency,
+                    postRepairVerified: true,
+                  },
+                });
+              } else {
+                suspiciousCount += 1;
+                repairDeferred = true;
+                deferredInPage = true;
+                await this.store.updateRecord(currentFindingId, {
+                  status: "open",
+                  correlationId: runId,
+                  data: {
+                    findingType: "canonicalIndexMismatch",
+                    issues: postRepair.issues,
+                    consistency: postRepair.consistency,
+                    postRepairVerified: false,
+                    concurrentCanonicalDelete: !postRepair.exists,
+                  },
+                });
+              }
+            } catch (error: any) {
+              if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+                await this.store.updateRecord(currentFindingId, {
+                  status: "open",
+                  correlationId: runId,
+                  data: {
+                    findingType: "canonicalIndexMismatch",
+                    issues: verification.issues,
+                    concurrentCanonicalDelete: true,
+                  },
+                });
+                continue;
+              }
+
+              throw error;
+            }
           }
-        }
 
-        if (deferredInPage) {
-          checkpoint.canonicalTypeName = typeName;
-          checkpoint.canonicalCursor = pageStartCursor;
-          break;
-        }
+          if (deferredInPage) {
+            checkpoint.canonicalTypeName = typeName;
+            checkpoint.canonicalCursor = pageStartCursor;
+            break;
+          }
 
-        if (page.cursor && page.cursor === pageStartCursor) {
-          suspiciousCount += 1;
-          await this.store.putRecord(
-            inspectionCapabilityFindingId(typeName, "structured"),
-            {
-              kind: "finding",
-              status: "open",
-              typeName,
-              scope: "canonicalAuditNonProgress",
-              correlationId: runId,
-              expiresAt: now + this.options.recordRetentionMs,
-              data: {
-                findingType: "canonicalAuditNonProgress",
+          if (page.cursor && page.cursor === pageStartCursor) {
+            suspiciousCount += 1;
+            await this.store.putRecord(
+              inspectionCapabilityFindingId(typeName, "structured"),
+              {
+                kind: "finding",
+                status: "open",
+                typeName,
+                scope: "canonicalAuditNonProgress",
+                correlationId: runId,
+                expiresAt: now + this.options.recordRetentionMs,
+                data: {
+                  findingType: "canonicalAuditNonProgress",
+                },
               },
-            },
-          );
+            );
+            typeIndex += 1;
+            checkpoint.canonicalTypeName = typeNames[typeIndex];
+            checkpoint.canonicalCursor = undefined;
+            continue;
+          }
+
+          if (page.cursor) {
+            checkpoint.canonicalTypeName = typeName;
+            checkpoint.canonicalCursor = page.cursor;
+            break;
+          }
+
           typeIndex += 1;
           checkpoint.canonicalTypeName = typeNames[typeIndex];
           checkpoint.canonicalCursor = undefined;
-          continue;
         }
 
-        if (page.cursor) {
-          checkpoint.canonicalTypeName = typeName;
-          checkpoint.canonicalCursor = page.cursor;
-          break;
-        }
-
-        typeIndex += 1;
-        checkpoint.canonicalTypeName = typeNames[typeIndex];
+        checkpoint.canonicalComplete = typeIndex >= typeNames.length;
+      } else if (schemaState.findingCount > 0) {
+        checkpoint.canonicalTypeName = undefined;
         checkpoint.canonicalCursor = undefined;
+        checkpoint.canonicalComplete = false;
       }
 
-      checkpoint.canonicalComplete = typeIndex >= typeNames.length;
-    } else if (schemaState.findingCount > 0) {
-      checkpoint.canonicalTypeName = undefined;
-      checkpoint.canonicalCursor = undefined;
-      checkpoint.canonicalComplete = false;
-    }
+      const retention = await this.inspectHealthRecords(
+        checkpoint.retentionCursor,
+        now,
+        runId,
+      );
+      checkpoint.retentionCursor = retention.cursor;
+      const indexCycleComplete =
+        !!checkpoint.structuredComplete && !!checkpoint.textComplete;
+      const canonicalCycleComplete =
+        schemaState.findingCount > 0 || !!checkpoint.canonicalComplete;
+      const schemaRepairComplete =
+        schemaState.findingCount === 0 ||
+        (repairMode === "apply" &&
+          schemaState.confirmed &&
+          checkpoint.schemaReconcileComplete === true &&
+          indexCycleComplete &&
+          !repairDeferred);
 
-    const retention = await this.inspectHealthRecords(
-      checkpoint.retentionCursor,
-      now,
-      runId,
-    );
-    checkpoint.retentionCursor = retention.cursor;
-    const indexCycleComplete =
-      !!checkpoint.structuredComplete && !!checkpoint.textComplete;
-    const canonicalCycleComplete =
-      schemaState.findingCount > 0 || !!checkpoint.canonicalComplete;
-    const schemaRepairComplete =
-      schemaState.findingCount === 0 ||
-      (repairMode === "apply" &&
-        schemaState.confirmed &&
-        checkpoint.schemaReconcileComplete === true &&
-        indexCycleComplete &&
-        !repairDeferred);
-
-    if (schemaState.findingCount > 0 && schemaRepairComplete) {
-      await this.store.putRecord(INDEX_SCHEMA_BASELINE_ID, {
-        kind: "checkpoint",
-        status: "complete",
-        operation: "indexSchemaBaseline",
-        data: {
-          signature: schemaState.signature,
-          descriptors: schemaState.currentDescriptors,
-        },
-      });
-      await this.store.deleteRecord(INDEX_SCHEMA_CANDIDATE_ID);
-
-      for (const typeName of schemaState.changedTypeNames) {
-        await this.store.updateRecord(schemaFindingId(typeName), {
-          status: "repaired",
-          correlationId: runId,
+      if (schemaState.findingCount > 0 && schemaRepairComplete) {
+        await this.store.putRecord(INDEX_SCHEMA_BASELINE_ID, {
+          kind: "checkpoint",
+          status: "complete",
+          operation: "indexSchemaBaseline",
+          data: {
+            signature: schemaState.signature,
+            descriptors: schemaState.currentDescriptors,
+          },
         });
+        await this.store.deleteRecord(INDEX_SCHEMA_CANDIDATE_ID);
+
+        for (const typeName of schemaState.changedTypeNames) {
+          await this.store.updateRecord(schemaFindingId(typeName), {
+            status: "repaired",
+            correlationId: runId,
+          });
+        }
+
+        checkpoint.schemaSignature = schemaState.signature;
+        checkpoint.schemaTypeName = undefined;
+        checkpoint.schemaCursor = undefined;
+        checkpoint.schemaReconcileComplete = true;
       }
 
-      checkpoint.schemaSignature = schemaState.signature;
-      checkpoint.schemaTypeName = undefined;
-      checkpoint.schemaCursor = undefined;
-      checkpoint.schemaReconcileComplete = true;
-    }
+      if (repairDeferred && indexCycleComplete) {
+        checkpoint.structuredCursor = undefined;
+        checkpoint.structuredComplete = false;
+        checkpoint.textCursor = undefined;
+        checkpoint.textComplete = false;
+      }
 
-    if (repairDeferred && indexCycleComplete) {
-      checkpoint.structuredCursor = undefined;
-      checkpoint.structuredComplete = false;
-      checkpoint.textCursor = undefined;
-      checkpoint.textComplete = false;
-    }
+      const continuation =
+        !indexCycleComplete ||
+        !canonicalCycleComplete ||
+        !!retention.cursor ||
+        (repairMode === "apply" &&
+          schemaState.confirmed &&
+          (!checkpoint.schemaReconcileComplete || repairDeferred));
 
-    const continuation =
-      !indexCycleComplete ||
-      !canonicalCycleComplete ||
-      !!retention.cursor ||
-      (repairMode === "apply" &&
+      const preserveSchemaProgress =
+        repairMode === "apply" &&
         schemaState.confirmed &&
-        (!checkpoint.schemaReconcileComplete || repairDeferred));
+        schemaState.findingCount > 0 &&
+        !schemaRepairComplete;
 
-    const preserveSchemaProgress =
-      repairMode === "apply" &&
-      schemaState.confirmed &&
-      schemaState.findingCount > 0 &&
-      !schemaRepairComplete;
+      await this.writeCheckpoint(
+        indexCycleComplete &&
+        canonicalCycleComplete &&
+        !repairDeferred &&
+        !preserveSchemaProgress
+          ? {
+              retentionCursor: checkpoint.retentionCursor,
+              schemaSignature: checkpoint.schemaSignature,
+              schemaReconcileComplete: checkpoint.schemaReconcileComplete,
+            }
+          : checkpoint,
+        continuation ? "running" : "complete",
+      );
 
-    await this.writeCheckpoint(
-      indexCycleComplete &&
-      canonicalCycleComplete &&
-      !repairDeferred &&
-      !preserveSchemaProgress
-        ? {
-            retentionCursor: checkpoint.retentionCursor,
-            schemaSignature: checkpoint.schemaSignature,
-            schemaReconcileComplete: checkpoint.schemaReconcileComplete,
-          }
-        : checkpoint,
-      continuation ? "running" : "complete",
-    );
-
-    const result: TypeInfoORMHealthMonitorRunResult = {
-      runId,
-      repairMode,
-      examinedCount,
-      orphanFindingCount,
-      confirmedOrphanCount,
-      repairedCount,
-      schemaDriftFindingCount: schemaState.findingCount,
-      confirmedSchemaDriftCount: schemaState.confirmedCount,
-      schemaReconciledItemCount,
-      missingIndexFindingCount,
-      reindexedItemCount,
-      slowOperationFindingCount: retention.slowOperationFindingCount,
-      failedOperationFindingCount: retention.failedOperationFindingCount,
-      operationRecordsProcessedCount: retention.operationRecordsProcessedCount,
-      suspiciousCount,
-      expiredRecordCount: retention.deletedCount,
-      continuation,
-    };
+      const result: TypeInfoORMHealthMonitorRunResult = {
+        runId,
+        repairMode,
+        examinedCount,
+        orphanFindingCount,
+        confirmedOrphanCount,
+        repairedCount,
+        schemaDriftFindingCount: schemaState.findingCount,
+        confirmedSchemaDriftCount: schemaState.confirmedCount,
+        schemaReconciledItemCount,
+        missingIndexFindingCount,
+        reindexedItemCount,
+        slowOperationFindingCount: retention.slowOperationFindingCount,
+        failedOperationFindingCount: retention.failedOperationFindingCount,
+        operationRecordsProcessedCount: retention.operationRecordsProcessedCount,
+        suspiciousCount,
+        expiredRecordCount: retention.deletedCount,
+        continuation,
+      };
 
       await this.store.updateRecord(runId, {
         status: "complete",
