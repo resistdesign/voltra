@@ -42,6 +42,10 @@
     "./iac/packs": {
       "types": "./iac/packs/index.d.ts",
       "import": "./iac/packs/index.js"
+    },
+    "./health": {
+      "types": "./health/index.d.ts",
+      "import": "./health/index.js"
     }
   },
   "typesVersions": {
@@ -69,6 +73,9 @@
       ],
       "build": [
         "build/index.d.ts"
+      ],
+      "health": [
+        "health/index.d.ts"
       ]
     }
   },

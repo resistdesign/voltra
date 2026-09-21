@@ -1,67 +1,67 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const readSibling = (name: string): string =>
-  readFileSync(new URL(name, import.meta.url), "utf8");
+const indexingRoot = fileURLToPath(new URL("../", import.meta.url));
+const isolationTestFileName = "StructuredDriverIsolation.test-utils.ts";
 
-const sourceRoot = fileURLToPath(new URL("../../", import.meta.url));
-
-const listProductionSources = (directory: string): string[] =>
+const listGenericSources = (directory: string): string[] =>
   readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = `${directory}/${entry.name}`;
     if (entry.isDirectory()) {
-      return listProductionSources(path);
+      return listGenericSources(path);
     }
     return entry.name.endsWith(".ts") &&
-      !entry.name.endsWith(".test-utils.ts") &&
-      !entry.name.endsWith(".spec.ts")
+      !entry.name.endsWith(".d.ts") &&
+      entry.name !== isolationTestFileName
       ? [path]
       : [];
   });
 
-const productionSources = listProductionSources(sourceRoot);
-const importStatements = (source: string): string =>
-  Array.from(source.matchAll(/^import[\s\S]*?from\s+["'][^"']+["'];/gm))
-    .map(([statement]) => statement)
-    .join("\n");
+const genericSources = listGenericSources(indexingRoot);
+const genericText = genericSources
+  .map((path) => readFileSync(path, "utf8"))
+  .join("\n");
+
+const importStatements = genericSources
+  .flatMap((path) =>
+    Array.from(
+      readFileSync(path, "utf8").matchAll(
+        /^import[\s\S]*?from\s+["']([^"']+)["'];/gm,
+      ),
+      (match) => match[1],
+    ),
+  )
+  .join("\n");
 
 /**
- * Guard the production driver boundary at the source level.
+ * Guard Voltra's core storage-driver isolation objective.
  *
- * Test harnesses may compose both implementations, but production in-memory
- * code must not reference Dynamo-named code and production Dynamo code must not
- * reference in-memory implementations.
+ * Generic Indexing owns semantic behavior only. Concrete storage technology,
+ * SDKs, adapters, persistence implementations, and driver imports must remain
+ * under driver folders. This includes test utilities: driver-aware integration
+ * suites belong under drivers, not under generic Indexing.
  */
 export const runStructuredDriverIsolationScenario = () => {
-  const memorySource = [
-    readSibling("./StructuredInMemoryBackend.ts"),
-    readSibling("./StructuredInMemoryIndex.ts"),
-  ].join("\n");
-  const dynamoSource = readSibling("./StructuredDdbBackend.ts");
-  const publicIndexSource = readFileSync(
-    new URL("../index.ts", import.meta.url),
-    "utf8",
+  const relativePaths = genericSources.map((path) =>
+    path.slice(indexingRoot.length + 1),
   );
-  const memoryDriverSources = productionSources
-    .filter((path) => /(?:InMemory|MemoryBackend)\.ts$/.test(path))
-    .map((path) => readFileSync(path, "utf8"))
-    .join("\n");
-  const dynamoDriverImports = productionSources
-    .filter((path) => /(?:Ddb|Dynamo)[^/]*\.ts$/.test(path))
-    .map((path) => importStatements(readFileSync(path, "utf8")))
-    .join("\n");
+
+  const findMatchingPaths = (pattern: RegExp): string[] =>
+    genericSources
+      .filter((path) => pattern.test(readFileSync(path, "utf8")))
+      .map((path) => path.slice(indexingRoot.length + 1));
 
   return {
-    memoryHasNoDynamoNames: !/\b(?:Dynamo|Ddb)|\/ddb\//.test(memorySource),
-    dynamoHasNoInMemoryDependency: !/StructuredInMemory|\/InMemory/.test(
-      dynamoSource,
+    storageSpecificFileNames: relativePaths.filter((path) =>
+      /(?:Ddb|Dynamo|S3|InMemory)/.test(path),
     ),
-    allMemoryDriversHaveNoDynamoNames: !/\b(?:Dynamo|Ddb)|\/ddb\//.test(
-      memoryDriverSources,
+    driverImports: findMatchingPaths(/(?:\/drivers\/|ORM\/drivers)/),
+    storageSdkImports: findMatchingPaths(/@aws-sdk|client-dynamodb|client-s3/),
+    dynamoContracts: findMatchingPaths(
+      /\b(?:DynamoDB|DynamoQueryClient|DynamoScanClient|ConsistentRead|ScanCommand|QueryCommand)\b/,
     ),
-    allDynamoDriversHaveNoInMemoryImports: !/(?:InMemory|MemoryBackend)/.test(
-      dynamoDriverImports,
+    s3Contracts: findMatchingPaths(
+      /\b(?:S3Client|GetObjectCommand|PutObjectCommand|ListObjectsV2Command)\b/,
     ),
-    fakeClientIsNotPublic: !/InMemoryDynamoQueryClient/.test(publicIndexSource),
   };
 };

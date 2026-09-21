@@ -16,11 +16,13 @@ import { fileURLToPath } from "url";
 import { collectRequiredEnvironmentVariables } from "../../src/common";
 import {
   BASE_DOMAIN,
+  DEMO_HEALTH_MCP_ROUTE_PATH,
   DEMO_MCP_ROUTE_PATH,
   DOMAINS,
 } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
 import { INDEXING_TABLE_ENV_VAR } from "../common/IndexingTable";
+import { HEALTH_TABLE_ENV_VAR } from "../common/HealthTable";
 
 const moduleDirname =
   typeof __dirname === "string"
@@ -135,6 +137,13 @@ const IaC = new SimpleCFT({
       keys: { pk: "HASH", sk: "RANGE" },
     });
 
+    const healthTableId = "HealthTable";
+    cft.applyPack(addDatabase, {
+      tableId: healthTableId,
+      attributes: { id: "S" },
+      keys: { id: "HASH" },
+    });
+
     cft.applyPack(addCloudFunction, {
       id: IDS.API.FUNCTION,
       environment: {
@@ -162,6 +171,9 @@ const IaC = new SimpleCFT({
           ),
           [INDEXING_TABLE_ENV_VAR]: {
             Ref: indexingTableId,
+          },
+          [HEALTH_TABLE_ENV_VAR]: {
+            Ref: healthTableId,
           },
         },
       },
@@ -236,6 +248,11 @@ const IaC = new SimpleCFT({
       MCPDemoEndpoint: {
         Description: "Public read-only MCP endpoint for the Voltra demo API.",
         Value: `https://${DOMAINS.API}${DEMO_MCP_ROUTE_PATH}`,
+      },
+      HealthMCPDemoEndpoint: {
+        Description:
+          "Public non-destructive MCP endpoint for bounded Voltra Health previews.",
+        Value: `https://${DOMAINS.API}${DEMO_HEALTH_MCP_ROUTE_PATH}`,
       },
     },
   });

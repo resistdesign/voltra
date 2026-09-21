@@ -117,9 +117,9 @@
         "candidatesVerified": 0,
         "batchGetCalls": 0,
         "batchGetKeys": 0,
-        "ddbQueryCalls": 0,
-        "ddbBatchGetCalls": 0,
-        "ddbItemReadCalls": 0
+        "storageQueryCalls": 0,
+        "storageBatchReadCalls": 0,
+        "storageItemReadCalls": 0
       }
     }
   ]

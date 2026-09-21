@@ -16,6 +16,7 @@ const requiredExports = [
   "./native",
   "./build",
   "./common",
+  "./health",
   "./iac",
   "./iac/packs",
 ];
@@ -27,6 +28,7 @@ const requiredDistFiles = [
   "native/index.js",
   "build/index.js",
   "common/index.js",
+  "health/index.js",
 ];
 
 const requiredRuntimeExports = [
@@ -45,6 +47,15 @@ const requiredRuntimeExports = [
   {
     distFilePath: "build/index.js",
     names: ["getTypeInfoMapFromTypeScript"],
+  },
+  {
+    distFilePath: "health/index.js",
+    names: [
+      "DriverHealthStore",
+      "TypeInfoORMHealthMonitor",
+      "TypeInfoORMHealthOperationRecorder",
+      "addTypeInfoORMHealthMCPToRouteMap",
+    ],
   },
 ];
 
@@ -228,6 +239,21 @@ import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";
 import { createWebFormRenderer, AutoField } from "@resistdesign/voltra/web";
 import { createNativeFormRenderer } from "@resistdesign/voltra/native";
 import { getTypeInfoMapFromTypeScript } from "@resistdesign/voltra/build";
+import type {
+  AddTypeInfoORMHealthMCPToRouteMapConfig,
+  HealthRecord,
+  HealthStore,
+  TypeInfoORMHealthMonitorConfig,
+  TypeInfoORMHealthMonitorRunResult,
+  TypeInfoORMHealthStatusOptions,
+  TypeInfoORMHealthStatusResult,
+} from "@resistdesign/voltra/health";
+import {
+  DriverHealthStore,
+  TypeInfoORMHealthMonitor,
+  TypeInfoORMHealthOperationRecorder,
+  addTypeInfoORMHealthMCPToRouteMap,
+} from "@resistdesign/voltra/health";
 
 const routeMap: RouteMap = addRoutesToRouteMap({}, []);
 const t: TypeInfo = {};
@@ -236,6 +262,23 @@ const dynamoConfig: DynamoDBSpecificConfig = {};
 const inMemoryConfig: InMemorySpecificConfig = {};
 const inMemoryFileConfig: InMemoryFileSpecificConfig = {};
 const s3Config: S3SpecificConfig = { bucketName: "test-bucket", s3Config: {} };
+const healthRecord: HealthRecord = {
+  id: "health-1",
+  kind: "run",
+  createdAt: 0,
+  updatedAt: 0,
+};
+const healthStoreType: HealthStore | undefined = undefined;
+const healthMonitorConfigType =
+  undefined as TypeInfoORMHealthMonitorConfig | undefined;
+const healthRunResultType =
+  undefined as TypeInfoORMHealthMonitorRunResult | undefined;
+const healthStatusOptionsType =
+  undefined as TypeInfoORMHealthStatusOptions | undefined;
+const healthStatusResultType =
+  undefined as TypeInfoORMHealthStatusResult | undefined;
+const healthMCPConfigType =
+  undefined as AddTypeInfoORMHealthMCPToRouteMapConfig | undefined;
 void routeMap;
 void t;
 void tm;
@@ -243,6 +286,17 @@ void dynamoConfig;
 void inMemoryConfig;
 void inMemoryFileConfig;
 void s3Config;
+void healthRecord;
+void healthStoreType;
+void healthMonitorConfigType;
+void healthRunResultType;
+void healthStatusOptionsType;
+void healthStatusResultType;
+void healthMCPConfigType;
+void DriverHealthStore;
+void TypeInfoORMHealthMonitor;
+void TypeInfoORMHealthOperationRecorder;
+void addTypeInfoORMHealthMCPToRouteMap;
 void handleCloudFunctionEvent;
 void TypeInfoORMServiceError;
 void createWebFormRenderer;
@@ -271,6 +325,7 @@ void AutoField;
         "@resistdesign/voltra/web": ["dist/web/index.d.ts"],
         "@resistdesign/voltra/native": ["dist/native/index.d.ts"],
         "@resistdesign/voltra/build": ["dist/build/index.d.ts"],
+        "@resistdesign/voltra/health": ["dist/health/index.d.ts"],
       },
     };
 

@@ -1,0 +1,33 @@
+{
+  "file": "./TypeInfoORMHealthOperationRecorder.test-utils.ts",
+  "tests": [
+    {
+      "export": "runHealthOperationRecorderScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "kind": "operation",
+          "status": "pending",
+          "typeName": "Book",
+          "operation": "update",
+          "scope": "failedOperation",
+          "value": 5,
+          "expiresAt": 6000,
+          "success": false
+        },
+        {
+          "kind": "operation",
+          "status": "pending",
+          "typeName": "Book",
+          "operation": "list",
+          "scope": "slowOperation",
+          "count": 3,
+          "value": 150,
+          "expiresAt": 6000,
+          "success": true
+        }
+      ]
+    }
+  ]
+}

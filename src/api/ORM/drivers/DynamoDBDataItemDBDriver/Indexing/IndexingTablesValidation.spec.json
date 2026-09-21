@@ -1,0 +1,29 @@
+{
+  "file": "./IndexingTablesValidation.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexingTablesValidationMissingFullTextTableErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Missing table name for indexing.tableName."
+    },
+    {
+      "export": "runIndexingTablesValidationMissingStructuredTableErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Missing table name for indexing.tableName."
+    },
+    {
+      "export": "runIndexingTablesValidationMissingRelationsTableErrorScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "Missing table name for indexing.tableName."
+    },
+    {
+      "export": "runDynamoIndexRejectsOversizedKeyScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    }
+  ]
+}
