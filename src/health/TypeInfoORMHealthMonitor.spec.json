@@ -218,6 +218,16 @@
           "continuation": false
         }
       }
+    },
+    {
+      "export": "runHealthFailedRunPersistenceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "errorMessage": "health test failure",
+        "failedRunCount": 1,
+        "runningRunCount": 0
+      }
     }
   ]
 }
