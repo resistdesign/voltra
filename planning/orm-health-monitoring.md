@@ -67,7 +67,7 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 - [x] Update consumer/export checks and public documentation/examples for the new barrel and public types.
 - [x] Add an MCP-friendly Health RouteMap adapter with bounded `healthStatus`, `healthPreview`, and opt-in `healthRepair` tools using normal Voltra route authorization.
 - [x] Add a focused demo-site/IaC example with one Health store, live ORM operation recording, a bounded Health monitor, and a public non-destructive MCP/demo surface; production auth/group usage is shown in the consumer example.
-- [x] Run build, core tests, demo builds, export checks, and consumer smoke checks; fix regressions. Final architecture-corrected branch verified green in GitHub Actions run #473.
+- [x] Run build, core tests, demo builds, export checks, and consumer smoke checks; fix regressions. Final architecture-corrected branch verified green in GitHub Actions run #474.
 - [x] Open and polish PR #405 with implementation, safety, demo/MCP, and verification notes.
 
 ## Guardrails
