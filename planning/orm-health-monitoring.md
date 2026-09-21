@@ -70,6 +70,13 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 - [x] Run build, core tests, demo builds, export checks, and consumer smoke checks; fix regressions. Final architecture-corrected branch verified green in GitHub Actions run #474.
 - [x] Open and polish PR #405 with implementation, safety, demo/MCP, and verification notes.
 
+## Completion audit remediation
+
+- [~] Replace legacy S3 exact/lossy helpers' module-level in-memory stores with real S3-driver IO while preserving their public signatures; update focused tests to use injected driver-local test storage.
+- [~] Persist Health monitor run failures as `status: "failed"` without masking the original exception; add regression coverage.
+- [ ] Re-run the complete test/build/demo/export/consumer workflow after these corrections and record the final green run.
+- [ ] Perform one final scope audit for unfinished markers or storage-specific leakage before requesting user review.
+
 ## Guardrails
 
 - Health is fully optional and must not alter normal ORM correctness when disabled.
