@@ -84,6 +84,45 @@ model; destructive MCP repair is opt-in.
 See `examples/api/orm-health-monitoring.ts` and the live demo under
 `site/api/health.ts`.
 
+### Optional Cognito Request Authentication
+
+When a gateway should allow requests through, `handleCloudFunctionEvent` can
+resolve authentication separately from event normalization. Missing or invalid
+authentication is treated as anonymous: public routes can still run, while
+protected routes continue to enforce their normal Voltra route auth rules.
+
+For Cognito user pools, `AWS.getCognitoAuthInfo` validates the incoming bearer
+token and maps its subject and groups to Voltra `AuthInfo`:
+
+```ts
+import {
+  AWS,
+  handleCloudFunctionEvent,
+} from "@resistdesign/voltra/api";
+
+const getAuthInfo = (event: AWS.IAWSCloudFunctionEvent) =>
+  AWS.getCognitoAuthInfo(event, {
+    userPoolId: process.env.USER_POOL_ID as string,
+    clientId: process.env.USER_POOL_CLIENT_ID as string,
+    tokenUse: "id",
+  });
+
+export const handler = (event: AWS.IAWSCloudFunctionEvent) =>
+  handleCloudFunctionEvent(
+    event,
+    AWS.normalizeCloudFunctionEvent,
+    routes,
+    [process.env.CLIENT_ORIGIN as string],
+    undefined,
+    false,
+    getAuthInfo,
+  );
+```
+
+Use a gateway authorizer instead when unauthenticated requests must be rejected
+before they reach the cloud function. See
+`examples/api/cognito-pass-through-auth.ts` for a complete routing example.
+
 ### IaC Auth/Gateway Example
 
 `addGateway` authorizer provider ARNs can use CloudFormation intrinsics:
