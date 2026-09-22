@@ -58,12 +58,12 @@ const getRouteMap = (): RouteMap =>
       path: "mcp",
       name: "Voltra MCP Test",
       version: "1.0.0",
-      authConfig: {
-        allowedRoles: ["MCP"],
-      },
       tools: [
         {
-          name: "whoAmI",
+          path: "whoAmI",
+          authConfig: {
+            allowedRoles: ["MCP"],
+          },
           description: "Return the authenticated caller and supplied message.",
           inputTypeInfo: {
             entryTypeName: "WhoAmIInput",
@@ -142,11 +142,16 @@ const runMCPRequest = async (
   );
 
 export const runMCPUnauthorizedScenario = async () => {
-  const body = getRequestBody("server/discover");
+  const body = getRequestBody("tools/call", {
+    name: "whoAmI",
+    arguments: {
+      message: "hello",
+    },
+  });
   const response = await runMCPRequest(
     body,
-    "server/discover",
-    undefined,
+    "tools/call",
+    "whoAmI",
     false,
   );
 
@@ -154,6 +159,38 @@ export const runMCPUnauthorizedScenario = async () => {
     statusCode: response.statusCode,
     body: response.body,
   };
+};
+
+export const runMCPPublicDescriptorScenario = async () => {
+  const body = getRequestBody("server/discover");
+  const response = await runMCPRequest(
+    body,
+    "server/discover",
+    undefined,
+    false,
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    serverName:
+      parsed.result._meta?.["io.modelcontextprotocol/serverInfo"]?.name,
+  };
+};
+
+export const runMCPNativeRouteKeysScenario = () => {
+  const routeMap = getRouteMap();
+
+  return [
+    "mcp/server/discover",
+    "mcp/tools/list",
+    "mcp/tools/call",
+    "mcp/tools/call/whoAmI",
+  ].map((path) => ({
+    path,
+    exists: Object.prototype.hasOwnProperty.call(routeMap, path),
+    authConfig: routeMap[path]?.authConfig,
+  }));
 };
 
 export const runMCPDiscoverScenario = async () => {
@@ -172,7 +209,12 @@ export const runMCPDiscoverScenario = async () => {
 
 export const runMCPToolsListScenario = async () => {
   const body = getRequestBody("tools/list");
-  const response = await runMCPRequest(body, "tools/list");
+  const response = await runMCPRequest(
+    body,
+    "tools/list",
+    undefined,
+    false,
+  );
   const parsed = JSON.parse(response.body);
   const tool = parsed.result.tools[0];
 
