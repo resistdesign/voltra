@@ -51,13 +51,19 @@ const MCP_TEST_TYPE_INFO_MAP: TypeInfoMap = {
   },
 };
 
-const getRouteMap = (): RouteMap =>
+const getRouteMap = (
+  standardAuthConfig?: {
+    public?: boolean;
+    allowedRoles?: string[];
+  },
+): RouteMap =>
   addMCPToRouteMap(
     {},
     {
       path: "mcp",
       name: "Voltra MCP Test",
       version: "1.0.0",
+      ...(standardAuthConfig ? { authConfig: standardAuthConfig } : {}),
       tools: [
         {
           path: "whoAmI",
@@ -182,6 +188,7 @@ export const runMCPNativeRouteKeysScenario = () => {
   const routeMap = getRouteMap();
 
   return [
+    "mcp",
     "mcp/server/discover",
     "mcp/tools/list",
     "mcp/tools/call",
@@ -191,6 +198,17 @@ export const runMCPNativeRouteKeysScenario = () => {
     exists: Object.prototype.hasOwnProperty.call(routeMap, path),
     authConfig: routeMap[path]?.authConfig,
   }));
+};
+
+export const runMCPStandardRouteAuthOverrideScenario = () => {
+  const routeMap = getRouteMap({
+    allowedRoles: ["DescriptorAdmin"],
+  });
+
+  return {
+    descriptorAuthConfig: routeMap["mcp/server/discover"]?.authConfig,
+    toolAuthConfig: routeMap["mcp/tools/call/whoAmI"]?.authConfig,
+  };
 };
 
 export const runMCPDiscoverScenario = async () => {
