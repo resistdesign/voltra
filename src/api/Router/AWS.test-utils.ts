@@ -15,6 +15,22 @@ const publicJwk = primaryKeyPair.publicKey.export({
   format: "jwk",
 }) as Record<string, unknown>;
 
+const encodeBase64Url = (bytes: Uint8Array): string => {
+  let binary = "";
+
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+};
+
+const encodeJsonBase64Url = (value: unknown): string =>
+  encodeBase64Url(new TextEncoder().encode(JSON.stringify(value)));
+
 const createToken = (
   tokenUse: "id" | "access",
   privateKey = primaryKeyPair.privateKey,
@@ -38,18 +54,15 @@ const createToken = (
       : { client_id: CLIENT_ID }),
     ...payloadOverrides,
   };
-  const encodedHeader = Buffer.from(JSON.stringify(header)).toString(
-    "base64url",
-  );
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString(
-    "base64url",
-  );
+  const encodedHeader = encodeJsonBase64Url(header);
+  const encodedPayload = encodeJsonBase64Url(payload);
   const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const signature = sign(
+  const signatureBytes = sign(
     "RSA-SHA256",
-    Buffer.from(signingInput),
+    new TextEncoder().encode(signingInput),
     privateKey,
-  ).toString("base64url");
+  ) as unknown as Uint8Array;
+  const signature = encodeBase64Url(signatureBytes);
 
   return `${signingInput}.${signature}`;
 };
