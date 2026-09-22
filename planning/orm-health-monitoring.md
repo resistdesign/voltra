@@ -87,3 +87,14 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 - Keep deployment orchestration out of Voltra: consumers may run the monitor from Lambda, Fargate, cron, queues, or any other TypeScript runtime.
 - Preserve existing API/index contracts unless a narrowly scoped health capability requires an additive extension.
 - Keep the active plan in `planning/` until the user agrees the effort is finished.
+
+
+## Native MCP routing correction
+
+- [ ] Audit MCP-introduced Router changes and remove abstractions that bypass normal RouteMap semantics.
+- [ ] Detect normalized MCP requests in cloud-agnostic code before RouteMap lookup and convert MCP methods/tool names into normal internal route paths.
+- [ ] Rebuild MCP tooling so it returns ordinary Routes: standard MCP protocol routes plus per-tool Routes with each tool's own normal `authConfig`.
+- [ ] Make MCP standard/descriptor Routes public by default; allow `authConfig` on the MCP helper to apply only to those standard routes.
+- [ ] Adapt Health MCP and demo/example consumers to the native RouteMap model.
+- [ ] Add focused specs for path normalization, public descriptors, per-tool auth, and protocol responses.
+- [ ] Run focused tests/build/export/consumer verification and open a replacement PR.
