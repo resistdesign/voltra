@@ -11,6 +11,24 @@
       }
     },
     {
+      "export": "runMCPPublicDescriptorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "serverName": "Voltra MCP Test"
+      }
+    },
+    {
+      "export": "runMCPProtectedDescriptorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+      }
+    },
+    {
       "export": "runMCPDiscoverScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
