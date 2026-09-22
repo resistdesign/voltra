@@ -361,6 +361,8 @@ export namespace AWS {
   };
 
   /**
+   * Extract auth info already populated on the event by an upstream authorizer.
+   *
    * @returns Normalized auth info with user id and roles.
    */
   export const getAuthInfo = (
