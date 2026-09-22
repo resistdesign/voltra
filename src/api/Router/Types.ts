@@ -101,15 +101,27 @@ export type RouteAuthConfig = {
 /**
  * A configuration used to define how an RPC request to a specific path is handled.
  * */
+export type RouteAuthConfigFactory = (
+  eventData: NormalizedCloudFunctionEventData,
+) => RouteAuthConfig;
+
+/**
+ * A configuration used to define how an RPC request to a specific path is handled.
+ * */
 export type Route = {
   /**
    * Route path segment used as the lookup key in a RouteMap.
    */
   path: string;
   /**
-   * Optional auth requirements for the route.
+   * Optional static auth requirements for the route.
    */
   authConfig?: RouteAuthConfig;
+  /**
+   * Optional per-request auth requirements. When provided, this takes
+   * precedence over `authConfig`.
+   */
+  authConfigFactory?: RouteAuthConfigFactory;
 } & (
   | {
       /**
