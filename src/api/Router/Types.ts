@@ -166,11 +166,13 @@ export type CloudFunctionAuthInfoGetter = (
  * @param allowedOrigins Allowed origins for CORS responses.
  * @param errorShouldBeExposedToClient Optional error filter for response payloads.
  * @param debug When true, log handler inputs and outputs.
- * @param getAuthInfo Optional auth resolver. Resolution is intentionally
- * non-blocking for routing: missing or invalid authentication is treated as
- * anonymous so public routes remain reachable, while protected routes still
- * enforce their auth configuration. Use an upstream gateway authorizer when
- * unauthenticated requests must be rejected before routing.
+ * @param getAuthInfo Optional auth resolver. When supplied, its result replaces
+ * auth information produced by the event transformer. Resolution is
+ * intentionally non-blocking for routing: missing, invalid, or failed
+ * authentication is treated as anonymous so public routes remain reachable,
+ * while protected routes still enforce their auth configuration. Use an
+ * upstream gateway authorizer when unauthenticated requests must be rejected
+ * before routing.
  * @returns Cloud function response object.
  */
 export type CloudFunctionEventRouter = (
