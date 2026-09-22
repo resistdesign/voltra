@@ -25,6 +25,7 @@
  * ```
  */
 import {
+  CloudFunctionAuthInfoGetter,
   CloudFunctionEventRouter,
   CloudFunctionEventTransformer,
   CloudFunctionResponse,
@@ -170,6 +171,15 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
    * When true, log handler inputs and outputs.
    */
   debug: boolean = false,
+  /**
+   * Optional auth resolver for the raw event. When supplied, its result
+   * replaces auth info produced by the event transformer. Authentication
+   * resolution does not gate public routes: unresolved, invalid, or failed auth
+   * is treated as anonymous, while protected routes continue to enforce their
+   * route auth configuration. Use an upstream gateway authorizer when
+   * authentication must be enforced before the request reaches routing.
+   */
+  getAuthInfo?: CloudFunctionAuthInfoGetter,
 ): Promise<CloudFunctionResponse> => {
   let transformedEvent: NormalizedCloudFunctionEventData | undefined =
     undefined;
@@ -178,6 +188,20 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
     transformedEvent = eventTransformer(event);
   } catch (error) {
     // Ignore.
+  }
+
+  if (transformedEvent && getAuthInfo) {
+    try {
+      transformedEvent = {
+        ...transformedEvent,
+        authInfo: (await getAuthInfo(event)) || {},
+      };
+    } catch (error) {
+      transformedEvent = {
+        ...transformedEvent,
+        authInfo: {},
+      };
+    }
   }
 
   if (transformedEvent) {

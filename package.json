@@ -121,7 +121,8 @@
     "typescript": "^5.3.3",
     "uuid": "^11.0.3",
     "yaml": "^2.3.4",
-    "@modelcontextprotocol/server": "2.0.0"
+    "@modelcontextprotocol/server": "2.0.0",
+    "aws-jwt-verify": "^5.2.1"
   },
   "devDependencies": {
     "@astrojs/react": "^4.3.1",

@@ -146,3 +146,93 @@ export const runRouterStandardHTTPResponseDetectionScenario = () => ({
     body: "ok",
   }),
 });
+
+const buildAuthResolverEvent = () => ({
+  httpMethod: "POST",
+  path: "auth-resolution",
+  body: JSON.stringify([]),
+  headers: { Origin: "https://example.com" },
+  multiValueHeaders: {},
+  requestContext: {
+    authorizer: {
+      claims: { sub: "gateway-user", "cognito:groups": ["gateway-role"] },
+    },
+  },
+});
+
+export const runRouterAuthResolverPublicPassThroughScenario = async () => {
+  const response = await handleCloudFunctionEvent(
+    buildAuthResolverEvent(),
+    AWS.normalizeCloudFunctionEvent,
+    addRoutesToRouteMap({}, [
+      {
+        path: "auth-resolution",
+        authConfig: { public: true },
+        handlerFactory: (eventData) => () => eventData.authInfo,
+      },
+    ]),
+    ["https://example.com"],
+    undefined,
+    false,
+    async () => {
+      throw new Error("Invalid authentication");
+    },
+  );
+
+  return {
+    statusCode: response.statusCode,
+    body: response.body,
+  };
+};
+
+export const runRouterAuthResolverProtectedDenialScenario = async () => {
+  const response = await handleCloudFunctionEvent(
+    buildAuthResolverEvent(),
+    AWS.normalizeCloudFunctionEvent,
+    addRoutesToRouteMap({}, [
+      {
+        path: "auth-resolution",
+        authConfig: { anyAuthorized: true },
+        handler: () => "secure",
+      },
+    ]),
+    ["https://example.com"],
+    undefined,
+    false,
+    async () => {
+      throw new Error("Invalid authentication");
+    },
+  );
+
+  return {
+    statusCode: response.statusCode,
+    body: response.body,
+  };
+};
+
+export const runRouterAuthResolverAuthenticatedScenario = async () => {
+  const response = await handleCloudFunctionEvent(
+    buildAuthResolverEvent(),
+    AWS.normalizeCloudFunctionEvent,
+    addRoutesToRouteMap({}, [
+      {
+        path: "auth-resolution",
+        authConfig: { anyAuthorized: true },
+        handlerFactory: (eventData) => () => eventData.authInfo,
+      },
+    ]),
+    ["https://example.com"],
+    undefined,
+    false,
+    async () => ({
+      userId: "resolved-user",
+      roles: ["resolved-role"],
+    }),
+  );
+
+  return {
+    statusCode: response.statusCode,
+    body: response.body,
+  };
+};
+
