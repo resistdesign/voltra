@@ -110,6 +110,12 @@ export type AddGatewayConfig = {
   stageName?: any;
   /**
    * Authorizer config or boolean to enable/disable.
+   *
+   * Gateway authorizers reject unauthenticated requests before they reach the
+   * cloud function. If public routes should remain reachable while authenticated
+   * requests still receive identity information, leave the gateway authorizer
+   * disabled and use the `handleCloudFunctionEvent` `getAuthInfo` option
+   * instead.
    */
   authorizer?: AddGatewayAuthorizerConfig | boolean;
   /**
