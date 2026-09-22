@@ -344,7 +344,7 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
         ? [
             {
               path: "healthRepair",
-        authConfig: config.authConfig,
+              authConfig: config.authConfig,
               description:
                 "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true when additional bounded work remains.",
               outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
