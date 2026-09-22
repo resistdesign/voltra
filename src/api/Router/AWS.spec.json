@@ -1,0 +1,41 @@
+{
+  "file": "./AWS.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCognitoAuthInfoVerifiedIdTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "userId": "user-123",
+        "roles": [
+          "member",
+          "admin"
+        ]
+      }
+    },
+    {
+      "export": "runCognitoAuthInfoVerifiedAccessTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "userId": "user-123",
+        "roles": [
+          "member",
+          "admin"
+        ]
+      }
+    },
+    {
+      "export": "runCognitoAuthInfoInvalidSignatureScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    },
+    {
+      "export": "runCognitoAuthInfoMissingTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    }
+  ]
+}
