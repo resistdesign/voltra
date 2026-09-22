@@ -7,7 +7,7 @@ Allow `handleCloudFunctionEvent` to resolve authentication independently from ev
 ## Checklist
 
 - [x] Add a cloud-agnostic async-capable `getAuthInfo` hook to `handleCloudFunctionEvent` without breaking existing callers.
-- [x] Add `AWS.getCognitoAuthInfo` with Cognito JWT validation and normalized `AuthInfo` output.
+- [x] Add `AWS.getCognitoAuthInfo` with AWS-maintained `aws-jwt-verify` validation, internal verifier/JWKS caching, and normalized `AuthInfo` output.
 - [x] Preserve existing API Gateway authorizer claim extraction behavior when no custom auth resolver is supplied.
 - [x] Add tests for public pass-through, protected-route denial, valid resolved auth, and Cognito JWT validation.
 - [x] Document the pass-through semantics on the router API and the `addGateway.authorizer` option.
