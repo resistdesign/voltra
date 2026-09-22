@@ -207,8 +207,19 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
       };
     } else {
       if (route) {
-        const { authConfig = {}, handlerFactory, handler } = route;
-        const requestIsAuthorized = getRouteIsAuthorized(authInfo, authConfig);
+        const {
+          authConfig = {},
+          authConfigFactory,
+          handlerFactory,
+          handler,
+        } = route;
+        const resolvedAuthConfig = authConfigFactory
+          ? authConfigFactory(transformedEvent)
+          : authConfig;
+        const requestIsAuthorized = getRouteIsAuthorized(
+          authInfo,
+          resolvedAuthConfig,
+        );
 
         if (requestIsAuthorized) {
           const handlerInstance: RouteHandler = handler
