@@ -5,13 +5,18 @@
       "export": "runNormalRoutePathScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": ["status"]
+      "expectation": [
+        "status"
+      ]
     },
     {
       "export": "runModernMCPDescriptorRoutePathScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": ["mcp/server/discover"]
+      "expectation": [
+        "mcp/server/discover",
+        "mcp"
+      ]
     },
     {
       "export": "runModernMCPToolRoutePathScenario",
@@ -19,7 +24,8 @@
       "operation": "DEEP_EQUALS",
       "expectation": [
         "mcp/tools/call/healthStatus",
-        "mcp/tools/call"
+        "mcp/tools/call",
+        "mcp"
       ]
     },
     {
@@ -28,7 +34,8 @@
       "operation": "DEEP_EQUALS",
       "expectation": [
         "mcp/tools/call/healthStatus",
-        "mcp/tools/call"
+        "mcp/tools/call",
+        "mcp"
       ]
     }
   ]
