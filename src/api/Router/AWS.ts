@@ -1,4 +1,3 @@
-import { Buffer } from "node:buffer";
 import { createPublicKey, verify as verifySignature } from "node:crypto";
 import {
   AuthInfo,
@@ -23,9 +22,24 @@ type CognitoJwksCacheEntry = {
 const COGNITO_JWKS_CACHE_TTL_MS = 60 * 60 * 1000;
 const cognitoJwksCache = new Map<string, CognitoJwksCacheEntry>();
 
+const decodeBase64UrlBytes = (value: string): Uint8Array => {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const paddingLength = (4 - (base64.length % 4)) % 4;
+  const decoded = atob(`${base64}${"=".repeat(paddingLength)}`);
+  const bytes = new Uint8Array(decoded.length);
+
+  for (let i = 0; i < decoded.length; i += 1) {
+    bytes[i] = decoded.charCodeAt(i);
+  }
+
+  return bytes;
+};
+
 const decodeBase64UrlJson = <T>(value: string): T | undefined => {
   try {
-    return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as T;
+    return JSON.parse(
+      new TextDecoder().decode(decodeBase64UrlBytes(value)),
+    ) as T;
   } catch (error) {
     return undefined;
   }
@@ -232,9 +246,9 @@ export namespace AWS {
       });
       const signatureIsValid = verifySignature(
         "RSA-SHA256",
-        Buffer.from(`${encodedHeader}.${encodedPayload}`),
+        new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`),
         publicKey,
-        Buffer.from(encodedSignature, "base64url"),
+        decodeBase64UrlBytes(encodedSignature),
       );
 
       if (!signatureIsValid) {
