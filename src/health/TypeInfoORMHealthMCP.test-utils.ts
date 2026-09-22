@@ -130,15 +130,34 @@ const runRequest = async (
 
 export const runHealthMCPUnauthorizedScenario = async () => {
   const response = await runRequest(
-    getRequestBody("server/discover"),
-    "server/discover",
-    undefined,
+    getRequestBody("tools/call", {
+      name: "healthStatus",
+      arguments: {},
+    }),
+    "tools/call",
+    "healthStatus",
     false,
   );
 
   return {
     statusCode: response.statusCode,
     body: response.body,
+  };
+};
+
+export const runHealthMCPPublicDescriptorScenario = async () => {
+  const response = await runRequest(
+    getRequestBody("server/discover"),
+    "server/discover",
+    undefined,
+    false,
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    serverName:
+      parsed.result._meta?.["io.modelcontextprotocol/serverInfo"]?.name,
   };
 };
 
