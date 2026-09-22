@@ -70,7 +70,10 @@ export type MCPToolRoute = Route & {
 /**
  * Backward-compatible MCP tool type alias.
  */
-export type MCPTool = MCPToolRoute;
+export type MCPTool<
+  TInput = Record<string, unknown>,
+  TOutput = unknown,
+> = MCPToolRoute;
 
 /**
  * Configuration for adding a stateless MCP endpoint to a Voltra RouteMap.
