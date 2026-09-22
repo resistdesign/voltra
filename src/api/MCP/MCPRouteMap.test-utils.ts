@@ -187,16 +187,31 @@ export const runMCPPublicDescriptorScenario = async () => {
 
 export const runMCPNativeRouteKeysScenario = () => {
   const routeMap = getRouteMap();
-  const paths = [
-    "mcp",
-    mergeStringPaths("mcp", "server/discover"),
-    mergeStringPaths("mcp", "tools/list"),
-    mergeStringPaths("mcp", "tools/call"),
-    mergeStringPaths("mcp", "tools/call/whoAmI"),
+  const routes = [
+    {
+      label: "mcp",
+      path: mergeStringPaths("", "mcp"),
+    },
+    {
+      label: "mcp/server/discover",
+      path: mergeStringPaths("mcp", "server/discover"),
+    },
+    {
+      label: "mcp/tools/list",
+      path: mergeStringPaths("mcp", "tools/list"),
+    },
+    {
+      label: "mcp/tools/call",
+      path: mergeStringPaths("mcp", "tools/call"),
+    },
+    {
+      label: "mcp/tools/call/whoAmI",
+      path: mergeStringPaths("mcp", "tools/call/whoAmI"),
+    },
   ];
 
-  return paths.map((path) => ({
-    path,
+  return routes.map(({ label, path }) => ({
+    path: label,
     exists: Object.prototype.hasOwnProperty.call(routeMap, path),
     authConfig: routeMap[path]?.authConfig,
   }));
