@@ -37,7 +37,7 @@ const getCognitoRegion = (userPoolId: string): string | undefined => {
 };
 
 const getBearerToken = (authorizationHeader: string): string | undefined => {
-  const match = /^\\s*Bearer\\s+(.+?)\\s*$/i.exec(authorizationHeader);
+  const match = /^\s*Bearer\s+(.+?)\s*$/i.exec(authorizationHeader);
 
   return match?.[1];
 };
