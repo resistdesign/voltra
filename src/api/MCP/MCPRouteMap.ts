@@ -17,6 +17,7 @@ import {
   type RouteAuthConfig,
   type RouteMap,
 } from "../Router";
+import { getRouteIsAuthorized } from "../Router/Auth";
 import {
   getJSONSchemaFromTypeInfoPack,
   type TypeInfoPack,
@@ -101,8 +102,20 @@ export type AddMCPToRouteMapConfig = {
   name: string;
   /** MCP server version advertised to clients. */
   version: string;
-  /** Normal Voltra route authorization applied to the whole MCP endpoint. */
+  /**
+   * Normal Voltra authorization applied to functional MCP tool calls.
+   *
+   * Descriptor/protocol requests remain public by default so clients can
+   * discover the server and its tools before authenticating.
+   */
   authConfig?: RouteAuthConfig;
+  /**
+   * Protect descriptor/protocol requests with the same `authConfig`.
+   *
+   * Defaults to false. Set true when server discovery, tool descriptors, and
+   * other MCP protocol metadata should require authorization too.
+   */
+  protectDescriptorRoutes?: boolean;
   /** Tools exposed by the MCP endpoint. */
   tools: MCPTool<any, any>[];
 };
@@ -142,6 +155,43 @@ const getMCPRequest = (
     body,
   });
 };
+
+const getMCPRequestMethods = (
+  eventData: NormalizedCloudFunctionEventData,
+): string[] => {
+  const { body } = eventData;
+  const messages = Array.isArray(body) ? body : [body];
+  const methods: string[] = [];
+
+  for (const message of messages) {
+    if (message && typeof message === "object" && !Array.isArray(message)) {
+      const method = (message as { method?: unknown }).method;
+
+      if (typeof method === "string") {
+        methods.push(method);
+      }
+    }
+  }
+
+  if (methods.length === 0) {
+    const headerMethod = eventData.headers["mcp-method"]?.[0];
+
+    if (headerMethod) {
+      methods.push(headerMethod);
+    }
+  }
+
+  return methods;
+};
+
+const getMCPRequestRequiresFunctionalAuth = (
+  eventData: NormalizedCloudFunctionEventData,
+): boolean => getMCPRequestMethods(eventData).includes("tools/call");
+
+const getMCPRouteAuthConfig = (
+  config: AddMCPToRouteMapConfig,
+): RouteAuthConfig =>
+  config.protectDescriptorRoutes ? (config.authConfig ?? {}) : { public: true };
 
 const getToolResultText = (result: unknown): string => {
   if (typeof result === "string") {
@@ -210,9 +260,11 @@ const getMCPServer = (
 /**
  * Add a stateless MCP tool endpoint to an existing Voltra RouteMap.
  *
- * The endpoint uses the route's normal Voltra authorization. Tool
- * handlerFactory callbacks receive the same normalized caller context as
- * ordinary route handler factories, including authenticated user id and roles.
+ * By default, MCP descriptor/protocol requests are public while functional
+ * tool calls use `authConfig`. Set `protectDescriptorRoutes` to true to
+ * apply the same authorization to the whole MCP endpoint. Tool handlerFactory
+ * callbacks receive the same normalized caller context as ordinary route
+ * handler factories, including authenticated user id and roles.
  *
  * @category MCP
  * @returns New route map with the MCP endpoint appended.
@@ -223,8 +275,18 @@ export const addMCPToRouteMap = (
 ): RouteMap =>
   addRouteToRouteMap(routeMap, {
     path: config.path,
-    authConfig: config.authConfig,
+    authConfig: getMCPRouteAuthConfig(config),
     handlerFactory: (eventData) => async () => {
+      const functionalRequestIsAuthorized =
+        !getMCPRequestRequiresFunctionalAuth(eventData) ||
+        getRouteIsAuthorized(eventData.authInfo, config.authConfig ?? {});
+
+      if (!functionalRequestIsAuthorized) {
+        return new Response("Unauthorized", {
+          status: 401,
+        });
+      }
+
       const mcpHandler = createMcpHandler(() =>
         getMCPServer(config, eventData),
       );
