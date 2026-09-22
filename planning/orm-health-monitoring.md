@@ -97,4 +97,6 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 - [x] Make MCP standard/descriptor Routes public by default; allow `authConfig` on the MCP helper to apply only to those standard routes.
 - [x] Adapt Health MCP and demo/example consumers to the native RouteMap model.
 - [x] Add focused specs for path normalization, public descriptors, per-tool auth, and protocol responses.
-- [x] Run focused tests/build/export/consumer verification and open a replacement PR. GitHub Actions run #483 completed successfully.
+- [x] Remove legacy MCP routing/serving compatibility from V3; require the modern MCP headers and strict modern handler posture.
+- [x] Preserve MCP tool identifiers exactly when mapping them to internal RouteMap path segments.
+- [~] Re-run tests/build/export/consumer verification after the modern-only cleanup.
