@@ -1,5 +1,6 @@
 import { addMCPToRouteMap } from "./MCPRouteMap";
 import type { TypeInfoMap } from "../../common/TypeParsing";
+import { mergeStringPaths } from "../../common/Routing";
 import {
   AWS,
   handleCloudFunctionEvent,
@@ -186,14 +187,15 @@ export const runMCPPublicDescriptorScenario = async () => {
 
 export const runMCPNativeRouteKeysScenario = () => {
   const routeMap = getRouteMap();
-
-  return [
+  const paths = [
     "mcp",
-    "mcp/server/discover",
-    "mcp/tools/list",
-    "mcp/tools/call",
-    "mcp/tools/call/whoAmI",
-  ].map((path) => ({
+    mergeStringPaths("mcp", "server/discover"),
+    mergeStringPaths("mcp", "tools/list"),
+    mergeStringPaths("mcp", "tools/call"),
+    mergeStringPaths("mcp", "tools/call/whoAmI"),
+  ];
+
+  return paths.map((path) => ({
     path,
     exists: Object.prototype.hasOwnProperty.call(routeMap, path),
     authConfig: routeMap[path]?.authConfig,
@@ -204,10 +206,12 @@ export const runMCPStandardRouteAuthOverrideScenario = () => {
   const routeMap = getRouteMap({
     allowedRoles: ["DescriptorAdmin"],
   });
+  const descriptorPath = mergeStringPaths("mcp", "server/discover");
+  const toolPath = mergeStringPaths("mcp", "tools/call/whoAmI");
 
   return {
-    descriptorAuthConfig: routeMap["mcp/server/discover"]?.authConfig,
-    toolAuthConfig: routeMap["mcp/tools/call/whoAmI"]?.authConfig,
+    descriptorAuthConfig: routeMap[descriptorPath]?.authConfig,
+    toolAuthConfig: routeMap[toolPath]?.authConfig,
   };
 };
 
