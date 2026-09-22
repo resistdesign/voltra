@@ -92,7 +92,11 @@ authentication is treated as anonymous: public routes can still run, while
 protected routes continue to enforce their normal Voltra route auth rules.
 
 For Cognito user pools, `AWS.getCognitoAuthInfo` validates the incoming bearer
-token and maps its subject and groups to Voltra `AuthInfo`:
+token and maps its subject and groups to Voltra `AuthInfo`. Voltra uses AWS's
+`aws-jwt-verify` internally, caches verifier instances, and leaves JWKS
+discovery, fetching, caching, key rotation, signature validation, and Cognito
+claim validation to that AWS-maintained verifier. Consumers only provide the
+user pool id, app client id, and accepted token type:
 
 ```ts
 import {
