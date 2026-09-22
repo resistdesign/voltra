@@ -1,0 +1,40 @@
+{
+  "file": "./MCP.test-utils.ts",
+  "tests": [
+    {
+      "export": "runNormalRoutePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "status"
+      ]
+    },
+    {
+      "export": "runModernMCPDescriptorRoutePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "mcp/server/discover",
+        "mcp"
+      ]
+    },
+    {
+      "export": "runModernMCPToolRoutePathScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "mcp/tools/call/healthStatus",
+        "mcp/tools/call",
+        "mcp"
+      ]
+    },
+    {
+      "export": "runBodyOnlyMCPShapeIsNotRoutedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        "mcp"
+      ]
+    }
+  ]
+}
