@@ -87,3 +87,12 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 - Keep deployment orchestration out of Voltra: consumers may run the monitor from Lambda, Fargate, cron, queues, or any other TypeScript runtime.
 - Preserve existing API/index contracts unless a narrowly scoped health capability requires an additive extension.
 - Keep the active plan in `planning/` until the user agrees the effort is finished.
+
+
+## MCP descriptor authorization refinement
+
+- [ ] Keep MCP descriptor/protocol requests public by default while preserving `authConfig` enforcement for functional tool calls.
+- [ ] Add an opt-in `protectDescriptorRoutes` toggle that restores whole-endpoint protection when desired.
+- [ ] Add focused MCP specs covering public descriptors, protected tool calls, and protected descriptors.
+- [ ] Update the MCP example/docs for the new default and toggle.
+- [ ] Verify focused MCP specs and package build, then open the small PR.
