@@ -21,12 +21,14 @@ Use this for client route usage via platform barrels:
 ## API Routing (Backend)
 
 - `examples/api/backend-routing.ts`
+- `examples/api/cognito-pass-through-auth.ts`
 - `examples/api/mcp-routing.ts`
 - `examples/api/orm-indexing.ts`
 - `examples/api/orm-index-maintenance.ts`
 - `examples/api/orm-health-monitoring.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
+Use `cognito-pass-through-auth.ts` when the gateway should allow requests through and Voltra should resolve Cognito identity when a valid bearer token is present. Public routes continue anonymously without valid auth; protected routes still enforce their normal route auth configuration.
 Use `mcp-routing.ts` to expose MCP protocol routes plus normally-authorized tool Routes through the same RouteMap.
 Use `orm-indexing.ts` as the starting point for unified field-capability and
 backend configuration.

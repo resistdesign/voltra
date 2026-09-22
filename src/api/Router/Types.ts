@@ -6,8 +6,7 @@ export type CORSPattern = string | RegExp;
 export type CORSPatter = CORSPattern;
 
 /**
- * User authentication information.
- * Typically, from Cognito.
+ * User authentication information resolved for request routing.
  * */
 export type AuthInfo = {
   /**
@@ -144,6 +143,22 @@ export type CloudFunctionEventTransformer = (
 ) => NormalizedCloudFunctionEventData;
 
 /**
+ * Resolve authentication information from a raw cloud function event.
+ *
+ * This resolver supplies identity to route authorization; it does not decide
+ * whether a request may reach the router. If authentication cannot be resolved,
+ * public routes can still run anonymously while protected routes remain subject
+ * to their {@link RouteAuthConfig}. Use an upstream gateway authorizer when
+ * authentication must be enforced before the request reaches routing.
+ *
+ * @param event Raw cloud function event object.
+ * @returns Resolved auth info, synchronously or asynchronously.
+ */
+export type CloudFunctionAuthInfoGetter = (
+  event: any,
+) => AuthInfo | Promise<AuthInfo>;
+
+/**
  * A function that routes an event to a route handler based on a {@link RouteMap}.
  * @param event Raw cloud function event object.
  * @param eventTransformer Transformer used to normalize the event.
@@ -151,6 +166,13 @@ export type CloudFunctionEventTransformer = (
  * @param allowedOrigins Allowed origins for CORS responses.
  * @param errorShouldBeExposedToClient Optional error filter for response payloads.
  * @param debug When true, log handler inputs and outputs.
+ * @param getAuthInfo Optional auth resolver. When supplied, its result replaces
+ * auth information produced by the event transformer. Resolution is
+ * intentionally non-blocking for routing: missing, invalid, or failed
+ * authentication is treated as anonymous so public routes remain reachable,
+ * while protected routes still enforce their auth configuration. Use an
+ * upstream gateway authorizer when unauthenticated requests must be rejected
+ * before routing.
  * @returns Cloud function response object.
  */
 export type CloudFunctionEventRouter = (
@@ -160,4 +182,5 @@ export type CloudFunctionEventRouter = (
   allowedOrigins: CORSPattern[],
   errorShouldBeExposedToClient?: (error: unknown) => boolean,
   debug?: boolean,
+  getAuthInfo?: CloudFunctionAuthInfoGetter,
 ) => Promise<CloudFunctionResponse>;

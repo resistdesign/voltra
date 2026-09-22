@@ -1,8 +1,31 @@
+import { CognitoJwtVerifier } from "aws-jwt-verify";
+import type { CognitoJwtVerifierSingleUserPool } from "aws-jwt-verify/cognito-verifier";
 import {
   AuthInfo,
   CloudFunctionEventTransformer,
   NormalizedCloudFunctionEventData,
 } from "./Types";
+
+const getBearerToken = (authorizationHeader: string): string | undefined => {
+  const match = /^\s*Bearer\s+(.+?)\s*$/i.exec(authorizationHeader);
+
+  return match?.[1];
+};
+
+const getStringArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => !!item);
+  }
+
+  return [];
+};
 
 /**
  * AWS specific utilities for processing routing and normalizing Cloud Function events.
@@ -37,6 +60,107 @@ export namespace AWS {
      */
     body?: string;
   }
+
+  /**
+   * Configuration for resolving Cognito user-pool authentication directly from
+   * a bearer token on the incoming request.
+   */
+  export type CognitoAuthInfoConfig = {
+    /**
+     * Cognito user pool id that must have issued the token.
+     */
+    userPoolId: string;
+    /**
+     * Cognito app client id, or accepted app client ids, for the token.
+     */
+    clientId: string | string[];
+    /**
+     * Cognito token type that is accepted by this resolver.
+     */
+    tokenUse: "id" | "access";
+  };
+
+
+  type CognitoAuthInfoVerifier =
+    CognitoJwtVerifierSingleUserPool<CognitoAuthInfoConfig>;
+
+  const cognitoAuthInfoVerifierMap = new Map<string, CognitoAuthInfoVerifier>();
+
+  const getCognitoAuthInfoVerifier = (
+    config: CognitoAuthInfoConfig,
+  ): CognitoAuthInfoVerifier => {
+    const { userPoolId, clientId, tokenUse } = config;
+    const clientIds = Array.isArray(clientId)
+      ? [...clientId].sort()
+      : [clientId];
+    const key = JSON.stringify([userPoolId, tokenUse, ...clientIds]);
+    let verifier = cognitoAuthInfoVerifierMap.get(key);
+
+    if (!verifier) {
+      verifier = CognitoJwtVerifier.create({
+        userPoolId,
+        clientId,
+        tokenUse,
+      });
+      cognitoAuthInfoVerifierMap.set(key, verifier);
+    }
+
+    return verifier;
+  };
+
+  /**
+   * Validate a Cognito bearer token from the raw cloud function event and
+   * normalize its subject and groups into Voltra auth info.
+   *
+   * Token signature, issuer, expiration/not-before claims, token use, and app
+   * client are verified by AWS's `aws-jwt-verify` Cognito verifier. The
+   * verifier also discovers, fetches, caches, and refreshes the Cognito signing
+   * keys for the configured user pool.
+   *
+   * Missing, malformed, expired, incorrectly scoped, or unverifiable tokens
+   * resolve to anonymous auth info instead of throwing. This allows
+   * `handleCloudFunctionEvent` to continue routing public requests while its
+   * route authorization still denies protected routes without valid auth.
+   *
+   * @returns Auth info for a verified Cognito token, or an empty object when
+   * authentication cannot be established.
+   */
+  export const getCognitoAuthInfo = async (
+    /**
+     * AWS Cloud Function event containing the bearer token.
+     */
+    event: IAWSCloudFunctionEvent,
+    /**
+     * Cognito validation configuration.
+     */
+    config: CognitoAuthInfoConfig,
+  ): Promise<AuthInfo> => {
+    try {
+      const authorizationHeader = getHeadersFromEvent(event).authorization?.[0];
+      const token = authorizationHeader
+        ? getBearerToken(authorizationHeader)
+        : undefined;
+
+      if (!token) {
+        return {};
+      }
+
+      const verifier = getCognitoAuthInfoVerifier(config);
+      const payload = await verifier.verify(token);
+      const userId = payload.sub;
+
+      if (typeof userId !== "string" || !userId) {
+        return {};
+      }
+
+      return {
+        userId,
+        roles: getStringArray(payload["cognito:groups"]),
+      };
+    } catch (error) {
+      return {};
+    }
+  };
 
   /**
    * @returns Normalized request path string.
@@ -117,6 +241,8 @@ export namespace AWS {
   };
 
   /**
+   * Extract auth info already populated on the event by an upstream authorizer.
+   *
    * @returns Normalized auth info with user id and roles.
    */
   export const getAuthInfo = (

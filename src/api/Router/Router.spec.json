@@ -118,6 +118,33 @@
         "standardResponse": true,
         "plainObject": false
       }
+    },
+    {
+      "export": "runRouterAuthResolverPublicPassThroughScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "body": "{}"
+      }
+    },
+    {
+      "export": "runRouterAuthResolverProtectedDenialScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 401,
+        "body": "Unauthorized"
+      }
+    },
+    {
+      "export": "runRouterAuthResolverAuthenticatedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "body": "{\"userId\":\"resolved-user\",\"roles\":[\"resolved-role\"]}"
+      }
     }
   ]
 }

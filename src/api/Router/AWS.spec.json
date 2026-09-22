@@ -1,0 +1,23 @@
+{
+  "file": "./AWS.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCognitoAuthInfoMissingTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    },
+    {
+      "export": "runCognitoAuthInfoNonBearerTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    },
+    {
+      "export": "runCognitoAuthInfoMalformedTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    }
+  ]
+}
