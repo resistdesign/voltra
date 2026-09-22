@@ -146,3 +146,104 @@ export const runRouterStandardHTTPResponseDetectionScenario = () => ({
     body: "ok",
   }),
 });
+
+export const runRouterAuthResolverScenario = async () => {
+  const routeMap = {
+    status: {
+      path: "status",
+      authConfig: { anyAuthorized: true },
+      handlerFactory: (eventData: any) => () => eventData.authInfo,
+    },
+  };
+
+  return handleCloudFunctionEvent(
+    {
+      httpMethod: "POST",
+      path: "status",
+      body: "[]",
+      headers: {},
+      multiValueHeaders: {},
+      requestContext: {},
+    },
+    AWS.normalizeCloudFunctionEvent,
+    routeMap,
+    [],
+    undefined,
+    false,
+    async () => ({
+      userId: "resolved-user",
+      roles: ["member"],
+    }),
+  );
+};
+
+export const runRouterOptionalAuthPublicScenario = async () =>
+  handleCloudFunctionEvent(
+    {
+      httpMethod: "POST",
+      path: "public",
+      body: "[]",
+      headers: {},
+      multiValueHeaders: {},
+      requestContext: {},
+    },
+    AWS.normalizeCloudFunctionEvent,
+    {
+      public: {
+        path: "public",
+        authConfig: { public: true },
+        handler: () => "public",
+      },
+    },
+    [],
+    undefined,
+    false,
+    async () => ({}),
+  );
+
+export const runRouterOptionalAuthProtectedScenario = async () =>
+  handleCloudFunctionEvent(
+    {
+      httpMethod: "POST",
+      path: "protected",
+      body: "[]",
+      headers: {},
+      multiValueHeaders: {},
+      requestContext: {},
+    },
+    AWS.normalizeCloudFunctionEvent,
+    {
+      protected: {
+        path: "protected",
+        authConfig: { anyAuthorized: true },
+        handler: () => "protected",
+      },
+    },
+    [],
+    undefined,
+    false,
+    async () => ({}),
+  );
+
+const cognitoConfig: AWS.CognitoAuthInfoConfig = {
+  userPoolId: "us-east-1_example",
+  clientId: "example-client",
+};
+
+export const runCognitoAuthInfoNoTokenScenario = async () =>
+  AWS.getCognitoAuthInfo(
+    {
+      headers: {},
+    },
+    cognitoConfig,
+  );
+
+export const runCognitoAuthInfoInvalidTokenScenario = async () =>
+  AWS.getCognitoAuthInfo(
+    {
+      headers: {
+        Authorization: "Bearer not-a-jwt",
+      },
+    },
+    cognitoConfig,
+  );
