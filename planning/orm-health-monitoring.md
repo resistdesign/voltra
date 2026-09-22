@@ -91,8 +91,8 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 
 ## MCP descriptor authorization refinement
 
-- [ ] Keep MCP descriptor/protocol requests public by default while preserving `authConfig` enforcement for functional tool calls.
-- [ ] Add an opt-in `protectDescriptorRoutes` toggle that restores whole-endpoint protection when desired.
-- [ ] Add focused MCP specs covering public descriptors, protected tool calls, and protected descriptors.
-- [ ] Update the MCP example/docs for the new default and toggle.
-- [ ] Verify focused MCP specs and package build, then open the small PR.
+- [x] Keep MCP descriptor/protocol requests public by default while preserving `authConfig` enforcement for functional tool calls.
+- [x] Add an opt-in `protectDescriptorRoutes` toggle that restores whole-endpoint protection when desired.
+- [x] Add focused MCP specs covering public descriptors, protected tool calls, and protected descriptors.
+- [x] Update the MCP example/docs for the new default and toggle.
+- [~] Verify focused MCP specs and package build, then open the small PR. Local execution was unavailable in this environment; PR CI will provide the verification evidence.
