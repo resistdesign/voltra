@@ -51,7 +51,7 @@ const MCP_TEST_TYPE_INFO_MAP: TypeInfoMap = {
   },
 };
 
-const getRouteMap = (): RouteMap =>
+const getRouteMap = (protectDescriptorRoutes: boolean = false): RouteMap =>
   addMCPToRouteMap(
     {},
     {
@@ -61,6 +61,7 @@ const getRouteMap = (): RouteMap =>
       authConfig: {
         allowedRoles: ["MCP"],
       },
+      protectDescriptorRoutes,
       tools: [
         {
           name: "whoAmI",
@@ -133,21 +134,60 @@ const runMCPRequest = async (
   method: string,
   name?: string,
   authorized: boolean = true,
+  protectDescriptorRoutes: boolean = false,
 ) =>
   handleCloudFunctionEvent(
     getEvent(body, method, name, authorized),
     AWS.normalizeCloudFunctionEvent,
-    getRouteMap(),
+    getRouteMap(protectDescriptorRoutes),
     [],
   );
 
 export const runMCPUnauthorizedScenario = async () => {
+  const body = getRequestBody("tools/call", {
+    name: "whoAmI",
+    arguments: {
+      message: "hello",
+    },
+  });
+  const response = await runMCPRequest(
+    body,
+    "tools/call",
+    "whoAmI",
+    false,
+  );
+
+  return {
+    statusCode: response.statusCode,
+    body: response.body,
+  };
+};
+
+export const runMCPPublicDescriptorScenario = async () => {
   const body = getRequestBody("server/discover");
   const response = await runMCPRequest(
     body,
     "server/discover",
     undefined,
     false,
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    serverName:
+      parsed.result._meta?.["io.modelcontextprotocol/serverInfo"]?.name,
+  };
+};
+
+export const runMCPProtectedDescriptorScenario = async () => {
+  const body = getRequestBody("server/discover");
+  const response = await runMCPRequest(
+    body,
+    "server/discover",
+    undefined,
+    false,
+    true,
   );
 
   return {
@@ -172,7 +212,12 @@ export const runMCPDiscoverScenario = async () => {
 
 export const runMCPToolsListScenario = async () => {
   const body = getRequestBody("tools/list");
-  const response = await runMCPRequest(body, "tools/list");
+  const response = await runMCPRequest(
+    body,
+    "tools/list",
+    undefined,
+    false,
+  );
   const parsed = JSON.parse(response.body);
   const tool = parsed.result.tools[0];
 
