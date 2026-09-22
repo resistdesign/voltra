@@ -144,6 +144,24 @@ export type CloudFunctionEventTransformer = (
 ) => NormalizedCloudFunctionEventData;
 
 /**
+ * Resolves authentication information from a raw cloud function event.
+ *
+ * Return an empty {@link AuthInfo} when a request has no usable credentials if
+ * unauthenticated requests should still be allowed to reach public routes.
+ * Route authorization is still enforced after resolution, so protected routes
+ * remain unavailable without the required identity or roles.
+ *
+ * If credentials must be rejected before any route is reached, enforce that at
+ * the request ingress layer instead of using pass-through auth resolution.
+ *
+ * @param event Raw cloud function event object.
+ * @returns Resolved auth information, synchronously or asynchronously.
+ */
+export type CloudFunctionAuthInfoResolver = (
+  event: any,
+) => AuthInfo | Promise<AuthInfo>;
+
+/**
  * A function that routes an event to a route handler based on a {@link RouteMap}.
  * @param event Raw cloud function event object.
  * @param eventTransformer Transformer used to normalize the event.
@@ -151,6 +169,7 @@ export type CloudFunctionEventTransformer = (
  * @param allowedOrigins Allowed origins for CORS responses.
  * @param errorShouldBeExposedToClient Optional error filter for response payloads.
  * @param debug When true, log handler inputs and outputs.
+ * @param getAuthInfo Optional auth resolver that overrides auth information from the event transformer.
  * @returns Cloud function response object.
  */
 export type CloudFunctionEventRouter = (
@@ -160,4 +179,5 @@ export type CloudFunctionEventRouter = (
   allowedOrigins: CORSPattern[],
   errorShouldBeExposedToClient?: (error: unknown) => boolean,
   debug?: boolean,
+  getAuthInfo?: CloudFunctionAuthInfoResolver,
 ) => Promise<CloudFunctionResponse>;
