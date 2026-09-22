@@ -216,10 +216,14 @@ const addMCPStandardRoutes = (
   routeMap: RouteMap,
   config: AddMCPToRouteMapConfig,
 ): RouteMap => {
-  let newRouteMap = {
-    ...routeMap,
-  };
   const authConfig = config.authConfig ?? { public: true };
+  const baseHandlerFactory = getMCPHandlerFactory(config);
+  let newRouteMap = addRouteToRouteMap(routeMap, {
+    path: config.path,
+    authConfig,
+    handlerFactory: baseHandlerFactory,
+  });
+
   for (const method of MCP_STANDARD_METHODS) {
     const handlerFactory =
       method === "tools/call"
@@ -268,6 +272,7 @@ const addMCPToolRoutes = (
 /**
  * Add a native MCP RouteMap surface to an existing Voltra RouteMap.
  *
+ * The external MCP base path remains a normal transport fallback route.
  * Standard MCP methods become ordinary child routes under `config.path`.
  * Named `tools/call` requests become `tools/call/<tool path>` routes.
  * Therefore normal Voltra route authorization runs before MCP protocol
