@@ -164,13 +164,13 @@ export const runRouterAuthResolverPublicPassThroughScenario = async () => {
   const response = await handleCloudFunctionEvent(
     buildAuthResolverEvent(),
     AWS.normalizeCloudFunctionEvent,
-    {
-      "auth-resolution": {
+    addRoutesToRouteMap({}, [
+      {
         path: "auth-resolution",
         authConfig: { public: true },
         handlerFactory: (eventData) => () => eventData.authInfo,
       },
-    },
+    ]),
     ["https://example.com"],
     undefined,
     false,
@@ -189,13 +189,13 @@ export const runRouterAuthResolverProtectedDenialScenario = async () => {
   const response = await handleCloudFunctionEvent(
     buildAuthResolverEvent(),
     AWS.normalizeCloudFunctionEvent,
-    {
-      "auth-resolution": {
+    addRoutesToRouteMap({}, [
+      {
         path: "auth-resolution",
         authConfig: { anyAuthorized: true },
         handler: () => "secure",
       },
-    },
+    ]),
     ["https://example.com"],
     undefined,
     false,
@@ -214,13 +214,13 @@ export const runRouterAuthResolverAuthenticatedScenario = async () => {
   const response = await handleCloudFunctionEvent(
     buildAuthResolverEvent(),
     AWS.normalizeCloudFunctionEvent,
-    {
-      "auth-resolution": {
+    addRoutesToRouteMap({}, [
+      {
         path: "auth-resolution",
         authConfig: { anyAuthorized: true },
         handlerFactory: (eventData) => () => eventData.authInfo,
       },
-    },
+    ]),
     ["https://example.com"],
     undefined,
     false,
