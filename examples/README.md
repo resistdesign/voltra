@@ -27,7 +27,7 @@ Use this for client route usage via platform barrels:
 - `examples/api/orm-health-monitoring.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
-Use `mcp-routing.ts` to expose authenticated MCP tools through the same RouteMap.
+Use `mcp-routing.ts` to expose MCP protocol routes plus normally-authorized tool Routes through the same RouteMap.
 Use `orm-indexing.ts` as the starting point for unified field-capability and
 backend configuration.
 Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup after out-of-band writes and schema-driven index changes.

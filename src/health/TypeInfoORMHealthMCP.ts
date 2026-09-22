@@ -268,10 +268,9 @@ export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
   /** MCP server version. Defaults to `1.0.0`. */
   version?: string;
   /**
-   * Normal Voltra route authorization applied to all Health MCP tools.
+   * Normal Voltra route authorization copied onto each Health tool Route.
    *
-   * Health operations can inspect internal state and apply destructive repairs,
-   * so authorization is intentionally required rather than defaulted.
+   * Standard MCP descriptor/protocol routes remain public by default.
    */
   authConfig: RouteAuthConfig;
   /**
@@ -313,10 +312,10 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
     path: config.path ?? "health-mcp",
     name: config.name ?? "Voltra Health",
     version: config.version ?? "1.0.0",
-    authConfig: config.authConfig,
     tools: [
       {
-        name: "healthStatus",
+        path: "healthStatus",
+        authConfig: config.authConfig,
         description:
           "Read one bounded page of persisted Voltra Health status without running audits or repairs.",
         inputTypeInfo: HEALTH_MCP_STATUS_INPUT_TYPE_INFO_PACK,
@@ -332,7 +331,8 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
         ): Promise<TypeInfoORMHealthStatusResult> => monitor.status(input),
       },
       {
-        name: "healthPreview",
+        path: "healthPreview",
+        authConfig: config.authConfig,
         description:
           "Run one bounded, non-destructive Voltra ORM/index health pass. Reports orphaned indexes, schema drift, suspicious state, retention cleanup, and whether more work remains.",
         outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
@@ -343,7 +343,8 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
       ...(config.enableRepairTool
         ? [
             {
-              name: "healthRepair",
+              path: "healthRepair",
+              authConfig: config.authConfig,
               description:
                 "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true when additional bounded work remains.",
               outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,

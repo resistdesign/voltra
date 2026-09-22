@@ -1,5 +1,6 @@
 import { addMCPToRouteMap } from "./MCPRouteMap";
 import type { TypeInfoMap } from "../../common/TypeParsing";
+import { mergeStringPaths } from "../../common/Routing";
 import {
   AWS,
   handleCloudFunctionEvent,
@@ -51,19 +52,25 @@ const MCP_TEST_TYPE_INFO_MAP: TypeInfoMap = {
   },
 };
 
-const getRouteMap = (): RouteMap =>
+const getRouteMap = (
+  standardAuthConfig?: {
+    public?: boolean;
+    allowedRoles?: string[];
+  },
+): RouteMap =>
   addMCPToRouteMap(
     {},
     {
       path: "mcp",
       name: "Voltra MCP Test",
       version: "1.0.0",
-      authConfig: {
-        allowedRoles: ["MCP"],
-      },
+      ...(standardAuthConfig ? { authConfig: standardAuthConfig } : {}),
       tools: [
         {
-          name: "whoAmI",
+          path: "whoAmI",
+          authConfig: {
+            allowedRoles: ["MCP"],
+          },
           description: "Return the authenticated caller and supplied message.",
           inputTypeInfo: {
             entryTypeName: "WhoAmIInput",
@@ -142,6 +149,26 @@ const runMCPRequest = async (
   );
 
 export const runMCPUnauthorizedScenario = async () => {
+  const body = getRequestBody("tools/call", {
+    name: "whoAmI",
+    arguments: {
+      message: "hello",
+    },
+  });
+  const response = await runMCPRequest(
+    body,
+    "tools/call",
+    "whoAmI",
+    false,
+  );
+
+  return {
+    statusCode: response.statusCode,
+    body: response.body,
+  };
+};
+
+export const runMCPPublicDescriptorScenario = async () => {
   const body = getRequestBody("server/discover");
   const response = await runMCPRequest(
     body,
@@ -149,10 +176,57 @@ export const runMCPUnauthorizedScenario = async () => {
     undefined,
     false,
   );
+  const parsed = JSON.parse(response.body);
 
   return {
     statusCode: response.statusCode,
-    body: response.body,
+    serverName:
+      parsed.result._meta?.["io.modelcontextprotocol/serverInfo"]?.name,
+  };
+};
+
+export const runMCPNativeRouteKeysScenario = () => {
+  const routeMap = getRouteMap();
+  const routes = [
+    {
+      label: "mcp",
+      path: mergeStringPaths("", "mcp"),
+    },
+    {
+      label: "mcp/server/discover",
+      path: mergeStringPaths("mcp", "server/discover"),
+    },
+    {
+      label: "mcp/tools/list",
+      path: mergeStringPaths("mcp", "tools/list"),
+    },
+    {
+      label: "mcp/tools/call",
+      path: mergeStringPaths("mcp", "tools/call"),
+    },
+    {
+      label: "mcp/tools/call/whoAmI",
+      path: mergeStringPaths("mcp", "tools/call/whoAmI"),
+    },
+  ];
+
+  return routes.map(({ label, path }) => ({
+    path: label,
+    exists: Object.prototype.hasOwnProperty.call(routeMap, path),
+    authConfig: routeMap[path]?.authConfig,
+  }));
+};
+
+export const runMCPStandardRouteAuthOverrideScenario = () => {
+  const routeMap = getRouteMap({
+    allowedRoles: ["DescriptorAdmin"],
+  });
+  const descriptorPath = mergeStringPaths("mcp", "server/discover");
+  const toolPath = mergeStringPaths("mcp", "tools/call/whoAmI");
+
+  return {
+    descriptorAuthConfig: routeMap[descriptorPath]?.authConfig,
+    toolAuthConfig: routeMap[toolPath]?.authConfig,
   };
 };
 
@@ -172,7 +246,12 @@ export const runMCPDiscoverScenario = async () => {
 
 export const runMCPToolsListScenario = async () => {
   const body = getRequestBody("tools/list");
-  const response = await runMCPRequest(body, "tools/list");
+  const response = await runMCPRequest(
+    body,
+    "tools/list",
+    undefined,
+    false,
+  );
   const parsed = JSON.parse(response.body);
   const tool = parsed.result.tools[0];
 
