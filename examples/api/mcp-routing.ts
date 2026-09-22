@@ -6,8 +6,11 @@ import {
 /**
  * Add a stateless MCP endpoint to an existing Voltra RouteMap.
  *
- * The whole endpoint uses normal Voltra route authorization. Tool factories
- * receive the normalized request context, including the authenticated caller.
+ * Descriptor/protocol requests are public by default so MCP clients can
+ * discover the server before authenticating. Functional tool calls still use
+ * normal Voltra route authorization. Set `protectDescriptorRoutes: true` to
+ * protect the whole MCP endpoint instead. Tool factories receive the normalized
+ * request context, including the authenticated caller.
  */
 export const MCP_ROUTE_MAP: RouteMap = addMCPToRouteMap(
   {},
@@ -18,6 +21,7 @@ export const MCP_ROUTE_MAP: RouteMap = addMCPToRouteMap(
     authConfig: {
       allowedRoles: ["MCP"],
     },
+    protectDescriptorRoutes: false,
     tools: [
       {
         name: "whoAmI",
