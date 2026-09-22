@@ -148,13 +148,13 @@ export const runRouterStandardHTTPResponseDetectionScenario = () => ({
 });
 
 export const runRouterAuthResolverScenario = async () => {
-  const routeMap = {
-    status: {
+  const routeMap = addRoutesToRouteMap({}, [
+    {
       path: "status",
       authConfig: { anyAuthorized: true },
       handlerFactory: (eventData: any) => () => eventData.authInfo,
     },
-  };
+  ]);
 
   return handleCloudFunctionEvent(
     {
@@ -188,13 +188,13 @@ export const runRouterOptionalAuthPublicScenario = async () =>
       requestContext: {},
     },
     AWS.normalizeCloudFunctionEvent,
-    {
-      public: {
+    addRoutesToRouteMap({}, [
+      {
         path: "public",
         authConfig: { public: true },
         handler: () => "public",
       },
-    },
+    ]),
     [],
     undefined,
     false,
@@ -212,13 +212,13 @@ export const runRouterOptionalAuthProtectedScenario = async () =>
       requestContext: {},
     },
     AWS.normalizeCloudFunctionEvent,
-    {
-      protected: {
+    addRoutesToRouteMap({}, [
+      {
         path: "protected",
         authConfig: { anyAuthorized: true },
         handler: () => "protected",
       },
-    },
+    ]),
     [],
     undefined,
     false,
