@@ -118,6 +118,64 @@
         "standardResponse": true,
         "plainObject": false
       }
+    },
+    {
+      "export": "runRouterAuthResolverScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "headers": {
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+        },
+        "body": "{\"userId\":\"resolved-user\",\"roles\":[\"member\"]}"
+      }
+    },
+    {
+      "export": "runRouterOptionalAuthPublicScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "headers": {
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+        },
+        "body": "\"public\""
+      }
+    },
+    {
+      "export": "runRouterOptionalAuthProtectedScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 401,
+        "headers": {
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
+        },
+        "body": "Unauthorized"
+      }
+    },
+    {
+      "export": "runCognitoAuthInfoNoTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "roles": []
+      }
+    },
+    {
+      "export": "runCognitoAuthInfoInvalidTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "roles": []
+      }
     }
   ]
 }
