@@ -43,10 +43,12 @@ import {
 } from "../../common/Routing";
 import { logFunctionCall } from "../../common/Logging";
 import { isStandardHTTPResponse } from "./Utils";
+import { getRoutePathCandidates } from "./MCP";
 
 export * from "./Types";
 export * from "./AWS";
 export * from "./Utils";
+export * from "./MCP";
 
 /**
  * A utility function to add a route to a route map by path.
@@ -192,8 +194,19 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
     const normalizedOrigin =
       typeof providedOrigin === "string" ? providedOrigin : "";
     const normalizedBody = Array.isArray(body) ? body : [body];
-    const normalizedPath = getPathString(getPathArray(`${path}`));
-    const route = routeMap[normalizedPath];
+    const routePathCandidates = getRoutePathCandidates(transformedEvent).map(
+      (candidatePath) => getPathString(getPathArray(`${candidatePath}`)),
+    );
+    let normalizedPath = routePathCandidates[0] ?? "";
+    let route: Route | undefined;
+
+    for (const candidatePath of routePathCandidates) {
+      if (Object.prototype.hasOwnProperty.call(routeMap, candidatePath)) {
+        normalizedPath = candidatePath;
+        route = routeMap[candidatePath];
+        break;
+      }
+    }
     const responseHeaders = getHeadersWithCORS(
       normalizedOrigin,
       allowedOrigins,
