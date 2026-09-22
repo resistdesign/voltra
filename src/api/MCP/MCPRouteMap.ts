@@ -2,8 +2,8 @@
  * @packageDocumentation
  *
  * Route map helpers that expose MCP tools through the Voltra Router layer.
- * Use {@link addMCPToRouteMap} to add one authenticated, stateless MCP endpoint
- * to an existing RouteMap.
+ * Use {@link addMCPToRouteMap} to add one stateless MCP endpoint with
+ * independently configurable descriptor and functional authorization.
  */
 import {
   createMcpHandler,
@@ -215,9 +215,6 @@ const getMCPServer = (
   });
 
   for (const tool of config.tools) {
-    const handler = tool.handler
-      ? tool.handler
-      : tool.handlerFactory(eventData);
     const inputJSONSchema = tool.inputTypeInfo
       ? getJSONSchemaFromTypeInfoPack(tool.inputTypeInfo)
       : DEFAULT_MCP_TOOL_INPUT_SCHEMA;
@@ -239,6 +236,9 @@ const getMCPServer = (
         ...(tool.annotations ? { annotations: tool.annotations } : {}),
       },
       async (input) => {
+        const handler = tool.handler
+          ? tool.handler
+          : tool.handlerFactory(eventData);
         const result = await handler(input);
 
         return {
