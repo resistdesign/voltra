@@ -1,9 +1,11 @@
 /**
  * @packageDocumentation
  *
- * Route map helpers that expose MCP tools through the Voltra Router layer.
- * Use {@link addMCPToRouteMap} to add one authenticated, stateless MCP endpoint
- * to an existing RouteMap.
+ * Native RouteMap helpers for exposing MCP protocol methods and tools.
+ *
+ * MCP still uses one external HTTP endpoint. After cloud-specific event
+ * normalization, Voltra maps the MCP method/name to ordinary internal RouteMap
+ * paths so normal route authorization runs before MCP handlers.
  */
 import {
   createMcpHandler,
@@ -12,11 +14,16 @@ import {
   type ToolAnnotations,
 } from "@modelcontextprotocol/server";
 import {
+  MCP_STANDARD_METHODS,
   addRouteToRouteMap,
   type NormalizedCloudFunctionEventData,
+  type Route,
   type RouteAuthConfig,
+  type RouteHandler,
+  type RouteHandlerFactory,
   type RouteMap,
 } from "../Router";
+import { mergeStringPaths } from "../../common/Routing";
 import {
   getJSONSchemaFromTypeInfoPack,
   type TypeInfoPack,
@@ -34,32 +41,12 @@ const DEFAULT_MCP_TOOL_INPUT_SCHEMA = {
 export type MCPToolAnnotations = ToolAnnotations;
 
 /**
- * Handler invoked when an MCP client calls a tool.
+ * A normal Voltra Route exposed as an MCP tool.
+ *
+ * The route path is also the MCP tool name. Its normal `authConfig` controls
+ * tool execution exactly as it would for any other Voltra route.
  */
-export type MCPToolHandler<
-  TInput = Record<string, unknown>,
-  TOutput = unknown,
-> = (input: TInput) => TOutput | Promise<TOutput>;
-
-/**
- * Factory used to create an MCP tool handler with request context injected.
- */
-export type MCPToolHandlerFactory<
-  TInput = Record<string, unknown>,
-  TOutput = unknown,
-> = (
-  eventData: NormalizedCloudFunctionEventData,
-) => MCPToolHandler<TInput, TOutput>;
-
-/**
- * Tool exposed through an MCP route.
- */
-export type MCPTool<
-  TInput = Record<string, unknown>,
-  TOutput = unknown,
-> = {
-  /** Tool name exposed to the MCP client. */
-  name: string;
+export type MCPToolRoute = Route & {
   /** Optional human-friendly title. */
   title?: string;
   /** Description used by the model to decide when to call the tool. */
@@ -78,33 +65,35 @@ export type MCPTool<
   outputTypeInfo?: TypeInfoPack;
   /** MCP behavior hints such as read-only or destructive operation hints. */
   annotations?: MCPToolAnnotations;
-} & (
-  | {
-      /** Direct tool handler. */
-      handler: MCPToolHandler<TInput, TOutput>;
-      handlerFactory?: never;
-    }
-  | {
-      handler?: never;
-      /** Factory that receives the normalized Voltra request context. */
-      handlerFactory: MCPToolHandlerFactory<TInput, TOutput>;
-    }
-);
+};
+
+/**
+ * Backward-compatible MCP tool type alias.
+ */
+export type MCPTool<
+  TInput = Record<string, unknown>,
+  TOutput = unknown,
+> = MCPToolRoute;
 
 /**
  * Configuration for adding a stateless MCP endpoint to a Voltra RouteMap.
  */
 export type AddMCPToRouteMapConfig = {
-  /** Route path for the MCP endpoint. */
+  /** External base route path for the MCP endpoint. */
   path: string;
   /** MCP server name advertised to clients. */
   name: string;
   /** MCP server version advertised to clients. */
   version: string;
-  /** Normal Voltra route authorization applied to the whole MCP endpoint. */
+  /**
+   * Authorization for standard MCP protocol/descriptor routes.
+   *
+   * Defaults to public. Tool execution authorization belongs to each tool
+   * Route's own `authConfig`.
+   */
   authConfig?: RouteAuthConfig;
-  /** Tools exposed by the MCP endpoint. */
-  tools: MCPTool<any, any>[];
+  /** Normal Voltra Routes exposed as MCP tools. */
+  tools: MCPToolRoute[];
 };
 
 const getRequestHeaders = (
@@ -155,6 +144,12 @@ const getToolResultText = (result: unknown): string => {
   return JSON.stringify(result);
 };
 
+const getToolHandler = (
+  tool: MCPToolRoute,
+  eventData: NormalizedCloudFunctionEventData,
+): RouteHandler =>
+  tool.handler ? tool.handler : tool.handlerFactory(eventData);
+
 const getMCPServer = (
   config: AddMCPToRouteMapConfig,
   eventData: NormalizedCloudFunctionEventData,
@@ -165,9 +160,6 @@ const getMCPServer = (
   });
 
   for (const tool of config.tools) {
-    const handler = tool.handler
-      ? tool.handler
-      : tool.handlerFactory(eventData);
     const inputJSONSchema = tool.inputTypeInfo
       ? getJSONSchemaFromTypeInfoPack(tool.inputTypeInfo)
       : DEFAULT_MCP_TOOL_INPUT_SCHEMA;
@@ -180,7 +172,7 @@ const getMCPServer = (
       : undefined;
 
     server.registerTool(
-      tool.name,
+      tool.path,
       {
         ...(tool.title ? { title: tool.title } : {}),
         ...(tool.description ? { description: tool.description } : {}),
@@ -189,6 +181,7 @@ const getMCPServer = (
         ...(tool.annotations ? { annotations: tool.annotations } : {}),
       },
       async (input) => {
+        const handler = getToolHandler(tool, eventData);
         const result = await handler(input);
 
         return {
@@ -207,30 +200,90 @@ const getMCPServer = (
   return server;
 };
 
+const getMCPHandlerFactory = (
+  config: AddMCPToRouteMapConfig,
+): RouteHandlerFactory =>
+  (eventData) => async () => {
+    const mcpHandler = createMcpHandler(() =>
+      getMCPServer(config, eventData),
+    );
+
+    return mcpHandler.fetch(getMCPRequest(eventData), {
+      parsedBody: eventData.body,
+    });
+  };
+
+const addMCPStandardRoutes = (
+  routeMap: RouteMap,
+  config: AddMCPToRouteMapConfig,
+): RouteMap => {
+  let newRouteMap = {
+    ...routeMap,
+  };
+  const authConfig = config.authConfig ?? { public: true };
+  const handlerFactory = getMCPHandlerFactory(config);
+
+  for (const method of MCP_STANDARD_METHODS) {
+    newRouteMap = addRouteToRouteMap(
+      newRouteMap,
+      {
+        path: method,
+        authConfig,
+        handlerFactory,
+      },
+      config.path,
+    );
+  }
+
+  return newRouteMap;
+};
+
+const addMCPToolRoutes = (
+  routeMap: RouteMap,
+  config: AddMCPToRouteMapConfig,
+): RouteMap => {
+  let newRouteMap = {
+    ...routeMap,
+  };
+  const handlerFactory = getMCPHandlerFactory(config);
+
+  for (const tool of config.tools) {
+    const path = mergeStringPaths("tools/call", tool.path);
+
+    newRouteMap = addRouteToRouteMap(
+      newRouteMap,
+      {
+        path,
+        authConfig: tool.authConfig,
+        handlerFactory,
+      },
+      config.path,
+    );
+  }
+
+  return newRouteMap;
+};
+
 /**
- * Add a stateless MCP tool endpoint to an existing Voltra RouteMap.
+ * Add a native MCP RouteMap surface to an existing Voltra RouteMap.
  *
- * The endpoint uses the route's normal Voltra authorization. Tool
- * handlerFactory callbacks receive the same normalized caller context as
- * ordinary route handler factories, including authenticated user id and roles.
+ * Standard MCP methods become ordinary child routes under `config.path`.
+ * Named `tools/call` requests become `tools/call/<tool path>` routes.
+ * Therefore normal Voltra route authorization runs before MCP protocol
+ * handling, and every tool owns its own normal `authConfig`.
+ *
+ * Standard MCP protocol/descriptor routes are public by default. Set
+ * `config.authConfig` only when those standard routes themselves should be
+ * protected.
  *
  * @category MCP
- * @returns New route map with the MCP endpoint appended.
+ * @returns New RouteMap with MCP standard routes and tool routes appended.
  */
 export const addMCPToRouteMap = (
   routeMap: RouteMap,
   config: AddMCPToRouteMapConfig,
 ): RouteMap =>
-  addRouteToRouteMap(routeMap, {
-    path: config.path,
-    authConfig: config.authConfig,
-    handlerFactory: (eventData) => async () => {
-      const mcpHandler = createMcpHandler(() =>
-        getMCPServer(config, eventData),
-      );
-
-      return mcpHandler.fetch(getMCPRequest(eventData), {
-        parsedBody: eventData.body,
-      });
-    },
-  });
+  addMCPToolRoutes(
+    addMCPStandardRoutes(routeMap, config),
+    config,
+  );
