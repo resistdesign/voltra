@@ -84,9 +84,17 @@ model; destructive MCP repair is opt-in.
 See `examples/api/orm-health-monitoring.ts` and the live demo under
 `site/api/health.ts`.
 
+### Optional API Authentication
+
+`handleCloudFunctionEvent` can receive a `getAuthInfo` resolver that runs independently from cloud-event normalization. This is useful when public routes should remain reachable without credentials while authenticated requests still populate `authInfo` for protected routes and handler factories.
+
+The AWS helper `AWS.getCognitoAuthInfo` validates Cognito bearer tokens and resolves missing or invalid credentials as anonymous. Protected routes still return `Unauthorized` through normal Voltra route authorization.
+
+See `examples/api/optional-auth.ts`.
+
 ### IaC Auth/Gateway Example
 
-`addGateway` authorizer provider ARNs can use CloudFormation intrinsics:
+`addGateway` authorizer provider ARNs can use CloudFormation intrinsics. Gateway authorizers reject unauthenticated requests before routing; use the `handleCloudFunctionEvent` `getAuthInfo` option instead when public-route pass-through is required.
 
 ```ts
 import { addGateway } from "@resistdesign/voltra/iac/packs";
@@ -197,6 +205,7 @@ EasyLayout now has:
 - Index: `examples/README.md`
 - Client routing: `examples/routing/app-routing.ts`
 - Backend API routing: `examples/api/backend-routing.ts`
+- Optional API auth: `examples/api/optional-auth.ts`
 - Forms: `examples/forms/`
   - `examples/forms/auto-form-validation-customization.tsx`
 - Layout: `examples/layout/`
