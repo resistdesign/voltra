@@ -11,6 +11,15 @@
       }
     },
     {
+      "export": "runHealthMCPPublicDescriptorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "serverName": "Voltra Health Test"
+      }
+    },
+    {
       "export": "runHealthMCPToolsScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
