@@ -1,106 +1,15 @@
-import { createPublicKey, verify as verifySignature } from "node:crypto";
+import { CognitoJwtVerifier } from "aws-jwt-verify";
+import type { CognitoJwtVerifierSingleUserPool } from "aws-jwt-verify/cognito-verifier";
 import {
   AuthInfo,
   CloudFunctionEventTransformer,
   NormalizedCloudFunctionEventData,
 } from "./Types";
 
-type CognitoJwk = {
-  kid?: string;
-  kty?: string;
-  alg?: string;
-  use?: string;
-  n?: string;
-  e?: string;
-};
-
-type CognitoJwksCacheEntry = {
-  expiresAt: number;
-  keys: CognitoJwk[];
-};
-
-const COGNITO_JWKS_CACHE_TTL_MS = 60 * 60 * 1000;
-const cognitoJwksCache = new Map<string, CognitoJwksCacheEntry>();
-
-const decodeBase64UrlBytes = (value: string): Uint8Array => {
-  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const paddingLength = (4 - (base64.length % 4)) % 4;
-  const decoded = atob(`${base64}${"=".repeat(paddingLength)}`);
-  const bytes = new Uint8Array(decoded.length);
-
-  for (let i = 0; i < decoded.length; i += 1) {
-    bytes[i] = decoded.charCodeAt(i);
-  }
-
-  return bytes;
-};
-
-const decodeBase64UrlJson = <T>(value: string): T | undefined => {
-  try {
-    return JSON.parse(
-      new TextDecoder().decode(decodeBase64UrlBytes(value)),
-    ) as T;
-  } catch (error) {
-    return undefined;
-  }
-};
-
-const getCognitoRegion = (userPoolId: string): string | undefined => {
-  const separatorIndex = userPoolId.indexOf("_");
-
-  return separatorIndex > 0 ? userPoolId.slice(0, separatorIndex) : undefined;
-};
-
 const getBearerToken = (authorizationHeader: string): string | undefined => {
   const match = /^\s*Bearer\s+(.+?)\s*$/i.exec(authorizationHeader);
 
   return match?.[1];
-};
-
-const getCognitoJwks = async (
-  issuer: string,
-  forceRefresh: boolean = false,
-): Promise<CognitoJwk[]> => {
-  const cached = cognitoJwksCache.get(issuer);
-
-  if (!forceRefresh && cached && cached.expiresAt > Date.now()) {
-    return cached.keys;
-  }
-
-  const response = await fetch(`${issuer}/.well-known/jwks.json`);
-
-  if (!response.ok) {
-    throw new Error("Unable to load Cognito signing keys.");
-  }
-
-  const data = (await response.json()) as { keys?: CognitoJwk[] };
-  const keys = Array.isArray(data.keys) ? data.keys : [];
-
-  if (keys.length === 0) {
-    throw new Error("Cognito signing keys were empty.");
-  }
-
-  cognitoJwksCache.set(issuer, {
-    expiresAt: Date.now() + COGNITO_JWKS_CACHE_TTL_MS,
-    keys,
-  });
-
-  return keys;
-};
-
-const getCognitoJwk = async (
-  issuer: string,
-  kid: string,
-): Promise<CognitoJwk | undefined> => {
-  let keys = await getCognitoJwks(issuer);
-  let key = keys.find((item) => item.kid === kid);
-
-  if (!key) {
-    keys = await getCognitoJwks(issuer, true);
-    key = keys.find((item) => item.kid === kid);
-  }
-
-  return key;
 };
 
 const getStringArray = (value: unknown): string[] => {
@@ -171,9 +80,42 @@ export namespace AWS {
     tokenUse: "id" | "access";
   };
 
+
+  type CognitoAuthInfoVerifier =
+    CognitoJwtVerifierSingleUserPool<CognitoAuthInfoConfig>;
+
+  const cognitoAuthInfoVerifierMap = new Map<string, CognitoAuthInfoVerifier>();
+
+  const getCognitoAuthInfoVerifier = (
+    config: CognitoAuthInfoConfig,
+  ): CognitoAuthInfoVerifier => {
+    const { userPoolId, clientId, tokenUse } = config;
+    const clientIds = Array.isArray(clientId)
+      ? [...clientId].sort()
+      : [clientId];
+    const key = JSON.stringify([userPoolId, tokenUse, ...clientIds]);
+    let verifier = cognitoAuthInfoVerifierMap.get(key);
+
+    if (!verifier) {
+      verifier = CognitoJwtVerifier.create({
+        userPoolId,
+        clientId,
+        tokenUse,
+      });
+      cognitoAuthInfoVerifierMap.set(key, verifier);
+    }
+
+    return verifier;
+  };
+
   /**
    * Validate a Cognito bearer token from the raw cloud function event and
    * normalize its subject and groups into Voltra auth info.
+   *
+   * Token signature, issuer, expiration/not-before claims, token use, and app
+   * client are verified by AWS's `aws-jwt-verify` Cognito verifier. The
+   * verifier also discovers, fetches, caches, and refreshes the Cognito signing
+   * keys for the configured user pool.
    *
    * Missing, malformed, expired, incorrectly scoped, or unverifiable tokens
    * resolve to anonymous auth info instead of throwing. This allows
@@ -194,94 +136,17 @@ export namespace AWS {
     config: CognitoAuthInfoConfig,
   ): Promise<AuthInfo> => {
     try {
-      const { userPoolId, clientId, tokenUse } = config;
-      const region = getCognitoRegion(userPoolId);
       const authorizationHeader = getHeadersFromEvent(event).authorization?.[0];
       const token = authorizationHeader
         ? getBearerToken(authorizationHeader)
         : undefined;
 
-      if (!region || !token) {
+      if (!token) {
         return {};
       }
 
-      const tokenParts = token.split(".");
-
-      if (tokenParts.length !== 3) {
-        return {};
-      }
-
-      const [encodedHeader, encodedPayload, encodedSignature] = tokenParts;
-      const header = decodeBase64UrlJson<{
-        alg?: string;
-        kid?: string;
-      }>(encodedHeader);
-      const payload = decodeBase64UrlJson<Record<string, unknown>>(
-        encodedPayload,
-      );
-
-      if (
-        !header ||
-        !payload ||
-        header.alg !== "RS256" ||
-        typeof header.kid !== "string"
-      ) {
-        return {};
-      }
-
-      const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
-      const jwk = await getCognitoJwk(issuer, header.kid);
-
-      if (
-        !jwk ||
-        (jwk.alg !== undefined && jwk.alg !== "RS256") ||
-        (jwk.use !== undefined && jwk.use !== "sig")
-      ) {
-        return {};
-      }
-
-      const publicKey = createPublicKey({
-        key: jwk as any,
-        format: "jwk",
-      });
-      const signatureIsValid = verifySignature(
-        "RSA-SHA256",
-        new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`),
-        publicKey,
-        decodeBase64UrlBytes(encodedSignature),
-      );
-
-      if (!signatureIsValid) {
-        return {};
-      }
-
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      const expiresAt = payload.exp;
-      const notBefore = payload.nbf;
-
-      if (
-        payload.iss !== issuer ||
-        payload.token_use !== tokenUse ||
-        typeof expiresAt !== "number" ||
-        expiresAt <= nowSeconds ||
-        (typeof notBefore === "number" && notBefore > nowSeconds)
-      ) {
-        return {};
-      }
-
-      const acceptedClientIds = Array.isArray(clientId)
-        ? clientId
-        : [clientId];
-      const tokenClientId =
-        tokenUse === "id" ? payload.aud : payload.client_id;
-
-      if (
-        typeof tokenClientId !== "string" ||
-        !acceptedClientIds.includes(tokenClientId)
-      ) {
-        return {};
-      }
-
+      const verifier = getCognitoAuthInfoVerifier(config);
+      const payload = await verifier.verify(token);
       const userId = payload.sub;
 
       if (typeof userId !== "string" || !userId) {
