@@ -32,6 +32,18 @@
       "expectation": {}
     },
     {
+      "export": "runCognitoAuthInfoWrongClientScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    },
+    {
+      "export": "runCognitoAuthInfoExpiredTokenScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {}
+    },
+    {
       "export": "runCognitoAuthInfoMissingTokenScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
