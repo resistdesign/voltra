@@ -1,5 +1,13 @@
 import { getRoutePathCandidates } from "./MCP";
+import { getPathArray } from "../../common/Routing";
 import type { NormalizedCloudFunctionEventData } from "./Types";
+
+const getReadableRoutePathCandidates = (
+  eventData: NormalizedCloudFunctionEventData,
+): string[] =>
+  getRoutePathCandidates(eventData).map((path) =>
+    getPathArray(path).join("/"),
+  );
 
 const getEventData = (
   body: unknown,
@@ -13,13 +21,13 @@ const getEventData = (
 });
 
 export const runNormalRoutePathScenario = () =>
-  getRoutePathCandidates({
+  getReadableRoutePathCandidates({
     ...getEventData({ ok: true }),
     path: "status",
   });
 
 export const runModernMCPDescriptorRoutePathScenario = () =>
-  getRoutePathCandidates(
+  getReadableRoutePathCandidates(
     getEventData(
       {
         jsonrpc: "2.0",
@@ -33,7 +41,7 @@ export const runModernMCPDescriptorRoutePathScenario = () =>
   );
 
 export const runModernMCPToolRoutePathScenario = () =>
-  getRoutePathCandidates(
+  getReadableRoutePathCandidates(
     getEventData(
       {
         jsonrpc: "2.0",
@@ -52,7 +60,7 @@ export const runModernMCPToolRoutePathScenario = () =>
   );
 
 export const runLegacyMCPToolRoutePathScenario = () =>
-  getRoutePathCandidates(
+  getReadableRoutePathCandidates(
     getEventData({
       jsonrpc: "2.0",
       id: 1,
