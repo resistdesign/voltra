@@ -1,3 +1,4 @@
+import { CognitoJwtVerifier } from "aws-jwt-verify";
 import {
   AuthInfo,
   CloudFunctionEventTransformer,
@@ -8,6 +9,31 @@ import {
  * AWS specific utilities for processing routing and normalizing Cloud Function events.
  * */
 export namespace AWS {
+  /**
+   * Configuration for resolving Cognito authentication directly from a bearer token.
+   */
+  export type CognitoAuthInfoConfig = {
+    /**
+     * Cognito User Pool id that issued the token.
+     */
+    userPoolId: string;
+    /**
+     * Cognito app client id, or accepted app client ids, for token validation.
+     */
+    clientId: string | string[];
+    /**
+     * Cognito token type to accept.
+     *
+     * @defaultValue "access"
+     */
+    tokenUse?: "access" | "id";
+  };
+
+  const cognitoVerifierMap = new Map<
+    string,
+    ReturnType<typeof CognitoJwtVerifier.create>
+  >();
+
   /**
    * An AWS specific Cloud Function event.
    * */
@@ -116,6 +142,79 @@ export namespace AWS {
     return httpMethod;
   };
 
+  const getCleanRoles = (roles: unknown): string[] =>
+    Array.isArray(roles)
+      ? roles.filter((role): role is string => typeof role === "string")
+      : typeof roles === "string"
+        ? roles
+            .split(",")
+            .map((x) => x.trim())
+            .filter((x) => !!x)
+        : [];
+
+  /**
+   * Resolve Cognito auth information from an Authorization bearer token.
+   *
+   * Missing, malformed, expired, or otherwise invalid credentials resolve to
+   * empty auth information instead of rejecting the request. This allows Voltra
+   * public routes to remain reachable while protected routes still reject the
+   * request through their route auth configuration.
+   *
+   * @returns Verified user id and Cognito groups, or empty auth information.
+   */
+  export const getCognitoAuthInfo = async (
+    /**
+     * AWS Cloud Function event containing the incoming Authorization header.
+     */
+    event: IAWSCloudFunctionEvent,
+    /**
+     * Cognito token verification configuration.
+     */
+    config: CognitoAuthInfoConfig,
+  ): Promise<AuthInfo> => {
+    const { userPoolId, clientId, tokenUse = "access" } = config;
+    const headers = getHeadersFromEvent(event);
+    const authorization = headers.authorization?.[0] ?? "";
+    const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+    if (!match) {
+      return {
+        userId: undefined,
+        roles: [],
+      };
+    }
+
+    const verifierKey = JSON.stringify({
+      userPoolId,
+      clientId,
+      tokenUse,
+    });
+    let verifier = cognitoVerifierMap.get(verifierKey);
+
+    if (!verifier) {
+      verifier = CognitoJwtVerifier.create({
+        userPoolId,
+        clientId,
+        tokenUse,
+      });
+      cognitoVerifierMap.set(verifierKey, verifier);
+    }
+
+    try {
+      const payload = await verifier.verify(match[1]);
+
+      return {
+        userId: typeof payload.sub === "string" ? payload.sub : undefined,
+        roles: getCleanRoles(payload["cognito:groups"]),
+      };
+    } catch (error) {
+      return {
+        userId: undefined,
+        roles: [],
+      };
+    }
+  };
+
   /**
    * @returns Normalized auth info with user id and roles.
    */
@@ -135,14 +234,7 @@ export namespace AWS {
         } = {},
       } = {},
     } = event;
-    const cleanRoles = Array.isArray(roles)
-      ? roles
-      : typeof roles === "string"
-        ? roles
-            .split(",")
-            .map((x) => x.trim())
-            .filter((x) => !!x)
-        : [];
+    const cleanRoles = getCleanRoles(roles);
 
     return {
       userId,
