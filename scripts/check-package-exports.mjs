@@ -34,7 +34,7 @@ const requiredDistFiles = [
 const requiredRuntimeExports = [
   {
     distFilePath: "api/index.js",
-    names: ["addRoutesToRouteMap", "handleCloudFunctionEvent"],
+    names: ["AWS", "addRoutesToRouteMap", "handleCloudFunctionEvent"],
   },
   {
     distFilePath: "common/index.js",
@@ -229,11 +229,12 @@ const checkTypeContractWithTypeScript = async () => {
 import type {
   DynamoDBSpecificConfig,
   InMemoryFileSpecificConfig,
+  CloudFunctionAuthInfoGetter,
   InMemorySpecificConfig,
   RouteMap,
   S3SpecificConfig,
 } from "@resistdesign/voltra/api";
-import { addRoutesToRouteMap, handleCloudFunctionEvent } from "@resistdesign/voltra/api";
+import { AWS, addRoutesToRouteMap, handleCloudFunctionEvent } from "@resistdesign/voltra/api";
 import type { TypeInfo, TypeInfoMap } from "@resistdesign/voltra/common";
 import { TypeInfoORMServiceError } from "@resistdesign/voltra/common";
 import { createWebFormRenderer, AutoField } from "@resistdesign/voltra/web";
@@ -262,6 +263,12 @@ const dynamoConfig: DynamoDBSpecificConfig = {};
 const inMemoryConfig: InMemorySpecificConfig = {};
 const inMemoryFileConfig: InMemoryFileSpecificConfig = {};
 const s3Config: S3SpecificConfig = { bucketName: "test-bucket", s3Config: {} };
+const authInfoGetter: CloudFunctionAuthInfoGetter = (event) =>
+  AWS.getCognitoAuthInfo(event, {
+    userPoolId: "us-east-1_example",
+    clientId: "example-client",
+    tokenUse: "id",
+  });
 const healthRecord: HealthRecord = {
   id: "health-1",
   kind: "run",
@@ -286,6 +293,8 @@ void dynamoConfig;
 void inMemoryConfig;
 void inMemoryFileConfig;
 void s3Config;
+void authInfoGetter;
+void AWS;
 void healthRecord;
 void healthStoreType;
 void healthMonitorConfigType;
