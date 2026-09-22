@@ -17,7 +17,6 @@ import {
   type RouteAuthConfig,
   type RouteMap,
 } from "../Router";
-import { getRouteIsAuthorized } from "../Router/Auth";
 import {
   getJSONSchemaFromTypeInfoPack,
   type TypeInfoPack,
@@ -190,8 +189,18 @@ const getMCPRequestRequiresFunctionalAuth = (
 
 const getMCPRouteAuthConfig = (
   config: AddMCPToRouteMapConfig,
-): RouteAuthConfig =>
-  config.protectDescriptorRoutes ? (config.authConfig ?? {}) : { public: true };
+  eventData: NormalizedCloudFunctionEventData,
+): RouteAuthConfig => {
+  if (config.protectDescriptorRoutes) {
+    return config.authConfig ?? {};
+  }
+
+  if (getMCPRequestRequiresFunctionalAuth(eventData)) {
+    return config.authConfig ?? {};
+  }
+
+  return { public: true };
+};
 
 const getToolResultText = (result: unknown): string => {
   if (typeof result === "string") {
@@ -275,18 +284,9 @@ export const addMCPToRouteMap = (
 ): RouteMap =>
   addRouteToRouteMap(routeMap, {
     path: config.path,
-    authConfig: getMCPRouteAuthConfig(config),
+    authConfigFactory: (eventData) =>
+      getMCPRouteAuthConfig(config, eventData),
     handlerFactory: (eventData) => async () => {
-      const functionalRequestIsAuthorized =
-        !getMCPRequestRequiresFunctionalAuth(eventData) ||
-        getRouteIsAuthorized(eventData.authInfo, config.authConfig ?? {});
-
-      if (!functionalRequestIsAuthorized) {
-        return new Response("Unauthorized", {
-          status: 401,
-        });
-      }
-
       const mcpHandler = createMcpHandler(() =>
         getMCPServer(config, eventData),
       );
