@@ -29,12 +29,10 @@
       ]
     },
     {
-      "export": "runLegacyMCPToolRoutePathScenario",
+      "export": "runBodyOnlyMCPShapeIsNotRoutedScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": [
-        "mcp/tools/call/healthStatus",
-        "mcp/tools/call",
         "mcp"
       ]
     }
