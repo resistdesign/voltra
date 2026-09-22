@@ -49,6 +49,7 @@
  * Reference examples:
  * - `examples/README.md`
  * - `examples/api/backend-routing.ts`
+ * - `examples/api/optional-auth.ts`
  */
 
 /**
