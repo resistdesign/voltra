@@ -12,4 +12,4 @@ Allow `handleCloudFunctionEvent` to resolve authentication independently from ev
 - [x] Add tests for public pass-through, protected-route denial, valid resolved auth, and Cognito JWT validation.
 - [x] Document the pass-through semantics on the router API and the `addGateway.authorizer` option.
 - [x] Add README/reference example coverage without changing the demo site IaC/API implementation.
-- [ ] Verify build/tests/exports and review the final PR diff.
+- [x] Verify build/tests/exports and review the final PR diff.
