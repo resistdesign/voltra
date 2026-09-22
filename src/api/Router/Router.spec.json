@@ -126,10 +126,10 @@
       "expectation": {
         "statusCode": 200,
         "headers": {
+          "Access-Control-Allow-Origin": "",
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
-          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE",
-          "Access-Control-Allow-Origin": ""
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "{\"userId\":\"resolved-user\",\"roles\":[\"member\"]}"
       }
@@ -141,10 +141,10 @@
       "expectation": {
         "statusCode": 200,
         "headers": {
+          "Access-Control-Allow-Origin": "",
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
-          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE",
-          "Access-Control-Allow-Origin": ""
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "\"public\""
       }
@@ -156,10 +156,10 @@
       "expectation": {
         "statusCode": 401,
         "headers": {
+          "Access-Control-Allow-Origin": "",
           "Access-Control-Allow-Credentials": "true",
           "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Method, Mcp-Name",
-          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE",
-          "Access-Control-Allow-Origin": ""
+          "Access-Control-Allow-Methods": "OPTIONS, HEAD, GET, POST, PUT, PATCH, DELETE"
         },
         "body": "Unauthorized"
       }
