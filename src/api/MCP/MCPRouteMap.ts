@@ -68,14 +68,6 @@ export type MCPToolRoute = Route & {
 };
 
 /**
- * Backward-compatible MCP tool type alias.
- */
-export type MCPTool<
-  TInput = Record<string, unknown>,
-  TOutput = unknown,
-> = MCPToolRoute;
-
-/**
  * Configuration for adding a stateless MCP endpoint to a Voltra RouteMap.
  */
 export type AddMCPToRouteMapConfig = {
@@ -206,8 +198,11 @@ const getMCPHandlerFactory = (
   tools: MCPToolRoute[] = config.tools,
 ): RouteHandlerFactory =>
   (eventData) => async () => {
-    const mcpHandler = createMcpHandler(() =>
-      getMCPServer(config, eventData, tools),
+    const mcpHandler = createMcpHandler(
+      () => getMCPServer(config, eventData, tools),
+      {
+        legacy: "reject",
+      },
     );
 
     return mcpHandler.fetch(getMCPRequest(eventData), {
