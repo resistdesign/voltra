@@ -165,6 +165,8 @@ export const runHealthMCPToolsScenario = async () => {
   const response = await runRequest(
     getRequestBody("tools/list"),
     "tools/list",
+    undefined,
+    false,
   );
   const parsed = JSON.parse(response.body);
   const tools = parsed.result.tools;
