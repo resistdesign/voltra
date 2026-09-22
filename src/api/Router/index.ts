@@ -172,11 +172,12 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
    */
   debug: boolean = false,
   /**
-   * Optional auth resolver for the raw event. Authentication resolution does
-   * not gate public routes: unresolved or invalid auth is treated as anonymous,
-   * while protected routes continue to enforce their route auth configuration.
-   * Use an upstream gateway authorizer when authentication must be enforced
-   * before the request reaches routing.
+   * Optional auth resolver for the raw event. When supplied, its result
+   * replaces auth info produced by the event transformer. Authentication
+   * resolution does not gate public routes: unresolved, invalid, or failed auth
+   * is treated as anonymous, while protected routes continue to enforce their
+   * route auth configuration. Use an upstream gateway authorizer when
+   * authentication must be enforced before the request reaches routing.
    */
   getAuthInfo?: CloudFunctionAuthInfoGetter,
 ): Promise<CloudFunctionResponse> => {
