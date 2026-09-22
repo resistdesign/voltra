@@ -42,6 +42,8 @@ export const MCP_STANDARD_METHODS = [
   "roots/list",
 ] as const;
 
+const MCP_STANDARD_METHOD_SET = new Set<string>(MCP_STANDARD_METHODS);
+
 const getSingleMCPMessage = (
   body: unknown,
 ): Record<string, unknown> | undefined => {
@@ -73,13 +75,17 @@ export const getMCPMethodFromEventData = (
 ): string | undefined => {
   const headerMethod = eventData.headers["mcp-method"]?.[0];
 
-  if (headerMethod) {
+  if (headerMethod && MCP_STANDARD_METHOD_SET.has(headerMethod)) {
     return headerMethod;
   }
 
   const message = getSingleMCPMessage(eventData.body);
 
-  if (message?.jsonrpc === "2.0" && typeof message.method === "string") {
+  if (
+    message?.jsonrpc === "2.0" &&
+    typeof message.method === "string" &&
+    MCP_STANDARD_METHOD_SET.has(message.method)
+  ) {
     return message.method;
   }
 
