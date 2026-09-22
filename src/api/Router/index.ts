@@ -25,6 +25,7 @@
  * ```
  */
 import {
+  CloudFunctionAuthInfoResolver,
   CloudFunctionEventRouter,
   CloudFunctionEventTransformer,
   CloudFunctionResponse,
@@ -170,12 +171,26 @@ export const handleCloudFunctionEvent: CloudFunctionEventRouter = async (
    * When true, log handler inputs and outputs.
    */
   debug: boolean = false,
+  /**
+   * Optional auth resolver. Return empty auth info for requests that should
+   * continue anonymously to public routes. Protected routes remain enforced by
+   * their route auth configuration.
+   */
+  getAuthInfo?: CloudFunctionAuthInfoResolver,
 ): Promise<CloudFunctionResponse> => {
   let transformedEvent: NormalizedCloudFunctionEventData | undefined =
     undefined;
 
   try {
-    transformedEvent = eventTransformer(event);
+    const normalizedEvent = eventTransformer(event);
+    const authInfo = getAuthInfo
+      ? await getAuthInfo(event)
+      : normalizedEvent.authInfo;
+
+    transformedEvent = {
+      ...normalizedEvent,
+      authInfo,
+    };
   } catch (error) {
     // Ignore.
   }
