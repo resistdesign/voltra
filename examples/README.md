@@ -21,12 +21,14 @@ Use this for client route usage via platform barrels:
 ## API Routing (Backend)
 
 - `examples/api/backend-routing.ts`
+- `examples/api/optional-auth.ts`
 - `examples/api/mcp-routing.ts`
 - `examples/api/orm-indexing.ts`
 - `examples/api/orm-index-maintenance.ts`
 - `examples/api/orm-health-monitoring.ts`
 
 Use this for Cloud Function/API event routing with `@resistdesign/voltra/api`. This is separate from app/client routing.
+Use `optional-auth.ts` when public routes should accept anonymous requests while valid bearer credentials still populate auth info for protected routes and handler factories.
 Use `mcp-routing.ts` to expose MCP protocol routes plus normally-authorized tool Routes through the same RouteMap.
 Use `orm-indexing.ts` as the starting point for unified field-capability and
 backend configuration.
