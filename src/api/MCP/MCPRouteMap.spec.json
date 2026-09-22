@@ -25,6 +25,13 @@
       "operation": "DEEP_EQUALS",
       "expectation": [
         {
+          "path": "mcp",
+          "exists": true,
+          "authConfig": {
+            "public": true
+          }
+        },
+        {
           "path": "mcp/server/discover",
           "exists": true,
           "authConfig": {
@@ -55,6 +62,23 @@
           }
         }
       ]
+    },
+    {
+      "export": "runMCPStandardRouteAuthOverrideScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "descriptorAuthConfig": {
+          "allowedRoles": [
+            "DescriptorAdmin"
+          ]
+        },
+        "toolAuthConfig": {
+          "allowedRoles": [
+            "MCP"
+          ]
+        }
+      }
     },
     {
       "export": "runMCPDiscoverScenario",
