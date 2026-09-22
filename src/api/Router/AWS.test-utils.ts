@@ -125,7 +125,11 @@ export const runCognitoAuthInfoInvalidSignatureScenario = async () =>
 export const runCognitoAuthInfoWrongClientScenario = async () =>
   withMockedJwks(() =>
     AWS.getCognitoAuthInfo(
-      getEvent(createToken("id", primaryKeyPair.privateKey, { aud: "wrong-client" })),
+      getEvent(
+        createToken("id", primaryKeyPair.privateKey, {
+          aud: "wrong-client",
+        }),
+      ),
       {
         userPoolId: USER_POOL_ID,
         clientId: CLIENT_ID,
