@@ -119,8 +119,9 @@ export const getMCPNameFromEventData = (
  * Non-MCP requests keep their normal path. MCP protocol methods become
  * ordinary child paths under the externally-visible MCP endpoint. Named tool
  * calls route to a tool-specific path first, then fall back to the generic
- * `tools/call` path so malformed/unknown calls still receive an MCP protocol
- * response.
+ * `tools/call` path and finally the original HTTP path. The original-path
+ * fallback preserves ordinary RouteMap behavior when an MCP-specific route is
+ * not installed.
  */
 export const getRoutePathCandidates = (
   eventData: NormalizedCloudFunctionEventData,
@@ -137,9 +138,13 @@ export const getRoutePathCandidates = (
     const name = getMCPNameFromEventData(eventData);
 
     if (name) {
-      return [mergeStringPaths(methodPath, name), methodPath];
+      return [
+        mergeStringPaths(methodPath, name),
+        methodPath,
+        eventData.path,
+      ];
     }
   }
 
-  return [methodPath];
+  return [methodPath, eventData.path];
 };
