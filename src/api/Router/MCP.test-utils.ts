@@ -59,7 +59,7 @@ export const runModernMCPToolRoutePathScenario = () =>
     ),
   );
 
-export const runLegacyMCPToolRoutePathScenario = () =>
+export const runBodyOnlyMCPShapeIsNotRoutedScenario = () =>
   getReadableRoutePathCandidates(
     getEventData({
       jsonrpc: "2.0",
