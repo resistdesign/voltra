@@ -11,6 +11,52 @@
       }
     },
     {
+      "export": "runMCPPublicDescriptorScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "serverName": "Voltra MCP Test"
+      }
+    },
+    {
+      "export": "runMCPNativeRouteKeysScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "path": "mcp/server/discover",
+          "exists": true,
+          "authConfig": {
+            "public": true
+          }
+        },
+        {
+          "path": "mcp/tools/list",
+          "exists": true,
+          "authConfig": {
+            "public": true
+          }
+        },
+        {
+          "path": "mcp/tools/call",
+          "exists": true,
+          "authConfig": {
+            "public": true
+          }
+        },
+        {
+          "path": "mcp/tools/call/whoAmI",
+          "exists": true,
+          "authConfig": {
+            "allowedRoles": [
+              "MCP"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "export": "runMCPDiscoverScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
