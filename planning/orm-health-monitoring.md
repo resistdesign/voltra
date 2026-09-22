@@ -91,10 +91,10 @@ Exact/range/membership semantics, text tokenization and search, phrase/prefix/lo
 
 ## Native MCP routing correction
 
-- [ ] Audit MCP-introduced Router changes and remove abstractions that bypass normal RouteMap semantics.
-- [ ] Detect normalized MCP requests in cloud-agnostic code before RouteMap lookup and convert MCP methods/tool names into normal internal route paths.
-- [ ] Rebuild MCP tooling so it returns ordinary Routes: standard MCP protocol routes plus per-tool Routes with each tool's own normal `authConfig`.
-- [ ] Make MCP standard/descriptor Routes public by default; allow `authConfig` on the MCP helper to apply only to those standard routes.
-- [ ] Adapt Health MCP and demo/example consumers to the native RouteMap model.
-- [ ] Add focused specs for path normalization, public descriptors, per-tool auth, and protocol responses.
-- [ ] Run focused tests/build/export/consumer verification and open a replacement PR.
+- [x] Audit MCP-introduced Router changes and remove abstractions that bypass normal RouteMap semantics.
+- [x] Detect normalized MCP requests in cloud-agnostic code before RouteMap lookup and convert MCP methods/tool names into normal internal route paths.
+- [x] Rebuild MCP tooling so it returns ordinary Routes: standard MCP protocol routes plus per-tool Routes with each tool's own normal `authConfig`.
+- [x] Make MCP standard/descriptor Routes public by default; allow `authConfig` on the MCP helper to apply only to those standard routes.
+- [x] Adapt Health MCP and demo/example consumers to the native RouteMap model.
+- [x] Add focused specs for path normalization, public descriptors, per-tool auth, and protocol responses.
+- [~] Run focused tests/build/export/consumer verification and open a replacement PR. Source work is complete; replacement PR CI will provide the full verification run.
