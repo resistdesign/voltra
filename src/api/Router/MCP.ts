@@ -2,8 +2,9 @@ import { mergeStringPaths } from "../../common/Routing";
 import type { NormalizedCloudFunctionEventData } from "./Types";
 
 /**
- * MCP request and notification methods understood by the current MCP server
- * dependency across its supported modern and legacy protocol revisions.
+ * MCP request methods supported by Voltra's V3 MCP integration.
+ *
+ * Voltra V3 intentionally targets the modern 2026 MCP era only.
  */
 export const MCP_STANDARD_METHODS = [
   "server/discover",
@@ -18,78 +19,29 @@ export const MCP_STANDARD_METHODS = [
   "resources/subscribe",
   "resources/unsubscribe",
   "completion/complete",
-  "logging/setLevel",
-  "ping",
-  "initialize",
-  "notifications/initialized",
-  "notifications/cancelled",
-  "notifications/progress",
-  "notifications/message",
-  "notifications/resources/updated",
-  "notifications/resources/list_changed",
-  "notifications/tools/list_changed",
-  "notifications/prompts/list_changed",
-  "notifications/roots/list_changed",
-  "notifications/subscriptions/acknowledged",
   "notifications/elicitation/complete",
-  "notifications/tasks/status",
   "tasks/get",
   "tasks/result",
   "tasks/list",
   "tasks/cancel",
-  "sampling/createMessage",
-  "elicitation/create",
-  "roots/list",
 ] as const;
 
 const MCP_STANDARD_METHOD_SET = new Set<string>(MCP_STANDARD_METHODS);
-
-const getSingleMCPMessage = (
-  body: unknown,
-): Record<string, unknown> | undefined => {
-  let message = body;
-
-  if (Array.isArray(body)) {
-    if (body.length === 1) {
-      message = body[0];
-    } else {
-      message = undefined;
-    }
-  }
-
-  if (message && typeof message === "object" && !Array.isArray(message)) {
-    return message as Record<string, unknown>;
-  }
-
-  return undefined;
-};
 
 /**
  * Read the MCP method from a normalized request.
  *
  * Modern MCP requests declare the method in the standard `Mcp-Method`
- * header. Legacy/stateless requests fall back to the JSON-RPC body.
+ * header. Voltra V3 does not infer MCP routing from legacy request bodies.
  */
 export const getMCPMethodFromEventData = (
   eventData: NormalizedCloudFunctionEventData,
 ): string | undefined => {
   const headerMethod = eventData.headers["mcp-method"]?.[0];
 
-  if (headerMethod && MCP_STANDARD_METHOD_SET.has(headerMethod)) {
-    return headerMethod;
-  }
-
-  const message = getSingleMCPMessage(eventData.body);
-
-  if (
-    message?.jsonrpc === "2.0" &&
-    typeof message.method === "string" &&
-    MCP_STANDARD_METHOD_SET.has(message.method)
-  ) {
-    return message.method;
-  }
-
-  return undefined;
+  return headerMethod && MCP_STANDARD_METHOD_SET.has(headerMethod)
+    ? headerMethod
+    : undefined;
 };
 
 /**
@@ -100,17 +52,7 @@ export const getMCPNameFromEventData = (
 ): string | undefined => {
   const headerName = eventData.headers["mcp-name"]?.[0];
 
-  if (headerName) {
-    return headerName;
-  }
-
-  const message = getSingleMCPMessage(eventData.body);
-  const params =
-    message?.params && typeof message.params === "object"
-      ? (message.params as Record<string, unknown>)
-      : undefined;
-
-  return typeof params?.name === "string" ? params.name : undefined;
+  return headerName || undefined;
 };
 
 /**
@@ -119,9 +61,8 @@ export const getMCPNameFromEventData = (
  * Non-MCP requests keep their normal path. MCP protocol methods become
  * ordinary child paths under the externally-visible MCP endpoint. Named tool
  * calls route to a tool-specific path first, then fall back to the generic
- * `tools/call` path and finally the original HTTP path. The original-path
- * fallback preserves ordinary RouteMap behavior when an MCP-specific route is
- * not installed.
+ * `tools/call` path and finally the original HTTP path. Protocol identifiers
+ * are preserved exactly as path segments; Voltra does not rename tool names.
  */
 export const getRoutePathCandidates = (
   eventData: NormalizedCloudFunctionEventData,
