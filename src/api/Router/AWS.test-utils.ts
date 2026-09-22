@@ -18,6 +18,7 @@ const publicJwk = primaryKeyPair.publicKey.export({
 const createToken = (
   tokenUse: "id" | "access",
   privateKey = primaryKeyPair.privateKey,
+  payloadOverrides: Record<string, unknown> = {},
 ) => {
   const nowSeconds = Math.floor(Date.now() / 1000);
   const header = {
@@ -35,6 +36,7 @@ const createToken = (
     ...(tokenUse === "id"
       ? { aud: CLIENT_ID }
       : { client_id: CLIENT_ID }),
+    ...payloadOverrides,
   };
   const encodedHeader = Buffer.from(JSON.stringify(header)).toString(
     "base64url",
@@ -55,7 +57,7 @@ const createToken = (
 const withMockedJwks = async <T>(callback: () => Promise<T>): Promise<T> => {
   const originalFetch = globalThis.fetch;
 
-  globalThis.fetch = async () =>
+  globalThis.fetch = (async () =>
     new Response(
       JSON.stringify({
         keys: [
@@ -73,7 +75,7 @@ const withMockedJwks = async <T>(callback: () => Promise<T>): Promise<T> => {
           "Content-Type": "application/json",
         },
       },
-    );
+    )) as typeof fetch;
 
   try {
     return await callback();
@@ -112,6 +114,34 @@ export const runCognitoAuthInfoInvalidSignatureScenario = async () =>
   withMockedJwks(() =>
     AWS.getCognitoAuthInfo(
       getEvent(createToken("id", alternateKeyPair.privateKey)),
+      {
+        userPoolId: USER_POOL_ID,
+        clientId: CLIENT_ID,
+        tokenUse: "id",
+      },
+    ),
+  );
+
+export const runCognitoAuthInfoWrongClientScenario = async () =>
+  withMockedJwks(() =>
+    AWS.getCognitoAuthInfo(
+      getEvent(createToken("id", primaryKeyPair.privateKey, { aud: "wrong-client" })),
+      {
+        userPoolId: USER_POOL_ID,
+        clientId: CLIENT_ID,
+        tokenUse: "id",
+      },
+    ),
+  );
+
+export const runCognitoAuthInfoExpiredTokenScenario = async () =>
+  withMockedJwks(() =>
+    AWS.getCognitoAuthInfo(
+      getEvent(
+        createToken("id", primaryKeyPair.privateKey, {
+          exp: Math.floor(Date.now() / 1000) - 60,
+        }),
+      ),
       {
         userPoolId: USER_POOL_ID,
         clientId: CLIENT_ID,
