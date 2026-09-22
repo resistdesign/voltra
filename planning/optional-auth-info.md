@@ -11,4 +11,4 @@ Allow `handleCloudFunctionEvent` to resolve authentication information independe
 - [x] Preserve existing gateway-authorizer behavior and document when to use gateway authorization versus pass-through auth resolution.
 - [x] Add/update tests covering authenticated, unauthenticated, invalid-token, public-route, and protected-route behavior.
 - [x] Add reference example/docs for optional auth resolution; leave the demo site runtime/IaC unchanged.
-- [ ] Verify build/tests/docs/export checks and open a PR.
+- [x] Verify build/tests/docs/export checks and open a PR.
