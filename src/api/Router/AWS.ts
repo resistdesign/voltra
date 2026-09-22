@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { createPublicKey, verify as verifySignature } from "node:crypto";
 import {
   AuthInfo,
