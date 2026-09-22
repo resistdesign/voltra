@@ -68,12 +68,12 @@ export const addDemoMCPToRouteMap = (
     path: DEMO_MCP_ROUTE_PATH,
     name: "Voltra Demo",
     version: "1.0.0",
-    authConfig: {
-      public: true,
-    },
     tools: [
       {
-        name: "listPeople",
+        path: "listPeople",
+        authConfig: {
+          public: true,
+        },
         description:
           "List people from the Voltra demo application. Returns safe demo profile fields and supports cursor paging.",
         inputTypeInfo: getDemoTypeInfoPack("MCPDemoListPeopleInput"),
@@ -83,7 +83,10 @@ export const addDemoMCPToRouteMap = (
           orm.list("Person", getPagingConfig(input), PERSON_FIELDS),
       },
       {
-        name: "getPerson",
+        path: "getPerson",
+        authConfig: {
+          public: true,
+        },
         description:
           "Read one person from the Voltra demo application by person ID.",
         inputTypeInfo: getDemoTypeInfoPack("MCPDemoGetPersonInput"),
@@ -93,7 +96,10 @@ export const addDemoMCPToRouteMap = (
           orm.read("Person", input.id, PERSON_FIELDS),
       },
       {
-        name: "searchCars",
+        path: "searchCars",
+        authConfig: {
+          public: true,
+        },
         description:
           "Search demo cars by make or model using Voltra ORM text indexing.",
         inputTypeInfo: getDemoTypeInfoPack("MCPDemoSearchCarsInput"),
