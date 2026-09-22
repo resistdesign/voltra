@@ -70,10 +70,7 @@ export type MCPToolRoute = Route & {
 /**
  * Backward-compatible MCP tool type alias.
  */
-export type MCPTool<
-  TInput = Record<string, unknown>,
-  TOutput = unknown,
-> = MCPToolRoute;
+export type MCPTool = MCPToolRoute;
 
 /**
  * Configuration for adding a stateless MCP endpoint to a Voltra RouteMap.
@@ -153,13 +150,14 @@ const getToolHandler = (
 const getMCPServer = (
   config: AddMCPToRouteMapConfig,
   eventData: NormalizedCloudFunctionEventData,
+  tools: MCPToolRoute[] = config.tools,
 ): McpServer => {
   const server = new McpServer({
     name: config.name,
     version: config.version,
   });
 
-  for (const tool of config.tools) {
+  for (const tool of tools) {
     const inputJSONSchema = tool.inputTypeInfo
       ? getJSONSchemaFromTypeInfoPack(tool.inputTypeInfo)
       : DEFAULT_MCP_TOOL_INPUT_SCHEMA;
@@ -202,10 +200,11 @@ const getMCPServer = (
 
 const getMCPHandlerFactory = (
   config: AddMCPToRouteMapConfig,
+  tools: MCPToolRoute[] = config.tools,
 ): RouteHandlerFactory =>
   (eventData) => async () => {
     const mcpHandler = createMcpHandler(() =>
-      getMCPServer(config, eventData),
+      getMCPServer(config, eventData, tools),
     );
 
     return mcpHandler.fetch(getMCPRequest(eventData), {
@@ -221,9 +220,12 @@ const addMCPStandardRoutes = (
     ...routeMap,
   };
   const authConfig = config.authConfig ?? { public: true };
-  const handlerFactory = getMCPHandlerFactory(config);
-
   for (const method of MCP_STANDARD_METHODS) {
+    const handlerFactory =
+      method === "tools/call"
+        ? getMCPHandlerFactory(config, [])
+        : getMCPHandlerFactory(config);
+
     newRouteMap = addRouteToRouteMap(
       newRouteMap,
       {
@@ -245,10 +247,9 @@ const addMCPToolRoutes = (
   let newRouteMap = {
     ...routeMap,
   };
-  const handlerFactory = getMCPHandlerFactory(config);
-
   for (const tool of config.tools) {
     const path = mergeStringPaths("tools/call", tool.path);
+    const handlerFactory = getMCPHandlerFactory(config, [tool]);
 
     newRouteMap = addRouteToRouteMap(
       newRouteMap,
