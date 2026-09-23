@@ -45,6 +45,17 @@
       }
     },
     {
+      "export": "runHealthRetentionDoesNotBlockContinuationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "firstContinuation": false,
+        "firstRetentionCursorPresent": true,
+        "secondContinuation": false,
+        "retentionCursorAdvanced": true
+      }
+    },
+    {
       "export": "runHealthSchemaDriftScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
