@@ -334,7 +334,7 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
         path: "healthPreview",
         authConfig: config.authConfig,
         description:
-          "Run one bounded, non-destructive Voltra ORM/index health pass. Reports orphaned indexes, schema drift, suspicious state, retention cleanup, and whether more work remains.",
+          "Run one bounded, non-destructive Voltra ORM/index health pass. Reports orphaned indexes, schema drift, suspicious state, and retention cleanup. continuation=true only when the index/schema audit requires another run; retention backlog does not block audit completion.",
         outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
         annotations: PREVIEW_ANNOTATIONS,
         handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
@@ -346,7 +346,7 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
               path: "healthRepair",
               authConfig: config.authConfig,
               description:
-                "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true when additional bounded work remains.",
+                "Run one bounded Voltra ORM/index health pass and apply only strongly validated repairs. Returns continuation=true only when additional index/schema audit work remains; retention cleanup continues opportunistically without blocking completion.",
               outputTypeInfo: HEALTH_MCP_RESULT_TYPE_INFO_PACK,
               annotations: REPAIR_ANNOTATIONS,
               handler: async (): Promise<TypeInfoORMHealthMonitorRunResult> =>
