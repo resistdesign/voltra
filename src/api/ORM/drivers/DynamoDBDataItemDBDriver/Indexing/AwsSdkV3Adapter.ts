@@ -12,6 +12,7 @@ import {
   type WriteRequest as AwsWriteRequest,
 } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+import { DYNAMODB_MARSHALL_OPTIONS } from "../MarshallOptions";
 
 import type {
   BatchGetItemInput,
@@ -40,7 +41,7 @@ export type BatchWriteWithRetryOptions = {
 };
 
 const toAwsKey = (item: AttributeMap): Record<string, AttributeValue> =>
-  marshall(item) as Record<string, AttributeValue>;
+  marshall(item, DYNAMODB_MARSHALL_OPTIONS) as Record<string, AttributeValue>;
 
 const fromAwsKey = (item: Record<string, AttributeValue>): AttributeMap =>
   unmarshall(item) as AttributeMap;
