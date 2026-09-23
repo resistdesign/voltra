@@ -2,6 +2,14 @@
   "file": "./DynamoDBDataItemDBDriver.test-utils.ts",
   "tests": [
     {
+      "export": "runDynamoDBDataItemDriverUndefinedFilterValueScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "label": "kept"
+      }
+    },
+    {
       "export": "runDynamoDBDataItemDriverUndefinedCreateKeysScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
@@ -29,7 +37,10 @@
       "expectation": {
         "name": "Alpha+",
         "age": 35,
-        "tags": ["friendly", "quiet"]
+        "tags": ["friendly", "quiet"],
+        "metadata": {
+          "label": "kept"
+        }
       }
     },
     {
