@@ -416,9 +416,12 @@ export class DynamoDBDataItemDBDriver<
     if (typeof uniqueIdentifier !== "undefined") {
       const command = new UpdateItemCommand({
         TableName: tableName,
-        Key: marshall({
-          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-        }),
+        Key: marshall(
+          {
+            [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+          },
+          DYNAMODB_MARSHALL_OPTIONS,
+        ),
         ReturnValues: "ALL_NEW",
         ...buildUpdateExpression(
           cleanUpdatedItem,
