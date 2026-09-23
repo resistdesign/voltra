@@ -49,6 +49,7 @@ import { getSortedItems } from "../../../common/SearchUtils";
 import { SEARCH_VALIDATION_ERRORS } from "../../../common/SearchValidation";
 import ConfigTypeInfoMap from "./DynamoDBDataItemDBDriver/ConfigTypeInfoMap.json";
 import type { DynamoDBSpecificConfig } from "./DynamoDBDataItemDBDriver/ConfigTypes";
+import { DYNAMODB_MARSHALL_OPTIONS } from "./DynamoDBDataItemDBDriver/MarshallOptions";
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>
@@ -161,7 +162,7 @@ const createFilterExpression = (
         ` ${DynamoDBLogicalOperatorMappings[logicalOperator]} `,
       ),
       ExpressionAttributeNames: attributeNames,
-      ExpressionAttributeValues: marshall(attributeValues),
+      ExpressionAttributeValues: marshall(attributeValues, DYNAMODB_MARSHALL_OPTIONS),
     };
   }
 
@@ -188,7 +189,10 @@ const buildUpdateExpression = (
       const operator = updateConfig?.fieldOperators?.[f];
 
       attributeNames[placeholderName] = f;
-      attributeValues[placeholderValue] = convertToAttr(value);
+      attributeValues[placeholderValue] = convertToAttr(
+        value,
+        DYNAMODB_MARSHALL_OPTIONS,
+      );
 
       if (operator === TypeInfoORMUpdateOperators.NUMBER.INCREMENT) {
         addExpressionParts.push(`${placeholderName} ${placeholderValue}`);
@@ -203,6 +207,7 @@ const buildUpdateExpression = (
         );
         attributeValues[decrementPlaceholderValue] = convertToAttr(
           -(value as number),
+          DYNAMODB_MARSHALL_OPTIONS,
         );
         continue;
       }
@@ -310,7 +315,7 @@ export class DynamoDBDataItemDBDriver<
     } as any;
     const command = new PutItemCommand({
       TableName: tableName,
-      Item: marshall(cleanNewItemWithId, { removeUndefinedValues: true }),
+      Item: marshall(cleanNewItemWithId, DYNAMODB_MARSHALL_OPTIONS),
     });
 
     await this.dynamoDBClient.send(command);
@@ -336,9 +341,12 @@ export class DynamoDBDataItemDBDriver<
     const selectedFieldParams = buildSelectedFieldParams(selectedFields);
     const command = new GetItemCommand({
       TableName: tableName,
-      Key: marshall({
-        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-      }),
+      Key: marshall(
+        {
+          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+        },
+        DYNAMODB_MARSHALL_OPTIONS,
+      ),
       ...selectedFieldParams,
     });
     const { Item } = await this.dynamoDBClient.send(command);
@@ -366,9 +374,12 @@ export class DynamoDBDataItemDBDriver<
     const selectedFieldParams = buildSelectedFieldParams(selectedFields);
     const command = new GetItemCommand({
       TableName: tableName,
-      Key: marshall({
-        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-      }),
+      Key: marshall(
+        {
+          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+        },
+        DYNAMODB_MARSHALL_OPTIONS,
+      ),
       ConsistentRead: true,
       ...selectedFieldParams,
     });
@@ -439,9 +450,12 @@ export class DynamoDBDataItemDBDriver<
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const command = new DeleteItemCommand({
       TableName: tableName,
-      Key: marshall({
-        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-      }),
+      Key: marshall(
+        {
+          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+        },
+        DYNAMODB_MARSHALL_OPTIONS,
+      ),
       ReturnValues: "ALL_OLD",
     });
     const { Attributes } = await this.dynamoDBClient.send(command);
@@ -528,7 +542,7 @@ export class DynamoDBDataItemDBDriver<
 
     if (typeof cursor === "string") {
       try {
-        structuredCursor = marshall(JSON.parse(cursor));
+        structuredCursor = marshall(JSON.parse(cursor), DYNAMODB_MARSHALL_OPTIONS);
       } catch (error) {
         throw {
           message: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
