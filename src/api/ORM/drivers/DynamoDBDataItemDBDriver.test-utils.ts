@@ -21,6 +21,10 @@ type TestItem = {
   age: number;
   status?: string;
   tags?: string[];
+  metadata?: {
+    label: string;
+    optional?: string;
+  };
 };
 
 const buildDriver = (useFirstSortFieldAsIndexName = false) => {
@@ -381,6 +385,34 @@ const runDynamoDBDataItemDriverUndefinedCreateScenario = async () => {
   return Object.keys(item).sort();
 };
 
+const runDynamoDBDataItemDriverUndefinedFilterValueInternalScenario = async () => {
+  const { driver, getLastScanInput } = buildDriver();
+
+  await driver.listItems({
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        {
+          fieldName: "metadata",
+          operator: ComparisonOperators.EQUALS,
+          value: {
+            label: "kept",
+            optional: undefined,
+          },
+        },
+      ],
+    },
+  });
+
+  const input = getLastScanInput();
+  const values = input?.ExpressionAttributeValues
+    ? unmarshall(input.ExpressionAttributeValues as any)
+    : undefined;
+
+  return values?.[":metadata"];
+};
+
 const runDynamoDBDataItemDriverScenario = async () => {
   const { driver, getLastScanInput, getLastQueryInput } = buildDriver();
   const {
@@ -407,6 +439,12 @@ const runDynamoDBDataItemDriverScenario = async () => {
   const readSelected = await driver.readItem(id1, ["id", "name"]);
   await driver.updateItem(id1, { name: "Alpha+" });
   await driver.updateItem(id1, { tags: ["friendly", "quiet"] });
+  await driver.updateItem(id1, {
+    metadata: {
+      label: "kept",
+      optional: undefined,
+    },
+  });
   const afterUpdate = await driver.readItem(id1);
 
   const filtered = await driver.listItems({
@@ -543,6 +581,7 @@ const runDynamoDBDataItemDriverScenario = async () => {
       name: afterUpdate.name,
       age: afterUpdate.age,
       tags: afterUpdate.tags,
+      metadata: afterUpdate.metadata,
     },
     filteredIds: filtered.items.map((item) => item.id),
     page1Ids: page1.items.map((item) => item.id),
@@ -572,6 +611,9 @@ const runDynamoDBDataItemDriverScenario = async () => {
     invalidCursorErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
   };
 };
+
+export const runDynamoDBDataItemDriverUndefinedFilterValueScenario = async () =>
+  runDynamoDBDataItemDriverUndefinedFilterValueInternalScenario();
 
 export const runDynamoDBDataItemDriverUndefinedCreateKeysScenario = async () =>
   runDynamoDBDataItemDriverUndefinedCreateScenario();

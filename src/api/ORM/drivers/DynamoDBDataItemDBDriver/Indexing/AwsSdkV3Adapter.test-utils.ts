@@ -14,23 +14,28 @@ export const runAwsSdkV3ConsistencyMappingScenario = async () => {
 
   await client.getItem({
     TableName: "Index",
-    Key: { pk: "doc", sk: "state" },
+    Key: { pk: "doc", sk: "state", ignored: undefined },
     ConsistentRead: true,
   });
   await client.batchGetItem({
     RequestItems: {
       Index: {
-        Keys: [{ pk: "doc", sk: "state" }],
+        Keys: [{ pk: "doc", sk: "state", ignored: undefined }],
         ConsistentRead: true,
       },
     },
   });
 
+  const getItemKey = (inputs[0]?.Key ?? {}) as Record<string, unknown>;
+  const batchGetRequestItems = inputs[1]?.RequestItems as
+    | Record<string, { Keys?: Array<Record<string, unknown>>; ConsistentRead?: boolean }>
+    | undefined;
+  const batchGetItemKey = batchGetRequestItems?.Index?.Keys?.[0] ?? {};
+
   return {
     getItem: inputs[0]?.ConsistentRead,
-    batchGetItem: (
-      inputs[1]?.RequestItems as
-        Record<string, { ConsistentRead?: boolean }> | undefined
-    )?.Index?.ConsistentRead,
+    batchGetItem: batchGetRequestItems?.Index?.ConsistentRead,
+    getItemKeyFields: Object.keys(getItemKey).sort(),
+    batchGetItemKeyFields: Object.keys(batchGetItemKey).sort(),
   };
 };
