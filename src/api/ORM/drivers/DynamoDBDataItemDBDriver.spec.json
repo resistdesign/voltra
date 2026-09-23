@@ -2,6 +2,12 @@
   "file": "./DynamoDBDataItemDBDriver.test-utils.ts",
   "tests": [
     {
+      "export": "runDynamoDBDataItemDriverUndefinedCreateKeysScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": ["age", "id", "name"]
+    },
+    {
       "export": "runDynamoDBDataItemDriverCreatedIdsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
