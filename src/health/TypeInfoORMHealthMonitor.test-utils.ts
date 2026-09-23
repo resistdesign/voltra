@@ -363,6 +363,61 @@ export const runHealthBoundedContinuationScenario = async () => {
   };
 };
 
+export const runHealthRetentionDoesNotBlockContinuationScenario = async () => {
+  const store = createHealthStore();
+
+  for (let index = 0; index < 5; index += 1) {
+    await store.createRecord({
+      kind: "run",
+      status: "complete",
+      operation: "indexAudit",
+      expiresAt: Date.now() + 60_000,
+    });
+  }
+
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    {
+      Book: new InMemoryDataItemDBDriver<Book, "id">({
+        tableName: "RetentionBooks",
+        uniquelyIdentifyingFieldName: "id",
+        generateUniqueIdentifier: () => "unused",
+      }),
+    },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+  );
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store,
+    retentionPageSize: 2,
+  });
+
+  const first = await monitor.preview();
+  const firstCheckpoint = await store.readRecord("health:index-audit");
+  const firstRetentionCursor =
+    typeof firstCheckpoint?.data?.retentionCursor === "string"
+      ? firstCheckpoint.data.retentionCursor
+      : undefined;
+
+  const second = await monitor.preview();
+  const secondCheckpoint = await store.readRecord("health:index-audit");
+  const secondRetentionCursor =
+    typeof secondCheckpoint?.data?.retentionCursor === "string"
+      ? secondCheckpoint.data.retentionCursor
+      : undefined;
+
+  return {
+    firstContinuation: first.continuation,
+    firstRetentionCursorPresent: !!firstRetentionCursor,
+    secondContinuation: second.continuation,
+    retentionCursorAdvanced:
+      !!firstRetentionCursor &&
+      !!secondRetentionCursor &&
+      firstRetentionCursor !== secondRetentionCursor,
+  };
+};
+
 export const runHealthSchemaDriftScenario = async () => {
   let bookCounter = 0;
   let legacyCounter = 0;
