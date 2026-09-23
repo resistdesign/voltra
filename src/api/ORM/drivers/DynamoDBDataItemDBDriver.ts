@@ -310,7 +310,7 @@ export class DynamoDBDataItemDBDriver<
     } as any;
     const command = new PutItemCommand({
       TableName: tableName,
-      Item: marshall(cleanNewItemWithId),
+      Item: marshall(cleanNewItemWithId, { removeUndefinedValues: true }),
     });
 
     await this.dynamoDBClient.send(command);
