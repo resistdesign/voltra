@@ -545,7 +545,10 @@ export class DynamoDBDataItemDBDriver<
 
     if (typeof cursor === "string") {
       try {
-        structuredCursor = marshall(JSON.parse(cursor), DYNAMODB_MARSHALL_OPTIONS);
+        structuredCursor = marshall(
+          JSON.parse(cursor) as Record<string, any>,
+          DYNAMODB_MARSHALL_OPTIONS,
+        );
       } catch (error) {
         throw {
           message: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
