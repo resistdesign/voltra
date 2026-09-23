@@ -7,7 +7,9 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "getItem": true,
-        "batchGetItem": true
+        "batchGetItem": true,
+        "getItemKeyFields": ["pk", "sk"],
+        "batchGetItemKeyFields": ["pk", "sk"]
       }
     }
   ]
