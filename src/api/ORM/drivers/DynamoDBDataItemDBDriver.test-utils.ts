@@ -369,6 +369,18 @@ const runDynamoDBDataItemDriverInOperatorScenario = async () => {
   };
 };
 
+const runDynamoDBDataItemDriverUndefinedCreateScenario = async () => {
+  const { driver } = buildDriver();
+  const id = await driver.createItem({
+    name: "Optional",
+    age: 1,
+    status: undefined,
+  });
+  const item = await driver.readItem(id);
+
+  return Object.keys(item).sort();
+};
+
 const runDynamoDBDataItemDriverScenario = async () => {
   const { driver, getLastScanInput, getLastQueryInput } = buildDriver();
   const {
@@ -560,6 +572,9 @@ const runDynamoDBDataItemDriverScenario = async () => {
     invalidCursorErrorExpected: DATA_ITEM_DB_DRIVER_ERRORS.INVALID_CURSOR,
   };
 };
+
+export const runDynamoDBDataItemDriverUndefinedCreateKeysScenario = async () =>
+  runDynamoDBDataItemDriverUndefinedCreateScenario();
 
 export const runDynamoDBDataItemDriverCreatedIdsScenario = async () =>
   (await runDynamoDBDataItemDriverScenario()).createdIds;
