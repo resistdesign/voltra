@@ -91,7 +91,7 @@ export type TypeInfoORMHealthMonitorRunResult = {
   suspiciousCount: number;
   /** Expired Health records removed during bounded retention cleanup. */
   expiredRecordCount: number;
-  /** True when the current index-audit cycle has more persisted work. */
+  /** True when the current index/schema audit cycle requires another run. Retention cleanup continues opportunistically without blocking audit completion. */
   continuation: boolean;
 };
 
