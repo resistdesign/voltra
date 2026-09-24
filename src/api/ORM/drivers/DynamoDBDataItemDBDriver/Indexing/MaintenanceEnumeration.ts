@@ -1,9 +1,9 @@
 /**
  * DynamoDB-specific maintenance enumeration helpers for the unified index table.
  *
- * Normal search/read paths remain unchanged. When a deployment supplies a
- * maintenance kind GSI, bounded maintenance can query one logical record
- * family directly instead of scanning unrelated index artifacts.
+ * Voltra owns the required maintenance GSI contract. Bounded maintenance
+ * queries one logical record family directly instead of scanning unrelated
+ * index artifacts.
  */
 import {
   INDEX_TABLE_KIND_ATTRIBUTE,
@@ -11,6 +11,7 @@ import {
   INDEX_TABLE_SORT_KEY,
   type IndexItemKind,
 } from "../../../../Indexing/IndexTable";
+import { VOLTRA_INDEX_MAINTENANCE_INDEX_NAME } from "../../../../../common/IndexingInfrastructure";
 import type {
   AttributeMap,
   DynamoQueryClient,
@@ -127,14 +128,11 @@ export type DynamoMaintenanceKindListOptions = {
 export type DynamoMaintenanceKindPage = {
   items: AttributeMap[];
   cursor?: AttributeMap;
-  strategy: "query" | "scan";
 };
 
 /**
- * Enumerate one logical unified-index record family.
- *
- * Deployments with `maintenanceIndexName` use a DynamoDB GSI query keyed by
- * `kind`. Existing deployments remain compatible through the scan fallback.
+ * Enumerate one logical unified-index record family through Voltra's canonical
+ * maintenance GSI.
  */
 export const listDynamoIndexItemsByKind = async (
   options: DynamoMaintenanceKindListOptions,
@@ -147,39 +145,35 @@ export const listDynamoIndexItemsByKind = async (
     limit,
     hydrateBaseItems = false,
   } = options;
-  const boundedLimit = Math.max(1, limit);
+  const response = await client.query({
+    TableName: table.tableName,
+    IndexName: VOLTRA_INDEX_MAINTENANCE_INDEX_NAME,
+    KeyConditionExpression: "#kind = :kind",
+    ExpressionAttributeNames: {
+      "#kind": INDEX_TABLE_KIND_ATTRIBUTE,
+    },
+    ExpressionAttributeValues: {
+      ":kind": kind,
+    },
+    ExclusiveStartKey: cursor,
+    Limit: Math.max(1, limit),
+    ScanIndexForward: true,
+  });
+  const indexedItems = response.Items ?? [];
 
-  if (table.maintenanceIndexName) {
-    const response = await client.query({
-      TableName: table.tableName,
-      IndexName: table.maintenanceIndexName,
-      KeyConditionExpression: "#kind = :kind",
-      ExpressionAttributeNames: {
-        "#kind": INDEX_TABLE_KIND_ATTRIBUTE,
-      },
-      ExpressionAttributeValues: {
-        ":kind": kind,
-      },
-      ExclusiveStartKey: cursor,
-      Limit: boundedLimit,
-      ScanIndexForward: true,
-    });
-    const indexedItems = response.Items ?? [];
-
-    return {
-      items: hydrateBaseItems
-        ? await hydrateKeysStrongly(
-            client,
-            table.tableName,
-            indexedItems
-              .map((item) => keyFromItem(item))
-              .filter((key): key is AttributeMap => !!key),
-          )
-        : indexedItems,
-      cursor: response.LastEvaluatedKey,
-      strategy: "query",
-    };
-  }
+  return {
+    items: hydrateBaseItems
+      ? await hydrateKeysStrongly(
+          client,
+          table.tableName,
+          indexedItems
+            .map((item) => keyFromItem(item))
+            .filter((key): key is AttributeMap => !!key),
+        )
+      : indexedItems,
+    cursor: response.LastEvaluatedKey,
+  };
+};  }
 
   if (!client.scan) {
     throw new Error(
