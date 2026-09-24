@@ -919,6 +919,7 @@ export class TypeInfoORMHealthMonitor {
         } else {
           structuredDocumentsProcessedCount += page.documents.length;
           remainingBudget -= page.documents.length;
+          const repairDeferredBeforePage = repairDeferred;
 
           for (const document of page.documents) {
             const scopedMatches = Object.keys(document.fields)
@@ -980,7 +981,12 @@ export class TypeInfoORMHealthMonitor {
             }
           }
 
-          if (page.cursor && page.cursor === pageStartCursor) {
+          if (repairDeferred && !repairDeferredBeforePage) {
+            // A page cursor resumes after this page. Re-run the current page when
+            // the repair cap leaves a confirmed item behind so it cannot be skipped.
+            checkpoint.structuredCursor = pageStartCursor;
+            checkpoint.structuredComplete = false;
+          } else if (page.cursor && page.cursor === pageStartCursor) {
             suspiciousCount += 1;
             await this.store.putRecord(auditProgressFindingId("structured"), {
               kind: "finding",
@@ -1001,7 +1007,11 @@ export class TypeInfoORMHealthMonitor {
         }
       }
 
-      if (!checkpoint.textComplete && remainingBudget > 0) {
+      if (
+        !checkpoint.textComplete &&
+        remainingBudget > 0 &&
+        !repairDeferred
+      ) {
         const pageStartCursor = checkpoint.textCursor;
         const page = await this.orm.listTextIndexDocuments({
           cursor: pageStartCursor,
@@ -1013,6 +1023,7 @@ export class TypeInfoORMHealthMonitor {
         } else {
           textDocumentsProcessedCount += page.documents.length;
           remainingBudget -= page.documents.length;
+          const repairDeferredBeforePage = repairDeferred;
 
           for (const document of page.documents) {
             const match = descriptorForField(document.indexField);
@@ -1050,7 +1061,12 @@ export class TypeInfoORMHealthMonitor {
             }
           }
 
-          if (page.cursor && page.cursor === pageStartCursor) {
+          if (repairDeferred && !repairDeferredBeforePage) {
+            // Preserve the current text page for the next bounded pass when the
+            // repair cap leaves a confirmed item behind.
+            checkpoint.textCursor = pageStartCursor;
+            checkpoint.textComplete = false;
+          } else if (page.cursor && page.cursor === pageStartCursor) {
             suspiciousCount += 1;
             await this.store.putRecord(auditProgressFindingId("text"), {
               kind: "finding",
