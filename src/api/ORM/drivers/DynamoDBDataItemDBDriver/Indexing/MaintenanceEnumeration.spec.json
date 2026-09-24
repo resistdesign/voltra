@@ -6,28 +6,25 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "strategy": "query",
-        "queryIndexName": "KindPkMaintenanceIndex",
+        "queryIndexName": "VoltraIndexMaintenance",
+        "expectedIndexName": "VoltraIndexMaintenance",
         "queryCondition": "#kind = :kind",
         "queryKind": "sd",
         "batchConsistentRead": true,
         "batchKeyCount": 1,
         "itemDocId": "doc-1",
-        "cursorKind": "sd",
-        "scanCalls": 0
+        "cursorKind": "sd"
       }
     },
     {
-      "export": "runMaintenanceKindScanFallbackScenario",
+      "export": "runMaintenanceKindKeysOnlyScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "strategy": "scan",
-        "scanFilter": "#kind = :kind",
-        "scanKind": "fm",
-        "consistentRead": true,
+        "queryIndexName": "VoltraIndexMaintenance",
+        "queryKind": "fm",
         "itemCount": 1,
-        "queryCalls": 0
+        "itemPk": "v1#fm#d#s#doc-1"
       }
     }
   ]
