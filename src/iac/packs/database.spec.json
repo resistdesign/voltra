@@ -54,6 +54,29 @@
           "KeyType": "RANGE"
         }
       ]
+    },
+    {
+      "export": "runDatabasePackGlobalSecondaryIndexesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "IndexName": "RatingIndex",
+          "KeySchema": [
+            {
+              "AttributeName": "rating",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "sort",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "KEYS_ONLY"
+          }
+        }
+      ]
     }
   ]
 }
