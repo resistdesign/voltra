@@ -908,14 +908,16 @@ export class TypeInfoORMHealthMonitor {
       };
 
       if (!checkpoint.structuredComplete && remainingBudget > 0) {
+        const pageStartCursor = checkpoint.structuredCursor;
         const page = await this.orm.listStructuredIndexDocuments({
-          cursor: checkpoint.structuredCursor,
+          cursor: pageStartCursor,
           limit: Math.min(this.options.indexPageSize, remainingBudget),
         });
 
         if (!page) {
           checkpoint.structuredComplete = true;
         } else {
+          structuredDocumentsProcessedCount += page.documents.length;
           remainingBudget -= page.documents.length;
 
           for (const document of page.documents) {
@@ -942,6 +944,8 @@ export class TypeInfoORMHealthMonitor {
 
             if (uniqueMatches.length === 1) {
               const match = uniqueMatches[0];
+              structuredTypeNames.add(match.descriptor.typeName);
+
               if (match.removed) {
                 await auditRemovedTypeCandidate(match.descriptor, {
                   docId: document.docId,
@@ -976,24 +980,46 @@ export class TypeInfoORMHealthMonitor {
             }
           }
 
-          checkpoint.structuredCursor = page.cursor;
-          checkpoint.structuredComplete = !page.cursor;
+          if (page.cursor && page.cursor === pageStartCursor) {
+            suspiciousCount += 1;
+            await this.store.putRecord(auditProgressFindingId("structured"), {
+              kind: "finding",
+              status: "open",
+              scope: "structuredIndexAuditNonProgress",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "structuredIndexAuditNonProgress",
+              },
+            });
+            checkpoint.structuredCursor = undefined;
+            checkpoint.structuredComplete = true;
+          } else {
+            checkpoint.structuredCursor = page.cursor;
+            checkpoint.structuredComplete = !page.cursor;
+          }
         }
       }
 
       if (!checkpoint.textComplete && remainingBudget > 0) {
+        const pageStartCursor = checkpoint.textCursor;
         const page = await this.orm.listTextIndexDocuments({
-          cursor: checkpoint.textCursor,
+          cursor: pageStartCursor,
           limit: Math.min(this.options.indexPageSize, remainingBudget),
         });
 
         if (!page) {
           checkpoint.textComplete = true;
         } else {
+          textDocumentsProcessedCount += page.documents.length;
           remainingBudget -= page.documents.length;
 
           for (const document of page.documents) {
             const match = descriptorForField(document.indexField);
+            if (match) {
+              textTypeNames.add(match.descriptor.typeName);
+            }
+
             if (match?.removed) {
               await auditRemovedTypeCandidate(match.descriptor, {
                 docId: document.docId,
@@ -1024,8 +1050,24 @@ export class TypeInfoORMHealthMonitor {
             }
           }
 
-          checkpoint.textCursor = page.cursor;
-          checkpoint.textComplete = !page.cursor;
+          if (page.cursor && page.cursor === pageStartCursor) {
+            suspiciousCount += 1;
+            await this.store.putRecord(auditProgressFindingId("text"), {
+              kind: "finding",
+              status: "open",
+              scope: "textIndexAuditNonProgress",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "textIndexAuditNonProgress",
+              },
+            });
+            checkpoint.textCursor = undefined;
+            checkpoint.textComplete = true;
+          } else {
+            checkpoint.textCursor = page.cursor;
+            checkpoint.textComplete = !page.cursor;
+          }
         }
       }
 
