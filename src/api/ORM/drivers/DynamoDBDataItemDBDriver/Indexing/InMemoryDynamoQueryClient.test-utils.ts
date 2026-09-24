@@ -7,7 +7,6 @@ import type {
   GetItemInput,
   PutItemInput,
   QueryInput,
-  ScanInput,
 } from "./Types";
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -221,79 +220,43 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
     return {};
   }
 
-  async scan(input: ScanInput) {
-    let items = Array.from(this.table(input.TableName).values()).sort(
-      (left, right) => {
-        const leftKey = keyOf(left);
-        const rightKey = keyOf(right);
-        return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
-      },
-    );
-
-    if (input.ExclusiveStartKey) {
-      const cursorKey = keyOf(input.ExclusiveStartKey);
-      items = items.filter((item) => keyOf(item) > cursorKey);
-    }
-
-    const kindName = input.ExpressionAttributeNames?.["#kind"];
-    const kindValue = input.ExpressionAttributeValues?.[":kind"];
-    if (
-      input.FilterExpression?.includes("#kind = :kind") &&
-      kindName &&
-      kindValue !== undefined
-    ) {
-      items = items.filter((item) => item[kindName] === kindValue);
-    }
-
-    const limit = input.Limit ?? items.length;
-    const page = items.slice(0, limit);
-    const last = page[page.length - 1];
-
-    if (input.ConsistentRead) {
-      this.consistentGetCount += page.length;
-    }
-
-    return {
-      Items: page.map(clone),
-      LastEvaluatedKey:
-        page.length < items.length && last
-          ? { pk: last.pk, sk: last.sk }
-          : undefined,
-    };
-  }
-
   async query(input: QueryInput) {
-    const pkName =
+    const kindName = input.ExpressionAttributeNames?.["#kind"];
+    const partitionName =
+      kindName ??
       input.ExpressionAttributeNames?.["#pk"] ??
       input.ExpressionAttributeNames?.["#termKey"] ??
       input.ExpressionAttributeNames?.["#field"] ??
       input.ExpressionAttributeNames?.["#edgeKey"] ??
       "pk";
-    const pkValue =
+    const partitionValue =
+      input.ExpressionAttributeValues[":kind"] ??
       input.ExpressionAttributeValues[":pk"] ??
       input.ExpressionAttributeValues[":termKey"] ??
       input.ExpressionAttributeValues[":field"] ??
       input.ExpressionAttributeValues[":edgeKey"];
-    const skName = input.ExpressionAttributeNames?.["#rangeKey"] ?? "sk";
+    const sortName =
+      input.ExpressionAttributeNames?.["#rangeKey"] ??
+      (kindName ? "pk" : "sk");
     let items = Array.from(this.table(input.TableName).values())
-      .filter((item) => item[pkName] === pkValue)
+      .filter((item) => item[partitionName] === partitionValue)
       .sort((left, right) =>
-        String(left[skName]) < String(right[skName]) ? -1 : 1,
+        String(left[sortName]) < String(right[sortName]) ? -1 : 1,
       );
 
     if (input.KeyConditionExpression.includes("BETWEEN")) {
       const lower = String(input.ExpressionAttributeValues[":lower"]);
       const upper = String(input.ExpressionAttributeValues[":upper"]);
       items = items.filter((item) => {
-        const key = String(item[skName]);
+        const key = String(item[sortName]);
         return key >= lower && key <= upper;
       });
     } else if (input.KeyConditionExpression.includes(">=")) {
       const lower = String(input.ExpressionAttributeValues[":lower"]);
-      items = items.filter((item) => String(item[skName]) >= lower);
+      items = items.filter((item) => String(item[sortName]) >= lower);
     } else if (input.KeyConditionExpression.includes("<=")) {
       const upper = String(input.ExpressionAttributeValues[":upper"]);
-      items = items.filter((item) => String(item[skName]) <= upper);
+      items = items.filter((item) => String(item[sortName]) <= upper);
     }
 
     if (input.ScanIndexForward === false) {
@@ -301,22 +264,28 @@ export class InMemoryDynamoQueryClient implements DynamoQueryClient {
     }
     if (input.ExclusiveStartKey) {
       const cursorSortKey = String(
-        input.ExclusiveStartKey[skName] ?? input.ExclusiveStartKey.sk,
+        input.ExclusiveStartKey[sortName] ?? input.ExclusiveStartKey.sk,
       );
       items = items.filter((item) =>
         input.ScanIndexForward === false
-          ? String(item[skName]) < cursorSortKey
-          : String(item[skName]) > cursorSortKey,
+          ? String(item[sortName]) < cursorSortKey
+          : String(item[sortName]) > cursorSortKey,
       );
     }
+
     const limit = input.Limit ?? items.length;
     const page = items.slice(0, limit);
     const last = page[page.length - 1];
+
     return {
       Items: page.map(clone),
       LastEvaluatedKey:
         page.length < items.length && last
-          ? { pk: last.pk, sk: last.sk }
+          ? {
+              pk: last.pk,
+              sk: last.sk,
+              ...(kindName ? { kind: last[kindName] } : {}),
+            }
           : undefined,
     };
   }
