@@ -68,8 +68,13 @@ const hydrateKeysStrongly = async (
       attempt < BATCH_GET_MAX_ATTEMPTS;
       attempt += 1
     ) {
+      const requestItems = pending;
+      if (!requestItems) {
+        break;
+      }
+
       const response = await client.batchGetItem({
-        RequestItems: pending,
+        RequestItems: requestItems,
       });
 
       for (const item of response.Responses?.[tableName] ?? []) {
