@@ -24,6 +24,12 @@
       "conditions": [],
       "operation": "===",
       "expectation": true
+    },
+    {
+      "export": "runIndexingTablesValidationEmptyMaintenanceIndexScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "indexing.maintenanceIndexName must be a non-empty string when provided."
     }
   ]
 }
