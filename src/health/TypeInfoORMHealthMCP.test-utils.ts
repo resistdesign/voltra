@@ -24,6 +24,15 @@ const buildResult = (
 ): TypeInfoORMHealthMonitorRunResult => ({
   runId: repairMode === "preview" ? "run-preview" : "run-repair",
   repairMode,
+  passNumber: repairMode === "preview" ? 2 : 3,
+  structuredDocumentsProcessedCount: 7,
+  textDocumentsProcessedCount: 5,
+  structuredTypeNames: ["Book"],
+  textTypeNames: ["Book"],
+  cycleExaminedCount: repairMode === "preview" ? 8 : 12,
+  cycleOrphanFindingCount: 2,
+  cycleRepairedCount: repairMode === "preview" ? 0 : 2,
+  cycleSuspiciousCount: 0,
   examinedCount: repairMode === "preview" ? 3 : 4,
   orphanFindingCount: 1,
   confirmedOrphanCount: repairMode === "preview" ? 0 : 1,
@@ -52,6 +61,39 @@ const getMonitor = (): TypeInfoORMHealthMCPMonitor => ({
     repairRecordCount: 6,
     failedRunCount: 0,
     cursor: options.cursor ? undefined : "health-cursor-2",
+    continuation: !options.cursor,
+  }),
+  progress: async () => ({
+    runId: "run-active",
+    status: "running",
+    repairMode: "apply",
+    passCount: 4,
+    structuredComplete: false,
+    textComplete: false,
+    canonicalComplete: true,
+    schemaReconcileComplete: true,
+    structuredTypeNames: ["FriendFinderDecision"],
+    textTypeNames: ["FriendFinderDecision"],
+    canonicalTypeName: undefined,
+    retentionPending: true,
+    continuation: true,
+    updatedAt: 1234,
+  }),
+  findings: async (options = {}) => ({
+    examinedRecordCount: options.itemsPerPage ?? 100,
+    findings: [
+      {
+        id: "finding-1",
+        status: "repaired",
+        typeName: "FriendFinderDecision",
+        itemId: "decision-1",
+        scope: "orphanedIndex",
+        correlationId: "run-active",
+        createdAt: 1000,
+        updatedAt: 1200,
+      },
+    ],
+    cursor: options.cursor ? undefined : "finding-cursor-2",
     continuation: !options.cursor,
   }),
   preview: async () => buildResult("preview"),
@@ -193,6 +235,44 @@ export const runHealthMCPStatusScenario = async () => {
     }),
     "tools/call",
     "healthStatus",
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    structuredContent: parsed.result.structuredContent,
+  };
+};
+
+export const runHealthMCPProgressScenario = async () => {
+  const response = await runRequest(
+    getRequestBody("tools/call", {
+      name: "healthProgress",
+      arguments: {},
+    }),
+    "tools/call",
+    "healthProgress",
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    structuredContent: parsed.result.structuredContent,
+  };
+};
+
+export const runHealthMCPFindingsScenario = async () => {
+  const response = await runRequest(
+    getRequestBody("tools/call", {
+      name: "healthFindings",
+      arguments: {
+        itemsPerPage: 25,
+        typeName: "FriendFinderDecision",
+        scope: "orphanedIndex",
+      },
+    }),
+    "tools/call",
+    "healthFindings",
   );
   const parsed = JSON.parse(response.body);
 
