@@ -2,69 +2,107 @@
 
 ## Goal
 
-Make Voltra Health/index-maintenance traversal efficient on unified DynamoDB index tables without contaminating storage-neutral ORM/Health APIs with DynamoDB-specific behavior.
+Make Voltra Health/index-maintenance traversal efficient on the unified DynamoDB index table while keeping physical DynamoDB schema knowledge inside Voltra.
 
-The existing DynamoDB maintenance path performs bounded table scans with a `kind` filter. This is safe and resumable, but a unified index table contains many unrelated record families, so a page can evaluate many physical records and return few or zero structured/full-text document mirrors. Large Health sweeps therefore require many mostly-empty passes.
+The previous maintenance path used bounded table scans with a `kind` filter. On a unified index table, DynamoDB evaluates unrelated terms, ranges, postings, occupancy records, and relationship records before applying that filter. A bounded maintenance page can therefore consume reads while returning few or zero document mirrors.
 
-## Design
+Voltra alpha does not preserve that path. The canonical DynamoDB index database now includes the infrastructure required for direct maintenance enumeration.
 
-### Optional maintenance GSI
+## Canonical index infrastructure
 
-DynamoDB index-table configuration now accepts an optional `maintenanceIndexName`.
+Voltra owns one internal infrastructure contract for its DynamoDB index table:
 
-The corresponding GSI is:
+- base partition key: `pk`
+- base sort key: `sk`
+- logical record-kind attribute: `kind`
+- maintenance GSI: `VoltraIndexMaintenance`
+  - partition key: `kind`
+  - sort key: `pk`
+  - projection: `KEYS_ONLY`
 
-- partition key: `kind`
-- sort key: `pk`
-- projection: `KEYS_ONLY`
+The contract is shared internally by the API driver and IaC pack. Applications do not configure the maintenance index name.
 
-All existing unified index records already persist `kind`, so adding the GSI to an existing table allows DynamoDB to backfill it without rewriting index data.
+## Semantic IaC pack
 
-The GSI intentionally remains optional:
+The generic `addDatabase` pack now supports global secondary indexes because that is a useful DynamoDB primitive.
 
-- deployments that configure it use direct `Query` enumeration by logical record family;
-- existing deployments continue using the current strongly-consistent bounded `Scan` fallback.
+Voltra indexing should not require consumers to reproduce its exact table schema with that primitive, however. A new semantic pack owns the canonical schema:
 
-### Strong-read preservation
+```ts
+cft.applyPack(addIndexDatabase, {
+  tableId: "IndexingTable",
+});
+```
 
-DynamoDB GSIs are eventually consistent. Structured document maintenance needs full mirror state and existing maintenance behavior benefits from strong base-table reads.
+`addIndexDatabase` delegates to `addDatabase` and creates the complete Voltra index table, including the maintenance GSI.
+
+Consumers that use the Voltra DynamoDB indexing drivers should provision their index table with `addIndexDatabase`.
+
+## Runtime configuration
+
+Runtime configuration remains intentionally minimal:
+
+```ts
+const table: IndexTableConfig = {
+  tableName: process.env.INDEXING_TABLE as string,
+};
+```
+
+There is no `maintenanceIndexName` runtime option and no additional environment variable. The DynamoDB indexing driver knows the canonical maintenance GSI name because Voltra owns both sides of the contract.
+
+## Maintenance enumeration
+
+Structured and full-text maintenance enumerate logical record families directly through the maintenance GSI:
+
+- structured document mirrors: `kind = "sd"`
+- full-text document mirrors: `kind = "fm"`
+
+There is no scan fallback.
+
+If the canonical infrastructure is not deployed, maintenance fails instead of silently degrading into a much more expensive traversal mode. This keeps alpha deployments on one state-of-the-art path and prevents infrastructure drift from being hidden.
+
+## Strong-read repair safety
+
+DynamoDB GSIs are eventually consistent.
 
 For structured mirrors, Voltra therefore:
 
-1. queries the KEYS_ONLY maintenance GSI for only `structuredDocument` keys;
-2. batch-gets those base-table records with `ConsistentRead: true`;
-3. preserves the GSI page order while tolerating records removed between the GSI query and base-table hydration.
+1. queries the KEYS_ONLY maintenance GSI;
+2. batch-loads the corresponding base-table records with `ConsistentRead: true`;
+3. preserves page order and tolerates records deleted between GSI enumeration and hydration;
+4. continues through the existing strongly validated Health/canonical repair path.
 
-Full-text maintenance only needs the persisted base keys to decode document/field identity, so it can use the KEYS_ONLY query result directly. Destructive Health repair remains guarded by the existing strongly-consistent canonical verification/recheck path.
+Full-text maintenance only needs the projected base keys to decode document and field identity, so it can use the KEYS_ONLY GSI result directly. Destructive repairs still use the existing guarded validation/recheck semantics.
 
-### Architecture boundary
+## Architecture boundary
 
-The optimization is entirely inside the DynamoDB indexing driver. Generic TypeInfo ORM maintenance APIs and Health monitor semantics are unchanged.
+The optimization remains entirely inside the DynamoDB indexing implementation.
 
-Other drivers retain their existing enumeration implementations.
+Generic TypeInfo ORM maintenance and Health APIs do not contain DynamoDB concepts. Other storage drivers continue to implement the same generic maintenance contracts using their own native enumeration strategies.
 
-## IaC and demo support
+## Demo
 
-- Extend `addDatabase` with optional global-secondary-index configuration.
-- Configure the Voltra demo unified index table with a `kind` + `pk` KEYS_ONLY maintenance GSI.
-- Pass the GSI name into the demo's `IndexTableConfig` through a dedicated environment variable.
-- Keep the one-index-table example explicit about the optional optimized path and backward-compatible scan fallback.
+The Voltra demo is upgraded to the canonical path:
 
-## Compatibility
+- it provisions the unified index table with `addIndexDatabase`;
+- API runtime configuration still receives only the table name;
+- no maintenance-GSI environment variable or hand-authored GSI schema exists in demo code.
 
-- `maintenanceIndexName` is optional.
-- No persisted key format changes.
-- No reindex/migration is required when enabling the GSI because DynamoDB backfills existing records using their current `kind` attribute.
-- Deployments may roll out the GSI first, then configure `maintenanceIndexName`.
-- Scan-capable existing deployments continue to work unchanged.
+## Adoption
+
+This is an alpha contract change, not a compatibility layer.
+
+When a DynamoDB deployment moves to this Voltra release, its index table infrastructure should be updated to the canonical `addIndexDatabase` shape. Existing unified index records already persist `kind`, so DynamoDB can populate the new GSI from the current table contents; Voltra does not need a second logical reindex solely to create the GSI.
 
 ## Verification
 
-- Focused coverage for direct GSI query enumeration and strong base-table hydration.
-- Focused coverage for the legacy scan fallback.
-- AWS SDK adapter coverage for `IndexName`.
-- Database IaC pack coverage for GSI CloudFormation output.
-- Demo environment-mapping coverage.
-- Index-table configuration validation coverage.
-- Consumer smoke coverage for the new optional config.
-- Full CI/build/export/demo checks.
+- Direct maintenance-GSI query coverage.
+- Strong base-table hydration coverage for structured mirrors.
+- Full-text KEYS_ONLY enumeration coverage.
+- AWS SDK adapter coverage for `Query.IndexName`.
+- Generic `addDatabase` GSI coverage.
+- Dedicated `addIndexDatabase` schema/contract coverage.
+- Demo IaC uses `addIndexDatabase`.
+- Demo runtime environment mapping remains table-only.
+- Consumer smoke coverage includes `addIndexDatabase` and table-only `IndexTableConfig`.
+- Full tests, declaration build, demo builds, export checks, and consumer smoke checks run in CI.
