@@ -173,31 +173,4 @@ export const listDynamoIndexItemsByKind = async (
       : indexedItems,
     cursor: response.LastEvaluatedKey,
   };
-};  }
-
-  if (!client.scan) {
-    throw new Error(
-      "DynamoDB maintenance enumeration requires either maintenanceIndexName or scan support.",
-    );
-  }
-
-  const response = await client.scan({
-    TableName: table.tableName,
-    FilterExpression: "#kind = :kind",
-    ExpressionAttributeNames: {
-      "#kind": INDEX_TABLE_KIND_ATTRIBUTE,
-    },
-    ExpressionAttributeValues: {
-      ":kind": kind,
-    },
-    ExclusiveStartKey: cursor,
-    Limit: boundedLimit,
-    ConsistentRead: true,
-  });
-
-  return {
-    items: response.Items ?? [],
-    cursor: response.LastEvaluatedKey,
-    strategy: "scan",
-  };
 };
