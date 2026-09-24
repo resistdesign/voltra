@@ -49,6 +49,7 @@ import {
   assertIndexTableConfig,
   type IndexTableConfig,
 } from "./IndexTable";
+import { listDynamoIndexItemsByKind } from "./MaintenanceEnumeration";
 import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
 import type {
   DynamoBatchWriter,
@@ -677,6 +678,7 @@ type LossyPostingsPageOptions = {
  */
 export class FullTextDdbBackend extends FullTextDdbWriter {
   private readonly queryClient: DynamoQueryClient;
+  private readonly maintenanceTable: IndexTableConfig;
   private activeTrace: SearchTrace | undefined;
 
   /**
@@ -685,6 +687,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
   constructor(config: FullTextDdbBackendConfig) {
     super(config);
     this.queryClient = config.client;
+    this.maintenanceTable = config.table;
   }
 
   /**
@@ -695,28 +698,16 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
   async listDocuments(
     options: TextIndexDocumentListOptions = {},
   ): Promise<TextIndexDocumentPage> {
-    if (!this.queryClient.scan) {
-      throw new Error(
-        "Full-text maintenance enumeration requires DynamoDB scan support.",
-      );
-    }
-
-    const response = await this.queryClient.scan({
-      TableName: this.mirrorTableName,
-      FilterExpression: "#kind = :kind",
-      ExpressionAttributeNames: {
-        "#kind": INDEX_TABLE_KIND_ATTRIBUTE,
-      },
-      ExpressionAttributeValues: {
-        ":kind": INDEX_ITEM_KINDS.fullTextDocumentMirror,
-      },
-      ExclusiveStartKey: decodeMaintenanceCursor(options.cursor),
-      Limit: Math.max(1, options.limit ?? 100),
-      ConsistentRead: true,
+    const page = await listDynamoIndexItemsByKind({
+      client: this.queryClient,
+      table: this.maintenanceTable,
+      kind: INDEX_ITEM_KINDS.fullTextDocumentMirror,
+      cursor: decodeMaintenanceCursor(options.cursor),
+      limit: Math.max(1, options.limit ?? 100),
     });
 
     const documents = [];
-    for (const item of response.Items ?? []) {
+    for (const item of page.items) {
       const docId = decodeMirrorDocumentId(
         item[fullTextDocMirrorSchema.partitionKey],
       );
@@ -730,7 +721,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
 
     return {
       documents,
-      cursor: encodeMaintenanceCursor(response.LastEvaluatedKey),
+      cursor: encodeMaintenanceCursor(page.cursor),
     };
   }
 
