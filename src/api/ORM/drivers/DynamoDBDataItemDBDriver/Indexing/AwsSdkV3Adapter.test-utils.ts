@@ -27,7 +27,7 @@ export const runAwsSdkV3ConsistencyMappingScenario = async () => {
   });
   await client.query({
     TableName: "Index",
-    IndexName: "KindPkMaintenanceIndex",
+    IndexName: "ExampleSecondaryIndex",
     KeyConditionExpression: "#kind = :kind",
     ExpressionAttributeNames: { "#kind": "kind" },
     ExpressionAttributeValues: { ":kind": "sd" },
