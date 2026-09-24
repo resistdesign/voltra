@@ -21,7 +21,10 @@ import {
   DOMAINS,
 } from "../common/Constants";
 import { DemoTypeInfoMap } from "../common/DemoTypeInfoMap";
-import { INDEXING_TABLE_ENV_VAR } from "../common/IndexingTable";
+import {
+  INDEXING_MAINTENANCE_INDEX_ENV_VAR,
+  INDEXING_TABLE_ENV_VAR,
+} from "../common/IndexingTable";
 import { HEALTH_TABLE_ENV_VAR } from "../common/HealthTable";
 
 const moduleDirname =
@@ -131,10 +134,18 @@ const IaC = new SimpleCFT({
     }
 
     const indexingTableId = "IndexingTable";
+    const indexingMaintenanceIndexName = "KindPkMaintenanceIndex";
     cft.applyPack(addDatabase, {
       tableId: indexingTableId,
-      attributes: { pk: "S", sk: "S" },
+      attributes: { pk: "S", sk: "S", kind: "S" },
       keys: { pk: "HASH", sk: "RANGE" },
+      globalSecondaryIndexes: [
+        {
+          indexName: indexingMaintenanceIndexName,
+          keys: { kind: "HASH", pk: "RANGE" },
+          projection: "KEYS_ONLY",
+        },
+      ],
     });
 
     const healthTableId = "HealthTable";
@@ -172,6 +183,8 @@ const IaC = new SimpleCFT({
           [INDEXING_TABLE_ENV_VAR]: {
             Ref: indexingTableId,
           },
+          [INDEXING_MAINTENANCE_INDEX_ENV_VAR]:
+            indexingMaintenanceIndexName,
           [HEALTH_TABLE_ENV_VAR]: {
             Ref: healthTableId,
           },
