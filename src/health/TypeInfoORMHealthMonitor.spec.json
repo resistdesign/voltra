@@ -47,6 +47,18 @@
       }
     },
     {
+      "export": "runHealthRepairCapContinuationScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "completed": true,
+        "usedMultipleRuns": true,
+        "stayedWithinRepairBudget": true,
+        "repairedAllOrphans": true,
+        "remainingIndexedIds": []
+      }
+    },
+    {
       "export": "runHealthRetentionDoesNotBlockContinuationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

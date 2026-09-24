@@ -373,6 +373,85 @@ export const runHealthBoundedContinuationScenario = async () => {
   };
 };
 
+export const runHealthRepairCapContinuationScenario = async () => {
+  let counter = 0;
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "RepairCapBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => `repair-cap-${++counter}`,
+  });
+  const fullTextBackend = new FullTextMemoryBackend();
+  const structuredBackend = new StructuredInMemoryBackend();
+  const typeInfoMap = structuredClone(getBookTypeInfoV1());
+  const titleField = typeInfoMap.Book.fields?.title;
+
+  if (!titleField) {
+    throw new Error("Book title TypeInfo field is required.");
+  }
+
+  delete titleField.tags;
+
+  const orm = createOrm(
+    typeInfoMap,
+    { Book: driver },
+    fullTextBackend,
+    structuredBackend,
+  );
+  const ratings = Array.from({ length: 7 }, (_, index) => index);
+
+  for (const rating of ratings) {
+    const id = await orm.create("Book", {
+      title: `Repair Cap ${rating}`,
+      slug: `repair-cap-${rating}`,
+      rating,
+    } as TypeInfoDataItem);
+    await driver.deleteItem(id);
+  }
+
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store: createHealthStore(),
+    maxIndexDocumentsPerRun: 3,
+    indexPageSize: 3,
+    maxRepairsPerRun: 2,
+  });
+  const repairedCounts: number[] = [];
+  let completed = false;
+
+  for (let runIndex = 0; runIndex < 20; runIndex += 1) {
+    const result = await monitor.repair();
+    repairedCounts.push(result.repairedCount);
+
+    if (!result.continuation) {
+      completed = true;
+      break;
+    }
+  }
+
+  const remainingIndexedIds: Array<string | number> = [];
+
+  for (const rating of ratings) {
+    remainingIndexedIds.push(
+      ...(await queryStructuredIds(
+        structuredBackend,
+        "Book",
+        "rating",
+        rating,
+      )),
+    );
+  }
+
+  return {
+    completed,
+    usedMultipleRuns: repairedCounts.length > 1,
+    stayedWithinRepairBudget: repairedCounts.every((count) => count <= 2),
+    repairedAllOrphans:
+      repairedCounts.reduce((total, count) => total + count, 0) ===
+      ratings.length,
+    remainingIndexedIds: Array.from(new Set(remainingIndexedIds)).sort(),
+  };
+};
+
 export const runHealthRetentionDoesNotBlockContinuationScenario = async () => {
   const store = createHealthStore();
 
