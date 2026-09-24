@@ -16,8 +16,12 @@ import type {
   TypeInfoPack,
 } from "../common/TypeParsing";
 import type {
+  TypeInfoORMHealthFindingSummary,
+  TypeInfoORMHealthFindingsOptions,
+  TypeInfoORMHealthFindingsResult,
   TypeInfoORMHealthMonitor,
   TypeInfoORMHealthMonitorRunResult,
+  TypeInfoORMHealthProgressResult,
   TypeInfoORMHealthStatusOptions,
   TypeInfoORMHealthStatusResult,
 } from "./TypeInfoORMHealthMonitor";
@@ -37,6 +41,60 @@ const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
         readonly: true,
         optional: false,
         possibleValues: ["preview", "apply"],
+      },
+      passNumber: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      structuredDocumentsProcessedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      textDocumentsProcessedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      structuredTypeNames: {
+        type: "string",
+        array: true,
+        readonly: true,
+        optional: false,
+      },
+      textTypeNames: {
+        type: "string",
+        array: true,
+        readonly: true,
+        optional: false,
+      },
+      cycleExaminedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      cycleOrphanFindingCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      cycleRepairedCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      cycleSuspiciousCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
       },
       examinedCount: {
         type: "number",
@@ -230,6 +288,255 @@ const HEALTH_MCP_STATUS_OUTPUT_TYPE_INFO_PACK: TypeInfoPack = {
   typeInfoMap: HEALTH_MCP_STATUS_TYPE_INFO_MAP,
 };
 
+const HEALTH_MCP_PROGRESS_TYPE_INFO_MAP: TypeInfoMap = {
+  TypeInfoORMHealthProgressResult: {
+    fields: {
+      runId: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      status: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      repairMode: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+        possibleValues: ["preview", "apply"],
+      },
+      passCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      structuredComplete: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      textComplete: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      canonicalComplete: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      schemaReconcileComplete: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      structuredTypeNames: {
+        type: "string",
+        array: true,
+        readonly: true,
+        optional: false,
+      },
+      textTypeNames: {
+        type: "string",
+        array: true,
+        readonly: true,
+        optional: false,
+      },
+      canonicalTypeName: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      retentionPending: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      continuation: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      updatedAt: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+    },
+  },
+};
+
+const HEALTH_MCP_PROGRESS_OUTPUT_TYPE_INFO_PACK: TypeInfoPack = {
+  entryTypeName: "TypeInfoORMHealthProgressResult",
+  typeInfoMap: HEALTH_MCP_PROGRESS_TYPE_INFO_MAP,
+};
+
+const HEALTH_MCP_FINDINGS_TYPE_INFO_MAP: TypeInfoMap = {
+  TypeInfoORMHealthFindingsOptions: {
+    fields: {
+      itemsPerPage: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      cursor: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      status: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      typeName: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      scope: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+    },
+  },
+  TypeInfoORMHealthFindingSummary: {
+    fields: {
+      id: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      status: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      typeName: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      itemId: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      operation: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      scope: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      correlationId: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      count: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      value: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      createdAt: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      updatedAt: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      expiresAt: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+    },
+  },
+  TypeInfoORMHealthFindingsResult: {
+    fields: {
+      examinedRecordCount: {
+        type: "number",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+      findings: {
+        type: "string",
+        typeReference: "TypeInfoORMHealthFindingSummary",
+        array: true,
+        readonly: true,
+        optional: false,
+      },
+      cursor: {
+        type: "string",
+        array: false,
+        readonly: true,
+        optional: true,
+      },
+      continuation: {
+        type: "boolean",
+        array: false,
+        readonly: true,
+        optional: false,
+      },
+    },
+  },
+};
+
+const HEALTH_MCP_FINDINGS_INPUT_TYPE_INFO_PACK: TypeInfoPack = {
+  entryTypeName: "TypeInfoORMHealthFindingsOptions",
+  typeInfoMap: HEALTH_MCP_FINDINGS_TYPE_INFO_MAP,
+};
+
+const HEALTH_MCP_FINDINGS_OUTPUT_TYPE_INFO_PACK: TypeInfoPack = {
+  entryTypeName: "TypeInfoORMHealthFindingsResult",
+  typeInfoMap: HEALTH_MCP_FINDINGS_TYPE_INFO_MAP,
+};
+
 const PREVIEW_ANNOTATIONS: MCPToolAnnotations = {
   // Preview does not mutate application/index data, but it does persist
   // Health findings/checkpoints and may prune expired Health records.
@@ -251,7 +558,7 @@ const REPAIR_ANNOTATIONS: MCPToolAnnotations = {
  */
 export type TypeInfoORMHealthMCPMonitor = Pick<
   TypeInfoORMHealthMonitor,
-  "status" | "preview" | "repair"
+  "status" | "progress" | "findings" | "preview" | "repair"
 >;
 
 /**
@@ -291,6 +598,8 @@ export type AddTypeInfoORMHealthMCPToRouteMapConfig = {
  *
  * The exposed tools are deliberately small:
  * - `healthStatus` reads one bounded page of persisted Health state.
+ * - `healthProgress` reads the active logical audit-cycle phase and recent type progress.
+ * - `healthFindings` reads one bounded page of persisted findings with optional filters.
  * - `healthPreview` performs one bounded non-destructive monitor pass.
  * - `healthRepair` is opt-in and performs one bounded pass while applying
  *   only the monitor's strongly validated repairs.
@@ -329,6 +638,38 @@ export const addTypeInfoORMHealthMCPToRouteMap = (
         handler: async (
           input: TypeInfoORMHealthStatusOptions,
         ): Promise<TypeInfoORMHealthStatusResult> => monitor.status(input),
+      },
+      {
+        path: "healthProgress",
+        authConfig: config.authConfig,
+        description:
+          "Read the current logical Voltra Health audit-cycle progress, including completion phases, pass count, recently processed TypeInfo types, and whether retention still has background work.",
+        outputTypeInfo: HEALTH_MCP_PROGRESS_OUTPUT_TYPE_INFO_PACK,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+        handler: async (): Promise<TypeInfoORMHealthProgressResult> =>
+          monitor.progress(),
+      },
+      {
+        path: "healthFindings",
+        authConfig: config.authConfig,
+        description:
+          "Read one bounded page of persisted Voltra Health findings. Optional status, typeName, and scope filters help inspect active or repaired issues without running maintenance.",
+        inputTypeInfo: HEALTH_MCP_FINDINGS_INPUT_TYPE_INFO_PACK,
+        outputTypeInfo: HEALTH_MCP_FINDINGS_OUTPUT_TYPE_INFO_PACK,
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+        handler: async (
+          input: TypeInfoORMHealthFindingsOptions,
+        ): Promise<TypeInfoORMHealthFindingsResult> => monitor.findings(input),
       },
       {
         path: "healthPreview",
