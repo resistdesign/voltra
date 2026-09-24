@@ -5,6 +5,7 @@ import {
   addCloudFunction,
   addDatabase,
   addDNS,
+  addIndexDatabase,
   addGateway,
   addSecureFileStorage,
   addSSLCertificate,
@@ -131,10 +132,8 @@ const IaC = new SimpleCFT({
     }
 
     const indexingTableId = "IndexingTable";
-    cft.applyPack(addDatabase, {
+    cft.applyPack(addIndexDatabase, {
       tableId: indexingTableId,
-      attributes: { pk: "S", sk: "S" },
-      keys: { pk: "HASH", sk: "RANGE" },
     });
 
     const healthTableId = "HealthTable";

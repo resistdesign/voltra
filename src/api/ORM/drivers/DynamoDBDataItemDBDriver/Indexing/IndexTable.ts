@@ -31,6 +31,7 @@ export const assertIndexTableConfig = (
   if (typeof config?.tableName !== "string" || config.tableName.trim() === "") {
     throw new Error("Missing table name for indexing.tableName.");
   }
+
 };
 
 /** Validate a logical Voltra index key against DynamoDB physical limits. */

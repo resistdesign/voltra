@@ -5,15 +5,20 @@
  * Callers provide semantic identities; this module owns namespaces, encoding,
  * ordering, and collision-safe logical key construction.
  */
+import {
+  VOLTRA_INDEX_TABLE_KIND_ATTRIBUTE,
+  VOLTRA_INDEX_TABLE_PARTITION_KEY,
+  VOLTRA_INDEX_TABLE_SORT_KEY,
+} from "../../common/IndexingInfrastructure";
 import type { DocId } from "./Types";
 import type { WhereValue } from "./structured/Types";
 
 /** Logical partition-key attribute used by every unified index item. */
-export const INDEX_TABLE_PARTITION_KEY = "pk";
+export const INDEX_TABLE_PARTITION_KEY = VOLTRA_INDEX_TABLE_PARTITION_KEY;
 /** Logical sort-key attribute used by every unified index item. */
-export const INDEX_TABLE_SORT_KEY = "sk";
+export const INDEX_TABLE_SORT_KEY = VOLTRA_INDEX_TABLE_SORT_KEY;
 /** Logical item-kind attribute used for diagnostics and migrations. */
-export const INDEX_TABLE_KIND_ATTRIBUTE = "kind";
+export const INDEX_TABLE_KIND_ATTRIBUTE = VOLTRA_INDEX_TABLE_KIND_ATTRIBUTE;
 /** Current logical key format version. */
 export const INDEX_KEY_VERSION = "v1";
 /** Separator reserved for Voltra-owned key structure. */

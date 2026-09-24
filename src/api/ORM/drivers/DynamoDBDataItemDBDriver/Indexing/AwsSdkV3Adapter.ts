@@ -7,7 +7,6 @@ import {
   GetItemCommand,
   PutItemCommand,
   QueryCommand,
-  ScanCommand,
   type KeysAndAttributes as AwsKeysAndAttributes,
   type WriteRequest as AwsWriteRequest,
 } from "@aws-sdk/client-dynamodb";
@@ -28,8 +27,6 @@ import type {
   PutItemOutput,
   QueryInput,
   QueryOutput,
-  ScanInput,
-  ScanOutput,
   WriteRequest,
 } from "./Types";
 
@@ -182,6 +179,7 @@ export const createAwsSdkV3DynamoClient = (
     const response = await client.send(
       new QueryCommand({
         TableName: input.TableName,
+        IndexName: input.IndexName,
         KeyConditionExpression: input.KeyConditionExpression,
         ExpressionAttributeNames: input.ExpressionAttributeNames,
         ExpressionAttributeValues: toAwsKey(input.ExpressionAttributeValues),
@@ -190,32 +188,6 @@ export const createAwsSdkV3DynamoClient = (
           : undefined,
         Limit: input.Limit,
         ScanIndexForward: input.ScanIndexForward,
-      }),
-    );
-
-    return {
-      Items: response.Items
-        ? response.Items.map((item) => fromAwsKey(item))
-        : undefined,
-      LastEvaluatedKey: response.LastEvaluatedKey
-        ? fromAwsKey(response.LastEvaluatedKey)
-        : undefined,
-    };
-  },
-  scan: async (input: ScanInput): Promise<ScanOutput> => {
-    const response = await client.send(
-      new ScanCommand({
-        TableName: input.TableName,
-        FilterExpression: input.FilterExpression,
-        ExpressionAttributeNames: input.ExpressionAttributeNames,
-        ExpressionAttributeValues: input.ExpressionAttributeValues
-          ? toAwsKey(input.ExpressionAttributeValues)
-          : undefined,
-        ExclusiveStartKey: input.ExclusiveStartKey
-          ? toAwsKey(input.ExclusiveStartKey)
-          : undefined,
-        Limit: input.Limit,
-        ConsistentRead: input.ConsistentRead,
       }),
     );
 

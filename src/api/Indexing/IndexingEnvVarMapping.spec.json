@@ -5,7 +5,9 @@
       "export": "runIndexingEnvVarMappingEnvVarsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["INDEXING_TABLE"]
+      "expectation": [
+        "INDEXING_TABLE"
+      ]
     },
     {
       "export": "runIndexingEnvVarMappingUniqueCountScenario",

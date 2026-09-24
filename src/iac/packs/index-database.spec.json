@@ -1,0 +1,85 @@
+{
+  "file": "./index-database.test-utils.ts",
+  "tests": [
+    {
+      "export": "runIndexDatabasePackTableNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "voltra-index"
+    },
+    {
+      "export": "runIndexDatabasePackBillingModeScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "PAY_PER_REQUEST"
+    },
+    {
+      "export": "runIndexDatabasePackAttributesScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "AttributeName": "pk",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "sk",
+          "AttributeType": "S"
+        },
+        {
+          "AttributeName": "kind",
+          "AttributeType": "S"
+        }
+      ]
+    },
+    {
+      "export": "runIndexDatabasePackKeysScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "AttributeName": "pk",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "sk",
+          "KeyType": "RANGE"
+        }
+      ]
+    },
+    {
+      "export": "runIndexDatabasePackMaintenanceIndexScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [
+        {
+          "IndexName": "VoltraIndexMaintenance",
+          "KeySchema": [
+            {
+              "AttributeName": "kind",
+              "KeyType": "HASH"
+            },
+            {
+              "AttributeName": "pk",
+              "KeyType": "RANGE"
+            }
+          ],
+          "Projection": {
+            "ProjectionType": "KEYS_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "export": "runIndexDatabasePackContractScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "partitionKey": "pk",
+        "sortKey": "sk",
+        "kindAttribute": "kind",
+        "maintenanceIndexName": "VoltraIndexMaintenance"
+      }
+    }
+  ]
+}

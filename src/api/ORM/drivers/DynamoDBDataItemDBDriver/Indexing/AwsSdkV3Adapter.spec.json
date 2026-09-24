@@ -8,8 +8,15 @@
       "expectation": {
         "getItem": true,
         "batchGetItem": true,
-        "getItemKeyFields": ["pk", "sk"],
-        "batchGetItemKeyFields": ["pk", "sk"]
+        "getItemKeyFields": [
+          "pk",
+          "sk"
+        ],
+        "batchGetItemKeyFields": [
+          "pk",
+          "sk"
+        ],
+        "queryIndexName": "ExampleSecondaryIndex"
       }
     }
   ]
