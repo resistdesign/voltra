@@ -37,6 +37,11 @@ export * from "./database";
  * @category iac
  * @group Resource Packs
  */
+export * from "./index-database";
+/**
+ * @category iac
+ * @group Resource Packs
+ */
 export * from "./dns";
 /**
  * @category iac
