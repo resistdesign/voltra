@@ -12,10 +12,9 @@ import type { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 /**
  * One physical table configuration is shared by every logical index backend.
  *
- * For efficient Health/maintenance enumeration on DynamoDB, provision a
- * KEYS_ONLY GSI with `kind` as HASH and `pk` as RANGE, then pass its name
- * as `maintenanceIndexName`. Existing deployments may omit it and retain the
- * bounded scan fallback.
+ * Provision the table with Voltra's `addIndexDatabase` IaC pack. The pack
+ * owns the DynamoDB schema and maintenance index expected by these drivers, so
+ * API consumers only provide the table name at runtime.
  */
 export const createIndexingBackends = (
   ddbClient: DynamoDBClient,
