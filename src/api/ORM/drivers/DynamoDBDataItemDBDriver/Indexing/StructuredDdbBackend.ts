@@ -9,6 +9,7 @@ import type {
   WriteRequest,
 } from "./Types";
 import type { DocId } from "../../../../Indexing/Types";
+import { INDEX_ITEM_KINDS } from "../../../../Indexing/IndexTable";
 import {
   assertDynamoIndexSortKey,
   assertIndexTableConfig,
@@ -59,6 +60,7 @@ import {
   type StructuredOccupancyItem,
 } from "../../../../Indexing/structured/StructuredOccupancy";
 import type { StructuredDerivedMutation } from "../../../../Indexing/structured/StructuredWriter";
+import { listDynamoIndexItemsByKind } from "./MaintenanceEnumeration";
 
 type DynamoKey = Record<string, unknown>;
 
@@ -119,6 +121,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
   private readonly termTableName: string;
   private readonly rangeTableName: string;
   private readonly docFieldsTableName: string;
+  private readonly table: IndexTableConfig;
   readonly tokenizer?: Partial<StructuredStringTokenizerConfig>;
 
   /**
@@ -130,6 +133,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     this.termTableName = config.table.tableName;
     this.rangeTableName = config.table.tableName;
     this.docFieldsTableName = config.table.tableName;
+    this.table = config.table;
     this.tokenizer = config.tokenizer;
   }
 
@@ -468,27 +472,16 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
     list: async (
       options: StructuredDocumentListOptions = {},
     ): Promise<StructuredDocumentPage> => {
-      if (!this.client.scan) {
-        throw new Error(
-          "Structured document maintenance enumeration requires DynamoDB scan support.",
-        );
-      }
-
-      const response = await this.client.scan({
-        TableName: this.docFieldsTableName,
-        FilterExpression: "#kind = :kind",
-        ExpressionAttributeNames: {
-          "#kind": "kind",
-        },
-        ExpressionAttributeValues: {
-          ":kind": "sd",
-        },
-        ExclusiveStartKey: decodeCursorKey(options.cursor),
-        Limit: Math.max(1, options.limit ?? 100),
-        ConsistentRead: true,
+      const page = await listDynamoIndexItemsByKind({
+        client: this.client,
+        table: this.table,
+        kind: INDEX_ITEM_KINDS.structuredDocument,
+        cursor: decodeCursorKey(options.cursor),
+        limit: Math.max(1, options.limit ?? 100),
+        hydrateBaseItems: true,
       });
+      const items = page.items as StructuredDocFieldsItem[];
 
-      const items = (response.Items ?? []) as StructuredDocFieldsItem[];
       return {
         documents: items.map((item) => ({
           docId: item.docId,
@@ -498,7 +491,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
               ? item.version
               : 0,
         })),
-        cursor: encodeCursorKey(response.LastEvaluatedKey),
+        cursor: encodeCursorKey(page.cursor),
       };
     },
   };
