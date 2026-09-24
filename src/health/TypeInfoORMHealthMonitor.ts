@@ -1390,9 +1390,29 @@ export class TypeInfoORMHealthMonitor {
         continuation ? "running" : "complete",
       );
 
+      const cycleExaminedCount =
+        previousCycleExaminedCount + examinedCount;
+      const cycleOrphanFindingCount =
+        previousCycleOrphanFindingCount + orphanFindingCount;
+      const cycleRepairedCount =
+        previousCycleRepairedCount + repairedCount + reindexedItemCount;
+      const cycleSuspiciousCount =
+        previousCycleSuspiciousCount + suspiciousCount;
+      const currentStructuredTypeNames = Array.from(structuredTypeNames).sort();
+      const currentTextTypeNames = Array.from(textTypeNames).sort();
+
       const result: TypeInfoORMHealthMonitorRunResult = {
         runId,
         repairMode,
+        passNumber,
+        structuredDocumentsProcessedCount,
+        textDocumentsProcessedCount,
+        structuredTypeNames: currentStructuredTypeNames,
+        textTypeNames: currentTextTypeNames,
+        cycleExaminedCount,
+        cycleOrphanFindingCount,
+        cycleRepairedCount,
+        cycleSuspiciousCount,
         examinedCount,
         orphanFindingCount,
         confirmedOrphanCount,
@@ -1411,8 +1431,12 @@ export class TypeInfoORMHealthMonitor {
       };
 
       await this.store.updateRecord(runId, {
-        status: "complete",
-        data: result as unknown as Record<string, unknown>,
+        status: continuation ? "running" : "complete",
+        expiresAt: now + this.options.recordRetentionMs,
+        data: {
+          ...(result as unknown as Record<string, unknown>),
+          passCount: passNumber,
+        },
       });
 
       return result;
@@ -1420,7 +1444,13 @@ export class TypeInfoORMHealthMonitor {
       try {
         await this.store.updateRecord(runId, {
           status: "failed",
-          data: { repairMode },
+          expiresAt: now + this.options.recordRetentionMs,
+          data: {
+            ...previousRunData,
+            repairMode,
+            passCount: passNumber,
+            failureCount: readFiniteNumber(previousRunData.failureCount) + 1,
+          },
         });
       } catch (_healthStoreError) {
         // Preserve the original monitor failure if Health persistence also fails.
