@@ -16,7 +16,6 @@ import type {
   TypeInfoPack,
 } from "../common/TypeParsing";
 import type {
-  TypeInfoORMHealthFindingSummary,
   TypeInfoORMHealthFindingsOptions,
   TypeInfoORMHealthFindingsResult,
   TypeInfoORMHealthMonitor,
