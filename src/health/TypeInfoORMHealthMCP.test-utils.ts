@@ -27,8 +27,8 @@ const buildResult = (
   passNumber: repairMode === "preview" ? 2 : 3,
   structuredDocumentsProcessedCount: 7,
   textDocumentsProcessedCount: 5,
-  structuredTypeNames: ["Book"],
-  textTypeNames: ["Book"],
+  structuredTypeNames: repairMode === "preview" ? [] : ["Book"],
+  textTypeNames: repairMode === "preview" ? [] : ["Book"],
   cycleExaminedCount: repairMode === "preview" ? 8 : 12,
   cycleOrphanFindingCount: 2,
   cycleRepairedCount: repairMode === "preview" ? 0 : 2,
@@ -72,30 +72,35 @@ const getMonitor = (): TypeInfoORMHealthMCPMonitor => ({
     textComplete: false,
     canonicalComplete: true,
     schemaReconcileComplete: true,
-    structuredTypeNames: ["FriendFinderDecision"],
-    textTypeNames: ["FriendFinderDecision"],
+    structuredTypeNames: [],
+    textTypeNames: [],
     canonicalTypeName: undefined,
     retentionPending: true,
     continuation: true,
     updatedAt: 1234,
   }),
-  findings: async (options = {}) => ({
-    examinedRecordCount: options.itemsPerPage ?? 100,
-    findings: [
-      {
-        id: "finding-1",
-        status: "repaired",
-        typeName: "FriendFinderDecision",
-        itemId: "decision-1",
-        scope: "orphanedIndex",
-        correlationId: "run-active",
-        createdAt: 1000,
-        updatedAt: 1200,
-      },
-    ],
-    cursor: options.cursor ? undefined : "finding-cursor-2",
-    continuation: !options.cursor,
-  }),
+  findings: async (options = {}) => {
+    const empty = options.typeName === "NoSuchType";
+    return {
+      examinedRecordCount: options.itemsPerPage ?? 100,
+      findings: empty
+        ? []
+        : [
+            {
+              id: "finding-1",
+              status: "repaired",
+              typeName: "FriendFinderDecision",
+              itemId: "decision-1",
+              scope: "orphanedIndex",
+              correlationId: "run-active",
+              createdAt: 1000,
+              updatedAt: 1200,
+            },
+          ],
+      cursor: empty || options.cursor ? undefined : "finding-cursor-2",
+      continuation: !empty && !options.cursor,
+    };
+  },
   preview: async () => buildResult("preview"),
   repair: async () => buildResult("apply"),
 });
@@ -269,6 +274,26 @@ export const runHealthMCPFindingsScenario = async () => {
         itemsPerPage: 25,
         typeName: "FriendFinderDecision",
         scope: "orphanedIndex",
+      },
+    }),
+    "tools/call",
+    "healthFindings",
+  );
+  const parsed = JSON.parse(response.body);
+
+  return {
+    statusCode: response.statusCode,
+    structuredContent: parsed.result.structuredContent,
+  };
+};
+
+export const runHealthMCPEmptyFindingsScenario = async () => {
+  const response = await runRequest(
+    getRequestBody("tools/call", {
+      name: "healthFindings",
+      arguments: {
+        itemsPerPage: 25,
+        typeName: "NoSuchType",
       },
     }),
     "tools/call",

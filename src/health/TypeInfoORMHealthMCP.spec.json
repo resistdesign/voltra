@@ -107,12 +107,8 @@
           "textComplete": false,
           "canonicalComplete": true,
           "schemaReconcileComplete": true,
-          "structuredTypeNames": [
-            "FriendFinderDecision"
-          ],
-          "textTypeNames": [
-            "FriendFinderDecision"
-          ],
+          "structuredTypeNames": [],
+          "textTypeNames": [],
           "retentionPending": true,
           "continuation": true,
           "updatedAt": 1234
@@ -145,6 +141,19 @@
       }
     },
     {
+      "export": "runHealthMCPEmptyFindingsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "examinedRecordCount": 25,
+          "findings": [],
+          "continuation": false
+        }
+      }
+    },
+    {
       "export": "runHealthMCPPreviewScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
@@ -156,12 +165,8 @@
           "passNumber": 2,
           "structuredDocumentsProcessedCount": 7,
           "textDocumentsProcessedCount": 5,
-          "structuredTypeNames": [
-            "Book"
-          ],
-          "textTypeNames": [
-            "Book"
-          ],
+          "structuredTypeNames": [],
+          "textTypeNames": [],
           "cycleExaminedCount": 8,
           "cycleOrphanFindingCount": 2,
           "cycleRepairedCount": 0,

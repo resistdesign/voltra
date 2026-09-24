@@ -64,12 +64,22 @@ const HEALTH_MCP_RESULT_TYPE_INFO_MAP: TypeInfoMap = {
         array: true,
         readonly: true,
         optional: false,
+        tags: {
+          validation: {
+            emptyArrayIsValid: true,
+          },
+        },
       },
       textTypeNames: {
         type: "string",
         array: true,
         readonly: true,
         optional: false,
+        tags: {
+          validation: {
+            emptyArrayIsValid: true,
+          },
+        },
       },
       cycleExaminedCount: {
         type: "number",
@@ -344,12 +354,22 @@ const HEALTH_MCP_PROGRESS_TYPE_INFO_MAP: TypeInfoMap = {
         array: true,
         readonly: true,
         optional: false,
+        tags: {
+          validation: {
+            emptyArrayIsValid: true,
+          },
+        },
       },
       textTypeNames: {
         type: "string",
         array: true,
         readonly: true,
         optional: false,
+        tags: {
+          validation: {
+            emptyArrayIsValid: true,
+          },
+        },
       },
       canonicalTypeName: {
         type: "string",
@@ -509,6 +529,11 @@ const HEALTH_MCP_FINDINGS_TYPE_INFO_MAP: TypeInfoMap = {
         array: true,
         readonly: true,
         optional: false,
+        tags: {
+          validation: {
+            emptyArrayIsValid: true,
+          },
+        },
       },
       cursor: {
         type: "string",
