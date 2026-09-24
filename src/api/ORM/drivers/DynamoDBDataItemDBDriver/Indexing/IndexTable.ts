@@ -12,12 +12,6 @@ export const INDEX_SORT_KEY_MAX_BYTES = 1024;
 export type DynamoIndexTableConfig = {
   /** DynamoDB table name used by this indexing driver. */
   tableName: string;
-  /**
-   * Optional GSI whose partition key is the unified index `kind` attribute
-   * and whose sort key is `pk`. Health/maintenance enumeration can query this
-   * index directly instead of scanning unrelated index artifacts.
-   */
-  maintenanceIndexName?: string;
 };
 
 /**
@@ -38,15 +32,6 @@ export const assertIndexTableConfig = (
     throw new Error("Missing table name for indexing.tableName.");
   }
 
-  if (
-    config.maintenanceIndexName !== undefined &&
-    (typeof config.maintenanceIndexName !== "string" ||
-      config.maintenanceIndexName.trim() === "")
-  ) {
-    throw new Error(
-      "indexing.maintenanceIndexName must be a non-empty string when provided.",
-    );
-  }
 };
 
 /** Validate a logical Voltra index key against DynamoDB physical limits. */
