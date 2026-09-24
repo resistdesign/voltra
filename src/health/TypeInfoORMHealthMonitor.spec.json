@@ -59,6 +59,16 @@
       }
     },
     {
+      "export": "runHealthLegacyMaintenanceCursorResetScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "completed": true,
+        "checkpointCursorVersion": 1,
+        "staleStructuredCursorCleared": true
+      }
+    },
+    {
       "export": "runHealthRetentionDoesNotBlockContinuationScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",

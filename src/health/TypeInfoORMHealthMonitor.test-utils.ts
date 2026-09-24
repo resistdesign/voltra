@@ -452,6 +452,50 @@ export const runHealthRepairCapContinuationScenario = async () => {
   };
 };
 
+export const runHealthLegacyMaintenanceCursorResetScenario = async () => {
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    {
+      Book: new InMemoryDataItemDBDriver<Book, "id">({
+        tableName: "LegacyCursorBooks",
+        uniquelyIdentifyingFieldName: "id",
+        generateUniqueIdentifier: () => "unused",
+      }),
+    },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+  );
+  const store = createHealthStore();
+
+  await store.putRecord("health:index-audit", {
+    kind: "checkpoint",
+    status: "running",
+    operation: "indexAudit",
+    data: {
+      structuredCursor: "legacy-maintenance-cursor",
+      structuredComplete: false,
+      textComplete: true,
+      schemaReconcileComplete: true,
+      canonicalComplete: true,
+    },
+  });
+
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store,
+    maxIndexDocumentsPerRun: 10,
+  });
+  const result = await monitor.preview();
+  const checkpoint = await store.readRecord("health:index-audit");
+
+  return {
+    completed: !result.continuation,
+    checkpointCursorVersion: checkpoint?.data?.indexCursorVersion,
+    staleStructuredCursorCleared:
+      checkpoint?.data?.structuredCursor === undefined,
+  };
+};
+
 export const runHealthRetentionDoesNotBlockContinuationScenario = async () => {
   const store = createHealthStore();
 

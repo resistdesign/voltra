@@ -72,12 +72,23 @@ export const HealthDemo: FC = () => {
       const nextResult = payload?.result?.structuredContent as
         | HealthPreviewResult
         | undefined;
+      const rpcErrorMessage =
+        typeof payload?.error?.message === "string"
+          ? payload.error.message
+          : payload?.result?.isError && Array.isArray(payload.result.content)
+            ? payload.result.content.find(
+                (entry: any) =>
+                  entry?.type === "text" && typeof entry.text === "string",
+              )?.text
+            : undefined;
 
       setResult(nextResult);
       setStatus(
         response.ok && nextResult
           ? "Health preview completed."
-          : `Health preview failed with HTTP ${response.status}.`,
+          : rpcErrorMessage
+            ? `Health preview failed: ${rpcErrorMessage}`
+            : `Health preview failed with HTTP ${response.status}.`,
       );
     } catch (error) {
       setResult(undefined);
