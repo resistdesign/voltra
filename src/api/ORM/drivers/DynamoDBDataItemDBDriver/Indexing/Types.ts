@@ -223,48 +223,6 @@ export type QueryOutput = {
 };
 
 /**
- * Input payload for DynamoDB scan operations.
- */
-export type ScanInput = {
-  /** DynamoDB table name. */
-  TableName: string;
-  /** Optional filter expression. */
-  FilterExpression?: string;
-  /** Optional expression attribute name mappings. */
-  ExpressionAttributeNames?: Record<string, string>;
-  /** Optional expression attribute values. */
-  ExpressionAttributeValues?: AttributeMap;
-  /** Exclusive start key for pagination. */
-  ExclusiveStartKey?: AttributeMap;
-  /** Maximum number of physical records to evaluate. */
-  Limit?: number;
-  /** Request strongly consistent reads. */
-  ConsistentRead?: boolean;
-};
-
-/**
- * Output payload from DynamoDB scan operations.
- */
-export type ScanOutput = {
-  /** Items returned by the scan. */
-  Items?: AttributeMap[];
-  /** Last evaluated key for pagination. */
-  LastEvaluatedKey?: AttributeMap;
-};
-
-/**
- * Optional DynamoDB scan capability used by bounded maintenance tooling.
- */
-export type DynamoScanClient = {
-  /**
-   * Execute a DynamoDB scan operation.
-   * @param input Scan input payload.
-   * @returns Scan output payload.
-   */
-  scan(input: ScanInput): Promise<ScanOutput>;
-};
-
-/**
  * DynamoDB client interface with query support.
  */
 export type DynamoQueryClient = DynamoBatchWriter & {
@@ -274,4 +232,4 @@ export type DynamoQueryClient = DynamoBatchWriter & {
    * @returns Query output payload.
    */
   query(input: QueryInput): Promise<QueryOutput>;
-} & Partial<DynamoScanClient>;
+};
