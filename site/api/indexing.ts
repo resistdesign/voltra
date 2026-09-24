@@ -8,6 +8,7 @@ import {
   StructuredDdbBackend,
 } from "../../src/api";
 import {
+  INDEXING_MAINTENANCE_INDEX_ENV_VAR,
   INDEXING_TABLE_ENV_VAR,
   readIndexingTableFromEnv,
 } from "../common/IndexingTable";
@@ -23,7 +24,10 @@ export const structuredStringTokenizer = {
   maxTokensPerValue: 256,
 } as const;
 
-collectRequiredEnvironmentVariables([INDEXING_TABLE_ENV_VAR]);
+collectRequiredEnvironmentVariables([
+  INDEXING_TABLE_ENV_VAR,
+  INDEXING_MAINTENANCE_INDEX_ENV_VAR,
+]);
 
 const indexingTable = readIndexingTableFromEnv(process.env);
 export const indexMutationCoordinator = new IndexMutationCoordinator(
