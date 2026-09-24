@@ -16,7 +16,7 @@
           "pk",
           "sk"
         ],
-        "queryIndexName": "KindPkMaintenanceIndex"
+        "queryIndexName": "ExampleSecondaryIndex"
       }
     }
   ]
