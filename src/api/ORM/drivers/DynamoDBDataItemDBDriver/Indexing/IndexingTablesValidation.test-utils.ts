@@ -1,4 +1,7 @@
-import { assertDynamoIndexTableKey } from "./IndexTable";
+import {
+  assertDynamoIndexTableKey,
+  assertIndexTableConfig,
+} from "./IndexTable";
 import type { DynamoQueryClient } from "./Types";
 import { FullTextDdbBackend } from "./FullTextDdbBackend";
 import { createRelationEdgesDdbDependencies } from "./RelationalDdb";
@@ -68,5 +71,17 @@ export const runDynamoIndexRejectsOversizedKeyScenario = () => {
     return false;
   } catch (_error) {
     return true;
+  }
+};
+
+export const runIndexingTablesValidationEmptyMaintenanceIndexScenario = () => {
+  try {
+    assertIndexTableConfig({
+      tableName: "Index",
+      maintenanceIndexName: "",
+    });
+    return undefined;
+  } catch (error) {
+    return (error as Error).message ?? String(error);
   }
 };
