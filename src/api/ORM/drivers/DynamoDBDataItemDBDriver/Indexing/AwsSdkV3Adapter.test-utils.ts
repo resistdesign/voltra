@@ -25,6 +25,13 @@ export const runAwsSdkV3ConsistencyMappingScenario = async () => {
       },
     },
   });
+  await client.query({
+    TableName: "Index",
+    IndexName: "KindPkMaintenanceIndex",
+    KeyConditionExpression: "#kind = :kind",
+    ExpressionAttributeNames: { "#kind": "kind" },
+    ExpressionAttributeValues: { ":kind": "sd" },
+  });
 
   const getItemKey = (inputs[0]?.Key ?? {}) as Record<string, unknown>;
   const batchGetRequestItems = inputs[1]?.RequestItems as
@@ -37,5 +44,6 @@ export const runAwsSdkV3ConsistencyMappingScenario = async () => {
     batchGetItem: batchGetRequestItems?.Index?.ConsistentRead,
     getItemKeyFields: Object.keys(getItemKey).sort(),
     batchGetItemKeyFields: Object.keys(batchGetItemKey).sort(),
+    queryIndexName: inputs[2]?.IndexName,
   };
 };
