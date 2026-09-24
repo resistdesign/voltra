@@ -182,6 +182,7 @@ export const createAwsSdkV3DynamoClient = (
     const response = await client.send(
       new QueryCommand({
         TableName: input.TableName,
+        IndexName: input.IndexName,
         KeyConditionExpression: input.KeyConditionExpression,
         ExpressionAttributeNames: input.ExpressionAttributeNames,
         ExpressionAttributeValues: toAwsKey(input.ExpressionAttributeValues),
