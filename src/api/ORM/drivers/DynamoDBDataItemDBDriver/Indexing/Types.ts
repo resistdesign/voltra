@@ -179,6 +179,10 @@ export type QueryInput = {
    */
   TableName: string;
   /**
+   * Optional secondary index name.
+   */
+  IndexName?: string;
+  /**
    * Key condition expression for the query.
    */
   KeyConditionExpression: string;
