@@ -338,28 +338,38 @@ export const runHealthBoundedContinuationScenario = async () => {
     await driver.deleteItem(id);
   }
 
+  const store = createHealthStore();
   const monitor = new TypeInfoORMHealthMonitor({
     orm,
-    store: createHealthStore(),
+    store,
     maxIndexDocumentsPerRun: 1,
     indexPageSize: 1,
   });
   const examinedCounts: number[] = [];
+  const runIds: string[] = [];
   let completed = false;
 
   for (let runIndex = 0; runIndex < 20; runIndex += 1) {
     const result = await monitor.preview();
     examinedCounts.push(result.examinedCount);
+    runIds.push(result.runId);
     if (!result.continuation) {
       completed = true;
       break;
     }
   }
 
+  const records = await store.listRecords({ itemsPerPage: 100 });
+  const runRecordCount = records.records.filter(
+    (record) => record.kind === "run",
+  ).length;
+
   return {
     completed,
     usedMultipleRuns: examinedCounts.length > 1,
     stayedWithinBudget: examinedCounts.every((count) => count <= 1),
+    reusedLogicalRun: new Set(runIds).size === 1,
+    runRecordCount,
   };
 };
 
@@ -1002,6 +1012,58 @@ export const runHealthStatusPagingScenario = async () => {
       statsRecordCount: second.statsRecordCount,
       continuation: second.continuation,
     },
+  };
+};
+
+export const runHealthFindingsFilterScenario = async () => {
+  const store = createHealthStore();
+  await store.createRecord({
+    kind: "finding",
+    status: "open",
+    typeName: "Book",
+    itemId: "book-1",
+    scope: "orphanedIndex",
+  });
+  await store.createRecord({
+    kind: "finding",
+    status: "repaired",
+    typeName: "Book",
+    itemId: "book-2",
+    scope: "orphanedIndex",
+  });
+  await store.createRecord({
+    kind: "finding",
+    status: "open",
+    typeName: "Legacy",
+    itemId: "legacy-1",
+    scope: "removedTypeIndex",
+  });
+
+  const orm = createOrm(
+    getBookTypeInfoV1(),
+    {
+      Book: new InMemoryDataItemDBDriver<Book, "id">({
+        tableName: "FindingBooks",
+        uniquelyIdentifyingFieldName: "id",
+        generateUniqueIdentifier: () => "unused",
+      }),
+    },
+    new FullTextMemoryBackend(),
+    new StructuredInMemoryBackend(),
+  );
+  const monitor = new TypeInfoORMHealthMonitor({ orm, store });
+  const page = await monitor.findings({
+    itemsPerPage: 20,
+    status: "open",
+    typeName: "Book",
+    scope: "orphanedIndex",
+  });
+
+  return {
+    examinedRecordCount: page.examinedRecordCount,
+    findingIds: page.findings.map((finding) => finding.id),
+    findingTypeNames: page.findings.map((finding) => finding.typeName),
+    continuation: page.continuation,
   };
 };
 

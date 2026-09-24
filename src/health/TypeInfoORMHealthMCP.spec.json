@@ -32,6 +32,24 @@
           "outputContinuationType": "boolean"
         },
         {
+          "name": "healthProgress",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "outputRepairModeValues": [
+            "preview",
+            "apply"
+          ],
+          "outputContinuationType": "boolean"
+        },
+        {
+          "name": "healthFindings",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "outputContinuationType": "boolean"
+        },
+        {
           "name": "healthPreview",
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -75,6 +93,58 @@
       }
     },
     {
+      "export": "runHealthMCPProgressScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "runId": "run-active",
+          "status": "running",
+          "repairMode": "apply",
+          "passCount": 4,
+          "structuredComplete": false,
+          "textComplete": false,
+          "canonicalComplete": true,
+          "schemaReconcileComplete": true,
+          "structuredTypeNames": [
+            "FriendFinderDecision"
+          ],
+          "textTypeNames": [
+            "FriendFinderDecision"
+          ],
+          "retentionPending": true,
+          "continuation": true,
+          "updatedAt": 1234
+        }
+      }
+    },
+    {
+      "export": "runHealthMCPFindingsScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "statusCode": 200,
+        "structuredContent": {
+          "examinedRecordCount": 25,
+          "findings": [
+            {
+              "id": "finding-1",
+              "status": "repaired",
+              "typeName": "FriendFinderDecision",
+              "itemId": "decision-1",
+              "scope": "orphanedIndex",
+              "correlationId": "run-active",
+              "createdAt": 1000,
+              "updatedAt": 1200
+            }
+          ],
+          "cursor": "finding-cursor-2",
+          "continuation": true
+        }
+      }
+    },
+    {
       "export": "runHealthMCPPreviewScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
@@ -83,6 +153,19 @@
         "structuredContent": {
           "runId": "run-preview",
           "repairMode": "preview",
+          "passNumber": 2,
+          "structuredDocumentsProcessedCount": 7,
+          "textDocumentsProcessedCount": 5,
+          "structuredTypeNames": [
+            "Book"
+          ],
+          "textTypeNames": [
+            "Book"
+          ],
+          "cycleExaminedCount": 8,
+          "cycleOrphanFindingCount": 2,
+          "cycleRepairedCount": 0,
+          "cycleSuspiciousCount": 0,
           "examinedCount": 3,
           "orphanFindingCount": 1,
           "confirmedOrphanCount": 0,
@@ -110,6 +193,19 @@
         "structuredContent": {
           "runId": "run-repair",
           "repairMode": "apply",
+          "passNumber": 3,
+          "structuredDocumentsProcessedCount": 7,
+          "textDocumentsProcessedCount": 5,
+          "structuredTypeNames": [
+            "Book"
+          ],
+          "textTypeNames": [
+            "Book"
+          ],
+          "cycleExaminedCount": 12,
+          "cycleOrphanFindingCount": 2,
+          "cycleRepairedCount": 2,
+          "cycleSuspiciousCount": 0,
           "examinedCount": 4,
           "orphanFindingCount": 1,
           "confirmedOrphanCount": 1,

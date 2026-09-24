@@ -41,7 +41,9 @@
       "expectation": {
         "completed": true,
         "usedMultipleRuns": true,
-        "stayedWithinBudget": true
+        "stayedWithinBudget": true,
+        "reusedLogicalRun": true,
+        "runRecordCount": 1
       }
     },
     {
@@ -228,6 +230,21 @@
           "statsRecordCount": 0,
           "continuation": false
         }
+      }
+    },
+    {
+      "export": "runHealthFindingsFilterScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "examinedRecordCount": 3,
+        "findingIds": [
+          "health-1"
+        ],
+        "findingTypeNames": [
+          "Book"
+        ],
+        "continuation": false
       }
     },
     {
