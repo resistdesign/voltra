@@ -129,7 +129,7 @@ const run = async () => {
         "  },",
         "};",
         "const dynamoConfig: DynamoDBSpecificConfig = {};",
-        'const indexTable: IndexTableConfig = { tableName: "VoltraIndex" };',
+        'const indexTable: IndexTableConfig = { tableName: "VoltraIndex", maintenanceIndexName: "KindPkMaintenanceIndex" };',
         'const indexKey: IndexTableKey = { pk: "v1#st#field", sk: "d#1" };',
         "const indexKind: IndexItemKind = INDEX_ITEM_KINDS.structuredTerm;",
         'const indexPartition = buildIndexKey(indexKind, "field");',
