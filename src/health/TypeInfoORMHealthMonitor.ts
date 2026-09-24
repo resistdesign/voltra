@@ -567,15 +567,57 @@ export class TypeInfoORMHealthMonitor {
   ): Promise<TypeInfoORMHealthMonitorRunResult> => {
     const repairMode = options.repairMode ?? this.options.repairMode;
     const now = this.options.now();
-    const runId = await this.store.createRecord({
-      kind: "run",
-      status: "running",
-      operation: "indexAudit",
-      expiresAt: now + this.options.recordRetentionMs,
-      data: { repairMode },
-    });
+    const checkpoint = await this.readCheckpoint();
+    let runId = checkpoint.runId;
+    let runRecord = runId ? await this.store.readRecord(runId) : undefined;
+
+    if (!runId || !runRecord || runRecord.kind !== "run" || runRecord.status === "complete") {
+      runId = await this.store.createRecord({
+        kind: "run",
+        status: "running",
+        operation: "indexAudit",
+        expiresAt: now + this.options.recordRetentionMs,
+        data: {
+          repairMode,
+          passCount: 0,
+          cycleExaminedCount: 0,
+          cycleOrphanFindingCount: 0,
+          cycleRepairedCount: 0,
+          cycleSuspiciousCount: 0,
+          structuredTypeNames: [],
+          textTypeNames: [],
+        },
+      });
+      checkpoint.runId = runId;
+      await this.writeCheckpoint(checkpoint, "running");
+      runRecord = await this.store.readRecord(runId);
+    } else {
+      await this.store.updateRecord(runId, {
+        status: "running",
+        expiresAt: now + this.options.recordRetentionMs,
+      });
+    }
+
+    if (!runId) {
+      throw new Error("Health audit cycle run id was not initialized.");
+    }
+
+    const previousRunData = runRecord?.data ?? {};
+    const passNumber = readFiniteNumber(previousRunData.passCount) + 1;
+    const previousCycleExaminedCount = readFiniteNumber(
+      previousRunData.cycleExaminedCount,
+    );
+    const previousCycleOrphanFindingCount = readFiniteNumber(
+      previousRunData.cycleOrphanFindingCount,
+    );
+    const previousCycleRepairedCount = readFiniteNumber(
+      previousRunData.cycleRepairedCount,
+    );
+    const previousCycleSuspiciousCount = readFiniteNumber(
+      previousRunData.cycleSuspiciousCount,
+    );
+
     try {
-      const checkpoint = await this.readCheckpoint();
       const schemaState = await this.evaluateSchemaDrift(now, runId);
 
       if (checkpoint.schemaSignature !== schemaState.signature) {
@@ -596,6 +638,10 @@ export class TypeInfoORMHealthMonitor {
       let missingIndexFindingCount = 0;
       let reindexedItemCount = 0;
       let suspiciousCount = 0;
+      let structuredDocumentsProcessedCount = 0;
+      let textDocumentsProcessedCount = 0;
+      const structuredTypeNames = new Set<string>();
+      const textTypeNames = new Set<string>();
       let repairDeferred = false;
       let remainingBudget = this.options.maxIndexDocumentsPerRun;
 
@@ -1489,6 +1535,7 @@ export class TypeInfoORMHealthMonitor {
     }
 
     return {
+      runId: typeof data.runId === "string" ? data.runId : undefined,
       structuredCursor:
         typeof data.structuredCursor === "string"
           ? data.structuredCursor
