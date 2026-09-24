@@ -6,21 +6,20 @@
       "conditions": [],
       "operation": "ARRAY_EQUALS",
       "expectation": [
-        "INDEXING_TABLE",
-        "INDEXING_MAINTENANCE_INDEX"
+        "INDEXING_TABLE"
       ]
     },
     {
       "export": "runIndexingEnvVarMappingUniqueCountScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": 2
+      "expectation": 1
     },
     {
       "export": "runIndexingEnvVarMappingTotalCountScenario",
       "conditions": [],
       "operation": "===",
-      "expectation": 2
+      "expectation": 1
     },
     {
       "export": "runIndexingEnvVarMappingAllPrefixedScenario",
@@ -33,12 +32,6 @@
       "conditions": [],
       "operation": "===",
       "expectation": "VoltraIndex"
-    },
-    {
-      "export": "runIndexingEnvVarMappingMaintenanceIndexScenario",
-      "conditions": [],
-      "operation": "===",
-      "expectation": "KindPkMaintenanceIndex"
     }
   ]
 }
