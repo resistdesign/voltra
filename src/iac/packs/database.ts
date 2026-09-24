@@ -6,6 +6,19 @@
 import { createResourcePack } from "../utils";
 import { SimpleCFT } from "../SimpleCFT";
 
+/** Configuration for one DynamoDB global secondary index. */
+export type AddDatabaseGlobalSecondaryIndexConfig = {
+  /** CloudFormation/DynamoDB index name. */
+  indexName: string;
+  /** HASH/RANGE key schema for the secondary index. */
+  keys: Record<string, "HASH" | "RANGE">;
+  /**
+   * Projection mode. Object form emits an INCLUDE projection.
+   * Defaults to ALL.
+   */
+  projection?: "ALL" | "KEYS_ONLY" | { nonKeyAttributes: string[] };
+};
+
 /**
  * The configuration for adding a database to a stack.
  * */
@@ -33,6 +46,8 @@ export type AddDatabaseConfig = {
    * The billing mode for the database table.
    * */
   billingMode?: "PAY_PER_REQUEST" | "PROVISIONED";
+  /** Optional global secondary indexes. */
+  globalSecondaryIndexes?: AddDatabaseGlobalSecondaryIndexConfig[];
 };
 
 /**
@@ -48,6 +63,7 @@ export const addDatabase = createResourcePack(
     keys,
     attributes,
     billingMode = "PAY_PER_REQUEST",
+    globalSecondaryIndexes = [],
   }: AddDatabaseConfig) =>
     new SimpleCFT().patch({
       Resources: {
@@ -66,6 +82,30 @@ export const addDatabase = createResourcePack(
               KeyType: keys[keyName],
             })),
             BillingMode: billingMode,
+            ...(globalSecondaryIndexes.length > 0
+              ? {
+                  GlobalSecondaryIndexes: globalSecondaryIndexes.map((index) => {
+                    const projection =
+                      typeof index.projection === "object"
+                        ? {
+                            ProjectionType: "INCLUDE",
+                            NonKeyAttributes: index.projection.nonKeyAttributes,
+                          }
+                        : {
+                            ProjectionType: index.projection ?? "ALL",
+                          };
+
+                    return {
+                      IndexName: index.indexName,
+                      KeySchema: Object.keys(index.keys).map((keyName) => ({
+                        AttributeName: keyName,
+                        KeyType: index.keys[keyName],
+                      })),
+                      Projection: projection,
+                    };
+                  }),
+                }
+              : {}),
           },
         },
       },
