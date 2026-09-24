@@ -15,6 +15,16 @@ export const runDatabasePackScenario = () => {
         sort: "S",
         rating: "N",
       },
+      globalSecondaryIndexes: [
+        {
+          indexName: "RatingIndex",
+          keys: {
+            rating: "HASH",
+            sort: "RANGE",
+          },
+          projection: "KEYS_ONLY",
+        },
+      ],
     })
     .toJSON();
 
@@ -27,6 +37,7 @@ export const runDatabasePackScenario = () => {
     billingMode: table?.Properties?.BillingMode,
     attributeDefinitions: table?.Properties?.AttributeDefinitions,
     keySchema: table?.Properties?.KeySchema,
+    globalSecondaryIndexes: table?.Properties?.GlobalSecondaryIndexes,
   };
 };
 
@@ -44,3 +55,6 @@ export const runDatabasePackAttributeDefinitionsScenario = async () =>
 
 export const runDatabasePackKeySchemaScenario = async () =>
   (await runDatabasePackScenario()).keySchema;
+
+export const runDatabasePackGlobalSecondaryIndexesScenario = async () =>
+  (await runDatabasePackScenario()).globalSecondaryIndexes;
