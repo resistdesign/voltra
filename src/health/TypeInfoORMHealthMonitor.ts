@@ -225,6 +225,8 @@ export type TypeInfoORMHealthMonitorConfig = TypeInfoORMHealthMonitorOptions &
 type AuditCheckpointData = {
   /** Active logical Health audit-cycle run id. */
   runId?: string;
+  /** Version of the opaque structured/text maintenance cursor contract. */
+  indexCursorVersion?: number;
   structuredCursor?: string;
   structuredComplete?: boolean;
   textCursor?: string;
@@ -263,6 +265,14 @@ type SchemaDriftState = {
 const INDEX_AUDIT_CHECKPOINT_ID = "health:index-audit";
 const INDEX_SCHEMA_BASELINE_ID = "health:index-schema:baseline";
 const INDEX_SCHEMA_CANDIDATE_ID = "health:index-schema:candidate";
+/**
+ * Version of Health's persisted structured/text maintenance cursor contract.
+ *
+ * Maintenance cursors are intentionally opaque to Health. Bump this when a
+ * Voltra release changes the backend cursor contract so persisted checkpoints
+ * restart enumeration instead of replaying an incompatible token.
+ */
+const INDEX_AUDIT_CURSOR_VERSION = 1;
 const DEFAULT_RECORD_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 const identityKey = (typeName: string, docId: DocId): string =>
@@ -568,6 +578,15 @@ export class TypeInfoORMHealthMonitor {
     const repairMode = options.repairMode ?? this.options.repairMode;
     const now = this.options.now();
     const checkpoint = await this.readCheckpoint();
+
+    if (checkpoint.indexCursorVersion !== INDEX_AUDIT_CURSOR_VERSION) {
+      checkpoint.indexCursorVersion = INDEX_AUDIT_CURSOR_VERSION;
+      checkpoint.structuredCursor = undefined;
+      checkpoint.structuredComplete = false;
+      checkpoint.textCursor = undefined;
+      checkpoint.textComplete = false;
+    }
+
     let runId = checkpoint.runId;
     let runRecord = runId ? await this.store.readRecord(runId) : undefined;
 
@@ -1398,6 +1417,7 @@ export class TypeInfoORMHealthMonitor {
         !repairDeferred &&
         !preserveSchemaProgress
           ? {
+              indexCursorVersion: checkpoint.indexCursorVersion,
               retentionCursor: checkpoint.retentionCursor,
               schemaSignature: checkpoint.schemaSignature,
               schemaReconcileComplete: checkpoint.schemaReconcileComplete,
@@ -1624,6 +1644,10 @@ export class TypeInfoORMHealthMonitor {
 
     return {
       runId: typeof data.runId === "string" ? data.runId : undefined,
+      indexCursorVersion:
+        typeof data.indexCursorVersion === "number"
+          ? data.indexCursorVersion
+          : undefined,
       structuredCursor:
         typeof data.structuredCursor === "string"
           ? data.structuredCursor
