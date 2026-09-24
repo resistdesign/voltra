@@ -57,12 +57,96 @@ export type TypeInfoORMHealthStatusResult = {
   continuation: boolean;
 };
 
+/** Non-mutating progress snapshot for the active Health audit cycle. */
+export type TypeInfoORMHealthProgressResult = {
+  /** Active logical audit-cycle run id, when a cycle is in progress. */
+  runId?: string;
+  /** Persisted lifecycle status for the active cycle/checkpoint. */
+  status?: HealthRecord["status"];
+  /** Repair mode used by the active logical cycle. */
+  repairMode?: TypeInfoORMHealthRepairMode;
+  /** Number of bounded passes completed or attempted in the active cycle. */
+  passCount: number;
+  /** Whether structured index maintenance enumeration is complete. */
+  structuredComplete: boolean;
+  /** Whether full-text index maintenance enumeration is complete. */
+  textComplete: boolean;
+  /** Whether canonical-item inspection is complete. */
+  canonicalComplete: boolean;
+  /** Whether confirmed schema reconciliation is complete. */
+  schemaReconcileComplete: boolean;
+  /** Type names encountered in the most recent structured-index pass. */
+  structuredTypeNames: string[];
+  /** Type names encountered in the most recent text-index pass. */
+  textTypeNames: string[];
+  /** Canonical type currently being inspected, when applicable. */
+  canonicalTypeName?: string;
+  /** True when Health retention has more records to inspect opportunistically. */
+  retentionPending: boolean;
+  /** True when the actual index/schema audit requires another bounded pass. */
+  continuation: boolean;
+  /** Last persisted update timestamp for the logical cycle/checkpoint. */
+  updatedAt?: number;
+};
+
+/** Bounded filters for listing persisted Health findings. */
+export type TypeInfoORMHealthFindingsOptions = TypeInfoORMHealthStatusOptions & {
+  /** Optional finding status filter. */
+  status?: HealthRecord["status"];
+  /** Optional TypeInfo type filter. */
+  typeName?: string;
+  /** Optional finding scope filter. */
+  scope?: string;
+};
+
+/** Compact persisted Health finding suitable for operational tooling. */
+export type TypeInfoORMHealthFindingSummary = {
+  id: string;
+  status?: HealthRecord["status"];
+  typeName?: string;
+  itemId?: string;
+  operation?: string;
+  scope?: string;
+  correlationId?: string;
+  count?: number;
+  value?: number;
+  createdAt: number;
+  updatedAt: number;
+  expiresAt?: number;
+};
+
+/** One bounded page of persisted Health findings. */
+export type TypeInfoORMHealthFindingsResult = {
+  examinedRecordCount: number;
+  findings: TypeInfoORMHealthFindingSummary[];
+  cursor?: string;
+  continuation: boolean;
+};
+
 /** Result summary returned by one bounded Health monitor run. */
 export type TypeInfoORMHealthMonitorRunResult = {
   /** Health run record id. */
   runId: string;
   /** Repair mode used by this run. */
   repairMode: TypeInfoORMHealthRepairMode;
+  /** 1-based bounded pass number within the logical audit cycle. */
+  passNumber: number;
+  /** Structured index mirrors returned and inspected in this bounded pass. */
+  structuredDocumentsProcessedCount: number;
+  /** Full-text index mirrors returned and inspected in this bounded pass. */
+  textDocumentsProcessedCount: number;
+  /** Type names encountered in structured index mirrors during this pass. */
+  structuredTypeNames: string[];
+  /** Type names encountered in full-text index mirrors during this pass. */
+  textTypeNames: string[];
+  /** Total canonical/index candidates examined across the logical cycle. */
+  cycleExaminedCount: number;
+  /** Total orphan findings observed across the logical cycle. */
+  cycleOrphanFindingCount: number;
+  /** Total guarded repairs completed across the logical cycle. */
+  cycleRepairedCount: number;
+  /** Total suspicious conditions observed across the logical cycle. */
+  cycleSuspiciousCount: number;
   /** Index document/field mirrors examined. */
   examinedCount: number;
   /** Missing-canonical findings observed. */
@@ -139,6 +223,8 @@ export type TypeInfoORMHealthMonitorConfig = TypeInfoORMHealthMonitorOptions &
   };
 
 type AuditCheckpointData = {
+  /** Active logical Health audit-cycle run id. */
+  runId?: string;
   structuredCursor?: string;
   structuredComplete?: boolean;
   textCursor?: string;
@@ -241,6 +327,17 @@ const inspectionCapabilityFindingId = (
   `health:finding:index-inspection:${encodeURIComponent(
     typeName,
   )}:${capability}`;
+
+const auditProgressFindingId = (source: "structured" | "text"): string =>
+  `health:finding:index-audit-progress:${source}`;
+
+const readFiniteNumber = (value: unknown): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : 0;
+
+const readStringArray = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === "string")
+    : [];
 
 const schemaSignature = (
   descriptors: TypeInfoORMIndexMaintenanceTypeDescriptor[],
@@ -378,6 +475,75 @@ export class TypeInfoORMHealthMonitor {
       statsRecordCount,
       repairRecordCount,
       failedRunCount,
+      cursor: page.cursor,
+      continuation: !!page.cursor,
+    };
+  };
+
+  /** Read the active audit-cycle progress without running maintenance work. */
+  progress = async (): Promise<TypeInfoORMHealthProgressResult> => {
+    const checkpointRecord = await this.store.readRecord(INDEX_AUDIT_CHECKPOINT_ID);
+    const checkpoint = await this.readCheckpoint();
+    const runRecord = checkpoint.runId
+      ? await this.store.readRecord(checkpoint.runId)
+      : undefined;
+    const runData = runRecord?.data ?? {};
+
+    return {
+      runId: checkpoint.runId,
+      status: runRecord?.status ?? checkpointRecord?.status,
+      repairMode:
+        runData.repairMode === "preview" || runData.repairMode === "apply"
+          ? runData.repairMode
+          : undefined,
+      passCount: readFiniteNumber(runData.passCount),
+      structuredComplete: checkpoint.structuredComplete === true,
+      textComplete: checkpoint.textComplete === true,
+      canonicalComplete: checkpoint.canonicalComplete === true,
+      schemaReconcileComplete: checkpoint.schemaReconcileComplete === true,
+      structuredTypeNames: readStringArray(runData.structuredTypeNames),
+      textTypeNames: readStringArray(runData.textTypeNames),
+      canonicalTypeName: checkpoint.canonicalTypeName,
+      retentionPending: !!checkpoint.retentionCursor,
+      continuation: checkpointRecord?.status === "running",
+      updatedAt: runRecord?.updatedAt ?? checkpointRecord?.updatedAt,
+    };
+  };
+
+  /** Read one bounded Health-store page and return only persisted findings. */
+  findings = async (
+    options: TypeInfoORMHealthFindingsOptions = {},
+  ): Promise<TypeInfoORMHealthFindingsResult> => {
+    const page = await this.store.listRecords({
+      itemsPerPage: Math.max(1, options.itemsPerPage ?? 100),
+      cursor: options.cursor,
+    });
+    const findings = page.records
+      .filter((record) => record.kind === "finding")
+      .filter((record) => !options.status || record.status === options.status)
+      .filter((record) => !options.typeName || record.typeName === options.typeName)
+      .filter((record) => !options.scope || record.scope === options.scope)
+      .map(
+        (record): TypeInfoORMHealthFindingSummary => ({
+          id: record.id,
+          status: record.status,
+          typeName: record.typeName,
+          itemId:
+            record.itemId === undefined ? undefined : String(record.itemId),
+          operation: record.operation,
+          scope: record.scope,
+          correlationId: record.correlationId,
+          count: record.count,
+          value: record.value,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+          expiresAt: record.expiresAt,
+        }),
+      );
+
+    return {
+      examinedRecordCount: page.records.length,
+      findings,
       cursor: page.cursor,
       continuation: !!page.cursor,
     };
