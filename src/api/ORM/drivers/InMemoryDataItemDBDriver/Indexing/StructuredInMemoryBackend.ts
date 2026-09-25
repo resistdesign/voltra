@@ -410,13 +410,21 @@ export class StructuredInMemoryBackend
                   ? 1
                   : 0,
         );
+      const probe =
+        !cursor &&
+        typeof options.probe === "number" &&
+        Number.isFinite(options.probe)
+          ? Math.max(0, Math.min(0.9999999999999999, options.probe))
+          : undefined;
       const remaining = cursor
         ? ordered.filter(
             (item) =>
               item.pk > cursor.pk ||
               (item.pk === cursor.pk && item.sk > cursor.sk),
           )
-        : ordered;
+        : probe === undefined
+          ? ordered
+          : ordered.slice(Math.floor(probe * ordered.length));
       const limit = Math.max(1, options.limit ?? 100);
       const items = remaining.slice(0, limit);
       const last = items[items.length - 1];

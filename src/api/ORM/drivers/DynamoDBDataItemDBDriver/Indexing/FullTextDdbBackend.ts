@@ -703,6 +703,7 @@ export class FullTextDdbBackend extends FullTextDdbWriter {
       table: this.maintenanceTable,
       kind: INDEX_ITEM_KINDS.fullTextDocumentMirror,
       cursor: decodeMaintenanceCursor(options.cursor),
+      probe: options.probe,
       limit: Math.max(1, options.limit ?? 100),
     });
 

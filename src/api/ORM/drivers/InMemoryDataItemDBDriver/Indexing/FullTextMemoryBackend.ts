@@ -370,12 +370,20 @@ export class FullTextMemoryBackend
     const ordered = Array.from(pairs.values()).sort((left, right) =>
       left.identity < right.identity ? -1 : left.identity > right.identity ? 1 : 0,
     );
+    const probe =
+      !options.cursor &&
+      typeof options.probe === "number" &&
+      Number.isFinite(options.probe)
+        ? Math.max(0, Math.min(0.9999999999999999, options.probe))
+        : undefined;
     const start = options.cursor
       ? Math.max(
           0,
           ordered.findIndex((entry) => entry.identity === options.cursor) + 1,
         )
-      : 0;
+      : probe === undefined
+        ? 0
+        : Math.floor(probe * ordered.length);
     const limit = Math.max(1, options.limit ?? 100);
     const page = ordered.slice(start, start + limit);
     const last = page[page.length - 1];

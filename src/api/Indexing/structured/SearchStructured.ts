@@ -58,6 +58,14 @@ export type StructuredDocumentListOptions = {
   limit?: number;
   /** Opaque continuation token from a prior page. */
   cursor?: string;
+  /**
+   * Optional normalized keyspace probe position in the range [0, 1).
+   *
+   * Backends may use this as a best-effort starting hint when no cursor is
+   * supplied. Correctness must never depend on probe uniformity because the
+   * deterministic maintenance sweep remains the coverage guarantee.
+   */
+  probe?: number;
 };
 
 type StructuredTermIndex = {

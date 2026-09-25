@@ -26,6 +26,18 @@
         "itemCount": 1,
         "itemPk": "v1#fm#d#s#doc-1"
       }
+    },
+    {
+      "export": "runMaintenanceKindProbeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "probeCondition": "#kind = :kind AND #pk >= :probePk",
+        "probePartitionKey": "v1#sd#d#s#80000000-0000-0000-0000-000000000000",
+        "cursorCondition": "#kind = :kind",
+        "cursorExclusiveStartKey": "v1#sd#d#s#existing",
+        "cursorIgnoredProbe": true
+      }
     }
   ]
 }

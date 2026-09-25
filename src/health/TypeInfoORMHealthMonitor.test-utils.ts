@@ -1234,3 +1234,60 @@ export const runHealthFailedRunPersistenceScenario = async () => {
       .length,
   };
 };
+
+
+export const runHealthRandomProbeScenario = async () => {
+  let counter = 0;
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "ProbeBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () =>
+      `probe-${String(++counter).padStart(2, "0")}`,
+  });
+  const fullTextBackend = new FullTextMemoryBackend();
+  const structuredBackend = new StructuredInMemoryBackend();
+  const typeInfoMap = structuredClone(getBookTypeInfoV1());
+  const titleField = typeInfoMap.Book.fields?.title;
+
+  if (!titleField) {
+    throw new Error("Book title TypeInfo field is required.");
+  }
+
+  delete titleField.tags;
+
+  const orm = createOrm(
+    typeInfoMap,
+    { Book: driver },
+    fullTextBackend,
+    structuredBackend,
+  );
+
+  for (let index = 0; index < 8; index += 1) {
+    const id = await orm.create("Book", {
+      title: `Probe ${index}`,
+      slug: `probe-${index}`,
+      rating: index,
+    } as TypeInfoDataItem);
+    await driver.deleteItem(id);
+  }
+
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm,
+    store: createHealthStore(),
+    maxIndexDocumentsPerRun: 1,
+    indexProbeCount: 1,
+    maxProbeIndexDocumentsPerRun: 2,
+    indexPageSize: 1,
+    random: () => 0.75,
+  });
+  const result = await monitor.preview();
+
+  return {
+    continuation: result.continuation,
+    structuredDocumentsProcessedCount:
+      result.structuredDocumentsProcessedCount,
+    textDocumentsProcessedCount: result.textDocumentsProcessedCount,
+    examinedCount: result.examinedCount,
+    orphanFindingCount: result.orphanFindingCount,
+  };
+};

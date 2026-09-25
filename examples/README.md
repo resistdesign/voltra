@@ -34,7 +34,8 @@ Use `orm-indexing.ts` as the starting point for unified field-capability and
 backend configuration.
 Use `orm-index-maintenance.ts` as the starting point for reindexing or cleanup after out-of-band writes and schema-driven index changes.
 Use `orm-health-monitoring.ts` for bounded scheduled monitoring, preview/repair
-runs, one driver-backed Health store, and authenticated Health MCP tools.
+runs, opportunistic random index probes alongside guaranteed resumable sweeps,
+one driver-backed Health store, and authenticated Health MCP tools.
 
 ## MCP Reference
 

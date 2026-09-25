@@ -477,6 +477,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         table: this.table,
         kind: INDEX_ITEM_KINDS.structuredDocument,
         cursor: decodeCursorKey(options.cursor),
+        probe: options.probe,
         limit: Math.max(1, options.limit ?? 100),
         hydrateBaseItems: true,
       });

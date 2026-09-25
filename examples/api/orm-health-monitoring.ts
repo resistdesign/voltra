@@ -23,7 +23,11 @@ const store = new DriverHealthStore(healthDriver);
 const monitor = new TypeInfoORMHealthMonitor({
   orm,
   store,
-  maxIndexDocumentsPerRun: 200,
+  // Keep a deterministic sweep for guaranteed eventual coverage.
+  maxIndexDocumentsPerRun: 100,
+  // Add bounded opportunistic probes for faster discovery in large indexes.
+  indexProbeCount: 3,
+  maxProbeIndexDocumentsPerRun: 300,
   maxRepairsPerRun: 20,
   maxSchemaItemsPerRun: 100,
 });
@@ -39,7 +43,8 @@ operationRecorder.attach(orm);
 // Safe for CI, diagnostics, or an operator preview.
 export const previewHealth = async () => monitor.preview();
 
-// Suitable for a scheduled job. Each call is bounded and resumes persisted work.
+// Suitable for a frequent scheduled job (for example every 15 minutes).
+// Each call performs bounded random probes plus a resumable deterministic sweep.
 export const runHealthJob = async () => monitor.repair();
 
 // The same monitor can be exposed to agents through Voltra's native MCP
