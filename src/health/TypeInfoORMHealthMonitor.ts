@@ -1116,37 +1116,6 @@ export class TypeInfoORMHealthMonitor {
         return budget - remaining;
       };
 
-      let remainingProbeBudget = this.options.maxProbeIndexDocumentsPerRun;
-      for (
-        let probeIndex = 0;
-        probeIndex < this.options.indexProbeCount &&
-        remainingProbeBudget > 0 &&
-        !repairDeferred;
-        probeIndex += 1
-      ) {
-        const randomValue = this.options.random();
-        const probe =
-          typeof randomValue === "number" && Number.isFinite(randomValue)
-            ? Math.max(0, Math.min(0.9999999999999999, randomValue))
-            : 0;
-        const probesRemaining = this.options.indexProbeCount - probeIndex;
-        const probeBudget = Math.max(
-          1,
-          Math.floor(remainingProbeBudget / probesRemaining),
-        );
-        const structuredBudget = Math.ceil(probeBudget / 2);
-        const structuredUsed = await runStructuredProbe(
-          probe,
-          structuredBudget,
-        );
-        const textUsed = await runTextProbe(
-          probe,
-          Math.max(0, probeBudget - structuredUsed),
-        );
-
-        remainingProbeBudget -= structuredUsed + textUsed;
-      }
-
       if (!checkpoint.structuredComplete && remainingBudget > 0) {
         const pageStartCursor = checkpoint.structuredCursor;
         const page = await this.orm.listStructuredIndexDocuments({
@@ -1231,6 +1200,38 @@ export class TypeInfoORMHealthMonitor {
             checkpoint.textComplete = !page.cursor;
           }
         }
+      }
+
+      // Preserve deterministic sweep progress before opportunistic probes.
+      let remainingProbeBudget = this.options.maxProbeIndexDocumentsPerRun;
+      for (
+        let probeIndex = 0;
+        probeIndex < this.options.indexProbeCount &&
+        remainingProbeBudget > 0 &&
+        !repairDeferred;
+        probeIndex += 1
+      ) {
+        const randomValue = this.options.random();
+        const probe =
+          typeof randomValue === "number" && Number.isFinite(randomValue)
+            ? Math.max(0, Math.min(0.9999999999999999, randomValue))
+            : 0;
+        const probesRemaining = this.options.indexProbeCount - probeIndex;
+        const probeBudget = Math.max(
+          1,
+          Math.floor(remainingProbeBudget / probesRemaining),
+        );
+        const structuredBudget = Math.ceil(probeBudget / 2);
+        const structuredUsed = await runStructuredProbe(
+          probe,
+          structuredBudget,
+        );
+        const textUsed = await runTextProbe(
+          probe,
+          Math.max(0, probeBudget - structuredUsed),
+        );
+
+        remainingProbeBudget -= structuredUsed + textUsed;
       }
 
       if (schemaState.findingCount === 0 && !checkpoint.canonicalComplete) {
