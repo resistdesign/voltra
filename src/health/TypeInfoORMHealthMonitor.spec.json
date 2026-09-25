@@ -278,6 +278,18 @@
         "failedRunCount": 1,
         "runningRunCount": 0
       }
+    },
+    {
+      "export": "runHealthRandomProbeScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "continuation": true,
+        "structuredDocumentsProcessedCount": 3,
+        "textDocumentsProcessedCount": 0,
+        "examinedCount": 3,
+        "orphanFindingCount": 3
+      }
     }
   ]
 }
