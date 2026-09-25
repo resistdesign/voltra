@@ -292,6 +292,14 @@ export type TextIndexDocumentListOptions = {
   limit?: number;
   /** Opaque backend continuation token. */
   cursor?: string;
+  /**
+   * Optional normalized keyspace probe position in the range [0, 1).
+   *
+   * Backends may use this as a best-effort starting hint when no cursor is
+   * supplied. Deterministic maintenance enumeration remains the coverage
+   * guarantee.
+   */
+  probe?: number;
 };
 
 /** Bounded page of full-text document/field mirrors. */
