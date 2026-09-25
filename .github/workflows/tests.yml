@@ -50,11 +50,6 @@ jobs:
 
       - name: Build demo IaC
         run: yarn site:build:iac
-        env:
-          REPO_OWNER: test
-          REPO_NAME: test
-          REPO_BRANCH: test
-          REPO_TOKEN: test
 
       - name: Run export checks
         run: yarn test:exports

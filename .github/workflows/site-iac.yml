@@ -1,63 +1,217 @@
-name: Site API IaC Deployment
+name: Demo Site Deployment
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - 'site/iac/**'
+      - ".github/workflows/site-iac.yml"
+      - "public/**"
+      - "site/**"
+      - "src/**"
+      - "README.md"
+      - "package.json"
+      - "yarn.lock"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voltra-demo-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  AWS_STACK_NAME: ${{ secrets.AWS_STACK_NAME }}
+
 jobs:
-  build-iac:
+  deploy-iac:
+    name: Deploy IaC
     runs-on: ubuntu-latest
 
     steps:
-      - name: Begin Deployment...
-        uses: actions/checkout@v2
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Use Node 20
-        uses: actions/setup-node@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
-
-      - name: Use cached node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: nodeModules-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            nodeModules-
+          cache: yarn
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         env:
           CI: true
 
-      - name: Build Demo Site Types
+      - name: Build demo TypeInfo
         run: yarn site:build:demo-types
 
-      - name: Build
+      - name: Build demo IaC
         run: yarn site:build:iac
         env:
           CI: true
-          REPO_OWNER: ${{ secrets.REPO_OWNER }}
-          REPO_NAME: ${{ secrets.REPO_NAME }}
-          REPO_BRANCH: ${{ secrets.REPO_BRANCH }}
-          REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-session-name: LeadAdvisorHireCallingDeploy
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: voltra-demo-github-actions
+
+      - name: Retire legacy AWS build pipeline state
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          legacy_pipeline="$(
+            aws cloudformation describe-stack-resource \
+              --stack-name "$AWS_STACK_NAME" \
+              --logical-resource-id APIBuildPipelinePipeline \
+              --query "StackResourceDetail.PhysicalResourceId" \
+              --output text 2>/dev/null || true
+          )"
+
+          if [[ -n "$legacy_pipeline" && "$legacy_pipeline" != "None" ]]; then
+            for execution_id in $(
+              aws codepipeline list-pipeline-executions \
+                --pipeline-name "$legacy_pipeline" \
+                --query "pipelineExecutionSummaries[?status=='InProgress'].pipelineExecutionId" \
+                --output text 2>/dev/null || true
+            ); do
+              aws codepipeline stop-pipeline-execution \
+                --pipeline-name "$legacy_pipeline" \
+                --pipeline-execution-id "$execution_id" \
+                --abandon \
+                --reason "Moving Voltra demo deployment to GitHub Actions" \
+                >/dev/null || true
+            done
+          fi
+
+          legacy_bucket="$(
+            aws cloudformation describe-stack-resource \
+              --stack-name "$AWS_STACK_NAME" \
+              --logical-resource-id APIBuildPipelinePipelineBucket \
+              --query "StackResourceDetail.PhysicalResourceId" \
+              --output text 2>/dev/null || true
+          )"
+
+          if [[ -n "$legacy_bucket" && "$legacy_bucket" != "None" ]]; then
+            aws s3 rm "s3://$legacy_bucket/" --recursive || true
+          fi
 
       - name: Deploy to AWS CloudFormation
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        uses: aws-actions/aws-cloudformation-github-deploy@v2.2.0
         with:
-          name: ${{ secrets.AWS_STACK_NAME }}
+          name: ${{ env.AWS_STACK_NAME }}
           template: site-dist/iac/index.yml
           capabilities: CAPABILITY_NAMED_IAM
-          no-fail-on-empty-changeset: "1"
+          fail-on-empty-changeset: false
           parameter-overrides: >-
             HostedZoneId=${{ secrets.HOSTEDZONEID }}
+
+  deploy-api:
+    name: Build and deploy API
+    needs: deploy-iac
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        env:
+          CI: true
+
+      - name: Build demo TypeInfo
+        run: yarn site:build:demo-types
+
+      - name: Build demo API
+        run: yarn site:build:api
+
+      - name: Package demo API
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d site-dist/api
+          (
+            cd site-dist/api
+            zip -qr "$RUNNER_TEMP/api.zip" .
+          )
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: voltra-demo-api-github-actions
+
+      - name: Resolve API Lambda
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          api_function_name="$(
+            aws cloudformation describe-stacks \
+              --stack-name "$AWS_STACK_NAME" \
+              --query "Stacks[0].Outputs[?OutputKey=='APIFunctionName'].OutputValue | [0]" \
+              --output text
+          )"
+
+          if [[ -z "$api_function_name" || "$api_function_name" == "None" ]]; then
+            echo "APIFunctionName output not found in stack $AWS_STACK_NAME." >&2
+            exit 1
+          fi
+
+          echo "API_FUNCTION_NAME=$api_function_name" >> "$GITHUB_ENV"
+
+      - name: Deploy demo API
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          aws lambda update-function-code \
+            --function-name "$API_FUNCTION_NAME" \
+            --zip-file "fileb://$RUNNER_TEMP/api.zip" \
+            >/dev/null
+
+          aws lambda wait function-updated \
+            --function-name "$API_FUNCTION_NAME"
+
+  deploy-app:
+    name: Build and deploy app
+    needs: deploy-iac
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        env:
+          CI: true
+
+      - name: Build demo app
+        run: yarn site:build:app
+
+      - name: Deploy demo app
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: site-dist/app

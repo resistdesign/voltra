@@ -1,7 +1,6 @@
 // This is the IaC for a Demo API used to test `api` package code.
 import { SimpleCFT } from "../../src/iac";
 import {
-  addBuildPipeline,
   addCloudFunction,
   addDatabase,
   addDNS,
@@ -9,12 +8,10 @@ import {
   addGateway,
   addSecureFileStorage,
   addSSLCertificate,
-  createBuildSpec,
 } from "../../src/iac/packs";
 import Path from "path";
 import FS from "fs";
 import { fileURLToPath } from "url";
-import { collectRequiredEnvironmentVariables } from "../../src/common";
 import {
   BASE_DOMAIN,
   DEMO_HEALTH_MCP_ROUTE_PATH,
@@ -30,12 +27,6 @@ const moduleDirname =
     ? __dirname
     : Path.dirname(fileURLToPath(import.meta.url));
 
-const ENV_VARS = collectRequiredEnvironmentVariables([
-  "REPO_OWNER",
-  "REPO_NAME",
-  "REPO_BRANCH",
-  "REPO_TOKEN",
-]);
 const OUTPUT_PATH = Path.join(
   moduleDirname,
   "..",
@@ -59,14 +50,7 @@ const IDS = {
     FILE_STORAGE: "ApiFileStorage",
     GATEWAY: "APIGateway",
     FUNCTION: "APIFunction",
-    BUILD_PIPELINE: "APIBuildPipeline",
   },
-};
-const REPO_CREDENTIALS = {
-  OWNER: ENV_VARS.REPO_OWNER,
-  NAME: ENV_VARS.REPO_NAME,
-  BRANCH: ENV_VARS.REPO_BRANCH,
-  TOKEN: ENV_VARS.REPO_TOKEN,
 };
 const IaC = new SimpleCFT({
   AWSTemplateFormatVersion: "2010-09-09",
@@ -180,54 +164,6 @@ const IaC = new SimpleCFT({
       memorySize: 512,
     });
   })
-  .applyPack(addBuildPipeline, {
-    id: IDS.API.BUILD_PIPELINE,
-    dependsOn: [IDS.API.FUNCTION],
-    environmentComputeType: "BUILD_GENERAL1_SMALL",
-    environmentImage: "aws/codebuild/standard:7.0",
-    environmentType: "LINUX_CONTAINER",
-    timeoutInMinutes: 10,
-    buildSpec: {
-      "Fn::Sub": [
-        createBuildSpec({
-          version: 0.2,
-          phases: {
-            install: {
-              "runtime-versions": {
-                nodejs: 20,
-              },
-              commands: ["yarn"],
-            },
-            build: {
-              commands: ["yarn site:build:demo-types", "yarn site:build:api"],
-            },
-            post_build: {
-              commands: [
-                'PWD_RETURN_DIR="$PWD"',
-                'cd "${OutputDirectory}" && zip -qr "../${ZipFileName}.zip" *',
-                'cd "$PWD_RETURN_DIR"',
-                'aws lambda update-function-code --function-name "${APIFunctionArn}" --zip-file "fileb://${ZipFileDirectory}${ZipFileName}.zip"',
-              ],
-            },
-          },
-        }),
-        {
-          APIFunctionArn: {
-            "Fn::GetAtt": [IDS.API.FUNCTION, "Arn"],
-          },
-          OutputDirectory: "./site-dist/api",
-          ZipFileName: "api",
-          ZipFileDirectory: "./site-dist/",
-        },
-      ],
-    },
-    repoConfig: {
-      owner: REPO_CREDENTIALS.OWNER,
-      repo: REPO_CREDENTIALS.NAME,
-      branch: REPO_CREDENTIALS.BRANCH,
-      oauthToken: REPO_CREDENTIALS.TOKEN,
-    },
-  })
   .applyPack(addGateway, {
     id: IDS.API.GATEWAY,
     domainName: DOMAINS.API,
@@ -244,6 +180,12 @@ const IaC = new SimpleCFT({
   })
   .patch({
     Outputs: {
+      APIFunctionName: {
+        Description: "AWS Lambda function name for the Voltra demo API.",
+        Value: {
+          Ref: IDS.API.FUNCTION,
+        },
+      },
       MCPDemoEndpoint: {
         Description: "Public read-only MCP endpoint for the Voltra demo API.",
         Value: `https://${DOMAINS.API}${DEMO_MCP_ROUTE_PATH}`,
