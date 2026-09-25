@@ -1221,15 +1221,22 @@ export class TypeInfoORMHealthMonitor {
           1,
           Math.floor(remainingProbeBudget / probesRemaining),
         );
-        const structuredBudget = Math.ceil(probeBudget / 2);
-        const structuredUsed = await runStructuredProbe(
-          probe,
-          structuredBudget,
-        );
-        const textUsed = await runTextProbe(
-          probe,
-          Math.max(0, probeBudget - structuredUsed),
-        );
+        let structuredUsed = 0;
+        let textUsed = 0;
+
+        if (probeIndex % 2 === 0) {
+          structuredUsed = await runStructuredProbe(probe, probeBudget);
+          textUsed = await runTextProbe(
+            probe,
+            Math.max(0, probeBudget - structuredUsed),
+          );
+        } else {
+          textUsed = await runTextProbe(probe, probeBudget);
+          structuredUsed = await runStructuredProbe(
+            probe,
+            Math.max(0, probeBudget - textUsed),
+          );
+        }
 
         remainingProbeBudget -= structuredUsed + textUsed;
       }
