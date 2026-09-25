@@ -9,6 +9,7 @@ import {
   INDEX_TABLE_KIND_ATTRIBUTE,
   INDEX_TABLE_PARTITION_KEY,
   INDEX_TABLE_SORT_KEY,
+  buildIndexScalarKey,
   type IndexItemKind,
 } from "../../../../Indexing/IndexTable";
 import { VOLTRA_INDEX_MAINTENANCE_INDEX_NAME } from "../../../../../common/IndexingInfrastructure";
@@ -116,6 +117,8 @@ export type DynamoMaintenanceKindListOptions = {
   table: IndexTableConfig;
   kind: IndexItemKind;
   cursor?: AttributeMap;
+  /** Best-effort normalized keyspace position used only when cursor is absent. */
+  probe?: number;
   limit: number;
   /**
    * Load full records from the base table after querying the KEYS_ONLY GSI.
@@ -142,18 +145,43 @@ export const listDynamoIndexItemsByKind = async (
     table,
     kind,
     cursor,
+    probe,
     limit,
     hydrateBaseItems = false,
   } = options;
+  const normalizedProbe =
+    typeof probe === "number" && Number.isFinite(probe)
+      ? Math.max(0, Math.min(0.9999999999999999, probe))
+      : undefined;
+  const probePrefix =
+    normalizedProbe === undefined
+      ? undefined
+      : Math.floor(normalizedProbe * 0x100000000)
+          .toString(16)
+          .padStart(8, "0");
+  const probePartitionKey =
+    !cursor && probePrefix
+      ? buildIndexScalarKey(
+          kind,
+          "document",
+          `${probePrefix}-0000-0000-0000-000000000000`,
+        )
+      : undefined;
   const response = await client.query({
     TableName: table.tableName,
     IndexName: VOLTRA_INDEX_MAINTENANCE_INDEX_NAME,
-    KeyConditionExpression: "#kind = :kind",
+    KeyConditionExpression: probePartitionKey
+      ? "#kind = :kind AND #pk >= :probePk"
+      : "#kind = :kind",
     ExpressionAttributeNames: {
       "#kind": INDEX_TABLE_KIND_ATTRIBUTE,
+      ...(probePartitionKey
+        ? { "#pk": INDEX_TABLE_PARTITION_KEY }
+        : {}),
     },
     ExpressionAttributeValues: {
       ":kind": kind,
+      ...(probePartitionKey ? { ":probePk": probePartitionKey } : {}),
     },
     ExclusiveStartKey: cursor,
     Limit: Math.max(1, limit),
