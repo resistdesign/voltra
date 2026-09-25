@@ -114,3 +114,46 @@ export const runMaintenanceKindKeysOnlyScenario = async () => {
     itemPk: page.items[0]?.pk,
   };
 };
+
+
+export const runMaintenanceKindProbeScenario = async () => {
+  const queryInputs: QueryInput[] = [];
+  const client: DynamoQueryClient = {
+    ...createNoopClient(),
+    query: async (input) => {
+      queryInputs.push(input);
+      return { Items: [] };
+    },
+  };
+
+  await listDynamoIndexItemsByKind({
+    client,
+    table: { tableName: "Index" },
+    kind: INDEX_ITEM_KINDS.structuredDocument,
+    probe: 0.5,
+    limit: 10,
+  });
+
+  await listDynamoIndexItemsByKind({
+    client,
+    table: { tableName: "Index" },
+    kind: INDEX_ITEM_KINDS.structuredDocument,
+    probe: 0.75,
+    cursor: {
+      kind: INDEX_ITEM_KINDS.structuredDocument,
+      pk: "v1#sd#d#s#existing",
+      sk: "state",
+    },
+    limit: 10,
+  });
+
+  return {
+    probeCondition: queryInputs[0]?.KeyConditionExpression,
+    probePartitionKey:
+      queryInputs[0]?.ExpressionAttributeValues[":probePk"],
+    cursorCondition: queryInputs[1]?.KeyConditionExpression,
+    cursorExclusiveStartKey: queryInputs[1]?.ExclusiveStartKey?.pk,
+    cursorIgnoredProbe:
+      queryInputs[1]?.ExpressionAttributeValues[":probePk"] === undefined,
+  };
+};
