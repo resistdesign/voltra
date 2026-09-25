@@ -67,19 +67,35 @@ jobs:
           set -euo pipefail
 
           legacy_pipeline="$(
-            aws cloudformation describe-stack-resource               --stack-name "$AWS_STACK_NAME"               --logical-resource-id APIBuildPipelinePipeline               --query "StackResourceDetail.PhysicalResourceId"               --output text 2>/dev/null || true
+            aws cloudformation describe-stack-resource \
+              --stack-name "$AWS_STACK_NAME" \
+              --logical-resource-id APIBuildPipelinePipeline \
+              --query "StackResourceDetail.PhysicalResourceId" \
+              --output text 2>/dev/null || true
           )"
 
           if [[ -n "$legacy_pipeline" && "$legacy_pipeline" != "None" ]]; then
             for execution_id in $(
-              aws codepipeline list-pipeline-executions                 --pipeline-name "$legacy_pipeline"                 --query "pipelineExecutionSummaries[?status=='InProgress'].pipelineExecutionId"                 --output text 2>/dev/null || true
+              aws codepipeline list-pipeline-executions \
+                --pipeline-name "$legacy_pipeline" \
+                --query "pipelineExecutionSummaries[?status=='InProgress'].pipelineExecutionId" \
+                --output text 2>/dev/null || true
             ); do
-              aws codepipeline stop-pipeline-execution                 --pipeline-name "$legacy_pipeline"                 --pipeline-execution-id "$execution_id"                 --abandon                 --reason "Moving Voltra demo deployment to GitHub Actions"                 >/dev/null || true
+              aws codepipeline stop-pipeline-execution \
+                --pipeline-name "$legacy_pipeline" \
+                --pipeline-execution-id "$execution_id" \
+                --abandon \
+                --reason "Moving Voltra demo deployment to GitHub Actions" \
+                >/dev/null || true
             done
           fi
 
           legacy_bucket="$(
-            aws cloudformation describe-stack-resource               --stack-name "$AWS_STACK_NAME"               --logical-resource-id APIBuildPipelinePipelineBucket               --query "StackResourceDetail.PhysicalResourceId"               --output text 2>/dev/null || true
+            aws cloudformation describe-stack-resource \
+              --stack-name "$AWS_STACK_NAME" \
+              --logical-resource-id APIBuildPipelinePipelineBucket \
+              --query "StackResourceDetail.PhysicalResourceId" \
+              --output text 2>/dev/null || true
           )"
 
           if [[ -n "$legacy_bucket" && "$legacy_bucket" != "None" ]]; then
@@ -146,7 +162,10 @@ jobs:
           set -euo pipefail
 
           api_function_name="$(
-            aws cloudformation describe-stacks               --stack-name "$AWS_STACK_NAME"               --query "Stacks[0].Outputs[?OutputKey=='APIFunctionName'].OutputValue | [0]"               --output text
+            aws cloudformation describe-stacks \
+              --stack-name "$AWS_STACK_NAME" \
+              --query "Stacks[0].Outputs[?OutputKey=='APIFunctionName'].OutputValue | [0]" \
+              --output text
           )"
 
           if [[ -z "$api_function_name" || "$api_function_name" == "None" ]]; then
@@ -161,9 +180,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          aws lambda update-function-code             --function-name "$API_FUNCTION_NAME"             --zip-file "fileb://$RUNNER_TEMP/api.zip"             >/dev/null
+          aws lambda update-function-code \
+            --function-name "$API_FUNCTION_NAME" \
+            --zip-file "fileb://$RUNNER_TEMP/api.zip" \
+            >/dev/null
 
-          aws lambda wait function-updated             --function-name "$API_FUNCTION_NAME"
+          aws lambda wait function-updated \
+            --function-name "$API_FUNCTION_NAME"
 
   deploy-app:
     name: Build and deploy app
