@@ -49,6 +49,8 @@ export const addDemoHealthMCPToRouteMap = (
     store: demoHealthStore,
     repairMode: "preview",
     maxIndexDocumentsPerRun: 100,
+    indexProbeCount: 2,
+    maxProbeIndexDocumentsPerRun: 100,
     maxRepairsPerRun: 0,
     maxSchemaItemsPerRun: 50,
     indexPageSize: 50,
