@@ -183,8 +183,14 @@ export type TypeInfoORMHealthMonitorRunResult = {
 export type TypeInfoORMHealthMonitorOptions = {
   /** Default repair behavior. Defaults to preview. */
   repairMode?: TypeInfoORMHealthRepairMode;
-  /** Maximum index mirrors examined in one scheduled run. */
+  /** Maximum index mirrors examined by the deterministic sweep in one run. */
   maxIndexDocumentsPerRun?: number;
+  /** Number of opportunistic random keyspace probes attempted per run. */
+  indexProbeCount?: number;
+  /** Additional index mirrors that random probes may examine per run. Defaults to 0. */
+  maxProbeIndexDocumentsPerRun?: number;
+  /** Random source used for normalized probe positions. Defaults to Math.random. */
+  random?: () => number;
   /** Maximum destructive repairs applied in one run. */
   maxRepairsPerRun?: number;
   /** Maximum canonical items reindexed for schema reconciliation in one run. */
@@ -412,6 +418,12 @@ export class TypeInfoORMHealthMonitor {
         1,
         config.maxIndexDocumentsPerRun ?? 200,
       ),
+      indexProbeCount: Math.max(0, Math.floor(config.indexProbeCount ?? 0)),
+      maxProbeIndexDocumentsPerRun: Math.max(
+        0,
+        Math.floor(config.maxProbeIndexDocumentsPerRun ?? 0),
+      ),
+      random: config.random ?? Math.random,
       maxRepairsPerRun: Math.max(0, config.maxRepairsPerRun ?? 20),
       maxSchemaItemsPerRun: Math.max(1, config.maxSchemaItemsPerRun ?? 100),
       maxCanonicalItemsPerRun: Math.max(
@@ -926,6 +938,215 @@ export class TypeInfoORMHealthMonitor {
         }
       };
 
+      const auditStructuredDocuments = async (
+        documents: Array<{
+          docId: DocId;
+          fields: Record<string, unknown>;
+          version: number;
+        }>,
+      ): Promise<void> => {
+        for (const document of documents) {
+          const scopedMatches = Object.keys(document.fields)
+            .map((field) => descriptorForField(field))
+            .filter(
+              (
+                value,
+              ): value is {
+                descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
+                removed: boolean;
+              } => !!value,
+            );
+          const uniqueMatches = Array.from(
+            new Map(
+              scopedMatches.map((match) => [
+                `${match.removed ? "removed" : "current"}:${
+                  match.descriptor.typeName
+                }`,
+                match,
+              ]),
+            ).values(),
+          );
+
+          if (uniqueMatches.length === 1) {
+            const match = uniqueMatches[0];
+            structuredTypeNames.add(match.descriptor.typeName);
+
+            if (match.removed) {
+              await auditRemovedTypeCandidate(match.descriptor, {
+                docId: document.docId,
+                source: "structured",
+                structuredVersion: document.version,
+              });
+            } else {
+              await auditCandidate({
+                typeName: match.descriptor.typeName,
+                docId: document.docId,
+                source: "structured",
+                structuredVersion: document.version,
+              });
+            }
+          } else if (
+            Object.keys(document.fields).length > 0 &&
+            uniqueMatches.length !== 1
+          ) {
+            suspiciousCount += 1;
+            await this.store.createRecord({
+              kind: "finding",
+              status: "open",
+              itemId: document.docId,
+              scope: "unscopedStructuredIndex",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "unscopedStructuredIndex",
+                fieldCount: Object.keys(document.fields).length,
+              },
+            });
+          }
+        }
+      };
+
+      const auditTextDocuments = async (
+        documents: Array<{ docId: DocId; indexField: string }>,
+      ): Promise<void> => {
+        for (const document of documents) {
+          const match = descriptorForField(document.indexField);
+          if (match) {
+            textTypeNames.add(match.descriptor.typeName);
+          }
+
+          if (match?.removed) {
+            await auditRemovedTypeCandidate(match.descriptor, {
+              docId: document.docId,
+              source: "text",
+              textIndexFields: [document.indexField],
+            });
+          } else if (match) {
+            await auditCandidate({
+              typeName: match.descriptor.typeName,
+              docId: document.docId,
+              source: "text",
+              textIndexFields: [document.indexField],
+            });
+          } else {
+            suspiciousCount += 1;
+            await this.store.createRecord({
+              kind: "finding",
+              status: "open",
+              itemId: document.docId,
+              scope: "unscopedTextIndex",
+              correlationId: runId,
+              expiresAt: now + this.options.recordRetentionMs,
+              data: {
+                findingType: "unscopedTextIndex",
+                indexField: document.indexField,
+              },
+            });
+          }
+        }
+      };
+
+      const runStructuredProbe = async (
+        probe: number,
+        budget: number,
+      ): Promise<number> => {
+        let remaining = budget;
+        let cursor: string | undefined;
+        let firstPage = true;
+
+        while (remaining > 0 && !repairDeferred) {
+          const pageStartCursor = cursor;
+          const page = await this.orm.listStructuredIndexDocuments({
+            cursor,
+            ...(firstPage ? { probe } : {}),
+            limit: Math.min(this.options.indexPageSize, remaining),
+          });
+
+          if (!page || page.documents.length === 0) {
+            break;
+          }
+
+          structuredDocumentsProcessedCount += page.documents.length;
+          remaining -= page.documents.length;
+          await auditStructuredDocuments(page.documents);
+
+          if (!page.cursor || page.cursor === pageStartCursor) {
+            break;
+          }
+
+          cursor = page.cursor;
+          firstPage = false;
+        }
+
+        return budget - remaining;
+      };
+
+      const runTextProbe = async (
+        probe: number,
+        budget: number,
+      ): Promise<number> => {
+        let remaining = budget;
+        let cursor: string | undefined;
+        let firstPage = true;
+
+        while (remaining > 0 && !repairDeferred) {
+          const pageStartCursor = cursor;
+          const page = await this.orm.listTextIndexDocuments({
+            cursor,
+            ...(firstPage ? { probe } : {}),
+            limit: Math.min(this.options.indexPageSize, remaining),
+          });
+
+          if (!page || page.documents.length === 0) {
+            break;
+          }
+
+          textDocumentsProcessedCount += page.documents.length;
+          remaining -= page.documents.length;
+          await auditTextDocuments(page.documents);
+
+          if (!page.cursor || page.cursor === pageStartCursor) {
+            break;
+          }
+
+          cursor = page.cursor;
+          firstPage = false;
+        }
+
+        return budget - remaining;
+      };
+
+      let remainingProbeBudget = this.options.maxProbeIndexDocumentsPerRun;
+      for (
+        let probeIndex = 0;
+        probeIndex < this.options.indexProbeCount &&
+        remainingProbeBudget > 0 &&
+        !repairDeferred;
+        probeIndex += 1
+      ) {
+        const randomValue = this.options.random();
+        const probe =
+          typeof randomValue === "number" && Number.isFinite(randomValue)
+            ? Math.max(0, Math.min(0.9999999999999999, randomValue))
+            : 0;
+        const probesRemaining = this.options.indexProbeCount - probeIndex;
+        const probeBudget = Math.max(
+          1,
+          Math.floor(remainingProbeBudget / probesRemaining),
+        );
+        const structuredBudget = Math.ceil(probeBudget / 2);
+        const structuredUsed = await runStructuredProbe(
+          probe,
+          structuredBudget,
+        );
+        const textUsed = await runTextProbe(
+          probe,
+          Math.max(0, probeBudget - structuredUsed),
+        );
+
+        remainingProbeBudget -= structuredUsed + textUsed;
+      }
+
       if (!checkpoint.structuredComplete && remainingBudget > 0) {
         const pageStartCursor = checkpoint.structuredCursor;
         const page = await this.orm.listStructuredIndexDocuments({
@@ -939,66 +1160,7 @@ export class TypeInfoORMHealthMonitor {
           structuredDocumentsProcessedCount += page.documents.length;
           remainingBudget -= page.documents.length;
           const repairDeferredBeforePage = repairDeferred;
-
-          for (const document of page.documents) {
-            const scopedMatches = Object.keys(document.fields)
-              .map((field) => descriptorForField(field))
-              .filter(
-                (
-                  value,
-                ): value is {
-                  descriptor: TypeInfoORMIndexMaintenanceTypeDescriptor;
-                  removed: boolean;
-                } => !!value,
-              );
-            const uniqueMatches = Array.from(
-              new Map(
-                scopedMatches.map((match) => [
-                  `${match.removed ? "removed" : "current"}:${
-                    match.descriptor.typeName
-                  }`,
-                  match,
-                ]),
-              ).values(),
-            );
-
-            if (uniqueMatches.length === 1) {
-              const match = uniqueMatches[0];
-              structuredTypeNames.add(match.descriptor.typeName);
-
-              if (match.removed) {
-                await auditRemovedTypeCandidate(match.descriptor, {
-                  docId: document.docId,
-                  source: "structured",
-                  structuredVersion: document.version,
-                });
-              } else {
-                await auditCandidate({
-                  typeName: match.descriptor.typeName,
-                  docId: document.docId,
-                  source: "structured",
-                  structuredVersion: document.version,
-                });
-              }
-            } else if (
-              Object.keys(document.fields).length > 0 &&
-              uniqueMatches.length !== 1
-            ) {
-              suspiciousCount += 1;
-              await this.store.createRecord({
-                kind: "finding",
-                status: "open",
-                itemId: document.docId,
-                scope: "unscopedStructuredIndex",
-                correlationId: runId,
-                expiresAt: now + this.options.recordRetentionMs,
-                data: {
-                  findingType: "unscopedStructuredIndex",
-                  fieldCount: Object.keys(document.fields).length,
-                },
-              });
-            }
-          }
+          await auditStructuredDocuments(page.documents);
 
           if (repairDeferred && !repairDeferredBeforePage) {
             // A page cursor resumes after this page. Re-run the current page when
@@ -1043,42 +1205,7 @@ export class TypeInfoORMHealthMonitor {
           textDocumentsProcessedCount += page.documents.length;
           remainingBudget -= page.documents.length;
           const repairDeferredBeforePage = repairDeferred;
-
-          for (const document of page.documents) {
-            const match = descriptorForField(document.indexField);
-            if (match) {
-              textTypeNames.add(match.descriptor.typeName);
-            }
-
-            if (match?.removed) {
-              await auditRemovedTypeCandidate(match.descriptor, {
-                docId: document.docId,
-                source: "text",
-                textIndexFields: [document.indexField],
-              });
-            } else if (match) {
-              await auditCandidate({
-                typeName: match.descriptor.typeName,
-                docId: document.docId,
-                source: "text",
-                textIndexFields: [document.indexField],
-              });
-            } else {
-              suspiciousCount += 1;
-              await this.store.createRecord({
-                kind: "finding",
-                status: "open",
-                itemId: document.docId,
-                scope: "unscopedTextIndex",
-                correlationId: runId,
-                expiresAt: now + this.options.recordRetentionMs,
-                data: {
-                  findingType: "unscopedTextIndex",
-                  indexField: document.indexField,
-                },
-              });
-            }
-          }
+          await auditTextDocuments(page.documents);
 
           if (repairDeferred && !repairDeferredBeforePage) {
             // Preserve the current text page for the next bounded pass when the
