@@ -25,10 +25,10 @@ Goal: make Voltra's application-state loader sufficient for stateful UI flows th
 
 ## Phase 4 — Verification and PR
 
-- [ ] Run focused loader specs.
-- [ ] Run the core test suite and build/type/export checks appropriate to the public app API.
-- [ ] Review the final diff for unrelated changes.
-- [ ] Move this plan to `planning/complete/` and open a PR against `main`.
+- [x] Run focused loader specs via PR CI (`Tests` run 36812407395).
+- [x] Run the core test suite plus build, demo API/app/IaC, export checks, and consumer smoke via PR CI; all passed.
+- [x] Review the final diff for unrelated changes; scope remains limited to loader/service request control, tests, and planning.
+- [~] PR #422 is open against `main`. Move this plan to `planning/complete/` after the user accepts the framework work as finished.
 
 ## Consumer requirement
 
