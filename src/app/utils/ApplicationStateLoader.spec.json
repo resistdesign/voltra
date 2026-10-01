@@ -25,7 +25,9 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "result": "ok",
-        "args": ["direct"]
+        "args": [
+          "direct"
+        ]
       }
     },
     {
@@ -38,7 +40,9 @@
       "export": "runApplicationStateLoaderSuccessOnLoadCallsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [true]
+      "expectation": [
+        true
+      ]
     },
     {
       "export": "runApplicationStateLoaderErrorHasValueScenario",
@@ -62,7 +66,9 @@
       "export": "runApplicationStateLoaderErrorOnLoadCallsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [false]
+      "expectation": [
+        false
+      ]
     },
     {
       "export": "runApplicationStateLoaderHasValueControllerPropsScenario",
@@ -96,14 +102,83 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "result": "ok",
-        "args": ["second"]
+        "args": [
+          "second"
+        ]
       }
     },
     {
       "export": "runApplicationStateLoaderCancellationOnLoadCallsScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": [true]
+      "expectation": [
+        true
+      ]
+    },
+    {
+      "export": "runApplicationStateLoaderSuccessRequestStatusScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "success"
+    },
+    {
+      "export": "runApplicationStateLoaderSuccessRequestValueScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "result": "ok",
+        "args": [
+          "direct"
+        ]
+      }
+    },
+    {
+      "export": "runApplicationStateLoaderErrorRequestStatusScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "error"
+    },
+    {
+      "export": "runApplicationStateLoaderErrorRequestMessageScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "nope"
+    },
+    {
+      "export": "runApplicationStateLoaderCancellationFirstRequestStatusScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "cancelled"
+    },
+    {
+      "export": "runApplicationStateLoaderCancellationSecondRequestStatusScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "success"
+    },
+    {
+      "export": "runApplicationStateLoaderExplicitCancellationStatusScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "cancelled"
+    },
+    {
+      "export": "runApplicationStateLoaderExplicitCancellationAbortedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runApplicationStateLoaderExplicitCancellationHasValueScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": false
+    },
+    {
+      "export": "runApplicationStateLoaderExplicitCancellationOnLoadCallsScenario",
+      "conditions": [],
+      "operation": "ARRAY_EQUALS",
+      "expectation": []
     }
   ]
 }
