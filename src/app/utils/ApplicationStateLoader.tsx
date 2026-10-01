@@ -95,7 +95,7 @@ export type RemoteProcedureCall<ArgsType extends any[] = any[]> = {
 export type ApplicationStateLoaderConfig<
   ValueType = ApplicationStateValue,
   ArgsType extends any[] = any[],
-> = ServiceRequestConfig & {
+> = Omit<ServiceRequestConfig, "signal"> & {
   /**
    * Identifier for the value to update in application state.
    * */
@@ -216,7 +216,7 @@ export const useApplicationStateLoader = <
       } catch (error) {
         const cancelled =
           requestSequence !== requestSequenceRef.current ||
-          (error instanceof Error && error.name === "AbortError");
+          ((error as { name?: string } | undefined)?.name === "AbortError");
 
         if (!cancelled) {
           completionSuccess = false;
