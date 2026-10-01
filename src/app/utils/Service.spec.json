@@ -75,7 +75,10 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "ok": true,
-        "args": ["a", 1]
+        "args": [
+          "a",
+          1
+        ]
       }
     },
     {
@@ -88,7 +91,10 @@
       "export": "runServiceAuthorizationObjectHeadersScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["Bearer token-2", "Bearer token-3"]
+      "expectation": [
+        "Bearer token-2",
+        "Bearer token-3"
+      ]
     },
     {
       "export": "runServiceTextSuccessResponseScenario",
@@ -112,13 +118,18 @@
       "export": "runServiceCancellationRequestBodiesScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["[\"first\"]", "[\"second\"]"]
+      "expectation": [
+        "[\"first\"]",
+        "[\"second\"]"
+      ]
     },
     {
       "export": "runServiceCancellationAbortedBodiesScenario",
       "conditions": [],
       "operation": "ARRAY_EQUALS",
-      "expectation": ["[\"first\"]"]
+      "expectation": [
+        "[\"first\"]"
+      ]
     },
     {
       "export": "runServiceCancellationFirstRequestErrorNameScenario",
@@ -131,8 +142,22 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "args": ["second"]
+        "args": [
+          "second"
+        ]
       }
+    },
+    {
+      "export": "runServiceExternalSignalCancellationAbortedScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": true
+    },
+    {
+      "export": "runServiceExternalSignalCancellationErrorNameScenario",
+      "conditions": [],
+      "operation": "===",
+      "expectation": "AbortError"
     }
   ]
 }
