@@ -18,6 +18,22 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /**
+ * Result of an imperative Application State Loader request.
+ * */
+export type ApplicationStateLoaderRequestResult<ValueType> =
+  | {
+      status: "success";
+      value: ValueType;
+    }
+  | {
+      status: "error";
+      error: any;
+    }
+  | {
+      status: "cancelled";
+    };
+
+/**
  * Access and track the loading of an application state value.
  * */
 export type ApplicationStateLoader<
@@ -37,11 +53,22 @@ export type ApplicationStateLoader<
    * */
   invalidate: () => void;
   /**
+   * Cancel and invalidate all currently pending requests owned by this loader
+   * without starting a replacement request.
+   * */
+  cancelPendingRequest: () => void;
+  /**
    * Trigger a remote procedure call with the provided args.
+   *
+   * The identified application-state value is still updated on success. The
+   * returned result lets imperative flows coordinate success, failure, and
+   * cancellation without bypassing the loader or duplicating request state.
    *
    * @param args - Arguments to send with the request.
    * */
-  makeRemoteProcedureCall: (...args: ArgsType) => Promise<void>;
+  makeRemoteProcedureCall: (
+    ...args: ArgsType
+  ) => Promise<ApplicationStateLoaderRequestResult<ValueType>>;
 };
 
 /**
@@ -68,7 +95,7 @@ export type RemoteProcedureCall<ArgsType extends any[] = any[]> = {
 export type ApplicationStateLoaderConfig<
   ValueType = ApplicationStateValue,
   ArgsType extends any[] = any[],
-> = ServiceRequestConfig & {
+> = Omit<ServiceRequestConfig, "signal"> & {
   /**
    * Identifier for the value to update in application state.
    * */
@@ -84,7 +111,8 @@ export type ApplicationStateLoaderConfig<
    * */
   resetOnError?: boolean;
   /**
-   * Called each time the application state value has been loaded.
+   * Called each time the application state value has completed successfully or
+   * with an error. Cancelled or superseded requests do not invoke this callback.
    *
    * @param success - Whether the request completed successfully.
    * */
@@ -125,6 +153,7 @@ export const useApplicationStateLoader = <
   const { args = [] as unknown as ArgsType } = remoteProcedureCall;
   const argsRef = useRef<ArgsType>(args);
   const requestSequenceRef = useRef(0);
+  const requestAbortControllersRef = useRef(new Map<number, AbortController>());
   argsRef.current = args;
   const [cacheValidity, setCacheValidity] = useState<{}>({});
   const [loading, setLoading] = useState<boolean>(false);
@@ -134,55 +163,88 @@ export const useApplicationStateLoader = <
   const invalidate = useCallback(() => {
     setCacheValidity({});
   }, []);
+  const cancelPendingRequest = useCallback(() => {
+    requestSequenceRef.current += 1;
+
+    for (const abortController of requestAbortControllersRef.current.values()) {
+      abortController.abort();
+    }
+
+    requestAbortControllersRef.current.clear();
+    setLoading(false);
+  }, []);
   const makeRemoteProcedureCall = useCallback(
-    async (...directArgs: ArgsType) => {
+    async (
+      ...directArgs: ArgsType
+    ): Promise<ApplicationStateLoaderRequestResult<ValueType>> => {
       const requestSequence = ++requestSequenceRef.current;
-      let success = false;
+      const requestAbortController = new AbortController();
+      let completionSuccess: boolean | undefined;
+      let requestResult: ApplicationStateLoaderRequestResult<ValueType> = {
+        status: "cancelled",
+      };
+
+      requestAbortControllersRef.current.set(
+        requestSequence,
+        requestAbortController,
+      );
 
       setLoading(true);
       setLatestError(undefined);
 
       try {
         const { serviceConfig, path } = remoteProcedureCall;
-        const result = await sendServiceRequest(
+        const result = (await sendServiceRequest(
           serviceConfig,
           path,
           directArgs,
           {
             cancelPendingOnNewRequest,
+            signal: requestAbortController.signal,
           },
-        );
+        )) as ValueType;
 
-        if (requestSequence !== requestSequenceRef.current) {
-          return;
-        }
-
-        success = true;
-
-        onChange(result);
-        setModified(false);
-      } catch (error) {
-        if (requestSequence !== requestSequenceRef.current) {
-          return;
-        }
-
-        success = false;
-
-        setLatestError(error);
-
-        if (resetOnError) {
-          onChange(undefined);
+        if (requestSequence === requestSequenceRef.current) {
+          completionSuccess = true;
+          onChange(result);
           setModified(false);
+          requestResult = {
+            status: "success",
+            value: result,
+          };
+        }
+      } catch (error) {
+        const cancelled =
+          requestSequence !== requestSequenceRef.current ||
+          ((error as { name?: string } | undefined)?.name === "AbortError");
+
+        if (!cancelled) {
+          completionSuccess = false;
+          setLatestError(error);
+
+          if (resetOnError) {
+            onChange(undefined);
+            setModified(false);
+          }
+
+          requestResult = {
+            status: "error",
+            error,
+          };
         }
       } finally {
-        if (requestSequence !== requestSequenceRef.current) {
-          return;
+        requestAbortControllersRef.current.delete(requestSequence);
+
+        if (requestSequence === requestSequenceRef.current) {
+          setLoading(false);
+
+          if (completionSuccess !== undefined) {
+            onLoadComplete?.(completionSuccess);
+          }
         }
-
-        setLoading(false);
-
-        onLoadComplete?.(success);
       }
+
+      return requestResult;
     },
     [
       remoteProcedureCall,
@@ -199,16 +261,37 @@ export const useApplicationStateLoader = <
       loading,
       latestError,
       invalidate,
+      cancelPendingRequest,
       makeRemoteProcedureCall,
     }),
-    [valueController, loading, latestError, invalidate, makeRemoteProcedureCall],
+    [
+      valueController,
+      loading,
+      latestError,
+      invalidate,
+      cancelPendingRequest,
+      makeRemoteProcedureCall,
+    ],
   );
 
   useEffect(() => {
     if (!manual && argsRef.current) {
-      makeRemoteProcedureCall(...argsRef.current);
+      void makeRemoteProcedureCall(...argsRef.current);
     }
   }, [cacheValidity, manual, makeRemoteProcedureCall]);
+
+  useEffect(
+    () => () => {
+      requestSequenceRef.current += 1;
+
+      for (const abortController of requestAbortControllersRef.current.values()) {
+        abortController.abort();
+      }
+
+      requestAbortControllersRef.current.clear();
+    },
+    [],
+  );
 
   return appStateLoader;
 };

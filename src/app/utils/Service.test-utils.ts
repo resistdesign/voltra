@@ -295,6 +295,51 @@ const runServiceCancellationScenario = async () => {
   };
 };
 
+
+const runServiceExternalSignalCancellationScenario = async () => {
+  const config: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+  };
+  const originalFetch = globalThis.fetch;
+  const abortController = new AbortController();
+  let aborted = false;
+
+  globalThis.fetch = async (_input, init) =>
+    await new Promise<Response>((_resolve, reject) => {
+      const signal = init?.signal;
+      const onAbort = () => {
+        aborted = true;
+        reject(createAbortError());
+      };
+
+      if (signal?.aborted) {
+        onAbort();
+      } else {
+        signal?.addEventListener("abort", onAbort, { once: true });
+      }
+    });
+
+  const request = sendServiceRequest(config, "v1", ["pending"], {
+    signal: abortController.signal,
+  });
+  abortController.abort();
+
+  let errorName: string | undefined;
+  try {
+    await request;
+  } catch (error: any) {
+    errorName = error?.name ?? String(error);
+  }
+
+  globalThis.fetch = originalFetch;
+
+  return {
+    aborted,
+    errorName,
+  };
+};
+
 export const runServiceUrlScenario = async () => (await runServiceScenario()).url;
 
 export const runServiceOriginUrlScenario = async () =>
@@ -353,3 +398,9 @@ export const runServiceCancellationFirstRequestErrorNameScenario = async () =>
 
 export const runServiceCancellationLatestResponseScenario = async () =>
   (await runServiceCancellationScenario()).latestResponse;
+
+export const runServiceExternalSignalCancellationAbortedScenario = async () =>
+  (await runServiceExternalSignalCancellationScenario()).aborted;
+
+export const runServiceExternalSignalCancellationErrorNameScenario = async () =>
+  (await runServiceExternalSignalCancellationScenario()).errorName;

@@ -24,7 +24,7 @@ export type ServiceConfig = {
    * */
   port?: number;
   /**
-   * Base path to prefix all request paths.
+   * Base path to prefix all requests.
    * */
   basePath?: string;
   /**
@@ -48,6 +48,10 @@ export type ServiceRequestConfig = {
    * @default false
    * */
   cancelPendingOnNewRequest?: boolean;
+  /**
+   * Abort this request when the provided signal is aborted.
+   * */
+  signal?: AbortSignal;
 };
 
 /**
@@ -105,16 +109,23 @@ export const sendServiceRequest = async (
   requestConfig: ServiceRequestConfig = {},
 ): Promise<any> => {
   const { protocol, domain, port, basePath = "", authorization = "" } = config;
-  const { cancelPendingOnNewRequest = false } = requestConfig;
+  const { cancelPendingOnNewRequest = false, signal } = requestConfig;
   const fullUrl = getFullUrl(protocol, domain, basePath, path, port);
   const abortController = new AbortController();
   const previousRequestController = activeRequestControllers.get(fullUrl);
   const authorizationValue =
     typeof authorization === "object" ? authorization.value : authorization;
+  const abortFromSignal = () => abortController.abort();
 
   if (cancelPendingOnNewRequest) {
     previousRequestController?.abort();
     activeRequestControllers.set(fullUrl, abortController);
+  }
+
+  if (signal?.aborted) {
+    abortController.abort();
+  } else {
+    signal?.addEventListener("abort", abortFromSignal, { once: true });
   }
 
   const requestHeaders = {
@@ -150,6 +161,8 @@ export const sendServiceRequest = async (
       throw data;
     }
   } finally {
+    signal?.removeEventListener("abort", abortFromSignal);
+
     if (cancelPendingOnNewRequest) {
       const activeRequestController = activeRequestControllers.get(fullUrl);
 

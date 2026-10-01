@@ -119,7 +119,8 @@ const runApplicationStateLoaderScenario = async () => {
     } as Response;
   };
 
-  await successHarness.controller.makeRemoteProcedureCall("direct");
+  const successRequestResult =
+    await successHarness.controller.makeRemoteProcedureCall("direct");
 
   const successValueState = successHarness.getValueState();
   const successModifiedState = successHarness.getModifiedState();
@@ -141,7 +142,8 @@ const runApplicationStateLoaderScenario = async () => {
       text: async () => JSON.stringify({ message: "nope" }),
     }) as Response;
 
-  await errorHarness.controller.makeRemoteProcedureCall("direct");
+  const errorRequestResult =
+    await errorHarness.controller.makeRemoteProcedureCall("direct");
 
   const errorValueState = errorHarness.getValueState();
   const errorModifiedState = errorHarness.getModifiedState();
@@ -155,10 +157,18 @@ const runApplicationStateLoaderScenario = async () => {
     successValue: successValueState.get(identifier),
     successModified: successModifiedState.get(identifier),
     successOnLoadCalls: successHarness.onLoadCalls,
+    successRequestStatus: successRequestResult.status,
+    successRequestValue:
+      successRequestResult.status === "success" ? successRequestResult.value : null,
     errorHasValue: errorValueState.has(identifier),
     errorValue: errorValueState.get(identifier) ?? null,
     errorModified: errorModifiedState.get(identifier),
     errorOnLoadCalls: errorHarness.onLoadCalls,
+    errorRequestStatus: errorRequestResult.status,
+    errorRequestMessage:
+      errorRequestResult.status === "error"
+        ? (errorRequestResult.error as { message?: string } | undefined)?.message ?? null
+        : null,
   };
 };
 
@@ -216,7 +226,7 @@ const runApplicationStateLoaderCancellationScenario = async () => {
   const firstRequest = harness.controller.makeRemoteProcedureCall("first");
   const secondRequest = harness.controller.makeRemoteProcedureCall("second");
 
-  await firstRequest;
+  const firstRequestResult = await firstRequest;
 
   resolveLatestRequest?.({
     ok: true,
@@ -227,7 +237,7 @@ const runApplicationStateLoaderCancellationScenario = async () => {
       }),
   } as Response);
 
-  await secondRequest;
+  const secondRequestResult = await secondRequest;
 
   globalThis.fetch = originalFetch;
 
@@ -237,6 +247,57 @@ const runApplicationStateLoaderCancellationScenario = async () => {
     loading: harness.controller.loading,
     latestError: harness.controller.latestError ?? null,
     value: valueState.get(identifier) ?? null,
+    onLoadCalls: harness.onLoadCalls,
+    firstRequestStatus: firstRequestResult.status,
+    secondRequestStatus: secondRequestResult.status,
+  };
+};
+
+
+const runApplicationStateLoaderExplicitCancellationScenario = async () => {
+  const identifier: ApplicationStateIdentifier = { screen: { profile: {} } };
+  const serviceConfig: ServiceConfig = {
+    protocol: "https",
+    domain: "example.com",
+  };
+  const originalFetch = globalThis.fetch;
+  let aborted = false;
+
+  const harness = buildHarness({
+    identifier,
+    manual: true,
+    remoteProcedureCall: {
+      serviceConfig,
+      path: "load",
+      args: [],
+    },
+  });
+
+  globalThis.fetch = async (_input, init) =>
+    await new Promise<Response>((_resolve, reject) => {
+      const signal = init?.signal;
+      const onAbort = () => {
+        aborted = true;
+        reject(createAbortError());
+      };
+
+      if (signal?.aborted) {
+        onAbort();
+      } else {
+        signal?.addEventListener("abort", onAbort, { once: true });
+      }
+    });
+
+  const request = harness.controller.makeRemoteProcedureCall("pending");
+  harness.controller.cancelPendingRequest();
+  const requestResult = await request;
+
+  globalThis.fetch = originalFetch;
+
+  return {
+    status: requestResult.status,
+    aborted,
+    hasValue: harness.getValueState().has(identifier),
     onLoadCalls: harness.onLoadCalls,
   };
 };
@@ -259,6 +320,12 @@ export const runApplicationStateLoaderSuccessModifiedScenario = async () =>
 export const runApplicationStateLoaderSuccessOnLoadCallsScenario = async () =>
   (await runApplicationStateLoaderScenario()).successOnLoadCalls;
 
+export const runApplicationStateLoaderSuccessRequestStatusScenario = async () =>
+  (await runApplicationStateLoaderScenario()).successRequestStatus;
+
+export const runApplicationStateLoaderSuccessRequestValueScenario = async () =>
+  (await runApplicationStateLoaderScenario()).successRequestValue;
+
 export const runApplicationStateLoaderErrorHasValueScenario = async () =>
   (await runApplicationStateLoaderScenario()).errorHasValue;
 
@@ -270,6 +337,12 @@ export const runApplicationStateLoaderErrorModifiedScenario = async () =>
 
 export const runApplicationStateLoaderErrorOnLoadCallsScenario = async () =>
   (await runApplicationStateLoaderScenario()).errorOnLoadCalls;
+
+export const runApplicationStateLoaderErrorRequestStatusScenario = async () =>
+  (await runApplicationStateLoaderScenario()).errorRequestStatus;
+
+export const runApplicationStateLoaderErrorRequestMessageScenario = async () =>
+  (await runApplicationStateLoaderScenario()).errorRequestMessage;
 
 export const runApplicationStateLoaderHasValueControllerPropsScenario = () => {
   const identifier = getApplicationStateIdentifier<{ count: number }>();
@@ -291,7 +364,8 @@ export const runApplicationStateLoaderHasValueControllerPropsScenario = () => {
     "value" in harness.controller &&
     "modified" in harness.controller &&
     "onChange" in harness.controller &&
-    "setModified" in harness.controller
+    "setModified" in harness.controller &&
+    "cancelPendingRequest" in harness.controller
   );
 };
 
@@ -332,3 +406,21 @@ export const runApplicationStateLoaderCancellationValueScenario = async () =>
 
 export const runApplicationStateLoaderCancellationOnLoadCallsScenario = async () =>
   (await runApplicationStateLoaderCancellationScenario()).onLoadCalls;
+
+export const runApplicationStateLoaderCancellationFirstRequestStatusScenario = async () =>
+  (await runApplicationStateLoaderCancellationScenario()).firstRequestStatus;
+
+export const runApplicationStateLoaderCancellationSecondRequestStatusScenario = async () =>
+  (await runApplicationStateLoaderCancellationScenario()).secondRequestStatus;
+
+export const runApplicationStateLoaderExplicitCancellationStatusScenario = async () =>
+  (await runApplicationStateLoaderExplicitCancellationScenario()).status;
+
+export const runApplicationStateLoaderExplicitCancellationAbortedScenario = async () =>
+  (await runApplicationStateLoaderExplicitCancellationScenario()).aborted;
+
+export const runApplicationStateLoaderExplicitCancellationHasValueScenario = async () =>
+  (await runApplicationStateLoaderExplicitCancellationScenario()).hasValue;
+
+export const runApplicationStateLoaderExplicitCancellationOnLoadCallsScenario = async () =>
+  (await runApplicationStateLoaderExplicitCancellationScenario()).onLoadCalls;
