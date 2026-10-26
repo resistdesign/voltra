@@ -93,6 +93,41 @@
           "name": "upsert"
         }
       }
+    },
+    {
+      "export": "runConditionalGuardReadAccess",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "guesses": [
+          "INVALID_OPERATION",
+          "INVALID_OPERATION",
+          "INVALID_OPERATION",
+          "INVALID_OPERATION"
+        ],
+        "before": {
+          "id": "one",
+          "name": "visible",
+          "score": 0,
+          "secret": "hidden"
+        },
+        "losingIds": [],
+        "visibleIds": [
+          "one"
+        ],
+        "permitted": true,
+        "stale": "CONDITIONAL_WRITE_CONFLICT",
+        "after": {
+          "id": "one",
+          "name": "permitted",
+          "score": 0,
+          "secret": "hidden"
+        },
+        "permittedIds": [
+          "one"
+        ],
+        "staleIds": []
+      }
     }
   ]
 }

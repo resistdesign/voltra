@@ -3653,6 +3653,44 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             throw error;
           }
         }
+        const expected = updateConfig?.preconditions?.expected;
+        if (this.config.useDAC && expected && Object.keys(expected).length) {
+          // A guard observes a field value through its success/conflict outcome.
+          // Authorize both the probed values and the stored snapshot, since DAC
+          // paths can constrain values. Never silently remove a denied guard.
+          const expectedItem = {
+            ...expected,
+            [String(primaryField)]: primaryFieldValue,
+          };
+          for (const observedItem of [
+            expectedItem,
+            ...(existingItem ? [{ ...expectedItem, ...existingItem }] : []),
+          ]) {
+            const {
+              allowed,
+              denied,
+              fieldsResources = {},
+            } = await this.getItemDACValidation(
+              observedItem,
+              typeName,
+              TypeOperation.READ,
+              context,
+            );
+            if (
+              denied ||
+              !allowed ||
+              Object.keys(expected).some((name) => {
+                const access = fieldsResources[name];
+                return !access?.allowed || access.denied;
+              })
+            ) {
+              throw {
+                message: TypeInfoORMServiceError.INVALID_OPERATION,
+                typeName,
+              };
+            }
+          }
+        }
         const result =
           updateConfig?.preconditions !== undefined
             ? await driver.updateItemConditionally!(

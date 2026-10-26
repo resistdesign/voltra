@@ -334,3 +334,136 @@ export const runStrongReadAndUnsupported = async () => {
     upserted: await unsupported.read("Record", "new", ["name"]),
   };
 };
+
+/** Guard comparisons must respect read permissions independently of patch permissions. */
+export const runConditionalGuardReadAccess = async () => {
+  const driver = makeDriver();
+  const values = new StructuredInMemoryBackend();
+  const backend = createIndexBackend({ values, valueWriter: values });
+  const guardedTypes: TypeInfoMap = {
+    Record: {
+      ...typeInfoMap.Record,
+      fields: {
+        ...typeInfoMap.Record.fields,
+        score: { ...field("number"), readonly: true },
+      },
+    },
+  };
+  const base = {
+    ...config(driver),
+    typeInfoMap: guardedTypes,
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(guardedTypes, {
+      backend,
+    }),
+  };
+  const admin = new TypeInfoORMService(base);
+  await admin.create("Record", { name: "visible", score: 0, secret: "hidden" });
+  const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE;
+  const orm = new TypeInfoORMService({
+    ...base,
+    useDAC: true,
+    dacConfig: {
+      itemResourcePathPrefix: ["ORM"],
+      relationshipResourcePathPrefix: ["REL"],
+      getDACRoleById: async (id) => ({
+        id,
+        constraints: [
+          ...[TypeOperation.READ, TypeOperation.UPDATE].map((operation) => ({
+            type: DACConstraintType.ALLOW,
+            pathIsPrefix: true,
+            resourcePath: ["ORM", operation, "Record", wildcard],
+          })),
+          {
+            type: DACConstraintType.DENY,
+            pathIsPrefix: true,
+            resourcePath: [
+              "ORM",
+              TypeOperation.READ,
+              "Record",
+              wildcard,
+              "secret",
+              id === "value-reader" ? "hidden" : wildcard,
+            ],
+          },
+          {
+            type: DACConstraintType.DENY,
+            pathIsPrefix: true,
+            resourcePath: [
+              "ORM",
+              TypeOperation.UPDATE,
+              "Record",
+              wildcard,
+              "score",
+              wildcard,
+            ],
+          },
+        ],
+      }),
+    },
+  });
+  const context = { accessingRoleId: "editor" };
+  const guesses = [];
+  // Cover field-wide denial and denial constrained to the stored value.
+  for (const accessingRoleId of ["editor", "value-reader"]) {
+    for (const secret of ["hidden", "wrong"]) {
+      guesses.push(
+        await errorOf(() =>
+          orm.update(
+            "Record",
+            { id: "one", name: "loser" },
+            { preconditions: { expected: { secret } } },
+            { accessingRoleId },
+          ),
+        ),
+      );
+    }
+  }
+  const before = await admin.read("Record", "one");
+  const find = async (name: string) =>
+    (
+      await admin.list(
+        "Record",
+        {
+          itemsPerPage: 10,
+          criteria: {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              {
+                fieldName: "name",
+                operator: ComparisonOperators.EQUALS,
+                value: name,
+              },
+            ],
+          },
+        },
+        ["id"],
+      )
+    ).items.map((item) => item.id);
+  const losingIds = await find("loser");
+  const visibleIds = await find("visible");
+  const permitted = await orm.update(
+    "Record",
+    { id: "one", name: "permitted" },
+    { preconditions: { expected: { name: "visible", score: 0 } } },
+    context,
+  );
+  const stale = await errorOf(() =>
+    orm.update(
+      "Record",
+      { id: "one", name: "loser" },
+      { preconditions: { expected: { name: "visible" } } },
+      context,
+    ),
+  );
+  return {
+    guesses,
+    before,
+    losingIds,
+    visibleIds,
+    permitted,
+    stale,
+    after: await admin.read("Record", "one"),
+    permittedIds: await find("permitted"),
+    staleIds: await find("visible"),
+  };
+};

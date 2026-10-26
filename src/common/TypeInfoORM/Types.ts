@@ -244,7 +244,7 @@ export type TypeInfoORMReadConfig = {
 export type TypeInfoORMUpdatePreconditions = {
   /** Explicit existence guard; expected-value guards also imply this. */
   exists?: true;
-  /** All named scalar fields must equal these values (null means stored null). */
+  /** All named scalar fields must equal these values (null means stored null). Requires READ access to every guarded field. */
   expected?: Record<string, string | number | boolean | null>;
 };
 
