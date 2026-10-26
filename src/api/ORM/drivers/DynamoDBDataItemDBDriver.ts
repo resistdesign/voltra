@@ -34,6 +34,7 @@ import {
   TypeInfoPack,
 } from "../../../common/TypeParsing/TypeInfo";
 import {
+  TypeInfoORMServiceError,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -50,6 +51,17 @@ import { SEARCH_VALIDATION_ERRORS } from "../../../common/SearchValidation";
 import ConfigTypeInfoMap from "./DynamoDBDataItemDBDriver/ConfigTypeInfoMap.json";
 import type { DynamoDBSpecificConfig } from "./DynamoDBDataItemDBDriver/ConfigTypes";
 import { DYNAMODB_MARSHALL_OPTIONS } from "./DynamoDBDataItemDBDriver/MarshallOptions";
+
+const rethrowCanonicalWriteError = (error: unknown): never => {
+  if (
+    (error as { name?: string })?.name === "ConditionalCheckFailedException"
+  ) {
+    throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT, {
+      cause: error,
+    });
+  }
+  throw error;
+};
 
 const DynamoDBOperatorMappings: Partial<
   Record<ComparisonOperators, (fieldName: string) => string>
@@ -209,6 +221,9 @@ const buildUpdateExpression = (
           -(value as number),
           DYNAMODB_MARSHALL_OPTIONS,
         );
+        // Only the negative delta is referenced by ADD. Unused expression
+        // values are rejected by DynamoDB, including on guarded updates.
+        delete attributeValues[placeholderValue];
         continue;
       }
 
@@ -297,11 +312,12 @@ export class DynamoDBDataItemDBDriver<
    * Create an item in the database.
    * @returns Generated identifier for the created item.
    */
-  public createItem = async (
+  private createCanonicalItem = async (
     /**
      * New item payload without the identifying field.
      */
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+    ifAbsent = false,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
     const {
       tableName,
@@ -316,12 +332,34 @@ export class DynamoDBDataItemDBDriver<
     const command = new PutItemCommand({
       TableName: tableName,
       Item: marshall(cleanNewItemWithId, DYNAMODB_MARSHALL_OPTIONS),
+      ...(ifAbsent
+        ? {
+            ConditionExpression: "attribute_not_exists(#createKey)",
+            ExpressionAttributeNames: {
+              "#createKey": String(uniquelyIdentifyingFieldName),
+            },
+          }
+        : {}),
     });
 
-    await this.dynamoDBClient.send(command);
+    try {
+      await this.dynamoDBClient.send(command);
+    } catch (error) {
+      rethrowCanonicalWriteError(error);
+    }
 
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
+
+  /** Create with the existing overwrite semantics. */
+  public createItem = (
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+  ) => this.createCanonicalItem(newItem);
+
+  /** Atomically refuse an occupied identity using a conditional canonical put. */
+  public createItemIfAbsent = (
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+  ) => this.createCanonicalItem(newItem, true);
 
   /**
    * Read an item from the database.
@@ -361,7 +399,7 @@ export class DynamoDBDataItemDBDriver<
   };
 
   /**
-   * Read an item using DynamoDB strong consistency for maintenance validation.
+   * Read a canonical item using DynamoDB strong consistency.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param selectedFields Optional fields to select from the item.
    * @returns Item payload (partial when selected fields are used).
@@ -414,6 +452,35 @@ export class DynamoDBDataItemDBDriver<
     }: ItemType = updatedItem as ItemType;
 
     if (typeof uniqueIdentifier !== "undefined") {
+      const expressions = buildUpdateExpression(
+        cleanUpdatedItem,
+        uniquelyIdentifyingFieldName,
+        updateConfig,
+      );
+      const conditions: string[] = [];
+      const names = expressions.ExpressionAttributeNames;
+      const values = expressions.ExpressionAttributeValues;
+      if (updateConfig?.preconditions !== undefined) {
+        // Allocate aliases outside the update expression namespace, even for
+        // field names that look like our own condition aliases.
+        const alias = (prefix: string, used: Record<string, unknown>) => {
+          let index = 0;
+          while (`${prefix}${index}` in used) index++;
+          return `${prefix}${index}`;
+        };
+        const keyName = alias("#guard", names);
+        names[keyName] = String(uniquelyIdentifyingFieldName);
+        conditions.push(`attribute_exists(${keyName})`);
+        for (const [field, expected] of Object.entries(
+          updateConfig.preconditions.expected ?? {},
+        )) {
+          const name = alias("#guard", names);
+          const value = alias(":guard", values);
+          names[name] = field;
+          values[value] = convertToAttr(expected, DYNAMODB_MARSHALL_OPTIONS);
+          conditions.push(`${name} = ${value}`);
+        }
+      }
       const command = new UpdateItemCommand({
         TableName: tableName,
         Key: marshall(
@@ -423,15 +490,17 @@ export class DynamoDBDataItemDBDriver<
           DYNAMODB_MARSHALL_OPTIONS,
         ),
         ReturnValues: "ALL_NEW",
-        ...buildUpdateExpression(
-          cleanUpdatedItem,
-          uniquelyIdentifyingFieldName,
-          updateConfig,
-        ),
+        ...expressions,
+        ...(conditions.length
+          ? { ConditionExpression: conditions.join(" AND ") }
+          : {}),
       });
-      const { Attributes } = await this.dynamoDBClient.send(command);
-
-      return !!Attributes;
+      try {
+        const { Attributes } = await this.dynamoDBClient.send(command);
+        return !!Attributes;
+      } catch (error) {
+        return rethrowCanonicalWriteError(error);
+      }
     } else {
       throw {
         message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
@@ -439,6 +508,17 @@ export class DynamoDBDataItemDBDriver<
       };
     }
   };
+
+  /** Atomically require existence and expected values before applying operators. */
+  public updateItemConditionally = (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    updatedItem: Partial<ItemType>,
+    updateConfig: TypeInfoORMUpdateConfig,
+  ) =>
+    this.updateItem(uniqueIdentifier, updatedItem, {
+      ...updateConfig,
+      preconditions: updateConfig.preconditions ?? { exists: true },
+    });
 
   /**
    * Delete an item from the database.

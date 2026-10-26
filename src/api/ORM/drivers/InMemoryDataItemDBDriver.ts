@@ -15,6 +15,7 @@ import type {
   ListItemsResults,
 } from "../../../common/SearchTypes";
 import {
+  TypeInfoORMServiceError,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -90,8 +91,9 @@ export class InMemoryDataItemDBDriver<
    * @param newItem New item payload without the identifying field.
    * @returns Generated identifier for the created item.
    */
-  public createItem = async (
+  private createCanonicalItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+    ifAbsent = false,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
     const {
       uniquelyIdentifyingFieldName,
@@ -105,10 +107,23 @@ export class InMemoryDataItemDBDriver<
       [uniquelyIdentifyingFieldName]: newItemId,
     } as unknown as ItemType;
 
+    if (ifAbsent && this.items.has(newItemId)) {
+      throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+    }
     this.items.set(newItemId, { ...cleanNewItemWithId });
 
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
+
+  /** Create with the existing overwrite semantics. */
+  public createItem = (
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+  ) => this.createCanonicalItem(newItem);
+
+  /** Atomically refuse an occupied generated identity within this driver instance. */
+  public createItemIfAbsent = (
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+  ) => this.createCanonicalItem(newItem, true);
 
   /**
    * Read an item from memory.
@@ -133,7 +148,7 @@ export class InMemoryDataItemDBDriver<
   };
 
   /**
-   * Strongly consistent maintenance read.
+   * Strongly consistent canonical read of this driver instance.
    */
   public readItemStronglyConsistent = this.readItem;
 
@@ -158,6 +173,16 @@ export class InMemoryDataItemDBDriver<
     }
 
     const existing = this.items.get(uniqueIdentifier);
+    if (updateConfig?.preconditions !== undefined) {
+      if (
+        !existing ||
+        Object.entries(updateConfig.preconditions.expected ?? {}).some(
+          ([field, value]) => existing[field] !== value,
+        )
+      ) {
+        throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+      }
+    }
     const cleanUpdatedItem: Partial<ItemType> = { ...updatedItem };
     delete cleanUpdatedItem[uniquelyIdentifyingFieldName];
 
@@ -197,6 +222,17 @@ export class InMemoryDataItemDBDriver<
 
     return true;
   };
+
+  /** Atomically guard an existing item and apply the update without yielding. */
+  public updateItemConditionally = (
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    updatedItem: Partial<ItemType>,
+    updateConfig: TypeInfoORMUpdateConfig,
+  ) =>
+    this.updateItem(uniqueIdentifier, updatedItem, {
+      ...updateConfig,
+      preconditions: updateConfig.preconditions ?? { exists: true },
+    });
 
   /**
    * Delete an item from memory.

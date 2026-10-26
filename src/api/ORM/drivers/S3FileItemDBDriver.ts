@@ -4,6 +4,10 @@
  * S3-backed file item driver that exposes files as ORM items with upload/download URLs.
  */
 import {
+  TypeInfoORMServiceError,
+  TypeInfoORMUpdateConfig,
+} from "../../../common/TypeInfoORM";
+import {
   CopyObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -158,6 +162,7 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
 
   /**
    * Update a @{@link BaseFileItem}.
+   * Conditional canonical updates are unsupported and fail before file I/O.
    * @param uniqueIdentifier Unique identifier value for the file.
    * @param item Partial update payload for the file.
    * @returns True when the item was updated.
@@ -165,7 +170,11 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
   public updateItem = async (
     uniqueIdentifier: BaseFileItem["id"],
     item: Partial<BaseFileItem>,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ) => {
+    if (updateConfig?.preconditions !== undefined) {
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    }
     const { directory, name } = item;
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;

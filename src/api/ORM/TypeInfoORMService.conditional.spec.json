@@ -1,0 +1,98 @@
+{
+  "file": "./TypeInfoORMService.conditional.test-utils.ts",
+  "tests": [
+    {
+      "export": "runConditionalCanonicalWrites",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createStatuses": [
+          "fulfilled",
+          "rejected"
+        ],
+        "conflict": "CONDITIONAL_WRITE_CONFLICT",
+        "missing": "CONDITIONAL_WRITE_CONFLICT",
+        "stale": "CONDITIONAL_WRITE_CONFLICT",
+        "before": {
+          "id": "one",
+          "name": "winner",
+          "score": 0
+        },
+        "updateStatuses": [
+          "fulfilled",
+          "rejected"
+        ],
+        "after": {
+          "id": "one",
+          "name": "winner",
+          "score": 1
+        },
+        "invalid": "INVALID_PRECONDITION",
+        "unknown": "INVALID_PRECONDITION",
+        "noUpsert": "ITEM_NOT_FOUND"
+      }
+    },
+    {
+      "export": "runConditionalIndexSafetyAndRecovery",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "updateConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "losingIds": [],
+        "winnerIds": [
+          "one"
+        ],
+        "indexFailure": "INDEX_UNAVAILABLE",
+        "canonical": {
+          "id": "one",
+          "name": "committed",
+          "score": 0
+        },
+        "consistency": "strong",
+        "repairedIds": [
+          "one"
+        ],
+        "staleIds": []
+      }
+    },
+    {
+      "export": "runStrongReadAndUnsupported",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "projected": {
+          "id": "one",
+          "name": "visible"
+        },
+        "selections": [
+          "ALL",
+          "ALL",
+          "ALL",
+          "ALL"
+        ],
+        "denied": "INVALID_OPERATION",
+        "updateDenied": "INVALID_OPERATION",
+        "missingContext": "MISSING_ACCESSING_ROLE",
+        "failures": [
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY"
+        ],
+        "strongOrdinaryReads": 0,
+        "wrappedFailure": {
+          "message": "ITEM_NOT_FOUND",
+          "typeName": "Record"
+        },
+        "overwritten": {
+          "id": "one",
+          "name": "default"
+        },
+        "upserted": {
+          "id": "new",
+          "name": "upsert"
+        }
+      }
+    }
+  ]
+}

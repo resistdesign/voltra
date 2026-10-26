@@ -1,0 +1,29 @@
+{
+  "file": "./CanonicalConditions.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCanonicalConditionCommands",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "commandGuardsVerified": true,
+        "createConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "updateConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "infrastructure": "NETWORK_UNAVAILABLE"
+      }
+    },
+    {
+      "export": "runFileCapabilityDeclarations",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "errors": [
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY"
+        ]
+      }
+    }
+  ]
+}

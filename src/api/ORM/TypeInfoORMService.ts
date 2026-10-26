@@ -40,6 +40,8 @@ import {
   OperationGroup,
   RelationshipOperation,
   TypeInfoORMAPI,
+  TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMContext,
   TypeInfoORMServiceError,
   TypeInfoORMUpdateConfig,
@@ -144,12 +146,15 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
-type RequiredDataItemDBDriverMethodName =
+type DataItemDBDriverMethodName =
   | "createItem"
   | "readItem"
   | "updateItem"
   | "deleteItem"
-  | "listItems";
+  | "listItems"
+  | "readItemStronglyConsistent"
+  | "createItemIfAbsent"
+  | "updateItemConditionally";
 
 /**
  * Wrap a driver method to attach extra fields to thrown errors.
@@ -158,13 +163,13 @@ type RequiredDataItemDBDriverMethodName =
 export const getDriverMethodWithModifiedError = <
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
-  DriverMethodNameType extends RequiredDataItemDBDriverMethodName,
-  MethodType extends (
-    ...args: any[]
-  ) => any = DataItemDBDriver<
-    ItemType,
-    UniquelyIdentifyingFieldName
-  >[DriverMethodNameType],
+  DriverMethodNameType extends DataItemDBDriverMethodName,
+  MethodType extends (...args: any[]) => any = NonNullable<
+    DataItemDBDriver<
+      ItemType,
+      UniquelyIdentifyingFieldName
+    >[DriverMethodNameType]
+  >,
 >(
   /**
    * Extra fields to attach to thrown errors.
@@ -179,14 +184,15 @@ export const getDriverMethodWithModifiedError = <
    */
   driverMethodName: DriverMethodNameType,
 ): MethodType =>
-  ((...args: Parameters<MethodType>): Promise<any> => {
+  (async (...args: Parameters<MethodType>): Promise<any> => {
     try {
-      return (driver[driverMethodName] as (...args: any[]) => Promise<any>)(
-        ...(args as Parameters<MethodType>),
-      ) as Promise<any>;
+      return await (
+        driver[driverMethodName] as (...args: any[]) => Promise<any>
+      ).apply(driver, args);
     } catch (error: any) {
       throw {
         ...(error as Record<any, any>),
+        message: error?.message,
         ...extendedData,
       };
     }
@@ -1201,12 +1207,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      */
     extendedData: Record<any, any>,
   ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
-    const driverMethodList: RequiredDataItemDBDriverMethodName[] = [
+    const driverMethodList: DataItemDBDriverMethodName[] = [
       "createItem",
       "readItem",
       "updateItem",
       "deleteItem",
       "listItems",
+      "readItemStronglyConsistent",
+      "createItemIfAbsent",
+      "updateItemConditionally",
     ];
     const driverWrapper: DataItemDBDriver<any, any> = {} as DataItemDBDriver<
       any,
@@ -1214,6 +1223,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     >;
 
     for (const dM of driverMethodList) {
+      if (typeof driver[dM] !== "function") continue;
       driverWrapper[dM] = getDriverMethodWithModifiedError(
         extendedData,
         driver,
@@ -2769,6 +2779,63 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
   };
 
+  /** Validate guard shape and scalar values against schema without requiring writes to guard fields. */
+  protected validateUpdatePreconditions = (
+    typeName: string,
+    updateConfig?: TypeInfoORMUpdateConfig,
+  ): void => {
+    const guards = updateConfig?.preconditions;
+    if (guards === undefined) return;
+    const invalid = () => {
+      throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
+    };
+    if (
+      !guards ||
+      typeof guards !== "object" ||
+      Array.isArray(guards) ||
+      Object.keys(guards).some(
+        (key) => !["exists", "expected"].includes(key),
+      ) ||
+      (guards.exists !== undefined && guards.exists !== true)
+    )
+      invalid();
+    const expected = guards.expected;
+    if (expected === undefined) return;
+    if (!expected || typeof expected !== "object" || Array.isArray(expected))
+      invalid();
+    const typeInfo = this.getTypeInfo(typeName);
+    for (const [name, value] of Object.entries(expected)) {
+      const field = typeInfo.fields?.[name];
+      if (!field) return invalid();
+      if (
+        field.array ||
+        field.typeReference ||
+        (value !== null &&
+          !["string", "number", "boolean"].includes(typeof value)) ||
+        (typeof value === "number" && !Number.isFinite(value))
+      )
+        invalid();
+      const validation = validateTypeInfoValue(
+        { [name]: value },
+        typeName,
+        {
+          ...this.config.typeInfoMap,
+          [typeName]: {
+            ...typeInfo,
+            fields: { [name]: field },
+            unionFieldSets: undefined,
+          },
+        },
+        true,
+        this.config.customValidators,
+        TypeOperation.READ,
+        RelationshipValidationType.STRICT_EXCLUDE,
+        true,
+      );
+      if (!validation.valid) invalid();
+    }
+  };
+
   /**
    * Validate update operator config against the target TypeInfo fields.
    */
@@ -3365,13 +3432,29 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * Create a new item of the given type.
    * @param typeName Type name to create.
    * @param item Item payload to create.
+   * @param createConfig Optional atomic create-if-absent requirement.
    * @returns Primary field value for the created item.
    * */
-  create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
+  create = async (
+    typeName: string,
+    item: TypeInfoDataItem,
+    createConfig?: TypeInfoORMCreateConfig,
+  ): Promise<any> => {
+    if (
+      createConfig?.ifAbsent !== undefined &&
+      typeof createConfig.ifAbsent !== "boolean"
+    ) {
+      throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
+    }
     this.validate(typeName, item, TypeOperation.CREATE);
     const driver = this.getDriverInternal(typeName);
     const cleanItem = this.getCleanItem(typeName, item);
-    const newIdentifier = await driver.createItem(cleanItem);
+    const create = createConfig?.ifAbsent
+      ? driver.createItemIfAbsent
+      : driver.createItem;
+    if (!create)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    const newIdentifier = await create.call(driver, cleanItem);
     const { primaryField } = this.getTypeInfo(typeName);
     const indexedItem = {
       ...cleanItem,
@@ -3388,6 +3471,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * @param typeName Type name to read.
    * @param primaryFieldValue Primary field value to fetch.
    * @param selectedFields Optional fields to select.
+   * @param context Server-owned DAC context (existing argument position).
+   * @param readConfig Required consistency; unsupported drivers refuse strong reads.
    * @returns Cleaned item data.
    * */
   read = async (
@@ -3395,6 +3480,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     primaryFieldValue: any,
     selectedFields?: string[],
     context?: TypeInfoORMContext,
+    readConfig?: TypeInfoORMReadConfig,
   ): Promise<Partial<TypeInfoDataItem>> => {
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
@@ -3405,7 +3491,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const { useDAC } = this.config;
     const driver = this.getDriverInternal(typeName);
-    const item = await driver.readItem(
+    if (
+      readConfig?.consistency !== undefined &&
+      !["default", "strong"].includes(readConfig.consistency)
+    ) {
+      throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
+    }
+    const read =
+      readConfig?.consistency === "strong"
+        ? driver.readItemStronglyConsistent
+        : driver.readItem;
+    if (!read) throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    const item = await read.call(
+      driver,
       primaryFieldValue,
       // SECURITY: Dac validation could fail when `item` is missing unselected fields.
       // CANNOT pass selected fields to `driver` when DAC is enabled.
@@ -3462,6 +3560,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     this.validate(typeName, item, TypeOperation.UPDATE, true);
     this.validateUpdateConfig(typeName, item, updateConfig);
+    this.validateUpdatePreconditions(typeName, updateConfig);
 
     const { primaryField } = this.getTypeInfo(typeName);
     const primaryFieldValue =
@@ -3540,6 +3639,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item,
           mergedFieldsResources,
         );
+        const update =
+          updateConfig?.preconditions !== undefined
+            ? driver.updateItemConditionally
+            : driver.updateItem;
+        if (!update)
+          throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
         let existingItem: Partial<TypeInfoDataItem> | undefined;
         try {
           existingItem = await driver.readItem(primaryFieldValue);
@@ -3548,11 +3653,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             throw error;
           }
         }
-        const result = await driver.updateItem(
-          primaryFieldValue,
-          cleanItem,
-          updateConfig,
-        );
+        const result =
+          updateConfig?.preconditions !== undefined
+            ? await driver.updateItemConditionally!(
+                primaryFieldValue,
+                cleanItem,
+                updateConfig,
+              )
+            : await driver.updateItem(
+                primaryFieldValue,
+                cleanItem,
+                updateConfig,
+              );
         const updatedItem = await driver.readItem(primaryFieldValue);
 
         if (existingItem) {

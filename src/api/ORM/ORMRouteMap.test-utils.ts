@@ -523,3 +523,35 @@ export const runORMRouteMapExplicitHandlerArgumentScenario = async () => {
     parity: JSON.stringify(withoutDAC) === JSON.stringify(withDAC),
   };
 };
+
+export const runORMRouteMapConditionalForwarding = async () => {
+  const results = [];
+  for (const useDAC of [false, true]) {
+    const driver = new InMemoryDataItemDBDriver({
+      tableName: "Records", uniquelyIdentifyingFieldName: "id", generateUniqueIdentifier: () => "one",
+    });
+    let strongReads = 0;
+    const strong = driver.readItemStronglyConsistent;
+    driver.readItemStronglyConsistent = async (...args) => { strongReads++; return strong(...args); };
+    const routes = getTypeInfoORMRouteMap({ ...buildConfig(), getDriver: () => driver },
+      useDAC ? buildDacConfig() : undefined, useDAC ? () => "role-1" : undefined,
+      undefined, { allowUpdateFieldOperators: false });
+    const handler = (path: string) => getHandlerFactory(routes[mergeStringPaths("", path)])(eventData);
+    const create = handler("create");
+    await create("Person", { name: "winner", score: 0 }, { ifAbsent: true });
+    const errorOf = async (call: () => Promise<unknown>) => {
+      try { await call(); return "NO_ERROR"; } catch (error: any) { return error.message; }
+    };
+    const collision = await errorOf(() => create("Person", { name: "loser" }, { ifAbsent: true }));
+    const update = handler("update");
+    const stale = await errorOf(() => update("Person", { id: "one", score: 2 }, {
+      preconditions: { expected: { score: 9 } }, fieldOperators: { score: TypeInfoORMUpdateOperators.NUMBER.INCREMENT },
+    }));
+    await update("Person", { id: "one", score: 2 }, {
+      preconditions: { expected: { score: 0 } }, fieldOperators: { score: TypeInfoORMUpdateOperators.NUMBER.INCREMENT },
+    });
+    const read = await handler("read")("Person", "one", ["name", "score"], { consistency: "strong" });
+    results.push({ collision, stale, read, strongReads });
+  }
+  return results;
+};

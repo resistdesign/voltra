@@ -79,6 +79,20 @@ export type DataItemDBDriver<
   createItem(
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
+  /** Atomically create only if the generated identity is absent; conflicts throw
+   * TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT. Omit if unsupported.
+   */
+  createItemIfAbsent?(
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+  ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
+  /** Atomically check updateConfig.preconditions and mutate an existing item.
+   * Never upsert. Omit if unsupported; ordinary updateItem is not a fallback.
+   */
+  updateItemConditionally?(
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    updatedItem: Partial<ItemType>,
+    updateConfig: TypeInfoORMUpdateConfig,
+  ): Promise<boolean>;
   /**
    * Read an item from the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
@@ -90,7 +104,7 @@ export type DataItemDBDriver<
     selectedFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>>;
   /**
-   * Optional strongly consistent read used by destructive maintenance safety checks.
+   * Optional strongly consistent canonical read for applications and maintenance.
    *
    * Drivers that cannot provide stronger read semantics should omit this method.
    */
@@ -100,6 +114,7 @@ export type DataItemDBDriver<
   ): Promise<Partial<ItemType>>;
   /**
    * Update an item in the data store.
+   * ORM guards are dispatched through updateItemConditionally, never emulated here.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.

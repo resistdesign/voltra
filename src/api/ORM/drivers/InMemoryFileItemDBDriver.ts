@@ -1,4 +1,8 @@
 import {
+  TypeInfoORMServiceError,
+  TypeInfoORMUpdateConfig,
+} from "../../../common/TypeInfoORM";
+import {
   DATA_ITEM_DB_DRIVER_ERRORS,
   DataItemDBDriver,
   DataItemDBDriverConfig,
@@ -201,6 +205,7 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
 
   /**
    * Update a file item in memory.
+   * Conditional canonical updates are unsupported and fail before file I/O.
    * @returns True when the item was updated.
    */
   public updateItem = async (
@@ -212,7 +217,11 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
      * Partial update payload for the file.
      */
     item: Partial<BaseFileItem>,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ): Promise<boolean> => {
+    if (updateConfig?.preconditions !== undefined) {
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    }
     if (typeof uniqueIdentifier === "undefined") {
       throw {
         message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,

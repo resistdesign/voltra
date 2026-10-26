@@ -131,6 +131,12 @@ export enum TypeInfoORMServiceError {
    * Indexing operations require criteria to be provided.
    * */
   INDEXING_REQUIRES_CRITERIA = "INDEXING_REQUIRES_CRITERIA",
+  /** The canonical mutation lost an atomic precondition check. No write occurred. */
+  CONDITIONAL_WRITE_CONFLICT = "CONDITIONAL_WRITE_CONFLICT",
+  /** The driver cannot guarantee the requested condition or consistency. */
+  UNSUPPORTED_CAPABILITY = "UNSUPPORTED_CAPABILITY",
+  /** A condition or consistency option is malformed or not applicable to TypeInfo. */
+  INVALID_PRECONDITION = "INVALID_PRECONDITION",
 }
 
 /**
@@ -222,10 +228,32 @@ export type TypeInfoORMNumberFieldUpdateOperator =
  */
 export type TypeInfoORMFieldUpdateOperator = TypeInfoORMNumberFieldUpdateOperator;
 
+/** Options for canonical creation; omitted options preserve overwrite behavior. */
+export type TypeInfoORMCreateConfig = {
+  /** Atomically refuse an existing generated identity. Requires driver support. */
+  ifAbsent?: boolean;
+};
+
+/** Options for canonical reads; default uses the driver's ordinary read. */
+export type TypeInfoORMReadConfig = {
+  /** Required strong consistency never silently falls back to an ordinary read. */
+  consistency?: "default" | "strong";
+};
+
+/** Atomic update guards. Every guarded update requires an existing item. */
+export type TypeInfoORMUpdatePreconditions = {
+  /** Explicit existence guard; expected-value guards also imply this. */
+  exists?: true;
+  /** All named scalar fields must equal these values (null means stored null). */
+  expected?: Record<string, string | number | boolean | null>;
+};
+
 /**
  * Optional config for TypeInfo ORM update calls.
  */
 export type TypeInfoORMUpdateConfig = {
+  /** Atomic canonical guards, checked before applying any field operators. */
+  preconditions?: TypeInfoORMUpdatePreconditions;
   /**
    * Optional per-field operator map applied during update.
    */
@@ -286,11 +314,13 @@ export type TypeInfoORMAPI = {
    *
    * @param typeName - Type name to create.
    * @param item - Item payload to create.
+   * @param createConfig - Optional atomic create-if-absent requirement.
    * @returns The created item result.
    */
   create: (
     typeName: string,
     item: TypeInfoDataItem,
+    createConfig?: TypeInfoORMCreateConfig,
   ) => Promise<any>;
   /**
    * Read an item by primary field value.
@@ -298,6 +328,7 @@ export type TypeInfoORMAPI = {
    * @param typeName - Type name to read.
    * @param primaryFieldValue - Primary field value to lookup.
    * @param selectedFields - Optional fields to project.
+   * @param readConfig - Required consistency; strong reads refuse unsupported drivers.
    * @returns Retrieved item data.
    */
   read: (
@@ -305,13 +336,14 @@ export type TypeInfoORMAPI = {
     primaryFieldValue: any,
     selectedFields?: (keyof TypeInfoDataItem)[],
     context?: TypeInfoORMContext,
+    readConfig?: TypeInfoORMReadConfig,
   ) => Promise<Partial<TypeInfoDataItem>>;
   /**
    * Update an item.
    *
    * @param typeName - Type name to update.
    * @param item - Updated item payload.
-   * @param updateConfig - Optional per-field operator config.
+   * @param updateConfig - Optional field operators and atomic canonical preconditions.
    * @returns Whether the update succeeded.
    */
   update: (
@@ -399,11 +431,13 @@ export type TypeInfoORMClientAPI = {
    *
    * @param typeName - Type name to create.
    * @param item - Item payload to create.
+   * @param createConfig - Optional atomic create-if-absent requirement.
    * @returns The created item result.
    */
   create: (
     typeName: string,
     item: TypeInfoDataItem,
+    createConfig?: TypeInfoORMCreateConfig,
   ) => Promise<any>;
   /**
    * Read an item by primary field value.
@@ -411,19 +445,21 @@ export type TypeInfoORMClientAPI = {
    * @param typeName - Type name to read.
    * @param primaryFieldValue - Primary field value to lookup.
    * @param selectedFields - Optional fields to project.
+   * @param readConfig - Required consistency; strong reads refuse unsupported drivers.
    * @returns Retrieved item data.
    */
   read: (
     typeName: string,
     primaryFieldValue: any,
     selectedFields?: (keyof TypeInfoDataItem)[],
+    readConfig?: TypeInfoORMReadConfig,
   ) => Promise<Partial<TypeInfoDataItem>>;
   /**
    * Update an item.
    *
    * @param typeName - Type name to update.
    * @param item - Updated item payload.
-   * @param updateConfig - Optional per-field operator config.
+   * @param updateConfig - Optional field operators and atomic canonical preconditions.
    * @returns Whether the update succeeded.
    */
   update: (
