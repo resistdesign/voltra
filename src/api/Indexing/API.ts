@@ -662,6 +662,19 @@ function resolveIndexText(
   return String(value);
 }
 
+// A logical document write must not finish while issued token mutations remain
+// in flight: callers may hold canonical exclusion until this promise settles.
+async function mutateTokenBatch<T>(
+  tokens: T[],
+  mutate: (token: T) => Promise<void>,
+): Promise<void> {
+  const outcomes = await Promise.allSettled(
+    tokens.map(async (token) => mutate(token)),
+  );
+  const failure = outcomes.find((outcome) => outcome.status === "rejected");
+  if (failure?.status === "rejected") throw failure.reason;
+}
+
 /**
  * Index a document using exact and lossy backends.
  *
@@ -701,15 +714,13 @@ export async function indexDocument({
   const uniqueLossyTokens = Array.from(new Set(lossyTokens));
   const positions = buildExactPositions(exactTokens);
 
-  await Promise.all(
-    uniqueLossyTokens.map((token) =>
-      writer.addLossyPosting(token, indexFieldKey, docId),
-    ),
+  await mutateTokenBatch(uniqueLossyTokens, (token) =>
+    writer.addLossyPosting(token, indexFieldKey, docId),
   );
-  await Promise.all(
-    Array.from(positions.entries()).map(([token, tokenPositions]) =>
+  await mutateTokenBatch(
+    Array.from(positions.entries()),
+    ([token, tokenPositions]) =>
       writer.addExactPositions(token, indexFieldKey, docId, tokenPositions),
-    ),
   );
 }
 
@@ -753,15 +764,11 @@ export async function removeDocument({
   const uniqueLossyTokens = Array.from(new Set(lossyTokens));
   const uniqueExactTokens = Array.from(new Set(exactTokens));
 
-  await Promise.all(
-    uniqueLossyTokens.map((token) =>
-      writer.removeLossyPosting(token, indexFieldKey, docId),
-    ),
+  await mutateTokenBatch(uniqueLossyTokens, (token) =>
+    writer.removeLossyPosting(token, indexFieldKey, docId),
   );
-  await Promise.all(
-    uniqueExactTokens.map((token) =>
-      writer.removeExactPositions(token, indexFieldKey, docId),
-    ),
+  await mutateTokenBatch(uniqueExactTokens, (token) =>
+    writer.removeExactPositions(token, indexFieldKey, docId),
   );
 }
 

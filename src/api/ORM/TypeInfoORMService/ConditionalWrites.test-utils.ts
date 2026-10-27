@@ -22,6 +22,8 @@ import {
   DACConstraintType,
   WILDCARD_SIGNIFIER_PROTOTYPE,
 } from "../../DataAccessControl";
+import { tokenize, tokenizeLossyTrigrams } from "../../Indexing/tokenize";
+import type { DocId, TextIndexBackend } from "../../Indexing/Types";
 import type { DataItemDBDriver } from "../drivers/common/Types";
 
 type Item = { id: string; name: string; score: number; secret?: string };
@@ -1184,6 +1186,125 @@ export const runCoordinatedMaintenance = async () => {
       assert.deepEqual(await ids("delayed"), []);
       assert.deepEqual(await textIds("latest"), ["one"]);
       assert.deepEqual(await textIds("delayed"), []);
+    }
+  }
+  return { verified: true };
+};
+
+export const runCoordinatedTokenFailures = async () => {
+  const { FullTextMemoryBackend } =
+    await import("../drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend");
+  for (const method of [
+    "removeLossyPosting",
+    "removeExactPositions",
+    "addLossyPosting",
+    "addExactPositions",
+  ] as const) {
+    for (const synchronous of [false, true]) {
+      const driver = makeDriver();
+      const text: TextIndexBackend = new FullTextMemoryBackend();
+      text.writeDocument = undefined; // Exercise the supported token-level path.
+      const types: TypeInfoMap = {
+        Record: {
+          ...typeInfoMap.Record,
+          fields: {
+            ...typeInfoMap.Record.fields,
+            name: { ...field("string"), tags: { indexed: { text: true } } },
+          },
+        },
+      };
+      const orm = new TypeInfoORMService({
+        ...config(driver),
+        typeInfoMap: types,
+        indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(types, {
+          backend: createIndexBackend({
+            values: new StructuredInMemoryBackend(),
+            text,
+          }),
+        }),
+      });
+      const originalName = "alpha beta";
+      const attemptedName = "gamma delta";
+      const latestName = method.startsWith("remove")
+        ? originalName
+        : "latest winner";
+      await orm.create("Record", { name: originalName, score: 0 });
+      const reached = deferred();
+      const release = deferred();
+      const mutate = text[method].bind(text);
+      const failure = new Error("TOKEN_UNAVAILABLE");
+      let calls = 0;
+      text[method] = (
+        token: string,
+        indexField: string,
+        docId: DocId,
+        positions: number[] = [],
+      ) => {
+        calls += 1;
+        if (calls === 1) {
+          reached.resolve();
+          return release.promise.then(() =>
+            mutate(token, indexField, docId, positions),
+          );
+        }
+        if (calls === 2) {
+          if (synchronous) throw failure;
+          return Promise.reject(failure);
+        }
+        return mutate(token, indexField, docId, positions);
+      };
+      let reported = false;
+      let committedError: any;
+      const first = orm
+        .update("Record", { id: "one", name: attemptedName })
+        .catch((error) => {
+          reported = true;
+          committedError = error;
+        });
+      await reached.promise;
+      let overtook = false;
+      const second = orm
+        .update("Record", { id: "one", name: latestName })
+        .then(() => {
+          overtook = true;
+        });
+      try {
+        await new Promise<void>((resolve) => setImmediate(resolve));
+        assert.equal(reported, false, `${method}: failure escaped token drain`);
+        assert.equal(overtook, false, `${method}: queued writer overtook`);
+        assert.equal((await driver.readItem("one")).name, attemptedName);
+      } finally {
+        release.resolve();
+        await Promise.all([first, second]);
+      }
+      assert.equal(committedError.message, "CANONICAL_WRITE_COMMITTED");
+      assert.equal(committedError.cause, failure);
+      assert.equal((await driver.readItem("one")).name, latestName);
+      const indexField = qualifyIndexField("Record", "name");
+      const names = [originalName, attemptedName, latestName];
+      const expectedLossy = new Set(tokenizeLossyTrigrams(latestName).tokens);
+      const latestTokens = tokenize(latestName).tokens;
+      for (const token of new Set(
+        names.flatMap((name) => tokenizeLossyTrigrams(name).tokens),
+      )) {
+        assert.deepEqual(
+          await text.loadLossyPostings(token, indexField),
+          expectedLossy.has(token) ? ["one"] : [],
+          `${method}: raw lossy posting for ${token}`,
+        );
+      }
+      for (const token of new Set(
+        names.flatMap((name) => tokenize(name).tokens),
+      )) {
+        const positions = latestTokens.flatMap((value, index) =>
+          value === token ? [index] : [],
+        );
+        assert.deepEqual(
+          await text.loadExactPositions(token, indexField, "one"),
+          positions.length ? positions : undefined,
+          `${method}: raw exact positions for ${token}`,
+        );
+      }
     }
   }
   return { verified: true };

@@ -197,6 +197,14 @@
       "expectation": {
         "verified": true
       }
+    },
+    {
+      "export": "runCoordinatedTokenFailures",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
     }
   ]
 }
