@@ -48,6 +48,14 @@
       "expectation": {
         "verified": true
       }
+    },
+    {
+      "export": "runS3UncoordinatedNoOpUpdates",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
     }
   ]
 }

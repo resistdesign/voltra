@@ -597,8 +597,10 @@ export const runS3IndexedWorkflows = async () => {
     dbSpecificConfig: { bucketName: "test", s3Config: {} },
   });
   const files = new Set<string>();
+  let expectedCopySourceKey = "Files/first";
   (driver as any).s3.send = async (command: any) => {
-    const { Key, CopySource } = command.input;
+    const { Bucket, Key, CopySource } = command.input;
+    assert.equal(Bucket, "test");
     if (command.constructor.name === "HeadObjectCommand") {
       if (!files.has(Key))
         throw Object.assign(new Error("missing"), { name: "NotFound" });
@@ -608,9 +610,15 @@ export const runS3IndexedWorkflows = async () => {
         LastModified: new Date(1000),
       };
     }
-    if (command.constructor.name === "CopyObjectCommand")
-      assert.ok(files.has(CopySource));
-    else assert.equal(command.constructor.name, "PutObjectCommand");
+    if (command.constructor.name === "CopyObjectCommand") {
+      const [sourceBucket, ...sourceKeyParts] = CopySource.split("/");
+      assert.equal(decodeURIComponent(sourceBucket), "test");
+      assert.doesNotMatch(CopySource, /[ #?é]/);
+      const sourceKey = decodeURIComponent(sourceKeyParts.join("/"));
+      assert.equal(sourceKey, expectedCopySourceKey);
+      assert.ok(files.has(sourceKey));
+      assert.notEqual(sourceKey, Key);
+    } else assert.equal(command.constructor.name, "PutObjectCommand");
     files.add(Key);
     return {};
   };
@@ -638,6 +646,17 @@ export const runS3IndexedWorkflows = async () => {
   await orm.update("File", { id: "first", name: "next" });
   assert.deepEqual(await ids("first"), []);
   assert.deepEqual(await ids("next"), ["next"]);
+  const encodedName = "first #?%25 café.txt";
+  await orm.create("File", { name: encodedName });
+  expectedCopySourceKey = `Files/${encodedName}`;
+  await orm.update("File", { id: encodedName, name: "encoded-next" });
+  assert.equal(files.has(`Files/${encodedName}`), false);
+  assert.ok(files.has("Files/encoded-next"));
+  assert.deepEqual(await ids(encodedName), []);
+  assert.deepEqual(await ids("encoded-next"), ["encoded-next"]);
+  await orm.delete("File", "encoded-next");
+  assert.equal(files.has("Files/encoded-next"), false);
+  assert.deepEqual(await ids("encoded-next"), []);
   await orm.reindexStoredItem("File", "next");
   assert.equal(
     (await orm.cleanupOrphanedIndexState("File", "next")).status,
@@ -691,6 +710,78 @@ export const runS3IndexedWorkflows = async () => {
       error.canonicalCommitted === true && error.cause === failure,
   );
   assert.ok(files.has("Files/committed"));
+  return { verified: true };
+};
+
+/** Ordinary S3 no-op updates validate existence and preserve the canonical object. */
+export const runS3UncoordinatedNoOpUpdates = async () => {
+  const field = {
+    type: "string" as const,
+    optional: false,
+    readonly: false,
+    array: false,
+  };
+  const driver = new S3FileItemDBDriver({
+    tableName: "Files",
+    uniquelyIdentifyingFieldName: "id",
+    dbSpecificConfig: { bucketName: "test", s3Config: {} },
+  });
+  const files = new Map([["Files/folder/present", "original contents"]]);
+  (driver as any).s3.send = async (command: any) => {
+    assert.equal(command.constructor.name, "HeadObjectCommand");
+    assert.equal(command.input.Bucket, "test");
+    if (!files.has(command.input.Key))
+      throw Object.assign(new Error("missing"), { name: "NotFound" });
+    return { ContentLength: 17, ContentType: "text/plain" };
+  };
+  (driver as any).s3FileDriver.deleteFile = async () => {
+    throw new Error("NO_OP_MUST_NOT_DELETE");
+  };
+  const update = driver.updateItem;
+  driver.updateItem = (id, item, config) => {
+    assert.equal(config?.coordination, undefined);
+    return update(id, item, config);
+  };
+  const orm = new TypeInfoORMService({
+    useDAC: false,
+    typeInfoMap: {
+      File: {
+        primaryField: "id",
+        fields: {
+          id: field,
+          name: field,
+          directory: { ...field, optional: true },
+        },
+      },
+    },
+    getDriver: () => driver,
+    getRelationshipDriver: () => {
+      throw new Error("unused");
+    },
+  });
+  const presentPayloads: Record<string, string>[] = [{ name: "present" }, {}];
+  for (const payload of presentPayloads) {
+    assert.equal(
+      await orm.update("File", { id: "folder/present", ...payload }),
+      true,
+    );
+    assert.deepEqual(
+      [...files],
+      [["Files/folder/present", "original contents"]],
+    );
+  }
+  const missingPayloads: Record<string, string>[] = [{ name: "missing" }, {}];
+  for (const payload of missingPayloads) {
+    await assert.rejects(
+      () => orm.update("File", { id: "folder/missing", ...payload }),
+      { message: "ITEM_NOT_FOUND" },
+    );
+    assert.equal(files.has("Files/folder/missing"), false);
+    assert.deepEqual(
+      [...files],
+      [["Files/folder/present", "original contents"]],
+    );
+  }
   return { verified: true };
 };
 

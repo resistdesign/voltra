@@ -228,7 +228,8 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
    * Conditional canonical updates are unsupported and fail before file I/O.
    * @param uniqueIdentifier Unique identifier value for the file.
    * @param item Partial update payload for the file.
-   * @returns True when the item was updated.
+   * @returns True when the item was updated or already exists at the requested location.
+   * @throws When a same-location update target does not exist.
    * */
   public updateItem = async (
     uniqueIdentifier: BaseFileItem["id"],
@@ -265,10 +266,13 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
             },
             baseDirectory: tableName,
           }),
-          CopySource: getFullFileKey({
+          CopySource: `${encodeURIComponent(bucketName)}/${getFullFileKey({
             file: oldItemLoc,
             baseDirectory: tableName,
-          }),
+          })
+            .split("/")
+            .map(encodeURIComponent)
+            .join("/")}`,
         }),
       );
       try {
@@ -276,6 +280,10 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
       } catch (cause) {
         throw new CanonicalWriteCommittedError(cause);
       }
+    } else if (!before) {
+      // No copy will validate the source. HEAD must establish that this no-op
+      // refers to an existing canonical object, even without index/DAC callbacks.
+      await this.readItem(uniqueIdentifier);
     }
 
     const nextId =

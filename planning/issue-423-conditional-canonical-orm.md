@@ -295,3 +295,19 @@ Fresh local verification (all final commands exit 0):
 | git diff --check | Pass. |
 
 Only the existing plan, indexing documentation, generic hook/DAC wiring and cloud drivers with nearby native behavioral coverage changed. No generated metadata drift, extra CRUD verbs, capability registry or backend mechanics in generic modules. Existing dependencies were used; the repository consumer check manages its own temporary installation. No cloud operations, deployment, seeding, service changes, commit, push, PR actions or lifecycle settlement. The owner's existing commits are retained, and this plan remains active for explicit acceptance.
+
+## S3 copy source and no-op existence repair — 2026-10-27
+
+The current owner directive requires auditing useful S3 CRUD/index workflows. These two repairs stay inside that audit: correct the source storage boundary on rename, then preserve truthful results for ordinary updates that do not move a file. No generic contract change or stronger distributed guarantee is needed.
+
+- [x] Include the source bucket and URL-encoded key in S3 copy requests; validate both through SDK interception with ordinary and encoding-sensitive names and canonical/index assertions.
+- [x] Validate existence for uncoordinated same-location/no-name updates without copying onto self; add native JSON coverage for present/missing targets and canonical state.
+- [x] Run relevant verification and record actual evidence; retain this active plan pending owner acceptance.
+
+Rename now builds the SDK's source bucket/key, encoding each path segment while retaining separators. The interception independently checks the source bucket and exact decoded source key before copying; ordinary and encoding-sensitive names then exercise canonical deletion/destination creation and real generic index replacement/removal. The encoding case includes spaces, `#`, `?`, Unicode and a literal `%25` sequence to detect missing or repeated decoding. Initial use of a bare percent hit existing file-path validation, so the case uses its supported percent-escape spelling without widening this repair into path parsing.
+
+Same-location/no-name updates now obtain HEAD metadata when no prior canonical image exists. Existing targets return true without copy/delete; missing targets propagate `ITEM_NOT_FOUND`. The new native JSON case invokes the actual ORM with indexing/DAC disabled, verifies no coordination is supplied, and checks outcomes plus preserved canonical contents/absence in a nested directory. Before the existence fix this case failed with `Missing expected rejection`; after it, all 19 focused CanonicalConditions/ConditionalWrites cases pass.
+
+Fresh local verification: `yarn test` exits 0 (core and native suites; native summary 58 passes, zero failures/errors). `yarn build`, `yarn site:build:demo-types` plus unchanged generated metadata check, `yarn site:build:api`, `yarn site:build:iac`, `yarn test:exports` and `git diff --check` pass. The first `yarn site:build:app` run caught optional-undefined inference in the new test payload arrays; explicit record array types correct it, and the final focused rerun passes all 19 cases. The final `yarn site:build:app` exits 0, including TypeDoc/finalization. `yarn test:consumer` exits 0 for packed-package type/runtime/import checks; that repository script manages its own temporary dependency installation. Existing checkout dependencies and lockfile are unchanged.
+
+The SDK sends are intercepted; these checks do not exercise live AWS or claim cross-store atomicity. Existing independent-store race/recovery limitations remain unchanged. No generic/public contract, generated source or unrelated plan changed. No cloud operations, deployment, seeding, service changes, commit, push, PR actions or lifecycle settlement; the plan remains active for explicit owner acceptance.
