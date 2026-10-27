@@ -531,8 +531,11 @@ export const runORMRouteMapConditionalForwarding = async () => {
       tableName: "Records", uniquelyIdentifyingFieldName: "id", generateUniqueIdentifier: () => "one",
     });
     let strongReads = 0;
-    const strong = driver.readItemStronglyConsistent;
-    driver.readItemStronglyConsistent = async (...args) => { strongReads++; return strong(...args); };
+    const readItem = driver.readItem;
+    driver.readItem = async (...args) => {
+      if (args[2]?.consistency === "strong") strongReads++;
+      return readItem(...args);
+    };
     const routes = getTypeInfoORMRouteMap({ ...buildConfig(), getDriver: () => driver },
       useDAC ? buildDacConfig() : undefined, useDAC ? () => "role-1" : undefined,
       undefined, { allowUpdateFieldOperators: false });

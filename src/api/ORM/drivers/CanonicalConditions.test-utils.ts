@@ -32,10 +32,14 @@ export const runCanonicalConditionCommands = async () => {
       fieldOperators: { guard0: TypeInfoORMUpdateOperators.NUMBER.INCREMENT },
     },
   );
-  await driver.readItemStronglyConsistent("pair", ["id"]);
+  await driver.readItem("pair", ["id"], { consistency: "strong" });
   await driver.createItem({ name: "default" });
   await driver.updateItem("pair", { name: "default" });
-  const [create, update, strong, defaultCreate, defaultUpdate] = commands;
+  await driver.readItem("pair", ["id"]);
+  const [create, update, strong, defaultCreate, defaultUpdate, defaultRead] = commands;
+  assert.equal(defaultRead.ConsistentRead, undefined);
+  assert.deepEqual(strong.ProjectionExpression, defaultRead.ProjectionExpression);
+  assert.deepEqual(strong.ExpressionAttributeNames, defaultRead.ExpressionAttributeNames);
   assert.equal(create.ConditionExpression, "attribute_not_exists(#createKey)");
   assert.equal(create.ExpressionAttributeNames["#createKey"], "id");
   assert.deepEqual(unmarshall(create.Item), { id: "pair", name: "first" });
@@ -143,6 +147,23 @@ export const runFileCapabilityDeclarations = async () => {
   ];
   const errors: string[] = [];
   for (const driver of drivers) {
+    assert.equal(driver.capabilities.strongRead, true);
+    if (driver instanceof InMemoryFileItemDBDriver) {
+      const id = await driver.createItem({ name: "current", sizeInBytes: 7 });
+      await driver.updateItem(id, { sizeInBytes: 9 });
+      assert.deepEqual(await driver.readItem(id, ["sizeInBytes"], { consistency: "strong" }),
+        { sizeInBytes: 9 });
+    } else {
+      let heads = 0;
+      (driver as any).s3.send = async (command: any) => {
+        assert.equal(command.constructor.name, "HeadObjectCommand");
+        heads++;
+        return { ContentLength: 9, ContentType: "text/plain" };
+      };
+      const item = await driver.readItem("current", ["sizeInBytes"], { consistency: "strong" });
+      assert.equal(item.sizeInBytes, 9);
+      assert.equal(heads, 1);
+    }
     // Direct driver callers must also receive a refusal rather than an ignored guard.
     await assert.rejects(
       () => driver.createItem({ name: "test" }, { ifAbsent: true }),

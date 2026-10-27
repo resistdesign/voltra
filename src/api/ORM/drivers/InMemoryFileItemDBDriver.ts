@@ -1,6 +1,7 @@
 import {
   TypeInfoORMServiceError,
   TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMUpdateConfig,
 } from "../../../common/TypeInfoORM";
 import {
@@ -164,8 +165,12 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
     return id;
   };
 
+  /** Canonical reads honor required strong consistency. */
+  public readonly capabilities = { strongRead: true };
+
   /**
    * Read a file item from memory.
+   * @param _readConfig Required consistency; canonical reads honor strong consistency.
    * @returns File item payload (partial when selected fields are used).
    */
   public readItem = async (
@@ -177,6 +182,7 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
      * Optional fields to select from the file item.
      */
     selectFields?: (keyof BaseFileItem)[],
+    _readConfig?: TypeInfoORMReadConfig,
   ): Promise<Partial<BaseFileItem>> => {
     if (typeof uniqueIdentifier === "undefined") {
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -201,11 +207,6 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
 
     return selected;
   };
-
-  /**
-   * Strongly consistent maintenance read.
-   */
-  public readItemStronglyConsistent = this.readItem;
 
   /**
    * Update a file item in memory.

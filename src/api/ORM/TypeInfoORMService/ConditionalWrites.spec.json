@@ -173,6 +173,12 @@
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": [true, true, true, true]
+    },
+    {
+      "export": "runLegacyReadMaintenance",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": { "verified": true }
     }
   ]
 }

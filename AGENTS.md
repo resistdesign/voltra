@@ -22,6 +22,11 @@
 - All supported drivers, including in-memory drivers, must receive the same Voltra indexing semantics by implementing the same generic driver contracts. Never remove or weaken generic functionality merely to separate storage concerns.
 - Treat any backend-specific contamination of generic API code as an architectural regression requiring correction before completion.
 
+- Keep the shared ORM/driver operation surface to Create, Read, Update, Delete + List/Search. Express optional behavior
+  through configs on existing methods, passed through by default; backend features alone do not justify shared methods
+  or generic branches. Generic handling is for Voltra's cross-driver invariants (TypeInfo, DAC, indexing correctness and
+  explicit refusal of unavailable guarantees). Review contracts, wrappers, maintenance, all drivers, docs and callers together.
+
 ## Project Structure & Module Organization
 
 - `src/` holds the TypeScript source. Key areas include `src/api/`, `src/app/`, `src/common/`, and `src/iac/`.

@@ -151,8 +151,7 @@ type DataItemDBDriverMethodName =
   | "readItem"
   | "updateItem"
   | "deleteItem"
-  | "listItems"
-  | "readItemStronglyConsistent";
+  | "listItems";
 
 /**
  * Wrap a driver method to attach extra fields to thrown errors.
@@ -1239,7 +1238,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       "updateItem",
       "deleteItem",
       "listItems",
-      "readItemStronglyConsistent",
     ];
     const driverWrapper: DataItemDBDriver<any, any> = {
       capabilities: driver.capabilities,
@@ -1758,12 +1756,16 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw new Error(TypeInfoORMServiceError.INVALID_DRIVER);
     }
 
-    const strongReader = driver.readItemStronglyConsistent;
-    const reader = strongReader ?? driver.readItem;
-    const consistency = strongReader ? "strong" : "bestEffort";
+    const consistency = driver.capabilities?.strongRead
+      ? "strong"
+      : "bestEffort";
 
     try {
-      const item = await reader.call(driver, primaryFieldValue as any);
+      const item = await driver.readItem(
+        primaryFieldValue as any,
+        undefined,
+        consistency === "strong" ? { consistency: "strong" } : undefined,
+      );
       return { exists: true, consistency, item };
     } catch (error: any) {
       if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
@@ -2603,8 +2605,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: TypeInfoORMReindexStoredItemConfig = {},
   ): Promise<boolean> => {
     const driver = this.getDriverInternal(typeName);
-    const reader = driver.readItemStronglyConsistent ?? driver.readItem;
-    const currentItem = await reader.call(driver, primaryFieldValue as any);
+    const currentItem = await driver.readItem(
+      primaryFieldValue as any,
+      undefined,
+      driver.capabilities?.strongRead ? { consistency: "strong" } : undefined,
+    );
     const previousItem = config.previousItem ?? currentItem;
 
     await this.replaceItemIndexes(typeName, previousItem, currentItem, {
@@ -3517,17 +3522,17 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     ) {
       throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
     }
-    const read =
-      readConfig?.consistency === "strong"
-        ? driver.readItemStronglyConsistent
-        : driver.readItem;
-    if (!read) throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    const item = await read.call(
-      driver,
+    if (
+      readConfig?.consistency === "strong" &&
+      !driver.capabilities?.strongRead
+    )
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    const item = await driver.readItem(
       primaryFieldValue,
       // SECURITY: Dac validation could fail when `item` is missing unselected fields.
       // CANNOT pass selected fields to `driver` when DAC is enabled.
       useDAC ? undefined : cleanSelectedFields,
+      readConfig,
     );
     const {
       allowed: readAllowed,
@@ -3669,19 +3674,24 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
               Object.keys(expected).length > 0));
         if (guarded && !driver.capabilities?.conditionalUpdate)
           throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-        if (requiresStrongSnapshot && !driver.readItemStronglyConsistent)
+        if (requiresStrongSnapshot && !driver.capabilities?.strongRead)
           throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
         // Guarded indexing needs current canonical snapshots on both sides of
         // the mutation; expected-field READ DAC also needs current stored values.
         const readSnapshot = guarded
           ? requiresStrongSnapshot
-            ? driver.readItemStronglyConsistent
+            ? driver.readItem
             : undefined
           : driver.readItem;
         let existingItem: Partial<TypeInfoDataItem> | undefined;
         if (readSnapshot) {
           try {
-            existingItem = await readSnapshot.call(driver, primaryFieldValue);
+            existingItem = await readSnapshot.call(
+              driver,
+              primaryFieldValue,
+              undefined,
+              requiresStrongSnapshot ? { consistency: "strong" } : undefined,
+            );
           } catch (error: any) {
             if (error?.message !== DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
               throw error;
@@ -3734,7 +3744,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
         // No post-write snapshot is needed for guard authorization alone.
         if (guarded && !this.config.indexing) return result;
-        const updatedItem = await readSnapshot!.call(driver, primaryFieldValue);
+        const updatedItem = await readSnapshot!.call(
+          driver,
+          primaryFieldValue,
+          undefined,
+          requiresStrongSnapshot ? { consistency: "strong" } : undefined,
+        );
 
         if (existingItem) {
           await this.replaceItemIndexes(typeName, existingItem, updatedItem);

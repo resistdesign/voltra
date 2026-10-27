@@ -73,16 +73,19 @@ advertise conditional create/update with `capabilities.conditionalCreate` and
 `capabilities.conditionalUpdate`; typed configs pass through the existing
 `createItem` and `updateItem` methods. Drivers must enforce the requested guarantee
 atomically or refuse it. The ORM never emulates guards with an unconditional write.
-Guarded updates require `readItemStronglyConsistent` when indexing is configured:
+Drivers advertise required strong reads with `capabilities.strongRead` and honor
+`readItem(id, selectedFields, { consistency: "strong" })`. Missing capabilities
+are refused before dispatch, including legacy drivers that might ignore config.
+Guarded updates require this guarantee when indexing is configured:
 both the prior snapshot used to remove postings and the post-write snapshot used
 to add postings must be current. Expected-field guards with DAC enabled also
 require a strong prior snapshot to authorize observation of current stored values.
 Without indexing or these snapshot-dependent security checks, atomic guarded
-updates invoke neither ordinary nor optional strong readers and return the
+updates invoke no canonical reads and return the
 successful atomic driver result directly. Guard authorization alone requires
 only the pre-write snapshot. A
 guarded `false` result becomes `CONDITIONAL_WRITE_CONFLICT` before any post-write
-read or index work. Required strong reads use `readItemStronglyConsistent`
+read or index work. Required strong reads pass config through `readItem`
 through the normal read validation, DAC and projection path and refuse unsupported
 drivers. Existing context positions remain unchanged; read options follow context
 on the server and follow selected fields on the client. Routes supply their own
@@ -96,6 +99,9 @@ DAC context. Disabling route field operators preserves supplied guards.
   mutate synchronously within a single driver instance, without yielding between
   them. Strong reads observe that instance's current state; they provide no
   cross-process persistence guarantee.
+- S3 HEAD reads and in-memory file reads honor required strong consistency.
+  Maintenance prefers configured strong reads when advertised; best-effort
+  verification cannot authorize destructive healing.
 - S3 and in-memory file drivers do not advertise conditional mutation support;
   the ORM refuses such requests before file operations. File upload URLs and
   multi-step renames are not canonical data-item CAS. Their existing strong

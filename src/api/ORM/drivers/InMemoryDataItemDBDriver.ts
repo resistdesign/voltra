@@ -17,6 +17,7 @@ import type {
 import {
   TypeInfoORMServiceError,
   TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -116,8 +117,9 @@ export class InMemoryDataItemDBDriver<
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
-  /** Atomic conditional configs supported by the canonical mutation methods. */
+  /** Guarantees honored by configs on the existing canonical CRUD methods. */
   public readonly capabilities = {
+    strongRead: true,
     conditionalCreate: true,
     conditionalUpdate: true,
   };
@@ -132,11 +134,13 @@ export class InMemoryDataItemDBDriver<
    * Read an item from memory.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param selectedFields Optional fields to select from the item.
+   * @param _readConfig Required consistency; canonical reads honor strong consistency.
    * @returns Item payload (partial when selected fields are used).
    */
   public readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
+    _readConfig?: TypeInfoORMReadConfig,
   ): Promise<Partial<ItemType>> => {
     if (typeof uniqueIdentifier === "undefined") {
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
@@ -149,11 +153,6 @@ export class InMemoryDataItemDBDriver<
 
     return selectFieldsFromItem(item, selectedFields);
   };
-
-  /**
-   * Strongly consistent canonical read of this driver instance.
-   */
-  public readItemStronglyConsistent = this.readItem;
 
   /**
    * Update an item in memory.

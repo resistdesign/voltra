@@ -6,6 +6,7 @@
 import {
   TypeInfoORMServiceError,
   TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMUpdateConfig,
 } from "../../../common/TypeInfoORM";
 import {
@@ -107,15 +108,20 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
     });
   };
 
+  /** Canonical reads honor required strong consistency. */
+  public readonly capabilities = { strongRead: true };
+
   /**
    * Read a @{@link BaseFileItem} by its id.
    * @param id Unique identifier value for the file.
    * @param selectFields Optional fields to select from the file item.
+   * @param _readConfig Required consistency; canonical reads honor strong consistency.
    * @returns File item payload (partial when selected fields are used).
    * */
   public readItem = async (
     id: string,
     selectFields?: (keyof BaseFileItem)[],
+    _readConfig?: TypeInfoORMReadConfig,
   ) => {
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
@@ -158,13 +164,6 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
       return item;
     }
   };
-
-  /**
-   * Strongly consistent maintenance read.
-   *
-   * Amazon S3 object reads are strongly consistent after successful writes.
-   */
-  public readItemStronglyConsistent = this.readItem;
 
   /**
    * Update a @{@link BaseFileItem}.

@@ -9,6 +9,7 @@ import {
 } from "../../../../common/SearchTypes";
 import type {
   TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMUpdateConfig,
 } from "../../../../common/TypeInfoORM/Types";
 
@@ -74,10 +75,12 @@ export type DataItemDBDriver<
   ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
-  /** Explicit opt-in guarantees for configs on existing mutation methods.
-   * Missing capabilities are refused by the ORM before mutation.
+  /** Explicit opt-in guarantees for configs on existing CRUD methods.
+   * Missing capabilities are refused by the ORM before dispatch.
    */
   capabilities?: {
+    /** readItem honors required strong consistency; absent/false is unsupported. */
+    strongRead?: boolean;
     /** createItem atomically enforces ifAbsent. */
     conditionalCreate?: boolean;
     /** updateItem atomically enforces preconditions and never upserts. */
@@ -96,27 +99,20 @@ export type DataItemDBDriver<
    * Read an item from the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param selectedFields Optional fields to select from the item.
+   * @param readConfig Required consistency; unsupported guarantees must be refused.
    * @returns Item payload (partial when selected fields are used).
    */
   readItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
-  ): Promise<Partial<ItemType>>;
-  /**
-   * Optional strongly consistent canonical read for applications and maintenance.
-   *
-   * Drivers that cannot provide stronger read semantics should omit this method.
-   */
-  readItemStronglyConsistent?(
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    selectedFields?: (keyof ItemType)[],
+    readConfig?: TypeInfoORMReadConfig,
   ): Promise<Partial<ItemType>>;
   /**
    * Update an item in the data store.
    * Atomically enforce supplied preconditions, requiring an existing target.
    * Unsupported drivers must refuse guards. A failed guard throws
    * CONDITIONAL_WRITE_CONFLICT or returns false; the ORM normalizes false.
-   * Guarded ORM indexing additionally requires readItemStronglyConsistent.
+   * Guarded ORM indexing additionally requires strongRead and readItem with strong consistency.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.

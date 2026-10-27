@@ -193,11 +193,20 @@ export const runConditionalIndexSafetyAndRecovery = async () => {
     consistency: "strong",
   });
   values.write = write;
+  const readItem = driver.readItem;
+  let maintenanceReads = 0;
+  driver.readItem = async (id, selected, readConfig) => {
+    assert.equal(readConfig?.consistency, "strong");
+    maintenanceReads++;
+    return readItem(id, selected, readConfig);
+  };
   const verification = await orm.verifyStoredItemForIndexMaintenance(
     "Record",
     "one",
   );
   await orm.reindexStoredItem("Record", "one", { previousItem });
+  assert.equal(maintenanceReads, 2);
+  driver.readItem = readItem;
   return {
     createConflict,
     updateConflict,
@@ -217,15 +226,12 @@ export const runStrongReadAndUnsupported = async () => {
   const selections: unknown[] = [];
   let ordinaryReads = 0;
   const read = driver.readItem;
-  driver.readItem = async (...args) => {
-    ordinaryReads++;
-    return read(...args);
-  };
-  // Use a receiver-dependent non-arrow method to verify wrapper binding.
-  driver.readItemStronglyConsistent = async function (id, selected) {
-    selections.push(selected ?? "ALL");
+  // Receiver and config must survive the normal CRUD error wrapper.
+  driver.readItem = async function (id, selected, readConfig) {
     if (this !== driver) throw new Error("LOST_RECEIVER");
-    return read(id, selected);
+    if (readConfig?.consistency === "strong") selections.push(selected ?? "ALL");
+    else ordinaryReads++;
+    return read(id, selected, readConfig);
   };
   const wildcard = WILDCARD_SIGNIFIER_PROTOTYPE;
   const orm = new TypeInfoORMService({
@@ -297,7 +303,7 @@ export const runStrongReadAndUnsupported = async () => {
   }
   const legacy: DataItemDBDriver<Item, "id"> = {
     createItem: driver.createItem,
-    readItem: driver.readItem,
+    readItem: driver.readItem.bind(driver),
     updateItem: driver.updateItem,
     deleteItem: driver.deleteItem,
     listItems: driver.listItems,
@@ -489,7 +495,8 @@ export const runGuardedStaleReads = async () => {
   const obsolete = await read("one");
   await orm.update("Record", { id: "one", name: "current" });
   let ordinaryReads = 0;
-  driver.readItem = async () => {
+  driver.readItem = async (id, selected, readConfig) => {
+    if (readConfig?.consistency === "strong") return read(id, selected, readConfig);
     ordinaryReads++;
     return obsolete;
   };
@@ -540,12 +547,10 @@ export const runConditionalFalseResult = async () => {
   let mutations = 0;
   let indexWork = 0;
   const driver: DataItemDBDriver<Item, "id"> = {
-    capabilities: { conditionalUpdate: true },
+    capabilities: { conditionalUpdate: true, strongRead: true },
     createItem: async () => "one",
-    readItem: async () => {
-      throw new Error("ORDINARY_READ");
-    },
-    readItemStronglyConsistent: async () => {
+    readItem: async (_id, _selected, readConfig) => {
+      assert.equal(readConfig?.consistency, "strong");
       reads++;
       return { ...item };
     },
@@ -575,7 +580,7 @@ export const runConditionalFalseResult = async () => {
     ),
   );
   const noStrongReader = new TypeInfoORMService({
-    ...config({ ...driver, readItemStronglyConsistent: undefined }),
+    ...config({ ...driver, capabilities: { conditionalUpdate: true } }),
     indexing,
   });
   assert.equal(
@@ -602,7 +607,7 @@ export const runConditionalWithoutStrongReader = async () => {
     deleteItem: storage.deleteItem.bind(storage),
     listItems: storage.listItems.bind(storage),
   };
-  assert.equal(driver.readItemStronglyConsistent, undefined);
+  assert.equal(driver.capabilities?.strongRead, undefined);
   const orm = new TypeInfoORMService(config(driver));
   await orm.create("Record", { name: "initial", score: 0 });
   const exists = await orm.update(
@@ -664,23 +669,19 @@ export const runConditionalWithoutSnapshots = async () => {
       let ordinaryReads = 0;
       let strongReads = 0;
       const driver: DataItemDBDriver<Item, "id"> = {
-        capabilities: { conditionalUpdate: true },
+        capabilities: { conditionalUpdate: true, strongRead: optionalStrong },
         createItem: storage.createItem.bind(storage),
-        readItem: async () => {
+        readItem: async (_id, _selected, readConfig) => {
+          if (readConfig?.consistency === "strong") {
+            strongReads++;
+            throw new Error("UNEXPECTED_STRONG_READ");
+          }
           ordinaryReads++;
           throw new Error(missingRead ? "ITEM_NOT_FOUND" : "UNEXPECTED_READ");
         },
         updateItem: storage.updateItem.bind(storage),
         deleteItem: storage.deleteItem.bind(storage),
         listItems: storage.listItems.bind(storage),
-        ...(optionalStrong
-          ? {
-              readItemStronglyConsistent: async () => {
-                strongReads++;
-                throw new Error("UNEXPECTED_STRONG_READ");
-              },
-            }
-          : {}),
       };
       const orm = new TypeInfoORMService(config(driver));
       const success = await orm.update(
@@ -783,4 +784,43 @@ export const runRejectedErrorDiagnostics = async () => {
     }
   }
   return { checks };
+};
+
+/** Legacy readers cannot authorize destructive maintenance or required reads. */
+export const runLegacyReadMaintenance = async () => {
+  const storage = makeDriver();
+  const configs: unknown[] = [];
+  const driver: DataItemDBDriver<Item, "id"> = {
+    createItem: storage.createItem,
+    readItem: async (_id, _selected, readConfig) => {
+      configs.push(readConfig);
+      throw new Error("ITEM_NOT_FOUND");
+    },
+    updateItem: storage.updateItem,
+    deleteItem: storage.deleteItem,
+    listItems: storage.listItems,
+  };
+  const values = new StructuredInMemoryBackend();
+  const orm = new TypeInfoORMService({
+    ...config(driver),
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend: createIndexBackend({ values, valueWriter: values }),
+    }),
+  });
+  assert.deepEqual(
+    await orm.verifyStoredItemForIndexMaintenance("Record", "one"),
+    { exists: false, consistency: "bestEffort" },
+  );
+  const cleanup = await orm.cleanupOrphanedIndexState("Record", "one");
+  assert.equal(cleanup.status, "strongConsistencyUnavailable");
+  assert.equal(cleanup.cleanupAttempted, false);
+  assert.deepEqual(configs, [undefined, undefined]);
+  assert.equal(
+    await errorOf(() =>
+      orm.read("Record", "one", undefined, undefined, { consistency: "strong" }),
+    ),
+    TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY,
+  );
+  assert.equal(configs.length, 2);
+  return { verified: true };
 };

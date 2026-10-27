@@ -36,6 +36,7 @@ import {
 import {
   TypeInfoORMServiceError,
   TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -175,7 +176,10 @@ const createFilterExpression = (
         ` ${DynamoDBLogicalOperatorMappings[logicalOperator]} `,
       ),
       ExpressionAttributeNames: attributeNames,
-      ExpressionAttributeValues: marshall(attributeValues, DYNAMODB_MARSHALL_OPTIONS),
+      ExpressionAttributeValues: marshall(
+        attributeValues,
+        DYNAMODB_MARSHALL_OPTIONS,
+      ),
     };
   }
 
@@ -352,8 +356,9 @@ export class DynamoDBDataItemDBDriver<
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
-  /** Atomic conditional configs supported by the canonical mutation methods. */
+  /** Guarantees honored by configs on the existing canonical CRUD methods. */
   public readonly capabilities = {
+    strongRead: true,
     conditionalCreate: true,
     conditionalUpdate: true,
   };
@@ -366,6 +371,7 @@ export class DynamoDBDataItemDBDriver<
 
   /**
    * Read an item from the database.
+   * @param readConfig Required consistency; canonical reads honor strong consistency.
    * @returns Item payload (partial when selected fields are used).
    */
   public readItem = async (
@@ -377,6 +383,7 @@ export class DynamoDBDataItemDBDriver<
      * Optional fields to select from the item.
      */
     selectedFields?: (keyof ItemType)[],
+    readConfig?: TypeInfoORMReadConfig,
   ): Promise<Partial<ItemType>> => {
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const selectedFieldParams = buildSelectedFieldParams(selectedFields);
@@ -388,6 +395,7 @@ export class DynamoDBDataItemDBDriver<
         },
         DYNAMODB_MARSHALL_OPTIONS,
       ),
+      ...(readConfig?.consistency === "strong" ? { ConsistentRead: true } : {}),
       ...selectedFieldParams,
     });
     const { Item } = await this.dynamoDBClient.send(command);
@@ -399,38 +407,6 @@ export class DynamoDBDataItemDBDriver<
 
       return cleanItem;
     }
-  };
-
-  /**
-   * Read a canonical item using DynamoDB strong consistency.
-   * @param uniqueIdentifier Unique identifier value for the item.
-   * @param selectedFields Optional fields to select from the item.
-   * @returns Item payload (partial when selected fields are used).
-   */
-  public readItemStronglyConsistent = async (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    selectedFields?: (keyof ItemType)[],
-  ): Promise<Partial<ItemType>> => {
-    const { tableName, uniquelyIdentifyingFieldName } = this.config;
-    const selectedFieldParams = buildSelectedFieldParams(selectedFields);
-    const command = new GetItemCommand({
-      TableName: tableName,
-      Key: marshall(
-        {
-          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-        },
-        DYNAMODB_MARSHALL_OPTIONS,
-      ),
-      ConsistentRead: true,
-      ...selectedFieldParams,
-    });
-    const { Item } = await this.dynamoDBClient.send(command);
-
-    if (typeof Item === "undefined") {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-    }
-
-    return unmarshall(Item) as ItemType;
   };
 
   /**
