@@ -62,6 +62,14 @@
 - PRs should include a clear summary, linked issues when available, and screenshots for UI/site changes.
 - Note any test commands run (or reasons for skipping) in the PR description.
 
+## Pull Request Merge Gate
+
+- **Do not merge a PR while any plan associated with that PR remains active** (a file directly under `planning/`).
+  Green checks, completed checklist items, or an agent's own assessment do not bypass this rule.
+- After the work is complete and the user explicitly accepts it, move the PR's plan to `planning/complete/`
+  **on the PR branch** and commit that move before merging. Never close a plan merely to unblock a merge.
+- Verify the PR has no remaining associated active plans before merging. Unrelated active plans do not block the PR.
+
 ## Agent Workflow & Progress Tracking
 
 - Treat the **user prompt** as the authoritative scope for this run; do not down-scope without explicit user approval.
