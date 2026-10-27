@@ -78,7 +78,9 @@ both the prior snapshot used to remove postings and the post-write snapshot used
 to add postings must be current. Expected-field guards with DAC enabled also
 require a strong prior snapshot to authorize observation of current stored values.
 Without indexing or these snapshot-dependent security checks, atomic guarded
-updates do not require the optional strong reader; ordinary reads suffice. A
+updates invoke neither ordinary nor optional strong readers and return the
+successful atomic driver result directly. Guard authorization alone requires
+only the pre-write snapshot. A
 guarded `false` result becomes `CONDITIONAL_WRITE_CONFLICT` before any post-write
 read or index work. Required strong reads use `readItemStronglyConsistent`
 through the normal read validation, DAC and projection path and refuse unsupported

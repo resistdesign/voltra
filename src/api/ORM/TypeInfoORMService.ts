@@ -3674,14 +3674,18 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         // Guarded indexing needs current canonical snapshots on both sides of
         // the mutation; expected-field READ DAC also needs current stored values.
         const readSnapshot = guarded
-          ? (driver.readItemStronglyConsistent ?? driver.readItem)
+          ? requiresStrongSnapshot
+            ? driver.readItemStronglyConsistent
+            : undefined
           : driver.readItem;
         let existingItem: Partial<TypeInfoDataItem> | undefined;
-        try {
-          existingItem = await readSnapshot.call(driver, primaryFieldValue);
-        } catch (error: any) {
-          if (error?.message !== DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
-            throw error;
+        if (readSnapshot) {
+          try {
+            existingItem = await readSnapshot.call(driver, primaryFieldValue);
+          } catch (error: any) {
+            if (error?.message !== DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+              throw error;
+            }
           }
         }
         if (this.config.useDAC && expected && Object.keys(expected).length) {
@@ -3728,7 +3732,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         );
         if (guarded && result === false)
           throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
-        const updatedItem = await readSnapshot.call(driver, primaryFieldValue);
+        // No post-write snapshot is needed for guard authorization alone.
+        if (guarded && !this.config.indexing) return result;
+        const updatedItem = await readSnapshot!.call(driver, primaryFieldValue);
 
         if (existingItem) {
           await this.replaceItemIndexes(typeName, existingItem, updatedItem);

@@ -139,3 +139,32 @@ Fresh local verification (Node v24.22.0, Yarn 1.22.22):
 | `git diff --check` | Exit 0. |
 
 An initial full-suite run caught changed route strong-read counts; preserving preferred strong reads when supported resolved it without changing route fixtures. No public contracts, drivers, route/client argument positions or unrelated work changed. No cloud operations, deployment or seeding; no live distributed-concurrency claim. Owner acceptance remains separate, and this plan remains active.
+
+## Snapshot-free guarded update repair — 2026-10-27
+
+Owner follow-up: PR #424 discussion_r4390451231. The prior no-index repair still read before and after an atomic write; missing or failing readers could prevent or misreport canonical success. This follow-up preserves the independent conditional-write capability and all earlier DAC/index safeguards.
+
+- [x] Skip snapshots for guarded updates without indexing or expected-field READ DAC; retain conflict normalization and default behavior.
+- [x] Add native JSON regressions with real atomic mutations and missing/fail-if-called ordinary and optional strong readers; reconcile snapshot documentation.
+- [x] Run relevant behavioral/framework checks and record actual repair evidence. Leave this plan active pending explicit owner acceptance.
+
+The new `runConditionalWithoutSnapshots` native JSON case uses the real in-memory driver's atomic expected-value update through the generic contract, with ordinary readers that report missing or fail if called, both with and without an optional strong reader that fails if called. Each case asserts successful canonical mutation, stale-guard rejection, false-result conflict normalization, unchanged winning data and zero reader calls. Before the service repair, this case produced `ITEM_NOT_FOUND` (8 passes, 1 error); after repair, all four cases pass. Existing DAC and indexed safety/refusal cases remain intact. The service now selects a snapshot reader only for guarded indexing or expected-field READ DAC, and skips post-write snapshots for all no-index guarded updates. Unguarded behavior is unchanged. This supersedes the preceding repair's preference for optional strong readers when no snapshot is needed.
+
+The route forwarding expectation now records 1 strong read without DAC (the explicit authorized read), and 3 with DAC (two guard authorization snapshots plus the explicit read). Its conflict and payload assertions are unchanged; no route/client API or backend code changed. `INDEXING_INTEGRATION.md` now documents snapshot-free success instead of claiming ordinary reads suffice.
+
+Fresh local verification on Node v24.22.0 / Yarn 1.22.22:
+
+| Command | Observed result |
+| --- | --- |
+| `yarn tsx src/common/Testing/CLI.ts './src/api/ORM/TypeInfoORMService/ConditionalWrites.spec.json' './src/api/ORM/ORMRouteMap.spec.json'` | Exit 0; 13 passes, zero failures/errors on final source. |
+| `yarn test` | Exit 0; 1,042 core and 58 native passes, zero failures/errors. |
+| `yarn build` | Exit 0; bundles, declarations and package preparation passed. |
+| `yarn site:build:demo-types` and generated metadata diff check | Exit 0; metadata unchanged. |
+| `yarn site:build:api` | Exit 0. |
+| `yarn site:build:app` | Exit 0; includes TypeDoc and site finalization. |
+| `yarn site:build:iac` | Exit 0; local generation only. |
+| `yarn test:exports` | Exit 0. |
+| `yarn test:consumer` | Exit 0; packed-package type/runtime/import smoke checks passed. |
+| `git diff --check` | Exit 0. |
+
+The original owner merge-gate commit `585627a84fee17ff6254aebd290e86143d264926` remains an ancestor of this branch. No cloud operations, deployment or seeding were run. These are local repair observations, not owner acceptance or a claim about live distributed concurrency. The product plan remains active; no PR approval or merge is authorized by these checks.

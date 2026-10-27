@@ -654,6 +654,76 @@ export const runConditionalWithoutStrongReader = async () => {
   };
 };
 
+/** Atomic no-index success must not depend on either reader's availability. */
+export const runConditionalWithoutSnapshots = async () => {
+  const results = [];
+  for (const optionalStrong of [false, true]) {
+    for (const missingRead of [true, false]) {
+      const storage = makeDriver();
+      await storage.createItem({ name: "initial", score: 0 });
+      let ordinaryReads = 0;
+      let strongReads = 0;
+      const driver: DataItemDBDriver<Item, "id"> = {
+        capabilities: { conditionalUpdate: true },
+        createItem: storage.createItem.bind(storage),
+        readItem: async () => {
+          ordinaryReads++;
+          throw new Error(missingRead ? "ITEM_NOT_FOUND" : "UNEXPECTED_READ");
+        },
+        updateItem: storage.updateItem.bind(storage),
+        deleteItem: storage.deleteItem.bind(storage),
+        listItems: storage.listItems.bind(storage),
+        ...(optionalStrong
+          ? {
+              readItemStronglyConsistent: async () => {
+                strongReads++;
+                throw new Error("UNEXPECTED_STRONG_READ");
+              },
+            }
+          : {}),
+      };
+      const orm = new TypeInfoORMService(config(driver));
+      const success = await orm.update(
+        "Record",
+        { id: "one", name: "committed", score: 1 },
+        { preconditions: { expected: { score: 0 } } },
+      );
+      const stale = await errorOf(() =>
+        orm.update(
+          "Record",
+          { id: "one", name: "loser" },
+          { preconditions: { expected: { score: 0 } } },
+        ),
+      );
+      const falseResult = new TypeInfoORMService(
+        config({
+          ...driver,
+          updateItem: async () => false,
+        }),
+      );
+      const conflict = await errorOf(() =>
+        falseResult.update(
+          "Record",
+          { id: "one", name: "loser" },
+          { preconditions: { exists: true } },
+        ),
+      );
+      assert.equal(success, true);
+      assert.equal(stale, TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+      assert.equal(conflict, TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+      assert.equal(ordinaryReads, 0);
+      assert.equal(strongReads, 0);
+      assert.deepEqual(await storage.readItem("one"), {
+        id: "one",
+        name: "committed",
+        score: 1,
+      });
+      results.push(success);
+    }
+  }
+  return results;
+};
+
 /** Rejections retain provider and JavaScript diagnostics through the ORM wrapper. */
 export const runRejectedErrorDiagnostics = async () => {
   const driver = makeDriver();

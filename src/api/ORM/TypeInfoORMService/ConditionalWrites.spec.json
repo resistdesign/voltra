@@ -167,6 +167,12 @@
         },
         "noUpsert": "ITEM_NOT_FOUND"
       }
+    },
+    {
+      "export": "runConditionalWithoutSnapshots",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [true, true, true, true]
     }
   ]
 }
