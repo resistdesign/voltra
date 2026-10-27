@@ -12,6 +12,18 @@
     then proceed.
   - Only ask where work is tracked if the user prompt provides insufficient detail to create a plan.
 
+## Alpha Major-Version Compatibility Policy
+
+- **Voltra v3 is a new major version in alpha: it has ZERO backward-compatibility requirements.** This applies to v2,
+  earlier v3 alphas, old driver contracts, historical method signatures, legacy callers, and previous implementation behavior.
+- **Correctness, clean architecture, and the best current design take priority over legacy compatibility.** Breaking API
+  and driver changes are expected and welcome when they produce a better v3 architecture.
+- Do not add shims, fallback behavior, duplicate methods, capability scaffolding, deprecation layers, or compatibility
+  tests **just to accommodate older versions or callers**. Update implementations, consumers, tests, and docs to the
+  new contract instead. Legacy is not a design constraint unless the user explicitly requests it.
+- Preserve genuine system invariants and safety guarantees for the *new* contract. Do not confuse removing compatibility
+  burdens with permitting incorrect, unsafe, or silently degraded behavior.
+
 ## Core Architecture: Storage Driver Isolation
 
 - **SEVERE CORE OBJECTIVE:** Voltra's ORM, indexing, health, query planning, maintenance, and other generic API behavior must remain storage/backend agnostic.
