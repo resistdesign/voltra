@@ -8,6 +8,7 @@
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
   DataItemOperationConfig,
+  CanonicalWriteCommittedError,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -314,6 +315,56 @@ export class DynamoDBDataItemDBDriver<
     );
   }
 
+  private notify = async (
+    config: DataItemOperationConfig<ItemType> | undefined,
+    before: ItemType | undefined,
+    after: ItemType | undefined,
+  ) => {
+    try {
+      await config?.coordination?.changed?.(before, after);
+    } catch (cause) {
+      throw new CanonicalWriteCommittedError(cause);
+    }
+  };
+
+  private prior = async (id: ItemType[UniquelyIdentifyingFieldName]) => {
+    try {
+      return (await this.readItem(id, undefined, {
+        consistency: "strong",
+      })) as ItemType;
+    } catch (error: any) {
+      if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND)
+        return undefined;
+      throw error;
+    }
+  };
+
+  // Compare full observed values plus schema-field absence. This binds canonical
+  // DAC inputs to the atomic write without requiring locks on external writers.
+  private snapshotConditions = (
+    before: ItemType | undefined,
+    fields: string[],
+    names: Record<string, string>,
+    values: Record<string, AttributeValue>,
+  ): string[] => {
+    const conditions: string[] = [];
+    const keys = before
+      ? new Set([...Object.keys(before), ...fields])
+      : new Set([String(this.config.uniquelyIdentifyingFieldName)]);
+    let i = 0;
+    for (const field of keys) {
+      while (`#snapshot${i}` in names || `:snapshot${i}` in values) i++;
+      const name = `#snapshot${i}`,
+        value = `:snapshot${i++}`;
+      names[name] = field;
+      if (before?.[field] !== undefined) {
+        values[value] = convertToAttr(before[field], DYNAMODB_MARSHALL_OPTIONS);
+        conditions.push(`${name} = ${value}`);
+      } else conditions.push(`attribute_not_exists(${name})`);
+    }
+    return conditions;
+  };
+
   /**
    * Create an item in the database.
    * @returns Generated identifier for the created item.
@@ -323,7 +374,7 @@ export class DynamoDBDataItemDBDriver<
      * New item payload without the identifying field.
      */
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-    ifAbsent = false,
+    createConfig?: TypeInfoORMCreateConfig & DataItemOperationConfig<ItemType>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
     const {
       tableName,
@@ -335,22 +386,52 @@ export class DynamoDBDataItemDBDriver<
       ...newItem,
       [uniquelyIdentifyingFieldName]: newItemId,
     } as any;
+    if (createConfig?.coordination?.exclusive)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    // Create has no item DAC in the ORM. Direct inspected creates bind snapshots.
+    const inspected = createConfig?.coordination?.inspect;
+    const before = inspected
+      ? await this.prior(newItemId as ItemType[UniquelyIdentifyingFieldName])
+      : undefined;
+    await inspected?.(before);
+    const names: Record<string, string> = {};
+    const values: Record<string, AttributeValue> = {};
+    const conditions = inspected
+      ? this.snapshotConditions(
+          before,
+          createConfig?.coordination?.guardFields ?? [],
+          names,
+          values,
+        )
+      : [];
+    if (createConfig?.ifAbsent) {
+      names["#createKey"] = String(uniquelyIdentifyingFieldName);
+      conditions.push("attribute_not_exists(#createKey)");
+    }
     const command = new PutItemCommand({
       TableName: tableName,
       Item: marshall(cleanNewItemWithId, DYNAMODB_MARSHALL_OPTIONS),
-      ...(ifAbsent
+      ReturnValues: "ALL_OLD",
+      ...(conditions.length
         ? {
-            ConditionExpression: "attribute_not_exists(#createKey)",
-            ExpressionAttributeNames: {
-              "#createKey": String(uniquelyIdentifyingFieldName),
-            },
+            ConditionExpression: conditions.join(" AND "),
+            ExpressionAttributeNames: names,
           }
+        : {}),
+      ...(Object.keys(values).length
+        ? { ExpressionAttributeValues: values }
         : {}),
     });
 
     try {
-      await this.dynamoDBClient.send(command);
+      const { Attributes } = await this.dynamoDBClient.send(command);
+      await this.notify(
+        createConfig,
+        Attributes ? (unmarshall(Attributes) as ItemType) : undefined,
+        cleanNewItemWithId,
+      );
     } catch (error) {
+      if (error instanceof CanonicalWriteCommittedError) throw error;
       rethrowCanonicalWriteError(error);
     }
 
@@ -362,9 +443,7 @@ export class DynamoDBDataItemDBDriver<
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
     createConfig?: TypeInfoORMCreateConfig & DataItemOperationConfig<ItemType>,
   ) => {
-    if (createConfig?.coordination)
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    return this.createCanonicalItem(newItem, createConfig?.ifAbsent);
+    return this.createCanonicalItem(newItem, createConfig);
   };
 
   /**
@@ -383,10 +462,10 @@ export class DynamoDBDataItemDBDriver<
     selectedFields?: (keyof ItemType)[],
     readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<ItemType>,
   ): Promise<Partial<ItemType>> => {
-    if (readConfig?.coordination)
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
-    const selectedFieldParams = buildSelectedFieldParams(selectedFields);
+    const selectedFieldParams = buildSelectedFieldParams(
+      readConfig?.coordination ? undefined : selectedFields,
+    );
     const command = new GetItemCommand({
       TableName: tableName,
       Key: marshall(
@@ -395,18 +474,25 @@ export class DynamoDBDataItemDBDriver<
         },
         DYNAMODB_MARSHALL_OPTIONS,
       ),
-      ...(readConfig?.consistency === "strong" ? { ConsistentRead: true } : {}),
+      ...(readConfig?.consistency === "strong" || readConfig?.coordination
+        ? { ConsistentRead: true }
+        : {}),
       ...selectedFieldParams,
     });
     const { Item } = await this.dynamoDBClient.send(command);
 
-    if (typeof Item === "undefined") {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-    } else {
-      const cleanItem = unmarshall(Item) as ItemType;
-
-      return cleanItem;
-    }
+    const cleanItem = Item ? (unmarshall(Item) as ItemType) : undefined;
+    if (!cleanItem && readConfig?.coordination?.exclusive)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    await readConfig?.coordination?.inspect?.(cleanItem);
+    if (!cleanItem) throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+    return selectedFields?.length
+      ? (Object.fromEntries(
+          selectedFields
+            .filter((field) => field in cleanItem)
+            .map((field) => [field, cleanItem[field]]),
+        ) as Partial<ItemType>)
+      : cleanItem;
   };
 
   /**
@@ -424,8 +510,12 @@ export class DynamoDBDataItemDBDriver<
     updatedItem: Partial<ItemType>,
     updateConfig?: TypeInfoORMUpdateConfig & DataItemOperationConfig<ItemType>,
   ): Promise<boolean> => {
-    if (updateConfig?.coordination)
+    if (updateConfig?.coordination?.exclusive)
       throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    const before = updateConfig?.coordination
+      ? await this.prior(uniqueIdentifier)
+      : undefined;
+    await updateConfig?.coordination?.inspect?.(before);
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const {
       [uniquelyIdentifyingFieldName]: _unusedUniqueIdentifier,
@@ -438,9 +528,16 @@ export class DynamoDBDataItemDBDriver<
         uniquelyIdentifyingFieldName,
         updateConfig,
       );
-      const conditions: string[] = [];
       const names = expressions.ExpressionAttributeNames;
       const values = expressions.ExpressionAttributeValues;
+      const conditions = updateConfig?.coordination
+        ? this.snapshotConditions(
+            before,
+            updateConfig.coordination.guardFields ?? Object.keys(updatedItem),
+            names,
+            values,
+          )
+        : [];
       if (updateConfig?.preconditions !== undefined) {
         // Allocate aliases outside the update expression namespace, even for
         // field names that look like our own condition aliases.
@@ -478,6 +575,12 @@ export class DynamoDBDataItemDBDriver<
       });
       try {
         const { Attributes } = await this.dynamoDBClient.send(command);
+        if (Attributes)
+          await this.notify(
+            updateConfig,
+            before,
+            unmarshall(Attributes) as ItemType,
+          );
         return !!Attributes;
       } catch (error) {
         return rethrowCanonicalWriteError(error);
@@ -501,8 +604,22 @@ export class DynamoDBDataItemDBDriver<
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     deleteConfig?: DataItemOperationConfig<ItemType>,
   ): Promise<boolean> => {
-    if (deleteConfig?.coordination)
+    if (deleteConfig?.coordination?.exclusive)
       throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    const before = deleteConfig?.coordination
+      ? await this.prior(uniqueIdentifier)
+      : undefined;
+    await deleteConfig?.coordination?.inspect?.(before);
+    const names: Record<string, string> = {};
+    const values: Record<string, AttributeValue> = {};
+    const conditions = deleteConfig?.coordination
+      ? this.snapshotConditions(
+          before,
+          deleteConfig.coordination.guardFields ?? [],
+          names,
+          values,
+        )
+      : [];
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const command = new DeleteItemCommand({
       TableName: tableName,
@@ -513,10 +630,28 @@ export class DynamoDBDataItemDBDriver<
         DYNAMODB_MARSHALL_OPTIONS,
       ),
       ReturnValues: "ALL_OLD",
+      ...(conditions.length
+        ? {
+            ConditionExpression: conditions.join(" AND "),
+            ExpressionAttributeNames: names,
+          }
+        : {}),
+      ...(Object.keys(values).length
+        ? { ExpressionAttributeValues: values }
+        : {}),
     });
-    const { Attributes } = await this.dynamoDBClient.send(command);
-
-    return !!Attributes;
+    try {
+      const { Attributes } = await this.dynamoDBClient.send(command);
+      if (Attributes)
+        await this.notify(
+          deleteConfig,
+          unmarshall(Attributes) as ItemType,
+          undefined,
+        );
+      return !!Attributes;
+    } catch (error) {
+      return rethrowCanonicalWriteError(error);
+    }
   };
 
   /**

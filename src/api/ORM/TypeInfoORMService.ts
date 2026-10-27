@@ -248,11 +248,15 @@ export type TypeInfoORMDACConfig = {
    * `itemResourcePathPrefix` and before the canonical item path segments.
    *
    * Relationship create/delete operations also use this prefix to validate
-   * endpoint ownership for both the `from` and `to` items.
+   * endpoint ownership for both the `from` and `to` items. For mutation checks,
+   * canonicalItem is the authoritative snapshot bound to the atomic write.
+   * Resolve item-backed ownership from it when supplied. External owner/policy
+   * mappings require application-level coordination.
    */
   getOwnerPrefix?: (
     typeName: string,
     primaryFieldValue: LiteralValue,
+    canonicalItem?: Partial<TypeInfoDataItem>,
   ) => Promise<LiteralValue[] | undefined>;
   /**
    * Lookup helper used to resolve roles by id.
@@ -531,7 +535,7 @@ export type TypeInfoORMOrphanIndexCleanupResult = {
     | "maintenanceUnsupported";
   /** Whether any index cleanup write was attempted. */
   cleanupAttempted: boolean;
-  /** Whether current canonical state was reindexed while holding exclusion. */
+  /** Whether present canonical state was reindexed from an authoritative snapshot. */
   canonicalReindexed: boolean;
 };
 
@@ -1016,6 +1020,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      * Optional access context for the call.
      */
     context?: TypeInfoORMContext,
+    canonicalItem?: Partial<TypeInfoDataItem>,
   ): Promise<DACDataItemResourceAccessResultMap> => {
     const { useDAC } = this.config;
 
@@ -1034,7 +1039,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           : undefined;
       const ownerPrefix =
         getOwnerPrefix && typeof primaryFieldValue !== "undefined"
-          ? await getOwnerPrefix(typeName, primaryFieldValue)
+          ? await getOwnerPrefix(typeName, primaryFieldValue, canonicalItem)
           : undefined;
       const itemPrefix = [...itemResourcePathPrefix, ...(ownerPrefix ?? [])];
 
@@ -1771,8 +1776,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Safely clean orphaned index state for exactly one type+id.
    *
-   * Holds canonical mutation exclusion across absence inspection and cleanup.
-   * A driver unable to supply exclusion refuses before any index changes.
+   * Reindexes present canonical items from strong state. Destructive absence
+   * cleanup requires protection against recreation and refuses if unavailable.
    *
    * @param typeName TypeInfo type being repaired.
    * @param primaryFieldValue Canonical item identifier.
@@ -1826,7 +1831,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     let absentInspectionCompleted = false;
     try {
       await driver.readItem(primaryFieldValue, undefined, {
+        consistency: "strong",
         coordination: {
+          exclusive: true,
           inspect: async (current) => {
             inspected = true;
             if (current) {
@@ -2185,6 +2192,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       }
 
       await driver.readItem(primaryFieldValue, undefined, {
+        consistency: "strong",
         coordination: {
           inspect: async (current) => {
             if (!current)
@@ -2460,7 +2468,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       next ? "upsert" : "remove",
       nextFields.length,
     );
-    // Do not release canonical exclusion while a sibling index write is still
+    // Do not finish follow-up while a sibling index write is still
     // running after another write fails; it could overtake the next mutation.
     const outcomes = await Promise.allSettled(textOperations);
     const failure = outcomes.find((outcome) => outcome.status === "rejected");
@@ -2581,6 +2589,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     const driver = this.getDriverInternal(typeName);
     await driver.readItem(primaryFieldValue as any, undefined, {
+      consistency: "strong",
       coordination: {
         inspect: async (currentItem) => {
           if (!currentItem)
@@ -3652,14 +3661,15 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         const expected = updateConfig?.preconditions?.expected;
         const inspect = async (existingItem: TypeInfoDataItem | undefined) => {
           if (this.config.useDAC && existingItem) {
-            // Re-evaluate both stored and proposed field permissions while the
-            // driver excludes replacement, including asynchronous owner lookup.
+            // The driver binds these observations to its atomic mutation boundary.
+            // External policy/owner mappings need application-level coordination.
             for (const candidate of [existingItem, cleanItem]) {
               const access = await this.getItemDACValidation(
                 candidate,
                 typeName,
                 TypeOperation.UPDATE,
                 context,
+                existingItem,
               );
               if (
                 !access.allowed ||
@@ -3679,6 +3689,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                 typeName,
                 TypeOperation.DELETE,
                 context,
+                existingItem,
               );
               if (
                 Object.keys(cleanItem).some(
@@ -3712,6 +3723,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
                 typeName,
                 TypeOperation.READ,
                 context,
+                existingItem,
               );
               if (
                 denied ||
@@ -3737,7 +3749,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           ...(needsCoordination
             ? {
                 coordination: {
-                  inspect,
+                  guardFields: this.config.useDAC
+                    ? Object.keys(this.getTypeInfo(typeName).fields ?? {})
+                    : undefined,
+                  inspect: this.config.useDAC ? inspect : undefined,
                   changed: indexed
                     ? async (before, after) => {
                         if (before)
@@ -3781,21 +3796,33 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       this.config.useDAC || indexed
         ? {
             coordination: {
-              inspect: async (existingItem) => {
-                if (!existingItem)
-                  throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-                const { allowed, denied } = await this.getItemDACValidation(
-                  existingItem,
-                  typeName,
-                  TypeOperation.DELETE,
-                  context,
-                );
-                if (denied || !allowed)
-                  throw new Error(TypeInfoORMServiceError.INVALID_OPERATION);
-              },
-              changed: async (before) => {
-                await this.removeItemIndexes(typeName, before!);
-              },
+              guardFields: this.config.useDAC
+                ? Object.keys(this.getTypeInfo(typeName).fields ?? {})
+                : undefined,
+              inspect: this.config.useDAC
+                ? async (existingItem) => {
+                    if (!existingItem)
+                      throw new Error(
+                        DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND,
+                      );
+                    const { allowed, denied } = await this.getItemDACValidation(
+                      existingItem,
+                      typeName,
+                      TypeOperation.DELETE,
+                      context,
+                      existingItem,
+                    );
+                    if (denied || !allowed)
+                      throw new Error(
+                        TypeInfoORMServiceError.INVALID_OPERATION,
+                      );
+                  }
+                : undefined,
+              changed: indexed
+                ? async (before) => {
+                    if (before) await this.removeItemIndexes(typeName, before);
+                  }
+                : undefined,
             },
           }
         : undefined,

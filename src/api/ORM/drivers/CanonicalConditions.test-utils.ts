@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import {
   TypeInfoORMService,
   getDriverMethodWithModifiedError,
@@ -229,97 +229,468 @@ export const runFileRequirements = async () => {
   return { errors };
 };
 
-/** Missing exclusion is refused at each driver boundary before I/O or index work. */
-export const runCoordinationRefusal = async () => {
+/** Real generic indexes with intercepted canonical SDK commands; no cloud I/O. */
+export const runCloudIndexedWorkflows = async () => {
+  const { StructuredInMemoryBackend } =
+    await import("./InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend");
+  const { createIndexBackend, qualifyIndexField, searchLossy } =
+    await import("../../Indexing");
+  const { getTypeInfoORMIndexingConfigFromTypeInfoMap } =
+    await import("../getTypeInfoORMIndexingConfigFromTypeInfoMap");
+  const { DACConstraintType, WILDCARD_SIGNIFIER_PROTOTYPE } =
+    await import("../../DataAccessControl");
+  const { OperationGroup } = await import("../../../common/TypeInfoORM");
+  const { FullTextMemoryBackend } =
+    await import("./InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend");
+  const { ComparisonOperators, LogicalOperators } =
+    await import("../../../common/SearchTypes");
+  const { TypeOperation } =
+    await import("../../../common/TypeParsing/TypeInfo");
+  const field = {
+    type: "string" as const,
+    optional: false,
+    readonly: false,
+    array: false,
+  };
+  const typeInfoMap = {
+    Record: {
+      primaryField: "id",
+      fields: {
+        id: field,
+        name: { ...field, tags: { indexed: { exact: true, text: true } } },
+        owner: { ...field, optional: true },
+        secret: { ...field, optional: true },
+      },
+    },
+  };
+  const driver = new DynamoDBDataItemDBDriver<Record<string, any>, "id">({
+    tableName: "Records",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => "one",
+  });
+  let canonical: Record<string, any> | undefined;
+  let replaceOwner = false;
+  let reads = 0;
+  let staleReads = true;
+  // A single-record SDK double checks the emitted guards against current state.
+  // It deliberately returns stale ordinary reads and has no post-write reader.
+  (driver as any).dynamoDBClient.send = async (command: any) => {
+    const input = command.input;
+    if (command.constructor.name === "GetItemCommand") {
+      reads++;
+      return (input.ConsistentRead || !staleReads) && canonical
+        ? { Item: marshall(canonical) }
+        : {};
+    }
+    if (command.constructor.name === "ScanCommand")
+      return { Items: canonical ? [marshall(canonical)] : [] };
+    if (replaceOwner) {
+      canonical = { ...canonical, owner: "bob" };
+      replaceOwner = false;
+    }
+    const names = input.ExpressionAttributeNames ?? {};
+    const vals = input.ExpressionAttributeValues
+      ? unmarshall(input.ExpressionAttributeValues)
+      : {};
+    for (const condition of (input.ConditionExpression ?? "")
+      .split(" AND ")
+      .filter(Boolean)) {
+      const eq = condition.match(/^(#[\w]+) = (:[\w]+)$/);
+      const exists = condition.match(/^attribute_(not_)?exists\((#[\w]+)\)$/);
+      const valid = eq
+        ? JSON.stringify(canonical?.[names[eq[1]]]) ===
+          JSON.stringify(vals[eq[2]])
+        : exists
+          ? (canonical?.[names[exists[2]]] !== undefined) === !exists[1]
+          : false;
+      assert.ok(eq || exists, `Unhandled emitted condition: ${condition}`);
+      if (!valid)
+        throw Object.assign(new Error("changed"), {
+          name: "ConditionalCheckFailedException",
+        });
+    }
+    const before = canonical && structuredClone(canonical);
+    if (command.constructor.name === "PutItemCommand")
+      canonical = unmarshall(input.Item);
+    else if (command.constructor.name === "UpdateItemCommand") {
+      const next = { ...canonical };
+      for (const match of input.UpdateExpression.matchAll(
+        /(#[\w]+) = (:[\w]+)/g,
+      ))
+        next[names[match[1]]] = vals[match[2]];
+      canonical = next;
+    } else if (command.constructor.name === "DeleteItemCommand")
+      canonical = undefined;
+    else throw new Error(`Unexpected command ${command.constructor.name}`);
+    return {
+      Attributes:
+        input.ReturnValues === "ALL_NEW"
+          ? canonical && marshall(canonical)
+          : before && marshall(before),
+    };
+  };
+  const values = new StructuredInMemoryBackend();
+  const text = new FullTextMemoryBackend();
+  const orm = new TypeInfoORMService({
+    useDAC: true,
+    typeInfoMap,
+    getDriver: () => driver,
+    getRelationshipDriver: () => {
+      throw new Error("unused");
+    },
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend: createIndexBackend({ values, valueWriter: values, text }),
+    }),
+    dacConfig: {
+      itemResourcePathPrefix: ["ORM"],
+      relationshipResourcePathPrefix: ["REL"],
+      getOwnerPrefix: async (_type, _id, snapshot) => [
+        snapshot?.owner ?? canonical?.owner ?? "alice",
+      ],
+      getDACRoleById: async (id) => ({
+        id,
+        constraints: [
+          {
+            type: DACConstraintType.ALLOW,
+            pathIsPrefix: true,
+            resourcePath: [
+              "ORM",
+              "alice",
+              OperationGroup.ALL_OPERATIONS,
+              "Record",
+              WILDCARD_SIGNIFIER_PROTOTYPE,
+            ],
+          },
+          {
+            type: DACConstraintType.DENY,
+            pathIsPrefix: true,
+            resourcePath: [
+              "ORM",
+              "alice",
+              TypeOperation.READ,
+              "Record",
+              WILDCARD_SIGNIFIER_PROTOTYPE,
+              "secret",
+              WILDCARD_SIGNIFIER_PROTOTYPE,
+            ],
+          },
+        ],
+      }),
+    },
+  });
+  (orm as any).cleanupRelationships = async () => undefined;
+  const context = { accessingRoleId: "alice" };
+  const ids = async (name: string) =>
+    (await values.terms.query(qualifyIndexField("Record", "name"), "eq", name))
+      .candidateIds;
+  await orm.create(
+    "Record",
+    { name: "first", owner: "alice" },
+    { ifAbsent: true },
+  );
+  assert.deepEqual(await ids("first"), ["one"]);
+  await assert.rejects(
+    () =>
+      orm.create(
+        "Record",
+        { name: "loser", owner: "alice" },
+        { ifAbsent: true },
+      ),
+    { message: "CONDITIONAL_WRITE_CONFLICT" },
+  );
+  await orm.create("Record", { name: "overwrite", owner: "alice" });
+  assert.deepEqual(await ids("first"), []);
+  await orm.update(
+    "Record",
+    { id: "one", name: "ordinary" },
+    undefined,
+    context,
+  );
+  const beforeReads = reads;
+  await orm.update(
+    "Record",
+    { id: "one", name: "guarded" },
+    { preconditions: { expected: { name: "ordinary" } } },
+    context,
+  );
+  assert.equal(reads, beforeReads + 1); // one authoritative prior, no post-read
+  assert.deepEqual(canonical, { id: "one", name: "guarded", owner: "alice" });
+  assert.deepEqual(await ids("ordinary"), []);
+  assert.deepEqual(await ids("guarded"), ["one"]);
+  assert.deepEqual(
+    await orm.read("Record", "one", ["name"], context, {
+      consistency: "strong",
+    }),
+    { id: "one", name: "guarded" },
+  );
+  await assert.rejects(
+    () =>
+      orm.update(
+        "Record",
+        { id: "one", name: "loser" },
+        { preconditions: { expected: { name: "old" } } },
+        context,
+      ),
+    { message: "CONDITIONAL_WRITE_CONFLICT" },
+  );
+  assert.deepEqual(await ids("loser"), []);
+  Object.assign(canonical!, { secret: "hidden" });
+  for (const secret of ["hidden", "guess"]) {
+    await assert.rejects(
+      () =>
+        orm.update(
+          "Record",
+          { id: "one", name: "probe" },
+          {
+            preconditions: { expected: { secret } },
+          },
+          context,
+        ),
+      { message: "INVALID_OPERATION" },
+    );
+  }
+  assert.deepEqual(
+    (
+      await searchLossy({
+        backend: text,
+        indexField: qualifyIndexField("Record", "name"),
+        query: "guarded",
+        limit: 10,
+      })
+    ).docIds,
+    ["one"],
+  );
+  staleReads = false;
+  const search = await orm.list(
+    "Record",
+    {
+      criteria: {
+        logicalOperator: LogicalOperators.AND,
+        fieldCriteria: [
+          {
+            fieldName: "name",
+            operator: ComparisonOperators.EQUALS,
+            value: "guarded",
+          },
+        ],
+      },
+    },
+    undefined,
+    context,
+  );
+  assert.equal(search.items[0]?.name, "guarded");
+  staleReads = true;
+  // Ownership changes after asynchronous DAC inspection must fail atomically.
+  replaceOwner = true;
+  await assert.rejects(
+    () =>
+      orm.update(
+        "Record",
+        { id: "one", name: "unauthorized" },
+        undefined,
+        context,
+      ),
+    { message: "CONDITIONAL_WRITE_CONFLICT" },
+  );
+  assert.equal(canonical!.owner, "bob");
+  assert.equal(canonical!.name, "guarded");
+  await assert.rejects(
+    () =>
+      orm.update(
+        "Record",
+        { id: "one", name: "unauthorized" },
+        undefined,
+        context,
+      ),
+    { message: "INVALID_OPERATION" },
+  );
+  canonical!.owner = "alice";
+  await orm.reindexStoredItem("Record", "one");
+  assert.equal(
+    (await orm.verifyStoredItemForIndexMaintenance("Record", "one")).exists,
+    true,
+  );
+  assert.equal(
+    (await orm.cleanupOrphanedIndexState("Record", "one")).status,
+    "canonicalExists",
+  );
+  assert.equal(
+    (await orm.reconcileStoredTypeIndexesPage("Record")).processedCount,
+    1,
+  );
+  const failure = new Error("INDEX_OFFLINE");
+  const write = values.write.bind(values);
+  values.write = async () => {
+    throw failure;
+  };
+  await assert.rejects(
+    () =>
+      orm.update(
+        "Record",
+        { id: "one", name: "committed" },
+        undefined,
+        context,
+      ),
+    (error: any) =>
+      error.canonicalCommitted === true && error.cause === failure,
+  );
+  assert.equal(canonical!.name, "committed");
+  values.write = write;
+  await orm.reindexStoredItem("Record", "one", {
+    previousItem: { id: "one", name: "guarded" },
+  });
+  assert.deepEqual(await ids("committed"), ["one"]);
+  // Delete also binds inspected ownership, without deleting the changed owner.
+  replaceOwner = true;
+  await assert.rejects(() => orm.delete("Record", "one", context), {
+    message: "CONDITIONAL_WRITE_CONFLICT",
+  });
+  assert.equal(canonical!.owner, "bob");
+  canonical!.owner = "alice";
+  await orm.delete("Record", "one", context);
+  assert.equal(canonical, undefined);
+  assert.deepEqual(await ids("committed"), []);
+  await values.write("one", {
+    [qualifyIndexField("Record", "name")]: "orphan",
+  });
+  assert.equal(
+    (await orm.cleanupOrphanedIndexState("Record", "one")).status,
+    "maintenanceUnsupported",
+  );
+  assert.deepEqual(await ids("orphan"), ["one"]);
+  // Recreated canonical state is repaired, never treated as an absent orphan.
+  await orm.create("Record", { name: "recreated", owner: "alice" });
+  assert.equal(
+    (await orm.cleanupOrphanedIndexState("Record", "one")).status,
+    "canonicalExists",
+  );
+  assert.deepEqual(await ids("recreated"), ["one"]);
+  return { verified: true };
+};
+
+/** S3 indexed CRUD/reindex remains usable; only specific atomic/DAC cases refuse. */
+export const runS3IndexedWorkflows = async () => {
   const { StructuredInMemoryBackend } =
     await import("./InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend");
   const { createIndexBackend, qualifyIndexField } =
     await import("../../Indexing");
   const { getTypeInfoORMIndexingConfigFromTypeInfoMap } =
     await import("../getTypeInfoORMIndexingConfigFromTypeInfoMap");
-  const settings = {
-    tableName: "Records",
-    uniquelyIdentifyingFieldName: "id" as const,
-    dbSpecificConfig: { bucketName: "unused", s3Config: {} },
+  const field = {
+    type: "string" as const,
+    optional: false,
+    readonly: false,
+    array: false,
   };
-  const drivers = [
-    new DynamoDBDataItemDBDriver(settings),
-    new S3FileItemDBDriver(settings),
-  ];
-  for (const driver of drivers) {
-    const noIO = async () => {
-      throw new Error("UNEXPECTED_IO");
-    };
-    if (driver instanceof DynamoDBDataItemDBDriver)
-      (driver as any).dynamoDBClient.send = noIO;
-    if (driver instanceof S3FileItemDBDriver) (driver as any).s3.send = noIO;
-    let callbacks = 0;
-    const coordination = {
-      inspect: async () => {
-        callbacks++;
+  const typeInfoMap = {
+    File: {
+      primaryField: "id",
+      fields: {
+        id: field,
+        name: { ...field, tags: { indexed: { exact: true } } },
       },
-      changed: async () => {
-        callbacks++;
-      },
-    };
-    for (const call of [
-      () => driver.createItem({ name: "loser" }, { coordination }),
-      () => driver.updateItem("one", { name: "loser" }, { coordination }),
-      () => driver.deleteItem("one", { coordination }),
-      () => driver.readItem("one", undefined, { coordination }),
-    ])
-      await assert.rejects(call, { message: "UNSUPPORTED_CAPABILITY" });
-    const field = {
-      type: "string" as const,
-      optional: false,
-      readonly: false,
-      array: false,
-    };
-    const typeInfoMap = {
-      Record: {
-        primaryField: "id",
-        fields: {
-          id: field,
-          name: { ...field, tags: { indexed: { exact: true } } },
+    },
+  };
+  const driver = new S3FileItemDBDriver({
+    tableName: "Files",
+    uniquelyIdentifyingFieldName: "id",
+    dbSpecificConfig: { bucketName: "test", s3Config: {} },
+  });
+  const files = new Set<string>();
+  (driver as any).s3.send = async (command: any) => {
+    const { Key, CopySource } = command.input;
+    if (command.constructor.name === "HeadObjectCommand") {
+      if (!files.has(Key))
+        throw Object.assign(new Error("missing"), { name: "NotFound" });
+      return {
+        ContentLength: 7,
+        ContentType: "text/plain",
+        LastModified: new Date(1000),
+      };
+    }
+    if (command.constructor.name === "CopyObjectCommand")
+      assert.ok(files.has(CopySource));
+    else assert.equal(command.constructor.name, "PutObjectCommand");
+    files.add(Key);
+    return {};
+  };
+  (driver as any).s3FileDriver.deleteFile = async (loc: any, table: string) => {
+    files.delete(`${table}/${loc.name}`);
+  };
+  const values = new StructuredInMemoryBackend();
+  const orm = new TypeInfoORMService({
+    useDAC: false,
+    typeInfoMap,
+    getDriver: () => driver,
+    getRelationshipDriver: () => {
+      throw new Error("unused");
+    },
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend: createIndexBackend({ values, valueWriter: values }),
+    }),
+  });
+  (orm as any).cleanupRelationships = async () => undefined;
+  const ids = async (name: string) =>
+    (await values.terms.query(qualifyIndexField("File", "name"), "eq", name))
+      .candidateIds;
+  await orm.create("File", { name: "first" });
+  assert.deepEqual(await ids("first"), ["first"]);
+  await orm.update("File", { id: "first", name: "next" });
+  assert.deepEqual(await ids("first"), []);
+  assert.deepEqual(await ids("next"), ["next"]);
+  await orm.reindexStoredItem("File", "next");
+  assert.equal(
+    (await orm.cleanupOrphanedIndexState("File", "next")).status,
+    "canonicalExists",
+  );
+  // Location-only DAC observations can be honored; mutable metadata cannot.
+  let inspected = false;
+  await driver.updateItem(
+    "next",
+    { name: "next" },
+    {
+      coordination: {
+        guardFields: ["id", "name"],
+        inspect: async (item) => {
+          assert.equal(item!.id, "next");
+          inspected = true;
         },
       },
-    };
-    const values = new StructuredInMemoryBackend();
-    const indexField = qualifyIndexField("Record", "name");
-    await values.write("one", { [indexField]: "preserved" });
-    const orm = new TypeInfoORMService({
-      useDAC: false,
-      typeInfoMap,
-      getDriver: () => driver,
-      getRelationshipDriver: () => {
-        throw new Error("unused");
-      },
-      indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
-        backend: createIndexBackend({ values, valueWriter: values }),
-      }),
-    });
-    for (const call of [
-      () => orm.create("Record", { name: "loser" }),
-      () => orm.update("Record", { id: "one", name: "loser" }),
-      () => orm.delete("Record", "one"),
-      () => orm.reindexStoredItem("Record", "one"),
-    ])
-      await assert.rejects(call, { message: "UNSUPPORTED_CAPABILITY" });
-    const cleanup = await orm.cleanupOrphanedIndexState("Record", "one", {
-      structuredVersion: 1,
-    });
-    assert.equal(cleanup.status, "maintenanceUnsupported");
-    assert.equal(cleanup.cleanupAttempted, false);
-    assert.equal(callbacks, 0);
-    assert.deepEqual(
-      (await values.terms.query(indexField, "eq", "preserved")).candidateIds,
-      ["one"],
-    );
-    assert.deepEqual(
-      (await values.terms.query(indexField, "eq", "loser")).candidateIds,
-      [],
-    );
-  }
+    },
+  );
+  assert.equal(inspected, true);
+  await assert.rejects(
+    () =>
+      driver.updateItem(
+        "next",
+        { name: "next" },
+        {
+          coordination: {
+            guardFields: ["mimeType"],
+            inspect: async () => {
+              throw new Error("UNSAFE_INSPECTION");
+            },
+          },
+        },
+      ),
+    { message: "UNSUPPORTED_CAPABILITY" },
+  );
+  await orm.delete("File", "next");
+  assert.deepEqual(await ids("next"), []);
+  assert.equal(
+    (await orm.cleanupOrphanedIndexState("File", "next")).status,
+    "maintenanceUnsupported",
+  );
+  const failure = new Error("INDEX_OFFLINE");
+  values.write = async () => {
+    throw failure;
+  };
+  await assert.rejects(
+    () => orm.create("File", { name: "committed" }),
+    (error: any) =>
+      error.canonicalCommitted === true && error.cause === failure,
+  );
+  assert.ok(files.has("Files/committed"));
   return { verified: true };
 };
 

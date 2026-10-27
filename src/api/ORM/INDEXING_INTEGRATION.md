@@ -78,90 +78,90 @@ Server read options follow context; client options follow selected fields.
 Routes supply server-owned context. Disabling field operators preserves guards.
 Ordinary reads retain their driver's default consistency.
 
-## Coordinated canonical mutations and maintenance
+## Canonical mutation hooks and maintenance
 
-`DataItemOperationConfig` is a server-only driver contract, composed with configs
-on existing create/read/update/delete methods. It is not a route/client option.
-Its `coordination.inspect(current)` and `coordination.changed(before, after)`
-callbacks contain generic authorization and indexing work. The driver provides
-**exclusion of all competing canonical mutations** of that identity from
-inspection through callback completion, including unconfigured/direct driver
-writes. It must refuse before side effects if it cannot provide that exclusion.
-Images are full detached canonical values; `undefined` means absence. Callbacks
-must not recursively perform coordinated operations on the same store.
+`DataItemOperationConfig` is server-only, composed with existing CRUD configs.
+It is not a route/client option. `coordination.inspect(current)` authorizes a
+strong canonical snapshot; `changed(before, after)` runs generic indexing after
+commit. Drivers bind inspected `guardFields` (schema values, including absence)
+to the atomic mutation boundary. No global lock across callbacks is required.
 
-- Create/overwrite uses exact prior and committed images, removing old postings.
-- Ordinary and guarded update use exact mutation images, with no before/after
-  reads. No-index, non-DAC mutations need no coordination or snapshot reader.
-- DAC updates evaluate both stored and proposed permissions under exclusion,
-  including field deletion permissions. Expected-field guards additionally
-  authorize READ of probed and current values before evaluating the condition.
-  Delete authorizes the exact item being deleted under the same exclusion.
-  A concurrent replacement cannot invalidate those item-dependent checks.
-- Losing conditions and denied authorization never call `changed` and therefore
-  perform no index writes. A guarded false result is normalized to conflict.
-- Successful indexed mutations hold exclusion through generic index work, so a
-  later canonical writer cannot overtake an earlier writer's index mutations.
-  All issued index writes settle before exclusion is released, including when
-  one fails. Identity changes remove the previous identity's postings first.
-- Orphan cleanup inspects absence under the same exclusion and holds it through
-  structured and text cleanup. Index version checks additionally reject index
-  drift since audit. Recreation waits until cleanup finishes or fails.
-- Reindex, type rebuild and schema reconciliation use coordinated current state,
-  never ordinary list/read snapshots as mutation authority. Lists discover IDs.
-  Supply known `previousItem`/field overrides for out-of-band changes. Raw manual
-  index helpers are trusted administrative operations; callers own exclusion.
+- DynamoDB create/overwrite returns `ALL_OLD` alongside the submitted new image.
+  Indexed/DAC update reads strong prior state, compares observed fields and schema
+  absence atomically, and uses `ALL_NEW`. Delete compares inspected state and uses
+  `ALL_OLD`. A concurrent change produces `CONDITIONAL_WRITE_CONFLICT`; retry only
+  after re-reading and re-authorizing. No ordinary/post-write reads reconstruct
+  these mutation images. Unindexed, non-DAC writes need no snapshot reads.
+- DAC checks stored/proposed UPDATE permissions, field deletion permissions and
+  READ access to expected values and stored observations. A denied guard is never
+  silently removed. Item-backed ownership resolvers receive the inspected
+  `canonicalItem` as the third `getOwnerPrefix` argument; use this snapshot when
+  supplied. Its schema fields are bound at commit. External role/policy/owner
+  mappings require application coordination; arbitrary external lookups are not
+  covered by canonical snapshot checks.
+- Failed conditions/authorization never invoke `changed`, so losing payloads
+  never index. Every issued index write drains before callback failure escapes,
+  including nested full-text token batches and synchronous writer failures.
+- Memory data, relationships and files retain their internal queues. Cloud
+  writers can overtake each other's index follow-up; canonical data remains
+  authoritative. Cross-process ordering, external writes and crashes can leave
+  stale postings. Existing health inspection, reindex and known-previous-state
+  repair reconcile them; there is no cross-store transaction or rollback.
+- Reindex and schema reconciliation request strong current state. List pages
+  discover IDs, rather than supplying mutation authority. Reindex is available
+  on every shipped driver. Supply known previous images/field overrides for
+  out-of-band changes. A concurrent canonical change may require another pass.
+- Orphan cleanup reindexes a present canonical item. Only absent-state
+  destructive cleanup requests `exclusive: true`, meaning protection against
+  recreation through inspection/cleanup. Memory supplies it. DynamoDB/S3 refuse
+  that specific missing-identity action as `maintenanceUnsupported`, leaving
+  postings intact. Strong absence alone cannot authorize deletion, and index
+  version checks alone do not protect a canonical recreation.
 
-`verifyStoredItemForIndexMaintenance` requests a strong read for diagnostics;
-its result does not authorize destructive cleanup. No strong-read recheck or
-post-cleanup restoration is treated as proof against concurrent recreation.
+| Driver | Canonical guarantees and index follow-up |
+| --- | --- |
+| In-memory data/relationships | Atomic ifAbsent/guards and current images; internal queue through follow-up |
+| In-memory files | Current metadata images and rename queue; business conditional writes explicitly refused |
+| DynamoDB data | Atomic Put/Update business guards, strong reads, snapshot-bound DAC, returned mutation images, generic indexing and reindex |
+| S3 files | Strong HEAD metadata snapshots for generic indexing/reindex; location-only DAC supported. Atomic business guards and mutable-metadata DAC refused specifically |
 
-Driver enforcement:
+S3 exposes object metadata rather than application records. Its HEAD snapshots
+can race external object changes; they are not exact transactional before/after
+images. Rename is copy then delete; a failed source delete reports canonical
+commitment because the destination already exists. Metadata-derived owner/DAC
+checks cannot be bound atomically by this file driver's API, so mutations whose
+DAC schema includes mutable metadata are refused before writes. Location fields
+`id`, `name`, `directory` are immutable for the addressed key and can be authorized.
+Read DAC, health inspection and ordinary indexed file workflows remain available.
+An omitted rename directory preserves the source directory; a same-location
+update must never copy an object onto itself and then delete it.
 
-| Driver | Optional reads/conditions | Required coordination |
-| --- | --- | --- |
-| In-memory data and relationships | Strong instance reads; atomic ifAbsent and update conditions | Store-wide queue covers direct mutations, DAC and all index callbacks |
-| In-memory files | Strong metadata reads; conditional writes refused | Store-wide queue covers alias/rename changes and exact metadata images |
-| DynamoDB data | Consistent GetItem; atomic conditional PutItem/UpdateItem | Refused before SDK requests: the current driver cannot exclude external writers through asynchronous index/DAC work |
-| S3 files | Strong HEAD metadata; conditional writes refused | Refused before I/O: HEAD plus later operations is not mutation exclusion |
-
-Thus indexed CRUD and DAC-sensitive mutations on DynamoDB/S3 currently fail
-explicitly; they do not silently run an unsafe approximation. Non-indexed,
-non-DAC CRUD and supported business read/condition options remain available.
-Cleanup returns `maintenanceUnsupported` without index changes when exclusion
-is unavailable; reindex throws `UNSUPPORTED_CAPABILITY`. Future implementations
-must satisfy this same generic contract rather than add service vendor branches.
-No indexing strategy lives in the canonical driver. Derived in-memory relationship
-drivers inherit the contract; wrappers forward configs and preserve errors.
-In-memory file renames refuse an occupied destination with a conflict. Creating
-at an existing rename alias is refused as unsupported before changing state;
-it cannot be represented truthfully as a single-identity overwrite.
-
-Create retains existing validation/permission semantics; this contract does not
-add create DAC. Role/policy resolution is request authorization policy: mutations
-of policy or owner mappings outside the canonical store must themselves be
-coordinated by the application. Item-backed owner changes through this driver
-are covered. Direct external index writes and out-of-band canonical writes do
-not participate in an in-memory instance's exclusion domain.
+Manual index helpers remain trusted administrative operations. Reindex and
+normal indexing are not excluded merely because a driver cannot hold external
+writers through asynchronous work. No indexing algorithm lives in a canonical
+driver; wrappers forward configs and preserve errors. Create retains its existing
+validation/permission semantics; this contract does not add create DAC.
 
 ## Canonical success followed by index failure
 
-Canonical and index stores are independent. Exclusion orders participating writers;
-it does **not** supply a transaction, rollback, crash recovery, or atomic visibility
-across stores. Readers can observe a canonical commit before its index work finishes.
+Canonical and index stores are independent. Memory queues order local writers;
+cloud callbacks do not supply a transaction, rollback, crash recovery, or atomic
+visibility across stores. Readers can observe a canonical commit before its index work finishes.
 A crash or index failure can leave partial index state.
 
 A failed postcommit callback throws `CanonicalWriteCommittedError` with
 `message: CANONICAL_WRITE_COMMITTED`, `canonicalCommitted: true` and the original
 `cause`. It does not expose canonical before/after images to application callers.
-No optional read-after-write can reject an otherwise committed canonical operation.
+DynamoDB does not need a read after commit. S3 follow-up HEAD failures also report
+canonical commitment instead of presenting the successful write as uncommitted.
 Infrastructure errors during the canonical request can still leave an unknown
 outcome; reconcile rather than assume that nothing was written.
 
 Use an authorized canonical read to establish current state before retrying;
 search results do not establish existence or ownership. Trusted repair can use
-coordinated `reindexStoredItem` with known previous state and schema overrides.
+`reindexStoredItem` with known previous state and schema overrides.
 Repair itself can fail partially in independent stores and must be retried or
 investigated. A create retry may conflict after an earlier committed attempt.
 No cloud/distributed concurrency guarantee is established by intercepted SDK
-command tests; they prove request construction and pre-I/O refusal only.
+command tests; they verify emitted guards/images, resulting generic index behavior
+and specific refusals without establishing live AWS concurrency behavior.

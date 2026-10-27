@@ -26,7 +26,7 @@
       }
     },
     {
-      "export": "runCoordinationRefusal",
+      "export": "runCloudIndexedWorkflows",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
@@ -35,6 +35,14 @@
     },
     {
       "export": "runFileCoordinatedIndexes",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runS3IndexedWorkflows",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {

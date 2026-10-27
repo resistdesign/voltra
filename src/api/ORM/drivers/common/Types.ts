@@ -69,20 +69,23 @@ export type DataItemDBDriverConfig<
 };
 
 /**
- * Server-only requirements on an existing CRUD operation. Drivers must exclude
- * ALL competing canonical mutations of this identity through callback completion,
- * including unconfigured/direct writes. Refuse before side effects if impossible.
- * Images are detached full canonical values; undefined means absence. Callbacks
- * must not recursively mutate or request coordinated reads from the same store.
- * Ordinary reads may inspect current state. A coordinated read invokes inspect
- * even for absence, then retains normal ITEM_NOT_FOUND behavior.
+ * Server-only hooks on existing CRUD operations. Inspect authorizes a strong
+ * snapshot; mutations must atomically validate its guardFields (including absent
+ * fields) before committing. Changed receives mutation images (strong metadata
+ * snapshots for file stores that lack returned images). These
+ * hooks do not require exclusion through asynchronous index work or a transaction
+ * across stores. Callbacks must not recursively coordinate the same store.
  */
 export type DataItemOperationConfig<ItemType> = {
-  /** Generic authorization/index work executed within driver-owned exclusion. */
+  /** Generic authorization/index work; mechanisms remain driver-local. */
   coordination?: {
-    /** Inspect exact state before conditions/commit; rejection prevents mutation. */
+    /** Schema fields whose observed values/absence must hold at mutation commit. */
+    guardFields?: string[];
+    /** Protect absence from recreation through inspection/cleanup; present reads may proceed. */
+    exclusive?: boolean;
+    /** Inspect authoritative state before conditions/commit; rejection prevents mutation. */
     inspect?: (current: ItemType | undefined) => Promise<void>;
-    /** Maintain indexes after commit, before another canonical writer can run. */
+    /** Follow up with canonical images; postcommit failure reports canonicalCommitted. */
     changed?: (
       before: ItemType | undefined,
       after: ItemType | undefined,
@@ -90,7 +93,7 @@ export type DataItemOperationConfig<ItemType> = {
   };
 };
 
-/** A canonical write committed, but its coordinated follow-up failed. No rollback. */
+/** A canonical write committed, but its index follow-up failed. No rollback. */
 export class CanonicalWriteCommittedError extends Error {
   /** Canonical state changed even though coordinated follow-up failed. */
   readonly canonicalCommitted = true;
@@ -135,7 +138,7 @@ export type DataItemDBDriver<
    * Atomically enforce supplied preconditions, requiring an existing target.
    * Unsupported drivers must refuse guards. A failed guard throws
    * CONDITIONAL_WRITE_CONFLICT or returns false; the ORM normalizes false.
-   * Coordination requirements must be honored or refused before side effects.
+   * Requested atomic snapshot checks must be honored or refused before side effects.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.

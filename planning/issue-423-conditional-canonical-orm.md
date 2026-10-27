@@ -256,3 +256,42 @@ The nearby `runCoordinatedTokenFailures` native JSON regression disables optiona
 Fresh verification: focused ConditionalWrites JSON specs pass all 13 cases; `yarn test` passes 1,048 core and 58 native cases with zero failures/errors. `yarn build`, `yarn site:build:demo-types` with unchanged generated metadata, `yarn site:build:api`, `yarn site:build:iac`, and `yarn test:exports` all exit 0. The packed-package `yarn test:consumer` check also exits 0. The first site app run caught a missing required structured-search dependency in the new test setup during TypeDoc type checking; the setup now uses the existing memory structured backend. Focused and site checks were rerun after this correction. Existing dependencies were used; no manual dependency installation was performed.
 
 Final focused rerun passes all 13 cases and `yarn site:build:app` exits 0, including TypeDoc and site finalization. Final `git diff --check` passes. Only generic token batch draining, its native regression and this existing planning record changed. The product plan remains active for explicit owner acceptance; independent-store partial failure/crash recovery limitations remain as documented. No cloud operations, deployment, seeding or PR lifecycle actions were performed.
+
+## Practical backend-local guarantees — owner correction 2026-10-27
+
+This section supersedes the earlier global-exclusion proposal and its cloud refusal claims, following the current owner correction on PR #424 (issuecomment-6453517452). The original #423 DynamoDB use case must work with generic indexing and DAC enabled.
+
+- [x] Relax callback requirements; retain atomic canonical guards and bind DAC to schema-field snapshot checks at mutation commit.
+- [x] Restore DynamoDB indexed/DAC CRUD using strong prior snapshots, atomic comparisons and returned mutation images; audit S3 and memory workflows.
+- [x] Keep reindex/schema reconciliation available; limit refusal to destructive absence cleanup without recreation protection and specific unsupported atomic/security requests.
+- [x] Replace blanket-refusal coverage with native behavioral workflows; update docs and run relevant framework verification.
+
+Contract: existing CRUD configs retain server-only inspect/changed callbacks. Inspect authorizes a strong canonical snapshot; mutation drivers bind the inspected schema fields (including absence) to their atomic write. Changed consumes committed before/after images where available (strong metadata snapshots for file stores), with no global lock requirement. Memory may continue serializing internally. DynamoDB compares stored/schema fields at the canonical boundary and returns a conflict if another writer changes them. Read inspection/reindex uses strong current state but does not claim exclusion. Destructive orphan cleanup alone requests exclusion against recreation; missing cloud identities may explicitly refuse that specific action. Current identities remain reindexable. S3 ordinary indexed workflows use HEAD metadata; unsupported mutable-metadata DAC/atomic rename requirements must refuse explicitly rather than use an unbound authorization snapshot.
+
+Canonical/index stores are independent. External writers, process crashes and cross-process callback ordering can leave indexes lagging or stale; existing health/reindex/manual previous-state repair remain necessary. Callback failures after commit retain canonicalCommitted and their cause. All issued index writes still drain before failure, preserving the previous token-settlement repair. No new storage verbs, capabilities registry, coordinator service or backend code outside drivers is introduced. The plan stays active pending explicit owner acceptance.
+
+
+### Implemented behavior and verification
+
+DynamoDB indexed create/overwrite uses PutItem ALL_OLD plus the submitted committed image. Indexed/DAC updates obtain one strong prior image, bind observed values and schema-field absence with atomic conditions, and index ALL_NEW without a post-write read. Delete binds DAC observations and consumes ALL_OLD. Concurrent schema/owner changes fail with a recognizable conflict before generic indexing. Item-backed owner resolvers can use the authoritative third canonicalItem argument rather than re-reading mutable ownership; external policy and owner mappings remain application responsibilities. The public CRUD/list surface, configs/wrappers, routes/client context positions, generic indexing algorithms and exports remain intact.
+
+The replacement native regression uses one intercepted DynamoDB record and real structured/full-text memory indexes. It exercises ordinary/ifAbsent create, overwrite cleanup, ordinary/guarded update, strong authorized projection, actual indexed list/search, rejected writes, matching/nonmatching denied secret probes, ownership replacement between inspection and update/delete, postcommit index failure/cause, health verification, schema reconciliation and reindex recovery. Ordinary reads deliberately lag; successful mutations use one strong prior read and returned images. S3 coverage exercises indexed create/rename/delete/reindex, present-item repair, location-only inspection, specific mutable-metadata DAC refusal, and committed failure reporting. Its same-location update regression exposed a copy-onto-self/delete defect; omitted directories now preserve the source directory and avoid this destructive path. The existing memory data/relationship/file, denied-guard, stale-reader, concurrency/recreation and nested-token settlement regressions are retained.
+
+Missing cloud identities specifically refuse destructive orphan cleanup without touching postings, since no canonical recreation protection exists; present identities are reindexed successfully. S3 business conditions and mutable-metadata DAC specifically refuse before writes; location-only DAC remains available. S3 HEAD images are strong snapshots, not transactional mutation images. Memory retains its internal queues. Independent cloud writers can reorder index follow-up, and crashes/external changes can require health/reindex/known-previous-state repair. There is no global exclusion, cross-store atomicity, rollback or live-AWS concurrency claim.
+
+Fresh local verification (all final commands exit 0):
+
+| Command | Observed result |
+| --- | --- |
+| Focused ConditionalWrites + CanonicalConditions native JSON specs | 18 passes, zero failures/errors. Final CanonicalConditions rerun after the TypeDoc fixture correction: 5 passes. |
+| yarn test | 1,049 core + 58 native passes, zero failures/errors. |
+| yarn build | Package bundles, declarations and preparation pass. |
+| yarn site:build:demo-types | Pass; generated metadata unchanged. |
+| yarn site:build:api | Pass. |
+| yarn site:build:iac | Pass; local generation only. |
+| yarn site:build:app | Pass, including TypeDoc/finalization. Initial TypeDoc run caught assertion-induced narrowing in the new helper; Object.assign preserves its record type, and the focused case and full site command pass after correction. |
+| yarn test:exports | Export validation passes. |
+| yarn test:consumer | Packed-package consumer checks pass. |
+| git diff --check | Pass. |
+
+Only the existing plan, indexing documentation, generic hook/DAC wiring and cloud drivers with nearby native behavioral coverage changed. No generated metadata drift, extra CRUD verbs, capability registry or backend mechanics in generic modules. Existing dependencies were used; the repository consumer check manages its own temporary installation. No cloud operations, deployment, seeding, service changes, commit, push, PR actions or lifecycle settlement. The owner's existing commits are retained, and this plan remains active for explicit acceptance.
