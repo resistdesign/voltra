@@ -111,3 +111,31 @@ Fresh local verification (Node v24.22.0, Yarn 1.22.22):
 | `git diff --check` | Exit 0. |
 
 No live cloud operations, deployment or seeding. Strong snapshots address the requested single-writer stale-read defect; canonical and index writes remain separate and concurrent index writers are not serialized. The existing recovery APIs/documentation still apply. These local observations do not settle owner acceptance; the plan remains active.
+
+## No-index conditional capability repair — 2026-10-27
+
+- [x] Separate atomic conditional-update support from indexing/security snapshot requirements.
+- [x] Add no-strong-reader native JSON behavior coverage and reconcile documentation; preserve stale-index and DAC regressions.
+- [x] Run relevant behavioral/framework checks and record observed results.
+
+The owner’s additional PR #424 decision allows atomic no-index guarded updates without a strong reader. Strong snapshots remain required for configured indexing and expected-field READ DAC checks that inspect stored values. This is within issue #423’s independent capability contracts; no shared public API, route/client positions or driver implementations need to change.
+
+The service now enforces conditional-write capability independently and requires strong snapshots only for configured indexing or expected-field READ DAC. Where a strong reader is available, guarded updates still prefer it. The indexed false-result test now configures indexing explicitly, retaining its unsupported-reader refusal. The new no-index case delegates to the real in-memory atomic implementation through the generic driver contract with no strong reader; existence and expected-value updates succeed, stale/missing guards conflict, false results normalize to conflict, and losing payloads never overwrite or upsert canonical state. Existing DAC and stale-index regressions pass. Temporarily restoring the unconditional strong-reader refusal makes precisely the new case error with `UNSUPPORTED_CAPABILITY` (7 passes, 1 error); final source was restored and the focused battery passed again (8 passes, zero failures/errors).
+
+Fresh local verification (Node v24.22.0, Yarn 1.22.22):
+
+| Command | Observed result |
+| --- | --- |
+| `yarn install --frozen-lockfile` | Exit 0; already up to date; lockfile unchanged. |
+| `yarn test` | Exit 0; 1,041 core and 58 native passes; zero failures/errors. |
+| `yarn tsx src/common/Testing/CLI.ts './src/api/ORM/TypeInfoORMService/ConditionalWrites.spec.json'` | Exit 0; 8 passes, zero failures/errors on final source. |
+| `yarn site:build:demo-types` and generated metadata diff check | Exit 0; metadata unchanged. |
+| `yarn build` | Exit 0; bundles, declarations and package preparation passed. |
+| `yarn site:build:api` | Exit 0. |
+| `yarn site:build:app` | Exit 0, including documentation generation/finalization. |
+| `yarn site:build:iac` | Exit 0; local generation only. |
+| `yarn test:exports` | Exit 0; export validation passed. |
+| `yarn test:consumer` | Exit 0; packed-package type/runtime/import smoke checks passed. |
+| `git diff --check` | Exit 0. |
+
+An initial full-suite run caught changed route strong-read counts; preserving preferred strong reads when supported resolved it without changing route fixtures. No public contracts, drivers, route/client argument positions or unrelated work changed. No cloud operations, deployment or seeding; no live distributed-concurrency claim. Owner acceptance remains separate, and this plan remains active.

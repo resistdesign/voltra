@@ -557,7 +557,11 @@ export const runConditionalFalseResult = async () => {
     deleteItem: async () => true,
     listItems: async () => ({ items: [] }),
   };
-  const orm = new TypeInfoORMService(config(driver));
+  const values = new StructuredInMemoryBackend();
+  const indexing = getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+    backend: createIndexBackend({ values, valueWriter: values }),
+  });
+  const orm = new TypeInfoORMService({ ...config(driver), indexing });
   // Observe both index entry points independently of any backend's no-op behavior.
   (orm as any).replaceItemIndexes = (orm as any).indexItemIndexes =
     async () => {
@@ -570,12 +574,10 @@ export const runConditionalFalseResult = async () => {
       { preconditions: { exists: true } },
     ),
   );
-  const noStrongReader = new TypeInfoORMService(
-    config({
-      ...driver,
-      readItemStronglyConsistent: undefined,
-    }),
-  );
+  const noStrongReader = new TypeInfoORMService({
+    ...config({ ...driver, readItemStronglyConsistent: undefined }),
+    indexing,
+  });
   assert.equal(
     await errorOf(() =>
       noStrongReader.update(
@@ -587,6 +589,69 @@ export const runConditionalFalseResult = async () => {
     TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY,
   );
   return { conflict, reads, mutations, indexWork, canonical: item };
+};
+
+/** Atomic no-index guards do not depend on the optional strong reader. */
+export const runConditionalWithoutStrongReader = async () => {
+  const storage = makeDriver();
+  const driver: DataItemDBDriver<Item, "id"> = {
+    capabilities: { conditionalUpdate: true },
+    createItem: storage.createItem.bind(storage),
+    readItem: storage.readItem.bind(storage),
+    updateItem: storage.updateItem.bind(storage),
+    deleteItem: storage.deleteItem.bind(storage),
+    listItems: storage.listItems.bind(storage),
+  };
+  assert.equal(driver.readItemStronglyConsistent, undefined);
+  const orm = new TypeInfoORMService(config(driver));
+  await orm.create("Record", { name: "initial", score: 0 });
+  const exists = await orm.update(
+    "Record",
+    { id: "one", name: "winner" },
+    { preconditions: { exists: true } },
+  );
+  const expected = await orm.update(
+    "Record",
+    { id: "one", score: 1 },
+    { preconditions: { expected: { score: 0 } } },
+  );
+  const stale = await errorOf(() =>
+    orm.update(
+      "Record",
+      { id: "one", name: "loser" },
+      { preconditions: { expected: { score: 0 } } },
+    ),
+  );
+  const missing = await errorOf(() =>
+    orm.update(
+      "Record",
+      { id: "missing", name: "upsert" },
+      { preconditions: { exists: true } },
+    ),
+  );
+  // Preserve normalization for drivers that signal a lost guard with false.
+  const falseResult = new TypeInfoORMService(
+    config({
+      ...driver,
+      updateItem: async () => false,
+    }),
+  );
+  const conflict = await errorOf(() =>
+    falseResult.update(
+      "Record",
+      { id: "one", name: "loser" },
+      { preconditions: { exists: true } },
+    ),
+  );
+  return {
+    exists,
+    expected,
+    stale,
+    missing,
+    conflict,
+    canonical: await orm.read("Record", "one"),
+    noUpsert: await errorOf(() => orm.read("Record", "missing")),
+  };
 };
 
 /** Rejections retain provider and JavaScript diagnostics through the ORM wrapper. */

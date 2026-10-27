@@ -3660,16 +3660,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           mergedFieldsResources,
         );
         const guarded = updateConfig?.preconditions !== undefined;
-        if (
+        const expected = updateConfig?.preconditions?.expected;
+        const requiresStrongSnapshot =
           guarded &&
-          (!driver.capabilities?.conditionalUpdate ||
-            !driver.readItemStronglyConsistent)
-        )
+          (!!this.config.indexing ||
+            (!!this.config.useDAC &&
+              !!expected &&
+              Object.keys(expected).length > 0));
+        if (guarded && !driver.capabilities?.conditionalUpdate)
+          throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+        if (requiresStrongSnapshot && !driver.readItemStronglyConsistent)
           throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
         // Guarded indexing needs current canonical snapshots on both sides of
-        // the mutation, even when ordinary reads are eventually consistent.
+        // the mutation; expected-field READ DAC also needs current stored values.
         const readSnapshot = guarded
-          ? driver.readItemStronglyConsistent!
+          ? (driver.readItemStronglyConsistent ?? driver.readItem)
           : driver.readItem;
         let existingItem: Partial<TypeInfoDataItem> | undefined;
         try {
@@ -3679,7 +3684,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             throw error;
           }
         }
-        const expected = updateConfig?.preconditions?.expected;
         if (this.config.useDAC && expected && Object.keys(expected).length) {
           // A guard observes a field value through its success/conflict outcome.
           // Authorize both the probed values and the stored snapshot, since DAC

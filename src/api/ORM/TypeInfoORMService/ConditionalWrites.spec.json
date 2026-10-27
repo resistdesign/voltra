@@ -149,6 +149,24 @@
       "expectation": {
         "checks": [true, true, true]
       }
+    },
+    {
+      "export": "runConditionalWithoutStrongReader",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "exists": true,
+        "expected": true,
+        "stale": "CONDITIONAL_WRITE_CONFLICT",
+        "missing": "CONDITIONAL_WRITE_CONFLICT",
+        "conflict": "CONDITIONAL_WRITE_CONFLICT",
+        "canonical": {
+          "id": "one",
+          "name": "winner",
+          "score": 1
+        },
+        "noUpsert": "ITEM_NOT_FOUND"
+      }
     }
   ]
 }

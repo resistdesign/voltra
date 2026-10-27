@@ -73,10 +73,14 @@ advertise conditional create/update with `capabilities.conditionalCreate` and
 `capabilities.conditionalUpdate`; typed configs pass through the existing
 `createItem` and `updateItem` methods. Drivers must enforce the requested guarantee
 atomically or refuse it. The ORM never emulates guards with an unconditional write.
-Guarded updates also require `readItemStronglyConsistent`: both the prior snapshot
-used to remove postings and the post-write snapshot used to add postings must be
-current. A guarded `false` result becomes `CONDITIONAL_WRITE_CONFLICT` before any
-post-write read or index work. Required strong reads use `readItemStronglyConsistent`
+Guarded updates require `readItemStronglyConsistent` when indexing is configured:
+both the prior snapshot used to remove postings and the post-write snapshot used
+to add postings must be current. Expected-field guards with DAC enabled also
+require a strong prior snapshot to authorize observation of current stored values.
+Without indexing or these snapshot-dependent security checks, atomic guarded
+updates do not require the optional strong reader; ordinary reads suffice. A
+guarded `false` result becomes `CONDITIONAL_WRITE_CONFLICT` before any post-write
+read or index work. Required strong reads use `readItemStronglyConsistent`
 through the normal read validation, DAC and projection path and refuse unsupported
 drivers. Existing context positions remain unchanged; read options follow context
 on the server and follow selected fields on the client. Routes supply their own
