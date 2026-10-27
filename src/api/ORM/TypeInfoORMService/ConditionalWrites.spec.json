@@ -35,7 +35,7 @@
         "updateConflict": "CONDITIONAL_WRITE_CONFLICT",
         "losingIds": [],
         "winnerIds": ["one"],
-        "indexFailure": "INDEX_UNAVAILABLE",
+        "indexFailure": "CANONICAL_WRITE_COMMITTED",
         "canonical": {
           "id": "one",
           "name": "committed",
@@ -132,7 +132,7 @@
       "operation": "DEEP_EQUALS",
       "expectation": {
         "conflict": "CONDITIONAL_WRITE_CONFLICT",
-        "reads": 1,
+        "reads": 0,
         "mutations": 1,
         "indexWork": 0,
         "canonical": {
@@ -172,13 +172,31 @@
       "export": "runConditionalWithoutSnapshots",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": [true, true, true, true]
+      "expectation": [true, true]
     },
     {
-      "export": "runLegacyReadMaintenance",
+      "export": "runCoordinatedAuthorization",
       "conditions": [],
       "operation": "DEEP_EQUALS",
-      "expectation": { "verified": true }
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runCoordinatedMutationImages",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runCoordinatedMaintenance",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
     }
   ]
 }

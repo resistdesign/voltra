@@ -196,7 +196,7 @@ export const runConditionalIndexSafetyAndRecovery = async () => {
   const readItem = driver.readItem;
   let maintenanceReads = 0;
   driver.readItem = async (id, selected, readConfig) => {
-    assert.equal(readConfig?.consistency, "strong");
+    assert.ok(readConfig?.consistency === "strong" || readConfig?.coordination);
     maintenanceReads++;
     return readItem(id, selected, readConfig);
   };
@@ -229,7 +229,8 @@ export const runStrongReadAndUnsupported = async () => {
   // Receiver and config must survive the normal CRUD error wrapper.
   driver.readItem = async function (id, selected, readConfig) {
     if (this !== driver) throw new Error("LOST_RECEIVER");
-    if (readConfig?.consistency === "strong") selections.push(selected ?? "ALL");
+    if (readConfig?.consistency === "strong")
+      selections.push(selected ?? "ALL");
     else ordinaryReads++;
     return read(id, selected, readConfig);
   };
@@ -301,14 +302,24 @@ export const runStrongReadAndUnsupported = async () => {
   } catch (error: any) {
     wrappedFailure = { message: error.message, typeName: error.typeName };
   }
-  const legacy: DataItemDBDriver<Item, "id"> = {
-    createItem: driver.createItem,
-    readItem: driver.readItem.bind(driver),
-    updateItem: driver.updateItem,
+  const restricted: DataItemDBDriver<Item, "id"> = {
+    createItem: async (item, options) => {
+      if (options?.ifAbsent) throw new Error("UNSUPPORTED_CAPABILITY");
+      return driver.createItem(item, options);
+    },
+    readItem: async (id, selected, options) => {
+      if (options?.consistency === "strong")
+        throw new Error("UNSUPPORTED_CAPABILITY");
+      return driver.readItem.call(driver, id, selected, options);
+    },
+    updateItem: async (id, item, options) => {
+      if (options?.preconditions) throw new Error("UNSUPPORTED_CAPABILITY");
+      return driver.updateItem(id, item, options);
+    },
     deleteItem: driver.deleteItem,
     listItems: driver.listItems,
   };
-  const unsupported = new TypeInfoORMService(config(legacy));
+  const unsupported = new TypeInfoORMService(config(restricted));
   const failures = await Promise.all([
     errorOf(() =>
       unsupported.read("Record", "one", undefined, undefined, strong),
@@ -329,7 +340,7 @@ export const runStrongReadAndUnsupported = async () => {
     ),
   ]);
   const strongOrdinaryReads = ordinaryReads;
-  // Defaults continue to permit overwrite and upsert on a legacy driver.
+  // Unconfigured operations still permit overwrite and upsert.
   await unsupported.create("Record", { name: "default", score: 2 });
   await unsupported.update("Record", { id: "new", name: "upsert" });
   return {
@@ -496,7 +507,8 @@ export const runGuardedStaleReads = async () => {
   await orm.update("Record", { id: "one", name: "current" });
   let ordinaryReads = 0;
   driver.readItem = async (id, selected, readConfig) => {
-    if (readConfig?.consistency === "strong") return read(id, selected, readConfig);
+    if (readConfig?.consistency === "strong")
+      return read(id, selected, readConfig);
     ordinaryReads++;
     return obsolete;
   };
@@ -508,7 +520,11 @@ export const runGuardedStaleReads = async () => {
   driver.readItem = read;
   // Inspect persisted postings directly so canonical filtering cannot hide debris.
   for (const name of ["obsolete", "current", "committed"]) {
-    const postings = await values.terms.query(qualifyIndexField("Record", "name"), "eq", name);
+    const postings = await values.terms.query(
+      qualifyIndexField("Record", "name"),
+      "eq",
+      name,
+    );
     assert.equal(postings.candidateIds.length, name === "committed" ? 1 : 0);
   }
   const find = async (name: string) =>
@@ -547,7 +563,6 @@ export const runConditionalFalseResult = async () => {
   let mutations = 0;
   let indexWork = 0;
   const driver: DataItemDBDriver<Item, "id"> = {
-    capabilities: { conditionalUpdate: true, strongRead: true },
     createItem: async () => "one",
     readItem: async (_id, _selected, readConfig) => {
       assert.equal(readConfig?.consistency, "strong");
@@ -579,20 +594,6 @@ export const runConditionalFalseResult = async () => {
       { preconditions: { exists: true } },
     ),
   );
-  const noStrongReader = new TypeInfoORMService({
-    ...config({ ...driver, capabilities: { conditionalUpdate: true } }),
-    indexing,
-  });
-  assert.equal(
-    await errorOf(() =>
-      noStrongReader.update(
-        "Record",
-        { id: "one", name: "loser" },
-        { preconditions: { exists: true } },
-      ),
-    ),
-    TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY,
-  );
   return { conflict, reads, mutations, indexWork, canonical: item };
 };
 
@@ -600,14 +601,12 @@ export const runConditionalFalseResult = async () => {
 export const runConditionalWithoutStrongReader = async () => {
   const storage = makeDriver();
   const driver: DataItemDBDriver<Item, "id"> = {
-    capabilities: { conditionalUpdate: true },
     createItem: storage.createItem.bind(storage),
     readItem: storage.readItem.bind(storage),
     updateItem: storage.updateItem.bind(storage),
     deleteItem: storage.deleteItem.bind(storage),
     listItems: storage.listItems.bind(storage),
   };
-  assert.equal(driver.capabilities?.strongRead, undefined);
   const orm = new TypeInfoORMService(config(driver));
   await orm.create("Record", { name: "initial", score: 0 });
   const exists = await orm.update(
@@ -662,65 +661,69 @@ export const runConditionalWithoutStrongReader = async () => {
 /** Atomic no-index success must not depend on either reader's availability. */
 export const runConditionalWithoutSnapshots = async () => {
   const results = [];
-  for (const optionalStrong of [false, true]) {
-    for (const missingRead of [true, false]) {
-      const storage = makeDriver();
-      await storage.createItem({ name: "initial", score: 0 });
-      let ordinaryReads = 0;
-      let strongReads = 0;
-      const driver: DataItemDBDriver<Item, "id"> = {
-        capabilities: { conditionalUpdate: true, strongRead: optionalStrong },
-        createItem: storage.createItem.bind(storage),
-        readItem: async (_id, _selected, readConfig) => {
-          if (readConfig?.consistency === "strong") {
-            strongReads++;
-            throw new Error("UNEXPECTED_STRONG_READ");
-          }
-          ordinaryReads++;
-          throw new Error(missingRead ? "ITEM_NOT_FOUND" : "UNEXPECTED_READ");
-        },
-        updateItem: storage.updateItem.bind(storage),
-        deleteItem: storage.deleteItem.bind(storage),
-        listItems: storage.listItems.bind(storage),
-      };
-      const orm = new TypeInfoORMService(config(driver));
-      const success = await orm.update(
+  for (const missingRead of [true, false]) {
+    const storage = makeDriver();
+    await storage.createItem({ name: "initial", score: 0 });
+    let ordinaryReads = 0;
+    let strongReads = 0;
+    const driver: DataItemDBDriver<Item, "id"> = {
+      createItem: storage.createItem.bind(storage),
+      readItem: async (_id, _selected, readConfig) => {
+        if (readConfig?.consistency === "strong") {
+          strongReads++;
+          throw new Error("UNEXPECTED_STRONG_READ");
+        }
+        ordinaryReads++;
+        throw new Error(missingRead ? "ITEM_NOT_FOUND" : "UNEXPECTED_READ");
+      },
+      updateItem: storage.updateItem.bind(storage),
+      deleteItem: storage.deleteItem.bind(storage),
+      listItems: storage.listItems.bind(storage),
+    };
+    const orm = new TypeInfoORMService(config(driver));
+    const success = await orm.update(
+      "Record",
+      { id: "one", name: "committed", score: 1 },
+      { preconditions: { expected: { score: 0 } } },
+    );
+    const stale = await errorOf(() =>
+      orm.update(
         "Record",
-        { id: "one", name: "committed", score: 1 },
+        { id: "one", name: "loser" },
         { preconditions: { expected: { score: 0 } } },
-      );
-      const stale = await errorOf(() =>
-        orm.update(
-          "Record",
-          { id: "one", name: "loser" },
-          { preconditions: { expected: { score: 0 } } },
-        ),
-      );
-      const falseResult = new TypeInfoORMService(
-        config({
-          ...driver,
-          updateItem: async () => false,
-        }),
-      );
-      const conflict = await errorOf(() =>
-        falseResult.update(
-          "Record",
-          { id: "one", name: "loser" },
-          { preconditions: { exists: true } },
-        ),
-      );
-      assert.equal(success, true);
-      assert.equal(stale, TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
-      assert.equal(conflict, TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
-      assert.equal(ordinaryReads, 0);
-      assert.equal(strongReads, 0);
-      assert.deepEqual(await storage.readItem("one"), {
-        id: "one",
-        name: "committed",
-        score: 1,
-      });
-      results.push(success);
-    }
+      ),
+    );
+    const falseResult = new TypeInfoORMService(
+      config({
+        ...driver,
+        updateItem: async () => false,
+      }),
+    );
+    const conflict = await errorOf(() =>
+      falseResult.update(
+        "Record",
+        { id: "one", name: "loser" },
+        { preconditions: { exists: true } },
+      ),
+    );
+    assert.equal(success, true);
+    assert.equal(stale, TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+    assert.equal(conflict, TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+    assert.equal(ordinaryReads, 0);
+    assert.equal(strongReads, 0);
+    assert.deepEqual(await storage.readItem("one"), {
+      id: "one",
+      name: "committed",
+      score: 1,
+    });
+    assert.equal(
+      await orm.update("Record", { id: "one", name: "ordinary" }),
+      true,
+    );
+    assert.equal((await storage.readItem("one")).name, "ordinary");
+    assert.equal(ordinaryReads, 0);
+    assert.equal(strongReads, 0);
+    results.push(success);
   }
   return results;
 };
@@ -778,7 +781,8 @@ export const runRejectedErrorDiagnostics = async () => {
           received.message === error.message &&
           received.cause === error.cause &&
           (received as any).$metadata === (error as any).$metadata &&
-          (received.cause as any)?.$metadata === (error.cause as any)?.$metadata &&
+          (received.cause as any)?.$metadata ===
+            (error.cause as any)?.$metadata &&
           (received as any).typeName === "Record",
       );
     }
@@ -786,20 +790,15 @@ export const runRejectedErrorDiagnostics = async () => {
   return { checks };
 };
 
-/** Legacy readers cannot authorize destructive maintenance or required reads. */
-export const runLegacyReadMaintenance = async () => {
-  const storage = makeDriver();
-  const configs: unknown[] = [];
-  const driver: DataItemDBDriver<Item, "id"> = {
-    createItem: storage.createItem,
-    readItem: async (_id, _selected, readConfig) => {
-      configs.push(readConfig);
-      throw new Error("ITEM_NOT_FOUND");
-    },
-    updateItem: storage.updateItem,
-    deleteItem: storage.deleteItem,
-    listItems: storage.listItems,
-  };
+const deferred = () => {
+  let resolve!: () => void;
+  const promise = new Promise<void>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+};
+const indexedStore = () => {
+  const driver = makeDriver();
   const values = new StructuredInMemoryBackend();
   const orm = new TypeInfoORMService({
     ...config(driver),
@@ -807,20 +806,385 @@ export const runLegacyReadMaintenance = async () => {
       backend: createIndexBackend({ values, valueWriter: values }),
     }),
   });
-  assert.deepEqual(
-    await orm.verifyStoredItemForIndexMaintenance("Record", "one"),
-    { exists: false, consistency: "bestEffort" },
+  const ids = async (name: string) =>
+    (await values.terms.query(qualifyIndexField("Record", "name"), "eq", name))
+      .candidateIds;
+  return { driver, values, orm, ids };
+};
+
+/** Authoritative mutation images work even when every ordinary read is unusable. */
+export const runCoordinatedMutationImages = async () => {
+  for (const readFailure of ["ITEM_NOT_FOUND", "READ_UNAVAILABLE", "stale"]) {
+    const { driver, orm, ids } = indexedStore();
+    const read = driver.readItem;
+    driver.readItem = async () => {
+      if (readFailure === "stale")
+        return { id: "one", name: "obsolete", score: -1 };
+      throw new Error(readFailure);
+    };
+    await orm.create("Record", { name: "old", score: 0 });
+    await orm.create("Record", { name: "overwritten", score: 1 });
+    assert.deepEqual(await ids("old"), []);
+    await orm.update("Record", { id: "one", name: "ordinary" });
+    await orm.update(
+      "Record",
+      { id: "one", name: "guarded" },
+      {
+        preconditions: { expected: { name: "ordinary" } },
+      },
+    );
+    assert.deepEqual(await read("one"), {
+      id: "one",
+      name: "guarded",
+      score: 1,
+    });
+    for (const name of ["old", "overwritten", "ordinary", "obsolete"])
+      assert.deepEqual(await ids(name), []);
+    assert.deepEqual(await ids("guarded"), ["one"]);
+    // No relationships exist in this fixture.
+    (orm as any).cleanupRelationships = async () => undefined;
+    await orm.delete("Record", "one");
+    await assert.rejects(() => read("one"), { message: "ITEM_NOT_FOUND" });
+    assert.deepEqual(await ids("guarded"), []);
+  }
+  const { driver, values, orm, ids } = indexedStore();
+  await orm.create("Record", { name: "before", score: 0 });
+  const reached = deferred();
+  const release = deferred();
+  const write = values.write.bind(values);
+  let pause = true;
+  values.write = async (...args) => {
+    if (pause) {
+      pause = false;
+      reached.resolve();
+      await release.promise;
+    }
+    return write(...args);
+  };
+  const first = orm.update("Record", { id: "one", name: "first" });
+  await reached.promise;
+  const second = orm.update("Record", { id: "one", name: "second" });
+  // A second writer must not overtake the first writer's delayed index write.
+  assert.equal((await driver.readItem("one")).name, "first");
+  release.resolve();
+  await Promise.all([first, second]);
+  assert.equal((await driver.readItem("one")).name, "second");
+  assert.deepEqual(await ids("first"), []);
+  assert.deepEqual(await ids("before"), []);
+  assert.deepEqual(await ids("second"), ["one"]);
+  values.write = async () => {
+    throw new Error("INDEX_UNAVAILABLE");
+  };
+  await assert.rejects(
+    () => orm.update("Record", { id: "one", name: "committed" }),
+    (error: any) => {
+      assert.equal(error.message, "CANONICAL_WRITE_COMMITTED");
+      assert.equal(error.canonicalCommitted, true);
+      assert.equal(error.before, undefined);
+      assert.equal(error.after, undefined);
+      assert.equal(error.cause.message, "INDEX_UNAVAILABLE");
+      return true;
+    },
   );
-  const cleanup = await orm.cleanupOrphanedIndexState("Record", "one");
-  assert.equal(cleanup.status, "strongConsistencyUnavailable");
-  assert.equal(cleanup.cleanupAttempted, false);
-  assert.deepEqual(configs, [undefined, undefined]);
-  assert.equal(
-    await errorOf(() =>
-      orm.read("Record", "one", undefined, undefined, { consistency: "strong" }),
-    ),
-    TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY,
-  );
-  assert.equal(configs.length, 2);
+  assert.equal((await driver.readItem("one")).name, "committed");
+  return { verified: true };
+};
+
+/** Competing replacements cannot invalidate authorization between inspection and commit. */
+export const runCoordinatedAuthorization = async () => {
+  for (const operation of ["guarded", "ordinary", "delete"] as const) {
+    const { driver, values, orm: admin, ids } = indexedStore();
+    await admin.create("Record", { name: "alice", score: 0, secret: "alice" });
+    const orm = new TypeInfoORMService({
+      ...config(driver),
+      useDAC: true,
+      indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+        backend: createIndexBackend({ values, valueWriter: values }),
+      }),
+      dacConfig: {
+        itemResourcePathPrefix: ["ORM"],
+        relationshipResourcePathPrefix: ["REL"],
+        getOwnerPrefix: async () => [(await driver.readItem("one")).secret!],
+        getDACRoleById: async (id) => ({
+          id,
+          constraints: [
+            {
+              type: DACConstraintType.ALLOW,
+              pathIsPrefix: true,
+              resourcePath: [
+                "ORM",
+                "alice",
+                OperationGroup.ALL_OPERATIONS,
+                "Record",
+                WILDCARD_SIGNIFIER_PROTOTYPE,
+              ],
+            },
+          ],
+        }),
+      },
+    });
+    (orm as any).cleanupRelationships = async () => undefined;
+    const reached = deferred();
+    const release = deferred();
+    // Pause after real DAC inspection, inside the driver's exclusion window.
+    const update = driver.updateItem;
+    const remove = driver.deleteItem;
+    const pauseInspection = (options: any) => ({
+      ...options,
+      coordination: {
+        ...options.coordination,
+        inspect: async (current: Item | undefined) => {
+          await options.coordination.inspect(current);
+          reached.resolve();
+          await release.promise;
+        },
+      },
+    });
+    driver.updateItem = (id, item, options) =>
+      update(id, item, pauseInspection(options));
+    driver.deleteItem = (id, options) => remove(id, pauseInspection(options));
+    const context = { accessingRoleId: "alice" };
+    const mutation =
+      operation === "delete"
+        ? orm.delete("Record", "one", context)
+        : orm.update(
+            "Record",
+            { id: "one", name: "authorized" },
+            operation === "guarded"
+              ? { preconditions: { expected: { score: 0 } } }
+              : undefined,
+            context,
+          );
+    await reached.promise;
+    let replacementDone = false;
+    const replacement = admin
+      .create("Record", { name: "bob", secret: "bob", score: 1 })
+      .then(() => {
+        replacementDone = true;
+      });
+    await Promise.resolve();
+    assert.equal(replacementDone, false);
+    release.resolve();
+    await Promise.all([mutation, replacement]);
+    driver.updateItem = update;
+    driver.deleteItem = remove;
+    assert.equal((await driver.readItem("one")).secret, "bob");
+    assert.deepEqual(await ids("bob"), ["one"]);
+    assert.deepEqual(await ids("alice"), []);
+    assert.deepEqual(await ids("authorized"), []);
+    assert.equal(
+      await errorOf(() =>
+        orm.update(
+          "Record",
+          { id: "one", name: "loser" },
+          { preconditions: { expected: { score: 1 } } },
+          context,
+        ),
+      ),
+      "INVALID_OPERATION",
+    );
+    assert.equal(
+      await errorOf(() => orm.delete("Record", "one", context)),
+      "INVALID_OPERATION",
+    );
+    assert.equal((await driver.readItem("one")).name, "bob");
+    assert.deepEqual(await ids("bob"), ["one"]);
+    assert.deepEqual(await ids("loser"), []);
+
+    // Reverse the order: outer payload authorization sees Alice, but a queued
+    // replacement commits first. Commit-time inspection must reject the caller.
+    await admin.create("Record", { name: "alice", secret: "alice", score: 0 });
+    const held = deferred();
+    const unlock = deferred();
+    const dispatched = deferred();
+    const inspection = driver.readItem("one", undefined, {
+      coordination: {
+        inspect: async () => {
+          held.resolve();
+          await unlock.promise;
+        },
+      },
+    });
+    await held.promise;
+    const replaceFirst = admin.create("Record", {
+      name: "bob",
+      secret: "bob",
+      score: 1,
+    });
+    driver.updateItem = (id, item, options) => {
+      dispatched.resolve();
+      return update(id, item, options);
+    };
+    driver.deleteItem = (id, options) => {
+      dispatched.resolve();
+      return remove(id, options);
+    };
+    const deniedMutation = errorOf(() =>
+      operation === "delete"
+        ? orm.delete("Record", "one", context)
+        : orm.update(
+            "Record",
+            { id: "one", name: "loser" },
+            operation === "guarded"
+              ? { preconditions: { expected: { score: 1 } } }
+              : undefined,
+            context,
+          ),
+    );
+    await dispatched.promise;
+    unlock.resolve();
+    await inspection;
+    await replaceFirst;
+    assert.equal(await deniedMutation, "INVALID_OPERATION");
+    driver.updateItem = update;
+    driver.deleteItem = remove;
+    assert.equal((await driver.readItem("one")).secret, "bob");
+    assert.deepEqual(await ids("bob"), ["one"]);
+    assert.deepEqual(await ids("loser"), []);
+  }
+  return { verified: true };
+};
+
+/** Cleanup excludes recreation through both structured and text cleanup, even on failure. */
+export const runCoordinatedMaintenance = async () => {
+  const { FullTextMemoryBackend } =
+    await import("../drivers/InMemoryDataItemDBDriver/Indexing/FullTextMemoryBackend");
+  const { searchLossy } = await import("../../Indexing");
+  for (const cleanupFailure of [undefined, "CLEANUP_UNAVAILABLE", "ITEM_NOT_FOUND"]) {
+    const driver = makeDriver();
+    const values = new StructuredInMemoryBackend();
+    const text = new FullTextMemoryBackend();
+    const types: TypeInfoMap = {
+      Record: {
+        ...typeInfoMap.Record,
+        fields: {
+          ...typeInfoMap.Record.fields,
+          name: {
+            ...field("string"),
+            tags: { indexed: { exact: true, text: true } },
+          },
+        },
+      },
+    };
+    const orm = new TypeInfoORMService({
+      ...config(driver),
+      typeInfoMap: types,
+      indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(types, {
+        backend: createIndexBackend({ values, valueWriter: values, text }),
+      }),
+    });
+    const indexField = qualifyIndexField("Record", "name");
+    const ids = async (name: string) =>
+      (await values.terms.query(indexField, "eq", name)).candidateIds;
+    const textIds = async (query: string) =>
+      (await searchLossy({ backend: text, indexField, query, limit: 20 }))
+        .docIds;
+    await orm.create("Record", { name: "orphan", score: 0 });
+    const version = (await values.documents!.list!({ limit: 10 })).documents[0]
+      .version;
+    await driver.deleteItem("one"); // Deliberately leave an orphan, as an out-of-band writer would.
+    const reached = deferred();
+    const release = deferred();
+    const remove = text.removeDocumentIndex!.bind(text);
+    text.removeDocumentIndex = async (...args) => {
+      reached.resolve();
+      await release.promise;
+      if (cleanupFailure) throw new Error(cleanupFailure);
+      return remove(...args);
+    };
+    const cleanup = orm.cleanupOrphanedIndexState("Record", "one", {
+      structuredVersion: version,
+    });
+    // Attach rejection handling before intentionally releasing the failed phase.
+    const outcome = cleanup.then(
+      (value) => value.status,
+      (error) => error.message,
+    );
+    await reached.promise;
+    let recreated = false;
+    const recreation = orm
+      .create("Record", { name: "recreated", score: 1 })
+      .then(() => {
+        recreated = true;
+      });
+    await Promise.resolve();
+    assert.equal(recreated, false);
+    assert.equal(await errorOf(() => driver.readItem("one")), "ITEM_NOT_FOUND");
+    release.resolve();
+    assert.equal(
+      await outcome,
+      cleanupFailure ?? "cleaned",
+    );
+    await recreation;
+    assert.equal((await driver.readItem("one")).name, "recreated");
+    assert.deepEqual(await ids("recreated"), ["one"]);
+    assert.deepEqual(await ids("orphan"), []);
+    assert.deepEqual(await textIds("recreated"), ["one"]);
+    assert.deepEqual(await textIds("orphan"), []);
+    // Reindex uses a coordinated canonical inspection, never an ordinary snapshot.
+    const read = driver.readItem;
+    driver.readItem = (id, selected, options) => {
+      if (!options?.coordination) throw new Error("ORDINARY_READ_FORBIDDEN");
+      return read(id, selected, options);
+    };
+    await orm.reindexStoredItem("Record", "one");
+    const write = values.write.bind(values);
+    values.write = async () => {
+      throw new Error("REINDEX_UNAVAILABLE");
+    };
+    assert.equal(
+      await errorOf(() => orm.reindexStoredItem("Record", "one")),
+      "REINDEX_UNAVAILABLE",
+    );
+    values.write = write;
+    driver.readItem = read;
+    assert.equal((await driver.readItem("one")).name, "recreated");
+    assert.deepEqual(await ids("recreated"), ["one"]);
+    assert.deepEqual(await textIds("recreated"), ["one"]);
+    if (!cleanupFailure) {
+      // A failed structured write must not release the next canonical writer
+      // while its sibling full-text mutation is still in flight.
+      const textReached = deferred();
+      const textRelease = deferred();
+      const writeText = text.writeDocument.bind(text);
+      let pauseText = true;
+      text.writeDocument = async (...args) => {
+        if (pauseText) {
+          pauseText = false;
+          textReached.resolve();
+          await textRelease.promise;
+        }
+        return writeText(...args);
+      };
+      let failStructured = true;
+      values.write = (...args) => {
+        if (failStructured) {
+          failStructured = false;
+          throw new Error("STRUCTURED_UNAVAILABLE");
+        }
+        return write(...args);
+      };
+      let failureReported = false;
+      const first = errorOf(() =>
+        orm.update("Record", { id: "one", name: "delayed" }),
+      ).then((message) => {
+        failureReported = true;
+        return message;
+      });
+      await textReached.promise;
+      const second = orm.update("Record", { id: "one", name: "latest" });
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      assert.equal(failureReported, false);
+      assert.equal((await driver.readItem("one")).name, "delayed");
+      textRelease.resolve();
+      assert.equal(await first, "CANONICAL_WRITE_COMMITTED");
+      await second;
+      assert.equal((await driver.readItem("one")).name, "latest");
+      assert.deepEqual(await ids("latest"), ["one"]);
+      assert.deepEqual(await ids("delayed"), []);
+      assert.deepEqual(await textIds("latest"), ["one"]);
+      assert.deepEqual(await textIds("delayed"), []);
+    }
+  }
   return { verified: true };
 };

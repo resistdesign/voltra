@@ -6,6 +6,8 @@ import {
 } from "../../../common/TypeInfoORM";
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
+  DataItemOperationConfig,
+  CanonicalWriteCommittedError,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -112,6 +114,41 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
     this.downloadUrlPrefix = specific.downloadUrlPrefix ?? "memory://download/";
   }
 
+  private pending: Promise<void> = Promise.resolve();
+
+  private coordinate = async <Result>(
+    operation: () => Promise<Result>,
+  ): Promise<Result> => {
+    const previous = this.pending;
+    let release!: () => void;
+    this.pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
+  };
+
+  private snapshot = (id: string) => {
+    const item = this.items.get(this.resolveId(id));
+    return item ? structuredClone(item) : undefined;
+  };
+
+  private notify = async (
+    options: DataItemOperationConfig<BaseFileItem> | undefined,
+    before: BaseFileItem | undefined,
+    after: BaseFileItem | undefined,
+  ) => {
+    try {
+      await options?.coordination?.changed?.(before, after);
+    } catch (cause) {
+      throw new CanonicalWriteCommittedError(cause);
+    }
+  };
+
   private resolveId(id: string): string {
     return this.aliases.get(id) ?? id;
   }
@@ -130,43 +167,49 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
      * New file item payload without the id field.
      */
     item: Partial<Omit<BaseFileItem, "id">>,
-    createConfig?: TypeInfoORMCreateConfig,
-  ): Promise<string> => {
-    if (createConfig?.ifAbsent)
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    const { generateUniqueIdentifier } = this.config;
+    createConfig?: TypeInfoORMCreateConfig &
+      DataItemOperationConfig<BaseFileItem>,
+  ): Promise<string> =>
+    this.coordinate(async () => {
+      if (createConfig?.ifAbsent)
+        throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+      const { generateUniqueIdentifier } = this.config;
 
-    if (!item?.name) {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
-    }
+      if (!item?.name) {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      }
 
-    const fileLocation = {
-      name: item.name as string,
-      directory: item.directory,
-    };
-    const id =
-      typeof generateUniqueIdentifier === "function"
-        ? String(generateUniqueIdentifier(item as BaseFileItem))
-        : getFullFileKey({ file: fileLocation });
-    const mimeType = item.mimeType ?? "application/octet-stream";
+      const fileLocation = {
+        name: item.name as string,
+        directory: item.directory,
+      };
+      const id =
+        typeof generateUniqueIdentifier === "function"
+          ? String(generateUniqueIdentifier(item as BaseFileItem))
+          : getFullFileKey({ file: fileLocation });
+      const mimeType = item.mimeType ?? "application/octet-stream";
 
-    const newItem: BaseFileItem = {
-      id,
-      name: item.name,
-      directory: item.directory,
-      updatedOn: this.now(),
-      mimeType,
-      sizeInBytes: item.sizeInBytes ?? 0,
-      isDirectory: item.isDirectory ?? mimeType === "application/x-directory",
-    };
+      const newItem: BaseFileItem = {
+        id,
+        name: item.name,
+        directory: item.directory,
+        updatedOn: this.now(),
+        mimeType,
+        sizeInBytes: item.sizeInBytes ?? 0,
+        isDirectory: item.isDirectory ?? mimeType === "application/x-directory",
+      };
 
-    this.items.set(id, { ...newItem });
+      const before = this.snapshot(id);
+      // An alias names a different canonical identity after a rename. Reusing
+      // it would make the single-identity mutation images ambiguous.
+      if (this.aliases.has(id))
+        throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+      await createConfig?.coordination?.inspect?.(before);
+      this.items.set(id, structuredClone(newItem));
+      await this.notify(createConfig, before, this.snapshot(id));
 
-    return id;
-  };
-
-  /** Canonical reads honor required strong consistency. */
-  public readonly capabilities = { strongRead: true };
+      return id;
+    });
 
   /**
    * Read a file item from memory.
@@ -182,30 +225,37 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
      * Optional fields to select from the file item.
      */
     selectFields?: (keyof BaseFileItem)[],
-    _readConfig?: TypeInfoORMReadConfig,
+    _readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<BaseFileItem>,
   ): Promise<Partial<BaseFileItem>> => {
-    if (typeof uniqueIdentifier === "undefined") {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
-    }
+    const read = async () => {
+      if (typeof uniqueIdentifier === "undefined") {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      }
 
-    const resolvedId = this.resolveId(uniqueIdentifier);
-    const item = this.items.get(resolvedId);
+      const resolvedId = this.resolveId(uniqueIdentifier);
+      const item = this.snapshot(resolvedId);
+      await _readConfig?.coordination?.inspect?.(item);
 
-    if (!item) {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-    }
+      if (!item) {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+      }
 
-    const selected = selectFieldsFromItem(item, selectFields);
+      const selected = selectFieldsFromItem(item, selectFields);
 
-    if (selectFields?.includes("uploadUrl")) {
-      selected.uploadUrl = this.buildUrl(this.uploadUrlPrefix, resolvedId);
-    }
+      if (selectFields?.includes("uploadUrl")) {
+        selected.uploadUrl = this.buildUrl(this.uploadUrlPrefix, resolvedId);
+      }
 
-    if (selectFields?.includes("downloadUrl")) {
-      selected.downloadUrl = this.buildUrl(this.downloadUrlPrefix, resolvedId);
-    }
+      if (selectFields?.includes("downloadUrl")) {
+        selected.downloadUrl = this.buildUrl(
+          this.downloadUrlPrefix,
+          resolvedId,
+        );
+      }
 
-    return selected;
+      return selected;
+    };
+    return _readConfig?.coordination ? this.coordinate(read) : read();
   };
 
   /**
@@ -222,76 +272,94 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
      * Partial update payload for the file.
      */
     item: Partial<BaseFileItem>,
-    updateConfig?: TypeInfoORMUpdateConfig,
-  ): Promise<boolean> => {
-    if (updateConfig?.preconditions !== undefined) {
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    }
-    if (typeof uniqueIdentifier === "undefined") {
-      throw {
-        message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
-        uniquelyIdentifyingFieldName: this.config.uniquelyIdentifyingFieldName,
+    updateConfig?: TypeInfoORMUpdateConfig &
+      DataItemOperationConfig<BaseFileItem>,
+  ): Promise<boolean> =>
+    this.coordinate(async () => {
+      if (updateConfig?.preconditions !== undefined) {
+        throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+      }
+      if (typeof uniqueIdentifier === "undefined") {
+        throw {
+          message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
+          uniquelyIdentifyingFieldName:
+            this.config.uniquelyIdentifyingFieldName,
+        };
+      }
+
+      const resolvedId = this.resolveId(uniqueIdentifier);
+      const existing = this.snapshot(resolvedId);
+      await updateConfig?.coordination?.inspect?.(existing);
+
+      if (!existing) {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+      }
+
+      const directory =
+        typeof item.directory === "undefined"
+          ? existing.directory
+          : item.directory;
+      const name = typeof item.name === "undefined" ? existing.name : item.name;
+      const nextLocationId =
+        name && (name !== existing.name || directory !== existing.directory)
+          ? getFullFileKey({ file: { name, directory } })
+          : resolvedId;
+
+      if (
+        nextLocationId !== resolvedId &&
+        (this.items.has(nextLocationId) || this.aliases.has(nextLocationId))
+      )
+        throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+
+      const updated: BaseFileItem = {
+        ...existing,
+        ...item,
+        id: nextLocationId,
+        name,
+        directory,
+        updatedOn: this.now(),
       };
-    }
 
-    const resolvedId = this.resolveId(uniqueIdentifier);
-    const existing = this.items.get(resolvedId);
+      if (nextLocationId !== resolvedId) {
+        this.items.delete(resolvedId);
+        this.items.set(nextLocationId, updated);
+        this.aliases.set(uniqueIdentifier, nextLocationId);
+        this.aliases.set(resolvedId, nextLocationId);
+      } else {
+        this.items.set(resolvedId, updated);
+      }
 
-    if (!existing) {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-    }
-
-    const directory =
-      typeof item.directory === "undefined"
-        ? existing.directory
-        : item.directory;
-    const name = typeof item.name === "undefined" ? existing.name : item.name;
-    const nextLocationId =
-      name && (name !== existing.name || directory !== existing.directory)
-        ? getFullFileKey({ file: { name, directory } })
-        : resolvedId;
-
-    const updated: BaseFileItem = {
-      ...existing,
-      ...item,
-      id: nextLocationId,
-      name,
-      directory,
-      updatedOn: this.now(),
-    };
-
-    if (nextLocationId !== resolvedId) {
-      this.items.delete(resolvedId);
-      this.items.set(nextLocationId, updated);
-      this.aliases.set(uniqueIdentifier, nextLocationId);
-      this.aliases.set(resolvedId, nextLocationId);
-    } else {
-      this.items.set(resolvedId, updated);
-    }
-
-    await this.readItem(uniqueIdentifier);
-
-    return true;
-  };
+      await this.notify(
+        updateConfig,
+        existing,
+        this.snapshot(uniqueIdentifier),
+      );
+      return true;
+    });
 
   /**
    * Delete a file item from memory.
    * @returns True when the item was deleted.
    */
-  public deleteItem = async (id: string): Promise<boolean> => {
-    if (typeof id === "undefined") {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
-    }
+  public deleteItem = async (
+    id: string,
+    deleteConfig?: DataItemOperationConfig<BaseFileItem>,
+  ): Promise<boolean> =>
+    this.coordinate(async () => {
+      if (typeof id === "undefined") {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      }
 
-    await this.readItem(id);
-
-    const resolvedId = this.resolveId(id);
-    this.items.delete(resolvedId);
-    this.aliases.delete(id);
-    this.aliases.delete(resolvedId);
-
-    return true;
-  };
+      const before = this.snapshot(id);
+      await deleteConfig?.coordination?.inspect?.(before);
+      if (!before) throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+      const resolvedId = this.resolveId(id);
+      this.items.delete(resolvedId);
+      this.aliases.delete(id);
+      this.aliases.delete(resolvedId);
+      await this.notify(deleteConfig, before, undefined);
+      return true;
+    });
 
   /**
    * List file items from memory.

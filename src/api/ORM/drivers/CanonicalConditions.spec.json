@@ -13,7 +13,7 @@
       }
     },
     {
-      "export": "runFileCapabilityDeclarations",
+      "export": "runFileRequirements",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
@@ -23,6 +23,22 @@
           "UNSUPPORTED_CAPABILITY",
           "UNSUPPORTED_CAPABILITY"
         ]
+      }
+    },
+    {
+      "export": "runCoordinationRefusal",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runFileCoordinatedIndexes",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
       }
     }
   ]

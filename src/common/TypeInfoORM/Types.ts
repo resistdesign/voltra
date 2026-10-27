@@ -133,7 +133,9 @@ export enum TypeInfoORMServiceError {
   INDEXING_REQUIRES_CRITERIA = "INDEXING_REQUIRES_CRITERIA",
   /** The canonical mutation lost an atomic precondition check. No write occurred. */
   CONDITIONAL_WRITE_CONFLICT = "CONDITIONAL_WRITE_CONFLICT",
-  /** The driver cannot guarantee the requested condition or consistency. */
+  /** Canonical mutation committed, but coordinated follow-up failed. Reconcile before retry. */
+  CANONICAL_WRITE_COMMITTED = "CANONICAL_WRITE_COMMITTED",
+  /** The driver cannot guarantee the requested condition, consistency or coordination. */
   UNSUPPORTED_CAPABILITY = "UNSUPPORTED_CAPABILITY",
   /** A condition or consistency option is malformed or not applicable to TypeInfo. */
   INVALID_PRECONDITION = "INVALID_PRECONDITION",

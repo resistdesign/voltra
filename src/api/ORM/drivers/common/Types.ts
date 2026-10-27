@@ -69,23 +69,46 @@ export type DataItemDBDriverConfig<
 };
 
 /**
+ * Server-only requirements on an existing CRUD operation. Drivers must exclude
+ * ALL competing canonical mutations of this identity through callback completion,
+ * including unconfigured/direct writes. Refuse before side effects if impossible.
+ * Images are detached full canonical values; undefined means absence. Callbacks
+ * must not recursively mutate or request coordinated reads from the same store.
+ * Ordinary reads may inspect current state. A coordinated read invokes inspect
+ * even for absence, then retains normal ITEM_NOT_FOUND behavior.
+ */
+export type DataItemOperationConfig<ItemType> = {
+  /** Generic authorization/index work executed within driver-owned exclusion. */
+  coordination?: {
+    /** Inspect exact state before conditions/commit; rejection prevents mutation. */
+    inspect?: (current: ItemType | undefined) => Promise<void>;
+    /** Maintain indexes after commit, before another canonical writer can run. */
+    changed?: (
+      before: ItemType | undefined,
+      after: ItemType | undefined,
+    ) => Promise<void>;
+  };
+};
+
+/** A canonical write committed, but its coordinated follow-up failed. No rollback. */
+export class CanonicalWriteCommittedError extends Error {
+  /** Canonical state changed even though coordinated follow-up failed. */
+  readonly canonicalCommitted = true;
+
+  /** Preserve the follow-up failure without exposing canonical images to callers. */
+  constructor(cause: unknown) {
+    super("CANONICAL_WRITE_COMMITTED", { cause });
+    this.name = "CanonicalWriteCommittedError";
+  }
+}
+
+/**
  * The API for a database driver.
  * */
 export type DataItemDBDriver<
   ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
-  /** Explicit opt-in guarantees for configs on existing CRUD methods.
-   * Missing capabilities are refused by the ORM before dispatch.
-   */
-  capabilities?: {
-    /** readItem honors required strong consistency; absent/false is unsupported. */
-    strongRead?: boolean;
-    /** createItem atomically enforces ifAbsent. */
-    conditionalCreate?: boolean;
-    /** updateItem atomically enforces preconditions and never upserts. */
-    conditionalUpdate?: boolean;
-  };
   /**
    * Create an item, atomically refusing an occupied identity when ifAbsent is set.
    * Unsupported drivers must refuse the requirement, never ignore it.
@@ -93,7 +116,7 @@ export type DataItemDBDriver<
    */
   createItem(
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-    createConfig?: TypeInfoORMCreateConfig,
+    createConfig?: TypeInfoORMCreateConfig & DataItemOperationConfig<ItemType>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
   /**
    * Read an item from the data store.
@@ -105,14 +128,14 @@ export type DataItemDBDriver<
   readItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
-    readConfig?: TypeInfoORMReadConfig,
+    readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<ItemType>,
   ): Promise<Partial<ItemType>>;
   /**
    * Update an item in the data store.
    * Atomically enforce supplied preconditions, requiring an existing target.
    * Unsupported drivers must refuse guards. A failed guard throws
    * CONDITIONAL_WRITE_CONFLICT or returns false; the ORM normalizes false.
-   * Guarded ORM indexing additionally requires strongRead and readItem with strong consistency.
+   * Coordination requirements must be honored or refused before side effects.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.
@@ -120,7 +143,7 @@ export type DataItemDBDriver<
   updateItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
-    updateConfig?: TypeInfoORMUpdateConfig,
+    updateConfig?: TypeInfoORMUpdateConfig & DataItemOperationConfig<ItemType>,
   ): Promise<boolean>;
   /**
    * Delete an item from the data store.
@@ -129,6 +152,7 @@ export type DataItemDBDriver<
    */
   deleteItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    deleteConfig?: DataItemOperationConfig<ItemType>,
   ): Promise<boolean>;
   /**
    * List items from the data store.

@@ -7,6 +7,7 @@
  */
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
+  DataItemOperationConfig,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -356,18 +357,15 @@ export class DynamoDBDataItemDBDriver<
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
-  /** Guarantees honored by configs on the existing canonical CRUD methods. */
-  public readonly capabilities = {
-    strongRead: true,
-    conditionalCreate: true,
-    conditionalUpdate: true,
-  };
-
   /** Create with overwrite defaults or atomic create-if-absent enforcement. */
-  public createItem = (
+  public createItem = async (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-    createConfig?: TypeInfoORMCreateConfig,
-  ) => this.createCanonicalItem(newItem, createConfig?.ifAbsent);
+    createConfig?: TypeInfoORMCreateConfig & DataItemOperationConfig<ItemType>,
+  ) => {
+    if (createConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+    return this.createCanonicalItem(newItem, createConfig?.ifAbsent);
+  };
 
   /**
    * Read an item from the database.
@@ -383,8 +381,10 @@ export class DynamoDBDataItemDBDriver<
      * Optional fields to select from the item.
      */
     selectedFields?: (keyof ItemType)[],
-    readConfig?: TypeInfoORMReadConfig,
+    readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<ItemType>,
   ): Promise<Partial<ItemType>> => {
+    if (readConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const selectedFieldParams = buildSelectedFieldParams(selectedFields);
     const command = new GetItemCommand({
@@ -422,8 +422,10 @@ export class DynamoDBDataItemDBDriver<
      * Partial update payload for the item.
      */
     updatedItem: Partial<ItemType>,
-    updateConfig?: TypeInfoORMUpdateConfig,
+    updateConfig?: TypeInfoORMUpdateConfig & DataItemOperationConfig<ItemType>,
   ): Promise<boolean> => {
+    if (updateConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const {
       [uniquelyIdentifyingFieldName]: _unusedUniqueIdentifier,
@@ -497,7 +499,10 @@ export class DynamoDBDataItemDBDriver<
      * Unique identifier value for the item.
      */
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    deleteConfig?: DataItemOperationConfig<ItemType>,
   ): Promise<boolean> => {
+    if (deleteConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName, uniquelyIdentifyingFieldName } = this.config;
     const command = new DeleteItemCommand({
       TableName: tableName,

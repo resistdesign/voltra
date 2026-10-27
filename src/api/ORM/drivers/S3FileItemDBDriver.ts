@@ -30,6 +30,7 @@ import {
   BaseFileLocationInfo,
   CloudFileServiceDriver,
   DATA_ITEM_DB_DRIVER_ERRORS,
+  DataItemOperationConfig,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -84,8 +85,11 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
    * */
   public createItem = async (
     item: Partial<Omit<BaseFileItem, "id">>,
-    createConfig?: TypeInfoORMCreateConfig,
+    createConfig?: TypeInfoORMCreateConfig &
+      DataItemOperationConfig<BaseFileItem>,
   ) => {
+    if (createConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     if (createConfig?.ifAbsent)
       throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName } = this.config;
@@ -108,9 +112,6 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
     });
   };
 
-  /** Canonical reads honor required strong consistency. */
-  public readonly capabilities = { strongRead: true };
-
   /**
    * Read a @{@link BaseFileItem} by its id.
    * @param id Unique identifier value for the file.
@@ -121,8 +122,10 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
   public readItem = async (
     id: string,
     selectFields?: (keyof BaseFileItem)[],
-    _readConfig?: TypeInfoORMReadConfig,
+    _readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<BaseFileItem>,
   ) => {
+    if (_readConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
 
@@ -175,8 +178,11 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
   public updateItem = async (
     uniqueIdentifier: BaseFileItem["id"],
     item: Partial<BaseFileItem>,
-    updateConfig?: TypeInfoORMUpdateConfig,
+    updateConfig?: TypeInfoORMUpdateConfig &
+      DataItemOperationConfig<BaseFileItem>,
   ) => {
+    if (updateConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     if (updateConfig?.preconditions !== undefined) {
       throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     }
@@ -208,8 +214,6 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
       await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
     }
 
-    await this.readItem(uniqueIdentifier);
-
     return true;
   };
 
@@ -218,7 +222,12 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
    * @param id Unique identifier value for the file.
    * @returns True when the item was deleted.
    */
-  public deleteItem = async (id: string) => {
+  public deleteItem = async (
+    id: string,
+    deleteConfig?: DataItemOperationConfig<BaseFileItem>,
+  ) => {
+    if (deleteConfig?.coordination)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName } = this.config;
 
     if (typeof id === "undefined") {

@@ -67,77 +67,101 @@ against TypeInfo; unknown, relationship, array and non-scalar values are refused
 Version fields are ordinary expected numeric fields, not an ORM-managed counter.
 
 `TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT` identifies a rejected atomic
-mutation; validation, DAC and infrastructure failures remain distinct.
-`UNSUPPORTED_CAPABILITY` means the requested guarantee is unavailable. Drivers
-advertise conditional create/update with `capabilities.conditionalCreate` and
-`capabilities.conditionalUpdate`; typed configs pass through the existing
-`createItem` and `updateItem` methods. Drivers must enforce the requested guarantee
-atomically or refuse it. The ORM never emulates guards with an unconditional write.
-Drivers advertise required strong reads with `capabilities.strongRead` and honor
-`readItem(id, selectedFields, { consistency: "strong" })`. Missing capabilities
-are refused before dispatch, including legacy drivers that might ignore config.
-Guarded updates require this guarantee when indexing is configured:
-both the prior snapshot used to remove postings and the post-write snapshot used
-to add postings must be current. Expected-field guards with DAC enabled also
-require a strong prior snapshot to authorize observation of current stored values.
-Without indexing or these snapshot-dependent security checks, atomic guarded
-updates invoke no canonical reads and return the
-successful atomic driver result directly. Guard authorization alone requires
-only the pre-write snapshot. A
-guarded `false` result becomes `CONDITIONAL_WRITE_CONFLICT` before any post-write
-read or index work. Required strong reads pass config through `readItem`
-through the normal read validation, DAC and projection path and refuse unsupported
-drivers. Existing context positions remain unchanged; read options follow context
-on the server and follow selected fields on the client. Routes supply their own
-DAC context. Disabling route field operators preserves supplied guards.
+mutation. Validation, DAC and infrastructure failures remain distinct.
+`UNSUPPORTED_CAPABILITY` means a driver cannot deliver a requested guarantee.
+Configs go directly to existing CRUD methods; there is no capability registry or
+ORM prediction of driver support. A v3 driver must honor a requirement or refuse
+it before side effects. Guards are never emulated with an unconditional write.
 
-- DynamoDB data items use atomic conditional PutItem/UpdateItem and a strongly
-  consistent canonical GetItem. Conditions apply to one canonical item, not to
-  its separate index records. Command-shape specs intercept the SDK; they make
-  no AWS calls and do not establish distributed concurrency behavior themselves.
-- In-memory data items (including the derived relationship driver) check and
-  mutate synchronously within a single driver instance, without yielding between
-  them. Strong reads observe that instance's current state; they provide no
-  cross-process persistence guarantee.
-- S3 HEAD reads and in-memory file reads honor required strong consistency.
-  Maintenance prefers configured strong reads when advertised; best-effort
-  verification cannot authorize destructive healing.
-- S3 and in-memory file drivers do not advertise conditional mutation support;
-  the ORM refuses such requests before file operations. File upload URLs and
-  multi-step renames are not canonical data-item CAS. Their existing strong
-  reader remains available for current metadata reads (S3 HeadObject or local
-  state); this does not make subsequent URL usage or rename steps transactional.
-- Legacy/custom drivers retain ordinary CRUD behavior. They must implement the
-  capability declarations and enforce the configs with the documented guarantees
-  to accept these requirements.
+Strong reads pass through normal validation, full-item DAC and projection.
+Server read options follow context; client options follow selected fields.
+Routes supply server-owned context. Disabling field operators preserves guards.
+Ordinary reads retain their driver's default consistency.
 
-Omitting options preserves existing overwrite/upsert and ordinary-read defaults.
-Create retains its existing validation/permission semantics; this change does not
-introduce create DAC enforcement. Update/read retain their existing DAC checks.
+## Coordinated canonical mutations and maintenance
+
+`DataItemOperationConfig` is a server-only driver contract, composed with configs
+on existing create/read/update/delete methods. It is not a route/client option.
+Its `coordination.inspect(current)` and `coordination.changed(before, after)`
+callbacks contain generic authorization and indexing work. The driver provides
+**exclusion of all competing canonical mutations** of that identity from
+inspection through callback completion, including unconfigured/direct driver
+writes. It must refuse before side effects if it cannot provide that exclusion.
+Images are full detached canonical values; `undefined` means absence. Callbacks
+must not recursively perform coordinated operations on the same store.
+
+- Create/overwrite uses exact prior and committed images, removing old postings.
+- Ordinary and guarded update use exact mutation images, with no before/after
+  reads. No-index, non-DAC mutations need no coordination or snapshot reader.
+- DAC updates evaluate both stored and proposed permissions under exclusion,
+  including field deletion permissions. Expected-field guards additionally
+  authorize READ of probed and current values before evaluating the condition.
+  Delete authorizes the exact item being deleted under the same exclusion.
+  A concurrent replacement cannot invalidate those item-dependent checks.
+- Losing conditions and denied authorization never call `changed` and therefore
+  perform no index writes. A guarded false result is normalized to conflict.
+- Successful indexed mutations hold exclusion through generic index work, so a
+  later canonical writer cannot overtake an earlier writer's index mutations.
+  All issued index writes settle before exclusion is released, including when
+  one fails. Identity changes remove the previous identity's postings first.
+- Orphan cleanup inspects absence under the same exclusion and holds it through
+  structured and text cleanup. Index version checks additionally reject index
+  drift since audit. Recreation waits until cleanup finishes or fails.
+- Reindex, type rebuild and schema reconciliation use coordinated current state,
+  never ordinary list/read snapshots as mutation authority. Lists discover IDs.
+  Supply known `previousItem`/field overrides for out-of-band changes. Raw manual
+  index helpers are trusted administrative operations; callers own exclusion.
+
+`verifyStoredItemForIndexMaintenance` requests a strong read for diagnostics;
+its result does not authorize destructive cleanup. No strong-read recheck or
+post-cleanup restoration is treated as proof against concurrent recreation.
+
+Driver enforcement:
+
+| Driver | Optional reads/conditions | Required coordination |
+| --- | --- | --- |
+| In-memory data and relationships | Strong instance reads; atomic ifAbsent and update conditions | Store-wide queue covers direct mutations, DAC and all index callbacks |
+| In-memory files | Strong metadata reads; conditional writes refused | Store-wide queue covers alias/rename changes and exact metadata images |
+| DynamoDB data | Consistent GetItem; atomic conditional PutItem/UpdateItem | Refused before SDK requests: the current driver cannot exclude external writers through asynchronous index/DAC work |
+| S3 files | Strong HEAD metadata; conditional writes refused | Refused before I/O: HEAD plus later operations is not mutation exclusion |
+
+Thus indexed CRUD and DAC-sensitive mutations on DynamoDB/S3 currently fail
+explicitly; they do not silently run an unsafe approximation. Non-indexed,
+non-DAC CRUD and supported business read/condition options remain available.
+Cleanup returns `maintenanceUnsupported` without index changes when exclusion
+is unavailable; reindex throws `UNSUPPORTED_CAPABILITY`. Future implementations
+must satisfy this same generic contract rather than add service vendor branches.
+No indexing strategy lives in the canonical driver. Derived in-memory relationship
+drivers inherit the contract; wrappers forward configs and preserve errors.
+In-memory file renames refuse an occupied destination with a conflict. Creating
+at an existing rename alias is refused as unsupported before changing state;
+it cannot be represented truthfully as a single-identity overwrite.
+
+Create retains existing validation/permission semantics; this contract does not
+add create DAC. Role/policy resolution is request authorization policy: mutations
+of policy or owner mappings outside the canonical store must themselves be
+coordinated by the application. Item-backed owner changes through this driver
+are covered. Direct external index writes and out-of-band canonical writes do
+not participate in an in-memory instance's exclusion domain.
 
 ## Canonical success followed by index failure
 
-Canonical writes still precede indexing. A losing conditional mutation exits
-before index writes, so it cannot index its proposed payload. A successful
-canonical mutation and all of its indexes are **not** one transaction: an error
-from create/update can mean canonical success followed by partial index failure.
-A guard also does not serialize concurrent index maintenance or make a stale
-pre-update snapshot authoritative for another concurrent writer.
+Canonical and index stores are independent. Exclusion orders participating writers;
+it does **not** supply a transaction, rollback, crash recovery, or atomic visibility
+across stores. Readers can observe a canonical commit before its index work finishes.
+A crash or index failure can leave partial index state.
 
-After an ambiguous failure, use an authorized required-strong `read` of the
-canonical identity and compare the intended state/version before deciding to
-retry. Do not use search results to establish canonical existence or ownership.
-A create retry may now conflict because the original canonical write succeeded;
-that conflict alone does not identify which payload won. An infrastructure error
-can also leave the canonical outcome unknown, so reconcile rather than assume
-that nothing was written.
+A failed postcommit callback throws `CanonicalWriteCommittedError` with
+`message: CANONICAL_WRITE_COMMITTED`, `canonicalCommitted: true` and the original
+`cause`. It does not expose canonical before/after images to application callers.
+No optional read-after-write can reject an otherwise committed canonical operation.
+Infrastructure errors during the canonical request can still leave an unknown
+outcome; reconcile rather than assume that nothing was written.
 
-Trusted maintenance can use `verifyStoredItemForIndexMaintenance` to inspect
-existence/consistency, then `reindexStoredItem` to refresh indexes from persisted
-state. Supply the known `previousItem` when indexed values changed, and the
-existing previous/next index-field overrides when schema changed, so stale
-entries can be removed. Reindex prefers the supported strong reader; its fallback
-on other drivers is best effort. Maintenance APIs are trusted administrative
-surfaces, not substitutes for application DAC. Coordinate repair with other
-writers using the existing maintenance workflow; no new recovery engine or
-cross-record transaction is implied.
+Use an authorized canonical read to establish current state before retrying;
+search results do not establish existence or ownership. Trusted repair can use
+coordinated `reindexStoredItem` with known previous state and schema overrides.
+Repair itself can fail partially in independent stores and must be retried or
+investigated. A create retry may conflict after an earlier committed attempt.
+No cloud/distributed concurrency guarantee is established by intercepted SDK
+command tests; they prove request construction and pre-I/O refusal only.

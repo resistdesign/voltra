@@ -182,3 +182,61 @@ Required consistency now passes through the existing shared `readItem` with `Typ
 Native JSON coverage now verifies config forwarding and binding through authorized reads, strong prior/post-write snapshots despite stale ordinary reads, both maintenance callers, legacy strong-read refusal before dispatch and best-effort cleanup refusal. File-driver cases exercise current local state and intercepted S3 HEAD reads; DynamoDB command cases verify required/default consistency and unchanged projection. Earlier expected-field READ DAC, snapshot-free no-index writes, false conflicts, error diagnostics, route/client context positions and recovery cases continue to pass. Source search found no remaining obsolete read method in src/, site/ or scripts/. The concise general architecture principle is recorded in AGENTS.md; no operational material was added.
 
 Verification in this revision: the initial focused run exposed two fixture adaptation errors (receiver binding on the legacy stub and a duplicate local name); both were corrected. The new maintenance case initially used an unsupported operation, then a scalar with object deep comparison; its final object expectation passes. Final full `yarn test` exits 0 with 1,043 core and 58 native passes, zero failures/errors. `yarn build`, `yarn site:build:demo-types`, unchanged generated metadata diff, `yarn site:build:api`, `yarn site:build:iac`, and `yarn test:exports` exit 0. `yarn site:build:app` (including TypeDoc/finalization) and `yarn test:consumer` also exit 0. Final `git diff --check` passes. These are local repair results; independent checks and owner acceptance remain separate. This product plan stays active until explicit owner acceptance. No dependencies were installed manually. Existing owner merge-gate commit 585627a remains an ancestor. No cloud calls, deployment, seeding, approval or merge; live distributed-concurrency behavior is not established by SDK interception.
+
+## Coordinated v3 CRUD contract — owner architecture directive
+
+The current owner directive supersedes the capability/snapshot designs described above. No generic capability registry will remain. Existing CRUD configs request optional behavior directly; drivers enforce it or throw `UNSUPPORTED_CAPABILITY` before side effects.
+
+Contract proposal: driver-only operation configs carry `coordination` callbacks. `inspect` receives the exact full canonical state (or absence) before an operation. `changed` receives exact before/after mutation images after canonical commit. The driver must exclude every competing mutation of that identity, including ordinary/direct writes, from inspection through callback completion. A coordinated read holds the same exclusion while inspecting present or absent state. Callbacks contain generic DAC/index semantics; exclusion mechanisms remain in drivers. Callbacks are server internal and are not route/client options. No extra CRUD methods are added.
+
+Invariant/threat map:
+
+| Path | Required proof and action | Failure/limitation |
+| --- | --- | --- |
+| Read | Forward requested consistency; DAC evaluates full returned item before projection | Driver refuses unsupported options; ordinary reads have no mutation authority |
+| Update and guard READ DAC | Inspect exact state under exclusion, authorize stored state and expected observations, then enforce caller conditions at commit | Denied authorization/failed condition performs no canonical or index work; asynchronous item authorization cannot race replacement |
+| Create/overwrite | Exact prior/next images under exclusion; remove overwritten postings then index next image | No submitted-image assumption; conflict never invokes changed |
+| Ordinary/guarded update and delete | Exact before/after images; serialized generic index work | No ordinary before/after reads or read-after-write rejection; later writers cannot overtake index work |
+| Orphan cleanup | Inspect absence while excluding recreation through all destructive index work | Strong absence alone is insufficient; refuse before cleanup without exclusion |
+| Reindex | Inspect current image under exclusion through replacement | No fallback to ordinary state; supplied prior snapshot remains necessary for out-of-band drift |
+| Errors | Precommit refusal/authorization/conflict differs from postcommit callback failure | Postcommit failures report canonical commitment and preserve the cause without exposing canonical images; independent stores do not roll back together |
+
+In-memory data/relationship and file storage enforce exclusion for their entire canonical stores. DynamoDB and S3 file drivers currently cannot exclude external writers during asynchronous index callbacks; they must explicitly refuse coordinated operations before requests, while continuing ordinary non-indexed/non-DAC CRUD and supported optional conditions/reads. This is an explicit unavailable guarantee, not silent best effort. All drivers use the same generic indexing algorithm when they can supply the contract. External direct index writes, out-of-band canonical changes and mutable external authorization policy are outside the canonical driver's exclusion domain. No distributed transaction or independent-store rollback is claimed.
+
+- [x] Bind DAC mutation authorization to exact coordinated state first; add concurrent authorization/replacement proof.
+- [x] Replace separate mutation reads with coordinated images for all indexed CRUD; prove stale/missing reads, overwrite cleanup, ordering and committed failure diagnostics.
+- [x] Coordinate cleanup/reindex and remove capability prediction from contracts, wrappers, drivers, callers, docs and tests; prove safe refusal/recreation.
+- [x] Run relevant native and configured framework checks; record actual evidence and remaining limitations. Keep plan active for owner acceptance.
+
+
+### Coordinated contract verification — 2026-10-27
+
+Read the original issue #423, garden guide, sole job/criterion, accepted architecture specification, current owner comment #6448610949 and all four review findings independently. The owner's expanded directive authorizes this contract and safe refusal of essential guarantees; its zero-compatibility policy supersedes historical compatibility wording. No unrelated active plan is part of this work.
+
+The security boundary is enforced first: ordinary/guarded update and delete authorize exact stored state inside driver-owned exclusion, including asynchronous owner resolution and expected-value READ authorization. Native regressions queue replacement both before and after authorization, assert refusal after ownership changes, and inspect canonical state and raw postings. Existing denied matching/nonmatching guard guesses remain covered. Coordination covers item-dependent authorization; external role/policy/owner mappings require their own application coordination.
+
+All indexed CRUD now uses exact before/after images under the same exclusion, including create overwrite cleanup and ordinary updates. Stale, missing and failing ordinary readers cannot corrupt these paths or reject their successful canonical mutations. Concurrent index writers cannot overtake each other. A failed sibling index write waits for every issued write to settle before exclusion ends, including synchronous writer throws. Identity changes remove old-identity postings; in-memory file rename collisions refuse before commit, and ambiguous create-at-alias requests explicitly refuse. Postcommit index failures retain their cause and expose `canonicalCommitted` without returning raw canonical images.
+
+Cleanup holds exclusion across absence proof and structured/text deletion; recreation waits through successful or failed cleanup. Reindex and schema reconciliation use coordinated current state rather than ordinary snapshots. Tests assert canonical and raw structured/text state after recreation and failed maintenance. Index errors named `ITEM_NOT_FOUND` propagate; only the driver's expected absence after a completed callback is suppressed. Diagnostic strong reads are not cleanup authority. Wrappers forward configs, the relationship data driver inherits enforcement, route/client context positions remain unchanged, and the existing public barrels export the new contract/error. No driver capability registry remains in source, site or scripts.
+
+The initial focused service/driver/route/health battery passed 37 cases. Added identity-change and failed-sibling-write checks pass in the native specs. A negative control temporarily restored fail-fast `Promise.all`; the delayed sibling regression failed (`failureReported` was true while full-text work was still pending). The repaired implementation was restored. The final full suite passes 1,047 core and 58 native cases, zero failures/errors. No alternate runner or simulator was added.
+
+Fresh local verification on Node v24.22.0 / Yarn 1.22.22:
+
+| Command | Observed result |
+| --- | --- |
+| `yarn install --frozen-lockfile` | Exit 0; already up to date; lockfile unchanged. |
+| `yarn test` | Exit 0; 1,047 core + 58 native passes; zero failures/errors. |
+| Focused ConditionalWrites, CanonicalConditions, ORMRouteMap and health native JSON specs | Exit 0; 37 passes; subsequent cleanup-error extension also passes all 12 conditional cases and the final full suite. |
+| `yarn build` | Exit 0; bundles, declarations and package preparation. |
+| `yarn site:build:demo-types` | Exit 0; generated metadata unchanged. |
+| `yarn site:build:api` | Exit 0. |
+| `yarn site:build:app` | Exit 0, including TypeDoc/finalization. |
+| `yarn site:build:iac` | Exit 0; local generation only. |
+| `yarn test:exports` | Exit 0; export validation. |
+| `yarn test:consumer` | Exit 0; packed-package type/runtime/import checks. |
+| `git diff --check` | Exit 0. |
+
+Universal requirements are generic authorization/index semantics plus honor-or-refuse driver enforcement. Business consistency and conditions remain optional configured requests. In-memory stores supply exclusion; current DynamoDB/S3 drivers refuse indexed CRUD, DAC-sensitive mutations and coordinated reindex before I/O, while cleanup reports `maintenanceUnsupported`. This deliberately exposes an unavailable guarantee rather than weakening it. Non-indexed/non-DAC CRUD and supported read/condition requests remain available. SDK interception proves pre-I/O refusal and request construction, not live distributed behavior.
+
+Canonical/index stores still have no shared transaction or rollback: canonical commit can precede index visibility, and crashes/failures can leave partial indexes requiring coordinated repair with known previous state. Raw administrative index helpers and external writers are outside this contract. No deployment, cloud integration, seeding, push, PR approval/merge or lifecycle settlement was performed. Owner commits f6da4a6c and 585627a remain ancestors. All checklist work is verified; this plan remains active until explicit owner acceptance.
