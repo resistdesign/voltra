@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
-import { TypeInfoORMService } from "../TypeInfoORMService";
+import { TypeInfoORMService, getDriverMethodWithModifiedError } from "../TypeInfoORMService";
 import { DynamoDBDataItemDBDriver } from "./DynamoDBDataItemDBDriver";
 import { InMemoryFileItemDBDriver } from "./InMemoryFileItemDBDriver";
 import { S3FileItemDBDriver } from "./S3FileItemDBDriver";
@@ -23,8 +23,8 @@ export const runCanonicalConditionCommands = async () => {
     if (failure) throw failure;
     return { Attributes: { id: { S: "pair" } }, Item: { id: { S: "pair" } } };
   };
-  await driver.createItemIfAbsent({ name: "first" });
-  await driver.updateItemConditionally(
+  await driver.createItem({ name: "first" }, { ifAbsent: true });
+  await driver.updateItem(
     "pair",
     { guard0: 2, name: "next" },
     {
@@ -61,20 +61,42 @@ export const runCanonicalConditionCommands = async () => {
   assert.equal(strong.ConsistentRead, true);
   assert.equal(defaultCreate.ConditionExpression, undefined);
   assert.equal(defaultUpdate.ConditionExpression, undefined);
-  await driver.updateItemConditionally("pair", { count: 2 }, {
-    preconditions: { expected: { count: 7 } },
-    fieldOperators: { count: TypeInfoORMUpdateOperators.NUMBER.DECREMENT },
-  });
+  await driver.updateItem(
+    "pair",
+    { count: 2 },
+    {
+      preconditions: { expected: { count: 7 } },
+      fieldOperators: { count: TypeInfoORMUpdateOperators.NUMBER.DECREMENT },
+    },
+  );
   const decrement = commands.at(-1);
   const decrementValues = unmarshall(decrement.ExpressionAttributeValues);
   assert.equal(decrementValues[":count_decrement"], -2);
   const usedValues = new Set(
-    `${decrement.UpdateExpression} ${decrement.ConditionExpression}`.match(/:[\w]+/g),
+    `${decrement.UpdateExpression} ${decrement.ConditionExpression}`.match(
+      /:[\w]+/g,
+    ),
   );
   assert.deepEqual(new Set(Object.keys(decrementValues)), usedValues);
   failure = Object.assign(new Error("lost"), {
     name: "ConditionalCheckFailedException",
+    $metadata: { requestId: "guarded-put", httpStatusCode: 400 },
   });
+  const wrappedCreate = getDriverMethodWithModifiedError(
+    { typeName: "Record" }, driver, "createItem",
+  );
+  await assert.rejects(
+    () => wrappedCreate({ name: "loser" }, { ifAbsent: true }),
+    (error: any) => {
+      assert.ok(error instanceof Error);
+      assert.equal(error.name, "Error");
+      assert.ok(error.stack?.includes("CONDITIONAL_WRITE_CONFLICT"));
+      assert.equal(error.cause, failure);
+      assert.equal((error.cause as any).$metadata.requestId, "guarded-put");
+      assert.equal((error as any).typeName, "Record");
+      return true;
+    },
+  );
   const conflict = async (call: () => Promise<unknown>) => {
     try {
       await call();
@@ -84,10 +106,10 @@ export const runCanonicalConditionCommands = async () => {
     }
   };
   const createConflict = await conflict(() =>
-    driver.createItemIfAbsent({ name: "loser" }),
+    driver.createItem({ name: "loser" }, { ifAbsent: true }),
   );
   const updateConflict = await conflict(() =>
-    driver.updateItemConditionally(
+    driver.updateItem(
       "pair",
       { name: "loser" },
       { preconditions: { exists: true } },
@@ -95,7 +117,7 @@ export const runCanonicalConditionCommands = async () => {
   );
   failure = new Error("NETWORK_UNAVAILABLE");
   const infrastructure = await conflict(() =>
-    driver.createItemIfAbsent({ name: "retry" }),
+    driver.createItem({ name: "retry" }, { ifAbsent: true }),
   );
   assert.equal(
     createConflict,
@@ -123,7 +145,16 @@ export const runFileCapabilityDeclarations = async () => {
   for (const driver of drivers) {
     // Direct driver callers must also receive a refusal rather than an ignored guard.
     await assert.rejects(
-      () => driver.updateItem("one", { name: "test" }, { preconditions: { exists: true } }),
+      () => driver.createItem({ name: "test" }, { ifAbsent: true }),
+      { message: TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY },
+    );
+    await assert.rejects(
+      () =>
+        driver.updateItem(
+          "one",
+          { name: "test" },
+          { preconditions: { exists: true } },
+        ),
       { message: TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY },
     );
     driver.createItem =

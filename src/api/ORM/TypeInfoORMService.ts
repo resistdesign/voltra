@@ -152,9 +152,7 @@ type DataItemDBDriverMethodName =
   | "updateItem"
   | "deleteItem"
   | "listItems"
-  | "readItemStronglyConsistent"
-  | "createItemIfAbsent"
-  | "updateItemConditionally";
+  | "readItemStronglyConsistent";
 
 /**
  * Wrap a driver method to attach extra fields to thrown errors.
@@ -190,11 +188,39 @@ export const getDriverMethodWithModifiedError = <
         driver[driverMethodName] as (...args: any[]) => Promise<any>
       ).apply(driver, args);
     } catch (error: any) {
-      throw {
-        ...(error as Record<any, any>),
-        message: error?.message,
-        ...extendedData,
-      };
+      if (
+        error !== null &&
+        (typeof error === "object" || typeof error === "function")
+      ) {
+        try {
+          Object.assign(error, extendedData);
+        } catch {
+          // Frozen provider errors still retain their prototype and all own
+          // diagnostics, including non-enumerable stack/cause fields.
+          const descriptors = Object.getOwnPropertyDescriptors(error);
+          // Some runtimes expose stack via an accessor requiring Error slots.
+          if (error instanceof Error && descriptors.stack) {
+            descriptors.stack = {
+              value: error.stack,
+              enumerable: descriptors.stack.enumerable,
+              configurable: descriptors.stack.configurable,
+              writable: false,
+            };
+          }
+          for (const key of Object.keys(extendedData)) delete descriptors[key];
+          const enriched = Object.create(
+            Object.getPrototypeOf(error),
+            descriptors,
+          );
+          Object.assign(enriched, extendedData);
+          throw enriched;
+        }
+        throw error;
+      }
+      throw Object.assign(
+        new Error(String(error), { cause: error }),
+        extendedData,
+      );
     }
   }) as MethodType;
 
@@ -1214,13 +1240,10 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       "deleteItem",
       "listItems",
       "readItemStronglyConsistent",
-      "createItemIfAbsent",
-      "updateItemConditionally",
     ];
-    const driverWrapper: DataItemDBDriver<any, any> = {} as DataItemDBDriver<
-      any,
-      any
-    >;
+    const driverWrapper: DataItemDBDriver<any, any> = {
+      capabilities: driver.capabilities,
+    } as DataItemDBDriver<any, any>;
 
     for (const dM of driverMethodList) {
       if (typeof driver[dM] !== "function") continue;
@@ -3449,12 +3472,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     this.validate(typeName, item, TypeOperation.CREATE);
     const driver = this.getDriverInternal(typeName);
     const cleanItem = this.getCleanItem(typeName, item);
-    const create = createConfig?.ifAbsent
-      ? driver.createItemIfAbsent
-      : driver.createItem;
-    if (!create)
+    if (createConfig?.ifAbsent && !driver.capabilities?.conditionalCreate)
       throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    const newIdentifier = await create.call(driver, cleanItem);
+    const newIdentifier = await driver.createItem(cleanItem, createConfig);
     const { primaryField } = this.getTypeInfo(typeName);
     const indexedItem = {
       ...cleanItem,
@@ -3639,15 +3659,21 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item,
           mergedFieldsResources,
         );
-        const update =
-          updateConfig?.preconditions !== undefined
-            ? driver.updateItemConditionally
-            : driver.updateItem;
-        if (!update)
+        const guarded = updateConfig?.preconditions !== undefined;
+        if (
+          guarded &&
+          (!driver.capabilities?.conditionalUpdate ||
+            !driver.readItemStronglyConsistent)
+        )
           throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+        // Guarded indexing needs current canonical snapshots on both sides of
+        // the mutation, even when ordinary reads are eventually consistent.
+        const readSnapshot = guarded
+          ? driver.readItemStronglyConsistent!
+          : driver.readItem;
         let existingItem: Partial<TypeInfoDataItem> | undefined;
         try {
-          existingItem = await driver.readItem(primaryFieldValue);
+          existingItem = await readSnapshot.call(driver, primaryFieldValue);
         } catch (error: any) {
           if (error?.message !== DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
             throw error;
@@ -3691,19 +3717,14 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             }
           }
         }
-        const result =
-          updateConfig?.preconditions !== undefined
-            ? await driver.updateItemConditionally!(
-                primaryFieldValue,
-                cleanItem,
-                updateConfig,
-              )
-            : await driver.updateItem(
-                primaryFieldValue,
-                cleanItem,
-                updateConfig,
-              );
-        const updatedItem = await driver.readItem(primaryFieldValue);
+        const result = await driver.updateItem(
+          primaryFieldValue,
+          cleanItem,
+          updateConfig,
+        );
+        if (guarded && result === false)
+          throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+        const updatedItem = await readSnapshot.call(driver, primaryFieldValue);
 
         if (existingItem) {
           await this.replaceItemIndexes(typeName, existingItem, updatedItem);

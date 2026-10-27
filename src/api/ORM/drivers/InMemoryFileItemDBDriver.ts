@@ -1,5 +1,6 @@
 import {
   TypeInfoORMServiceError,
+  TypeInfoORMCreateConfig,
   TypeInfoORMUpdateConfig,
 } from "../../../common/TypeInfoORM";
 import {
@@ -128,7 +129,10 @@ export class InMemoryFileItemDBDriver implements DataItemDBDriver<
      * New file item payload without the id field.
      */
     item: Partial<Omit<BaseFileItem, "id">>,
+    createConfig?: TypeInfoORMCreateConfig,
   ): Promise<string> => {
+    if (createConfig?.ifAbsent)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { generateUniqueIdentifier } = this.config;
 
     if (!item?.name) {

@@ -16,6 +16,7 @@ import type {
 } from "../../../common/SearchTypes";
 import {
   TypeInfoORMServiceError,
+  TypeInfoORMCreateConfig,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -115,15 +116,17 @@ export class InMemoryDataItemDBDriver<
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
-  /** Create with the existing overwrite semantics. */
+  /** Atomic conditional configs supported by the canonical mutation methods. */
+  public readonly capabilities = {
+    conditionalCreate: true,
+    conditionalUpdate: true,
+  };
+
+  /** Create with overwrite defaults or atomic create-if-absent enforcement. */
   public createItem = (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => this.createCanonicalItem(newItem);
-
-  /** Atomically refuse an occupied generated identity within this driver instance. */
-  public createItemIfAbsent = (
-    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => this.createCanonicalItem(newItem, true);
+    createConfig?: TypeInfoORMCreateConfig,
+  ) => this.createCanonicalItem(newItem, createConfig?.ifAbsent);
 
   /**
    * Read an item from memory.
@@ -222,17 +225,6 @@ export class InMemoryDataItemDBDriver<
 
     return true;
   };
-
-  /** Atomically guard an existing item and apply the update without yielding. */
-  public updateItemConditionally = (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    updatedItem: Partial<ItemType>,
-    updateConfig: TypeInfoORMUpdateConfig,
-  ) =>
-    this.updateItem(uniqueIdentifier, updatedItem, {
-      ...updateConfig,
-      preconditions: updateConfig.preconditions ?? { exists: true },
-    });
 
   /**
    * Delete an item from memory.

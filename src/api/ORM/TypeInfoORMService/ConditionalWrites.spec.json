@@ -1,15 +1,12 @@
 {
-  "file": "./TypeInfoORMService.conditional.test-utils.ts",
+  "file": "./ConditionalWrites.test-utils.ts",
   "tests": [
     {
       "export": "runConditionalCanonicalWrites",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
-        "createStatuses": [
-          "fulfilled",
-          "rejected"
-        ],
+        "createStatuses": ["fulfilled", "rejected"],
         "conflict": "CONDITIONAL_WRITE_CONFLICT",
         "missing": "CONDITIONAL_WRITE_CONFLICT",
         "stale": "CONDITIONAL_WRITE_CONFLICT",
@@ -18,10 +15,7 @@
           "name": "winner",
           "score": 0
         },
-        "updateStatuses": [
-          "fulfilled",
-          "rejected"
-        ],
+        "updateStatuses": ["fulfilled", "rejected"],
         "after": {
           "id": "one",
           "name": "winner",
@@ -40,9 +34,7 @@
         "createConflict": "CONDITIONAL_WRITE_CONFLICT",
         "updateConflict": "CONDITIONAL_WRITE_CONFLICT",
         "losingIds": [],
-        "winnerIds": [
-          "one"
-        ],
+        "winnerIds": ["one"],
         "indexFailure": "INDEX_UNAVAILABLE",
         "canonical": {
           "id": "one",
@@ -50,9 +42,7 @@
           "score": 0
         },
         "consistency": "strong",
-        "repairedIds": [
-          "one"
-        ],
+        "repairedIds": ["one"],
         "staleIds": []
       }
     },
@@ -65,12 +55,7 @@
           "id": "one",
           "name": "visible"
         },
-        "selections": [
-          "ALL",
-          "ALL",
-          "ALL",
-          "ALL"
-        ],
+        "selections": ["ALL", "ALL", "ALL", "ALL"],
         "denied": "INVALID_OPERATION",
         "updateDenied": "INVALID_OPERATION",
         "missingContext": "MISSING_ACCESSING_ROLE",
@@ -112,9 +97,7 @@
           "secret": "hidden"
         },
         "losingIds": [],
-        "visibleIds": [
-          "one"
-        ],
+        "visibleIds": ["one"],
         "permitted": true,
         "stale": "CONDITIONAL_WRITE_CONFLICT",
         "after": {
@@ -123,10 +106,48 @@
           "score": 0,
           "secret": "hidden"
         },
-        "permittedIds": [
-          "one"
-        ],
+        "permittedIds": ["one"],
         "staleIds": []
+      }
+    },
+    {
+      "export": "runGuardedStaleReads",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ordinaryReads": 0,
+        "canonical": {
+          "name": "committed",
+          "score": 1,
+          "id": "one"
+        },
+        "obsoleteIds": [],
+        "currentIds": [],
+        "committedIds": ["one"]
+      }
+    },
+    {
+      "export": "runConditionalFalseResult",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "conflict": "CONDITIONAL_WRITE_CONFLICT",
+        "reads": 1,
+        "mutations": 1,
+        "indexWork": 0,
+        "canonical": {
+          "id": "one",
+          "name": "winner",
+          "score": 0
+        }
+      }
+    },
+    {
+      "export": "runRejectedErrorDiagnostics",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "checks": [true, true, true]
       }
     }
   ]

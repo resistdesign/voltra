@@ -35,6 +35,7 @@ import {
 } from "../../../common/TypeParsing/TypeInfo";
 import {
   TypeInfoORMServiceError,
+  TypeInfoORMCreateConfig,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -351,15 +352,17 @@ export class DynamoDBDataItemDBDriver<
     return newItemId as ItemType[UniquelyIdentifyingFieldName];
   };
 
-  /** Create with the existing overwrite semantics. */
+  /** Atomic conditional configs supported by the canonical mutation methods. */
+  public readonly capabilities = {
+    conditionalCreate: true,
+    conditionalUpdate: true,
+  };
+
+  /** Create with overwrite defaults or atomic create-if-absent enforcement. */
   public createItem = (
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => this.createCanonicalItem(newItem);
-
-  /** Atomically refuse an occupied identity using a conditional canonical put. */
-  public createItemIfAbsent = (
-    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ) => this.createCanonicalItem(newItem, true);
+    createConfig?: TypeInfoORMCreateConfig,
+  ) => this.createCanonicalItem(newItem, createConfig?.ifAbsent);
 
   /**
    * Read an item from the database.
@@ -508,17 +511,6 @@ export class DynamoDBDataItemDBDriver<
       };
     }
   };
-
-  /** Atomically require existence and expected values before applying operators. */
-  public updateItemConditionally = (
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    updatedItem: Partial<ItemType>,
-    updateConfig: TypeInfoORMUpdateConfig,
-  ) =>
-    this.updateItem(uniqueIdentifier, updatedItem, {
-      ...updateConfig,
-      preconditions: updateConfig.preconditions ?? { exists: true },
-    });
 
   /**
    * Delete an item from the database.

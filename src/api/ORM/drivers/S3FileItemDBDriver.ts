@@ -5,6 +5,7 @@
  */
 import {
   TypeInfoORMServiceError,
+  TypeInfoORMCreateConfig,
   TypeInfoORMUpdateConfig,
 } from "../../../common/TypeInfoORM";
 import {
@@ -80,7 +81,12 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
    * @param item New file item payload without the id field.
    * @returns Generated file id.
    * */
-  public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
+  public createItem = async (
+    item: Partial<Omit<BaseFileItem, "id">>,
+    createConfig?: TypeInfoORMCreateConfig,
+  ) => {
+    if (createConfig?.ifAbsent)
+      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
 

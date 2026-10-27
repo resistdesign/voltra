@@ -1,23 +1,28 @@
-import { TypeInfoORMService } from "./TypeInfoORMService";
-import { InMemoryDataItemDBDriver } from "./drivers/InMemoryDataItemDBDriver";
-import { StructuredInMemoryBackend } from "./drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
-import { createIndexBackend } from "../Indexing/query";
-import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "./getTypeInfoORMIndexingConfigFromTypeInfoMap";
+import assert from "node:assert/strict";
+import { TypeInfoORMService } from "../TypeInfoORMService";
+import { InMemoryDataItemDBDriver } from "../drivers/InMemoryDataItemDBDriver";
+import { StructuredInMemoryBackend } from "../drivers/InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend";
+import { qualifyIndexField } from "../../Indexing/fieldQualification";
+import { createIndexBackend } from "../../Indexing/query";
+import { getTypeInfoORMIndexingConfigFromTypeInfoMap } from "../getTypeInfoORMIndexingConfigFromTypeInfoMap";
 import {
   TypeInfoORMServiceError,
   TypeInfoORMUpdateOperators,
   OperationGroup,
-} from "../../common/TypeInfoORM";
-import { TypeInfoMap, TypeOperation } from "../../common/TypeParsing/TypeInfo";
+} from "../../../common/TypeInfoORM";
+import {
+  TypeInfoMap,
+  TypeOperation,
+} from "../../../common/TypeParsing/TypeInfo";
 import {
   ComparisonOperators,
   LogicalOperators,
-} from "../../common/SearchTypes";
+} from "../../../common/SearchTypes";
 import {
   DACConstraintType,
   WILDCARD_SIGNIFIER_PROTOTYPE,
-} from "../DataAccessControl";
-import type { DataItemDBDriver } from "./drivers/common/Types";
+} from "../../DataAccessControl";
+import type { DataItemDBDriver } from "../drivers/common/Types";
 
 type Item = { id: string; name: string; score: number; secret?: string };
 const field = (type: "string" | "number", optional = false) => ({
@@ -466,4 +471,181 @@ export const runConditionalGuardReadAccess = async () => {
     permittedIds: await find("permitted"),
     staleIds: await find("visible"),
   };
+};
+
+/** Guarded reindexing must use current snapshots even if ordinary reads lag. */
+export const runGuardedStaleReads = async () => {
+  const driver = makeDriver();
+  const values = new StructuredInMemoryBackend();
+  const backend = createIndexBackend({ values, valueWriter: values });
+  const orm = new TypeInfoORMService({
+    ...config(driver),
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend,
+    }),
+  });
+  await orm.create("Record", { name: "obsolete", score: 0 });
+  const read = driver.readItem;
+  const obsolete = await read("one");
+  await orm.update("Record", { id: "one", name: "current" });
+  let ordinaryReads = 0;
+  driver.readItem = async () => {
+    ordinaryReads++;
+    return obsolete;
+  };
+  await orm.update(
+    "Record",
+    { id: "one", name: "committed", score: 1 },
+    { preconditions: { expected: { name: "current", score: 0 } } },
+  );
+  driver.readItem = read;
+  // Inspect persisted postings directly so canonical filtering cannot hide debris.
+  for (const name of ["obsolete", "current", "committed"]) {
+    const postings = await values.terms.query(qualifyIndexField("Record", "name"), "eq", name);
+    assert.equal(postings.candidateIds.length, name === "committed" ? 1 : 0);
+  }
+  const find = async (name: string) =>
+    (
+      await orm.list(
+        "Record",
+        {
+          itemsPerPage: 10,
+          criteria: {
+            logicalOperator: LogicalOperators.AND,
+            fieldCriteria: [
+              {
+                fieldName: "name",
+                operator: ComparisonOperators.EQUALS,
+                value: name,
+              },
+            ],
+          },
+        },
+        ["id"],
+      )
+    ).items.map((item) => item.id);
+  return {
+    ordinaryReads,
+    canonical: await read("one"),
+    obsoleteIds: await find("obsolete"),
+    currentIds: await find("current"),
+    committedIds: await find("committed"),
+  };
+};
+
+/** A driver may return false for a lost guard; no post-write work may follow. */
+export const runConditionalFalseResult = async () => {
+  const item = { id: "one", name: "winner", score: 0 };
+  let reads = 0;
+  let mutations = 0;
+  let indexWork = 0;
+  const driver: DataItemDBDriver<Item, "id"> = {
+    capabilities: { conditionalUpdate: true },
+    createItem: async () => "one",
+    readItem: async () => {
+      throw new Error("ORDINARY_READ");
+    },
+    readItemStronglyConsistent: async () => {
+      reads++;
+      return { ...item };
+    },
+    updateItem: async (_id, _patch, options) => {
+      if (!options?.preconditions) throw new Error("MISSING_GUARD");
+      mutations++;
+      return false;
+    },
+    deleteItem: async () => true,
+    listItems: async () => ({ items: [] }),
+  };
+  const orm = new TypeInfoORMService(config(driver));
+  // Observe both index entry points independently of any backend's no-op behavior.
+  (orm as any).replaceItemIndexes = (orm as any).indexItemIndexes =
+    async () => {
+      indexWork++;
+    };
+  const conflict = await errorOf(() =>
+    orm.update(
+      "Record",
+      { id: "one", name: "loser" },
+      { preconditions: { exists: true } },
+    ),
+  );
+  const noStrongReader = new TypeInfoORMService(
+    config({
+      ...driver,
+      readItemStronglyConsistent: undefined,
+    }),
+  );
+  assert.equal(
+    await errorOf(() =>
+      noStrongReader.update(
+        "Record",
+        { id: "one", name: "loser" },
+        { preconditions: { exists: true } },
+      ),
+    ),
+    TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY,
+  );
+  return { conflict, reads, mutations, indexWork, canonical: item };
+};
+
+/** Rejections retain provider and JavaScript diagnostics through the ORM wrapper. */
+export const runRejectedErrorDiagnostics = async () => {
+  const driver = makeDriver();
+  await driver.createItem({ name: "winner", score: 0 });
+  const provider = Object.assign(new Error("provider failure"), {
+    name: "ConditionalCheckFailedException",
+    $metadata: { requestId: "request-one", httpStatusCode: 400 },
+  });
+  const conditional = new Error(
+    TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT,
+    { cause: provider },
+  );
+  const infrastructure = new TypeError("NETWORK_UNAVAILABLE", {
+    cause: new Error("connection reset"),
+  });
+  Object.defineProperty(infrastructure, "$metadata", {
+    value: { requestId: "request-two" },
+  });
+  const errors = [
+    infrastructure,
+    conditional,
+    Object.freeze(new RangeError("FROZEN", { cause: provider })),
+  ];
+  const checks: boolean[] = [];
+  for (const error of errors) {
+    driver.readItem = async () => {
+      throw error;
+    };
+    driver.updateItem = async () => {
+      throw error;
+    };
+    const orm = new TypeInfoORMService(config(driver));
+    try {
+      if (error === conditional) {
+        await orm.update(
+          "Record",
+          { id: "one", name: "loser" },
+          { preconditions: { exists: true } },
+        );
+      } else {
+        await orm.read("Record", "one");
+      }
+      checks.push(false);
+    } catch (received: any) {
+      checks.push(
+        received instanceof Error &&
+          Object.getPrototypeOf(received) === Object.getPrototypeOf(error) &&
+          (Object.isFrozen(error) || received === error) &&
+          received.name === error.name &&
+          received.stack === error.stack &&
+          received.message === error.message &&
+          received.cause === error.cause &&
+          (received as any).$metadata === (error as any).$metadata &&
+          (received.cause as any)?.$metadata === (error.cause as any)?.$metadata &&
+          (received as any).typeName === "Record",
+      );
+    }
+  }
+  return { checks };
 };

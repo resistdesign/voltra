@@ -7,7 +7,10 @@ import {
   ListItemsConfig,
   ListItemsResults,
 } from "../../../../common/SearchTypes";
-import type { TypeInfoORMUpdateConfig } from "../../../../common/TypeInfoORM/Types";
+import type {
+  TypeInfoORMCreateConfig,
+  TypeInfoORMUpdateConfig,
+} from "../../../../common/TypeInfoORM/Types";
 
 /**
  * The errors that can be thrown by a {@link DataItemDBDriver}.
@@ -71,28 +74,24 @@ export type DataItemDBDriver<
   ItemType extends Record<string, any>,
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
+  /** Explicit opt-in guarantees for configs on existing mutation methods.
+   * Missing capabilities are refused by the ORM before mutation.
+   */
+  capabilities?: {
+    /** createItem atomically enforces ifAbsent. */
+    conditionalCreate?: boolean;
+    /** updateItem atomically enforces preconditions and never upserts. */
+    conditionalUpdate?: boolean;
+  };
   /**
-   * Create a new item in the data store.
-   * @param newItem New item payload without the identifying field.
+   * Create an item, atomically refusing an occupied identity when ifAbsent is set.
+   * Unsupported drivers must refuse the requirement, never ignore it.
    * @returns Generated identifier for the created item.
    */
   createItem(
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+    createConfig?: TypeInfoORMCreateConfig,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
-  /** Atomically create only if the generated identity is absent; conflicts throw
-   * TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT. Omit if unsupported.
-   */
-  createItemIfAbsent?(
-    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
-  /** Atomically check updateConfig.preconditions and mutate an existing item.
-   * Never upsert. Omit if unsupported; ordinary updateItem is not a fallback.
-   */
-  updateItemConditionally?(
-    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    updatedItem: Partial<ItemType>,
-    updateConfig: TypeInfoORMUpdateConfig,
-  ): Promise<boolean>;
   /**
    * Read an item from the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
@@ -114,7 +113,10 @@ export type DataItemDBDriver<
   ): Promise<Partial<ItemType>>;
   /**
    * Update an item in the data store.
-   * ORM guards are dispatched through updateItemConditionally, never emulated here.
+   * Atomically enforce supplied preconditions, requiring an existing target.
+   * Unsupported drivers must refuse guards. A failed guard throws
+   * CONDITIONAL_WRITE_CONFLICT or returns false; the ORM normalizes false.
+   * Guarded ORM indexing additionally requires readItemStronglyConsistent.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.

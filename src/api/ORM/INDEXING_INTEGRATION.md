@@ -69,9 +69,14 @@ Version fields are ordinary expected numeric fields, not an ORM-managed counter.
 `TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT` identifies a rejected atomic
 mutation; validation, DAC and infrastructure failures remain distinct.
 `UNSUPPORTED_CAPABILITY` means the requested guarantee is unavailable. Drivers
-advertise conditional create/update through optional `createItemIfAbsent` and
-`updateItemConditionally` methods. The ORM never emulates them with a read followed
-by an unconditional write. Required strong reads use `readItemStronglyConsistent`
+advertise conditional create/update with `capabilities.conditionalCreate` and
+`capabilities.conditionalUpdate`; typed configs pass through the existing
+`createItem` and `updateItem` methods. Drivers must enforce the requested guarantee
+atomically or refuse it. The ORM never emulates guards with an unconditional write.
+Guarded updates also require `readItemStronglyConsistent`: both the prior snapshot
+used to remove postings and the post-write snapshot used to add postings must be
+current. A guarded `false` result becomes `CONDITIONAL_WRITE_CONFLICT` before any
+post-write read or index work. Required strong reads use `readItemStronglyConsistent`
 through the normal read validation, DAC and projection path and refuse unsupported
 drivers. Existing context positions remain unchanged; read options follow context
 on the server and follow selected fields on the client. Routes supply their own
@@ -91,7 +96,8 @@ DAC context. Disabling route field operators preserves supplied guards.
   reader remains available for current metadata reads (S3 HeadObject or local
   state); this does not make subsequent URL usage or rename steps transactional.
 - Legacy/custom drivers retain ordinary CRUD behavior. They must implement the
-  optional methods with the documented guarantees to accept these requirements.
+  capability declarations and enforce the configs with the documented guarantees
+  to accept these requirements.
 
 Omitting options preserves existing overwrite/upsert and ordinary-read defaults.
 Create retains its existing validation/permission semantics; this change does not

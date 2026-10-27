@@ -12,11 +12,11 @@ Goal: expose reusable conditional canonical CRUD and required strong reads throu
 
 ## Design and verification notes
 
-The original issue and current source agree on the gap. Optional driver methods advertise enforceable capabilities; legacy/file drivers must never receive a conditional request as an unconditional write. Conditions compare scalar field values and always require an existing update target. Strong-read config is appended after the existing server context argument; the client-safe API forwards it without accepting context. Canonical and index writes remain separate operations.
+The original issue and current source agree on the gap. Optional driver capability declarations advertise atomic config enforcement through existing create/update methods; legacy/file drivers must never receive a conditional request as an unconditional write. Conditions compare scalar field values and always require an existing update target. Strong-read config is appended after the existing server context argument; the client-safe API forwards it without accepting context. Canonical and index writes remain separate operations.
 
 ## Implementation review
 
-Generic create/read options and update guards are exported through the existing common barrel. Driver capabilities are optional; DynamoDB and in-memory data drivers implement them, file and legacy drivers are refused before mutation. In-memory relationship drivers inherit support; indexing relationship adapters, HealthStore, list/maintenance helpers and app hook wrappers retain their contracts. Route handlers preserve server-owned context; operator filtering preserves guards. The error wrapper now binds the receiver, preserves supported optional methods, and enriches asynchronous rejections while retaining their message. Existing maintenance reindex consequently retains its preferred strong reader through the wrapper.
+Generic create/read options and update guards are exported through the existing common barrel. Driver capability declarations are optional; DynamoDB and in-memory data drivers enforce conditional configs, file and legacy drivers are refused before mutation. In-memory relationship drivers inherit support; indexing relationship adapters, HealthStore, list/maintenance helpers and app hook wrappers retain their contracts. Route handlers preserve server-owned context; operator filtering preserves guards. The error wrapper now binds the receiver, preserves supported optional methods, and enriches asynchronous rejections while retaining their message. Existing maintenance reindex consequently retains its preferred strong reader through the wrapper.
 
 Behavioral verification uses native JSON specs with real in-memory canonical/index backends and a single index-writer fault injection. DynamoDB SDK sends are intercepted with zero AWS calls; command aliases, old expected values versus increment deltas, existence checks, strong dispatch, conflict translation and unchanged infrastructure errors are checked without a second backend simulator. File-driver refusal specs replace I/O methods with failures to ensure unsupported requests never reach them. External consumer smoke also compiles the new public types and verifies that client calls cannot supply server DAC context.
 
@@ -77,3 +77,37 @@ Fresh local verification on the repaired source (Node v24.22.0, Yarn 1.22.22):
 | `git diff --check` | Exit 0. |
 
 No live cloud operations, deployment or application data seeding. These are local results, not owner acceptance; the plan stays active pending acceptance.
+
+## Owner revisions — 2026-10-27
+
+- [x] Require strong snapshots before and after guarded updates; regress stale ordinary reads.
+- [x] Normalize a guarded false result to conflict before post-write reads/index work.
+- [x] Preserve rejected error identity and diagnostics with typeName.
+- [x] Pass typed configs through existing driver create/update methods; reconcile capabilities, callers and docs.
+- [x] Move only the conditional service spec/helper pair into TypeInfoORMService/.
+- [x] Run relevant native regressions and framework checks; record evidence.
+
+These revisions implement the current owner threads on PR #424 within issue #423. The existing guard READ DAC repair remains required. Strong snapshots address single-writer stale indexing; they do not serialize concurrent index writers.
+
+Conditional configs now flow through `createItem`/`updateItem`, with optional capability declarations preserved by the driver wrapper. DynamoDB and in-memory data drivers retain atomic enforcement; file drivers explicitly reject guarded configs even for direct callers, and legacy drivers remain refused by the ORM. Guarded updates require strong canonical snapshots both before and after mutation. False results become conflicts before post-write reads/indexing. Existing defaults and expected-field READ authorization remain intact. Rejections retain Error identity/prototype, name, stack, cause and provider diagnostics with typeName; frozen errors retain their prototype and own diagnostic descriptors, with stack materialized for runtime compatibility.
+
+Moved only the requested conditional spec/helper pair under `TypeInfoORMService/`. Updated route forwarding expectations to include the guard snapshots (one losing guard read, two successful mutation snapshots and one explicit strong read). No route/client API or server context argument changed.
+
+Focused verification: the conditional, canonical-driver and route JSON specs pass 13 tests with zero failures/errors. The stale-read case makes ordinary reads return an obsolete version across a successful CAS, then checks canonical state, raw stored postings and ORM lookup results. The false-return stub verifies one pre-write read, one conditional mutation and no index work/post-write read, plus refusal when a strong reader is unavailable. Rejected-error tests cover infrastructure TypeError identity, conditional cause/provider metadata and frozen Error diagnostics. The intercepted DynamoDB conditional put verifies its SDK cause and metadata survive wrapping. Temporarily reintroducing each of the three defects independently made its new regression fail; the repaired source was restored before final checks.
+
+Fresh local verification (Node v24.22.0, Yarn 1.22.22):
+
+| Command | Observed result |
+| --- | --- |
+| `yarn install --frozen-lockfile` | Exit 0; already up to date; lockfile unchanged. |
+| `yarn test` | Exit 0; 1,040 core and 58 native passes; zero failures/errors. |
+| `yarn site:build:demo-types` and generated metadata diff check | Exit 0; metadata unchanged. |
+| `yarn build` | Exit 0, including declarations and package preparation. |
+| `yarn site:build:api` | Exit 0. |
+| `yarn site:build:app` | Exit 0, including TypeDoc and site finalization. |
+| `yarn site:build:iac` | Exit 0; local generation only. |
+| `yarn test:exports` | Exit 0. |
+| `yarn test:consumer` | Exit 0; packed-package type/runtime/import checks passed. |
+| `git diff --check` | Exit 0. |
+
+No live cloud operations, deployment or seeding. Strong snapshots address the requested single-writer stale-read defect; canonical and index writes remain separate and concurrent index writers are not serialized. The existing recovery APIs/documentation still apply. These local observations do not settle owner acceptance; the plan remains active.
