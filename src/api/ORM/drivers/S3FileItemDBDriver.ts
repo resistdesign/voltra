@@ -229,7 +229,7 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
    * @param uniqueIdentifier Unique identifier value for the file.
    * @param item Partial update payload for the file.
    * @returns True when the item was updated or already exists at the requested location.
-   * @throws When a same-location update target does not exist.
+   * @throws When a same-location update target does not exist or a rename destination is occupied.
    * */
   public updateItem = async (
     uniqueIdentifier: BaseFileItem["id"],
@@ -256,25 +256,42 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
     const { name: oldName, directory: oldDirectory } = oldItemLoc;
 
     if (name && (name !== oldName || directory !== oldDirectory)) {
-      await this.s3.send(
-        new CopyObjectCommand({
-          Bucket: bucketName,
-          Key: getFullFileKey({
-            file: {
-              directory,
-              name,
-            },
-            baseDirectory: tableName,
+      try {
+        await this.s3.send(
+          new CopyObjectCommand({
+            // Source authorization does not permit overwriting another identity.
+            // Enforce absence atomically, including destinations created after inspection.
+            IfNoneMatch: "*",
+            Bucket: bucketName,
+            Key: getFullFileKey({
+              file: {
+                directory,
+                name,
+              },
+              baseDirectory: tableName,
+            }),
+            CopySource: `${encodeURIComponent(bucketName)}/${getFullFileKey({
+              file: oldItemLoc,
+              baseDirectory: tableName,
+            })
+              .split("/")
+              .map(encodeURIComponent)
+              .join("/")}`,
           }),
-          CopySource: `${encodeURIComponent(bucketName)}/${getFullFileKey({
-            file: oldItemLoc,
-            baseDirectory: tableName,
-          })
-            .split("/")
-            .map(encodeURIComponent)
-            .join("/")}`,
-        }),
-      );
+        );
+      } catch (error: any) {
+        if (
+          error?.name === "PreconditionFailed" ||
+          error?.name === "ConditionalRequestConflict" ||
+          error?.$metadata?.httpStatusCode === 412 ||
+          error?.$metadata?.httpStatusCode === 409
+        ) {
+          throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT, {
+            cause: error,
+          });
+        }
+        throw error;
+      }
       try {
         await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
       } catch (cause) {

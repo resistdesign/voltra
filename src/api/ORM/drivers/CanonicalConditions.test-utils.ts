@@ -867,3 +867,175 @@ export const runFileCoordinatedIndexes = async () => {
   await assert.rejects(() => read("file"), { message: "ITEM_NOT_FOUND" });
   return { verified: true };
 };
+
+/** S3 renames cannot overwrite identities outside the caller's DAC authority. */
+export const runS3RenameDestinationProtection = async () => {
+  const { StructuredInMemoryBackend } =
+    await import("./InMemoryDataItemDBDriver/Indexing/StructuredInMemoryBackend");
+  const { createIndexBackend, qualifyIndexField } =
+    await import("../../Indexing");
+  const { getTypeInfoORMIndexingConfigFromTypeInfoMap } =
+    await import("../getTypeInfoORMIndexingConfigFromTypeInfoMap");
+  const { DACConstraintType } = await import("../../DataAccessControl");
+  const { OperationGroup } = await import("../../../common/TypeInfoORM");
+  const field = {
+    type: "string" as const,
+    optional: false,
+    readonly: false,
+    array: false,
+  };
+  const typeInfoMap = {
+    File: {
+      primaryField: "id",
+      fields: {
+        id: field,
+        name: { ...field, tags: { indexed: { exact: true } } },
+        directory: { ...field, optional: true },
+      },
+    },
+  };
+  const driver = new S3FileItemDBDriver({
+    tableName: "Files",
+    uniquelyIdentifyingFieldName: "id",
+    dbSpecificConfig: { bucketName: "test", s3Config: {} },
+  });
+  const files = new Map<string, string>();
+  let copyFailure: Error | undefined;
+  let occupyAtCopy = false;
+  (driver as any).s3.send = async (command: any) => {
+    const { Bucket, Key, CopySource, IfNoneMatch } = command.input;
+    assert.equal(Bucket, "test");
+    switch (command.constructor.name) {
+      case "HeadObjectCommand":
+        if (!files.has(Key))
+          throw Object.assign(new Error("missing"), { name: "NotFound" });
+        return {
+          ContentLength: files.get(Key)!.length,
+          ContentType: "text/plain",
+          LastModified: new Date(1000),
+        };
+      case "PutObjectCommand":
+        files.set(Key, `${Key} original contents`);
+        return {};
+      case "CopyObjectCommand": {
+        const source = decodeURIComponent(
+          CopySource.split("/").slice(1).join("/"),
+        );
+        assert.ok(files.has(source));
+        // Model an object arriving at the mutation boundary, after inspection.
+        if (occupyAtCopy) files.set(Key, "concurrent protected contents");
+        if (IfNoneMatch === "*" && files.has(Key)) {
+          copyFailure = Object.assign(new Error("destination exists"), {
+            name: "PreconditionFailed",
+            $metadata: { httpStatusCode: 412 },
+          });
+          throw copyFailure;
+        }
+        files.set(Key, files.get(source)!);
+        return {};
+      }
+      default:
+        throw new Error(`Unexpected command ${command.constructor.name}`);
+    }
+  };
+  (driver as any).s3FileDriver.deleteFile = async (loc: any, table: string) => {
+    files.delete(`${table}/${loc.name}`);
+  };
+  const values = new StructuredInMemoryBackend();
+  const orm = new TypeInfoORMService({
+    useDAC: true,
+    typeInfoMap,
+    getDriver: () => driver,
+    getRelationshipDriver: () => {
+      throw new Error("unused");
+    },
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend: createIndexBackend({ values, valueWriter: values }),
+    }),
+    dacConfig: {
+      itemResourcePathPrefix: ["ORM"],
+      relationshipResourcePathPrefix: ["REL"],
+      getOwnerPrefix: async () => ["owner"],
+      getDACRoleById: async (id) => ({
+        id,
+        constraints: ["mine", "renamed"]
+          .map((identity) => ({
+            type: DACConstraintType.ALLOW,
+            pathIsPrefix: true,
+            resourcePath: [
+              "ORM",
+              "owner",
+              OperationGroup.ALL_OPERATIONS,
+              "File",
+              identity,
+            ],
+          }))
+          .concat([
+            {
+              type: DACConstraintType.DENY,
+              pathIsPrefix: true,
+              resourcePath: [
+                "ORM",
+                "owner",
+                OperationGroup.ALL_OPERATIONS,
+                "File",
+                "protected",
+              ],
+            },
+          ]),
+      }),
+    },
+  });
+  const caller = { accessingRoleId: "caller" };
+  await orm.create("File", { name: "mine" });
+  await orm.create("File", { name: "protected" });
+  await assert.rejects(() => orm.read("File", "protected", undefined, caller));
+  const ids = async (name: string) =>
+    (await values.terms.query(qualifyIndexField("File", "name"), "eq", name))
+      .candidateIds;
+  const beforeFiles = new Map(files);
+  const beforeIndexes = await Promise.all([
+    ids("mine"),
+    ids("protected"),
+    ids("renamed"),
+  ]);
+  const rejectRename = () =>
+    assert.rejects(
+      () =>
+        orm.update(
+          "File",
+          { id: "mine", name: "protected" },
+          undefined,
+          caller,
+        ),
+      (error: any) =>
+        error.message === "CONDITIONAL_WRITE_CONFLICT" &&
+        error.cause === copyFailure &&
+        error.canonicalCommitted !== true,
+    );
+  await rejectRename();
+  assert.deepEqual(files, beforeFiles);
+  assert.deepEqual(
+    await Promise.all([ids("mine"), ids("protected"), ids("renamed")]),
+    beforeIndexes,
+  );
+  // No preflight existence check can substitute for the conditional copy.
+  files.delete("Files/protected");
+  occupyAtCopy = true;
+  await rejectRename();
+  assert.equal(files.get("Files/mine"), beforeFiles.get("Files/mine"));
+  assert.equal(files.get("Files/protected"), "concurrent protected contents");
+  assert.deepEqual(
+    await Promise.all([ids("mine"), ids("protected"), ids("renamed")]),
+    beforeIndexes,
+  );
+  occupyAtCopy = false;
+  await orm.update("File", { id: "mine", name: "renamed" }, undefined, caller);
+  assert.equal(files.has("Files/mine"), false);
+  assert.equal(files.get("Files/renamed"), beforeFiles.get("Files/mine"));
+  assert.equal(files.get("Files/protected"), "concurrent protected contents");
+  assert.deepEqual(await ids("mine"), []);
+  assert.deepEqual(await ids("renamed"), ["renamed"]);
+  assert.deepEqual(await ids("protected"), ["protected"]);
+  return { verified: true };
+};
