@@ -811,8 +811,7 @@ export class TypeInfoORMHealthMonitor {
         await this.store.createRecord({
           kind: "repair",
           status:
-            cleanup.status === "cleaned" ||
-            cleanup.status === "concurrentCanonicalRestored"
+            cleanup.status === "cleaned"
               ? "repaired"
               : "open",
           typeName: candidate.typeName,
@@ -824,8 +823,7 @@ export class TypeInfoORMHealthMonitor {
         });
 
         if (
-          cleanup.status === "cleaned" ||
-          cleanup.status === "concurrentCanonicalRestored"
+          cleanup.status === "cleaned"
         ) {
           repairedCount += 1;
           await this.store.updateRecord(
@@ -836,8 +834,7 @@ export class TypeInfoORMHealthMonitor {
             },
           );
         } else if (
-          cleanup.status === "maintenanceUnsupported" ||
-          cleanup.status === "strongConsistencyUnavailable"
+          cleanup.status === "maintenanceUnsupported"
         ) {
           suspiciousCount += 1;
         }

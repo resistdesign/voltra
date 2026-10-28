@@ -1,0 +1,69 @@
+{
+  "file": "./CanonicalConditions.test-utils.ts",
+  "tests": [
+    {
+      "export": "runCanonicalConditionCommands",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "commandGuardsVerified": true,
+        "createConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "updateConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "infrastructure": "NETWORK_UNAVAILABLE"
+      }
+    },
+    {
+      "export": "runFileRequirements",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "errors": [
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY"
+        ]
+      }
+    },
+    {
+      "export": "runCloudIndexedWorkflows",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runFileCoordinatedIndexes",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runS3IndexedWorkflows",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runS3UncoordinatedNoOpUpdates",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runS3RenameDestinationProtection",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    }
+  ]
+}

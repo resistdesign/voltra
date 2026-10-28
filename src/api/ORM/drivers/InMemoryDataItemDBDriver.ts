@@ -1,5 +1,7 @@
 import {
   DATA_ITEM_DB_DRIVER_ERRORS,
+  DataItemOperationConfig,
+  CanonicalWriteCommittedError,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -15,6 +17,9 @@ import type {
   ListItemsResults,
 } from "../../../common/SearchTypes";
 import {
+  TypeInfoORMServiceError,
+  TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
   TypeInfoORMUpdateConfig,
   TypeInfoORMUpdateOperators,
 } from "../../../common/TypeInfoORM";
@@ -85,57 +90,94 @@ export class InMemoryDataItemDBDriver<
     >,
   ) {}
 
-  /**
-   * Create a new item in memory.
-   * @param newItem New item payload without the identifying field.
-   * @returns Generated identifier for the created item.
-   */
-  public createItem = async (
-    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-  ): Promise<ItemType[UniquelyIdentifyingFieldName]> => {
-    const {
-      uniquelyIdentifyingFieldName,
-      generateUniqueIdentifier = () => UUIDV4(),
-    } = this.config;
-    const newItemId = generateUniqueIdentifier(
-      newItem as ItemType,
-    ) as ItemType[UniquelyIdentifyingFieldName];
-    const cleanNewItemWithId = {
-      ...newItem,
-      [uniquelyIdentifyingFieldName]: newItemId,
-    } as unknown as ItemType;
+  // Store-wide exclusion also covers relationship identities and direct writes.
+  // This store is private to this instance; no external persistence writers exist.
+  private pending: Promise<void> = Promise.resolve();
 
-    this.items.set(newItemId, { ...cleanNewItemWithId });
-
-    return newItemId as ItemType[UniquelyIdentifyingFieldName];
+  private coordinate = async <Result>(
+    operation: () => Promise<Result>,
+  ): Promise<Result> => {
+    const previous = this.pending;
+    let release!: () => void;
+    this.pending = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
   };
+
+  private snapshot = (id: ItemType[UniquelyIdentifyingFieldName]) => {
+    const item = this.items.get(id);
+    return item ? structuredClone(item) : undefined;
+  };
+
+  private notify = async (
+    config: DataItemOperationConfig<ItemType> | undefined,
+    before: ItemType | undefined,
+    after: ItemType | undefined,
+  ) => {
+    try {
+      await config?.coordination?.changed?.(before, after);
+    } catch (cause) {
+      throw new CanonicalWriteCommittedError(cause);
+    }
+  };
+
+  /** Create under exclusion, exposing exact overwrite images to coordinated work. */
+  public createItem = (
+    newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
+    createConfig?: TypeInfoORMCreateConfig & DataItemOperationConfig<ItemType>,
+  ) =>
+    this.coordinate(async () => {
+      const id = (this.config.generateUniqueIdentifier ?? (() => UUIDV4()))(
+        newItem as ItemType,
+      ) as ItemType[UniquelyIdentifyingFieldName];
+      const before = this.snapshot(id);
+      await createConfig?.coordination?.inspect?.(before);
+      if (createConfig?.ifAbsent && before)
+        throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+      this.items.set(
+        id,
+        structuredClone({
+          ...newItem,
+          [this.config.uniquelyIdentifyingFieldName]: id,
+        }) as ItemType,
+      );
+      await this.notify(createConfig, before, this.snapshot(id));
+      return id;
+    });
 
   /**
    * Read an item from memory.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param selectedFields Optional fields to select from the item.
+   * @param readConfig Required consistency and canonical coordination requirements.
    * @returns Item payload (partial when selected fields are used).
    */
   public readItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
+    readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<ItemType>,
   ): Promise<Partial<ItemType>> => {
-    if (typeof uniqueIdentifier === "undefined") {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
-    }
+    const read = async () => {
+      if (typeof uniqueIdentifier === "undefined") {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      }
 
-    const item = this.items.get(uniqueIdentifier);
-    if (!item) {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-    }
+      const item = this.snapshot(uniqueIdentifier);
+      await readConfig?.coordination?.inspect?.(item);
+      if (!item) {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
+      }
 
-    return selectFieldsFromItem(item, selectedFields);
+      return selectFieldsFromItem(item, selectedFields);
+    };
+    return readConfig?.coordination ? this.coordinate(read) : read();
   };
-
-  /**
-   * Strongly consistent maintenance read.
-   */
-  public readItemStronglyConsistent = this.readItem;
 
   /**
    * Update an item in memory.
@@ -146,57 +188,73 @@ export class InMemoryDataItemDBDriver<
   public updateItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
-    updateConfig?: TypeInfoORMUpdateConfig,
-  ): Promise<boolean> => {
-    const { uniquelyIdentifyingFieldName } = this.config;
+    updateConfig?: TypeInfoORMUpdateConfig & DataItemOperationConfig<ItemType>,
+  ): Promise<boolean> =>
+    this.coordinate(async () => {
+      const { uniquelyIdentifyingFieldName } = this.config;
 
-    if (typeof uniqueIdentifier === "undefined") {
-      throw {
-        message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
-        uniquelyIdentifyingFieldName,
-      };
-    }
-
-    const existing = this.items.get(uniqueIdentifier);
-    const cleanUpdatedItem: Partial<ItemType> = { ...updatedItem };
-    delete cleanUpdatedItem[uniquelyIdentifyingFieldName];
-
-    const nextItem = {
-      ...(existing ?? {
-        [uniquelyIdentifyingFieldName]: uniqueIdentifier,
-      }),
-    } as ItemType;
-
-    for (const [key, value] of Object.entries(cleanUpdatedItem)) {
-      if (typeof value !== "undefined") {
-        const operator = updateConfig?.fieldOperators?.[key];
-
-        if (operator === TypeInfoORMUpdateOperators.NUMBER.INCREMENT) {
-          const currentValue = (nextItem as Record<string, unknown>)[key];
-
-          (nextItem as Record<string, unknown>)[key] =
-            (typeof currentValue === "number" ? currentValue : 0) +
-            (value as number);
-          continue;
-        }
-
-        if (operator === TypeInfoORMUpdateOperators.NUMBER.DECREMENT) {
-          const currentValue = (nextItem as Record<string, unknown>)[key];
-
-          (nextItem as Record<string, unknown>)[key] =
-            (typeof currentValue === "number" ? currentValue : 0) -
-            (value as number);
-          continue;
-        }
-
-        (nextItem as Record<string, unknown>)[key] = value;
+      if (typeof uniqueIdentifier === "undefined") {
+        throw {
+          message: DATA_ITEM_DB_DRIVER_ERRORS.MISSING_UNIQUE_IDENTIFIER,
+          uniquelyIdentifyingFieldName,
+        };
       }
-    }
 
-    this.items.set(uniqueIdentifier, nextItem);
+      const existing = this.snapshot(uniqueIdentifier);
+      await updateConfig?.coordination?.inspect?.(existing);
+      if (updateConfig?.preconditions !== undefined) {
+        if (
+          !existing ||
+          Object.entries(updateConfig.preconditions.expected ?? {}).some(
+            ([field, value]) => existing[field] !== value,
+          )
+        ) {
+          throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+        }
+      }
+      const cleanUpdatedItem: Partial<ItemType> = { ...updatedItem };
+      delete cleanUpdatedItem[uniquelyIdentifyingFieldName];
 
-    return true;
-  };
+      const nextItem = {
+        ...(existing ?? {
+          [uniquelyIdentifyingFieldName]: uniqueIdentifier,
+        }),
+      } as ItemType;
+
+      for (const [key, value] of Object.entries(cleanUpdatedItem)) {
+        if (typeof value !== "undefined") {
+          const operator = updateConfig?.fieldOperators?.[key];
+
+          if (operator === TypeInfoORMUpdateOperators.NUMBER.INCREMENT) {
+            const currentValue = (nextItem as Record<string, unknown>)[key];
+
+            (nextItem as Record<string, unknown>)[key] =
+              (typeof currentValue === "number" ? currentValue : 0) +
+              (value as number);
+            continue;
+          }
+
+          if (operator === TypeInfoORMUpdateOperators.NUMBER.DECREMENT) {
+            const currentValue = (nextItem as Record<string, unknown>)[key];
+
+            (nextItem as Record<string, unknown>)[key] =
+              (typeof currentValue === "number" ? currentValue : 0) -
+              (value as number);
+            continue;
+          }
+
+          (nextItem as Record<string, unknown>)[key] = value;
+        }
+      }
+
+      this.items.set(uniqueIdentifier, structuredClone(nextItem));
+      await this.notify(
+        updateConfig,
+        existing,
+        this.snapshot(uniqueIdentifier),
+      );
+      return true;
+    });
 
   /**
    * Delete an item from memory.
@@ -205,13 +263,19 @@ export class InMemoryDataItemDBDriver<
    */
   public deleteItem = async (
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-  ): Promise<boolean> => {
-    if (typeof uniqueIdentifier === "undefined") {
-      throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
-    }
+    deleteConfig?: DataItemOperationConfig<ItemType>,
+  ): Promise<boolean> =>
+    this.coordinate(async () => {
+      if (typeof uniqueIdentifier === "undefined") {
+        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
+      }
 
-    return this.items.delete(uniqueIdentifier);
-  };
+      const before = this.snapshot(uniqueIdentifier);
+      await deleteConfig?.coordination?.inspect?.(before);
+      const result = this.items.delete(uniqueIdentifier);
+      if (result) await this.notify(deleteConfig, before, undefined);
+      return result;
+    });
 
   /**
    * List items from memory.
@@ -239,7 +303,13 @@ export class InMemoryDataItemDBDriver<
     const offset = decodeCursor(cursor);
     const items = sortedItems
       .slice(offset, offset + itemsPerPage)
-      .map((item) => selectFieldsFromItem(item, selectedFields) as ItemType);
+      .map(
+        (item) =>
+          selectFieldsFromItem(
+            structuredClone(item),
+            selectedFields,
+          ) as ItemType,
+      );
 
     const nextOffset = offset + itemsPerPage;
 

@@ -9,6 +9,8 @@ import {
   TypeInfoORMClientAPI,
   TypeInfoORMAPIRoutePaths,
   TypeInfoORMUpdateConfig,
+  TypeInfoORMCreateConfig,
+  TypeInfoORMReadConfig,
 } from "../../common/TypeInfoORM";
 import { sendServiceRequest, ServiceConfig } from "./Service";
 import { TypeInfoDataItem } from "../../common/TypeParsing/TypeInfo";
@@ -65,15 +67,18 @@ export class TypeInfoORMClient implements TypeInfoORMClientAPI {
    *
    * @param typeName - TypeInfo type name.
    * @param item - Item payload to persist.
+   * @param createConfig - Optional atomic create-if-absent requirement.
    * @returns The created item result.
    */
   create = async (
     typeName: string,
     item: TypeInfoDataItem,
+    createConfig?: TypeInfoORMCreateConfig,
   ): Promise<any> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.CREATE, [
       typeName,
       item,
+      createConfig,
     ]);
   };
 
@@ -82,17 +87,21 @@ export class TypeInfoORMClient implements TypeInfoORMClientAPI {
    *
    * @param typeName - TypeInfo type name.
    * @param primaryFieldValue - Primary field value to lookup.
+   * @param selectedFields - Optional projection.
+   * @param readConfig - Required canonical read consistency.
    * @returns The retrieved item, if found.
    */
   read = async (
     typeName: string,
     primaryFieldValue: any,
     selectedFields?: (keyof TypeInfoDataItem)[],
+    readConfig?: TypeInfoORMReadConfig,
   ): Promise<TypeInfoDataItem> => {
     return await this.makeRequest(TypeInfoORMAPIRoutePaths.READ, [
       typeName,
       primaryFieldValue,
       selectedFields,
+      readConfig,
     ]);
   };
 
@@ -101,7 +110,7 @@ export class TypeInfoORMClient implements TypeInfoORMClientAPI {
    *
    * @param typeName - TypeInfo type name.
    * @param item - Updated item payload.
-   * @param updateConfig - Optional per-field operator config.
+   * @param updateConfig - Optional field operators and atomic canonical preconditions.
    * @returns Whether the update succeeded.
    */
   update = async (

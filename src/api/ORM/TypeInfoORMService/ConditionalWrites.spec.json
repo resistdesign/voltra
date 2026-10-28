@@ -1,0 +1,210 @@
+{
+  "file": "./ConditionalWrites.test-utils.ts",
+  "tests": [
+    {
+      "export": "runConditionalCanonicalWrites",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createStatuses": ["fulfilled", "rejected"],
+        "conflict": "CONDITIONAL_WRITE_CONFLICT",
+        "missing": "CONDITIONAL_WRITE_CONFLICT",
+        "stale": "CONDITIONAL_WRITE_CONFLICT",
+        "before": {
+          "id": "one",
+          "name": "winner",
+          "score": 0
+        },
+        "updateStatuses": ["fulfilled", "rejected"],
+        "after": {
+          "id": "one",
+          "name": "winner",
+          "score": 1
+        },
+        "invalid": "INVALID_PRECONDITION",
+        "unknown": "INVALID_PRECONDITION",
+        "noUpsert": "ITEM_NOT_FOUND"
+      }
+    },
+    {
+      "export": "runConditionalIndexSafetyAndRecovery",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "createConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "updateConflict": "CONDITIONAL_WRITE_CONFLICT",
+        "losingIds": [],
+        "winnerIds": ["one"],
+        "indexFailure": "CANONICAL_WRITE_COMMITTED",
+        "canonical": {
+          "id": "one",
+          "name": "committed",
+          "score": 0
+        },
+        "consistency": "strong",
+        "repairedIds": ["one"],
+        "staleIds": []
+      }
+    },
+    {
+      "export": "runStrongReadAndUnsupported",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "projected": {
+          "id": "one",
+          "name": "visible"
+        },
+        "selections": ["ALL", "ALL", "ALL", "ALL"],
+        "denied": "INVALID_OPERATION",
+        "updateDenied": "INVALID_OPERATION",
+        "missingContext": "MISSING_ACCESSING_ROLE",
+        "failures": [
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY",
+          "UNSUPPORTED_CAPABILITY"
+        ],
+        "strongOrdinaryReads": 0,
+        "wrappedFailure": {
+          "message": "ITEM_NOT_FOUND",
+          "typeName": "Record"
+        },
+        "overwritten": {
+          "id": "one",
+          "name": "default"
+        },
+        "upserted": {
+          "id": "new",
+          "name": "upsert"
+        }
+      }
+    },
+    {
+      "export": "runConditionalGuardReadAccess",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "guesses": [
+          "INVALID_OPERATION",
+          "INVALID_OPERATION",
+          "INVALID_OPERATION",
+          "INVALID_OPERATION"
+        ],
+        "before": {
+          "id": "one",
+          "name": "visible",
+          "score": 0,
+          "secret": "hidden"
+        },
+        "losingIds": [],
+        "visibleIds": ["one"],
+        "permitted": true,
+        "stale": "CONDITIONAL_WRITE_CONFLICT",
+        "after": {
+          "id": "one",
+          "name": "permitted",
+          "score": 0,
+          "secret": "hidden"
+        },
+        "permittedIds": ["one"],
+        "staleIds": []
+      }
+    },
+    {
+      "export": "runGuardedStaleReads",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "ordinaryReads": 0,
+        "canonical": {
+          "name": "committed",
+          "score": 1,
+          "id": "one"
+        },
+        "obsoleteIds": [],
+        "currentIds": [],
+        "committedIds": ["one"]
+      }
+    },
+    {
+      "export": "runConditionalFalseResult",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "conflict": "CONDITIONAL_WRITE_CONFLICT",
+        "reads": 0,
+        "mutations": 1,
+        "indexWork": 0,
+        "canonical": {
+          "id": "one",
+          "name": "winner",
+          "score": 0
+        }
+      }
+    },
+    {
+      "export": "runRejectedErrorDiagnostics",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "checks": [true, true, true]
+      }
+    },
+    {
+      "export": "runConditionalWithoutStrongReader",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "exists": true,
+        "expected": true,
+        "stale": "CONDITIONAL_WRITE_CONFLICT",
+        "missing": "CONDITIONAL_WRITE_CONFLICT",
+        "conflict": "CONDITIONAL_WRITE_CONFLICT",
+        "canonical": {
+          "id": "one",
+          "name": "winner",
+          "score": 1
+        },
+        "noUpsert": "ITEM_NOT_FOUND"
+      }
+    },
+    {
+      "export": "runConditionalWithoutSnapshots",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": [true, true]
+    },
+    {
+      "export": "runCoordinatedAuthorization",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runCoordinatedMutationImages",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runCoordinatedMaintenance",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    },
+    {
+      "export": "runCoordinatedTokenFailures",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "verified": true
+      }
+    }
+  ]
+}

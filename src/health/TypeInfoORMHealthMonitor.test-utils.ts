@@ -937,25 +937,18 @@ export const runHealthMissingIndexRepairScenario = async () => {
 };
 
 
-export const runHealthMissingIndexRequiresStrongReadScenario = async () => {
+export const runHealthMissingIndexUsesDriverContractScenario = async () => {
   let counter = 0;
   const baseDriver = new InMemoryDataItemDBDriver<Book, "id">({
     tableName: "WeakConsistencyBooks",
     uniquelyIdentifyingFieldName: "id",
     generateUniqueIdentifier: () => `weak-book-${++counter}`,
   });
-  const weakDriver: DataItemDBDriver<Book, "id"> = {
-    createItem: baseDriver.createItem,
-    readItem: baseDriver.readItem,
-    updateItem: baseDriver.updateItem,
-    deleteItem: baseDriver.deleteItem,
-    listItems: baseDriver.listItems,
-  };
   const fullTextBackend = new FullTextMemoryBackend();
   const structuredBackend = new StructuredInMemoryBackend();
   const orm = createOrm(
     getBookTypeInfoV1(),
-    { Book: weakDriver },
+    { Book: baseDriver },
     fullTextBackend,
     structuredBackend,
   );
