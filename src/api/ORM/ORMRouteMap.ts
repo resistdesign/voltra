@@ -28,11 +28,7 @@ import {
   RouteMap,
 } from "../Router/Types";
 import { addRouteToRouteMap } from "../Router";
-import {
-  TypeInfoORMAPI,
-  TypeInfoORMUpdateConfig,
-  TypeInfoORMReadConfig,
-} from "../../common/TypeInfoORM";
+import { TypeInfoORMAPI, TypeInfoORMUpdateConfig } from "../../common/TypeInfoORM";
 
 /**
  * Optional configuration for Type Info ORM route-map behavior.
@@ -152,40 +148,43 @@ export const getTypeInfoORMRouteMap = (
   const readHandlerFactory = (
     eventData: NormalizedCloudFunctionEventData,
   ): RouteHandler => {
-    const context = dacConfig ? resolveContext(eventData) : undefined;
+    if (!dacConfig) {
+      return orm.read;
+    }
+
+    const context = resolveContext(eventData);
+
     return ((
       typeName: string,
       primaryFieldValue: any,
       selectedFields?: string[],
-      readConfig?: TypeInfoORMReadConfig,
-    ) =>
-      orm.read(
-        typeName,
-        primaryFieldValue,
-        selectedFields,
-        context,
-        readConfig,
-      )) as RouteHandler;
+    ) => orm.read(typeName, primaryFieldValue, selectedFields, context)) as RouteHandler;
   };
   const updateHandlerFactory = (
     eventData: NormalizedCloudFunctionEventData,
   ): RouteHandler => {
-    const context = dacConfig ? resolveContext(eventData) : undefined;
+    if (!dacConfig) {
+      if (allowUpdateFieldOperators) {
+        return orm.update;
+      }
+
+      return ((typeName: string, item: any) =>
+        orm.update(typeName, item, undefined)) as RouteHandler;
+    }
+
+    const context = resolveContext(eventData);
+
     return ((
       typeName: string,
       item: any,
       updateConfig?: TypeInfoORMUpdateConfig,
-    ) => {
-      // Disabling field operators must not silently drop concurrency guards.
-      const config =
-        allowUpdateFieldOperators || !updateConfig
-          ? updateConfig
-          : {
-              ...updateConfig,
-              fieldOperators: undefined,
-            };
-      return orm.update(typeName, item, config, context);
-    }) as RouteHandler;
+    ) =>
+      orm.update(
+        typeName,
+        item,
+        allowUpdateFieldOperators ? updateConfig : undefined,
+        context,
+      )) as RouteHandler;
   };
   const deleteHandlerFactory = (
     eventData: NormalizedCloudFunctionEventData,

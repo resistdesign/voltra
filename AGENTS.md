@@ -12,18 +12,6 @@
     then proceed.
   - Only ask where work is tracked if the user prompt provides insufficient detail to create a plan.
 
-## Alpha Major-Version Compatibility Policy
-
-- **Voltra v3 is a new major version in alpha: it has ZERO backward-compatibility requirements.** This applies to v2,
-  earlier v3 alphas, old driver contracts, historical method signatures, legacy callers, and previous implementation behavior.
-- **Correctness, clean architecture, and the best current design take priority over legacy compatibility.** Breaking API
-  and driver changes are expected and welcome when they produce a better v3 architecture.
-- Do not add shims, fallback behavior, duplicate methods, capability scaffolding, deprecation layers, or compatibility
-  tests **just to accommodate older versions or callers**. Update implementations, consumers, tests, and docs to the
-  new contract instead. Legacy is not a design constraint unless the user explicitly requests it.
-- Preserve genuine system invariants and safety guarantees for the *new* contract. Do not confuse removing compatibility
-  burdens with permitting incorrect, unsafe, or silently degraded behavior.
-
 ## Core Architecture: Storage Driver Isolation
 
 - **SEVERE CORE OBJECTIVE:** Voltra's ORM, indexing, health, query planning, maintenance, and other generic API behavior must remain storage/backend agnostic.
@@ -33,11 +21,6 @@
 - Generic API modules must not import driver-specific modules or expose driver-specific types in generic contracts.
 - All supported drivers, including in-memory drivers, must receive the same Voltra indexing semantics by implementing the same generic driver contracts. Never remove or weaken generic functionality merely to separate storage concerns.
 - Treat any backend-specific contamination of generic API code as an architectural regression requiring correction before completion.
-
-- Keep the shared ORM/driver operation surface to Create, Read, Update, Delete + List/Search. Express optional behavior
-  through configs on existing methods, passed through by default; backend features alone do not justify shared methods
-  or generic branches. Generic handling is for Voltra's cross-driver invariants (TypeInfo, DAC, indexing correctness and
-  explicit refusal of unavailable guarantees). Review contracts, wrappers, maintenance, all drivers, docs and callers together.
 
 ## Project Structure & Module Organization
 
@@ -78,14 +61,6 @@
 - Keep subjects imperative and concise; automated commits may appear as `chore: (repo) Automatic commit`.
 - PRs should include a clear summary, linked issues when available, and screenshots for UI/site changes.
 - Note any test commands run (or reasons for skipping) in the PR description.
-
-## Pull Request Merge Gate
-
-- **Do not merge a PR while any plan associated with that PR remains active** (a file directly under `planning/`).
-  Green checks, completed checklist items, or an agent's own assessment do not bypass this rule.
-- After the work is complete and the user explicitly accepts it, move the PR's plan to `planning/complete/`
-  **on the PR branch** and commit that move before merging. Never close a plan merely to unblock a merge.
-- Verify the PR has no remaining associated active plans before merging. Unrelated active plans do not block the PR.
 
 ## Agent Workflow & Progress Tracking
 

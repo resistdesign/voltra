@@ -40,8 +40,6 @@ import {
   OperationGroup,
   RelationshipOperation,
   TypeInfoORMAPI,
-  TypeInfoORMCreateConfig,
-  TypeInfoORMReadConfig,
   TypeInfoORMContext,
   TypeInfoORMServiceError,
   TypeInfoORMUpdateConfig,
@@ -146,7 +144,7 @@ export const cleanRelationshipItem = (
   return cleanedItem as BaseItemRelationshipInfo;
 };
 
-type DataItemDBDriverMethodName =
+type RequiredDataItemDBDriverMethodName =
   | "createItem"
   | "readItem"
   | "updateItem"
@@ -160,13 +158,13 @@ type DataItemDBDriverMethodName =
 export const getDriverMethodWithModifiedError = <
   ItemType extends TypeInfoDataItem,
   UniquelyIdentifyingFieldName extends keyof ItemType,
-  DriverMethodNameType extends DataItemDBDriverMethodName,
-  MethodType extends (...args: any[]) => any = NonNullable<
-    DataItemDBDriver<
-      ItemType,
-      UniquelyIdentifyingFieldName
-    >[DriverMethodNameType]
-  >,
+  DriverMethodNameType extends RequiredDataItemDBDriverMethodName,
+  MethodType extends (
+    ...args: any[]
+  ) => any = DataItemDBDriver<
+    ItemType,
+    UniquelyIdentifyingFieldName
+  >[DriverMethodNameType],
 >(
   /**
    * Extra fields to attach to thrown errors.
@@ -181,45 +179,16 @@ export const getDriverMethodWithModifiedError = <
    */
   driverMethodName: DriverMethodNameType,
 ): MethodType =>
-  (async (...args: Parameters<MethodType>): Promise<any> => {
+  ((...args: Parameters<MethodType>): Promise<any> => {
     try {
-      return await (
-        driver[driverMethodName] as (...args: any[]) => Promise<any>
-      ).apply(driver, args);
+      return (driver[driverMethodName] as (...args: any[]) => Promise<any>)(
+        ...(args as Parameters<MethodType>),
+      ) as Promise<any>;
     } catch (error: any) {
-      if (
-        error !== null &&
-        (typeof error === "object" || typeof error === "function")
-      ) {
-        try {
-          Object.assign(error, extendedData);
-        } catch {
-          // Frozen provider errors still retain their prototype and all own
-          // diagnostics, including non-enumerable stack/cause fields.
-          const descriptors = Object.getOwnPropertyDescriptors(error);
-          // Some runtimes expose stack via an accessor requiring Error slots.
-          if (error instanceof Error && descriptors.stack) {
-            descriptors.stack = {
-              value: error.stack,
-              enumerable: descriptors.stack.enumerable,
-              configurable: descriptors.stack.configurable,
-              writable: false,
-            };
-          }
-          for (const key of Object.keys(extendedData)) delete descriptors[key];
-          const enriched = Object.create(
-            Object.getPrototypeOf(error),
-            descriptors,
-          );
-          Object.assign(enriched, extendedData);
-          throw enriched;
-        }
-        throw error;
-      }
-      throw Object.assign(
-        new Error(String(error), { cause: error }),
-        extendedData,
-      );
+      throw {
+        ...(error as Record<any, any>),
+        ...extendedData,
+      };
     }
   }) as MethodType;
 
@@ -248,15 +217,11 @@ export type TypeInfoORMDACConfig = {
    * `itemResourcePathPrefix` and before the canonical item path segments.
    *
    * Relationship create/delete operations also use this prefix to validate
-   * endpoint ownership for both the `from` and `to` items. For mutation checks,
-   * canonicalItem is the authoritative snapshot bound to the atomic write.
-   * Resolve item-backed ownership from it when supplied. External owner/policy
-   * mappings require application-level coordination.
+   * endpoint ownership for both the `from` and `to` items.
    */
   getOwnerPrefix?: (
     typeName: string,
     primaryFieldValue: LiteralValue,
-    canonicalItem?: Partial<TypeInfoDataItem>,
   ) => Promise<LiteralValue[] | undefined>;
   /**
    * Lookup helper used to resolve roles by id.
@@ -421,12 +386,12 @@ export type TypeInfoORMStoredItemIndexInspection = {
   issues: TypeInfoORMStoredItemIndexIssue[];
 };
 
-/** Strong diagnostic verification of one canonical item's current indexes. */
+/** Strong/best-effort verification of one canonical item's current indexes. */
 export type TypeInfoORMStoredItemIndexVerification = {
   /** Whether the canonical item exists. */
   exists: boolean;
   /** Read consistency used for canonical verification. */
-  consistency: "strong";
+  consistency: "strong" | "bestEffort";
   /** Detected current-schema index issues. */
   issues: TypeInfoORMStoredItemIndexIssue[];
   /** Backend capabilities unavailable for complete inspection. */
@@ -498,7 +463,7 @@ export type TypeInfoORMIndexMaintenanceVerification = {
   /** Whether the canonical item exists. */
   exists: boolean;
   /** Read consistency used for the verification. */
-  consistency: "strong";
+  consistency: "strong" | "bestEffort";
   /** Canonical item when it exists. */
   item?: Partial<TypeInfoDataItem>;
 };
@@ -531,11 +496,13 @@ export type TypeInfoORMOrphanIndexCleanupResult = {
   status:
     | "cleaned"
     | "canonicalExists"
+    | "concurrentCanonicalRestored"
     | "indexChanged"
+    | "strongConsistencyUnavailable"
     | "maintenanceUnsupported";
   /** Whether any index cleanup write was attempted. */
   cleanupAttempted: boolean;
-  /** Whether present canonical state was reindexed from an authoritative snapshot. */
+  /** Whether current canonical state was reindexed during race recovery. */
   canonicalReindexed: boolean;
 };
 
@@ -1020,7 +987,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      * Optional access context for the call.
      */
     context?: TypeInfoORMContext,
-    canonicalItem?: Partial<TypeInfoDataItem>,
   ): Promise<DACDataItemResourceAccessResultMap> => {
     const { useDAC } = this.config;
 
@@ -1039,7 +1005,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           : undefined;
       const ownerPrefix =
         getOwnerPrefix && typeof primaryFieldValue !== "undefined"
-          ? await getOwnerPrefix(typeName, primaryFieldValue, canonicalItem)
+          ? await getOwnerPrefix(typeName, primaryFieldValue)
           : undefined;
       const itemPrefix = [...itemResourcePathPrefix, ...(ownerPrefix ?? [])];
 
@@ -1235,17 +1201,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
      */
     extendedData: Record<any, any>,
   ): DataItemDBDriver<ItemType, UniquelyIdentifyingFieldName> => {
-    const driverMethodList: DataItemDBDriverMethodName[] = [
+    const driverMethodList: RequiredDataItemDBDriverMethodName[] = [
       "createItem",
       "readItem",
       "updateItem",
       "deleteItem",
       "listItems",
     ];
-    const driverWrapper = {} as DataItemDBDriver<any, any>;
+    const driverWrapper: DataItemDBDriver<any, any> = {} as DataItemDBDriver<
+      any,
+      any
+    >;
 
     for (const dM of driverMethodList) {
-      if (typeof driver[dM] !== "function") continue;
       driverWrapper[dM] = getDriverMethodWithModifiedError(
         extendedData,
         driver,
@@ -1741,8 +1709,8 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Verify canonical item existence for index maintenance.
    *
-   * Requests a required strong read. This diagnostic observation never
-   * authorizes destructive healing; cleanup requires coordinated exclusion.
+   * Drivers with a strong-read capability are preferred. Best-effort reads are
+   * still useful for diagnostics but must not authorize destructive healing.
    *
    * @param typeName TypeInfo type to verify.
    * @param primaryFieldValue Canonical item identifier.
@@ -1757,12 +1725,12 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       throw new Error(TypeInfoORMServiceError.INVALID_DRIVER);
     }
 
-    const consistency = "strong" as const;
+    const strongReader = driver.readItemStronglyConsistent;
+    const reader = strongReader ?? driver.readItem;
+    const consistency = strongReader ? "strong" : "bestEffort";
 
     try {
-      const item = await driver.readItem(primaryFieldValue as any, undefined, {
-        consistency: "strong",
-      });
+      const item = await reader.call(driver, primaryFieldValue as any);
       return { exists: true, consistency, item };
     } catch (error: any) {
       if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
@@ -1776,8 +1744,9 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   /**
    * Safely clean orphaned index state for exactly one type+id.
    *
-   * Reindexes present canonical items from strong state. Destructive absence
-   * cleanup requires protection against recreation and refuses if unavailable.
+   * The method refuses destructive cleanup without a strongly consistent
+   * canonical read. It rechecks canonical state after destructive phases and
+   * reindexes a concurrently-created item before returning.
    *
    * @param typeName TypeInfo type being repaired.
    * @param primaryFieldValue Canonical item identifier.
@@ -1799,15 +1768,39 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       };
     }
 
+    const verification = await this.verifyStoredItemForIndexMaintenance(
+      typeName,
+      primaryFieldValue,
+    );
+    if (verification.consistency !== "strong") {
+      return {
+        status: "strongConsistencyUnavailable",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    if (verification.exists) {
+      await this.reindexStoredItem(typeName, primaryFieldValue);
+      return {
+        status: "canonicalExists",
+        cleanupAttempted: false,
+        canonicalReindexed: true,
+      };
+    }
+
     const indexing = this.config.indexing;
-    const unsupported: TypeInfoORMOrphanIndexCleanupResult = {
-      status: "maintenanceUnsupported",
-      cleanupAttempted: false,
-      canonicalReindexed: false,
-    };
-    if (!indexing) return unsupported;
+    if (!indexing) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
     const structuredWriter = indexing.backend.valueWriter;
     const textMaintenance = indexing.backend.text;
+    const hasStructuredCleanup = config.structuredVersion !== undefined;
     const textFields = Array.from(
       new Set(config.textIndexFields ?? descriptor.textFields),
     );
@@ -1815,94 +1808,111 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       textFields.some(
         (field) => !field.startsWith(descriptor.qualifiedFieldPrefix),
       )
-    )
+    ) {
       throw new Error(
         "Text index maintenance field does not belong to the requested type.",
       );
-    if (
-      (config.structuredVersion !== undefined && !structuredWriter) ||
-      (textFields.length > 0 && !textMaintenance?.removeDocumentIndex)
-    )
-      return unsupported;
-
-    let result = unsupported;
-    const driver = this.getDriverInternal(typeName);
-    let inspected = false;
-    let absentInspectionCompleted = false;
-    try {
-      await driver.readItem(primaryFieldValue, undefined, {
-        consistency: "strong",
-        coordination: {
-          exclusive: true,
-          inspect: async (current) => {
-            inspected = true;
-            if (current) {
-              await this.replaceItemIndexes(typeName, current, current);
-              result = {
-                status: "canonicalExists",
-                cleanupAttempted: false,
-                canonicalReindexed: true,
-              };
-              return;
-            }
-            let cleanupAttempted = false;
-            const docId = normalizeDocId(
-              primaryFieldValue,
-              descriptor.primaryField,
-            );
-            if (config.structuredVersion !== undefined && structuredWriter) {
-              cleanupAttempted = true;
-              try {
-                await structuredWriter.write(
-                  docId,
-                  {},
-                  {
-                    ...this.buildIndexWriteContext(typeName),
-                    deleted: true,
-                    expectedVersion: config.structuredVersion,
-                  },
-                );
-              } catch (error) {
-                if (!(error instanceof StructuredIndexVersionMismatchError))
-                  throw error;
-                result = {
-                  status: "indexChanged",
-                  cleanupAttempted: true,
-                  canonicalReindexed: false,
-                };
-                absentInspectionCompleted = true;
-                return;
-              }
-            }
-            for (const field of textFields) {
-              cleanupAttempted = true;
-              await textMaintenance!.removeDocumentIndex!(docId, field);
-            }
-            result = {
-              status: "cleaned",
-              cleanupAttempted,
-              canonicalReindexed: false,
-            };
-            absentInspectionCompleted = true;
-          },
-        },
-      });
-    } catch (error: any) {
-      if (
-        !inspected &&
-        error?.message === TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY
-      )
-        return unsupported;
-      // Coordinated absent inspection completes before readItem reports absence.
-      if (
-        !(
-          absentInspectionCompleted &&
-          error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND
-        )
-      )
-        throw error;
     }
-    return result;
+    const hasTextCleanup = textFields.length > 0;
+
+    if (
+      (hasStructuredCleanup && !structuredWriter) ||
+      (hasTextCleanup && !textMaintenance?.removeDocumentIndex)
+    ) {
+      return {
+        status: "maintenanceUnsupported",
+        cleanupAttempted: false,
+        canonicalReindexed: false,
+      };
+    }
+
+    const restoreIfCanonicalAppeared = async (): Promise<boolean> => {
+      const current = await this.verifyStoredItemForIndexMaintenance(
+        typeName,
+        primaryFieldValue,
+      );
+
+      if (current.consistency !== "strong" || !current.exists) {
+        return false;
+      }
+
+      await this.reindexStoredItem(typeName, primaryFieldValue);
+      return true;
+    };
+
+    let cleanupAttempted = false;
+
+    if (hasStructuredCleanup && structuredWriter) {
+      cleanupAttempted = true;
+      try {
+        await structuredWriter.write(
+          normalizeDocId(primaryFieldValue, descriptor.primaryField),
+          {},
+          {
+            ...this.buildIndexWriteContext(typeName),
+            deleted: true,
+            expectedVersion: config.structuredVersion,
+          },
+        );
+      } catch (error) {
+        if (await restoreIfCanonicalAppeared()) {
+          return {
+            status: "concurrentCanonicalRestored",
+            cleanupAttempted: true,
+            canonicalReindexed: true,
+          };
+        }
+
+        if (error instanceof StructuredIndexVersionMismatchError) {
+          return {
+            status: "indexChanged",
+            cleanupAttempted: true,
+            canonicalReindexed: false,
+          };
+        }
+
+        throw error;
+      }
+
+      if (await restoreIfCanonicalAppeared()) {
+        return {
+          status: "concurrentCanonicalRestored",
+          cleanupAttempted: true,
+          canonicalReindexed: true,
+        };
+      }
+    }
+
+    if (hasTextCleanup && textMaintenance?.removeDocumentIndex) {
+      const docId = normalizeDocId(primaryFieldValue, descriptor.primaryField);
+
+      for (const indexField of textFields) {
+        cleanupAttempted = true;
+        await textMaintenance.removeDocumentIndex(docId, indexField);
+
+        if (await restoreIfCanonicalAppeared()) {
+          return {
+            status: "concurrentCanonicalRestored",
+            cleanupAttempted: true,
+            canonicalReindexed: true,
+          };
+        }
+      }
+    }
+
+    if (await restoreIfCanonicalAppeared()) {
+      return {
+        status: "concurrentCanonicalRestored",
+        cleanupAttempted,
+        canonicalReindexed: true,
+      };
+    }
+
+    return {
+      status: "cleaned",
+      cleanupAttempted,
+      canonicalReindexed: false,
+    };
   };
 
   protected stableIndexMaintenanceValue = (value: unknown): unknown => {
@@ -1915,8 +1925,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
-        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-        .map(([key, entry]) => [key, this.stableIndexMaintenanceValue(entry)]),
+        .sort(([left], [right]) =>
+          left < right ? -1 : left > right ? 1 : 0,
+        )
+        .map(([key, entry]) => [
+          key,
+          this.stableIndexMaintenanceValue(entry),
+        ]),
     );
   };
 
@@ -2191,28 +2206,19 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
         continue;
       }
 
-      await driver.readItem(primaryFieldValue, undefined, {
-        consistency: "strong",
-        coordination: {
-          inspect: async (current) => {
-            if (!current)
-              throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-            const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
-            if (staleTextFields.length > 0) {
-              if (!textMaintenance?.removeDocumentIndex) {
-                throw new Error(
-                  "Text index schema reconciliation requires document maintenance support.",
-                );
-              }
-              for (const indexField of staleTextFields) {
-                await textMaintenance.removeDocumentIndex(docId, indexField);
-              }
-            }
+      const docId = normalizeDocId(primaryFieldValue, primaryFieldName);
+      if (staleTextFields.length > 0) {
+        if (!textMaintenance?.removeDocumentIndex) {
+          throw new Error(
+            "Text index schema reconciliation requires document maintenance support.",
+          );
+        }
+        for (const indexField of staleTextFields) {
+          await textMaintenance.removeDocumentIndex(docId, indexField);
+        }
+      }
 
-            await this.indexItemIndexes(typeName, current);
-          },
-        },
-      });
+      await this.indexItemIndexes(typeName, item);
       processedCount += 1;
     }
 
@@ -2347,23 +2353,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     if (!indexing) return;
     const { primaryField } = this.getTypeInfo(typeName);
     const primaryFieldName = String(primaryField);
-    if (
-      action.type === "replace" &&
-      normalizeDocId(action.previous[primaryFieldName], primaryFieldName) !==
-        normalizeDocId(action.next[primaryFieldName], primaryFieldName)
-    ) {
-      await this.mutateItemIndexPlan(typeName, {
-        type: "remove",
-        previous: action.previous,
-        fields: action.previousFields,
-      });
-      await this.mutateItemIndexPlan(typeName, {
-        type: "index",
-        next: action.next,
-        fields: action.nextFields,
-      });
-      return;
-    }
     const previous = action.type === "index" ? undefined : action.previous;
     const next = action.type === "remove" ? undefined : action.next;
     const identity = next ?? previous;
@@ -2448,17 +2437,14 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     }
 
     if (indexing.backend.valueWriter) {
-      const valueWriter = indexing.backend.valueWriter;
       textOperations.push(
-        Promise.resolve().then(() =>
-          valueWriter.write(
-            docId,
-            next ? this.buildIndexValueFields(typeName, next) : {},
-            {
-              ...this.buildIndexWriteContext(typeName),
-              ...(next ? {} : { deleted: true }),
-            },
-          ),
+        indexing.backend.valueWriter.write(
+          docId,
+          next ? this.buildIndexValueFields(typeName, next) : {},
+          {
+            ...this.buildIndexWriteContext(typeName),
+            ...(next ? {} : { deleted: true }),
+          },
         ),
       );
     }
@@ -2468,11 +2454,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       next ? "upsert" : "remove",
       nextFields.length,
     );
-    // Do not finish follow-up while a sibling index write is still
-    // running after another write fails; it could overtake the next mutation.
-    const outcomes = await Promise.allSettled(textOperations);
-    const failure = outcomes.find((outcome) => outcome.status === "rejected");
-    if (failure?.status === "rejected") throw failure.reason;
+    await Promise.all(textOperations);
   }
 
   /**
@@ -2588,23 +2570,13 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     config: TypeInfoORMReindexStoredItemConfig = {},
   ): Promise<boolean> => {
     const driver = this.getDriverInternal(typeName);
-    await driver.readItem(primaryFieldValue as any, undefined, {
-      consistency: "strong",
-      coordination: {
-        inspect: async (currentItem) => {
-          if (!currentItem)
-            throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-          await this.replaceItemIndexes(
-            typeName,
-            config.previousItem ?? currentItem,
-            currentItem,
-            {
-              previousIndexFields: config.previousIndexFields,
-              nextIndexFields: config.nextIndexFields,
-            },
-          );
-        },
-      },
+    const reader = driver.readItemStronglyConsistent ?? driver.readItem;
+    const currentItem = await reader.call(driver, primaryFieldValue as any);
+    const previousItem = config.previousItem ?? currentItem;
+
+    await this.replaceItemIndexes(typeName, previousItem, currentItem, {
+      previousIndexFields: config.previousIndexFields,
+      nextIndexFields: config.nextIndexFields,
     });
 
     return true;
@@ -2644,16 +2616,14 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           continue;
         }
 
-        await this.reindexStoredItem(
-          typeName,
-          primaryFieldValue as LiteralValue,
-          {
-            previousItem:
-              config.previousItemsByPrimaryField?.[String(primaryFieldValue)],
-            previousIndexFields: config.previousIndexFields,
-            nextIndexFields: config.nextIndexFields,
-          },
-        );
+        const previousItem =
+          config.previousItemsByPrimaryField?.[String(primaryFieldValue)] ??
+          item;
+
+        await this.replaceItemIndexes(typeName, previousItem, item, {
+          previousIndexFields: config.previousIndexFields,
+          nextIndexFields: config.nextIndexFields,
+        });
         processedCount += 1;
       }
 
@@ -2796,63 +2766,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     if (!validationResults.valid) {
       throw validationResults;
-    }
-  };
-
-  /** Validate guard shape and scalar values against schema without requiring writes to guard fields. */
-  protected validateUpdatePreconditions = (
-    typeName: string,
-    updateConfig?: TypeInfoORMUpdateConfig,
-  ): void => {
-    const guards = updateConfig?.preconditions;
-    if (guards === undefined) return;
-    const invalid = () => {
-      throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
-    };
-    if (
-      !guards ||
-      typeof guards !== "object" ||
-      Array.isArray(guards) ||
-      Object.keys(guards).some(
-        (key) => !["exists", "expected"].includes(key),
-      ) ||
-      (guards.exists !== undefined && guards.exists !== true)
-    )
-      invalid();
-    const expected = guards.expected;
-    if (expected === undefined) return;
-    if (!expected || typeof expected !== "object" || Array.isArray(expected))
-      invalid();
-    const typeInfo = this.getTypeInfo(typeName);
-    for (const [name, value] of Object.entries(expected)) {
-      const field = typeInfo.fields?.[name];
-      if (!field) return invalid();
-      if (
-        field.array ||
-        field.typeReference ||
-        (value !== null &&
-          !["string", "number", "boolean"].includes(typeof value)) ||
-        (typeof value === "number" && !Number.isFinite(value))
-      )
-        invalid();
-      const validation = validateTypeInfoValue(
-        { [name]: value },
-        typeName,
-        {
-          ...this.config.typeInfoMap,
-          [typeName]: {
-            ...typeInfo,
-            fields: { [name]: field },
-            unionFieldSets: undefined,
-          },
-        },
-        true,
-        this.config.customValidators,
-        TypeOperation.READ,
-        RelationshipValidationType.STRICT_EXCLUDE,
-        true,
-      );
-      if (!validation.valid) invalid();
     }
   };
 
@@ -3452,39 +3365,20 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * Create a new item of the given type.
    * @param typeName Type name to create.
    * @param item Item payload to create.
-   * @param createConfig Optional atomic create-if-absent requirement.
    * @returns Primary field value for the created item.
    * */
-  create = async (
-    typeName: string,
-    item: TypeInfoDataItem,
-    createConfig?: TypeInfoORMCreateConfig,
-  ): Promise<any> => {
-    if (
-      createConfig?.ifAbsent !== undefined &&
-      typeof createConfig.ifAbsent !== "boolean"
-    ) {
-      throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
-    }
+  create = async (typeName: string, item: TypeInfoDataItem): Promise<any> => {
     this.validate(typeName, item, TypeOperation.CREATE);
     const driver = this.getDriverInternal(typeName);
     const cleanItem = this.getCleanItem(typeName, item);
-    const indexed =
-      Object.keys(this.getIndexedFieldCapabilities(typeName)).length > 0;
-    const newIdentifier = await driver.createItem(cleanItem, {
-      ...createConfig,
-      ...(indexed
-        ? {
-            coordination: {
-              changed: async (before, after) => {
-                if (before)
-                  await this.replaceItemIndexes(typeName, before, after!);
-                else await this.indexItemIndexes(typeName, after!);
-              },
-            },
-          }
-        : {}),
-    });
+    const newIdentifier = await driver.createItem(cleanItem);
+    const { primaryField } = this.getTypeInfo(typeName);
+    const indexedItem = {
+      ...cleanItem,
+      [primaryField as keyof TypeInfoDataItem]: newIdentifier,
+    };
+
+    await this.indexItemIndexes(typeName, indexedItem);
 
     return newIdentifier;
   };
@@ -3494,8 +3388,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
    * @param typeName Type name to read.
    * @param primaryFieldValue Primary field value to fetch.
    * @param selectedFields Optional fields to select.
-   * @param context Server-owned DAC context (existing argument position).
-   * @param readConfig Required consistency; unsupported drivers refuse strong reads.
    * @returns Cleaned item data.
    * */
   read = async (
@@ -3503,7 +3395,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
     primaryFieldValue: any,
     selectedFields?: string[],
     context?: TypeInfoORMContext,
-    readConfig?: TypeInfoORMReadConfig,
   ): Promise<Partial<TypeInfoDataItem>> => {
     const cleanSelectedFields = this.getCleanSelectedFields(
       typeName,
@@ -3514,18 +3405,11 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
     const { useDAC } = this.config;
     const driver = this.getDriverInternal(typeName);
-    if (
-      readConfig?.consistency !== undefined &&
-      !["default", "strong"].includes(readConfig.consistency)
-    ) {
-      throw new Error(TypeInfoORMServiceError.INVALID_PRECONDITION);
-    }
     const item = await driver.readItem(
       primaryFieldValue,
       // SECURITY: Dac validation could fail when `item` is missing unselected fields.
       // CANNOT pass selected fields to `driver` when DAC is enabled.
       useDAC ? undefined : cleanSelectedFields,
-      readConfig,
     );
     const {
       allowed: readAllowed,
@@ -3578,7 +3462,6 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     this.validate(typeName, item, TypeOperation.UPDATE, true);
     this.validateUpdateConfig(typeName, item, updateConfig);
-    this.validateUpdatePreconditions(typeName, updateConfig);
 
     const { primaryField } = this.getTypeInfo(typeName);
     const primaryFieldValue =
@@ -3657,119 +3540,26 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
           item,
           mergedFieldsResources,
         );
-        const guarded = updateConfig?.preconditions !== undefined;
-        const expected = updateConfig?.preconditions?.expected;
-        const inspect = async (existingItem: TypeInfoDataItem | undefined) => {
-          if (this.config.useDAC && existingItem) {
-            // The driver binds these observations to its atomic mutation boundary.
-            // External policy/owner mappings need application-level coordination.
-            for (const candidate of [existingItem, cleanItem]) {
-              const access = await this.getItemDACValidation(
-                candidate,
-                typeName,
-                TypeOperation.UPDATE,
-                context,
-                existingItem,
-              );
-              if (
-                !access.allowed ||
-                access.denied ||
-                Object.keys(cleanItem).some(
-                  (field) =>
-                    field in candidate &&
-                    (!access.fieldsResources?.[field]?.allowed ||
-                      access.fieldsResources?.[field]?.denied),
-                )
-              )
-                throw new Error(TypeInfoORMServiceError.INVALID_OPERATION);
-            }
-            if (Object.values(cleanItem).some((value) => value === null)) {
-              const access = await this.getItemDACValidation(
-                existingItem,
-                typeName,
-                TypeOperation.DELETE,
-                context,
-                existingItem,
-              );
-              if (
-                Object.keys(cleanItem).some(
-                  (field) =>
-                    cleanItem[field] === null &&
-                    (!access.fieldsResources?.[field]?.allowed ||
-                      access.fieldsResources?.[field]?.denied),
-                )
-              )
-                throw new Error(TypeInfoORMServiceError.INVALID_OPERATION);
-            }
+        let existingItem: Partial<TypeInfoDataItem> | undefined;
+        try {
+          existingItem = await driver.readItem(primaryFieldValue);
+        } catch (error: any) {
+          if (error?.message !== DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND) {
+            throw error;
           }
-          if (this.config.useDAC && expected && Object.keys(expected).length) {
-            // A guard observes a field value through its success/conflict outcome.
-            // Authorize both the probed values and the stored snapshot, since DAC
-            // paths can constrain values. Never silently remove a denied guard.
-            const expectedItem = {
-              ...expected,
-              [String(primaryField)]: primaryFieldValue,
-            };
-            for (const observedItem of [
-              expectedItem,
-              ...(existingItem ? [{ ...expectedItem, ...existingItem }] : []),
-            ]) {
-              const {
-                allowed,
-                denied,
-                fieldsResources = {},
-              } = await this.getItemDACValidation(
-                observedItem,
-                typeName,
-                TypeOperation.READ,
-                context,
-                existingItem,
-              );
-              if (
-                denied ||
-                !allowed ||
-                Object.keys(expected).some((name) => {
-                  const access = fieldsResources[name];
-                  return !access?.allowed || access.denied;
-                })
-              ) {
-                throw {
-                  message: TypeInfoORMServiceError.INVALID_OPERATION,
-                  typeName,
-                };
-              }
-            }
-          }
-        };
-        const indexed =
-          Object.keys(this.getIndexedFieldCapabilities(typeName)).length > 0;
-        const needsCoordination = !!this.config.useDAC || indexed;
-        const result = await driver.updateItem(primaryFieldValue, cleanItem, {
-          ...updateConfig,
-          ...(needsCoordination
-            ? {
-                coordination: {
-                  guardFields: this.config.useDAC
-                    ? Object.keys(this.getTypeInfo(typeName).fields ?? {})
-                    : undefined,
-                  inspect: this.config.useDAC ? inspect : undefined,
-                  changed: indexed
-                    ? async (before, after) => {
-                        if (before)
-                          await this.replaceItemIndexes(
-                            typeName,
-                            before,
-                            after!,
-                          );
-                        else await this.indexItemIndexes(typeName, after!);
-                      }
-                    : undefined,
-                },
-              }
-            : {}),
-        });
-        if (guarded && result === false)
-          throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT);
+        }
+        const result = await driver.updateItem(
+          primaryFieldValue,
+          cleanItem,
+          updateConfig,
+        );
+        const updatedItem = await driver.readItem(primaryFieldValue);
+
+        if (existingItem) {
+          await this.replaceItemIndexes(typeName, existingItem, updatedItem);
+        } else {
+          await this.indexItemIndexes(typeName, updatedItem);
+        }
 
         return result;
       }
@@ -3789,50 +3579,32 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
   ): Promise<boolean> => {
     this.validateDeleteOperation(typeName, primaryFieldValue);
     const driver = this.getDriverInternal(typeName);
-    const indexed =
-      Object.keys(this.getIndexedFieldCapabilities(typeName)).length > 0;
-    const result = await driver.deleteItem(
-      primaryFieldValue,
-      this.config.useDAC || indexed
-        ? {
-            coordination: {
-              guardFields: this.config.useDAC
-                ? Object.keys(this.getTypeInfo(typeName).fields ?? {})
-                : undefined,
-              inspect: this.config.useDAC
-                ? async (existingItem) => {
-                    if (!existingItem)
-                      throw new Error(
-                        DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND,
-                      );
-                    const { allowed, denied } = await this.getItemDACValidation(
-                      existingItem,
-                      typeName,
-                      TypeOperation.DELETE,
-                      context,
-                      existingItem,
-                    );
-                    if (denied || !allowed)
-                      throw new Error(
-                        TypeInfoORMServiceError.INVALID_OPERATION,
-                      );
-                  }
-                : undefined,
-              changed: indexed
-                ? async (before) => {
-                    if (before) await this.removeItemIndexes(typeName, before);
-                  }
-                : undefined,
-            },
-          }
-        : undefined,
-    );
-    if (result)
+    const existingItem = await driver.readItem(primaryFieldValue);
+    const { allowed: deleteAllowed, denied: deleteDenied } =
+      await this.getItemDACValidation(
+        existingItem,
+        typeName,
+        TypeOperation.DELETE,
+        context,
+      );
+
+    if (deleteDenied || !deleteAllowed) {
+      throw {
+        message: TypeInfoORMServiceError.INVALID_OPERATION,
+        typeName,
+        primaryFieldValue,
+      };
+    } else {
+      const result = await driver.deleteItem(primaryFieldValue);
+
       await this.cleanupRelationships({
         fromTypeName: typeName,
         fromTypePrimaryFieldValue: primaryFieldValue,
       });
-    return result;
+      await this.removeItemIndexes(typeName, existingItem);
+
+      return result;
+    }
   };
 
   /**

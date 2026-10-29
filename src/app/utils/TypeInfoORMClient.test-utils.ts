@@ -144,21 +144,3 @@ export const runTypeInfoORMClientRelListScenario = async () =>
 
 export const runTypeInfoORMClientRelatedItemsScenario = async () =>
   (await runTypeInfoORMClientScenario()).relatedItems;
-
-export const runTypeInfoORMClientConditionalOptions = async () => {
-  const calls: unknown[] = [];
-  const previousFetch = globalThis.fetch;
-  globalThis.fetch = async (_url, init) => {
-    calls.push(JSON.parse(String(init?.body)));
-    return { ok: true, text: async () => "true" } as Response;
-  };
-  try {
-    const client = new TypeInfoORMClient({ protocol: "https", domain: "example.com", basePath: "orm" });
-    await client.create("Book", { title: "first" }, { ifAbsent: true });
-    await client.update("Book", { id: "one", score: 1 }, { preconditions: { exists: true, expected: { score: 0 } } });
-    await client.read("Book", "one", undefined, { consistency: "strong" });
-    return calls;
-  } finally {
-    globalThis.fetch = previousFetch;
-  }
-};

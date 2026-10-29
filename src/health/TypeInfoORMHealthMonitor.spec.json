@@ -211,19 +211,15 @@
       }
     },
     {
-      "export": "runHealthMissingIndexUsesDriverContractScenario",
+      "export": "runHealthMissingIndexRequiresStrongReadScenario",
       "conditions": [],
       "operation": "DEEP_EQUALS",
       "expectation": {
         "missingIndexFindingCount": 1,
-        "reindexedItemCount": 1,
-        "suspiciousCount": 0,
-        "text": [
-          "weak-book-1"
-        ],
-        "structured": [
-          "weak-book-1"
-        ]
+        "reindexedItemCount": 0,
+        "suspiciousCount": 1,
+        "text": [],
+        "structured": []
       }
     },
     {

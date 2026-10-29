@@ -4,12 +4,6 @@
  * S3-backed file item driver that exposes files as ORM items with upload/download URLs.
  */
 import {
-  TypeInfoORMServiceError,
-  TypeInfoORMCreateConfig,
-  TypeInfoORMReadConfig,
-  TypeInfoORMUpdateConfig,
-} from "../../../common/TypeInfoORM";
-import {
   CopyObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -30,8 +24,6 @@ import {
   BaseFileLocationInfo,
   CloudFileServiceDriver,
   DATA_ITEM_DB_DRIVER_ERRORS,
-  DataItemOperationConfig,
-  CanonicalWriteCommittedError,
   DataItemDBDriver,
   DataItemDBDriverConfig,
   SupportedDataItemDBDriverEntry,
@@ -79,67 +71,14 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
     });
   }
 
-  private inspect = async (
-    config: DataItemOperationConfig<BaseFileItem> | undefined,
-    before: BaseFileItem | undefined,
-  ) => {
-    if (
-      config?.coordination?.exclusive ||
-      (config?.coordination?.inspect &&
-        (!config.coordination.guardFields ||
-          config.coordination.guardFields.some(
-            (field) => !["id", "name", "directory"].includes(field),
-          )))
-    ) {
-      // HEAD metadata has no atomic whole-metadata CAS. Location-only DAC is
-      // immutable for this key; mutable metadata authorization is unsupported.
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    }
-    await config?.coordination?.inspect?.(before);
-  };
-
-  private prior = async (id: string): Promise<BaseFileItem | undefined> => {
-    try {
-      return await this.readItem(id);
-    } catch (error: any) {
-      if (error?.message === DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND)
-        return undefined;
-      throw error;
-    }
-  };
-
-  private notify = async (
-    config: DataItemOperationConfig<BaseFileItem> | undefined,
-    before: BaseFileItem | undefined,
-    after: () => Promise<BaseFileItem | undefined>,
-  ) => {
-    if (!config?.coordination?.changed) return;
-    try {
-      await config.coordination.changed(before, await after());
-    } catch (cause) {
-      throw new CanonicalWriteCommittedError(cause);
-    }
-  };
-
   /**
    * Create a new @{@link BaseFileItem}.
    * @param item New file item payload without the id field.
    * @returns Generated file id.
    * */
-  public createItem = async (
-    item: Partial<Omit<BaseFileItem, "id">>,
-    createConfig?: TypeInfoORMCreateConfig &
-      DataItemOperationConfig<BaseFileItem>,
-  ) => {
-    if (createConfig?.ifAbsent)
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
+  public createItem = async (item: Partial<Omit<BaseFileItem, "id">>) => {
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
-    const id = getFullFileKey({ file: item as BaseFileLocationInfo });
-    const before = createConfig?.coordination
-      ? await this.prior(id)
-      : undefined;
-    await this.inspect(createConfig, before);
 
     await this.s3.send(
       new PutObjectCommand({
@@ -153,21 +92,20 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
       }),
     );
 
-    await this.notify(createConfig, before, () => this.readItem(id));
-    return id;
+    return getFullFileKey({
+      file: item as BaseFileLocationInfo,
+    });
   };
 
   /**
    * Read a @{@link BaseFileItem} by its id.
    * @param id Unique identifier value for the file.
    * @param selectFields Optional fields to select from the file item.
-   * @param _readConfig Required consistency; canonical reads honor strong consistency.
    * @returns File item payload (partial when selected fields are used).
    * */
   public readItem = async (
     id: string,
     selectFields?: (keyof BaseFileItem)[],
-    _readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<BaseFileItem>,
   ) => {
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
@@ -176,31 +114,20 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
       const itemLoc: BaseFileLocationInfo = getBaseFileLocationInfo(id);
-      let head;
-      try {
-        head = await this.s3.send(
-          new HeadObjectCommand({
-            Bucket: bucketName,
-            Key: getFullFileKey({ file: itemLoc, baseDirectory: tableName }),
-          }),
-        );
-      } catch (error: any) {
-        if (
-          error?.name !== "NotFound" &&
-          error?.$metadata?.httpStatusCode !== 404
-        )
-          throw error;
-        if (_readConfig?.coordination?.exclusive)
-          throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-        await _readConfig?.coordination?.inspect?.(undefined);
-        throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.ITEM_NOT_FOUND);
-      }
       const {
         ContentType = "",
         ContentLength = 0,
         LastModified,
         Metadata: {} = {},
-      } = head;
+      } = await this.s3.send(
+        new HeadObjectCommand({
+          Bucket: bucketName,
+          Key: getFullFileKey({
+            file: itemLoc,
+            baseDirectory: tableName,
+          }),
+        }),
+      );
       const item: BaseFileItem = {
         ...itemLoc,
         id,
@@ -218,36 +145,28 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
             : undefined,
       };
 
-      await _readConfig?.coordination?.inspect?.(item);
       return item;
     }
   };
 
   /**
+   * Strongly consistent maintenance read.
+   *
+   * Amazon S3 object reads are strongly consistent after successful writes.
+   */
+  public readItemStronglyConsistent = this.readItem;
+
+  /**
    * Update a @{@link BaseFileItem}.
-   * Conditional canonical updates are unsupported and fail before file I/O.
    * @param uniqueIdentifier Unique identifier value for the file.
    * @param item Partial update payload for the file.
-   * @returns True when the item was updated or already exists at the requested location.
-   * @throws When a same-location update target does not exist or a rename destination is occupied.
+   * @returns True when the item was updated.
    * */
   public updateItem = async (
     uniqueIdentifier: BaseFileItem["id"],
     item: Partial<BaseFileItem>,
-    updateConfig?: TypeInfoORMUpdateConfig &
-      DataItemOperationConfig<BaseFileItem>,
   ) => {
-    if (updateConfig?.preconditions !== undefined) {
-      throw new Error(TypeInfoORMServiceError.UNSUPPORTED_CAPABILITY);
-    }
-    const before = updateConfig?.coordination
-      ? await this.prior(uniqueIdentifier)
-      : undefined;
-    await this.inspect(updateConfig, before);
-    const {
-      directory = getBaseFileLocationInfo(uniqueIdentifier).directory,
-      name,
-    } = item;
+    const { directory, name } = item;
     const { tableName } = this.config;
     const { bucketName } = this.specificConfig;
 
@@ -256,58 +175,27 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
     const { name: oldName, directory: oldDirectory } = oldItemLoc;
 
     if (name && (name !== oldName || directory !== oldDirectory)) {
-      try {
-        await this.s3.send(
-          new CopyObjectCommand({
-            // Source authorization does not permit overwriting another identity.
-            // Enforce absence atomically, including destinations created after inspection.
-            IfNoneMatch: "*",
-            Bucket: bucketName,
-            Key: getFullFileKey({
-              file: {
-                directory,
-                name,
-              },
-              baseDirectory: tableName,
-            }),
-            CopySource: `${encodeURIComponent(bucketName)}/${getFullFileKey({
-              file: oldItemLoc,
-              baseDirectory: tableName,
-            })
-              .split("/")
-              .map(encodeURIComponent)
-              .join("/")}`,
+      await this.s3.send(
+        new CopyObjectCommand({
+          Bucket: bucketName,
+          Key: getFullFileKey({
+            file: {
+              directory,
+              name,
+            },
+            baseDirectory: tableName,
           }),
-        );
-      } catch (error: any) {
-        if (
-          error?.name === "PreconditionFailed" ||
-          error?.name === "ConditionalRequestConflict" ||
-          error?.$metadata?.httpStatusCode === 412 ||
-          error?.$metadata?.httpStatusCode === 409
-        ) {
-          throw new Error(TypeInfoORMServiceError.CONDITIONAL_WRITE_CONFLICT, {
-            cause: error,
-          });
-        }
-        throw error;
-      }
-      try {
-        await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
-      } catch (cause) {
-        throw new CanonicalWriteCommittedError(cause);
-      }
-    } else if (!before) {
-      // No copy will validate the source. HEAD must establish that this no-op
-      // refers to an existing canonical object, even without index/DAC callbacks.
-      await this.readItem(uniqueIdentifier);
+          CopySource: getFullFileKey({
+            file: oldItemLoc,
+            baseDirectory: tableName,
+          }),
+        }),
+      );
+      await this.s3FileDriver.deleteFile(oldItemLoc, tableName);
     }
 
-    const nextId =
-      name && (name !== oldName || directory !== oldDirectory)
-        ? getFullFileKey({ file: { directory, name } })
-        : uniqueIdentifier;
-    await this.notify(updateConfig, before, () => this.readItem(nextId));
+    await this.readItem(uniqueIdentifier);
+
     return true;
   };
 
@@ -316,22 +204,17 @@ export class S3FileItemDBDriver implements DataItemDBDriver<
    * @param id Unique identifier value for the file.
    * @returns True when the item was deleted.
    */
-  public deleteItem = async (
-    id: string,
-    deleteConfig?: DataItemOperationConfig<BaseFileItem>,
-  ) => {
+  public deleteItem = async (id: string) => {
     const { tableName } = this.config;
 
     if (typeof id === "undefined") {
       throw new Error(DATA_ITEM_DB_DRIVER_ERRORS.MISSING_ID);
     } else {
-      const before = await this.readItem(id);
-      await this.inspect(deleteConfig, before);
+      await this.readItem(id);
       await this.s3FileDriver.deleteFile(
         getBaseFileLocationInfo(id),
         tableName,
       );
-      await this.notify(deleteConfig, before, async () => undefined);
     }
 
     return true;

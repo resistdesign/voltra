@@ -119,33 +119,6 @@
         },
         "parity": true
       }
-    },
-    {
-      "export": "runORMRouteMapConditionalForwarding",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": [
-        {
-          "collision": "CONDITIONAL_WRITE_CONFLICT",
-          "stale": "CONDITIONAL_WRITE_CONFLICT",
-          "read": {
-            "id": "one",
-            "name": "winner",
-            "score": 2
-          },
-          "strongReads": 1
-        },
-        {
-          "collision": "CONDITIONAL_WRITE_CONFLICT",
-          "stale": "CONDITIONAL_WRITE_CONFLICT",
-          "read": {
-            "id": "one",
-            "name": "winner",
-            "score": 2
-          },
-          "strongReads": 1
-        }
-      ]
     }
   ]
 }

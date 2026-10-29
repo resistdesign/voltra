@@ -7,11 +7,7 @@ import {
   ListItemsConfig,
   ListItemsResults,
 } from "../../../../common/SearchTypes";
-import type {
-  TypeInfoORMCreateConfig,
-  TypeInfoORMReadConfig,
-  TypeInfoORMUpdateConfig,
-} from "../../../../common/TypeInfoORM/Types";
+import type { TypeInfoORMUpdateConfig } from "../../../../common/TypeInfoORM/Types";
 
 /**
  * The errors that can be thrown by a {@link DataItemDBDriver}.
@@ -69,43 +65,6 @@ export type DataItemDBDriverConfig<
 };
 
 /**
- * Server-only hooks on existing CRUD operations. Inspect authorizes a strong
- * snapshot; mutations must atomically validate its guardFields (including absent
- * fields) before committing. Changed receives mutation images (strong metadata
- * snapshots for file stores that lack returned images). These
- * hooks do not require exclusion through asynchronous index work or a transaction
- * across stores. Callbacks must not recursively coordinate the same store.
- */
-export type DataItemOperationConfig<ItemType> = {
-  /** Generic authorization/index work; mechanisms remain driver-local. */
-  coordination?: {
-    /** Schema fields whose observed values/absence must hold at mutation commit. */
-    guardFields?: string[];
-    /** Protect absence from recreation through inspection/cleanup; present reads may proceed. */
-    exclusive?: boolean;
-    /** Inspect authoritative state before conditions/commit; rejection prevents mutation. */
-    inspect?: (current: ItemType | undefined) => Promise<void>;
-    /** Follow up with canonical images; postcommit failure reports canonicalCommitted. */
-    changed?: (
-      before: ItemType | undefined,
-      after: ItemType | undefined,
-    ) => Promise<void>;
-  };
-};
-
-/** A canonical write committed, but its index follow-up failed. No rollback. */
-export class CanonicalWriteCommittedError extends Error {
-  /** Canonical state changed even though coordinated follow-up failed. */
-  readonly canonicalCommitted = true;
-
-  /** Preserve the follow-up failure without exposing canonical images to callers. */
-  constructor(cause: unknown) {
-    super("CANONICAL_WRITE_COMMITTED", { cause });
-    this.name = "CanonicalWriteCommittedError";
-  }
-}
-
-/**
  * The API for a database driver.
  * */
 export type DataItemDBDriver<
@@ -113,32 +72,34 @@ export type DataItemDBDriver<
   UniquelyIdentifyingFieldName extends keyof ItemType,
 > = {
   /**
-   * Create an item, atomically refusing an occupied identity when ifAbsent is set.
-   * Unsupported drivers must refuse the requirement, never ignore it.
+   * Create a new item in the data store.
+   * @param newItem New item payload without the identifying field.
    * @returns Generated identifier for the created item.
    */
   createItem(
     newItem: Partial<Omit<ItemType, UniquelyIdentifyingFieldName>>,
-    createConfig?: TypeInfoORMCreateConfig & DataItemOperationConfig<ItemType>,
   ): Promise<ItemType[UniquelyIdentifyingFieldName]>;
   /**
    * Read an item from the data store.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param selectedFields Optional fields to select from the item.
-   * @param readConfig Required consistency; unsupported guarantees must be refused.
    * @returns Item payload (partial when selected fields are used).
    */
   readItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     selectedFields?: (keyof ItemType)[],
-    readConfig?: TypeInfoORMReadConfig & DataItemOperationConfig<ItemType>,
+  ): Promise<Partial<ItemType>>;
+  /**
+   * Optional strongly consistent read used by destructive maintenance safety checks.
+   *
+   * Drivers that cannot provide stronger read semantics should omit this method.
+   */
+  readItemStronglyConsistent?(
+    uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
+    selectedFields?: (keyof ItemType)[],
   ): Promise<Partial<ItemType>>;
   /**
    * Update an item in the data store.
-   * Atomically enforce supplied preconditions, requiring an existing target.
-   * Unsupported drivers must refuse guards. A failed guard throws
-   * CONDITIONAL_WRITE_CONFLICT or returns false; the ORM normalizes false.
-   * Requested atomic snapshot checks must be honored or refused before side effects.
    * @param uniqueIdentifier Unique identifier value for the item.
    * @param updatedItem Partial update payload for the item.
    * @returns True when the item was updated.
@@ -146,7 +107,7 @@ export type DataItemDBDriver<
   updateItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
     updatedItem: Partial<ItemType>,
-    updateConfig?: TypeInfoORMUpdateConfig & DataItemOperationConfig<ItemType>,
+    updateConfig?: TypeInfoORMUpdateConfig,
   ): Promise<boolean>;
   /**
    * Delete an item from the data store.
@@ -155,7 +116,6 @@ export type DataItemDBDriver<
    */
   deleteItem(
     uniqueIdentifier: ItemType[UniquelyIdentifyingFieldName],
-    deleteConfig?: DataItemOperationConfig<ItemType>,
   ): Promise<boolean>;
   /**
    * List items from the data store.

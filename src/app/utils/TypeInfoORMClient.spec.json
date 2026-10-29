@@ -265,45 +265,6 @@
           ["title"]
         ]
       }
-    },
-    {
-      "export": "runTypeInfoORMClientConditionalOptions",
-      "conditions": [],
-      "operation": "DEEP_EQUALS",
-      "expectation": [
-        [
-          "Book",
-          {
-            "title": "first"
-          },
-          {
-            "ifAbsent": true
-          }
-        ],
-        [
-          "Book",
-          {
-            "id": "one",
-            "score": 1
-          },
-          {
-            "preconditions": {
-              "exists": true,
-              "expected": {
-                "score": 0
-              }
-            }
-          }
-        ],
-        [
-          "Book",
-          "one",
-          null,
-          {
-            "consistency": "strong"
-          }
-        ]
-      ]
     }
   ]
 }
