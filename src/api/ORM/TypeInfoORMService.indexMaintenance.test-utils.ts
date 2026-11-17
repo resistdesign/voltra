@@ -570,7 +570,7 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
 /** Verify TypeInfo types sharing an ID retain independent structured state. */
 export const runSharedStructuredDocumentIdentityScenario = async () => {
   const typeInfo = getTypeInfoMapV1().Book;
-  typeInfo.fields.title.tags = undefined;
+  typeInfo.fields!.title.tags = undefined;
   const typeInfoMap: TypeInfoMap = { Book: typeInfo, Magazine: typeInfo };
   const drivers = Object.fromEntries(
     Object.keys(typeInfoMap).map((typeName) => [

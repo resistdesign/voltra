@@ -12,3 +12,11 @@ Scope excludes application ID changes, consistency/transaction refactors, and dr
 Validation: original production code fails the shared-ID regression (2 pass, 1 fail); fixed code passes. Full suite: 1,032 core and 58 native tests; build passed. Health legacy-identity regression passes (18 Health tests). All three drivers pass typed-state conformance. Existing persisted structured indexes require a clean rebuild, documented in README.
 
 PR opened: https://github.com/resistdesign/voltra/pull/427. All implementation and validation work is complete. Plan remains active pending user agreement that the work is finished.
+
+## PR check follow-up
+
+- [x] Inspect failed CI logs: demo-site TypeDoc checks test helpers excluded by the package build; the shared-ID fixture accesses optional `fields` without narrowing.
+- [x] Fix the known fixture's field typing and verify the regression and demo-site build.
+- [~] Commit and push the correction to PR #427, then verify GitHub checks.
+
+Follow-up local validation: `yarn site:build:app` (including TypeDoc), the three index-maintenance regressions, `yarn site:build:api`, `yarn site:build:iac`, `yarn test:exports`, and `yarn test:consumer` all passed. Remaining: verify the new GitHub check run after pushing.
