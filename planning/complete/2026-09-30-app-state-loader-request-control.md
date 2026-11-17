@@ -38,3 +38,7 @@ Engayge Friend Finder is the motivating production consumer. It must be able to 
 ## Framework-consumer rule
 
 Consumers may identify a missing Voltra capability and request an upstream framework change. They should not silently bypass an established Voltra abstraction with a parallel local implementation merely because the abstraction is incomplete. While Voltra is alpha, primary consumers such as Engayge are expected to drive the framework toward the ideal contract; missing capabilities should be fixed in Voltra first, then consumed through the normal Voltra surface.
+
+## Closure — 2026-10-26
+
+Closed at the user's explicit request: this plan was left active by accident. Historical checklist entries are retained as recorded; closure does not assert that any previously pending external action was performed. No further work is tracked by this plan.

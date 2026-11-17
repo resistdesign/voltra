@@ -22,3 +22,7 @@ Support analysis:
 - First sensitive-data commit: `cd3c6924b69dab13dc010418894d3e7d976ebbf4`
 - Sensitive path: `scripts/seed-data/Person.csv`
 - Branches and tags have already been rewritten and verified clean.
+
+## Closure — 2026-10-26
+
+Closed at the user's explicit request: this plan was left active by accident. Historical checklist entries are retained as recorded; closure does not assert that any previously pending external action was performed. No further work is tracked by this plan.
