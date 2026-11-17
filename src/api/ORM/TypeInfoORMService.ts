@@ -1586,7 +1586,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       };
     }
 
-    return { occupancyFields };
+    return { typeName, occupancyFields };
   };
 
   /**
@@ -1985,7 +1985,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
       if (!documents?.get) {
         unsupportedCapabilities.add("structured");
       } else {
-        const actualStructured = await documents.get(docId);
+        const actualStructured = await documents.get(docId, typeName);
         if (
           expectedStructuredCount > 0 &&
           typeof actualStructured === "undefined"
@@ -2267,6 +2267,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
       try {
         await structuredWriter.write(docId, {}, {
+          typeName: previousDescriptor.typeName,
           deleted: true,
           expectedVersion: config.structuredVersion,
         });
@@ -3659,6 +3660,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
 
           const orderBy = this.resolveIndexOrderBy(typeName, sortFields);
           let page = await searchIndex(indexing.backend, expression, {
+            typeName,
             limit: itemsPerPage,
             cursor,
             orderBy,
@@ -3738,6 +3740,7 @@ export class TypeInfoORMService implements TypeInfoORMAPI {
             }
 
             page = await searchIndex(indexing.backend, expression, {
+              typeName,
               limit: (itemsPerPage ?? 10) - items.length,
               cursor: page.cursor,
               orderBy,

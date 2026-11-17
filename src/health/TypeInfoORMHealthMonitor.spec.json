@@ -290,6 +290,20 @@
         "examinedCount": 3,
         "orphanFindingCount": 3
       }
+    },
+    {
+      "export": "runHealthLegacyStructuredIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "legacyReported": true,
+        "typed": {
+          "f1#Book#rating": 7
+        },
+        "legacy": {
+          "f1#Book#rating": 99
+        }
+      }
     }
   ]
 }

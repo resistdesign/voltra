@@ -45,6 +45,8 @@ export type StructuredOccupancyFieldMap = Record<
 
 /** Optional context supplied with a structured document write. */
 export type StructuredWriteContext = {
+  /** TypeInfo namespace for document state; omit for standalone untyped indexes. */
+  typeName?: string;
   /** All eligible scalar fields for the document type, including missing ones. */
   occupancyFields?: StructuredOccupancyFieldMap;
   /**

@@ -521,6 +521,7 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
     upper: 2,
   };
   const options = {
+    typeName: "Book",
     limit: 10,
     orderBy: { field: titleField },
     occupancyFields: {
@@ -563,5 +564,124 @@ export const runStructuredOccupancyRebuildWorkflowScenario = async () => {
     repeated,
     state: await structuredBackend.occupancyMaintenance.getState(),
     emptyScopeError,
+  };
+};
+
+/** Verify TypeInfo types sharing an ID retain independent structured state. */
+export const runSharedStructuredDocumentIdentityScenario = async () => {
+  const typeInfo = getTypeInfoMapV1().Book;
+  typeInfo.fields!.title.tags = undefined;
+  const typeInfoMap: TypeInfoMap = { Book: typeInfo, Magazine: typeInfo };
+  const drivers = Object.fromEntries(
+    Object.keys(typeInfoMap).map((typeName) => [
+      typeName,
+      new InMemoryDataItemDBDriver<Book, "id">({
+        tableName: typeName,
+        uniquelyIdentifyingFieldName: "id",
+        generateUniqueIdentifier: () => "shared#id/1",
+      }),
+    ]),
+  );
+  const values = new StructuredInMemoryBackend();
+  const orm = new TypeInfoORMService({
+    typeInfoMap,
+    getDriver: (typeName) => drivers[typeName],
+    getRelationshipDriver: () =>
+      new InMemoryItemRelationshipDBDriver({
+        tableName: "Relationships",
+        uniquelyIdentifyingFieldName: ItemRelationshipInfoIdentifyingKeys.id,
+      }),
+    indexing: getTypeInfoORMIndexingConfigFromTypeInfoMap(typeInfoMap, {
+      backend: createIndexBackend({ values, valueWriter: values }),
+      allowFullScanFallback: false,
+    }),
+    useDAC: false,
+  });
+  const id = await orm.create("Book", {
+    title: "Book",
+    slug: "book",
+    rating: 1,
+  });
+  await orm.create("Magazine", {
+    title: "Magazine",
+    slug: "magazine",
+    rating: 2,
+  });
+  const query = async (typeName: string, rating: number) => {
+    const field = qualifyIndexField(typeName, "rating");
+    const term = {
+      type: "term" as const,
+      field,
+      mode: "eq" as const,
+      value: rating,
+    };
+    return (
+      await searchStructured(
+        values,
+        { and: [term, { type: "gte", field, value: rating }] },
+        {
+          typeName,
+          limit: 10,
+          orderBy: { field },
+        },
+      )
+    ).candidateIds;
+  };
+  const snapshot = async () => ({
+    book1: await query("Book", 1),
+    book3: await query("Book", 3),
+    magazine2: await query("Magazine", 2),
+    magazine4: await query("Magazine", 4),
+  });
+  const afterIndex = await snapshot();
+  await orm.update("Book", { id, rating: 3 });
+  await orm.update("Magazine", { id, rating: 4 });
+  const afterUpdates = await snapshot();
+  const listed = await orm.list("Book", {
+    itemsPerPage: 10,
+    criteria: {
+      logicalOperator: LogicalOperators.AND,
+      fieldCriteria: [
+        { fieldName: "rating", operator: ComparisonOperators.EQUALS, value: 3 },
+      ],
+    },
+    sortFields: [{ field: "rating" }],
+  });
+  const audit = await values.documents?.list?.({ limit: 10 });
+  const versions = Object.fromEntries(
+    (audit?.documents ?? []).map((doc) => [doc.typeName!, doc.version]),
+  );
+  await orm.removeItemIndexes("Book", await drivers.Book.readItem(id));
+  const afterRemove = await snapshot();
+  await orm.reindexStoredItem("Book", id);
+  await drivers.Book.deleteItem(id);
+  const orphanVersion = (
+    await values.documents?.list?.({ limit: 10 })
+  )?.documents.find((doc) => doc.typeName === "Book")?.version;
+  const cleanup = await orm.cleanupOrphanedIndexState("Book", id, {
+    structuredVersion: orphanVersion,
+  });
+  const afterOrphanCleanup = await snapshot();
+  await orm.indexItemIndexes("Book", { id, rating: 3 });
+  const removedVersion = (
+    await values.documents?.list?.({ limit: 10 })
+  )?.documents.find((doc) => doc.typeName === "Book")?.version;
+  const previousDescriptor = orm
+    .getIndexMaintenanceTypeDescriptors()
+    .find((doc) => doc.typeName === "Book")!;
+  const removedCleanup = await orm.cleanupRemovedTypeIndexState(id, {
+    previousDescriptor,
+    structuredVersion: removedVersion,
+  });
+  return {
+    afterIndex,
+    afterUpdates,
+    listedIds: listed.items.map((item) => item.id),
+    versions,
+    afterRemove,
+    afterOrphanCleanup,
+    cleanupStatus: cleanup.status,
+    afterRemovedTypeCleanup: await snapshot(),
+    removedCleanupStatus: removedCleanup.status,
   };
 };

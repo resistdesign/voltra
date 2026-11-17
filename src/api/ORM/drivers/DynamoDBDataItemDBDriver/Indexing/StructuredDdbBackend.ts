@@ -20,7 +20,10 @@ import type {
   StructuredDocumentPage,
   StructuredSearchDependencies,
 } from "../../../../Indexing/structured/SearchStructured";
-import type { StructuredQueryOptions, WhereValue } from "../../../../Indexing/structured/Types";
+import type {
+  StructuredQueryOptions,
+  WhereValue,
+} from "../../../../Indexing/structured/Types";
 import { IndexMutationCoordinator } from "./IndexMutationCoordinator";
 import type { StructuredStringTokenizerConfig } from "../../../../Indexing/structured/StructuredStringLike";
 import {
@@ -392,15 +395,17 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
   documents = {
     get: async (
       docId: DocId,
+      typeName?: string,
     ): Promise<StructuredDocFieldsRecord | undefined> => {
       const response = await this.client.getItem({
         TableName: this.docFieldsTableName,
-        Key: buildStructuredDocFieldsKey(docId),
+        Key: buildStructuredDocFieldsKey(docId, typeName),
       });
       return (response.Item as StructuredDocFieldsItem | undefined)?.fields;
     },
     getMany: async (
       docIds: DocId[],
+      typeName?: string,
     ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>> => {
       const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
 
@@ -417,7 +422,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
         );
         const keyedDocs = chunk.map((docId) => ({
           docId,
-          key: buildStructuredDocFieldsKey(docId),
+          key: buildStructuredDocFieldsKey(docId, typeName),
         }));
         const docIdByKey = new Map(
           keyedDocs.map(({ docId, key }) => [indexKeyIdentity(key), docId]),
@@ -441,9 +446,8 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
           const response = await this.client.batchGetItem({
             RequestItems: requestItems,
           });
-          for (const item of (response.Responses?.[
-            this.docFieldsTableName
-          ] ?? []) as StructuredDocFieldsItem[]) {
+          for (const item of (response.Responses?.[this.docFieldsTableName] ??
+            []) as StructuredDocFieldsItem[]) {
             fieldsById.set(item.docId, item.fields);
           }
           pending = response.UnprocessedKeys;
@@ -456,7 +460,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
               ? undefined
               : {
                   docId,
-                  fields: await this.documents.get(docId),
+                  fields: await this.documents.get(docId, typeName),
                 };
           }),
         );
@@ -485,6 +489,7 @@ export class StructuredDdbReader implements StructuredSearchDependencies {
 
       return {
         documents: items.map((item) => ({
+          ...(item.typeName !== undefined ? { typeName: item.typeName } : {}),
           docId: item.docId,
           fields: item.fields ?? {},
           version:
@@ -517,10 +522,11 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
 
   async loadDocFieldsState(
     docId: DocId,
+    typeName?: string,
   ): Promise<StructuredDocFieldsState | undefined> {
     const response = await this.client.getItem({
       TableName: this.docFieldsTableName,
-      Key: buildStructuredDocFieldsKey(docId),
+      Key: buildStructuredDocFieldsKey(docId, typeName),
       ConsistentRead: true,
     });
 
@@ -552,6 +558,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredDocFieldsState["occupancyFields"],
+    typeName?: string,
   ): Promise<boolean> {
     if (typeof expectedVersion === "undefined") {
       const createResult = await this.client.putItem({
@@ -561,6 +568,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
           fields,
           1,
           occupancyFields,
+          typeName,
         ),
         ConditionExpression: "attribute_not_exists(#pk)",
         ExpressionAttributeNames: {
@@ -579,6 +587,7 @@ class StructuredDdbWriterDependencies implements StructuredWriterDependencies {
         fields,
         nextVersion,
         occupancyFields,
+        typeName,
       ),
       ConditionExpression:
         "(#version = :expectedVersion) OR (attribute_not_exists(#version) AND :expectedVersion = :zero)",

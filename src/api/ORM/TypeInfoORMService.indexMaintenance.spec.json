@@ -74,6 +74,66 @@
         },
         "emptyScopeError": "At least one type is required to rebuild structured occupancy."
       }
+    },
+    {
+      "export": "runSharedStructuredDocumentIdentityScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "afterIndex": {
+          "book1": [
+            "shared#id/1"
+          ],
+          "book3": [],
+          "magazine2": [
+            "shared#id/1"
+          ],
+          "magazine4": []
+        },
+        "afterUpdates": {
+          "book1": [],
+          "book3": [
+            "shared#id/1"
+          ],
+          "magazine2": [],
+          "magazine4": [
+            "shared#id/1"
+          ]
+        },
+        "listedIds": [
+          "shared#id/1"
+        ],
+        "versions": {
+          "Book": 2,
+          "Magazine": 2
+        },
+        "afterRemove": {
+          "book1": [],
+          "book3": [],
+          "magazine2": [],
+          "magazine4": [
+            "shared#id/1"
+          ]
+        },
+        "afterOrphanCleanup": {
+          "book1": [],
+          "book3": [],
+          "magazine2": [],
+          "magazine4": [
+            "shared#id/1"
+          ]
+        },
+        "cleanupStatus": "cleaned",
+        "afterRemovedTypeCleanup": {
+          "book1": [],
+          "book3": [],
+          "magazine2": [],
+          "magazine4": [
+            "shared#id/1"
+          ]
+        },
+        "removedCleanupStatus": "cleaned"
+      }
     }
   ]
 }

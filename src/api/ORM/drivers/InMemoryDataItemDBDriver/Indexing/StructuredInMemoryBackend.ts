@@ -141,9 +141,10 @@ export class StructuredInMemoryBackend
     return {
       loadDocFieldsState: async (
         docId: DocId,
+        typeName?: string,
       ): Promise<StructuredDocFieldsState | undefined> => {
         const item = this.records.get(
-          recordKey(buildStructuredDocFieldsKey(docId)),
+          recordKey(buildStructuredDocFieldsKey(docId, typeName)),
         ) as StructuredDocFieldsItem | undefined;
         return item
           ? {
@@ -160,8 +161,9 @@ export class StructuredInMemoryBackend
         expectedVersion,
         fields,
         occupancyFields,
+        typeName,
       ) => {
-        const key = recordKey(buildStructuredDocFieldsKey(docId));
+        const key = recordKey(buildStructuredDocFieldsKey(docId, typeName));
         const current = this.records.get(key) as
           | StructuredDocFieldsItem
           | undefined;
@@ -175,6 +177,7 @@ export class StructuredInMemoryBackend
             fields,
             (expectedVersion ?? 0) + 1,
             occupancyFields,
+            typeName,
           ),
         );
         return true;
@@ -375,17 +378,17 @@ export class StructuredInMemoryBackend
 
   /** Canonical structured fields used by compound verification. */
   readonly documents: StructuredSearchDependencies["documents"] = {
-    get: async (docId) => {
+    get: async (docId, typeName) => {
       const item = this.records.get(
-        recordKey(buildStructuredDocFieldsKey(docId)),
+        recordKey(buildStructuredDocFieldsKey(docId, typeName)),
       ) as StructuredDocFieldsItem | undefined;
       return item ? clone(item.fields) : undefined;
     },
-    getMany: async (docIds) => {
+    getMany: async (docIds, typeName) => {
       const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
       for (const docId of docIds) {
         const item = this.records.get(
-          recordKey(buildStructuredDocFieldsKey(docId)),
+          recordKey(buildStructuredDocFieldsKey(docId, typeName)),
         ) as StructuredDocFieldsItem | undefined;
         if (item) {
           fieldsById.set(docId, clone(item.fields));
@@ -431,6 +434,7 @@ export class StructuredInMemoryBackend
 
       return {
         documents: items.map((item) => ({
+          ...(item.typeName !== undefined ? { typeName: item.typeName } : {}),
           docId: item.docId,
           fields: clone(item.fields),
           version: item.version,

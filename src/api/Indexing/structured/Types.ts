@@ -148,6 +148,8 @@ export const STRUCTURED_OPTIONAL_ORDER_REQUIRES_OCCUPANCY =
  * Structured search composition options.
  */
 export type StructuredSearchOptions = StructuredQueryOptions & {
+  /** TypeInfo namespace used to read canonical document state. */
+  typeName?: string;
   /** Optional globally ordered candidate stream. */
   orderBy?: StructuredOrderBy;
   /** Bounded physical page consumed atomically from each backend source. */

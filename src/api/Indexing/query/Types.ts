@@ -179,6 +179,8 @@ export type IndexCandidatePage = {
 
 /** Options that participate in planning and cursor identity. */
 export type IndexSearchOptions = {
+  /** TypeInfo namespace used to read canonical value documents. */
+  typeName?: string;
   limit?: number;
   cursor?: string;
   orderBy?: IndexOrderBy;

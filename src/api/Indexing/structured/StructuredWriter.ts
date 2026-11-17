@@ -33,16 +33,20 @@ export type StructuredWriterDependencies = {
   /**
    * Load previously stored fields for a document.
    * @param docId Document id to load.
+   * @param typeName TypeInfo namespace; omit for standalone untyped indexes.
    * @returns Stored fields or undefined when missing.
    */
   loadDocFieldsState(
     docId: DocId,
+    typeName?: string,
   ): Promise<StructuredDocFieldsState | undefined>;
   /**
    * Compare-and-swap the latest fields for a document.
    * @param docId Document id to store.
    * @param expectedVersion Version expected by the caller.
    * @param fields Structured fields to persist.
+   * @param occupancyFields Eligible fields for occupancy maintenance.
+   * @param typeName TypeInfo namespace; omit for standalone untyped indexes.
    * @returns True when swap succeeds, false on version mismatch.
    */
   putDocFieldsIfVersion(
@@ -50,6 +54,7 @@ export type StructuredWriterDependencies = {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredOccupancyFieldMap,
+    typeName?: string,
   ): Promise<boolean>;
   /**
    * Store term index entries.
@@ -291,6 +296,7 @@ export class StructuredIndexWriter {
    * Write structured fields for a document, diffing term/range entries.
    * @param docId Document id to write.
    * @param fields Structured fields to store.
+   * @param context TypeInfo namespace and optional occupancy/version guards.
    * @returns Promise resolved once all writes complete.
    */
   async write(
@@ -303,7 +309,10 @@ export class StructuredIndexWriter {
     let attempts = 0;
 
     while (attempts <= maxRetries) {
-      const previousState = await this.dependencies.loadDocFieldsState(docId);
+      const previousState = await this.dependencies.loadDocFieldsState(
+        docId,
+        context.typeName,
+      );
       if (
         context.expectedVersion !== undefined &&
         previousState?.version !== context.expectedVersion
@@ -335,6 +344,7 @@ export class StructuredIndexWriter {
         expectedVersion,
         normalized,
         occupancyFields,
+        context.typeName,
       );
 
       if (!swapped) {
@@ -416,7 +426,10 @@ export class StructuredIndexWriter {
         }
       }
 
-      const confirmed = await this.dependencies.loadDocFieldsState(docId);
+      const confirmed = await this.dependencies.loadDocFieldsState(
+        docId,
+        context.typeName,
+      );
       const writtenVersion = (expectedVersion ?? 0) + 1;
       if (
         confirmed?.version === writtenVersion &&
