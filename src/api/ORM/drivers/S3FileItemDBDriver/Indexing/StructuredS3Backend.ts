@@ -160,18 +160,18 @@ class StructuredS3Reader implements StructuredSearchDependencies {
   };
 
   readonly documents: NonNullable<StructuredSearchDependencies["documents"]> = {
-    get: async (docId) =>
+    get: async (docId, typeName) =>
       (
         await this.records.get<StructuredDocFieldsItem>(
           COLLECTION_DOCUMENT,
-          buildStructuredDocFieldsKey(docId),
+          buildStructuredDocFieldsKey(docId, typeName),
         )
       )?.item.fields,
-    getMany: async (docIds) => {
+    getMany: async (docIds, typeName) => {
       const values = await Promise.all(
         docIds.map(async (docId) => ({
           docId,
-          fields: await this.documents.get(docId),
+          fields: await this.documents.get(docId, typeName),
         })),
       );
       return new Map(
@@ -190,6 +190,7 @@ class StructuredS3Reader implements StructuredSearchDependencies {
         );
       return {
         documents: page.items.map((item) => ({
+          ...(item.typeName !== undefined ? { typeName: item.typeName } : {}),
           docId: item.docId,
           fields: item.fields,
           version: item.version,
@@ -268,10 +269,11 @@ class StructuredS3WriterDependencies implements StructuredWriterDependencies {
 
   async loadDocFieldsState(
     docId: DocId,
+    typeName?: string,
   ): Promise<StructuredDocFieldsState | undefined> {
     const record = await this.records.get<StructuredDocFieldsItem>(
       COLLECTION_DOCUMENT,
-      buildStructuredDocFieldsKey(docId),
+      buildStructuredDocFieldsKey(docId, typeName),
     );
     return record
       ? {
@@ -289,6 +291,7 @@ class StructuredS3WriterDependencies implements StructuredWriterDependencies {
     expectedVersion: number | undefined,
     fields: StructuredDocFieldsRecord,
     occupancyFields?: StructuredDocFieldsState["occupancyFields"],
+    typeName?: string,
   ): Promise<boolean> {
     return this.records.putIfVersion(
       COLLECTION_DOCUMENT,
@@ -297,6 +300,7 @@ class StructuredS3WriterDependencies implements StructuredWriterDependencies {
         fields,
         (expectedVersion ?? 0) + 1,
         occupancyFields,
+        typeName,
       ),
       expectedVersion,
     );

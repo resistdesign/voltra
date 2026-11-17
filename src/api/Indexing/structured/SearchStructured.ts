@@ -36,6 +36,8 @@ type BackendCandidatePage = {
 
 /** One structured document mirror exposed to maintenance tooling. */
 export type StructuredDocumentSnapshot = {
+  /** TypeInfo namespace of this mirror, when typed. */
+  typeName?: string;
   /** Indexed document identifier. */
   docId: DocId;
   /** Current structured fields mirror. */
@@ -128,10 +130,14 @@ export type StructuredSearchDependencies = {
   ranges: StructuredRangeIndex;
   /** Canonical structured fields used for exact candidate verification. */
   documents?: {
-    get(docId: DocId): Promise<StructuredDocFieldsRecord | undefined>;
+    get(
+      docId: DocId,
+      typeName?: string,
+    ): Promise<StructuredDocFieldsRecord | undefined>;
     /** Batch-load canonical fields when the storage backend supports it. */
     getMany?(
       docIds: DocId[],
+      typeName?: string,
     ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>>;
     /** Enumerate bounded structured document mirrors for maintenance. */
     list?(
@@ -339,6 +345,7 @@ const matchesWhere = (
 const loadDocumentFields = async (
   dependencies: StructuredSearchDependencies,
   docIds: DocId[],
+  typeName?: string,
 ): Promise<ReadonlyMap<DocId, StructuredDocFieldsRecord>> => {
   if (!dependencies.documents) {
     throw new Error(
@@ -346,13 +353,13 @@ const loadDocumentFields = async (
     );
   }
   if (dependencies.documents.getMany) {
-    return dependencies.documents.getMany(docIds);
+    return dependencies.documents.getMany(docIds, typeName);
   }
 
   const results = await Promise.all(
     docIds.map(async (docId) => ({
       docId,
-      fields: await dependencies.documents?.get(docId),
+      fields: await dependencies.documents?.get(docId, typeName),
     })),
   );
   const fieldsById = new Map<DocId, StructuredDocFieldsRecord>();
@@ -597,7 +604,7 @@ const matchesMissingCandidate = async (
   const sortConfig = sortField
     ? options.occupancyFields?.[sortField]
     : undefined;
-  const fields = await dependencies.documents?.get(docId);
+  const fields = await dependencies.documents?.get(docId, options.typeName);
   return !!(
     fields &&
     sortField &&
@@ -721,7 +728,10 @@ const searchWithOccupancy = async (
         },
       );
       for (const docId of page.candidateIds) {
-        const fields = await dependencies.documents.get(docId);
+        const fields = await dependencies.documents.get(
+          docId,
+          options.typeName,
+        );
         if (fields && matchesWhere(where, fields, dependencies.tokenizer)) {
           results.push(docId);
         }
@@ -938,7 +948,7 @@ export async function searchStructured(
       !!source.orderBy || sources.length > 1 || !isLeaf(source.owner);
 
     const fieldsById = requiresVerification
-      ? await loadDocumentFields(dependencies, uniquePageIds)
+      ? await loadDocumentFields(dependencies, uniquePageIds, options.typeName)
       : undefined;
 
     for (const docId of uniquePageIds) {

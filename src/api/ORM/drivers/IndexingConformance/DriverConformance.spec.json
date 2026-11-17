@@ -39,6 +39,118 @@
         "structured": true,
         "relational": true
       }
+    },
+    {
+      "export": "runTypedStructuredDocumentConformanceScenario",
+      "conditions": [],
+      "operation": "DEEP_EQUALS",
+      "expectation": {
+        "memory": {
+          "first": {
+            "f1#Type%23One#score": 1
+          },
+          "second": {
+            "f1#Type%2FTwo#score": 2
+          },
+          "before": [
+            [
+              "same#id/1"
+            ],
+            [
+              "same#id/1"
+            ]
+          ],
+          "after": [
+            [],
+            [
+              "same#id/1"
+            ],
+            []
+          ],
+          "documents": [
+            {
+              "typeName": "Type#One",
+              "docId": "same#id/1",
+              "version": 2
+            },
+            {
+              "typeName": "Type/Two",
+              "docId": "same#id/1",
+              "version": 2
+            }
+          ]
+        },
+        "dynamo": {
+          "first": {
+            "f1#Type%23One#score": 1
+          },
+          "second": {
+            "f1#Type%2FTwo#score": 2
+          },
+          "before": [
+            [
+              "same#id/1"
+            ],
+            [
+              "same#id/1"
+            ]
+          ],
+          "after": [
+            [],
+            [
+              "same#id/1"
+            ],
+            []
+          ],
+          "documents": [
+            {
+              "typeName": "Type#One",
+              "docId": "same#id/1",
+              "version": 2
+            },
+            {
+              "typeName": "Type/Two",
+              "docId": "same#id/1",
+              "version": 2
+            }
+          ]
+        },
+        "s3": {
+          "first": {
+            "f1#Type%23One#score": 1
+          },
+          "second": {
+            "f1#Type%2FTwo#score": 2
+          },
+          "before": [
+            [
+              "same#id/1"
+            ],
+            [
+              "same#id/1"
+            ]
+          ],
+          "after": [
+            [],
+            [
+              "same#id/1"
+            ],
+            []
+          ],
+          "documents": [
+            {
+              "typeName": "Type#One",
+              "docId": "same#id/1",
+              "version": 2
+            },
+            {
+              "typeName": "Type/Two",
+              "docId": "same#id/1",
+              "version": 2
+            }
+          ]
+        }
+      }
     }
   ]
 }

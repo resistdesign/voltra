@@ -274,3 +274,74 @@ export const runIndexDriverConformanceEqualScenario = async () => {
     relational: result.relationalEqual,
   };
 };
+
+/** Exercise typed state reads, writes, and guarded removal in every driver. */
+export const runTypedStructuredDocumentConformanceScenario = async () => {
+  const memory = new StructuredInMemoryBackend();
+  const dynamo = new StructuredDdbBackend({
+    client: new InMemoryDynamoQueryClient(),
+    table: { tableName: "TypedDocuments" },
+  });
+  const s3 = new StructuredS3Backend({
+    store: new InMemoryS3IndexObjectStore(),
+  });
+  const exercise = async (
+    reader: Parameters<typeof searchStructured>[0],
+    writer: import("../../../Indexing/structured/Handlers").StructuredWriter,
+  ) => {
+    const id = "same#id/1";
+    const firstType = "Type#One";
+    const secondType = "Type/Two";
+    const firstField = qualifyIndexField(firstType, "score");
+    const secondField = qualifyIndexField(secondType, "score");
+    await writer.write(id, { [firstField]: 1 }, { typeName: firstType });
+    await writer.write(id, { [secondField]: 2 }, { typeName: secondType });
+    const first = await reader.documents?.get(id, firstType);
+    const second = (await reader.documents?.getMany?.([id], secondType))?.get(
+      id,
+    );
+    const query = async (typeName: string, field: string, value: number) =>
+      (
+        await searchStructured(
+          reader,
+          {
+            and: [
+              { type: "term", field, mode: "eq", value },
+              { type: "gte", field, value: 0 },
+            ],
+          },
+          { typeName },
+        )
+      ).candidateIds;
+    const before = [
+      await query(firstType, firstField, 1),
+      await query(secondType, secondField, 2),
+    ];
+    await writer.write(
+      id,
+      { [firstField]: 3 },
+      { typeName: firstType, expectedVersion: 1 },
+    );
+    await writer.write(
+      id,
+      {},
+      { typeName: secondType, expectedVersion: 1, deleted: true },
+    );
+    const after = [
+      await query(firstType, firstField, 1),
+      await query(firstType, firstField, 3),
+      await query(secondType, secondField, 2),
+    ];
+    const documents = (await reader.documents?.list?.({ limit: 10 }))?.documents
+      .map(({ typeName, docId, version }) => ({ typeName, docId, version }))
+      .sort((a, b) =>
+        a.typeName! < b.typeName! ? -1 : a.typeName! > b.typeName! ? 1 : 0,
+      );
+    return { first, second, before, after, documents };
+  };
+  return {
+    memory: await exercise(memory, memory),
+    dynamo: await exercise(dynamo.reader, dynamo.writer),
+    s3: await exercise(s3.reader, s3.writer),
+  };
+};

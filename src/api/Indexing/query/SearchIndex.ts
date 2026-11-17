@@ -208,6 +208,7 @@ const materializeValueExpression = async (
       context.backend.values,
       toWhere(expression),
       {
+        typeName: context.options.typeName,
         limit: Math.min(250, remaining),
         cursor,
         orderBy: nativeOrderBy,
@@ -438,14 +439,17 @@ const sortCandidates = async (
   const values = new Map<DocId, unknown>();
   const documents = context.backend.values.documents;
   if (documents.getMany) {
-    const fieldsById = await documents.getMany(ids);
+    const fieldsById = await documents.getMany(ids, context.options.typeName);
     for (const id of ids) {
       values.set(id, fieldsById.get(id)?.[orderBy.field]);
     }
   } else {
     await Promise.all(
       ids.map(async (id) => {
-        values.set(id, (await documents.get(id))?.[orderBy.field]);
+        values.set(
+          id,
+          (await documents.get(id, context.options.typeName))?.[orderBy.field],
+        );
       }),
     );
   }
@@ -485,6 +489,7 @@ export const searchIndex = async (
   const generation = await backend.values.occupancy?.getActiveGeneration();
   const queryFingerprint = fingerprintIndexQuery(expression);
   const planFingerprint = fingerprintIndexQuery({
+    typeName: options.typeName,
     orderBy: options.orderBy,
     occupancyFields: options.occupancyFields,
     tokenizer: options.tokenizer,

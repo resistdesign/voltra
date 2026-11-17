@@ -84,6 +84,19 @@ model; destructive MCP repair is opt-in.
 See `examples/api/orm-health-monitoring.ts` and the live demo under
 `site/api/health.ts`.
 
+### Structured index identity upgrade (#426)
+
+Structured document state is now keyed by TypeInfo type and item ID. When
+upgrading an existing index, perform a clean rebuild of structured index records
+from canonical items for every indexed type; reindexing alone can leave stale
+postings from the old shared state. Typed reads never fall back to legacy untyped
+mirrors, and Health reports those mirrors as unscoped instead of using them to
+authorize typed cleanup. Canonical item IDs do not change.
+
+Direct structured-backend integrations should pass the same `typeName` in write
+contexts, search options, and document reads. Omitting it retains standalone
+untyped index behavior. `TypeInfoORMService` supplies it automatically.
+
 ### Optional Cognito Request Authentication
 
 When a gateway should allow requests through, `handleCloudFunctionEvent` can

@@ -296,7 +296,7 @@ export const runHealthIndexRaceGuardScenario = async () => {
   await driver.deleteItem(id);
   await structuredBackend.write(id, {
     [qualifyIndexField("Book", "rating")]: 99,
-  });
+  }, { typeName: "Book" });
 
   const cleanup = await orm.cleanupOrphanedIndexState("Book", id, {
     structuredVersion: audited?.version,
@@ -868,6 +868,7 @@ export const runHealthMissingIndexRepairScenario = async () => {
   );
 
   await structuredBackend.write(id, {}, {
+    typeName: "Book",
     deleted: true,
     expectedVersion: structuredSnapshot?.version,
   });
@@ -972,6 +973,7 @@ export const runHealthMissingIndexRequiresStrongReadScenario = async () => {
     (document) => document.docId === id,
   );
   await structuredBackend.write(id, {}, {
+    typeName: "Book",
     deleted: true,
     expectedVersion: structuredSnapshot?.version,
   });
@@ -1289,5 +1291,29 @@ export const runHealthRandomProbeScenario = async () => {
     textDocumentsProcessedCount: result.textDocumentsProcessedCount,
     examinedCount: result.examinedCount,
     orphanFindingCount: result.orphanFindingCount,
+  };
+};
+
+/** Legacy untyped mirrors cannot authorize cleanup of typed document state. */
+export const runHealthLegacyStructuredIdentityScenario = async () => {
+  const driver = new InMemoryDataItemDBDriver<Book, "id">({
+    tableName: "LegacyBooks",
+    uniquelyIdentifyingFieldName: "id",
+    generateUniqueIdentifier: () => "legacy-shared-id",
+  });
+  const values = new StructuredInMemoryBackend();
+  const orm = createOrm(getBookTypeInfoV1(), { Book: driver }, new FullTextMemoryBackend(), values);
+  const id = await orm.create("Book", { title: "Current", slug: "current", rating: 7 } as TypeInfoDataItem);
+  const field = qualifyIndexField("Book", "rating");
+  // Simulate an old untyped mirror with the same raw ID and version.
+  await values.write(id, { [field]: 99 });
+  const monitor = new TypeInfoORMHealthMonitor({
+    orm, store: createHealthStore(), maxIndexDocumentsPerRun: 20, maxRepairsPerRun: 10,
+  });
+  const result = await monitor.repair();
+  return {
+    legacyReported: result.suspiciousCount > 0,
+    typed: await values.documents?.get(id, "Book"),
+    legacy: await values.documents?.get(id),
   };
 };

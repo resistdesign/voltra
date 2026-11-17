@@ -941,6 +941,7 @@ export class TypeInfoORMHealthMonitor {
       const auditStructuredDocuments = async (
         documents: Array<{
           docId: DocId;
+          typeName?: string;
           fields: Record<string, unknown>;
           version: number;
         }>,
@@ -967,7 +968,10 @@ export class TypeInfoORMHealthMonitor {
             ).values(),
           );
 
-          if (uniqueMatches.length === 1) {
+          if (
+            uniqueMatches.length === 1 &&
+            document.typeName === uniqueMatches[0].descriptor.typeName
+          ) {
             const match = uniqueMatches[0];
             structuredTypeNames.add(match.descriptor.typeName);
 
@@ -987,7 +991,8 @@ export class TypeInfoORMHealthMonitor {
             }
           } else if (
             Object.keys(document.fields).length > 0 &&
-            uniqueMatches.length !== 1
+            (uniqueMatches.length !== 1 ||
+              document.typeName !== uniqueMatches[0].descriptor.typeName)
           ) {
             suspiciousCount += 1;
             await this.store.createRecord({

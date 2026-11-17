@@ -96,6 +96,8 @@ export type StructuredDocFieldsKey = IndexTableKey;
 export type StructuredDocFieldsItem = StructuredDocFieldsKey & {
   /** Logical item kind in the shared physical table. */
   kind: typeof INDEX_ITEM_KINDS.structuredDocument;
+  /** TypeInfo namespace; absent for standalone untyped indexes. */
+  typeName?: string;
   /** Document id for the record. */
   docId: DocId;
   /**
@@ -237,6 +239,9 @@ export function buildStructuredRangeItem(
  * Build a structured document fields item.
  * @param docId Document id for the record.
  * @param fields Structured fields to store.
+ * @param version Monotonic document-state version.
+ * @param occupancyFields Eligible fields for occupancy maintenance.
+ * @param typeName TypeInfo namespace; omit only for standalone untyped indexes.
  * @returns Structured doc fields item.
  */
 export function buildStructuredDocFieldsItem(
@@ -244,18 +249,13 @@ export function buildStructuredDocFieldsItem(
   fields: StructuredDocFieldsRecord,
   version: number,
   occupancyFields?: StructuredOccupancyFieldMap,
+  typeName?: string,
 ): StructuredDocFieldsItem {
-  const key = assertIndexTableKey({
-    pk: buildIndexScalarKey(
-      INDEX_ITEM_KINDS.structuredDocument,
-      "document",
-      docId,
-    ),
-    sk: INDEX_KEY_PARTS.state,
-  });
+  const key = buildStructuredDocFieldsKey(docId, typeName);
   return {
     ...key,
     kind: INDEX_ITEM_KINDS.structuredDocument,
+    ...(typeName !== undefined ? { typeName } : {}),
     docId,
     fields,
     version,
@@ -263,13 +263,21 @@ export function buildStructuredDocFieldsItem(
   };
 }
 
-/** Build the logical key for canonical structured document state. */
-export function buildStructuredDocFieldsKey(docId: DocId): IndexTableKey {
+/**
+ * Build canonical structured state identity for a type and raw document ID.
+ * Omit typeName only for standalone untyped indexes. Typed state never falls
+ * back to legacy untyped records; rebuild existing indexes after upgrading.
+ */
+export function buildStructuredDocFieldsKey(
+  docId: DocId,
+  typeName?: string,
+): IndexTableKey {
   return assertIndexTableKey({
     pk: buildIndexScalarKey(
       INDEX_ITEM_KINDS.structuredDocument,
       "document",
       docId,
+      ...(typeName === undefined ? [] : ["type", typeName]),
     ),
     sk: INDEX_KEY_PARTS.state,
   });
