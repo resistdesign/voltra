@@ -17,6 +17,6 @@ PR opened: https://github.com/resistdesign/voltra/pull/427. All implementation a
 
 - [x] Inspect failed CI logs: demo-site TypeDoc checks test helpers excluded by the package build; the shared-ID fixture accesses optional `fields` without narrowing.
 - [x] Fix the known fixture's field typing and verify the regression and demo-site build.
-- [~] Commit and push the correction to PR #427, then verify GitHub checks.
+- [x] Commit and push the correction to PR #427, then verify GitHub checks.
 
-Follow-up local validation: `yarn site:build:app` (including TypeDoc), the three index-maintenance regressions, `yarn site:build:api`, `yarn site:build:iac`, `yarn test:exports`, and `yarn test:consumer` all passed. Remaining: verify the new GitHub check run after pushing.
+Follow-up local validation: `yarn site:build:app` (including TypeDoc), the three index-maintenance regressions, `yarn site:build:api`, `yarn site:build:iac`, `yarn test:exports`, and `yarn test:consumer` all passed. GitHub run 44167026023 passed all checks for fix commit 5b7f0da37, including the previously failing demo-site build.
